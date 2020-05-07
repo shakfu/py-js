@@ -7,10 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
+		12D5454E2463B03E00BE010E /* Tk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454D2463B03E00BE010E /* Tk.framework */; };
 		22CF122B0EE9AAAD0054F513 /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 22CF122A0EE9AAAD0054F513 /* py.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		12D5454D2463B03E00BE010E /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = System/Library/Frameworks/Tk.framework; sourceTree = SDKROOT; };
 		22CF10220EE984600054F513 /* maxmspsdk.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = maxmspsdk.xcconfig; path = ../../maxmspsdk.xcconfig; sourceTree = SOURCE_ROOT; };
 		22CF122A0EE9AAAD0054F513 /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = py.c; sourceTree = "<group>"; };
 		2FBBEAE508F335360078DB84 /* py.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = py.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -21,6 +25,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */,
+				12D5454E2463B03E00BE010E /* Tk.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,8 +39,18 @@
 				22CF10220EE984600054F513 /* maxmspsdk.xcconfig */,
 				22CF122A0EE9AAAD0054F513 /* py.c */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
+				12D5454A2463B03000BE010E /* Frameworks */,
 			);
 			name = iterator;
+			sourceTree = "<group>";
+		};
+		12D5454A2463B03000BE010E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				12D5454D2463B03E00BE010E /* Tk.framework */,
+				12D5454B2463B03000BE010E /* CoreFoundation.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		19C28FB4FE9D528D11CA2CBB /* Products */ = {
@@ -90,6 +106,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 089C166AFE841209C02AAC07 /* iterator */;
@@ -151,7 +168,18 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				OTHER_LDFLAGS = "$(C74_SYM_LINKER_FLAGS)";
+				HEADER_SEARCH_PATHS = (
+					"\"$(C74SUPPORT)/max-includes\"",
+					"\"$(C74SUPPORT)/msp-includes\"",
+					"\"$(C74SUPPORT)/jit-includes\"",
+					/usr/local/Cellar/python/3.7.7/Frameworks/Python.framework/Versions/3.7/include/python3.7m,
+				);
+				LIBRARY_SEARCH_PATHS = "/usr/local/opt/python/Frameworks/Python.framework/Versions/3.7/lib/python3.7/config-3.7m-darwin";
+				OTHER_LDFLAGS = (
+					"$(C74_SYM_LINKER_FLAGS)",
+					"-lpython3.7m",
+					"-ldl",
+				);
 			};
 			name = Development;
 		};
@@ -160,7 +188,18 @@
 			baseConfigurationReference = 22CF10220EE984600054F513 /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				OTHER_LDFLAGS = "$(C74_SYM_LINKER_FLAGS)";
+				HEADER_SEARCH_PATHS = (
+					"\"$(C74SUPPORT)/max-includes\"",
+					"\"$(C74SUPPORT)/msp-includes\"",
+					"\"$(C74SUPPORT)/jit-includes\"",
+					/usr/local/Cellar/python/3.7.7/Frameworks/Python.framework/Versions/3.7/include/python3.7m,
+				);
+				LIBRARY_SEARCH_PATHS = "/usr/local/opt/python/Frameworks/Python.framework/Versions/3.7/lib/python3.7/config-3.7m-darwin";
+				OTHER_LDFLAGS = (
+					"$(C74_SYM_LINKER_FLAGS)",
+					"-lpython3.7m",
+					"-ldl",
+				);
 			};
 			name = Deployment;
 		};
