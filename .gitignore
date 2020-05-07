@@ -1,3 +1,6 @@
+# dirs to exclude
+build/
+
 # Prerequisites
 *.d
 
