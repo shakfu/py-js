@@ -1,13 +1,13 @@
 /**
 	@file
-	py - a python object
+	py - a python max object
 	shakfu - github.com/shakfu
 
 	@ingroup	examples
 */
 
-#include "ext.h"							// standard Max include, always required
-#include "ext_obex.h"						// required for new style Max object
+#include "ext.h"			// standard Max include, always required
+#include "ext_obex.h"		// required for new style Max object
 
 ////////////////////////// object struct
 typedef struct _py
