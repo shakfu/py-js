@@ -9,6 +9,10 @@
 #include "ext.h"			// standard Max include, always required
 #include "ext_obex.h"		// required for new style Max object
 
+/* python */
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 ////////////////////////// object struct
 typedef struct _py
 {
@@ -147,3 +151,16 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 	}
 	return (x);
 }
+
+int string_to_py()
+{
+    Py_Initialize();
+    PyRun_SimpleString("from time import time,ctime\n"
+                       "print('Today is', ctime(time()))\n");
+    if (Py_FinalizeEx() < 0) {
+        exit(120);
+    }
+    // PyMem_RawFree(program);
+    return 0;
+}
+
