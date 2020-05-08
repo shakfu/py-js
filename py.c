@@ -103,9 +103,33 @@ void py_assist(t_py *x, void *b, long m, long a, char *s) // 4 final arguments a
 void py_bang(t_py *x)           // x = reference to this instance of the object
 {
     long sum;                           // local variable for this method
+    PyObject *locals, *globals;
+    PyObject *pval, *xval, *yval;
 
-    sum = x->p_value0+x->p_value1;      // add left and right operands
+    // python init and setup
+    Py_Initialize();
+    locals = PyDict_New();
+    globals = PyDict_New();
+    PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
+
+    xval = PyLong_FromLong(x->p_value0);
+    yval = PyLong_FromLong(x->p_value1);
+
+    PyDict_SetItemString(globals, "x", xval);
+    PyDict_SetItemString(globals, "y", yval);
+
+    pval = PyRun_String("x+y", Py_eval_input, globals, locals);
+
+    if PyLong_Check(pval) {
+        sum = PyLong_AsLong(pval);
+    }
+    // sum = x->p_value0+x->p_value1;      // add left and right operands
     outlet_int(x->p_outlet, sum);       // send out the sum on bang
+
+    Py_DECREF(pval);
+    Py_DECREF(xval);
+    Py_DECREF(yval);
+    Py_FinalizeEx();
 }
 
 
