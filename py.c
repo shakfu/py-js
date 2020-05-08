@@ -1,166 +1,124 @@
 /**
-	@file
-	py - a python max object
-	shakfu - github.com/shakfu
+    @file
+    py.c - experiment in max object for calling python code
 
-	@ingroup	examples
+    this object has 2 inlets and one outlet
+    it responds to ints in its inlets and the 'bang' message in the left inlet
+    it responds to the 'assistance' message sent by Max when the mouse is positioned over an inlet or outlet
+        (including an assistance method is optional, but strongly sugggested)
+    it adds its input values together and outputs their sum
+
+    @ingroup    examples
 */
 
-#include "ext.h"			// standard Max include, always required
-#include "ext_obex.h"		// required for new style Max object
+#include "ext.h"            // you must include this - it contains the external object's link to available Max functions
+#include "ext_obex.h"       // this is required for all objects using the newer style for writing objects.
 
 /* python */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-////////////////////////// object struct
-typedef struct _py
-{
-	t_object	ob;
-	t_atom		val;
-	t_symbol	*name;
-	void		*out;
+
+typedef struct _py {    // defines our object's internal variables for each instance in a patch
+    t_object p_ob;          // object header - ALL objects MUST begin with this...
+    long p_value0;          // int value - received from the left inlet and stored internally for each object instance
+    long p_value1;          // int value - received from the right inlet and stored internally for each object instance
+    void *p_outlet;         // outlet creation - inlets are automatic, but objects must "own" their own outlets
 } t_py;
 
-///////////////////////// function prototypes
-//// standard set
-void *py_new(t_symbol *s, long argc, t_atom *argv);
-void py_free(t_py *x);
-void py_assist(t_py *x, void *b, long m, long a, char *s);
 
-void py_int(t_py *x, long n);
-void py_float(t_py *x, double f);
-void py_anything(t_py *x, t_symbol *s, long ac, t_atom *av);
+// these are prototypes for the methods that are defined below
 void py_bang(t_py *x);
-void py_identify(t_py *x);
-void py_dblclick(t_py *x);
-void py_acant(t_py *x);
+void py_int(t_py *x, long n);
+void py_in1(t_py *x, long n);
+void py_assist(t_py *x, void *b, long m, long a, char *s);
+void *py_new(long n);
 
-//////////////////////// global class pointer variable
-void *py_class;
 
+t_class *py_class;      // global pointer to the object class - so max can reference the object
+
+
+//--------------------------------------------------------------------------
 
 void ext_main(void *r)
 {
-	t_class *c;
+    t_class *c;
 
-	c = class_new("py", (method)py_new, (method)py_free, (long)sizeof(t_py),
-				  0L /* leave NULL!! */, A_GIMME, 0);
+    c = class_new("py", (method)py_new, (method)NULL, sizeof(t_py), 0L, A_DEFLONG, 0);
+    // class_new() loads our external's class into Max's memory so it can be used in a patch
+    // py_new = object creation method defined below
 
-	class_addmethod(c, (method)py_bang,			"bang", 0);
-	class_addmethod(c, (method)py_int,			"int",		A_LONG, 0);
-	class_addmethod(c, (method)py_float,		"float",	A_FLOAT, 0);
-	class_addmethod(c, (method)py_anything,		"anything",	A_GIMME, 0);
-	class_addmethod(c, (method)py_identify,		"identify", 0);
-	CLASS_METHOD_ATTR_PARSE(c, "identify", "undocumented", gensym("long"), 0, "1");
+    class_addmethod(c, (method)py_bang,     "bang",     0);         // the method it uses when it gets a bang in the left inlet
+    class_addmethod(c, (method)py_int,      "int",      A_LONG, 0); // the method for an int in the left inlet (inlet 0)
+    class_addmethod(c, (method)py_in1,      "in1",      A_LONG, 0); // the method for an int in the right inlet (inlet 1)
+    // "ft1" is the special message for floats
+    class_addmethod(c, (method)py_assist,   "assist",   A_CANT, 0); // (optional) assistance method needs to be declared like this
 
-	// we want to 'reveal' the otherwise hidden 'xyzzy' method
-	class_addmethod(c, (method)py_anything,		"xyzzy", A_GIMME, 0);
-	// here's an otherwise undocumented method, which does something that the user can't actually
-	// do from the patcher however, we want them to know about it for some weird documentation reason.
-	// so let's make it documentable. it won't appear in the quickref, because we can't send it from a message.
-	class_addmethod(c, (method)py_acant,			"blooop", A_CANT, 0);
-	CLASS_METHOD_ATTR_PARSE(c, "blooop", "documentable", gensym("long"), 0, "1");
+    class_register(CLASS_BOX, c);
+    py_class = c;
 
-	/* you CAN'T call this from the patcher */
-	class_addmethod(c, (method)py_assist,			"assist",		A_CANT, 0);
-	class_addmethod(c, (method)py_dblclick,			"dblclick",		A_CANT, 0);
-
-	CLASS_ATTR_SYM(c, "name", 0, t_py, name);
-
-	class_register(CLASS_BOX, c);
-	py_class = c;
+    post("py object loaded...",0);  // post any important info to the max window when our class is loaded
 }
 
-void py_acant(t_py *x)
+
+//--------------------------------------------------------------------------
+
+void *py_new(long n)        // n = int argument typed into object box (A_DEFLONG) -- defaults to 0 if no args are typed
 {
-	object_post((t_object *)x, "can't touch this!");
+    t_py *x;                // local variable (pointer to a t_py data structure)
+
+    x = (t_py *)object_alloc(py_class); // create a new instance of this object
+
+    intin(x,1);                 // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
+    x->p_outlet = intout(x);    // create an int outlet and assign it to our outlet variable in the instance's data structure
+
+    x->p_value0 = 0;            // set initial (default) left operand value in the instance's data structure
+    x->p_value1 = n;            // set initial (default) right operand value (n = variable passed to py_new)
+
+    post(" new py object instance added to patch...", 0); // post important info to the max window when new instance is created
+
+    return(x);                  // return a reference to the object instance
 }
 
-void py_assist(t_py *x, void *b, long m, long a, char *s)
+
+//--------------------------------------------------------------------------
+
+void py_assist(t_py *x, void *b, long m, long a, char *s) // 4 final arguments are always the same for the assistance method
 {
-	if (m == ASSIST_INLET) { //inlet
-		sprintf(s, "I am inlet %ld", a);
-	}
-	else {	// outlet
-		sprintf(s, "I am outlet %ld", a);
-	}
-}
-
-void py_free(t_py *x)
-{
-	;
-}
-
-void py_dblclick(t_py *x)
-{
-	object_post((t_object *)x, "I got a double-click");
-}
-
-void py_int(t_py *x, long n)
-{
-	atom_setlong(&x->val, n);
-	py_bang(x);
-}
-
-void py_float(t_py *x, double f)
-{
-	atom_setfloat(&x->val, f);
-	py_bang(x);
-}
-
-void py_anything(t_py *x, t_symbol *s, long ac, t_atom *av)
-{
-	if (s == gensym("xyzzy")) {
-		object_post((t_object *)x, "A hollow voice says 'Plugh'");
-	} else {
-		atom_setsym(&x->val, s);
-		py_bang(x);
-	}
-}
-
-void py_bang(t_py *x)
-{
-	switch (x->val.a_type) {
-	case A_LONG: outlet_int(x->out, atom_getlong(&x->val)); break;
-	case A_FLOAT: outlet_float(x->out, atom_getfloat(&x->val)); break;
-	case A_SYM: outlet_anything(x->out, atom_getsym(&x->val), 0, NULL); break;
-	default: break;
-	}
-}
-
-void py_identify(t_py *x)
-{
-	object_post((t_object *)x, "my name is %s", x->name->s_name);
-}
-
-void *py_new(t_symbol *s, long argc, t_atom *argv)
-{
-	t_py *x = NULL;
-
-	if ((x = (t_py *)object_alloc(py_class))) {
-		x->name = gensym("");
-		if (argc && argv) {
-			x->name = atom_getsym(argv);
-		}
-		if (!x->name || x->name == gensym(""))
-			x->name = symbol_unique();
-
-		atom_setlong(&x->val, 0);
-		x->out = outlet_new(x, NULL);
-	}
-	return (x);
-}
-
-int string_to_py()
-{
-    Py_Initialize();
-    PyRun_SimpleString("from time import time,ctime\n"
-                       "print('Today is', ctime(time()))\n");
-    if (Py_FinalizeEx() < 0) {
-        exit(120);
+    if (m == ASSIST_OUTLET)
+        sprintf(s,"Sum of Left and Right Inlets");
+    else {
+        switch (a) {
+        case 0:
+            sprintf(s,"Inlet %ld: Left Operand (Causes Output)", a);
+            break;
+        case 1:
+            sprintf(s,"Inlet %ld: Right Operand (Added to Left)", a);
+            break;
+        }
     }
-    // PyMem_RawFree(program);
-    return 0;
 }
+
+
+void py_bang(t_py *x)           // x = reference to this instance of the object
+{
+    long sum;                           // local variable for this method
+
+    sum = x->p_value0+x->p_value1;      // add left and right operands
+    outlet_int(x->p_outlet, sum);       // send out the sum on bang
+}
+
+
+void py_int(t_py *x, long n)    // x = the instance of the object; n = the int received in the left inlet
+{
+    x->p_value0 = n;                    // store left operand value in instance's data structure
+    py_bang(x);                     // ... call the bang method to sum and send out our outlet
+}
+
+
+void py_in1(t_py *x, long n)    // x = the instance of the object, n = the int received in the right inlet
+{
+    x->p_value1 = n;                    // just store right operand value in instance's data structure and do nothing else
+}
+
 
