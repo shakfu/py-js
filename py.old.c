@@ -4,6 +4,14 @@
 	shakfu - github.com/shakfu
 
 	@ingroup	examples
+
+
+	py object
+		@function
+		@class
+		@imports
+		@module
+
 */
 
 #include "ext.h"			// standard Max include, always required
