@@ -2,6 +2,14 @@
 
 An attempt to make a max external for python
 
+## py/pyext docs (for inspiration!)
+
+With the py object you can load python modules and execute the functions therein.
+With the pyext you can use python classes to represent full-featured pd/Max message objects.
+Multithreading (detached methods) is supported for both objects.
+You can send messages to named objects or receive (with pyext) with Python methods.
+
+
 
 ## Building
 

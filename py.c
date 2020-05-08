@@ -8,6 +8,12 @@
         (including an assistance method is optional, but strongly sugggested)
     it adds its input values together and outputs their sum
 
+    py object
+        @module
+
+        (optional)
+        @imports
+
     @ingroup    examples
 */
 
@@ -21,6 +27,9 @@
 
 typedef struct _py {    // defines our object's internal variables for each instance in a patch
     t_object p_ob;          // object header - ALL objects MUST begin with this...
+    t_symbol *module;     // python module to import
+    t_symbol *imports;      // python import: additional imports
+    t_symbol *code;         // python code to evaluate to default outlet
     long p_value0;          // int value - received from the left inlet and stored internally for each object instance
     long p_value1;          // int value - received from the right inlet and stored internally for each object instance
     void *p_outlet;         // outlet creation - inlets are automatic, but objects must "own" their own outlets
@@ -32,8 +41,9 @@ void py_bang(t_py *x);
 void py_int(t_py *x, long n);
 void py_in1(t_py *x, long n);
 void py_assist(t_py *x, void *b, long m, long a, char *s);
-void *py_new(long n);
-
+// void *py_new(long n);
+void *py_new(t_symbol *s, long argc, t_atom *argv);
+void py_free(t_py *x);
 
 t_class *py_class;      // global pointer to the object class - so max can reference the object
 
@@ -44,7 +54,10 @@ void ext_main(void *r)
 {
     t_class *c;
 
-    c = class_new("py", (method)py_new, (method)NULL, sizeof(t_py), 0L, A_DEFLONG, 0);
+    // c = class_new("py", (method)py_new, (method)NULL, sizeof(t_py), 0L, A_DEFLONG, 0);
+    c = class_new("py", (method)py_new, (method)py_free, (long)sizeof(t_py),
+                  0L /* leave NULL!! */, A_GIMME, 0);
+
     // class_new() loads our external's class into Max's memory so it can be used in a patch
     // py_new = object creation method defined below
 
@@ -54,6 +67,17 @@ void ext_main(void *r)
     // "ft1" is the special message for floats
     class_addmethod(c, (method)py_assist,   "assist",   A_CANT, 0); // (optional) assistance method needs to be declared like this
 
+    // attributes
+    CLASS_ATTR_SYM(c, "module",  0, t_py, module);
+    CLASS_ATTR_BASIC(c, "module", 0);
+
+    CLASS_ATTR_SYM(c, "imports", 0, t_py, imports);
+    CLASS_ATTR_BASIC(c, "imports", 0);
+
+    CLASS_ATTR_SYM(c, "code",    0, t_py, code);
+    CLASS_ATTR_BASIC(c, "code", 0);
+
+
     class_register(CLASS_BOX, c);
     py_class = c;
 
@@ -62,8 +86,8 @@ void ext_main(void *r)
 
 
 //--------------------------------------------------------------------------
-
-void *py_new(long n)        // n = int argument typed into object box (A_DEFLONG) -- defaults to 0 if no args are typed
+void *py_new(t_symbol *s, long argc, t_atom *argv)
+// void *py_new(long n)        // n = int argument typed into object box (A_DEFLONG) -- defaults to 0 if no args are typed
 {
     t_py *x;                // local variable (pointer to a t_py data structure)
 
@@ -72,12 +96,24 @@ void *py_new(long n)        // n = int argument typed into object box (A_DEFLONG
     intin(x,1);                 // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
     x->p_outlet = intout(x);    // create an int outlet and assign it to our outlet variable in the instance's data structure
 
+    x->module = gensym("a");
+    x->imports = gensym("b");
+    x->code = gensym("c");
     x->p_value0 = 0;            // set initial (default) left operand value in the instance's data structure
-    x->p_value1 = n;            // set initial (default) right operand value (n = variable passed to py_new)
-
+    x->p_value1 = 0;            // set initial (default) right operand value (n = variable passed to py_new)
+    
+    // process @arg attributes
+    attr_args_process(x, argc, argv);
+    
     post(" new py object instance added to patch...", 0); // post important info to the max window when new instance is created
 
     return(x);                  // return a reference to the object instance
+}
+
+
+void py_free(t_py *x)
+{
+    ;
 }
 
 
@@ -132,7 +168,6 @@ void py_bang(t_py *x)           // x = reference to this instance of the object
     Py_FinalizeEx();
 }
 
-
 void py_int(t_py *x, long n)    // x = the instance of the object; n = the int received in the left inlet
 {
     x->p_value0 = n;                    // store left operand value in instance's data structure
@@ -144,5 +179,9 @@ void py_in1(t_py *x, long n)    // x = the instance of the object, n = the int r
 {
     x->p_value1 = n;                    // just store right operand value in instance's data structure and do nothing else
 }
+
+
+
+
 
 
