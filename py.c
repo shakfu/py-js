@@ -49,6 +49,7 @@ typedef struct _py {
 void py_bang(t_py *x);
 void py_import(t_py *x, t_symbol *s);
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
+void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_int(t_py *x, long n);
 void py_in1(t_py *x, long n);
 void py_dblclick(t_py *x);
@@ -73,6 +74,7 @@ void ext_main(void *r)
     class_addmethod(c, (method)py_bang,    "bang",      0);
     class_addmethod(c, (method)py_import,  "import",    A_DEFSYM, 0);
     class_addmethod(c, (method)py_eval,    "anything",  A_GIMME, 0);
+    class_addmethod(c, (method)py_eval,    "run",       A_GIMME, 0);
     class_addmethod(c, (method)py_int,     "int",       A_LONG, 0);
     class_addmethod(c, (method)py_in1,     "in1",       A_LONG, 0);
 
@@ -160,6 +162,9 @@ void py_import(t_py *x, t_symbol *s) {
     post("import: %s", x->import->s_name);
 }
 
+void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
+    ;
+}
 
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
     PyObject *locals, *globals;
@@ -172,8 +177,10 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         // python init and setup
         Py_Initialize();
         locals = PyDict_New();
-        globals = PyDict_New();
-        PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
+        //globals = PyDict_New();
+        //PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
+        PyObject* main_module = PyImport_AddModule("__main__");
+        PyObject* globals = PyModule_GetDict(main_module);
 
         if (x->import != gensym("")) {
             post("eval-import: %s", x->import->s_name);
@@ -182,18 +189,32 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
             PyDict_SetItemString(globals, x->import->s_name, x_module);
             post("eval-imported: %s", x->import->s_name);
         }
-
         
         pval = PyRun_String(code_input, Py_eval_input, globals, locals);
+        if (pval) {
 
-        if PyLong_Check(pval) {
-            long int_result = PyLong_AsLong(pval);
-            outlet_int(x->p_outlet, int_result);
+            if PyLong_Check(pval) {
+                long int_result = PyLong_AsLong(pval);
+                outlet_int(x->p_outlet, int_result);
+            }
+
+            Py_DECREF(pval);
+
+        } else {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+                error("error ocurred: %s", code_input);
+            }
         }
-
-
-        Py_DECREF(pval);
+        
+        // --------------
+        // new refs
+        Py_DECREF(locals);
+        Py_DECREF(globals);
+        // borrowed refs
+        // Py_XDECREF(main_module);
         // Py_XDECREF(x_module);
+        // --------------
         Py_FinalizeEx();
 
     }
