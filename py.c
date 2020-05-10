@@ -103,11 +103,15 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
     x = (t_py *)object_alloc(py_class);
 
-    intin(x,1);                 // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
-    x->p_outlet = intout(x);    // create an int outlet and assign it to our outlet variable in the instance's data structure
+    // create inlet(s)
+    intin(x,1);      // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
+
+    // create outlet
+    x->p_outlet = outlet_new(x, NULL);
 
     x->import = gensym("");
     x->code = gensym("");
+
     x->p_value0 = 0;
     x->p_value1 = 0;
     
@@ -158,9 +162,8 @@ void py_import(t_py *x, t_symbol *s) {
 
 
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
-    long result;
     PyObject *locals, *globals;
-    PyObject *pval, *xval, *yval;
+    PyObject *pval;
 
     if( gensym(s->s_name) == gensym("eval") ){
         char *code_input = atom_getsym(argv)->s_name; 
@@ -184,9 +187,9 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         pval = PyRun_String(code_input, Py_eval_input, globals, locals);
 
         if PyLong_Check(pval) {
-            result = PyLong_AsLong(pval);
+            long int_result = PyLong_AsLong(pval);
+            outlet_int(x->p_outlet, int_result);
         }
-        outlet_int(x->p_outlet, result);    
 
 
         Py_DECREF(pval);
