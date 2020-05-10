@@ -136,6 +136,7 @@ void py_assist(t_py *x, void *b, long m, long a, char *s) // 4 final arguments a
 
 void py_import(t_py *x, t_symbol *s) {
     x->import = s;
+    post("import: %s", x->import->s_name);
 }
 
 
@@ -154,8 +155,14 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         globals = PyDict_New();
         PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
 
-        //PyObject* x_module = PyImport_ImportModule((x->module)->s_name);
-        //PyDict_SetItemString(globals, (x->module)->s_name, x_module);
+        if (x->import != gensym("")) {
+            post("eval-import: %s", x->import->s_name);
+
+            PyObject* x_module = PyImport_ImportModule(x->import->s_name);
+            PyDict_SetItemString(globals, x->import->s_name, x_module);
+            post("eval-imported: %s", x->import->s_name);
+        }
+
         
         pval = PyRun_String(code_input, Py_eval_input, globals, locals);
 
