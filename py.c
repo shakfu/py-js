@@ -28,7 +28,7 @@
     TODO
 
         - [ ] add right inlet bang after eval op ends
-        
+
 
 */
 
@@ -199,14 +199,49 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
         if (pval) {
 
-            if PyLong_Check(pval) {
+            if (PyLong_Check(pval)) {
                 long int_result = PyLong_AsLong(pval);
                 outlet_int(x->p_outlet, int_result);
             }
 
-            if PyFloat_Check(pval) {
+            if (PyFloat_Check(pval)) {
                 float float_result = (float) PyFloat_AsDouble(pval);
                 outlet_float(x->p_outlet, float_result);
+            }
+
+            if (PySequence_Check(pval)) {
+                Py_ssize_t length = PySequence_Length(pval);
+                PyObject *item;
+                t_atom atom_dummy[3];
+                t_atomarray* atom_array = atomarray_new(3, atom_dummy);
+
+                while ((item = PyIter_Next(pval))) {
+                    if PyLong_Check(item) {
+                        long int_item = PyLong_AsLong(item);
+                        atomarray_appendatom(atom_array, int_item);
+                    }
+                    if PyFloat_Check(item) {
+                        float float_item = PyFloat_AsDouble(item);
+                        atomarray_appendatom(atom_array float_item);
+                    }
+                    if PyUnicode_Check(item) {
+                        const char *unicode_result = PyUnicode_AsUTF8(item);
+                        atomarray_appendatom(atom_array, gensym(unicode_result));
+                    }
+
+                }
+
+                long array_size = (long) atomarray_getsize(atom_array);
+                t_atom *atoms = NULL;
+
+                atomarray_copyatoms(atom_array, &array_size, &atoms);
+                if (array_size && atoms) {
+                    sysmem_freeptr(atoms);
+                }   
+
+
+                // char *bytes_result = PyBytes_AsString(pval);
+                // outlet_symbol(x->p_outlet, bytes_result);
             }
 
             if PyBytes_Check(pval) {
