@@ -51,8 +51,9 @@ void py_import(t_py *x, t_symbol *s);
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_int(t_py *x, long n);
 void py_in1(t_py *x, long n);
+void py_dblclick(t_py *x);
 void py_assist(t_py *x, void *b, long m, long a, char *s);
-// void *py_new(long n);
+
 void *py_new(t_symbol *s, long argc, t_atom *argv);
 void py_free(t_py *x);
 
@@ -74,7 +75,10 @@ void ext_main(void *r)
     class_addmethod(c, (method)py_eval,    "anything",  A_GIMME, 0);
     class_addmethod(c, (method)py_int,     "int",       A_LONG, 0);
     class_addmethod(c, (method)py_in1,     "in1",       A_LONG, 0);
-    class_addmethod(c, (method)py_assist,  "assist",   A_CANT, 0);
+
+    /* you CAN'T call this from the patcher */
+    class_addmethod(c, (method)py_dblclick, "dblclick", A_CANT, 0);
+    class_addmethod(c, (method)py_assist,   "assist",   A_CANT, 0);
 
     // attributes
     CLASS_ATTR_SYM(c, "import", 0, t_py, import);
@@ -95,9 +99,9 @@ void ext_main(void *r)
 
 void *py_new(t_symbol *s, long argc, t_atom *argv)
 {
-    t_py *x;                    // local variable (pointer to a t_py data structure)
+    t_py *x;
 
-    x = (t_py *)object_alloc(py_class); // create a new instance of this object
+    x = (t_py *)object_alloc(py_class);
 
     intin(x,1);                 // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
     x->p_outlet = intout(x);    // create an int outlet and assign it to our outlet variable in the instance's data structure
@@ -139,6 +143,13 @@ void py_assist(t_py *x, void *b, long m, long a, char *s) // 4 final arguments a
         }
     }
 }
+
+
+void py_dblclick(t_py *x)
+{
+    object_post((t_object *)x, "I got a double-click");
+}
+
 
 void py_import(t_py *x, t_symbol *s) {
     x->import = s;
