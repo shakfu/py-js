@@ -38,6 +38,7 @@ typedef struct _py {    // defines our object's internal variables for each inst
 // these are prototypes for the methods that are defined below
 void py_bang(t_py *x);
 void py_import(t_py *x, t_symbol *s);
+void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_int(t_py *x, long n);
 void py_in1(t_py *x, long n);
 void py_assist(t_py *x, void *b, long m, long a, char *s);
@@ -61,10 +62,11 @@ void ext_main(void *r)
     // class_new() loads our external's class into Max's memory so it can be used in a patch
     // py_new = object creation method defined below
 
-    class_addmethod(c, (method)py_bang,     "bang",     0);         // the method it uses when it gets a bang in the left inlet
-    class_addmethod(c, (method)py_import, "import",     A_DEFSYM, 0);
-    class_addmethod(c, (method)py_int,      "int",      A_LONG, 0); // the method for an int in the left inlet (inlet 0)
-    class_addmethod(c, (method)py_in1,      "in1",      A_LONG, 0); // the method for an int in the right inlet (inlet 1)
+    class_addmethod(c, (method)py_bang,    "bang",      0);         // the method it uses when it gets a bang in the left inlet
+    class_addmethod(c, (method)py_import,  "import",    A_DEFSYM, 0);
+    class_addmethod(c, (method)py_eval,    "anything",  A_GIMME, 0);
+    class_addmethod(c, (method)py_int,     "int",       A_LONG, 0); // the method for an int in the left inlet (inlet 0)
+    class_addmethod(c, (method)py_in1,     "in1",       A_LONG, 0); // the method for an int in the right inlet (inlet 1)
     // "ft1" is the special message for floats
     class_addmethod(c, (method)py_assist,   "assist",   A_CANT, 0); // (optional) assistance method needs to be declared like this
 
@@ -134,6 +136,41 @@ void py_assist(t_py *x, void *b, long m, long a, char *s) // 4 final arguments a
 
 void py_import(t_py *x, t_symbol *s) {
     x->import = s;
+}
+
+
+void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
+    long result;
+    PyObject *locals, *globals;
+    PyObject *pval, *xval, *yval;
+
+    if( gensym(s->s_name) == gensym("eval") ){
+        char *code_input = atom_getsym(argv)->s_name; 
+        post("eval: %s", code_input);
+
+        // python init and setup
+        Py_Initialize();
+        locals = PyDict_New();
+        globals = PyDict_New();
+        PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
+
+        //PyObject* x_module = PyImport_ImportModule((x->module)->s_name);
+        //PyDict_SetItemString(globals, (x->module)->s_name, x_module);
+        
+        pval = PyRun_String(code_input, Py_eval_input, globals, locals);
+
+        if PyLong_Check(pval) {
+            result = PyLong_AsLong(pval);
+        }
+        outlet_int(x->p_outlet, result);    
+
+
+        Py_DECREF(pval);
+        // Py_XDECREF(x_module);
+        Py_FinalizeEx();
+
+    }
+   return;  
 }
 
 
