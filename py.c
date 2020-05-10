@@ -27,8 +27,7 @@
 
 typedef struct _py {    // defines our object's internal variables for each instance in a patch
     t_object p_ob;          // object header - ALL objects MUST begin with this...
-    t_symbol *module;     // python module to import
-    t_symbol *imports;      // python import: additional imports
+    t_symbol *import;      // python import: additional imports
     t_symbol *code;         // python code to evaluate to default outlet
     long p_value0;          // int value - received from the left inlet and stored internally for each object instance
     long p_value1;          // int value - received from the right inlet and stored internally for each object instance
@@ -38,6 +37,7 @@ typedef struct _py {    // defines our object's internal variables for each inst
 
 // these are prototypes for the methods that are defined below
 void py_bang(t_py *x);
+void py_import(t_py *x, t_symbol *s);
 void py_int(t_py *x, long n);
 void py_in1(t_py *x, long n);
 void py_assist(t_py *x, void *b, long m, long a, char *s);
@@ -62,17 +62,15 @@ void ext_main(void *r)
     // py_new = object creation method defined below
 
     class_addmethod(c, (method)py_bang,     "bang",     0);         // the method it uses when it gets a bang in the left inlet
+    class_addmethod(c, (method)py_import, "import",     A_DEFSYM, 0);
     class_addmethod(c, (method)py_int,      "int",      A_LONG, 0); // the method for an int in the left inlet (inlet 0)
     class_addmethod(c, (method)py_in1,      "in1",      A_LONG, 0); // the method for an int in the right inlet (inlet 1)
     // "ft1" is the special message for floats
     class_addmethod(c, (method)py_assist,   "assist",   A_CANT, 0); // (optional) assistance method needs to be declared like this
 
     // attributes
-    CLASS_ATTR_SYM(c, "module",  0, t_py, module);
-    CLASS_ATTR_BASIC(c, "module", 0);
-
-    CLASS_ATTR_SYM(c, "imports", 0, t_py, imports);
-    CLASS_ATTR_BASIC(c, "imports", 0);
+    CLASS_ATTR_SYM(c, "import", 0, t_py, import);
+    CLASS_ATTR_BASIC(c, "import", 0);
 
     CLASS_ATTR_SYM(c, "code",    0, t_py, code);
     CLASS_ATTR_BASIC(c, "code", 0);
@@ -96,9 +94,8 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
     intin(x,1);                 // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
     x->p_outlet = intout(x);    // create an int outlet and assign it to our outlet variable in the instance's data structure
 
-    x->module = gensym("a");
-    x->imports = gensym("b");
-    x->code = gensym("c");
+    x->import = gensym("");
+    x->code = gensym("");
     x->p_value0 = 0;            // set initial (default) left operand value in the instance's data structure
     x->p_value1 = 0;            // set initial (default) right operand value (n = variable passed to py_new)
     
@@ -135,6 +132,10 @@ void py_assist(t_py *x, void *b, long m, long a, char *s) // 4 final arguments a
     }
 }
 
+void py_import(t_py *x, t_symbol *s) {
+    x->import = s;
+}
+
 
 void py_bang(t_py *x)           // x = reference to this instance of the object
 {
@@ -154,7 +155,7 @@ void py_bang(t_py *x)           // x = reference to this instance of the object
     PyDict_SetItemString(globals, "x", xval);
     PyDict_SetItemString(globals, "y", yval);
 
-    pval = PyRun_String("x+y", Py_eval_input, globals, locals);
+    pval = PyRun_String("x**y", Py_eval_input, globals, locals);
 
     if PyLong_Check(pval) {
         sum = PyLong_AsLong(pval);
