@@ -25,6 +25,11 @@
         @load <script>
         @code <stored code>
 
+    TODO
+
+        - [ ] add right inlet bang after eval op ends
+        
+
 */
 
 #include "ext.h"            // you must include this - it contains the external object's link to available Max functions
@@ -170,7 +175,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
     PyObject *locals, *globals;
     PyObject *pval;
 
-    if( gensym(s->s_name) == gensym("eval") ){
+    if (gensym(s->s_name) == gensym("eval")) {
         char *code_input = atom_getsym(argv)->s_name; 
         post("eval: %s", code_input);
 
@@ -191,12 +196,44 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         }
         
         pval = PyRun_String(code_input, Py_eval_input, globals, locals);
+
         if (pval) {
 
             if PyLong_Check(pval) {
                 long int_result = PyLong_AsLong(pval);
                 outlet_int(x->p_outlet, int_result);
             }
+
+            if PyFloat_Check(pval) {
+                float float_result = (float) PyFloat_AsDouble(pval);
+                outlet_float(x->p_outlet, float_result);
+            }
+
+            if PyBytes_Check(pval) {
+                error("python bytes returned");
+                // char *bytes_result = PyBytes_AsString(pval);
+                // outlet_symbol(x->p_outlet, bytes_result);
+            }
+
+            // if PyUnicode_Check(pval) {
+            //     //const char *unicode_result = PyUnicode_AsUTF8(pval);
+            //     PyObject *unicode_list = PyUnicode_Split(pv, NULL, -1);
+
+            //     if PyIter_Check(unicode_list) {
+            //         PyObject *item;
+            //         while ((item = PyIter_Next(unicode_list))) {
+
+            //         }
+            //     }
+
+
+
+            //     t_atom atoms[10];
+            //     atom_array = t_atomarray* atomarray_new(10, atoms);
+
+
+            //     outlet_anything(x->p_outlet, unicode_result, 0, NULL);
+            // }
 
             Py_DECREF(pval);
 
@@ -218,7 +255,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         Py_FinalizeEx();
 
     }
-   return;  
+    return;  
 }
 
 
