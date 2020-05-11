@@ -212,32 +212,42 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
             if (PySequence_Check(pval)) {
                 Py_ssize_t length = PySequence_Length(pval);
                 PyObject *item;
-                t_atom atom_dummy[3];
-                t_atomarray* atom_array = atomarray_new(3, atom_dummy);
+                t_atom atoms[100];
+                atom_setsym(atoms, gensym("start"));
+                int i = 0;
+
+                // t_atomarray* atom_array = atomarray_new(3, atom_dummy);
 
                 while ((item = PyIter_Next(pval))) {
-                    if PyLong_Check(item) {
+
+                    if (PyLong_Check(item)) {
+                        i++;
                         long int_item = PyLong_AsLong(item);
-                        atomarray_appendatom(atom_array, int_item);
-                    }
-                    if PyFloat_Check(item) {
+                        atom_setlong(atoms+i, int_item);
+                        // atomarray_appendatom(atom_array, &int_item);
+                    } else if PyFloat_Check(item) {
+                        i++;
                         float float_item = PyFloat_AsDouble(item);
-                        atomarray_appendatom(atom_array float_item);
-                    }
-                    if PyUnicode_Check(item) {
+                        atom_setfloat(atoms+i, float_item);
+                        // atomarray_appendatom(atom_array, &float_item);
+                    } else if PyUnicode_Check(item) {
+                        i++;
                         const char *unicode_result = PyUnicode_AsUTF8(item);
-                        atomarray_appendatom(atom_array, gensym(unicode_result));
-                    }
+                        atom_setsym(atoms+i, gensym(unicode_result));
+                        // atomarray_appendatom(atom_array, gensym(unicode_result));
+                    } else continue;
 
                 }
 
-                long array_size = (long) atomarray_getsize(atom_array);
-                t_atom *atoms = NULL;
+                outlet_anything(x->p_outlet, gensym("ok"), i, atoms);
 
-                atomarray_copyatoms(atom_array, &array_size, &atoms);
-                if (array_size && atoms) {
-                    sysmem_freeptr(atoms);
-                }   
+                // long array_size = (long) atomarray_getsize(atom_array);
+                // t_atom *atoms = NULL;
+
+                // atomarray_copyatoms(atom_array, &array_size, &atoms);
+                // if (array_size && atoms) {
+                //     sysmem_freeptr(atoms);
+                   
 
 
                 // char *bytes_result = PyBytes_AsString(pval);
