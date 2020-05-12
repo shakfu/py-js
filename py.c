@@ -42,6 +42,12 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+/* other */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <string.h>
+
 #define PY_MAX_ATOMS 128
 #define PY_NOT_STRING(x) (!PyBytes_Check(x) && !PyByteArray_Check(x) && !PyUnicode_Check(x))
 
@@ -64,6 +70,13 @@ void *py_new(t_symbol *s, long argc, t_atom *argv);
 void py_free(t_py *x);
 
 t_class *py_class;      // global pointer to the object class - so max can reference the object
+
+/*--------------------------------------------------------------------------*/
+// helper functions
+
+
+
+
 
 
 /*--------------------------------------------------------------------------*/
@@ -147,28 +160,55 @@ void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 }
 
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
-    PyObject *locals, *globals;
-    PyObject *pval;
 
-    if (gensym(s->s_name) == gensym("eval")) {
-        char *code_input = atom_getsym(argv)->s_name; 
-        post("eval: %s", code_input);
+    if (gensym(s->s_name) == gensym("eval") || gensym(s->s_name) == gensym("exec") ||
+        gensym(s->s_name) == gensym("execfile")) {
+
+        PyObject *pval; // python value
+
+        char *py_argv = atom_getsym(argv)->s_name;
+        post("%s: %s", s->s_name, py_argv);
 
         // python init and setup
         Py_Initialize();
-        locals = PyDict_New();
-        PyObject* main_module = PyImport_AddModule("__main__");
-        PyObject* globals = PyModule_GetDict(main_module);
+        PyObject *main_module = PyImport_AddModule("__main__");
+        PyObject *globals = PyModule_GetDict(main_module);
+        PyObject *locals = PyDict_New();
 
         if (x->p_module != gensym("")) {
-            post("eval-import: %s", x->p_module->s_name);
+            post("to-import: %s", x->p_module->s_name);
 
             PyObject* x_module = PyImport_ImportModule(x->p_module->s_name);
             PyDict_SetItemString(globals, x->p_module->s_name, x_module);
-            post("eval-imported: %s", x->p_module->s_name);
+            post("imported: %s", x->p_module->s_name);
         }
         
-        pval = PyRun_String(code_input, Py_eval_input, globals, locals);
+        if (gensym(s->s_name) == gensym("eval")) {
+            post("eval:code: %s", py_argv);
+            pval = PyRun_String(py_argv, Py_eval_input, globals, locals);
+        } 
+
+        else if (gensym(s->s_name) == gensym("exec")) {
+            post("exec:code: %s", py_argv);
+            pval = PyRun_String(py_argv, Py_single_input, globals, locals);
+        }
+
+        else if (gensym(s->s_name) == gensym("execfile")) {
+            post("execfile:path: %s", py_argv);
+            FILE* fhandle = fopen(py_argv, "r");
+            if (fhandle != NULL) {
+                // char *fname = basename(py_argv); // TODO (Causes Crash!)
+                // post("execfile:fname: %s", fname);
+                pval = PyRun_File(fhandle, "script.py", Py_file_input, globals, locals);
+            }
+            fclose(fhandle);
+            post("execfile:fhandle closed: %s", py_argv);
+        }
+
+        else { // redundant!
+            error("this should not be reached!");
+            return;
+        }
 
         if (pval) {
 
@@ -210,8 +250,6 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
                     error("PyObject_GetIter(PyList) returns NULL");
                     return;
                 }
-
-
 
                 while ((item = PyIter_Next(iter)) != NULL) {
                     if (PyLong_Check(item)) {
@@ -255,7 +293,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         } else {
             if (PyErr_Occurred()) {
                 PyErr_Print();
-                error("error ocurred: %s", code_input);
+                error("error ocurred: %s", py_argv);
             }
         }
         
