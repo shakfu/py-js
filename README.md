@@ -1,6 +1,6 @@
 # py for max
 
-An attempt to make a max external for python
+An attempt to make a simple (and extensible) max external for python
 
 ## py/pyext docs (for inspiration!)
 
@@ -9,9 +9,15 @@ With the pyext you can use python classes to represent full-featured pd/Max mess
 Multithreading (detached methods) is supported for both objects.
 You can send messages to named objects or receive (with pyext) with Python methods.
 
+## Notes
+
+- outlet creation order is important in outlet_new(x, NULL)?
+
+
 
 ## TODO
 
+- [ ] refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
 - [ ] add right inlet bang after eval op ends
 - [ ] add @run <script>
 - [ ] add text edit object
