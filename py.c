@@ -261,6 +261,6 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
 void py_bang(t_py *x)
 {
-    post("bang");
+    outlet_bang(x->p_outlet);
 }
 
