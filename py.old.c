@@ -1,10 +1,7 @@
 /**
-	@file
 	py - a python max object
-	shakfu - github.com/shakfu
-
-	@ingroup	examples
-
+	
+	repo - github.com/shakfu/py
 
 	py object
 		@function

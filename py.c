@@ -1,18 +1,18 @@
 /**
     py.c - basic experiment in minimal max object for calling python code
 
-    This object has 1 inlet and 1 outlet
+    repo - github.com/shakfu/py
+
+    This object has 1 inlet and 2 outlets
 
     Basic Features
 
     1.  Per-Object Namespace. It responds to an 'import <module>' message in 
         the left inlet which loads a python module in its namespace.
 
-    2.  Code Messages. It responds to any other message in the left inlet
-        which is evaluated in the namespace and outputs results to the outlet
-    
-    3.  Rerun stored code. Tt responds to a 'bang' message in the left inlet
-        and runs the previously sent code message.
+    2.  Eval Messages. It responds to an 'eval <expression>' message in the left inlet
+        which is evaluated in the namespace and outputs results to the left outlet
+        and outputs a bang from the right outlet to signal end of evaluation.
 
     py interpreter object
         @import <module>
@@ -28,6 +28,8 @@
     TODO
 
         - [ ] add right inlet bang after eval op ends
+        - [ ] add @run <script>
+        - [ ] add text edit object
 
 
 */
@@ -39,6 +41,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+#define NOT_STRING(x) (!PyBytes_Check(x) && !PyByteArray_Check(x) && !PyUnicode_Check(x))
 
 typedef struct _py {
     t_object p_ob;          // object header - ALL objects MUST begin with this...
@@ -202,83 +205,65 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
             if (PyLong_Check(pval)) {
                 long int_result = PyLong_AsLong(pval);
                 outlet_int(x->p_outlet, int_result);
-            }
+            } 
 
-            if (PyFloat_Check(pval)) {
+            else if (PyFloat_Check(pval)) {
                 float float_result = (float) PyFloat_AsDouble(pval);
                 outlet_float(x->p_outlet, float_result);
             }
 
-            if (PySequence_Check(pval)) {
-                Py_ssize_t length = PySequence_Length(pval);
+            else if (PyUnicode_Check(pval)) {
+                const char *unicode_result = PyUnicode_AsUTF8(pval);
+                outlet_anything(x->p_outlet, gensym(unicode_result), 0, NIL);
+            }
+
+            else if (PyList_Check(pval)) {
+                PyObject *iter;
                 PyObject *item;
-                t_atom atoms[100];
-                atom_setsym(atoms, gensym("start"));
                 int i = 0;
 
-                // t_atomarray* atom_array = atomarray_new(3, atom_dummy);
+                t_atom atoms[128];
 
-                while ((item = PyIter_Next(pval))) {
-
-                    if (PyLong_Check(item)) {
-                        i++;
-                        long int_item = PyLong_AsLong(item);
-                        atom_setlong(atoms+i, int_item);
-                        // atomarray_appendatom(atom_array, &int_item);
-                    } else if PyFloat_Check(item) {
-                        i++;
-                        float float_item = PyFloat_AsDouble(item);
-                        atom_setfloat(atoms+i, float_item);
-                        // atomarray_appendatom(atom_array, &float_item);
-                    } else if PyUnicode_Check(item) {
-                        i++;
-                        const char *unicode_result = PyUnicode_AsUTF8(item);
-                        atom_setsym(atoms+i, gensym(unicode_result));
-                        // atomarray_appendatom(atom_array, gensym(unicode_result));
-                    } else continue;
-
+                if ((iter = PyObject_GetIter(pval)) == NULL) {
+                    error("((iter = PyObject_GetIter(pval)) == NULL)");
+                    return;
                 }
 
-                outlet_anything(x->p_outlet, gensym("ok"), i, atoms);
+                while ((item = PyIter_Next(iter)) != NULL) {
+                    if (PyLong_Check(item)) {
+                        long long_item = PyLong_AsLong(item);
+                        atom_setlong(atoms+i, long_item);
+                        post("%d long: %ld\n", i, long_item);
+                        i++;
+                    }
+                    
+                    if PyFloat_Check(item) {
+                        float float_item = PyFloat_AsDouble(item);
+                        atom_setfloat(atoms+i, float_item);
+                        post("%d float: %f\n", i, float_item);
+                        i++;
+                    }
 
-                // long array_size = (long) atomarray_getsize(atom_array);
-                // t_atom *atoms = NULL;
+                    if PyUnicode_Check(item) {
+                        const char *unicode_item = PyUnicode_AsUTF8(item);
+                        post("%d unicode: %s\n", i, unicode_item);
+                        atom_setsym(atoms+i, gensym(unicode_item));
+                        i++;
+                    }
 
-                // atomarray_copyatoms(atom_array, &array_size, &atoms);
-                // if (array_size && atoms) {
-                //     sysmem_freeptr(atoms);
-                   
-
-
-                // char *bytes_result = PyBytes_AsString(pval);
-                // outlet_symbol(x->p_outlet, bytes_result);
+                    Py_DECREF(item);
+                }
+                post("end pylist op: %d", i);
+                outlet_anything(x->p_outlet, gensym("res"), i, atoms);
             }
 
-            if PyBytes_Check(pval) {
-                error("python bytes returned");
-                // char *bytes_result = PyBytes_AsString(pval);
-                // outlet_symbol(x->p_outlet, bytes_result);
+            else {
+                t_atom atoms[3];
+                atom_setsym(atoms, gensym("could"));
+                atom_setsym(atoms + 1, gensym("not"));
+                atom_setsym(atoms + 2, gensym("evaluate"));
+                outlet_anything(x->p_outlet, gensym("failure"), 3, atoms);
             }
-
-            // if PyUnicode_Check(pval) {
-            //     //const char *unicode_result = PyUnicode_AsUTF8(pval);
-            //     PyObject *unicode_list = PyUnicode_Split(pv, NULL, -1);
-
-            //     if PyIter_Check(unicode_list) {
-            //         PyObject *item;
-            //         while ((item = PyIter_Next(unicode_list))) {
-
-            //         }
-            //     }
-
-
-
-            //     t_atom atoms[10];
-            //     atom_array = t_atomarray* atomarray_new(10, atoms);
-
-
-            //     outlet_anything(x->p_outlet, unicode_result, 0, NULL);
-            // }
 
             Py_DECREF(pval);
 
