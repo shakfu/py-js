@@ -10,6 +10,14 @@ Multithreading (detached methods) is supported for both objects.
 You can send messages to named objects or receive (with pyext) with Python methods.
 
 
+## TODO
+
+- [ ] add right inlet bang after eval op ends
+- [ ] add @run <script>
+- [ ] add text edit object
+- [ ] if attr has same name as method (the import saga), crash. fixed by making them different
+      but there should be another better way.
+
 
 ## Building
 

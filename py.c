@@ -45,8 +45,8 @@
 
 typedef struct _py {
     t_object p_ob;          // object header - ALL objects MUST begin with this...
-    t_symbol *import;       // python import: additional imports
-    t_symbol *code;         // python code to evaluate to default outlet
+    t_symbol *p_module;     // python import: additional imports
+    t_symbol *p_code;       // python code to evaluate to default outlet
     long p_value0;          // int value - received from the left inlet and stored internally for each object instance
     long p_value1;          // int value - received from the right inlet and stored internally for each object instance
     void *p_outlet;         // outlet creation - inlets are automatic, but objects must "own" their own outlets
@@ -91,10 +91,10 @@ void ext_main(void *r)
     class_addmethod(c, (method)py_assist,   "assist",   A_CANT, 0);
 
     // attributes
-    CLASS_ATTR_SYM(c, "import", 0, t_py, import);
-    CLASS_ATTR_BASIC(c, "import", 0);
+    CLASS_ATTR_SYM(c, "module", 0, t_py, p_module);
+    CLASS_ATTR_BASIC(c, "module", 0);
 
-    CLASS_ATTR_SYM(c, "code",    0, t_py, code);
+    CLASS_ATTR_SYM(c, "code",    0, t_py, p_code);
     CLASS_ATTR_BASIC(c, "code", 0);
 
 
@@ -113,23 +113,21 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
     x = (t_py *)object_alloc(py_class);
 
-    // create inlet(s)
-    intin(x,1);      // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
+    if (x) {
+        x->p_module = gensym("");
+        x->p_code = gensym("");
+        x->p_value0 = 0;
+        x->p_value1 = 0;
 
-    // create outlet
-    x->p_outlet = outlet_new(x, NULL);
-
-    x->import = gensym("");
-    x->code = gensym("");
-
-    x->p_value0 = 0;
-    x->p_value1 = 0;
-    
-    // process @arg attributes
-    attr_args_process(x, argc, argv);
-    
-    post("new py object instance added to patch...", 0);
-
+        // create inlet(s)
+        intin(x,1);      // create a second int inlet (leftmost inlet is automatic - all objects have one inlet by default)
+        // create outlet
+        x->p_outlet = outlet_new(x, NULL);
+        
+        // process @arg attributes
+        attr_args_process(x, argc, argv);
+    }    
+    //post("new py object instance added to patch...", 0);
     return(x);
 }
 
@@ -166,8 +164,8 @@ void py_dblclick(t_py *x)
 
 
 void py_import(t_py *x, t_symbol *s) {
-    x->import = s;
-    post("import: %s", x->import->s_name);
+    x->p_module = s;
+    post("import: %s", x->p_module->s_name);
 }
 
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
@@ -190,12 +188,12 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         PyObject* main_module = PyImport_AddModule("__main__");
         PyObject* globals = PyModule_GetDict(main_module);
 
-        if (x->import != gensym("")) {
-            post("eval-import: %s", x->import->s_name);
+        if (x->p_module != gensym("")) {
+            post("eval-import: %s", x->p_module->s_name);
 
-            PyObject* x_module = PyImport_ImportModule(x->import->s_name);
-            PyDict_SetItemString(globals, x->import->s_name, x_module);
-            post("eval-imported: %s", x->import->s_name);
+            PyObject* x_module = PyImport_ImportModule(x->p_module->s_name);
+            PyDict_SetItemString(globals, x->p_module->s_name, x_module);
+            post("eval-imported: %s", x->p_module->s_name);
         }
         
         pval = PyRun_String(code_input, Py_eval_input, globals, locals);
