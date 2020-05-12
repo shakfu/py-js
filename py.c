@@ -112,12 +112,12 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         x->p_code = gensym("");
 
         // create inlet(s)
-        // create outlet
+        // create outlet(s)
         x->p_outlet = outlet_new(x, NULL);
         
         // process @arg attributes
         attr_args_process(x, argc, argv);
-    }    
+    }
     post("new py object instance added to patch...", 0);
     return(x);
 }
