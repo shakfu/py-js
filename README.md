@@ -17,6 +17,7 @@ You can send messages to named objects or receive (with pyext) with Python metho
 - [ ] add text edit object
 - [ ] if attr has same name as method (the import saga), crash. fixed by making them different
       but there should be another better way.
+- [ ] add cythonized access to max c-api..?
 
 
 ## Building
