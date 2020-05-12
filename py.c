@@ -34,14 +34,16 @@
 
 */
 
-#include "ext.h"            // you must include this - it contains the external object's link to available Max functions
+/* max/msp api */
+#include "ext.h"
 #include "ext_obex.h"       // this is required for all objects using the newer style for writing objects.
 
 /* python */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#define NOT_STRING(x) (!PyBytes_Check(x) && !PyByteArray_Check(x) && !PyUnicode_Check(x))
+#define PY_MAX_ATOMS 128
+#define PY_NOT_STRING(x) (!PyBytes_Check(x) && !PyByteArray_Check(x) && !PyUnicode_Check(x))
 
 typedef struct _py {
     t_object p_ob;          // object header - ALL objects MUST begin with this...
@@ -155,8 +157,6 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         // python init and setup
         Py_Initialize();
         locals = PyDict_New();
-        //globals = PyDict_New();
-        //PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
         PyObject* main_module = PyImport_AddModule("__main__");
         PyObject* globals = PyModule_GetDict(main_module);
 
@@ -192,12 +192,26 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
                 PyObject *item;
                 int i = 0;
 
-                t_atom atoms[128];
+                t_atom atoms_static[PY_MAX_ATOMS];
+                t_atom *atoms;
+                int is_dynamic = 0;
+
+                Py_ssize_t list_size = PyList_Size(pval);
+
+                if (list_size > PY_MAX_ATOMS) {
+                    post("dynamically increasing size of atom array");
+                    atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, list_size+1);
+                    is_dynamic = 1;
+                } else {
+                    atoms = atoms_static;
+                }
 
                 if ((iter = PyObject_GetIter(pval)) == NULL) {
-                    error("((iter = PyObject_GetIter(pval)) == NULL)");
+                    error("PyObject_GetIter(PyList) returns NULL");
                     return;
                 }
+
+
 
                 while ((item = PyIter_Next(iter)) != NULL) {
                     if (PyLong_Check(item)) {
@@ -223,16 +237,17 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
                     Py_DECREF(item);
                 }
-                post("end pylist op: %d", i);
                 outlet_anything(x->p_outlet, gensym("res"), i, atoms);
+                post("end pylist op: %d", i);
+
+                if (is_dynamic) {
+                    post("restoring to static atom array");
+                    atom_dynamic_end(atoms_static, atoms);
+                }
             }
 
             else {
-                t_atom atoms[3];
-                atom_setsym(atoms, gensym("could"));
-                atom_setsym(atoms + 1, gensym("not"));
-                atom_setsym(atoms + 2, gensym("evaluate"));
-                outlet_anything(x->p_outlet, gensym("failure"), 3, atoms);
+                error("failure to evalute expression");
             }
 
             Py_DECREF(pval);
