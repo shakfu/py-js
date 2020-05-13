@@ -49,10 +49,11 @@
 #include <Python.h>
 
 /* other */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#include <string.h>
+#include "maxapi.h"
+// #ifndef _GNU_SOURCE
+// #define _GNU_SOURCE
+// #endif
+// #include <string.h>
 
 #define PY_MAX_ATOMS 128
 #define PY_NOT_STRING(x) (!PyBytes_Check(x) && !PyByteArray_Check(x) && !PyUnicode_Check(x))
@@ -127,8 +128,6 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
     x = (t_py *)object_alloc(py_class);
 
-    Py_Initialize();
-
     if (x) {
         x->p_module = gensym("");
         x->p_code = gensym("");
@@ -153,6 +152,19 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
 void py_init(t_py *x)
 {
+    // PyObject *pmodule;
+    // wchar_t *program = "pymx";
+
+    /* Add a built-in module, before Py_Initialize */
+    if (PyImport_AppendInittab("maxapi", PyInit_maxapi) == -1) {
+        error("Error: could not extend in-built modules table\n");
+    }
+
+    // Py_SetProgramName(program);
+
+
+    Py_Initialize();
+
     // python init
     PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
     x->p_globals = PyModule_GetDict(main_module);
