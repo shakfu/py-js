@@ -7,12 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		127B315B246C3DBF0020E841 /* maxapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 127B3159246C3DBF0020E841 /* maxapi.c */; };
+		127B315C246C3DBF0020E841 /* maxapi.h in Headers */ = {isa = PBXBuildFile; fileRef = 127B315A246C3DBF0020E841 /* maxapi.h */; };
 		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
 		12D5454E2463B03E00BE010E /* Tk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454D2463B03E00BE010E /* Tk.framework */; };
 		22CF122B0EE9AAAD0054F513 /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 22CF122A0EE9AAAD0054F513 /* py.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		127B3159246C3DBF0020E841 /* maxapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = maxapi.c; sourceTree = "<group>"; };
+		127B315A246C3DBF0020E841 /* maxapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maxapi.h; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		12D5454D2463B03E00BE010E /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = System/Library/Frameworks/Tk.framework; sourceTree = SDKROOT; };
 		22CF10220EE984600054F513 /* maxmspsdk.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = maxmspsdk.xcconfig; path = ../../maxmspsdk.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -36,6 +40,8 @@
 		089C166AFE841209C02AAC07 /* iterator */ = {
 			isa = PBXGroup;
 			children = (
+				127B3159246C3DBF0020E841 /* maxapi.c */,
+				127B315A246C3DBF0020E841 /* maxapi.h */,
 				22CF10220EE984600054F513 /* maxmspsdk.xcconfig */,
 				22CF122A0EE9AAAD0054F513 /* py.c */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
@@ -68,6 +74,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				127B315C246C3DBF0020E841 /* maxapi.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -144,6 +151,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				22CF122B0EE9AAAD0054F513 /* py.c in Sources */,
+				127B315B246C3DBF0020E841 /* maxapi.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
