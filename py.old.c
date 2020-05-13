@@ -56,9 +56,6 @@ typedef struct _py {
     t_symbol *p_module;     // python import: additional imports
     t_symbol *p_code;       // python code to evaluate to default outlet
     void *p_outlet;         // outlet creation - inlets are automatic, but objects must "own" their own outlets
-    // python specific
-    PyObject *p_main_module;// python parent module 
-    PyObject *p_globals;    // global python namespace 
 } t_py;
 
 
@@ -123,14 +120,9 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
     x = (t_py *)object_alloc(py_class);
 
-    Py_Initialize();
-
     if (x) {
         x->p_module = gensym("");
         x->p_code = gensym("");
-
-        x->p_main_module = PyImport_AddModule("__main__");
-        x->p_globals = PyModule_GetDict(x->p_main_module);
 
         // create inlet(s)
         // create outlet(s)
@@ -139,7 +131,6 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         // process @arg attributes
         attr_args_process(x, argc, argv);
     }
-
     post("new py object instance added to patch...", 0);
     return(x);
 }
@@ -147,10 +138,7 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
 void py_free(t_py *x)
 {
-    post("freeing globals and terminating py interpreter...")
-    Py_DECREF(x->p_globals);
-    // Py_DECREF(x->p_main_module);
-    Py_FinalizeEx();
+    ;
 }
 
 
@@ -181,38 +169,41 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         char *py_argv = atom_getsym(argv)->s_name;
         post("%s: %s", s->s_name, py_argv);
 
-        // local are per eval
+        // python init and setup
+        Py_Initialize();
+        PyObject *main_module = PyImport_AddModule("__main__");
+        PyObject *globals = PyModule_GetDict(main_module);
         PyObject *locals = PyDict_New();
 
         if (x->p_module != gensym("")) {
             post("to-import: %s", x->p_module->s_name);
 
             PyObject* x_module = PyImport_ImportModule(x->p_module->s_name);
-            PyDict_SetItemString(x->p_globals, x->p_module->s_name, x_module);
+            PyDict_SetItemString(globals, x->p_module->s_name, x_module);
             post("imported: %s", x->p_module->s_name);
         }
+        
+        if (gensym(s->s_name) == gensym("eval")) {
+            post("eval:code: %s", py_argv);
+            pval = PyRun_String(py_argv, Py_eval_input, globals, locals);
+        } 
 
-        if (gensym(s->s_name) == gensym("execfile")) {
+        else if (gensym(s->s_name) == gensym("exec")) {
+            post("exec:code: %s", py_argv);
+            pval = PyRun_String(py_argv, Py_single_input, globals, locals);
+        }
+
+        else if (gensym(s->s_name) == gensym("execfile")) {
             post("execfile:path: %s", py_argv);
             FILE* fhandle = fopen(py_argv, "r");
             if (fhandle != NULL) {
                 // char *fname = basename(py_argv); // TODO (Causes Crash!)
                 // post("execfile:fname: %s", fname);
-                pval = PyRun_File(fhandle, "script.py", Py_file_input, x->p_globals, locals);
+                pval = PyRun_File(fhandle, "script.py", Py_file_input, globals, locals);
             }
             fclose(fhandle);
             post("execfile:fhandle closed: %s", py_argv);
         }
-
-        else if (gensym(s->s_name) == gensym("exec")) {
-            post("exec:code: %s", py_argv);
-            pval = PyRun_String(py_argv, Py_single_input, x->p_globals, locals);
-        }
-
-        else if (gensym(s->s_name) == gensym("eval")) {
-            post("eval:code: %s", py_argv);
-            pval = PyRun_String(py_argv, Py_eval_input, x->p_globals, locals);
-        } 
 
         else { // redundant!
             error("this should not be reached!");
@@ -309,12 +300,12 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         // --------------
         // new refs
         Py_DECREF(locals);
-        // Py_DECREF(globals);
+        Py_DECREF(globals);
         // borrowed refs
         // Py_XDECREF(main_module);
         // Py_XDECREF(x_module);
         // --------------
-        // Py_FinalizeEx();
+        Py_FinalizeEx();
 
     }
     return;  
