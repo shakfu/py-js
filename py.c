@@ -8,22 +8,29 @@
     Basic Features
 
     1.  Per-Object Namespace. It responds to an 'import <module>' message in 
-        the left inlet which loads a python module in its namespace.
+        the left inlet which loads a python module in its namespace. Each new import
+        (like python) adds to the namespace.
 
     2.  Eval Messages. It responds to an 'eval <expression>' message in the left inlet
         which is evaluated in the namespace and outputs results to the left outlet
         and outputs a bang from the right outlet to signal end of evaluation.
 
     py interpreter object
-        @import <module>
-        @eval <code>
+        attributes
+            @imports
+            @code
 
-        (phase 1)
-        @run <script>
+        messages
+            import <module> [adds to @imports]
+            eval <code> or eval @file <path>
+            exec <code> or exec @file <path>
+            run  <code> or run  @file <path>
 
-        (phase 2)
-        @load <script>
-        @code <stored code>
+            (phase 2)
+            load @file <path> -> into @code (for persistence) and texeditor edits
+
+            (phase N)
+            embed ipython kernel? (-;
 
     TODO
 
@@ -31,12 +38,11 @@
         - [ ] add @run <script>
         - [ ] add text edit object
 
-
 */
 
 /* max/msp api */
 #include "ext.h"
-#include "ext_obex.h"       // this is required for all objects using the newer style for writing objects.
+#include "ext_obex.h" // this is required for all objects using the newer style for writing objects.
 
 /* python */
 #define PY_SSIZE_T_CLEAN
@@ -57,7 +63,6 @@ typedef struct _py {
     t_symbol *p_code;       // python code to evaluate to default outlet
     void *p_outlet;         // outlet creation - inlets are automatic, but objects must "own" their own outlets
     // python specific
-    PyObject *p_main_module;// python parent module (borrowed ref)
     PyObject *p_globals;    // global python namespace (new ref)
 } t_py;
 
@@ -76,7 +81,7 @@ t_class *py_class;      // global pointer to the object class - so max can refer
 
 /*--------------------------------------------------------------------------*/
 // helper functions
-
+void py_init(t_py *x);
 
 
 
@@ -94,8 +99,8 @@ void ext_main(void *r)
     // methods
     class_addmethod(c, (method)py_bang,    "bang",      0);
     class_addmethod(c, (method)py_import,  "import",    A_DEFSYM, 0);
-    class_addmethod(c, (method)py_eval,    "anything",  A_GIMME, 0);
-    class_addmethod(c, (method)py_run,     "run",       A_GIMME, 0);
+    class_addmethod(c, (method)py_eval,    "anything",  A_GIMME,  0);
+    class_addmethod(c, (method)py_run,     "run",       A_GIMME,  0);
 
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)py_dblclick, "dblclick", A_CANT, 0);
@@ -107,11 +112,10 @@ void ext_main(void *r)
     CLASS_ATTR_SYM(c, "code",    0, t_py, p_code);
     CLASS_ATTR_BASIC(c, "code", 0);
 
-
     class_register(CLASS_BOX, c);
     py_class = c;
 
-    post("py object loaded...",0);  // post any important info to the max window when our class is loaded
+    post("py object loaded...",0);
 }
 
 
@@ -136,14 +140,23 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         // process @arg attributes
         attr_args_process(x, argc, argv);
 
-        // python init
-        x->p_main_module = PyImport_AddModule("__main__");
-        x->p_globals = PyModule_GetDict(x->p_main_module);
-        // TODO: add init_py() here add module / import extension ...
+        // // python init
+        py_init(x);
+        // PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
+        // x->p_globals = PyModule_GetDict(main_module);
+        // // TODO: add init_py() here add module / import extension ...
     }
 
     post("new py object instance added to patch...", 0);
     return(x);
+}
+
+void py_init(t_py *x)
+{
+    // python init
+    PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
+    x->p_globals = PyModule_GetDict(main_module);
+    // TODO: add init_py() here add module / import extension ...
 }
 
 
@@ -173,7 +186,14 @@ void py_import(t_py *x, t_symbol *s) {
 }
 
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
-    ;
+
+    if (gensym(s->s_name) == gensym("run")) {
+        PyObject *obj = Py_BuildValue("s", atom_getsym(argv)->s_name);
+         FILE *file = _Py_fopen_obj(obj, "r+");
+         if (file != NULL) {
+             PyRun_SimpleFile(file, "script.py");
+         }        
+    }
 }
 
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
@@ -233,7 +253,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
                 outlet_anything(x->p_outlet, gensym(unicode_result), 0, NIL);
             }
 
-            else if (PyList_Check(pval)) {
+            else if (PyList_Check(pval) || PyTuple_Check(pval) || PyAnySet_Check(pval)) {
                 PyObject *iter;
                 PyObject *item;
                 int i = 0;
@@ -242,18 +262,19 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
                 t_atom *atoms;
                 int is_dynamic = 0;
 
-                Py_ssize_t list_size = PyList_Size(pval);
+                Py_ssize_t seq_size = PySequence_Length(pval);
 
-                if (list_size > PY_MAX_ATOMS) {
+                if (seq_size > PY_MAX_ATOMS) {
                     post("dynamically increasing size of atom array");
-                    atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, list_size+1);
+                    atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, seq_size+1);
                     is_dynamic = 1;
+
                 } else {
                     atoms = atoms_static;
                 }
 
                 if ((iter = PyObject_GetIter(pval)) == NULL) {
-                    error("PyObject_GetIter(PyList) returns NULL");
+                    error("PyObject_GetIter(PyList||PyTuple||PySet) returns NULL");
                     return;
                 }
 
@@ -291,7 +312,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
             }
 
             else {
-                error("failure to evalute expression");
+                error("failure to evaluate expression");
             }
 
             Py_DECREF(pval);

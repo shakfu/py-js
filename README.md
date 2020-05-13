@@ -13,6 +13,10 @@ You can send messages to named objects or receive (with pyext) with Python metho
 
 - outlet creation order is important in outlet_new(x, NULL)?
 
+- Py_eval_input is equivalent to the built-in eval -- it evaluates an expression.
+- Py_file_input is equivalent to exec -- It executes Python code, but does not return anything.
+- Py_single_input evaluates an expression and prints its value -- used in the interpreter.
+
 
 
 ## TODO
