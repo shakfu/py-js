@@ -57,8 +57,8 @@ typedef struct _py {
     t_symbol *p_code;       // python code to evaluate to default outlet
     void *p_outlet;         // outlet creation - inlets are automatic, but objects must "own" their own outlets
     // python specific
-    PyObject *p_main_module;// python parent module 
-    PyObject *p_globals;    // global python namespace 
+    PyObject *p_main_module;// python parent module (borrowed ref)
+    PyObject *p_globals;    // global python namespace (new ref)
 } t_py;
 
 
@@ -129,15 +129,17 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         x->p_module = gensym("");
         x->p_code = gensym("");
 
-        x->p_main_module = PyImport_AddModule("__main__");
-        x->p_globals = PyModule_GetDict(x->p_main_module);
-
         // create inlet(s)
         // create outlet(s)
         x->p_outlet = outlet_new(x, NULL);
         
         // process @arg attributes
         attr_args_process(x, argc, argv);
+
+        // python init
+        x->p_main_module = PyImport_AddModule("__main__");
+        x->p_globals = PyModule_GetDict(x->p_main_module);
+        // TODO: add init_py() here add module / import extension ...
     }
 
     post("new py object instance added to patch...", 0);
@@ -147,9 +149,8 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
 void py_free(t_py *x)
 {
-    post("freeing globals and terminating py interpreter...")
+    post("freeing globals and terminating py interpreter...");
     Py_DECREF(x->p_globals);
-    // Py_DECREF(x->p_main_module);
     Py_FinalizeEx();
 }
 
@@ -163,8 +164,12 @@ void py_dblclick(t_py *x)
 
 
 void py_import(t_py *x, t_symbol *s) {
-    x->p_module = s;
-    post("import: %s", x->p_module->s_name);
+    //x->p_module = s;
+    if (s != gensym("")) {
+        PyObject* x_module = PyImport_ImportModule(s->s_name); // x_module borrrowed ref
+        PyDict_SetItemString(x->p_globals, s->s_name, x_module);
+        post("imported: %s", s->s_name);
+    }
 }
 
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
@@ -183,14 +188,6 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
         // local are per eval
         PyObject *locals = PyDict_New();
-
-        if (x->p_module != gensym("")) {
-            post("to-import: %s", x->p_module->s_name);
-
-            PyObject* x_module = PyImport_ImportModule(x->p_module->s_name);
-            PyDict_SetItemString(x->p_globals, x->p_module->s_name, x_module);
-            post("imported: %s", x->p_module->s_name);
-        }
 
         if (gensym(s->s_name) == gensym("execfile")) {
             post("execfile:path: %s", py_argv);
@@ -309,12 +306,10 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         // --------------
         // new refs
         Py_DECREF(locals);
-        // Py_DECREF(globals);
         // borrowed refs
         // Py_XDECREF(main_module);
         // Py_XDECREF(x_module);
         // --------------
-        // Py_FinalizeEx();
 
     }
     return;  
