@@ -1,6 +1,7 @@
 # dirs to exclude
 build/
 example.c
+.DS_Store
 
 # Prerequisites
 *.d

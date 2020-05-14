@@ -139,11 +139,8 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         // process @arg attributes
         attr_args_process(x, argc, argv);
 
-        // // python init
+        // python init
         py_init(x);
-        // PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
-        // x->p_globals = PyModule_GetDict(main_module);
-        // // TODO: add init_py() here add module / import extension ...
     }
 
     post("new py object instance added to patch...", 0);
@@ -339,9 +336,6 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         // --------------
         // new refs
         Py_DECREF(locals);
-        // borrowed refs
-        // Py_XDECREF(main_module);
-        // Py_XDECREF(x_module);
         // --------------
 
     }
