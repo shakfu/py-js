@@ -84,7 +84,33 @@ t_class *py_class;      // global pointer to the object class - so max can refer
 // helper functions
 void py_init(t_py *x);
 
+static int numargs=0;
 
+/* Return the number of arguments of the application command line */
+static PyObject*
+emb_numargs(PyObject *self, PyObject *args)
+{
+    if(!PyArg_ParseTuple(args, ":numargs"))
+        return NULL;
+    return PyLong_FromLong(numargs);
+}
+
+static PyMethodDef EmbMethods[] = {
+    {"numargs", emb_numargs, METH_VARARGS,
+     "Return the number of arguments received by the process."},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyModuleDef EmbModule = {
+    PyModuleDef_HEAD_INIT, "emb", NULL, -1, EmbMethods,
+    NULL, NULL, NULL, NULL
+};
+
+static PyObject*
+PyInit_emb(void)
+{
+    return PyModule_Create(&EmbModule);
+}
 
 
 
@@ -158,7 +184,8 @@ void py_init(t_py *x)
     }
 
     // Py_SetProgramName(program);
-
+    numargs = 20;
+    PyImport_AppendInittab("emb", &PyInit_emb);
 
     Py_Initialize();
 
@@ -345,6 +372,14 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
 void py_bang(t_py *x)
 {
+    // t_object *obj;
+    // t_atom arv;
+
+    // if ((obj = object_findregistered(CLASS_BOX, "marty")) != NULL) {
+        // object_method_typed(obj, gensym("bang"), 0, NULL, &arv); 
+        // object_method_parse(obj, gensym("bang"), NULL, NULL);
+        // post("object found");
+    // }
+
     outlet_bang(x->p_outlet);
 }
-
