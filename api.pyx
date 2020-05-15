@@ -195,7 +195,7 @@ cdef extern from "ext_dictionary.h":
     ctypedef struct t_dictionary
 
     cdef t_dictionary* dictionary_new()
-    cdef t_dictionary* dictionary_prototypefromclass(t_class *c)
+    # [private] cdef t_dictionary* dictionary_prototypefromclass(t_class *c)
     cdef t_max_err dictionary_appendlong(t_dictionary *d, t_symbol *key, t_atom_long value)
     cdef t_max_err dictionary_appendfloat(t_dictionary *d, t_symbol *key, double value) 
     cdef t_max_err dictionary_appendsym(t_dictionary *d, t_symbol *key, t_symbol *value) 
@@ -506,7 +506,7 @@ txt = 'Hello from Max!'
 cpdef public str hello():
     return txt
 
-cpdef public void pypost(str s):
+cpdef public void py_post(str s):
     post(s)
 
 

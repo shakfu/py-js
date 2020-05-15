@@ -61,7 +61,7 @@ build-extension:
 
 test:
 	$(call section,"testing planned")
-	echo "test me"
+	echo "remember to test!"
 
 
 # STYLING
