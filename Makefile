@@ -60,7 +60,8 @@ build-extension:
 .PHONY: test
 
 test:
-	$(call section,"testing here (planned)")
+	$(call section,"testing planned")
+	echo "test me"
 
 
 # STYLING
