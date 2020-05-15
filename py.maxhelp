@@ -56,8 +56,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 345.5, 13.0, 137.0, 22.0 ],
-					"text" : "eval str(emb.numargs())"
+					"patching_rect" : [ 345.5, 13.0, 147.0, 22.0 ],
+					"text" : "eval str(emb.classname())"
 				}
 
 			}
@@ -80,8 +80,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 5.0, 13.0, 149.0, 22.0 ],
-					"text" : "eval maxapi.pypost('hello')"
+					"patching_rect" : [ 5.0, 13.0, 126.0, 22.0 ],
+					"text" : "eval api.pypost('hello')"
 				}
 
 			}
@@ -128,8 +128,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 10.0, 43.0, 109.0, 22.0 ],
-					"text" : "eval maxapi.hello()"
+					"patching_rect" : [ 10.0, 43.0, 87.0, 22.0 ],
+					"text" : "eval api.hello()"
 				}
 
 			}
@@ -140,8 +140,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 49.0, 67.0, 89.0, 22.0 ],
-					"text" : "eval maxapi.txt"
+					"patching_rect" : [ 49.0, 67.0, 66.0, 22.0 ],
+					"text" : "eval api.txt"
 				}
 
 			}
@@ -152,8 +152,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 101.0, 102.0, 84.0, 22.0 ],
-					"text" : "import maxapi"
+					"patching_rect" : [ 101.0, 102.0, 61.0, 22.0 ],
+					"text" : "import api"
 				}
 
 			}
@@ -342,8 +342,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 92.0, 342.0, 187.0, 22.0 ],
-					"text" : "\"20\""
+					"patching_rect" : [ 92.0, 342.0, 187.0, 22.0 ]
 				}
 
 			}
