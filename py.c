@@ -71,6 +71,8 @@ typedef struct _py {
 // these are prototypes for the methods that are defined below
 void py_bang(t_py *x);
 void py_import(t_py *x, t_symbol *s);
+void py_register(t_py *x, t_symbol *s);
+void py_find(t_py *x, t_symbol *s);
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_dblclick(t_py *x);
@@ -84,17 +86,57 @@ t_class *py_class;      // global pointer to the object class - so max can refer
 // helper functions
 void py_init(t_py *x);
 
-/* Return the number of arguments of the application command line */
-static PyObject*
-emb_classname(PyObject *self, PyObject *args)
+void post_containers(t_py *x)
+{
+    t_patcher *p;
+    t_box *b;
+    // t_py *py;
+    t_max_err err;
+
+    err = object_obex_lookup(x, gensym("#P"), (t_object **)&p);
+    err = object_obex_lookup(x, gensym("#B"), (t_object **)&b);
+    // err = object_obex_lookup(x, gensym("py"), (t_object **)&py);
+
+    post("my patcher is located at 0x%X", p);
+    post("my box is located at 0x%X", b);
+    // post("my py object is located at 0x%X", py); // gives 0x0
+}
+
+/*--------------------------------------------------------------------------*/
+/* helper methods for embedded python interpreter
+    The embedded python interpreter has access to calling application
+    - external modules through imports msgs
+    - embdedded modules:
+        1. emb & emb_<methods> (which gives it selective access to the calling app)
+        2. api: cython wrapped max api
+
+*/
+static PyObject* emb_classname(PyObject *self, PyObject *args)
 {   //            global-------------vvvvvvvv
     const char *name = class_nameget(py_class)->s_name;
     return Py_BuildValue("s", name);
 }
 
+static PyObject *emb_check(PyObject *self, PyObject *args)
+{
+    t_object *obj = (t_object *)object_findregistered(gensym("myspace"), gensym("me"));
+    if (obj) {
+        ((t_py *)obj)->p_module = gensym("hello-python");
+        return Py_BuildValue("s", "bang-bang");
+    } else {
+        return Py_BuildValue("s", "no-bang");
+    }
+}
+
+
 static PyMethodDef EmbMethods[] = {
     {"classname", emb_classname, METH_VARARGS,
      "Return the classname of the max external."},
+
+    {"check", emb_check, METH_VARARGS,
+     "Bang if test succeeds."},
+
+     /* terminating sentinel */
     {NULL, NULL, 0, NULL}
 };
 
@@ -103,8 +145,7 @@ static PyModuleDef EmbModule = {
     NULL, NULL, NULL, NULL
 };
 
-static PyObject*
-PyInit_emb(void)
+static PyObject* PyInit_emb(void)
 {
     return PyModule_Create(&EmbModule);
 }
@@ -121,10 +162,12 @@ void ext_main(void *r)
                   0L /* leave NULL!! */, A_GIMME, 0);
 
     // methods
-    class_addmethod(c, (method)py_bang,    "bang",      0);
-    class_addmethod(c, (method)py_import,  "import",    A_DEFSYM, 0);
-    class_addmethod(c, (method)py_eval,    "anything",  A_GIMME,  0);
-    class_addmethod(c, (method)py_run,     "run",       A_GIMME,  0);
+    class_addmethod(c, (method)py_bang,       "bang",       0);
+    class_addmethod(c, (method)py_import,     "import",     A_DEFSYM, 0);
+    class_addmethod(c, (method)py_register,   "register",   A_DEFSYM, 0);
+    class_addmethod(c, (method)py_find,       "find",       A_DEFSYM, 0);
+    class_addmethod(c, (method)py_eval,       "anything",   A_GIMME,  0);
+    class_addmethod(c, (method)py_run,        "run",        A_GIMME,  0);
 
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)py_dblclick, "dblclick", A_CANT, 0);
@@ -216,6 +259,18 @@ void py_import(t_py *x, t_symbol *s) {
         post("imported: %s", s->s_name);
     }
 }
+
+
+void py_register(t_py *x, t_symbol *s) {
+    object_register(gensym("myspace"), gensym("me"), x);
+    post("object registered");
+}
+
+void py_find(t_py *x, t_symbol *s) {
+    t_object *obj = (t_object *)object_findregistered(gensym("myspace"), gensym("me"));
+    if (obj) py_bang((t_py *)obj);
+}
+
 
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
@@ -351,8 +406,19 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
         } else {
             if (PyErr_Occurred()) {
-                PyErr_Print();
-                error("error ocurred: %s", py_argv);
+                // PyErr_Print();
+                PyObject *ptype, *pvalue, *ptraceback;
+                PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+                //pvalue contains error message
+                //ptraceback contains stack snapshot and many other information
+                //(see python traceback structure)
+
+                //Get error message
+                const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+                error("%s: %s", pStrErrorMessage, py_argv);
+                Py_DECREF(ptype);
+                Py_DECREF(pvalue);
+                Py_DECREF(ptraceback);
             }
         }
         
@@ -368,14 +434,5 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
 void py_bang(t_py *x)
 {
-    // t_object *obj;
-    // t_atom arv;
-
-    // if ((obj = object_findregistered(CLASS_BOX, "marty")) != NULL) {
-        // object_method_typed(obj, gensym("bang"), 0, NULL, &arv); 
-        // object_method_parse(obj, gensym("bang"), NULL, NULL);
-        // post("object found");
-    // }
-
     outlet_bang(x->p_outlet);
 }

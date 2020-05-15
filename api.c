@@ -1039,7 +1039,7 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 /* Module declarations from 'api' */
 __PYX_EXTERN_C PyObject *hello(int __pyx_skip_dispatch); /*proto*/
-__PYX_EXTERN_C void pypost(PyObject *, int __pyx_skip_dispatch); /*proto*/
+__PYX_EXTERN_C void py_post(PyObject *, int __pyx_skip_dispatch); /*proto*/
 #define __Pyx_MODULE_NAME "api"
 extern int __pyx_module_is_main_api;
 int __pyx_module_is_main_api = 0;
@@ -1058,7 +1058,7 @@ static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_txt;
 static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
-static PyObject *__pyx_pf_3api_2pypost(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
+static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
 /* Late includes */
 
 /* "api.pyx":506
@@ -1081,7 +1081,7 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
  * cpdef public str hello():
  *     return txt             # <<<<<<<<<<<<<<
  * 
- * cpdef public void pypost(str s):
+ * cpdef public void py_post(str s):
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 507, __pyx_L1_error)
@@ -1149,20 +1149,20 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
 /* "api.pyx":509
  *     return txt
  * 
- * cpdef public void pypost(str s):             # <<<<<<<<<<<<<<
+ * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
  *     post(s)
  * 
  */
 
-static PyObject *__pyx_pw_3api_3pypost(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
-void pypost(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static PyObject *__pyx_pw_3api_3py_post(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
+void py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
   __Pyx_RefNannyDeclarations
   char const *__pyx_t_1;
-  __Pyx_RefNannySetupContext("pypost", 0);
+  __Pyx_RefNannySetupContext("py_post", 0);
 
   /* "api.pyx":510
  * 
- * cpdef public void pypost(str s):
+ * cpdef public void py_post(str s):
  *     post(s)             # <<<<<<<<<<<<<<
  * 
  * 
@@ -1173,7 +1173,7 @@ void pypost(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
   /* "api.pyx":509
  *     return txt
  * 
- * cpdef public void pypost(str s):             # <<<<<<<<<<<<<<
+ * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
  *     post(s)
  * 
  */
@@ -1181,19 +1181,19 @@ void pypost(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
   /* function exit code */
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_WriteUnraisable("api.pypost", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
+  __Pyx_WriteUnraisable("api.py_post", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3api_3pypost(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
-static PyObject *__pyx_pw_3api_3pypost(PyObject *__pyx_self, PyObject *__pyx_v_s) {
+static PyObject *__pyx_pw_3api_3py_post(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
+static PyObject *__pyx_pw_3api_3py_post(PyObject *__pyx_self, PyObject *__pyx_v_s) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("pypost (wrapper)", 0);
+  __Pyx_RefNannySetupContext("py_post (wrapper)", 0);
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 509, __pyx_L1_error)
-  __pyx_r = __pyx_pf_3api_2pypost(__pyx_self, ((PyObject*)__pyx_v_s));
+  __pyx_r = __pyx_pf_3api_2py_post(__pyx_self, ((PyObject*)__pyx_v_s));
 
   /* function exit code */
   goto __pyx_L0;
@@ -1204,13 +1204,13 @@ static PyObject *__pyx_pw_3api_3pypost(PyObject *__pyx_self, PyObject *__pyx_v_s
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_2pypost(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s) {
+static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
-  __Pyx_RefNannySetupContext("pypost", 0);
+  __Pyx_RefNannySetupContext("py_post", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_void_to_None(pypost(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 509, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_void_to_None(py_post(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 509, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1219,7 +1219,7 @@ static PyObject *__pyx_pf_3api_2pypost(CYTHON_UNUSED PyObject *__pyx_self, PyObj
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("api.pypost", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("api.py_post", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1229,7 +1229,7 @@ static PyObject *__pyx_pf_3api_2pypost(CYTHON_UNUSED PyObject *__pyx_self, PyObj
 
 static PyMethodDef __pyx_methods[] = {
   {"hello", (PyCFunction)__pyx_pw_3api_1hello, METH_NOARGS, 0},
-  {"pypost", (PyCFunction)__pyx_pw_3api_3pypost, METH_O, 0},
+  {"py_post", (PyCFunction)__pyx_pw_3api_3py_post, METH_O, 0},
   {0, 0, 0, 0}
 };
 
