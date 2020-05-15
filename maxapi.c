@@ -596,6 +596,8 @@ static CYTHON_INLINE float __PYX_NAN() {
 #define __PYX_HAVE_API__maxapi
 /* Early includes */
 #include "ext.h"
+#include "ext_mess.h"
+#include "max_types.h"
 #include "ext_proto.h"
 #include "ext_obex.h"
 #ifdef _OPENMP
@@ -1058,7 +1060,7 @@ static PyObject *__pyx_pf_6maxapi_hello(CYTHON_UNUSED PyObject *__pyx_self); /* 
 static PyObject *__pyx_pf_6maxapi_2pypost(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
 /* Late includes */
 
-/* "maxapi.pyx":90
+/* "maxapi.pyx":73
  * txt = 'Hello from Max!'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
@@ -1073,7 +1075,7 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
 
-  /* "maxapi.pyx":91
+  /* "maxapi.pyx":74
  * 
  * cpdef public str hello():
  *     return txt             # <<<<<<<<<<<<<<
@@ -1081,14 +1083,14 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
  * cpdef public void pypost(str s):
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 91, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 91, __pyx_L1_error)
+  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 74, __pyx_L1_error)
   __pyx_r = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "maxapi.pyx":90
+  /* "maxapi.pyx":73
  * txt = 'Hello from Max!'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
@@ -1126,7 +1128,7 @@ static PyObject *__pyx_pf_6maxapi_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 90, __pyx_L1_error)
+  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 73, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1143,7 +1145,7 @@ static PyObject *__pyx_pf_6maxapi_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   return __pyx_r;
 }
 
-/* "maxapi.pyx":93
+/* "maxapi.pyx":76
  *     return txt
  * 
  * cpdef public void pypost(str s):             # <<<<<<<<<<<<<<
@@ -1157,16 +1159,17 @@ void pypost(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
   char const *__pyx_t_1;
   __Pyx_RefNannySetupContext("pypost", 0);
 
-  /* "maxapi.pyx":94
+  /* "maxapi.pyx":77
  * 
  * cpdef public void pypost(str s):
  *     post(s)             # <<<<<<<<<<<<<<
  * 
+ * 
  */
-  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_s); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 94, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_s); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 77, __pyx_L1_error)
   post(__pyx_t_1);
 
-  /* "maxapi.pyx":93
+  /* "maxapi.pyx":76
  *     return txt
  * 
  * cpdef public void pypost(str s):             # <<<<<<<<<<<<<<
@@ -1188,7 +1191,7 @@ static PyObject *__pyx_pw_6maxapi_3pypost(PyObject *__pyx_self, PyObject *__pyx_
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("pypost (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 93, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 76, __pyx_L1_error)
   __pyx_r = __pyx_pf_6maxapi_2pypost(__pyx_self, ((PyObject*)__pyx_v_s));
 
   /* function exit code */
@@ -1206,7 +1209,7 @@ static PyObject *__pyx_pf_6maxapi_2pypost(CYTHON_UNUSED PyObject *__pyx_self, Py
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("pypost", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_void_to_None(pypost(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_void_to_None(pypost(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 76, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1558,14 +1561,14 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "maxapi.pyx":88
+  /* "maxapi.pyx":71
  * 
  * 
  * txt = 'Hello from Max!'             # <<<<<<<<<<<<<<
  * 
  * cpdef public str hello():
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 88, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 71, __pyx_L1_error)
 
   /* "maxapi.pyx":1
  * # maxapi.pyx             # <<<<<<<<<<<<<<
