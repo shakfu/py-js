@@ -68,15 +68,6 @@ cdef extern from "max_types.h":
 
 
 
-txt = 'Hello from Max!'
-
-cpdef public str hello():
-    return txt
-
-cpdef public void pypost(str s):
-    post(s)
-
-
 cdef extern from "ext_proto.h":
     cdef void freeobject(t_object *op)
     cdef void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
@@ -199,6 +190,71 @@ cdef extern from "ext_proto.h":
     # short open_dialog(char *name, short *volptr, t_fourcc *typeptr, t_fourcc *types, short ntypes)
     # short saveas_dialog(char *filename, short *path, short *binptr)
 
+cdef extern from "ext_dictionary.h":
+    ctypedef struct t_dictionary_entry
+    ctypedef struct t_dictionary
+
+    cdef t_dictionary* dictionary_new()
+    cdef t_dictionary* dictionary_prototypefromclass(t_class *c)
+    cdef t_max_err dictionary_appendlong(t_dictionary *d, t_symbol *key, t_atom_long value)
+    cdef t_max_err dictionary_appendfloat(t_dictionary *d, t_symbol *key, double value) 
+    cdef t_max_err dictionary_appendsym(t_dictionary *d, t_symbol *key, t_symbol *value) 
+    cdef t_max_err dictionary_appendatom(t_dictionary *d, t_symbol *key, t_atom *value)
+    cdef t_max_err dictionary_appendattribute(t_dictionary *d, t_symbol *key, t_symbol *attrname, t_object *obj)  
+    cdef t_max_err dictionary_appendstring(t_dictionary *d, t_symbol *key, const char *value) 
+    cdef t_max_err dictionary_appendatoms(t_dictionary *d, t_symbol *key, long argc, t_atom *argv) 
+    cdef t_max_err dictionary_appendatoms_flags(t_dictionary *d, t_symbol *key, long argc, t_atom *argv, long flags) 
+    cdef t_max_err dictionary_appendatomarray(t_dictionary *d, t_symbol *key, t_object *value) 
+    cdef t_max_err dictionary_appenddictionary(t_dictionary *d, t_symbol *key, t_object *value) 
+    cdef t_max_err dictionary_appendobject(t_dictionary *d, t_symbol *key, t_object *value) 
+    cdef t_max_err dictionary_appendobject_flags(t_dictionary *d, t_symbol *key, t_object *value, long flags) 
+    cdef t_max_err dictionary_appendbinbuf(t_dictionary *d, t_symbol *key, void *value) 
+    cdef t_max_err dictionary_getlong(const t_dictionary *d, t_symbol *key, t_atom_long *value)
+    cdef t_max_err dictionary_getfloat(const t_dictionary *d, t_symbol *key, double *value) 
+    cdef t_max_err dictionary_getsym(const t_dictionary *d, t_symbol *key, t_symbol **value) 
+    cdef t_max_err dictionary_getatom(const t_dictionary *d, t_symbol *key, t_atom *value) 
+    cdef t_max_err dictionary_getattribute(const t_dictionary *d, t_symbol *key, t_symbol *attrname, t_object *obj)  
+    cdef t_max_err dictionary_getstring(const t_dictionary *d, t_symbol *key, const char **value)
+    cdef t_max_err dictionary_getatoms(const t_dictionary *d, t_symbol *key, long *argc, t_atom **argv)
+    cdef t_max_err dictionary_getatoms_ext(const t_dictionary *d, t_symbol *key, long stringstosymbols, long *argc, t_atom **argv)
+    cdef t_max_err dictionary_copyatoms(const t_dictionary *d, t_symbol *key, long *argc, t_atom **argv)
+    cdef t_max_err dictionary_getatomarray(const t_dictionary *d, t_symbol *key, t_object **value) 
+    cdef t_max_err dictionary_getdictionary(const t_dictionary *d, t_symbol *key, t_object **value) 
+    cdef t_max_err dictionary_get_ex(t_dictionary *d, t_symbol *key, long *ac, t_atom **av, char *errstr)
+    cdef t_max_err dictionary_getobject(const t_dictionary *d, t_symbol *key, t_object **value) 
+    cdef long dictionary_entryisstring(const t_dictionary *d, t_symbol *key) 
+    cdef long dictionary_entryisatomarray(const t_dictionary *d, t_symbol *key)
+    cdef long dictionary_entryisdictionary(const t_dictionary *d, t_symbol *key) 
+    cdef long dictionary_hasentry(const t_dictionary *d, t_symbol *key) 
+    cdef t_atom_long dictionary_getentrycount(const t_dictionary *d)
+    cdef t_max_err dictionary_getkeys(const t_dictionary *d, long *numkeys, t_symbol ***keys)
+    cdef t_max_err dictionary_getkeys_ordered(const t_dictionary *d, long *numkeys, t_symbol ***keys)
+    cdef void dictionary_freekeys(t_dictionary *d, long numkeys, t_symbol **keys) 
+    cdef t_max_err dictionary_deleteentry(t_dictionary *d, t_symbol *key)
+    cdef t_max_err dictionary_chuckentry(t_dictionary *d, t_symbol *key)     
+    cdef t_max_err dictionary_clear(t_dictionary *d)
+    cdef t_dictionary *dictionary_clone(t_dictionary *d)
+    cdef t_max_err dictionary_clone_to_existing(const t_dictionary *d, t_dictionary *dc)
+    cdef t_max_err dictionary_copy_to_existing(const t_dictionary *d, t_dictionary *dc)
+    cdef t_max_err dictionary_merge_to_existing(const t_dictionary *d, t_dictionary *dc)
+    cdef void dictionary_funall(t_dictionary *d, method fun, void *arg)
+    cdef t_symbol* dictionary_entry_getkey(t_dictionary_entry *x)
+    cdef void dictionary_entry_getvalue(t_dictionary_entry *x, t_atom *value)
+    cdef void dictionary_entry_getvalues(t_dictionary_entry *x, long *argc, t_atom **argv) 
+    cdef t_max_err dictionary_copyunique(t_dictionary *d, t_dictionary *copyfrom)
+    cdef t_max_err dictionary_getdeflong(const t_dictionary *d, t_symbol *key, t_atom_long *value, t_atom_long xdef)
+    cdef t_max_err dictionary_getdeffloat(const t_dictionary *d, t_symbol *key, double *value, double xdef)
+    cdef t_max_err dictionary_getdefsym(const t_dictionary *d, t_symbol *key, t_symbol **value, t_symbol *xdef)
+    cdef t_max_err dictionary_getdefatom(const t_dictionary *d, t_symbol *key, t_atom *value, t_atom *xdef)
+    cdef t_max_err dictionary_getdefstring(const t_dictionary *d, t_symbol *key, const char **value, char *xdef)
+    cdef t_max_err dictionary_getdefatoms(t_dictionary *d, t_symbol *key, long *argc, t_atom **argv, t_atom *xdef)
+    cdef t_max_err dictionary_copydefatoms(t_dictionary *d, t_symbol *key, long *argc, t_atom **argv, t_atom *xdef)
+    cdef t_max_err dictionary_dump(t_dictionary *d, long recurse, long console)
+    cdef t_max_err dictionary_copyentries(t_dictionary *src, t_dictionary *dst, t_symbol **keys)
+    cdef t_dictionary *dictionary_sprintf(const char *fmt, ...)
+    cdef t_object *newobject_sprintf(t_object *patcher, const char *fmt, ...)
+    cdef t_object *newobject_fromboxtext(t_object *patcher, const char *text)
+    cdef t_object *newobject_fromdictionary(t_object *patcher, t_dictionary *d)
 
 
 cdef extern from "ext_obex.h":
@@ -399,11 +455,11 @@ cdef extern from "ext_obex.h":
     cdef long class_clonable(t_class *x)
     cdef long object_clonable(t_object *x)
     cdef t_max_err class_buildprototype(t_class *x)
-    # cdef t_dictionary *class_cloneprototype(t_class *x)
-    # cdef void attr_args_dictionary(t_dictionary *x, short ac, t_atom *av)
-    # cdef void attr_dictionary_process(void *x, t_dictionary *d)
-    # cdef void attr_dictionary_check(void *x, t_dictionary *d)
-    # cdef t_dictionary *object_dictionaryarg(long ac, t_atom *av)
+    cdef t_dictionary *class_cloneprototype(t_class *x)
+    cdef void attr_args_dictionary(t_dictionary *x, short ac, t_atom *av)
+    cdef void attr_dictionary_process(void *x, t_dictionary *d)
+    cdef void attr_dictionary_check(void *x, t_dictionary *d)
+    cdef t_dictionary *object_dictionaryarg(long ac, t_atom *av)
     cdef t_max_err class_sticky(t_class *x, t_symbol *stickyname, t_symbol *s, t_object *o)
     cdef t_max_err class_sticky_clear(t_class *x, t_symbol *stickyname, t_symbol *s)
     cdef t_max_err object_retain(t_object *x)
@@ -432,7 +488,7 @@ cdef extern from "ext_obex.h":
     cdef t_max_err atom_alloc(long *ac, t_atom **av, char *alloc)
     cdef t_max_err atom_alloc_array(long minsize, long *ac, t_atom **av, char *alloc)
     cdef long class_is_box(t_class *c)
-    # cdef t_dictionary *object_dictionary_fromnewargs(t_object *patcher, t_class *c, long argc, t_atom *argv, long flags, char *freedict)
+    cdef t_dictionary *object_dictionary_fromnewargs(t_object *patcher, t_class *c, long argc, t_atom *argv, long flags, char *freedict)
     cdef long class_is_ui(t_class *c)
     cdef t_max_err class_subclass(t_class *superclass, t_class *subclass)
     cdef t_object *class_super_construct(t_class *c, ...)
@@ -443,3 +499,14 @@ cdef extern from "ext_obex.h":
     cdef void *object_this_method_imp(void *x, void *s, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
     cdef t_max_err object_attr_touch(t_object *x, t_symbol *attrname)
     cdef t_max_err object_attr_touch_parse(t_object *x, char *attrnames)
+
+
+txt = 'Hello from Max!'
+
+cpdef public str hello():
+    return txt
+
+cpdef public void pypost(str s):
+    post(s)
+
+

@@ -49,7 +49,7 @@
 #include <Python.h>
 
 /* other */
-#include "maxapi.h"
+#include "api.h"
 // #ifndef _GNU_SOURCE
 // #define _GNU_SOURCE
 // #endif
@@ -179,7 +179,7 @@ void py_init(t_py *x)
     // wchar_t *program = "pymx";
 
     /* Add a built-in module, before Py_Initialize */
-    if (PyImport_AppendInittab("maxapi", PyInit_maxapi) == -1) {
+    if (PyImport_AppendInittab("api", PyInit_api) == -1) {
         error("Error: could not extend in-built modules table\n");
     }
 
@@ -237,7 +237,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
     if (gensym(s->s_name) == gensym("eval") || gensym(s->s_name) == gensym("exec") ||
         gensym(s->s_name) == gensym("execfile")) {
 
-        PyObject *pval; // python value
+        PyObject *pval = NULL; // python value
 
         char *py_argv = atom_getsym(argv)->s_name;
         post("%s: %s", s->s_name, py_argv);

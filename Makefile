@@ -10,13 +10,13 @@ section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 NAME=py
 EXTERNAL=${NAME}.c
 PROJECT=${NAME}.xcodeproj
-EXTENSION=maxapi.pyx
+EXTENSION=api.pyx
 MAXHELP=${NAME}.maxhelp
 
 
 .PHONY: all
 
-all: clean build
+all: clean test build
 	@echo "All DONE!"
 
 
@@ -39,8 +39,12 @@ dist:
 # -----------------------------------------------------------------------
 .PHONY: build
 
-build: build-extension build-external
+build: build-extension build-external build-help
 	$(call section,"build project")
+
+build-help:
+	$(call section,"moving ${MAXHELP} to package help folder")
+	@cp -rf py.maxhelp ../../../help
 
 build-external:
 	$(call section,"build with xcode")
@@ -50,15 +54,13 @@ build-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
 
+
 # TESTING
 # -----------------------------------------------------------------------
 .PHONY: test
 
-test: test-help
-
-test-help:
-	$(call section,"moving ${MAXHELP} to package help folder")
-	@cp -rf py.maxhelp ../../../help
+test:
+	$(call section,"testing here (planned)")
 
 
 # STYLING
