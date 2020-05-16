@@ -1,84 +1,9 @@
-/**
-    py.c - basic experiment in minimal max object for calling python code
-
-    repo - github.com/shakfu/py
-
-    This object has 1 inlet and 2 outlets
-
-    Basic Features
-
-    1.  Per-Object Namespace. It responds to an 'import <module>' message in 
-        the left inlet which loads a python module in its namespace. Each new import
-        (like python) adds to the namespace.
-
-    2.  Eval Messages. It responds to an 'eval <expression>' message in the left inlet
-        which is evaluated in the namespace and outputs results to the left outlet
-        and outputs a bang from the right outlet to signal end of evaluation.
-
-    py interpreter object
-        attributes
-            @imports
-            @code
-
-        messages
-            import <module> [adds to @imports]
-            eval <code> or eval @file <path>
-            exec <code> or exec @file <path>
-            run  <code> or run  @file <path>
-
-            (phase 2)
-            load @file <path> -> into @code (for persistence) and texeditor edits
-
-            (phase N)
-            embed ipython kernel? (-;
-
-    TODO
-
-        - [ ] add right inlet bang after eval op ends
-        - [ ] add @run <script>
-        - [ ] add text edit object
-
-*/
+/* py external api */
+#include "py.h"
 
 /* max/msp api */
-#include "ext.h"
-#include "ext_obex.h" // this is required for all objects using the newer style for writing objects.
-
-/* python */
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-
-/* other */
 #include "api.h"
-// #ifndef _GNU_SOURCE
-// #define _GNU_SOURCE
-// #endif
-// #include <string.h>
 
-#define PY_MAX_ATOMS 128
-#define PY_NOT_STRING(x) (!PyBytes_Check(x) && !PyByteArray_Check(x) && !PyUnicode_Check(x))
-
-typedef struct _py {
-    t_object p_ob;          // object header - ALL objects MUST begin with this...
-    t_symbol *p_module;     // python import: additional imports
-    t_symbol *p_code;       // python code to evaluate to default outlet
-    void *p_outlet;         // outlet creation - inlets are automatic, but objects must "own" their own outlets
-    // python specific
-    PyObject *p_globals;    // global python namespace (new ref)
-} t_py;
-
-
-// these are prototypes for the methods that are defined below
-void py_bang(t_py *x);
-void py_import(t_py *x, t_symbol *s);
-void py_register(t_py *x, t_symbol *s);
-void py_find(t_py *x, t_symbol *s);
-void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
-void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
-void py_dblclick(t_py *x);
-
-void *py_new(t_symbol *s, long argc, t_atom *argv);
-void py_free(t_py *x);
 
 t_class *py_class;      // global pointer to the object class - so max can reference the object
 
