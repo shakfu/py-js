@@ -1,7 +1,78 @@
-# maxapi.pyx
+# api.pyx
+"""
+- [ ] commonsyms.h
+- [ ] ext.h
+- [ ] ext_atomarray.h
+- [x] ext_atombuf.h
+- [ ] ext_atomic.h
+- [x] ext_backgroundtask.h
+- [ ] ext_boxstyle.h
+- [ ] ext_byteorder.h
+- [ ] ext_charset.h
+- [ ] ext_common.h
+- [ ] ext_critical.h
+- [ ] ext_database.h
+- [ ] ext_default.h
+- [x] ext_dictionary.h
+- [x] ext_dictobj.h
+- [ ] ext_drag.h
+- [ ] ext_expr.h
+- [ ] ext_globalsymbol.h
+- [x] ext_hashtab.h
+- [ ] ext_itm.h
+- [x] ext_linklist.h
+- [x] ext_maxtypes.h
+- [x] ext_mess.h
+- [x] ext_obex.h
+- [ ] ext_obex_util.h
+- [ ] ext_obstring.h
+- [ ] ext_packages.h
+- [ ] ext_parameter.h
+- [ ] ext_path.h
+- [ ] ext_preferences.h
+- [ ] ext_prefix.h
+- [ ] ext_preprocessor.h
+- [x] ext_proto.h
+- [ ] ext_proto_win.h
+- [ ] ext_qtimage.h
+- [ ] ext_qtstubs.h
+- [ ] ext_quickmap.h
+- [ ] ext_sndfile.h
+- [ ] ext_strings.h
+- [ ] ext_symobject.h
+- [ ] ext_sysfile.h
+- [ ] ext_sysmem.h
+- [ ] ext_sysmidi.h
+- [ ] ext_sysparallel.h
+- [ ] ext_sysprocess.h
+- [ ] ext_syssem.h
+- [ ] ext_sysshmem.h
+- [ ] ext_systhread.h
+- [ ] ext_systime.h
+- [ ] ext_time.h
+- [ ] ext_wind.h
+- [ ] ext_xmltree.h
+- [ ] indexmap.h
+- [ ] jdataview.h
+- [ ] jgraphics.h
+- [ ] jpatcher_api.h
+- [ ] jpatcher_syms.h
+- [ ] jpatcher_utils.h
+- [x] max_types.h
+"""
 
 cdef extern from "ext.h":
-    ctypedef t_object t_patcher
+    ctypedef t_object t_patcher # just a place holder
+
+cdef extern from "ext_atombuf.h":
+    ctypedef struct t_atombuf
+    void *atombuf_new(long argc, t_atom *argv)
+    void atombuf_free(t_atombuf *x)
+    void atombuf_text(t_atombuf **x, char **text, long size)
+    short atombuf_totext(t_atombuf *x, char **text, long *size)
+    short atombuf_count(t_atombuf *x)
+    void atombuf_set(t_atombuf *x, long start, long num)
+    long atombuf_replacepoundargs(t_atombuf *x, long argc, t_atom *argv)
 
 
 cdef extern from "ext_mess.h":
@@ -31,12 +102,26 @@ cdef extern from "ext_mess.h":
         A_DEFER =       0x41   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred.
         A_USURP =       0x42   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred and multiple calls within one servicing of the queue are filtered down to one call.
         A_DEFER_LOW =   0x43   # A special signature for declaring methods. This is like A_GIMME, but the call is deferref to the back of the queue.
-        A_USURP_LOW =   0x44    # A special signature for declaring methods. This is like A_GIMME, but the call is deferred to the back of the queue and multiple calls within one servicing of the queue are filtered down to one call.
+        A_USURP_LOW =   0x44   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred to the back of the queue and multiple calls within one servicing of the queue are filtered down to one call.
     cdef int ATOM_MAX_STRLEN
     ctypedef void *(*zero_meth)(void *x)
     ctypedef void *(*one_meth)(void *x, void *z)
     ctypedef void *(*two_meth)(void *x, void *z, void *a)
     ctypedef long *(*gimmeback_meth)(void *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
+
+
+cdef extern from "ext_backgroundtask.h":
+    ctypedef struct t_backgroundtask 
+        
+    cdef long backgroundtask_execute(t_object *owner, void *args, method cbtask, method cbcomplete, t_backgroundtask **task, long flags)
+    cdef long backgroundtask_execute_method(
+        t_object *obtask, t_symbol *mtask, long actask, t_atom *avtask, 
+        t_object *obcomp, t_symbol *mcomp, long accomp, t_atom *avcomp,
+        t_backgroundtask **task, long flags)
+    cdef void backgroundtask_purge_object(t_object *owner)
+    cdef void backgroundtask_join_object(t_object *owner)
+    cdef long backgroundtask_cancel(t_backgroundtask *task)
+    cdef long backgroundtask_join(t_backgroundtask *task)
 
 
 cdef extern from "max_types.h":
@@ -65,7 +150,121 @@ cdef extern from "max_types.h":
     ctypedef t_int16 t_filepath             # i.e. path/vol in file APIs identifying a folder  @ingroup misc
 
 
+cdef extern from "ext_hashtab.h":
+    cdef int HASH_DEFSLOTS
+    ctypedef struct t_hashtab_entry
+    ctypedef struct t_hashtab
 
+    cdef t_hashtab *hashtab_new(long slotcount)
+    cdef t_max_err hashtab_store(t_hashtab *x, t_symbol *key, t_object *val)
+    cdef t_max_err hashtab_storelong(t_hashtab *x, t_symbol *key, t_atom_long val)
+    cdef t_max_err hashtab_storesym(t_hashtab *x, t_symbol *key, t_symbol *val)
+    cdef t_max_err hashtab_store_safe(t_hashtab *x, t_symbol *key, t_object *val)
+    cdef t_max_err hashtab_storeflags(t_hashtab *x, t_symbol *key, t_object *val, long flags)
+    cdef t_max_err hashtab_lookup(t_hashtab *x, t_symbol *key, t_object **val)
+    cdef t_max_err hashtab_lookuplong(t_hashtab *x, t_symbol *key, t_atom_long *val) 
+    cdef t_max_err hashtab_lookupsym(t_hashtab *x, t_symbol *key, t_symbol **val) 
+    cdef t_max_err hashtab_lookupentry(t_hashtab *x, t_symbol *key, t_hashtab_entry **entry)
+    cdef t_max_err hashtab_lookupflags(t_hashtab *x, t_symbol *key, t_object **val, long *flags)
+    cdef t_max_err hashtab_delete(t_hashtab *x, t_symbol *key)
+    cdef t_max_err hashtab_clear(t_hashtab *x)
+    cdef t_max_err hashtab_chuckkey(t_hashtab *x, t_symbol *key)
+    cdef t_max_err hashtab_chuck(t_hashtab *x)
+    cdef t_max_err hashtab_findfirst(t_hashtab *x, void **o, long cmpfn(void *, void *), void *cmpdata)
+    cdef t_max_err hashtab_methodall(t_hashtab *x, t_symbol *s, ...)
+    #cdef t_max_err hashtab_methodall(...)
+    cdef t_max_err hashtab_methodall_imp(void *x, void *sym, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
+    cdef t_max_err hashtab_funall(t_hashtab *x, method fun, void *arg)
+    cdef t_max_err hashtab_objfunall(t_hashtab *x, method fun, void *arg)
+    cdef t_atom_long hashtab_getsize(t_hashtab *x)
+    cdef void hashtab_print(t_hashtab *x)
+    cdef void hashtab_readonly(t_hashtab *x, long readonly)
+    cdef void hashtab_flags(t_hashtab *x, long flags)
+    cdef t_atom_long hashtab_getflags(t_hashtab *x)
+    cdef t_max_err hashtab_keyflags(t_hashtab *x, t_symbol *key, long flags)
+    cdef t_atom_long hashtab_getkeyflags(t_hashtab *x, t_symbol *key)
+    cdef t_max_err hashtab_getkeys(t_hashtab *x, long *kc, t_symbol ***kv)
+    cdef t_hashtab_entry *hashtab_entry_new(t_symbol *key, t_object *val)
+    cdef void hashtab_entry_free(t_hashtab_entry *x)
+
+
+cdef extern from "ext_linklist.h":
+
+    ctypedef struct t_llelem
+    ctypedef struct t_linklist
+    #cdef long LINKLIST_PRUNE_CHUCK 0x00000001L     
+    ctypedef long (*t_cmpfn)(void *, void *)
+
+    cdef t_linklist *linklist_new()
+    cdef void linklist_chuck(t_linklist *x) 
+    cdef t_atom_long linklist_getsize(t_linklist *x)
+    cdef void *linklist_getindex(t_linklist *x, long index)
+    cdef t_llelem *linklist_index2ptr(t_linklist *x, long index)
+    cdef long linklist_ptr2index(t_linklist *x, t_llelem *p)
+    cdef t_atom_long linklist_objptr2index(t_linklist *x, void *p)
+    cdef t_atom_long linklist_append(t_linklist *x, void *o)
+    cdef t_atom_long linklist_insertindex(t_linklist *x,  void *o, long index)
+    cdef long linklist_insert_sorted(t_linklist *x, void *o, long cmpfn(void *, void *))
+    cdef t_llelem *linklist_insertafterobjptr(t_linklist *x, void *o, void *objptr)  
+    cdef t_llelem *linklist_insertbeforeobjptr(t_linklist *x, void *o, void *objptr) 
+    cdef t_llelem *linklist_moveafterobjptr(t_linklist *x, void *o, void *objptr)    
+    cdef t_llelem *linklist_movebeforeobjptr(t_linklist *x, void *o, void *objptr)   
+    cdef t_llelem *linklist_insertptr(t_linklist *x,  void *o, t_llelem *p) 
+    cdef t_atom_long linklist_deleteindex(t_linklist *x, long index) 
+    cdef long linklist_chuckindex(t_linklist *x, long index)
+    cdef long linklist_chuckobject(t_linklist *x, void *o)
+    cdef long linklist_deleteobject(t_linklist *x, void *o)
+    cdef long linklist_deleteptr(t_linklist *x, t_llelem *p)
+    cdef long linklist_chuckptr(t_linklist *x, t_llelem *p) 
+    cdef void linklist_clear(t_linklist *x)
+    cdef long linklist_insertnodeindex(t_linklist *x, t_llelem *p, long index)
+    cdef t_llelem *linklist_insertnodeptr(t_linklist *x, t_llelem *p1, t_llelem *p2)
+    cdef long linklist_appendnode(t_linklist *x, t_llelem *p)
+    cdef t_llelem *linklistelem_new()
+    cdef void linklistelem_free(t_linklist *x, t_llelem *elem)
+    cdef t_atom_long linklist_makearray(t_linklist *x, void **a, long max)
+    cdef void linklist_reverse(t_linklist *x)
+    cdef void linklist_rotate(t_linklist *x, long i)
+    cdef void linklist_shuffle(t_linklist *x)
+    cdef void linklist_swap(t_linklist *x, long a, long b)
+    cdef t_atom_long linklist_findfirst(t_linklist *x, void **o, long cmpfn(void *, void *), void *cmpdata)
+    cdef void linklist_findall(t_linklist *x, t_linklist **out, long cmpfn(void *, void *), void *cmpdata)
+    cdef void linklist_methodall(t_linklist *x, t_symbol *s, ...)
+    cdef void linklist_methodall_imp(void *x, void *sym, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
+    cdef void *linklist_methodindex(t_linklist *x, t_atom_long i, t_symbol *s, ...)
+    cdef void *linklist_methodindex_imp(void *x, void *i, void *s, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7) 
+    cdef void linklist_sort(t_linklist *x, long cmpfn(void *, void *))
+    cdef void linklist_funall(t_linklist *x, method fun, void *arg)
+    cdef t_atom_long linklist_funall_break(t_linklist *x, method fun, void *arg)
+    cdef void *linklist_funindex(t_linklist *x, long i, method fun, void *arg)
+    cdef void *linklist_substitute(t_linklist *x, void *p, void *newp)
+    cdef void *linklist_next(t_linklist *x, void *p, void **next)
+    cdef void *linklist_prev(t_linklist *x, void *p, void **prev)
+    cdef void *linklist_last(t_linklist *x, void **item)
+    cdef void linklist_readonly(t_linklist *x, long readonly)
+    cdef void linklist_flags(t_linklist *x, long flags)
+    cdef t_atom_long linklist_getflags(t_linklist *x)
+    cdef long linklist_match(void *a, void *b)
+
+
+cdef extern from "ext_maxtypes.h":
+    ctypedef t_object t_patcher
+    ctypedef t_object t_box
+    ctypedef t_object t_clock
+    ctypedef void* t_qelem
+
+    ctypedef enum:
+        PI_DEEP = 1         
+        PI_REQUIREFIRSTIN = 2
+        PI_WANTBOX = 4          
+        PI_SKIPGEN = 8
+        PI_WANTPATCHER = 16
+
+    ctypedef struct Zll
+    ctypedef struct t_zll
+
+    ctypedef struct Funbuff
+    ctypedef struct t_funbuff 
 
 
 cdef extern from "ext_proto.h":
@@ -190,6 +389,7 @@ cdef extern from "ext_proto.h":
     # short open_dialog(char *name, short *volptr, t_fourcc *typeptr, t_fourcc *types, short ntypes)
     # short saveas_dialog(char *filename, short *path, short *binptr)
 
+
 cdef extern from "ext_dictionary.h":
     ctypedef struct t_dictionary_entry
     ctypedef struct t_dictionary
@@ -255,6 +455,57 @@ cdef extern from "ext_dictionary.h":
     cdef t_object *newobject_sprintf(t_object *patcher, const char *fmt, ...)
     cdef t_object *newobject_fromboxtext(t_object *patcher, const char *text)
     cdef t_object *newobject_fromdictionary(t_object *patcher, t_dictionary *d)
+
+
+cdef extern from "ext_dictobj.h":
+
+    cdef t_dictionary *dictobj_register(t_dictionary *d, t_symbol **name)
+    cdef t_max_err dictobj_unregister(t_dictionary *d)
+    cdef t_dictionary *dictobj_findregistered_clone(t_symbol *name)
+    cdef t_dictionary *dictobj_findregistered_retain(t_symbol *name)
+    cdef t_max_err dictobj_release(t_dictionary *d)
+    cdef t_symbol *dictobj_namefromptr(t_dictionary *d)
+    cdef void dictobj_outlet_atoms(void *out, long argc, t_atom *argv)
+    cdef long dictobj_atom_safety(t_atom *a)
+    ctypedef enum:
+        DICTOBJ_ATOM_FLAGS_DEFAULT = 0
+        DICTOBJ_ATOM_FLAGS_REGISTER
+    cdef long dictobj_atom_safety_flags(t_atom *a, long flags)
+    cdef void dictobj_atom_release(t_atom *a)
+    cdef long dictobj_validate(const t_dictionary *schema, const t_dictionary *candidate)
+    cdef t_max_err dictobj_jsonfromstring(long *jsonsize, char **json, const char *str)
+    cdef t_max_err dictobj_dictionaryfromstring(t_dictionary **d, const char *str, int str_is_already_json, char *errorstring)
+    cdef t_max_err dictobj_dictionaryfromatoms(t_dictionary **d, const long argc, const t_atom *argv)
+    cdef t_max_err dictobj_dictionaryfromatoms_extended(t_dictionary **d, const t_symbol *msg, long argc, const t_atom *argv)
+    cdef t_max_err dictobj_dictionarytoatoms(const t_dictionary *d, long *argc, t_atom **argv)
+    cdef t_max_err dictobj_key_parse(t_object *x, t_dictionary *d, t_atom *akey, t_bool create, t_dictionary **targetdict, t_symbol **targetkey, t_int32 *index)
+
+
+cdef extern from "ext_expr.h":
+    
+    cdef int EXPR_MAX_VARS
+        
+    ctypedef enum e_max_expr_types:
+        ET_INT =    0x1
+        ET_FLT =    0x2
+        ET_OP  =    0x3
+        ET_STR =    0x4
+        ET_TBL =    0x5
+        ET_FUNC =   0x6
+        ET_SYM =    0x7
+        ET_VSYM =   0x8
+        ET_LP =     0x9 
+        ET_LB =     0x10
+        ET_II =     0x11
+        ET_FI =     0x12
+        ET_SI =     0x13
+
+    ctypedef struct t_ex_ex
+    ctypedef struct t_expr
+
+    cdef void *expr_new(long argc, t_atom *argv, t_atom *types)
+    cdef short expr_eval(t_expr *x, long argc, t_atom *argv, t_atom *result)
+    cdef void expr_install(method fun, const char *buf, long argc)
 
 
 cdef extern from "ext_obex.h":
@@ -499,6 +750,7 @@ cdef extern from "ext_obex.h":
     cdef void *object_this_method_imp(void *x, void *s, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
     cdef t_max_err object_attr_touch(t_object *x, t_symbol *attrname)
     cdef t_max_err object_attr_touch_parse(t_object *x, char *attrnames)
+
 
 
 txt = 'Hello from Max!'

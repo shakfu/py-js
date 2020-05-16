@@ -596,10 +596,17 @@ static CYTHON_INLINE float __PYX_NAN() {
 #define __PYX_HAVE_API__api
 /* Early includes */
 #include "ext.h"
+#include "ext_atombuf.h"
 #include "ext_mess.h"
+#include "ext_backgroundtask.h"
 #include "max_types.h"
+#include "ext_hashtab.h"
+#include "ext_linklist.h"
+#include "ext_maxtypes.h"
 #include "ext_proto.h"
 #include "ext_dictionary.h"
+#include "ext_dictobj.h"
+#include "ext_expr.h"
 #include "ext_obex.h"
 #ifdef _OPENMP
 #include <omp.h>
@@ -1051,6 +1058,7 @@ static const char __pyx_k_name[] = "__name__";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_Hello_from_Max[] = "Hello from Max!";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
+static const char __pyx_k_commonsyms_h_ext_h_ext_atomarra[] = "\n- [ ] commonsyms.h\n- [ ] ext.h\n- [ ] ext_atomarray.h\n- [x] ext_atombuf.h\n- [ ] ext_atomic.h\n- [x] ext_backgroundtask.h\n- [ ] ext_boxstyle.h\n- [ ] ext_byteorder.h\n- [ ] ext_charset.h\n- [ ] ext_common.h\n- [ ] ext_critical.h\n- [ ] ext_database.h\n- [ ] ext_default.h\n- [x] ext_dictionary.h\n- [x] ext_dictobj.h\n- [ ] ext_drag.h\n- [ ] ext_expr.h\n- [ ] ext_globalsymbol.h\n- [x] ext_hashtab.h\n- [ ] ext_itm.h\n- [x] ext_linklist.h\n- [x] ext_maxtypes.h\n- [x] ext_mess.h\n- [x] ext_obex.h\n- [ ] ext_obex_util.h\n- [ ] ext_obstring.h\n- [ ] ext_packages.h\n- [ ] ext_parameter.h\n- [ ] ext_path.h\n- [ ] ext_preferences.h\n- [ ] ext_prefix.h\n- [ ] ext_preprocessor.h\n- [x] ext_proto.h\n- [ ] ext_proto_win.h\n- [ ] ext_qtimage.h\n- [ ] ext_qtstubs.h\n- [ ] ext_quickmap.h\n- [ ] ext_sndfile.h\n- [ ] ext_strings.h\n- [ ] ext_symobject.h\n- [ ] ext_sysfile.h\n- [ ] ext_sysmem.h\n- [ ] ext_sysmidi.h\n- [ ] ext_sysparallel.h\n- [ ] ext_sysprocess.h\n- [ ] ext_syssem.h\n- [ ] ext_sysshmem.h\n- [ ] ext_systhread.h\n- [ ] ext_systime.h\n- [ ] ext_time.h\n- [ ] ext_wind.h\n- [ ] ext_xmltree.h\n- [ ] indexmap.h\n- [ ] jdataview.h\n- [ ] jgraphics.h\n- [ ] jpatcher_api.h\n- [ ] jpatcher_syms.h\n- [ ] jpatcher_utils.h\n- [x] max_types.h\n";
 static PyObject *__pyx_kp_u_Hello_from_Max;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_n_s_main;
@@ -1061,7 +1069,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self); /* pro
 static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
 /* Late includes */
 
-/* "api.pyx":506
+/* "api.pyx":758
  * txt = 'Hello from Max!'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
@@ -1076,7 +1084,7 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
 
-  /* "api.pyx":507
+  /* "api.pyx":759
  * 
  * cpdef public str hello():
  *     return txt             # <<<<<<<<<<<<<<
@@ -1084,14 +1092,14 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
  * cpdef public void py_post(str s):
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 507, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 759, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 507, __pyx_L1_error)
+  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 759, __pyx_L1_error)
   __pyx_r = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "api.pyx":506
+  /* "api.pyx":758
  * txt = 'Hello from Max!'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
@@ -1129,7 +1137,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 506, __pyx_L1_error)
+  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 758, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1146,7 +1154,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   return __pyx_r;
 }
 
-/* "api.pyx":509
+/* "api.pyx":761
  *     return txt
  * 
  * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
@@ -1160,17 +1168,17 @@ void py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
   char const *__pyx_t_1;
   __Pyx_RefNannySetupContext("py_post", 0);
 
-  /* "api.pyx":510
+  /* "api.pyx":762
  * 
  * cpdef public void py_post(str s):
  *     post(s)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_s); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 510, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_s); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 762, __pyx_L1_error)
   post(__pyx_t_1);
 
-  /* "api.pyx":509
+  /* "api.pyx":761
  *     return txt
  * 
  * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
@@ -1192,7 +1200,7 @@ static PyObject *__pyx_pw_3api_3py_post(PyObject *__pyx_self, PyObject *__pyx_v_
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("py_post (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 509, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 761, __pyx_L1_error)
   __pyx_r = __pyx_pf_3api_2py_post(__pyx_self, ((PyObject*)__pyx_v_s));
 
   /* function exit code */
@@ -1210,7 +1218,7 @@ static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyOb
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("py_post", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_void_to_None(py_post(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 509, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_void_to_None(py_post(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 761, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1247,7 +1255,7 @@ static PyModuleDef_Slot __pyx_moduledef_slots[] = {
 static struct PyModuleDef __pyx_moduledef = {
     PyModuleDef_HEAD_INIT,
     "api",
-    0, /* m_doc */
+    __pyx_k_commonsyms_h_ext_h_ext_atomarra, /* m_doc */
   #if CYTHON_PEP489_MULTI_PHASE_INIT
     0, /* m_size */
   #else
@@ -1516,7 +1524,7 @@ if (!__Pyx_RefNanny) {
   Py_INCREF(__pyx_m);
   #else
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("api", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("api", __pyx_methods, __pyx_k_commonsyms_h_ext_h_ext_atomarra, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -1562,19 +1570,19 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "api.pyx":504
+  /* "api.pyx":756
  * 
  * 
  * txt = 'Hello from Max!'             # <<<<<<<<<<<<<<
  * 
  * cpdef public str hello():
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 504, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 756, __pyx_L1_error)
 
   /* "api.pyx":1
- * # maxapi.pyx             # <<<<<<<<<<<<<<
- * 
- * cdef extern from "ext.h":
+ * # api.pyx             # <<<<<<<<<<<<<<
+ * """
+ * - [ ] commonsyms.h
  */
   __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
