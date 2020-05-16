@@ -6,7 +6,7 @@
 - [x] ext_atombuf.h
 - [ ] ext_atomic.h
 - [x] ext_backgroundtask.h
-- [ ] ext_boxstyle.h
+- [p] ext_boxstyle.h
 - [ ] ext_byteorder.h
 - [ ] ext_charset.h
 - [ ] ext_common.h
@@ -508,6 +508,14 @@ cdef extern from "ext_expr.h":
     cdef void expr_install(method fun, const char *buf, long argc)
 
 
+cdef extern from "ext_globalsymbol.h":
+    cdef void *globalsymbol_reference(t_object *x, const char *name, const char *classname)
+    cdef void globalsymbol_dereference(t_object *x, const char *name, const char *classname)
+    cdef t_max_err globalsymbol_bind(t_object *x, const char *name, long flags)
+    cdef void globalsymbol_unbind(t_object *x, const char *name, long flags)
+    cdef void globalsymbol_notify(t_object *x, const char *name, t_symbol *msg, void *data)
+
+
 cdef extern from "ext_obex.h":
 
     cdef int TRUE
@@ -752,6 +760,29 @@ cdef extern from "ext_obex.h":
     cdef t_max_err object_attr_touch_parse(t_object *x, char *attrnames)
 
 
+# cdef extern from "ext_boxstyle.h":
+
+#     cdef void class_attr_setstyle(t_class *c, const char *s)
+#     cdef void class_attr_style_alias(t_class *c, const char *name, const char *aliasname, long legacy)
+#     cdef int FILL_ATTR_SAVE
+#     cdef void class_attr_setfill(t_class *c, const char *name, long flags)
+#     cdef void jgraphics_attr_fillrect(t_object *b, t_jgraphics *g, t_symbol *attrname, t_rect *area)
+#     cdef t_jpattern *jgraphics_attr_setfill(t_object *b, t_jgraphics *g, t_symbol *attrname, t_rect *area)
+#     cdef void object_attr_getfillcolor_atposition(t_object *b, const char *attrname, double pos, t_jrgba *c)
+#     cdef long object_attr_getfill(t_object *obj, t_symbol *attrname)
+#     cdef void object_style_setfillattribute(t_object *x, t_symbol *fillattr, t_symbol *entry, long argc, t_atom *argv)
+#     cdef void class_attr_stylemap(t_class *c, char *attrname, char *mapname)
+#     cdef t_symbol *object_attr_attrname_forstylemap(t_object *x, t_symbol *mapname)     
+#     cdef t_symbol *object_attr_stylemapname(t_object *x, t_symbol *attrname)            
+#     cdef t_jpopupmenu *style_getmenu(t_object *context, t_symbol *current, long mask, long *selecteditem, long *headercount)        
+#     cdef void style_handlemenu(t_object *context, long itemindex, t_symbol **current)
+
+#     cdef void CLASS_ATTR_STYLE_RGBA_NOSAVE(c,attrname,flags,structname,structmember,label)
+#     cdef void CLASS_ATTR_STYLE_RGBA(c,attrname,flags,structname,structmember,label)
+#     cdef void CLASS_ATTR_STYLE_RGBA_PREVIEW(c,attrname,flags,structname,structmember,label,previewtype)
+#     cdef void CLASS_ATTR_STYLE_ALIAS_NOSAVE(c,attrname,aliasname)
+#     cdef void CLASS_ATTR_STYLE_ALIAS_COMPATIBILITY(c,attrname,aliasname)
+#     cdef void CLASS_ATTR_STYLE_ALIAS_RGBA_LEGACY(c,attrname,aliasname)
 
 txt = 'Hello from Max!'
 
