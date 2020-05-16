@@ -49,5 +49,5 @@ def main(path):
     return txt
 
 if __name__ == '__main__':
-    output = process(sys.argv[1])
+    output = main(sys.argv[1])
     print(output) #  for convenient redirection
