@@ -27,7 +27,7 @@
 - [x] ext_obex_util.h
 - [ ] ext_obstring.h
 - [ ] ext_packages.h
-- [ ] ext_parameter.h
+- [x] ext_parameter.h
 - [ ] ext_path.h
 - [ ] ext_preferences.h
 - [ ] ext_prefix.h
@@ -42,7 +42,7 @@
 - [ ] ext_symobject.h
 - [ ] ext_sysfile.h
 - [ ] ext_sysmem.h
-- [ ] ext_sysmidi.h
+- [x] ext_sysmidi.h
 - [ ] ext_sysparallel.h
 - [ ] ext_sysprocess.h
 - [ ] ext_syssem.h
@@ -1297,6 +1297,95 @@ cdef extern from "ext_parameter.h":
     cdef char *PARAM_COLOR_SELECTION
     cdef char *PARAM_COLOR_LED_BG
     cdef int PARAM_COLOR_COUNT
+
+
+cdef extern from "ext_sysmidi.h":
+
+    ctypedef enum:
+        SYSMIDI_ENABLED = 1
+        SYSMIDI_DYNAMIC = 2
+        SYSMIDI_PERMANENT = 4
+
+    ctypedef struct t_midistate
+    ctypedef struct t_midiportinfo
+    ctypedef struct t_sysmididriver
+
+    cdef void sysmidi_enqbigpacket(t_midiportinfo *port, t_uint8 *data, double ts, long len, long contFlags)
+    cdef long sysmidi_numinports()
+    cdef long sysmidi_numoutports()
+    cdef t_symbol *sysmidi_indextoname(long index, long io)
+    cdef void sysmidi_iterate(method meth, void *arg, long io)
+    cdef t_midiportinfo *sysmidi_createport(long id, long refnum, t_symbol *name, t_sysmididriver *dx, long io, long flags)
+    cdef void sysmidi_deletemarked(long io)
+    cdef t_midiportinfo *sysmidi_idtoport(long id, long io)
+    cdef long sysmidi_uniqueid()
+    cdef t_midiportinfo *sysmidi_data1toport(void *data, long io)
+    cdef t_midiportinfo *sysmidi_nametoport(t_symbol *name, long io)
+
+cdef extern from "ext_itm.h":
+
+
+    ctypedef t_object t_itm
+    ctypedef struct t_clocksource
+    ctypedef struct t_tschange
+
+    ctypedef enum:
+        TIME_FLAGS_LOCATION = 1     
+        TIME_FLAGS_TICKSONLY = 2        
+        TIME_FLAGS_FIXEDONLY = 4        
+        TIME_FLAGS_LOOKAHEAD = 8        
+        TIME_FLAGS_USECLOCK = 16        
+        TIME_FLAGS_USEQELEM = 32        
+        TIME_FLAGS_FIXED = 64           
+        TIME_FLAGS_PERMANENT = 128      
+        TIME_FLAGS_TRANSPORT = 256      
+        TIME_FLAGS_EVENTLIST = 512      
+        TIME_FLAGS_CHECKSCHEDULE = 1024
+        TIME_FLAGS_LISTENTICKS = 2048   
+        TIME_FLAGS_NOUNITS = 4096       
+        TIME_FLAGS_BBUSOURCE = 8192 
+        TIME_FLAGS_POSITIVE = 16384         
+
+    cdef void *itm_getglobal()
+    cdef void *itm_getnamed(t_symbol *s, void *scheduler, t_symbol *defaultclocksourcename, long create)
+    cdef void *itm_getfromarg(t_object *o, t_symbol *s)
+    cdef void itm_reference(t_itm *x)
+    cdef void itm_dereference(t_itm *x)
+    cdef void itm_deleteeventlist(t_itm *x, t_symbol *eventlist)
+    cdef void itm_eventlistseek(t_itm *x)
+    cdef void itm_geteventlistnames(t_itm *x, long *count, t_symbol ***names)
+    cdef void itm_switcheventlist(t_itm *x, t_symbol *eventlist, double offset)
+    cdef double itm_gettime(t_itm *x)
+    cdef double itm_getticks(t_itm *x)
+    cdef void itm_dump(t_itm *x)
+    cdef void itm_sync(t_itm *x)
+    cdef void itm_settimesignature(t_itm *x, long num, long denom, long flags)
+    cdef void itm_gettimesignature(t_itm *x, long *num, long *denom)
+    cdef void itm_seek(t_itm *x, double oldticks, double newticks, long chase)
+    cdef void itm_pause(t_itm *x)
+    cdef void itm_resume(t_itm *x)
+    cdef long itm_getstate(t_itm *x)
+    cdef void itm_setresolution(double res)
+    cdef double itm_getresolution()
+    cdef t_symbol *itm_getname(t_itm *x)
+    cdef t_max_err itm_parse(t_itm *x, long argc, t_atom *argv, long flags, double *ticks, double *fixed, t_symbol **unit, long *bbu, char *bbusource)
+    cdef double itm_tickstoms(t_itm *x, double ticks)
+    cdef double itm_mstoticks(t_itm *x, double ms)
+    cdef double itm_mstosamps(t_itm *x, double ms)
+    cdef double itm_sampstoms(t_itm *x, double samps)
+    cdef void itm_barbeatunitstoticks(t_itm *x, long bars, long beats, double units, double *ticks, char position)
+    cdef void itm_tickstobarbeatunits(t_itm *x, double ticks, long *bars, long *beats, double *units, char position)
+    cdef void itm_format(t_itm *x, double ms, double ticks, long flags, t_symbol *unit, long *argc, t_atom **argv)
+    cdef long itm_isunitfixed(t_symbol *u)
+    cdef void itmclock_delay(t_object *x, t_itm *m, t_symbol *eventlist, double delay, long quantization)
+    cdef void *itmclock_new(t_object *owner, t_object *timeobj, method task, method killer, long permanent)
+    cdef void itmclock_set(t_object *x, t_itm *m, t_symbol *eventlist, double time)
+    cdef void itmclock_unset(t_object *x)
+    cdef void *itm_clocksource_getnamed(t_symbol *name, long create)
+    cdef void itm_getclocksources(long *count, t_symbol ***sources)
+    cdef double itm_getsr(t_itm *x)
+    cdef double itm_gettempo(t_itm *x)
+
 
 
 
