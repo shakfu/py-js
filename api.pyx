@@ -11,20 +11,20 @@
 - [ ] ext_charset.h
 - [ ] ext_common.h
 - [ ] ext_critical.h
-- [ ] ext_database.h
-- [ ] ext_default.h
+- [x] ext_database.h
+- [x] ext_default.h
 - [x] ext_dictionary.h
 - [x] ext_dictobj.h
 - [ ] ext_drag.h
-- [ ] ext_expr.h
-- [ ] ext_globalsymbol.h
+- [x] ext_expr.h
+- [x] ext_globalsymbol.h
 - [x] ext_hashtab.h
 - [ ] ext_itm.h
 - [x] ext_linklist.h
 - [x] ext_maxtypes.h
 - [x] ext_mess.h
 - [x] ext_obex.h
-- [ ] ext_obex_util.h
+- [x] ext_obex_util.h
 - [ ] ext_obstring.h
 - [ ] ext_packages.h
 - [ ] ext_parameter.h
@@ -759,6 +759,7 @@ cdef extern from "ext_obex.h":
     cdef t_max_err object_attr_touch(t_object *x, t_symbol *attrname)
     cdef t_max_err object_attr_touch_parse(t_object *x, char *attrnames)
 
+
 cdef extern from "ext_obex_util.h":
     cdef USESYM(x)
     cdef CLASS_ATTR_CHAR(c,attrname,flags,structname,structmember)
@@ -1089,6 +1090,214 @@ cdef extern from "ext_default.h":
     cdef t_max_err patcher_setdefault(t_object *patcher, t_symbol *key, long argc, t_atom *argv);
     cdef t_max_err patcher_getdefault(t_object *patcher, t_symbol *key, long *argc, t_atom *argv);
     cdef t_max_err patcher_removedefault(t_object *patcher, t_symbol *key);
+
+
+cdef extern from "ext_parameter.h":
+
+    cdef long PARAMETER_METHOD_FLAG_OVERRIDE
+    cdef long PARAMETER_METHOD_FLAG_PRE
+    cdef long PARAMETER_METHOD_FLAG_POST
+    cdef long PARAMETER_METHOD_FLAG_FULL
+    cdef long PARAMETER_METHOD_FLAG_DONOTHING
+    cdef long PARAMETER_GESTURE_INDEX
+
+    ctypedef enum PARAM_TYPE:
+        PARAM_TYPE_INVALID = -1
+        PARAM_TYPE_FLOAT = 0
+        PARAM_TYPE_INT
+        PARAM_TYPE_ENUM
+        PARAM_TYPE_BLOB     
+        PARAM_TYPE_FILE
+
+    ctypedef enum PARAM_TYPE_ENABLE:
+        PARAM_TYPE_ENABLE_OFF   
+        PARAM_TYPE_ENABLE_ON    
+        PARAM_TYPE_ENABLE_BLOB  
+
+    ctypedef enum PARAM_UNITSTYLE:
+        PARAM_UNITSTYLE_INVALID = -1
+        PARAM_UNITSTYLE_INT
+        PARAM_UNITSTYLE_FLOAT
+        PARAM_UNITSTYLE_MS
+        PARAM_UNITSTYLE_HZ
+        PARAM_UNITSTYLE_DB
+        PARAM_UNITSTYLE_PERCENT
+        PARAM_UNITSTYLE_PAN
+        PARAM_UNITSTYLE_SEMITONE
+        PARAM_UNITSTYLE_MIDINOTE
+        PARAM_UNITSTYLE_CUSTOM 
+        PARAM_UNITSTYLE_NATIVE 
+
+    ctypedef enum PARAM_MOD:
+        PARAM_MOD_INVALID = -1
+        PARAM_MOD_NONE
+        PARAM_MOD_UNI
+        PARAM_MOD_BI
+        PARAM_MOD_ADD
+        PARAM_MOD_ABS
+
+    ctypedef enum PARAM_DATA_TYPE:
+        PARAM_DATA_TYPE_INVALID = -1
+        PARAM_DATA_TYPE_VALUE
+        PARAM_DATA_TYPE_TYPE
+        PARAM_DATA_TYPE_TYPE_ENABLE
+        PARAM_DATA_TYPE_ORDER
+        PARAM_DATA_TYPE_LONGNAME
+        PARAM_DATA_TYPE_SHORTNAME
+        PARAM_DATA_TYPE_MIN
+        PARAM_DATA_TYPE_MAX
+        PARAM_DATA_TYPE_ENUM
+        PARAM_DATA_TYPE_MODMODE
+        PARAM_DATA_TYPE_MODMIN
+        PARAM_DATA_TYPE_MODMAX
+        PARAM_DATA_TYPE_INITIAL_ENABLE
+        PARAM_DATA_TYPE_INITIAL
+        PARAM_DATA_TYPE_INITIAL_EDITABLE
+        PARAM_DATA_TYPE_UNITSTYLE
+        PARAM_DATA_TYPE_EXPONENT
+        PARAM_DATA_TYPE_STEPS
+        PARAM_DATA_TYPE_SPEEDLIM
+        PARAM_DATA_TYPE_SMOOTHING 
+        PARAM_DATA_TYPE_UNITS
+        PARAM_DATA_TYPE_INFO
+        PARAM_DATA_TYPE_FOCUS 
+        PARAM_DATA_TYPE_INVISIBLE
+        PARAM_DATA_TYPE_AUTOMATION_VALUE
+        PARAM_DATA_TYPE_AUTOMATION_STATE
+        PARAM_DATA_TYPE_MODULATION_VALUE
+        PARAM_DATA_TYPE_DIRTY
+        PARAM_DATA_TYPE_ASSIGNMENT_TEXT_MIDI
+        PARAM_DATA_TYPE_ASSIGNMENT_TEXT_KEY
+        PARAM_DATA_TYPE_ASSIGNMENT_TEXT_MACRO
+        PARAM_DATA_TYPE_LEARNING_MODE
+        PARAM_DATA_TYPE_FILEREF_PATH
+        PARAM_DATA_TYPE_FILEREF_DISPLAYPATH
+        PARAM_DATA_TYPE_FILEREF_DISPLAYNAME
+        PARAM_DATA_TYPE_DEVICESTATE 
+        PARAM_DATA_TYPE_DEFER
+        PARAM_DATA_TYPE_MAPPING_INDEX
+        PARAM_DATA_TYPE_NOBLOBCACHE
+
+    ctypedef enum PARAM_VALUE_SET_TYPE:
+        PARAM_VALUE_SET_DISTANCE = 0
+        PARAM_VALUE_SET_REAL
+        PARAM_VALUE_SET_GETONLY
+        PARAM_VALUE_SET_DISTANCE_NONOTIFY
+        PARAM_VALUE_SET_REAL_NONOTIFY
+
+    ctypedef enum PARAM_VALUE_GET_TYPE:
+        PARAM_VALUE_GET_OUTPUT = 0
+        PARAM_VALUE_GET_AUTOMATION
+        PARAM_VALUE_GET_MODULATION
+
+    ctypedef enum PARAM_VALUE_FORMAT:
+        PARAM_VALUE_DISTANCE = 0
+        PARAM_VALUE_LINEAR
+        PARAM_VALUE_REAL
+
+    ctypedef enum PARAM_AUTOMATION_STATE:
+        PARAM_AUTOMATION_STATE_NONE         = 0x00
+        PARAM_AUTOMATION_STATE_AUTOMATED    = 0x01
+        PARAM_AUTOMATION_STATE_AUTOENABLED  = 0x02
+        PARAM_AUTOMATION_STATE_IRRELEVANT   = 0x04
+        PARAM_AUTOMATION_STATE_DISABLED     = 0x08
+        PARAM_AUTOMATION_STATE_MACRO        = 0x10
+
+    ctypedef enum PARAM_DEVICESTATE:
+        PARAM_DEVICESTATE_ACTIVE            = 0
+        PARAM_DEVICESTATE_INACTIVE          = 1
+
+    ctypedef enum PARAM_LEARNING_TYPE:
+        PARAM_LEARNING_TYPE_NONE = 0
+        PARAM_LEARNING_TYPE_MIDI
+        PARAM_LEARNING_TYPE_KEY
+        PARAM_LEARNING_TYPE_MACRO
+
+    ctypedef struct t_parameter_notify_data
+
+    ctypedef struct t_param_class_defcolor_data
+    
+    cdef t_max_err class_parameter_init(t_class *c)
+    cdef t_max_err object_parameter_init(t_object *x, PARAM_TYPE type)
+    cdef t_max_err object_parameter_dictionary_process(t_object *x, t_dictionary *d)
+    cdef t_max_err object_parameter_free(t_object *x)
+    cdef t_bool object_parameter_notify(t_object *x, t_symbol *s, t_symbol *msg, void *sender, void *data, t_parameter_notify_data *pnd)
+    cdef t_max_err object_parameter_getinfo(t_object *x, PARAM_DATA_TYPE type, long *ac, t_atom **av)
+    cdef t_max_err object_parameter_setinfo(t_object *x, PARAM_DATA_TYPE type, long ac, t_atom *av)
+    cdef t_max_err object_parameter_string_get(t_object *x, double val, char **outstr)
+    cdef t_max_err object_parameter_stringtovalue(t_object *x, double *value, char *str)
+    cdef t_max_err object_parameter_value_set(t_object *x, PARAM_VALUE_SET_TYPE how, double *linear, double *real, char blobnotify)
+    cdef t_max_err object_parameter_value_get(t_object *x, PARAM_VALUE_GET_TYPE how, PARAM_VALUE_FORMAT what, double *value)
+    cdef t_max_err object_parameter_current_to_initial(t_object *x)
+    # cdef t_max_err object_parameter_color_get(t_object *x, t_symbol *s, t_jrgba *jrgba)
+    cdef t_max_err object_parameter_value_setvalueof(t_object *x, long ac, t_atom *av, char blobnotify)
+    cdef t_max_err object_parameter_value_setvalueof_nonotify(t_object *x, long ac, t_atom *av, char blobnotify)
+    cdef t_max_err object_parameter_value_getvalueof(t_object *x, long *ac, t_atom **av)
+    cdef t_max_err object_parameter_value_changed(t_object *x, char blobnotify)
+    cdef t_max_err object_parameter_value_changed_nonotify(t_object *x, char blobnotify)
+    cdef t_max_err class_parameter_addmethod(t_class *c, method m, char *name, long flags, ...)
+    cdef t_max_err parameter_default_int(t_object *x, long n)
+    cdef t_max_err parameter_default_float(t_object *x, double d)
+    cdef t_max_err parameter_default_anything(t_object *x, t_symbol *s, long ac, t_atom *av)
+    cdef t_max_err class_parameter_register_default_color(t_class *c, t_symbol *attrname, t_symbol *colorname)
+    cdef t_bool object_parameter_is_initialized(t_object *x)
+    cdef t_bool object_parameter_is_in_Live(t_object *x)
+    cdef t_bool object_parameter_is_in_maxtilde(t_object *x)
+    cdef t_bool object_parameter_is_automated(t_object *x)
+    cdef t_max_err object_parameter_wants_focus(t_object *x)
+    cdef t_bool object_parameter_is_parameter(t_object *x)
+    cdef t_atom_long object_parameter_get_order(t_object *x)
+
+    cdef t_symbol *ps_surface_bg
+    cdef t_symbol *ps_control_bg         
+    cdef t_symbol *ps_control_text_bg    
+    cdef t_symbol *ps_control_fg         
+    cdef t_symbol *ps_control_fg_on      
+    cdef t_symbol *ps_control_fg_off     
+    cdef t_symbol *ps_control_selection  
+    cdef t_symbol *ps_control_zombie     
+    cdef t_symbol *ps_value_arc
+    cdef t_symbol *ps_value_bar
+    cdef t_symbol *ps_active_automation  
+    cdef t_symbol *ps_inactive_automation
+    cdef t_symbol *ps_macro_assigned     
+    cdef t_symbol *ps_contrast_frame     
+    cdef t_symbol *ps_key_assignment     
+    cdef t_symbol *ps_midi_assignment    
+    cdef t_symbol *ps_macro_assignment   
+    cdef t_symbol *ps_assignment_text_bg 
+    cdef t_symbol *ps_control_fg_zombie  
+    cdef t_symbol *ps_value_arc_zombie   
+    cdef t_symbol *ps_numbox_triangle    
+    cdef t_symbol *ps_macro_title        
+    cdef t_symbol *ps_selection
+    cdef t_symbol *ps_led_bg
+    cdef char *PARAM_COLOR_SURFACE_BG
+    cdef char *PARAM_COLOR_CONTROL_BG
+    cdef char *PARAM_COLOR_CONTROL_TEXT_BG
+    cdef char *PARAM_COLOR_CONTROL_FG
+    cdef char *PARAM_COLOR_CONTROL_FG_ON
+    cdef char *PARAM_COLOR_CONTROL_FG_OFF
+    cdef char *PARAM_COLOR_CONTROL_SELECTION
+    cdef char *PARAM_COLOR_CONTROL_ZOMBIE
+    cdef char *PARAM_COLOR_VALUE_ARC
+    cdef char *PARAM_COLOR_VALUE_BAR
+    cdef char *PARAM_COLOR_ACTIVE_AUTOMATION
+    cdef char *PARAM_COLOR_INACTIVE_AUTOMATION
+    cdef char *PARAM_COLOR_MACRO_ASSIGNED
+    cdef char *PARAM_COLOR_CONTRAST_FRAME
+    cdef char *PARAM_COLOR_KEY_ASSIGNMENT
+    cdef char *PARAM_COLOR_MIDI_ASSIGNMENT
+    cdef char *PARAM_COLOR_MACRO_ASSIGNMENT
+    cdef char *PARAM_COLOR_ASSIGNMENT_TEXT_BG
+    cdef char *PARAM_COLOR_CONTROL_FG_ZOMBIE
+    cdef char *PARAM_COLOR_VALUE_ARC_ZOMBIE
+    cdef char *PARAM_COLOR_NUMBOX_TRIANGLE
+    cdef char *PARAM_COLOR_MACRO_TITLE
+    cdef char *PARAM_COLOR_SELECTION
+    cdef char *PARAM_COLOR_LED_BG
+    cdef int PARAM_COLOR_COUNT
+
 
 
 # cdef extern from "ext_boxstyle.h":
