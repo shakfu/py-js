@@ -19,7 +19,7 @@
 - [x] ext_expr.h
 - [x] ext_globalsymbol.h
 - [x] ext_hashtab.h
-- [ ] ext_itm.h
+- [x] ext_itm.h
 - [x] ext_linklist.h
 - [x] ext_maxtypes.h
 - [x] ext_mess.h

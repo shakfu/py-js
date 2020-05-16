@@ -1,18 +1,53 @@
 #!/usr/bin/env python
 
 import sys
-from pathlib import Path
-from subprocess import run
+import subprocess
 
+#----------------------------------------------------------------------
+## generic pipe functions
 
-includes = Path(r'/Users/sa/Documents/Max 8/Packages/max-sdk-8.0.3/source/c74support/max-includes')
+def rpl(x, y=''):
+    def _func(s):
+        return s.replace(x, y)
+    return _func
 
-p = includes / sys.argv[1]
-res = run(['/usr/local/bin/stripcmt', p], capture_output=True)
+def pipe(*args):
+    def _func(txt):
+        return subprocess.run(list(args), input=txt, 
+        text=True, capture_output=True).stdout
+    return _func
 
-lines = res.stdout.decode('utf8').splitlines()
+def read_file(path):
+    with open(path) as f:
+        txt = f.read()
+    return txt
 
-singles = '\n'.join([l for l in lines if l])
+def remove_blanklines(txt):
+    return '\n'.join([l for l in txt.splitlines() if l])
 
-final = singles.replace(';', '')
-print(final)
+#----------------------------------------------------------------------
+## main process pipeline
+
+def main(path):
+    # text processing pipeline 
+    pipeline = [
+        pipe('/usr/local/bin/stripcmt'), # strip comments
+        remove_blanklines,
+        rpl(';'),
+        rpl('C74_CONST', 'const'),
+        rpl('(void)', '()'),
+    ]
+
+    # read it
+    with open(path) as f:
+        txt = f.read()
+
+    # process it
+    for func in pipeline:
+        txt = func(txt)
+
+    return txt
+
+if __name__ == '__main__':
+    output = process(sys.argv[1])
+    print(output) #  for convenient redirection
