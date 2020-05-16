@@ -1322,6 +1322,7 @@ cdef extern from "ext_sysmidi.h":
     cdef t_midiportinfo *sysmidi_data1toport(void *data, long io)
     cdef t_midiportinfo *sysmidi_nametoport(t_symbol *name, long io)
 
+
 cdef extern from "ext_itm.h":
 
 
