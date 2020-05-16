@@ -62,7 +62,7 @@
 """
 
 cdef extern from "ext.h":
-    ctypedef t_object t_patcher # just a place holder
+    DEF PY_DUMMY = 1 # not used just include ext.h with a single line
 
 cdef extern from "ext_atombuf.h":
     ctypedef struct t_atombuf
@@ -759,6 +759,292 @@ cdef extern from "ext_obex.h":
     cdef t_max_err object_attr_touch(t_object *x, t_symbol *attrname)
     cdef t_max_err object_attr_touch_parse(t_object *x, char *attrnames)
 
+cdef extern from "ext_obex_util.h":
+    cdef USESYM(x)
+    cdef CLASS_ATTR_CHAR(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_LONG(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_ATOM_LONG(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_INT32(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_FILEPATH(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_FLOAT(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_DOUBLE(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_SYM(c,attrname,flags,structname,structmember)
+
+    cdef CLASS_ATTR_ATOM(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_OBJ(c,attrname,flags,structname,structmember)
+    cdef CLASS_ATTR_CHAR_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_LONG_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_ATOM_LONG_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_FLOAT_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_DOUBLE_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_SYM_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_ATOM_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_OBJ_ARRAY(c,attrname,flags,structname,structmember,size)
+    cdef CLASS_ATTR_CHAR_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize) 
+    cdef CLASS_ATTR_LONG_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
+    cdef CLASS_ATTR_FLOAT_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
+    cdef CLASS_ATTR_DOUBLE_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
+    cdef CLASS_ATTR_SYM_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
+    cdef CLASS_ATTR_ATOM_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
+    cdef CLASS_ATTR_OBJ_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
+    cdef STRUCT_ATTR_CHAR(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_LONG(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_ATOM_LONG(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_FLOAT(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_DOUBLE(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_SYM(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_ATOM(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_OBJ(c,flags,structname,structmember)
+    cdef STRUCT_ATTR_CHAR_ARRAY(c,flags,structname,structmember,size)
+    cdef STRUCT_ATTR_LONG_ARRAY(c,flags,structname,structmember,size)
+    cdef STRUCT_ATTR_FLOAT_ARRAY(c,flags,structname,structmember,size)
+    cdef STRUCT_ATTR_DOUBLE_ARRAY(c,flags,structname,structmember,size)
+    cdef STRUCT_ATTR_SYM_ARRAY(c,flags,structname,structmember,size) 
+    cdef STRUCT_ATTR_ATOM_ARRAY(c,flags,structname,structmember,size)
+    cdef STRUCT_ATTR_OBJ_ARRAY(c,flags,structname,structmember,size) 
+    cdef STRUCT_ATTR_CHAR_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
+    cdef STRUCT_ATTR_LONG_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
+    cdef STRUCT_ATTR_FLOAT_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
+    cdef STRUCT_ATTR_DOUBLE_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
+    cdef STRUCT_ATTR_SYM_VARSIZE(c,flags,structname,structmember,sizemember,maxsize) 
+    cdef STRUCT_ATTR_ATOM_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
+    cdef STRUCT_ATTR_OBJ_VARSIZE(c,flags,structname,structmember,sizemember,maxsize) 
+    # cdef STATIC_ATTR_ATOMS
+    # cdef STATIC_ATTR_PARSE
+    # cdef STATIC_ATTR_FORMAT
+    cdef STATIC_ATTR_CHAR(c,attrname,flags,val)
+    cdef STATIC_ATTR_LONG(c,attrname,flags,val)
+    cdef STATIC_ATTR_FLOAT(c,attrname,flags,val)
+    cdef STATIC_ATTR_DOUBLE(c,attrname,flags,val)
+    cdef STATIC_ATTR_SYM(c,attrname,flags,val)
+    cdef STATIC_ATTR_ATOM(c,attrname,flags,val)
+    cdef STATIC_ATTR_OBJ(c,attrname,flags,val)
+    cdef STATIC_ATTR_CHAR_ARRAY(c,attrname,flags,count,vals) 
+    cdef STATIC_ATTR_LONG_ARRAY(c,attrname,flags,count,vals) 
+    cdef STATIC_ATTR_FLOAT_ARRAY(c,attrname,flags,count,vals)
+    cdef STATIC_ATTR_DOUBLE_ARRAY(c,attrname,flags,count,vals)
+    cdef STATIC_ATTR_SYM_ARRAY(c,attrname,flags,count,vals)
+    # cdef STATIC_ATTR_ATOM_ARRAY  
+    cdef STATIC_ATTR_OBJ_ARRAY(c,attrname,flags,count,vals)  
+    # cdef OBJ_ATTR_ATOMS
+    # cdef OBJ_ATTR_PARSE
+    # cdef OBJ_ATTR_FORMAT
+    cdef OBJ_ATTR_CHAR(x,attrname,flags,val)
+    cdef OBJ_ATTR_LONG(x,attrname,flags,val)
+    cdef OBJ_ATTR_FLOAT(x,attrname,flags,val)
+    cdef OBJ_ATTR_DOUBLE(x,attrname,flags,val)
+    cdef OBJ_ATTR_SYM(x,attrname,flags,val)
+    cdef OBJ_ATTR_ATOM(x,attrname,flags,val)
+    cdef OBJ_ATTR_OBJ(x,attrname,flags,val)  
+    cdef OBJ_ATTR_CHAR_ARRAY(x,attrname,flags,count,vals)
+    cdef OBJ_ATTR_LONG_ARRAY(x,attrname,flags,count,vals)
+    cdef OBJ_ATTR_FLOAT_ARRAY(x,attrname,flags,count,vals)
+    cdef OBJ_ATTR_DOUBLE_ARRAY(x,attrname,flags,count,vals)
+    cdef OBJ_ATTR_SYM_ARRAY(x,attrname,flags,count,vals) 
+    # cdef OBJ_ATTR_ATOM_ARRAY
+    cdef OBJ_ATTR_OBJ_ARRAY(x,attrname,flags,count,vals) 
+    cdef CLASS_ATTR_ACCESSORS(c,attrname,getter,setter)
+    cdef CLASS_ATTR_ADD_FLAGS(c,attrname,flags)
+    cdef CLASS_ATTR_REMOVE_FLAGS(c,attrname,flags)
+    cdef CLASS_ATTR_FILTER_MIN(c,attrname,minval)
+    cdef CLASS_ATTR_FILTER_MAX(c,attrname,maxval)
+    cdef CLASS_ATTR_FILTER_CLIP(c,attrname,minval,maxval)
+    cdef CLASS_ATTR_ALIAS(c,attrname,aliasname)
+    # cdef CLASS_ATTR_ATTR_ATOMS
+    # cdef CLASS_ATTR_ATTR_PARSE
+    # cdef CLASS_ATTR_ATTR_FORMAT
+    cdef CLASS_ATTR_DEFAULT(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_SAVE(c,attrname,flags)
+    cdef CLASS_ATTR_SELFSAVE(c,attrname,flags)
+    cdef CLASS_ATTR_DEFAULT_SAVE(c,attrname,flags,parsestr) 
+    cdef CLASS_ATTR_DEFAULTNAME(c,attrname,flags,parsestr)
+
+    cdef CLASS_ATTR_DEFAULTNAME_SAVE(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_MIN(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_MAX(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_PAINT(c,attrname,flags)
+    cdef CLASS_ATTR_DEFAULT_PAINT(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_DEFAULT_SAVE_PAINT(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_DEFAULTNAME_PAINT(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_DEFAULTNAME_SAVE_PAINT(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_STYLE(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_LABEL(c,attrname,flags,labelstr)
+    cdef CLASS_ATTR_ENUM(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_ENUMINDEX(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_ENUMINDEX2(c,attrname,flags,enum1,enum2)
+    cdef CLASS_ATTR_ENUMINDEX3(c,attrname,flags,enum1,enum2,enum3)
+    cdef CLASS_ATTR_ENUMINDEX4(c,attrname,flags,enum1,enum2,enum3,enum4)
+    cdef CLASS_ATTR_ENUMINDEX5(c,attrname,flags,enum1,enum2,enum3,enum4,enum5)
+    cdef CLASS_ATTR_ENUMINDEX6(c,attrname,flags,enum1,enum2,enum3,enum4,enum5,enum6)
+    cdef CLASS_ATTR_ENUMINDEX7(c,attrname,flags,enum1,enum2,enum3,enum4,enum5,enum6,enum7)
+    cdef CLASS_ATTR_CATEGORY(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_STYLE_LABEL(c,attrname,flags,stylestr,labelstr)
+    cdef CLASS_ATTR_INVISIBLE(c,attrname,flags)
+    cdef CLASS_ATTR_ORDER(c,attrname,flags,parsestr)
+    cdef CLASS_ATTR_BASIC(c,attrname,flags)
+    cdef CLASS_ATTR_ATOMARRAY(c,attrname,flags)
+    cdef CLASS_METHOD_ATTR_PARSE(c,methodname,attrname,type,flags,parsestring)
+    cdef CLASS_ATTR_LEGACYDEFAULT(c,legacyattrname,newattrname,flags,parsestr)
+    cdef CLASS_ATTR_OBSOLETE(c,attrname,flags)
+    cdef CLASS_ATTR_RENAMED(c,oldname,newname,flags)
+    cdef CLASS_ATTR_INTRODUCED(c,attrname,flags,versionstr)
+    cdef CLASS_METHOD_OBSOLETE(c,methodname,flags)
+    cdef CLASS_METHOD_RENAMED(c,oldname,newname,flags)
+    cdef CLASS_METHOD_INTRODUCED(c,methodname,flags,versionstr)
+    # cdef OBJ_ATTR_ATTR_ATOMS
+    # cdef OBJ_ATTR_ATTR_PARSE
+    # cdef OBJ_ATTR_ATTR_FORMAT
+    cdef OBJ_ATTR_DEFAULT(x,attrname,flags,parsestr)
+    cdef OBJ_ATTR_SAVE(x,attrname,flags)
+    cdef OBJ_ATTR_DEFAULT_SAVE(x,attrname,flags,parsestr) 
+    cdef CLASS_STICKY_ATTR(c,name,flags,parsestr)
+    cdef CLASS_STICKY_ATTR_CLEAR(c,name)
+    cdef CLASS_STICKY_CATEGORY(c,flags,name)
+    cdef CLASS_STICKY_CATEGORY_CLEAR(c)
+    cdef CLASS_STICKY_METHOD(c,name,flags,parsestr)
+    cdef CLASS_STICKY_METHOD_CLEAR(c,name)
+    cdef int OBEX_UTIL_MAX_ATOM_GETBYTES 
+    cdef int OBEX_UTIL_MAX_ATOM_STATIC
+    # cdef OBEX_UTIL_ATOM_SETUP_VAR_STATIC
+    # cdef OBEX_UTIL_ATOM_CLEANUP_VAR_STATIC 
+    cdef OBEX_UTIL_ATOM_SETUP_ARRAY_STATIC(ac)
+    cdef OBEX_UTIL_ATOM_CLEANUP_ARRAY_STATIC(ac)
+    # cdef OBEX_UTIL_ATOM_SETUP_VAR_DYN
+    # cdef OBEX_UTIL_ATOM_CLEANUP_VAR_DYN
+    cdef OBEX_UTIL_ATOM_SETUP_ARRAY_DYN(ac)
+    cdef OBEX_UTIL_ATOM_CLEANUP_ARRAY_DYN(ac)
+    # cdef OBEX_UTIL_ATOM_SETUP_VAR_COMBO
+    # cdef OBEX_UTIL_ATOM_CLEANUP_VAR_COMBO
+    cdef OBEX_UTIL_ATOM_SETUP_ARRAY_COMBO(ac)
+    cdef OBEX_UTIL_ATOM_CLEANUP_ARRAY_COMBO(ac)
+    # cdef OBEX_UTIL_ATOM_SETUP_VAR
+    # cdef OBEX_UTIL_ATOM_CLEANUP_VAR
+    # cdef OBEX_UTIL_ATOM_SETUP_ARRAY
+    # cdef OBEX_UTIL_ATOM_CLEANUP_ARRAY
+    ctypedef enum e_max_atom_gettext_flags:
+        OBEX_UTIL_ATOM_GETTEXT_DEFAULT =            0x00000000 
+        OBEX_UTIL_ATOM_GETTEXT_TRUNCATE_ZEROS =     0x00000001 
+        OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE =       0x00000002 
+        OBEX_UTIL_ATOM_GETTEXT_SYM_FORCE_QUOTE =    0x00000004 
+        OBEX_UTIL_ATOM_GETTEXT_COMMA_DELIM =        0x00000008 
+        OBEX_UTIL_ATOM_GETTEXT_FORCE_ZEROS =        0x00000010 
+        OBEX_UTIL_ATOM_GETTEXT_NUM_HI_RES =         0x00000020  
+        OBEX_UTIL_ATOM_GETTEXT_NUM_LO_RES =         0x00000040  
+
+    cdef t_max_err atom_setchar_array(long ac, t_atom *av, long count, unsigned char *vals)
+    cdef t_max_err atom_setlong_array(long ac, t_atom *av, long count, t_atom_long *vals)
+    cdef t_max_err atom_setfloat_array(long ac, t_atom *av, long count, float *vals)
+    cdef t_max_err atom_setdouble_array(long ac, t_atom *av, long count, double *vals)
+    cdef t_max_err atom_setsym_array(long ac, t_atom *av, long count, t_symbol **vals)
+    cdef t_max_err atom_setatom_array(long ac, t_atom *av, long count, t_atom *vals)
+    cdef t_max_err atom_setobj_array(long ac, t_atom *av, long count, t_object **vals)
+    cdef t_max_err atom_setparse(long *ac, t_atom **av, const char *parsestr)
+    cdef t_max_err atom_setbinbuf(long *ac, t_atom **av, void *buf)
+    cdef t_max_err atom_setattrval(long *ac, t_atom **av, t_symbol *attrname, t_object *obj)
+    cdef t_max_err atom_setobjval(long *ac, t_atom **av, t_object *obj)
+    cdef t_max_err atom_setformat(long *ac, t_atom **av, const char *fmt, ...) 
+    #cdef t_max_err atom_setformat_va(long *ac, t_atom **av, const char *fmt, va_list args)
+    cdef t_max_err atom_getformat(long ac, t_atom *av, const char *fmt, ...)
+    #cdef t_max_err atom_getformat_va(long ac, t_atom *av, const char *fmt, va_list args)
+    cdef t_max_err atom_gettext(long ac, t_atom *av, long *textsize, char **text, long flags)
+    cdef t_max_err atom_getchar_array(long ac, t_atom *av, long count, unsigned char *vals)
+    cdef t_max_err atom_getlong_array(long ac, t_atom *av, long count, t_atom_long *vals)
+    cdef t_max_err atom_getfloat_array(long ac, t_atom *av, long count, float *vals)
+    cdef t_max_err atom_getdouble_array(long ac, t_atom *av, long count, double *vals)
+    cdef t_max_err atom_getsym_array(long ac, t_atom *av, long count, t_symbol **vals)
+    cdef t_max_err atom_getatom_array(long ac, t_atom *av, long count, t_atom *vals)
+    cdef t_max_err atom_getobj_array(long ac, t_atom *av, long count, t_object **vals)
+    cdef long atomisstring(const t_atom *a)
+    cdef long atomisatomarray(t_atom *a)
+    cdef long atomisdictionary(t_atom *a)
+    cdef OB_MSG(x,p)
+    cdef t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
+    cdef t_max_err object_method_binbuf(t_object *x, t_symbol *s, void *buf, t_atom *rv)
+    cdef t_max_err object_method_attrval(t_object *x, t_symbol *s, t_symbol *attrname, t_object *obj, t_atom *rv)
+    cdef t_max_err object_method_objval(t_object *x, t_symbol *s, t_object *obj, t_atom *rv)
+    cdef t_max_err object_method_format(t_object *x, t_symbol *s, t_atom *rv, const char *fmt, ...)
+    cdef t_max_err object_method_char(t_object *x, t_symbol *s, unsigned char v, t_atom *rv)
+    cdef t_max_err object_method_long(t_object *x, t_symbol *s, long v, t_atom *rv)
+    cdef t_max_err object_method_float(t_object *x, t_symbol *s, float v, t_atom *rv)
+    cdef t_max_err object_method_double(t_object *x, t_symbol *s, double v, t_atom *rv)
+    cdef t_max_err object_method_sym(t_object *x, t_symbol *s, t_symbol *v, t_atom *rv)
+    cdef t_max_err object_method_obj(t_object *x, t_symbol *s, t_object *v, t_atom *rv)
+    cdef t_max_err object_method_char_array(t_object *x, t_symbol *s, long ac, unsigned char *av, t_atom *rv)
+    cdef t_max_err object_method_long_array(t_object *x, t_symbol *s, long ac, t_atom_long *av, t_atom *rv)
+    cdef t_max_err object_method_float_array(t_object *x, t_symbol *s, long ac, float *av, t_atom *rv)
+    cdef t_max_err object_method_double_array(t_object *x, t_symbol *s, long ac, double *av, t_atom *rv)
+    cdef t_max_err object_method_sym_array(t_object *x, t_symbol *s, long ac, t_symbol **av, t_atom *rv)
+    cdef t_max_err object_method_obj_array(t_object *x, t_symbol *s, long ac, t_object **av, t_atom *rv)
+    cdef t_max_err call_method_typed(method m, t_object *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
+    cdef t_max_err call_method_parse(method m, t_object *x, t_symbol *s, char *parsestr, t_atom *rv)
+    cdef t_max_err call_method_binbuf(method m, t_object *x, t_symbol *s, void *buf, t_atom *rv)
+    cdef t_max_err call_method_attrval(method m, t_object *x, t_symbol *s, t_symbol *attrname, t_object *obj, t_atom *rv)
+    cdef t_max_err call_method_objval(method m, t_object *x, t_symbol *s, t_object *obj, t_atom *rv)
+    cdef t_max_err call_method_format(method m, t_object *x, t_symbol *s, t_atom *rv, char *fmt, ...)
+    cdef t_max_err call_method_char(method m, t_object *x, t_symbol *s, unsigned char v, t_atom *rv)
+    cdef t_max_err call_method_long(method m, t_object *x, t_symbol *s, long v, t_atom *rv)
+    cdef t_max_err call_method_float(method m, t_object *x, t_symbol *s,float v, t_atom *rv)
+    cdef t_max_err call_method_double(method m, t_object *x, t_symbol *s, double v, t_atom *rv)
+    cdef t_max_err call_method_sym(method m, t_object *x, t_symbol *s, t_symbol *v, t_atom *rv)
+    cdef t_max_err call_method_obj(method m, t_object *x, t_symbol *s, t_object *v, t_atom *rv)
+    cdef t_max_err call_method_char_array(method m, t_object *x, t_symbol *s, long ac, unsigned char *av, t_atom *rv)
+    cdef t_max_err call_method_long_array(method m, t_object *x, t_symbol *s, long ac, t_atom_long *av, t_atom *rv)
+    cdef t_max_err call_method_float_array(method m, t_object *x, t_symbol *s, long ac, float *av, t_atom *rv)
+    cdef t_max_err call_method_double_array(method m, t_object *x, t_symbol *s, long ac, double *av, t_atom *rv)
+    cdef t_max_err call_method_sym_array(method m, t_object *x, t_symbol *s, long ac, t_symbol **av, t_atom *rv)
+    cdef t_max_err call_method_obj_array(method m, t_object *x, t_symbol *s, long ac, t_object **av, t_atom *rv)
+    cdef t_max_err object_attr_setparse(t_object *x, t_symbol *s, const char *parsestr)
+    cdef t_max_err object_attr_setbinbuf(t_object *x, t_symbol *s, void *buf)
+    cdef t_max_err object_attr_setattrval(t_object *x, t_symbol *s, t_symbol *attrname, t_object *obj)
+    cdef t_max_err object_attr_setobjval(t_object *x, t_symbol *s, t_object *obj)
+    cdef t_max_err object_attr_setformat(t_object *x, t_symbol *s, const char *fmt, ...)
+    cdef t_object *attribute_new_atoms(const char *attrname, t_symbol *type, long flags, long ac, t_atom *av)
+    cdef t_object *attribute_new_parse(const char *attrname, t_symbol *type, long flags, const char *parsestr)
+    cdef t_object *attribute_new_binbuf(const char *attrname, t_symbol *type, long flags, void *buf)
+    cdef t_object *attribute_new_attrval(const char *attrname, t_symbol *type, long flags, t_symbol *objattrname, t_object *obj)
+    cdef t_object *attribute_new_objval(const char *attrname, t_symbol *type, long flags, t_object *obj)
+    cdef t_object *attribute_new_format(const char *attrname, t_symbol *type, long flags, const char *fmt, ...)
+    cdef void *object_new_parse(t_symbol *name_space, t_symbol *classname, const char *parsestr)
+    cdef void *object_new_binbuf(t_symbol *name_space, t_symbol *classname, void *buf)
+    cdef void *object_new_attrval(t_symbol *name_space, t_symbol *classname, t_symbol *objattrname, t_object *obj)
+    cdef void *object_new_objval(t_symbol *name_space, t_symbol *classname, t_object *obj)
+    cdef void *object_new_format(t_symbol *name_space, t_symbol *classname, const char *fmt, ...)    
+    cdef t_max_err object_attr_addattr(t_object *x, t_symbol *attrname, t_object *attr)
+    cdef t_object *object_attr_attr_get(t_object *x, t_symbol *attrname, t_symbol *attrname2)
+    cdef t_max_err object_attr_attr_setvalueof(t_object *x, t_symbol *attrname, t_symbol *attrname2, long argc, t_atom *argv)
+    cdef t_max_err object_attr_attr_getvalueof(t_object *x, t_symbol *attrname, t_symbol *attrname2, long *argc, t_atom **argv)
+    cdef t_max_err class_attr_addattr(t_class *c, t_symbol *attrname, t_object *attr)
+    cdef t_object *class_attr_attr_get(t_class *c, t_symbol *attrname, t_symbol *attrname2)
+    cdef t_max_err class_attr_attr_setvalueof(t_class *c, t_symbol *attrname, t_symbol *attrname2, long argc, t_atom *argv)
+    cdef t_max_err class_attr_attr_getvalueof(t_class *c, t_symbol *attrname, t_symbol *attrname2, long *argc, t_atom **argv)
+    cdef t_max_err object_attr_enforcelocal(t_object *x, t_symbol *attrname)
+    cdef t_max_err class_addattr_atoms(t_class *c, const char *attrname, t_symbol *type, long flags, long ac, t_atom *av)
+    cdef t_max_err class_addattr_parse(t_class *c, const char *attrname, t_symbol *type, long flags, const char *parsestr)
+    cdef t_max_err class_addattr_format(t_class *c, const char *attrname, t_symbol *type, long flags, const char *fmt, ...)
+    cdef t_max_err class_attr_addattr_atoms(t_class *c, const char *attrname, const char *attrname2, t_symbol *type, long flags, long ac, t_atom *av)
+    cdef t_max_err class_attr_addattr_parse(t_class *c, const char *attrname, const char *attrname2, t_symbol *type, long flags, const char *parsestr)
+    cdef t_max_err class_attr_addattr_format(t_class *c, const char *attrname, const char *attrname2, const t_symbol *type, long flags, const char *fmt, ...)
+    cdef t_max_err object_addattr_atoms(t_object *x, const char *attrname, t_symbol *type, long flags, long ac, t_atom *av)
+    cdef t_max_err object_addattr_parse(t_object *x, const char *attrname, t_symbol *type, long flags, const char *parsestr)
+    cdef t_max_err object_addattr_format(t_object *x, const char *attrname, t_symbol *type, long flags, const char *fmt, ...)
+    cdef t_max_err object_attr_addattr_atoms(t_object *x, const char *attrname, const char *attrname2, t_symbol *type, long flags, long ac, t_atom *av)
+    cdef t_max_err object_attr_addattr_parse(t_object *x, const char *attrname, const char *attrname2, t_symbol *type, long flags, const char *parsestr)
+    cdef t_max_err object_attr_addattr_format(t_object *x, const char *attrname, const char *attrname2, t_symbol *type, long flags, const char *fmt, ...)
+    cdef t_object *object_clone(t_object *x)
+    cdef t_object *object_clone_generic(t_object *x)
+    cdef void object_zero(t_object *x)
+    cdef t_max_err class_addcommand(t_class *c, method cmd, method enabler, method handler, const char *message)
+    cdef void *object_commandenabled(t_object *o, t_symbol *cmd)
+    cdef t_max_err object_getenabler(t_object *c, t_symbol *cmd, method *m)
+    cdef t_max_err object_getcommand(t_object *o, t_symbol *cmd, method *m)
+    cdef void *object_handlecommand(t_object *o, t_symbol *s, long argc, t_atom *argv, t_atom *rv)
+    cdef t_ptr_int object_attr_getdisabled(t_object *o, t_symbol *attrname)
+    cdef t_max_err object_attr_setdisabled(t_object *o, t_symbol *attrname, long way)
+    cdef t_max_err object_replaceargs(t_object *x, long argc, t_atom *argv, char match, char poundfill)
+    cdef t_max_err object_attr_obsolete_getter(t_object *x, t_object *attr, long *ac, t_atom **av)
+    cdef t_max_err object_attr_obsolete_setter(t_object *x, t_object *attr, long ac, t_atom *av)
+    cdef void object_method_obsolete(t_object *x, t_symbol *s, long ac, t_atom *av)
+
 
 cdef extern from "ext_database.h":
     ctypedef t_object t_database
@@ -797,6 +1083,12 @@ cdef extern from "ext_database.h":
     cdef t_ptr_uint db_result_datetimeinseconds(t_db_result *result, long recordindex, long fieldindex)
     cdef void db_util_stringtodate(const char *string, t_ptr_uint *date)
     cdef void db_util_datetostring(const t_ptr_uint date, char *string)
+
+
+cdef extern from "ext_default.h":
+    cdef t_max_err patcher_setdefault(t_object *patcher, t_symbol *key, long argc, t_atom *argv);
+    cdef t_max_err patcher_getdefault(t_object *patcher, t_symbol *key, long *argc, t_atom *argv);
+    cdef t_max_err patcher_removedefault(t_object *patcher, t_symbol *key);
 
 
 # cdef extern from "ext_boxstyle.h":
