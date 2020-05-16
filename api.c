@@ -609,7 +609,9 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include "ext_expr.h"
 #include "ext_globalsymbol.h"
 #include "ext_obex.h"
+#include "ext_obex_util.h"
 #include "ext_database.h"
+#include "ext_default.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */
@@ -1071,7 +1073,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self); /* pro
 static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
 /* Late includes */
 
-/* "api.pyx":827
+/* "api.pyx":1120
  * txt = 'Hello from Max!'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
@@ -1086,7 +1088,7 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
 
-  /* "api.pyx":828
+  /* "api.pyx":1121
  * 
  * cpdef public str hello():
  *     return txt             # <<<<<<<<<<<<<<
@@ -1094,14 +1096,14 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
  * cpdef public void py_post(str s):
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 828, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 828, __pyx_L1_error)
+  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 1121, __pyx_L1_error)
   __pyx_r = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "api.pyx":827
+  /* "api.pyx":1120
  * txt = 'Hello from Max!'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
@@ -1139,7 +1141,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 827, __pyx_L1_error)
+  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1120, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1156,7 +1158,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   return __pyx_r;
 }
 
-/* "api.pyx":830
+/* "api.pyx":1123
  *     return txt
  * 
  * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
@@ -1170,17 +1172,17 @@ void py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
   char const *__pyx_t_1;
   __Pyx_RefNannySetupContext("py_post", 0);
 
-  /* "api.pyx":831
+  /* "api.pyx":1124
  * 
  * cpdef public void py_post(str s):
  *     post(s)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_s); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 831, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_s); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 1124, __pyx_L1_error)
   post(__pyx_t_1);
 
-  /* "api.pyx":830
+  /* "api.pyx":1123
  *     return txt
  * 
  * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
@@ -1202,7 +1204,7 @@ static PyObject *__pyx_pw_3api_3py_post(PyObject *__pyx_self, PyObject *__pyx_v_
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("py_post (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 830, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 1123, __pyx_L1_error)
   __pyx_r = __pyx_pf_3api_2py_post(__pyx_self, ((PyObject*)__pyx_v_s));
 
   /* function exit code */
@@ -1220,7 +1222,7 @@ static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyOb
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("py_post", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_void_to_None(py_post(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 830, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_void_to_None(py_post(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1572,14 +1574,14 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "api.pyx":825
+  /* "api.pyx":1118
  * #     cdef void CLASS_ATTR_STYLE_ALIAS_RGBA_LEGACY(c,attrname,aliasname)
  * 
  * txt = 'Hello from Max!'             # <<<<<<<<<<<<<<
  * 
  * cpdef public str hello():
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 825, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 1118, __pyx_L1_error)
 
   /* "api.pyx":1
  * # api.pyx             # <<<<<<<<<<<<<<
