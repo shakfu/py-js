@@ -1,4 +1,5 @@
 # dirs to exclude
+header.h
 build/
 example.c
 .DS_Store
