@@ -1,21 +1,29 @@
 # api.pyx
 """
+'x' -> the header has been fully exposed to cython
+
+'-' -> the header is not explicitly exposed to cython and presently
+       not required for the external. It is exposed to non-cython c code
+       via the primary includes in "ext.h"
+
+' ' -> an empty box means it is planned
+
 - [ ] commonsyms.h
 - [ ] ext.h
 - [ ] ext_atomarray.h
 - [x] ext_atombuf.h
-- [ ] ext_atomic.h
+- [-] ext_atomic.h
 - [x] ext_backgroundtask.h
 - [p] ext_boxstyle.h
-- [ ] ext_byteorder.h
-- [ ] ext_charset.h
-- [ ] ext_common.h
-- [ ] ext_critical.h
+- [-] ext_byteorder.h
+- [-] ext_charset.h
+- [-] ext_common.h
+- [-] ext_critical.h
 - [x] ext_database.h
 - [x] ext_default.h
 - [x] ext_dictionary.h
 - [x] ext_dictobj.h
-- [ ] ext_drag.h
+- [-] ext_drag.h
 - [x] ext_expr.h
 - [x] ext_globalsymbol.h
 - [x] ext_hashtab.h
@@ -25,7 +33,7 @@
 - [x] ext_mess.h
 - [x] ext_obex.h
 - [x] ext_obex_util.h
-- [ ] ext_obstring.h
+- [-] ext_obstring.h
 - [ ] ext_packages.h
 - [x] ext_parameter.h
 - [ ] ext_path.h
@@ -33,7 +41,7 @@
 - [ ] ext_prefix.h
 - [ ] ext_preprocessor.h
 - [x] ext_proto.h
-- [ ] ext_proto_win.h
+- [-] ext_proto_win.h
 - [ ] ext_qtimage.h
 - [ ] ext_qtstubs.h
 - [ ] ext_quickmap.h
@@ -51,7 +59,7 @@
 - [ ] ext_systime.h
 - [ ] ext_time.h
 - [ ] ext_wind.h
-- [ ] ext_xmltree.h
+- [-] ext_xmltree.h
 - [ ] indexmap.h
 - [ ] jdataview.h
 - [ ] jgraphics.h
@@ -62,7 +70,7 @@
 """
 
 cdef extern from "ext.h":
-    DEF PY_DUMMY = 1 # not used just include ext.h with a single line
+    pass
 
 cdef extern from "ext_atombuf.h":
     ctypedef struct t_atombuf
@@ -1387,7 +1395,27 @@ cdef extern from "ext_itm.h":
     cdef double itm_getsr(t_itm *x)
     cdef double itm_gettempo(t_itm *x)
 
+cdef extern from "ext_time.h":
 
+    ctypedef t_object t_timeobject
+    cdef void time_stop(t_timeobject *x)
+    cdef void time_tick(t_timeobject *x)
+    cdef double time_getms(t_timeobject *x)
+    cdef double time_getticks(t_timeobject *x)
+    cdef void time_getphase(t_timeobject *tx, double *phase, double *slope, double *ticks)
+    cdef void time_listen(t_timeobject *x, t_symbol *attr, long flags)
+    cdef void time_setvalue(t_timeobject *tx, t_symbol *s, long argc, t_atom *argv)
+    cdef void class_time_addattr(t_class *c, const char *attrname, const char *attrlabel, long flags)
+    cdef void *time_new(t_object *owner, t_symbol *attrname, method tick, long flags)
+    cdef t_object *time_getnamed(t_object *owner, t_symbol *attrname)
+    cdef void time_enable_attributes(t_object *x)
+    cdef long time_isfixedunit(t_timeobject *x)
+    cdef void time_schedule(t_timeobject *x, t_timeobject *quantize)
+    cdef void time_schedule_limit(t_timeobject *x, t_timeobject *quantize)
+    cdef void time_now(t_timeobject *x, t_timeobject *quantize)
+    cdef void *time_getitm(t_timeobject *ox)
+    cdef double time_calcquantize(t_timeobject *ox, t_itm *vitm, t_timeobject *oq)
+    cdef void time_setclock(t_timeobject *tx, t_symbol *sc)
 
 
 # cdef extern from "ext_boxstyle.h":
