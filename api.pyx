@@ -34,9 +34,9 @@
 - [x] ext_obex.h
 - [x] ext_obex_util.h
 - [-] ext_obstring.h
-- [ ] ext_packages.h
+- [x] ext_packages.h
 - [x] ext_parameter.h
-- [ ] ext_path.h
+- [x] ext_path.h
 - [ ] ext_preferences.h
 - [ ] ext_prefix.h
 - [ ] ext_preprocessor.h
@@ -57,7 +57,7 @@
 - [ ] ext_sysshmem.h
 - [ ] ext_systhread.h
 - [ ] ext_systime.h
-- [ ] ext_time.h
+- [x] ext_time.h
 - [ ] ext_wind.h
 - [-] ext_xmltree.h
 - [ ] indexmap.h
@@ -1395,6 +1395,7 @@ cdef extern from "ext_itm.h":
     cdef double itm_getsr(t_itm *x)
     cdef double itm_gettempo(t_itm *x)
 
+
 cdef extern from "ext_time.h":
 
     ctypedef t_object t_timeobject
@@ -1416,6 +1417,180 @@ cdef extern from "ext_time.h":
     cdef void *time_getitm(t_timeobject *ox)
     cdef double time_calcquantize(t_timeobject *ox, t_itm *vitm, t_timeobject *oq)
     cdef void time_setclock(t_timeobject *tx, t_symbol *sc)
+
+
+cdef extern from "ext_packages.h":
+
+    ctypedef struct t_package_file
+    cdef short packages_getpackagepath(const char *packagename)
+    cdef t_linklist *packages_createsubpathlist(const char *subfoldername, short includesysfolder)
+    cdef t_max_err packages_getsubpathcontents(const char *subfoldername, const char *suffix_selector, short includesysfolder, t_linklist **subpathlist, t_dictionary **names_to_packagefiles)
+
+
+cdef extern from "ext_path.h":
+
+    cdef int MAX_PATH_CHARS
+    cdef int MAX_FILENAME_CHARS
+    ctypedef short FILE_REF
+    cdef char PATH_SEPARATOR_CHAR
+    cdef char PATH_SEPARATOR_STRING
+    cdef char SEPARATOR_CHAR
+
+    ctypedef enum e_max_path_styles:
+        PATH_STYLE_MAX = 0
+        PATH_STYLE_NATIVE
+        PATH_STYLE_COLON
+        PATH_STYLE_SLASH
+        PATH_STYLE_NATIVE_WIN       
+
+
+    cdef int PATH_STYLE_MAX_PLAT
+    cdef int PATH_STYLE_NATIVE_PLAT
+
+    ctypedef enum e_max_path_types:
+        PATH_TYPE_IGNORE = 0
+        PATH_TYPE_ABSOLUTE  
+        PATH_TYPE_RELATIVE  
+        PATH_TYPE_BOOT      
+        PATH_TYPE_C74       
+        PATH_TYPE_PATH      
+        PATH_TYPE_DESKTOP   
+        PATH_TYPE_TILDE 
+        PATH_TYPE_TEMPFOLDER
+        PATH_TYPE_MAXDB
+
+    cdef int PATH_CHAR_IS_SEPARATOR(c)
+
+    ctypedef enum e_max_fileinfo_flags: 
+        PATH_FILEINFO_ALIAS = 1
+        PATH_FILEINFO_FOLDER = 2
+        PATH_FILEINFO_PACKAGE = 4   
+
+    cdef int FILEINFO_ALIAS 
+    cdef int FILEINFO_FOLDER
+
+    ctypedef enum e_max_path_folder_flags:
+        PATH_REPORTPACKAGEASFOLDER = 1
+        PATH_FOLDER_SNIFF = 2   
+        PATH_NOALIASRESOLUTION = 4      
+
+
+    ctypedef enum e_max_openfile_permissions:
+        PATH_READ_PERM = 1
+        PATH_WRITE_PERM = 2
+        PATH_RW_PERM = 3    
+
+
+    cdef int READ_PERM
+    cdef int WRITE_PERM
+    cdef int RW_PERM
+    cdef int PATH_DEFAULT_PATHNAME_COUNT
+
+    ctypedef enum e_max_path_indices:   
+        PATH_STARTUP_PATH = 0
+        PATH_SEARCH_PATH
+        PATH_ACTION_PATH
+        PATH_HELP_PATH
+
+
+    cdef int STARTUP_PATH 
+    cdef int SEARCH_PATH      
+    cdef int ACTION_PATH
+    cdef int HELP_PATH
+    cdef int COLLECTIVE_FILECOPY
+    cdef int COLLECTIVE_COPYTOMADEFOLDER
+    cdef int TYPELIST_SIZE 
+
+    ctypedef enum e_max_typelists:
+        TYPELIST_MAXFILES       = 1
+        TYPELIST_EXTERNS        = 2
+        TYPELIST_COLLECTIVES    = 4
+        TYPELIST_MAXFORLIVE     = 8
+        TYPELIST_SNAPSHOTS      = 16
+        TYPELIST_GENPATCHERS    = 32
+        TYPELIST_SNIPPETS       = 64
+
+
+    ctypedef struct t_fileinfo
+
+    ctypedef struct t_path
+
+    ctypedef struct t_pathlink
+
+    ctypedef enum e_max_searchpath_flags:
+        PATH_FLAGS_RECURSIVE    = 0x001
+        PATH_FLAGS_READONLY     = 0x010
+
+    short path_getapppath()
+    short path_getsupportpath()
+
+        
+    # cdef short path_tofsref(const short path, const char *filename, FSRef *ref)
+    # cdef short path_fromfsref(FSRef *ref)
+    cdef void path_namefrompathname(char *pathname, char *name)
+    cdef short locatefile(const char *name, short *outvol, short *binflag)
+    cdef short locatefiletype(const char *name, short *outvol, t_fourcc filetype, t_fourcc creator)
+    cdef short locatefilelist(char *name, short *outvol, t_fourcc *outtype, t_fourcc *filetypelist, short numtypes)
+    cdef short locatefile_extended(char *name, short *outvol, t_fourcc *outtype, const t_fourcc *filetypelist, short numtypes)
+    cdef short locatefile_pathlist(t_pathlink *list, char *name, short *outvol, t_fourcc *outtype, t_fourcc *filetypelist, short numtypes)
+    cdef short path_resolvefile(char *name, const short path, short *outpath)
+    cdef short path_fileinfo(const char *name, const short path, t_fileinfo *info)
+    cdef short path_tempfolder()
+    cdef short path_desktopfolder()
+    cdef short path_userdocfolder()
+    cdef short path_usermaxfolder()
+    cdef short path_createfolder(const short path, const char *name, short *newpath)
+    cdef short path_createnewfolder(short path, char *name, short *newpath)
+    cdef short path_copyfile(short srcpath, char *srcname, short dstpath, char *dstname)
+    cdef short path_copytotempfile(short srcpath, char *srcname, short *outpath, char *outname)
+    cdef short path_copyfolder(short srcpath, short dstpath, char *dstname, long recurse, short *newpath)
+    #cdef short C74_MUST_CHECK path_getpath(short path, const char *name, short *outpath)
+    cdef short path_getname(short path, char *name, short *outpath)
+    cdef short path_topathname(const short path, const char *file, char *name)
+    cdef short path_frompathname(const char *name, short *path, char *filename)
+    cdef short path_frompotentialpathname(const char *name, short *path, char *filename)
+    cdef void path_splitnames(const char *pathname, char *foldername, char *filename)
+    cdef short path_getnext(t_pathlink *list, short *val)
+    cdef void path_setdefault(short path, short recursive)
+    cdef short path_getdefault()
+    # cdef void path_setdefaultlist(struct _pathlink *list)
+    cdef short path_getmoddate(short path, t_ptr_uint *date)
+    cdef short path_getfilemoddate(const char *filename, const short path, t_ptr_uint *date)
+    cdef short path_getfiledatesandsize(const char *filename, short path, t_uint64 *create, t_uint64 *mod, t_uint64 *access, t_uint64 *size)
+    cdef short path_getfilecreationdate(const char *filename, const short path, t_ptr_uint *date)
+    cdef short path_getfilesize(char *filename, short path, t_ptr_size *size)
+    cdef long path_listcount(t_pathlink *list)
+    cdef short nameinpath(char *name, short *ref)                    
+    cdef short path_nameinpath(const char *name, const short path, short *ref)
+    cdef short path_sysnameinpath(char *name, short *ref)
+    cdef void *path_openfolder(short path)
+    cdef short path_foldernextfile(void *xx, t_fourcc *filetype, char *name, short descend)
+    cdef void path_closefolder(void *x)
+    cdef short path_renamefile(const char *name, const short path, const char *newname)
+    cdef long path_getprefstring(long preftype, long index, t_symbol **s)
+    cdef void path_setprefstring(long preftype, long index, t_symbol *s, long flags, t_symbol *label, short update)
+    cdef void path_makefromsymbol(long pathtype, t_symbol *sp, short recursive)
+    # cdef short path_opensysfile(const char *name, const short path, t_filehandle *ref, short perm)
+    # cdef short path_createsysfile(const char *name, short path, t_fourcc type, t_filehandle *ref)
+    # cdef short path_createressysfile(const char *name, const short path, t_fourcc type, t_filehandle *ref)
+    cdef short path_nameconform(const char *src, char *dst, long style, long type)
+    cdef short path_deletefile(const char *name, const short path)
+    cdef short path_extendedfileinfo(const char *name, short path, t_fileinfo *info, const t_fourcc *typelist, short numtypes, short sniff)
+    cdef short path_getstyle(char *name)
+    cdef char path_getseparator(char *name)
+    cdef short path_fileisresource(char *name, short path)
+    cdef short path_topotentialname(const short path, const char *file, char *name, short check)
+    cdef short path_topotentialunicodename(short path, char *file, unsigned short **name, long *outlen, short check)
+    cdef short path_fromunicodepathname(unsigned short *name, short *path, char *filename, short check)   
+    cdef t_max_err path_toabsolutesystempath(const short in_path, const char *in_filename, char *out_filepath)
+    cdef t_max_err path_absolutepath(t_symbol **returned_path, const t_symbol *s, const t_fourcc *filetypelist, short numtypes)
+    cdef void path_addsearchpath(short path, short parent)
+    cdef void path_addnamed(long pathtype, char *name, short recursive, short permanent)
+    # cdef void path_removefromlist(t_pathlink **list, short parent)
+    cdef short path_collpathnamefrompath(short vol, short *collvol, char *filename)
+    cdef short defvolume()           
+
+
 
 
 # cdef extern from "ext_boxstyle.h":
