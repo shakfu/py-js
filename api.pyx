@@ -760,6 +760,45 @@ cdef extern from "ext_obex.h":
     cdef t_max_err object_attr_touch_parse(t_object *x, char *attrnames)
 
 
+cdef extern from "ext_database.h":
+    ctypedef t_object t_database
+    ctypedef t_object t_db_result
+    ctypedef t_object t_db_view
+
+    cdef t_max_err db_open(t_symbol *dbname, const char *fullpath, t_database **db)
+    ctypedef enum t_db_open_flags:
+        DB_OPEN_FLAGS_NONE = 0
+        DB_OPEN_FLAGS_READONLY = 0x01
+
+    cdef t_max_err db_open_ext(t_symbol *dbname, const char *fullpath, t_database **db, long flags)
+    cdef t_max_err db_close(t_database **db)
+    cdef t_max_err db_query(t_database *db, t_db_result **dbresult, const char *sql, ...)
+    cdef t_max_err db_query_direct(t_database *db, t_db_result **dbresult, const char *sql)
+    cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
+    cdef t_max_err db_query_getlastinsertid(t_database *db, long *id)
+    cdef t_max_err db_query_table_new(t_database *db, const char *tablename)
+    cdef t_max_err db_query_table_addcolumn(t_database *db, const char *tablename, const char *columnname, const char *columntype, const char *flags)
+    cdef t_max_err db_transaction_start(t_database *db)
+    cdef t_max_err db_transaction_end(t_database *db)
+    cdef t_max_err db_transaction_flush(t_database *db)
+    cdef t_max_err db_view_create(t_database *db, const char *sql, t_db_view **dbview)
+    cdef t_max_err db_view_remove(t_database *db, t_db_view **dbview)
+    cdef t_max_err db_view_getresult(t_db_view *dbview, t_db_result **result)
+    cdef t_max_err db_view_setquery(t_db_view *dbview, char *newquery)
+    cdef char** db_result_nextrecord(t_db_result *result)
+    cdef void db_result_reset(t_db_result *result)
+    cdef void db_result_clear(t_db_result *result)
+    cdef long db_result_numrecords(t_db_result *result)
+    cdef long db_result_numfields(t_db_result *result)
+    cdef char* db_result_fieldname(t_db_result *result, long fieldindex)
+    cdef char* db_result_string(t_db_result *result, long recordindex, long fieldindex)
+    cdef long db_result_long(t_db_result *result, long recordindex, long fieldindex)
+    cdef float db_result_float(t_db_result *result, long recordindex, long fieldindex)
+    cdef t_ptr_uint db_result_datetimeinseconds(t_db_result *result, long recordindex, long fieldindex)
+    cdef void db_util_stringtodate(const char *string, t_ptr_uint *date)
+    cdef void db_util_datetostring(const t_ptr_uint date, char *string)
+
+
 # cdef extern from "ext_boxstyle.h":
 
 #     cdef void class_attr_setstyle(t_class *c, const char *s)
