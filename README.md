@@ -44,7 +44,41 @@ Only tested on OS X at present.
 ## Development Notes
 
 
-### Repl possible?
+## Object Reference
+
+
+It looks like `obex` is a type `hashtab` (Hash Table), which can be used for storing object references?
+
+
+## Find named object
+
+see: https://cycling74.com/forums/find-named-object-and-send-it-a-message
+
+	I'm looking at some of the patcher scripting stuff in the api.  iterator.c is a good guide, but I do want to check if there's  a simple method similar to "getnamed" in javascript, such that I don't have to iterate through all the boxes in a patcher.
+	Something along the lines of
+
+```c
+	t_object *desiredobject = jpatcher_get_namedobject("scriptedname");
+```
+	and you could then just pass desiredobject into the various jbox goodies.
+
+and the answer
+
+```c
+t_max_err err;
+t_object *patcher = NULL;
+t_object *yourobject = NULL;
+
+// get the patcher
+err = object_obex_lookup(yourobjectpointer, gensym("#P"), &patcher);
+
+// get the object that you're looking for.
+yourobject = (t_object *)object_method(patcher, gensym("getnamedbox"), gensym("theobjectname"));
+```
+
+
+
+### REPL possible?
 
 **Is it possible to launch a python interactive loop / repl from the py external?**
 
