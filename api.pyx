@@ -10,7 +10,7 @@
 
 - [ ] commonsyms.h
 - [ ] ext.h
-- [ ] ext_atomarray.h
+- [x] ext_atomarray.h
 - [x] ext_atombuf.h
 - [-] ext_atomic.h
 - [x] ext_backgroundtask.h
@@ -55,7 +55,7 @@
 - [ ] ext_sysprocess.h
 - [ ] ext_syssem.h
 - [ ] ext_sysshmem.h
-- [ ] ext_systhread.h
+- [x] ext_systhread.h
 - [ ] ext_systime.h
 - [x] ext_time.h
 - [ ] ext_wind.h
@@ -1709,6 +1709,97 @@ cdef extern from "ext_sysmem.h":
     extern long sysmem_nullterminatehandle(t_handle h)
 
 
+cdef extern from "ext_atomarray.h":
+
+    cdef int ATOMARRAY_FLAG_FREECHILDREN
+
+    ctypedef struct t_atomarray
+
+    cdef t_atomarray *atomarray_new(long ac, t_atom *av)
+    cdef void atomarray_flags(t_atomarray *x, long flags) 
+    cdef long atomarray_getflags(t_atomarray *x) 
+    cdef t_max_err atomarray_setatoms(t_atomarray *x, long ac, t_atom *av)
+    cdef t_max_err atomarray_getatoms(t_atomarray *x, long *ac, t_atom **av)
+    cdef t_max_err atomarray_copyatoms(t_atomarray *x, long *ac, t_atom **av)
+    cdef t_atom_long atomarray_getsize(t_atomarray *x)
+    cdef t_max_err atomarray_getindex(t_atomarray *x, long index, t_atom *av)
+    cdef t_max_err atomarray_setindex(t_atomarray *x, long index, t_atom *av)
+    cdef void *atomarray_duplicate(t_atomarray *x)
+    cdef void *atomarray_clone(t_atomarray *x)
+    cdef void atomarray_appendatom(t_atomarray *x, t_atom *a)
+    cdef void atomarray_appendatoms(t_atomarray *x, long ac, t_atom *av)
+    cdef void atomarray_chuckindex(t_atomarray *x, long index)
+    cdef void atomarray_clear(t_atomarray *x)
+    cdef void atomarray_funall(t_atomarray *x, method fun, void *arg)
+
+
+cdef extern from "ext_systhread.h":
+
+    ctypedef void *t_systhread
+    ctypedef void *t_systhread_mutex
+    ctypedef void *t_systhread_cond
+    ctypedef void *t_systhread_rwlock   
+    ctypedef void *t_systhread_key
+
+    ctypedef enum e_max_systhread_mutex_flags:
+        SYSTHREAD_MUTEX_NORMAL =        0x00000000
+        SYSTHREAD_MUTEX_ERRORCHECK =    0x00000001  
+        SYSTHREAD_MUTEX_RECURSIVE =     0x00000002  
+
+
+    ctypedef enum e_max_systhread_priority:
+        SYSTHREAD_PRIORITY_MIN = -30
+        SYSTHREAD_PRIORITY_DEFAULT = 0
+        SYSTHREAD_PRIORITY_MAX = 30
+     
+    ctypedef enum e_max_systhread_rwlock_flags:
+        SYSTHREAD_RWLOCK_NORMAL =       0x00000000
+        SYSTHREAD_RWLOCK_LITE =         0x00000001
+
+        
+    cdef long systhread_create(method entryproc, void *arg, long stacksize, long priority, long flags, t_systhread *thread)
+    cdef long systhread_terminate(t_systhread thread)
+    cdef void systhread_sleep(long milliseconds)
+    cdef void systhread_exit(long status)
+    cdef long systhread_join(t_systhread thread, unsigned int* retval)
+    cdef long systhread_detach(t_systhread thread)
+    cdef t_systhread systhread_self()
+    cdef void systhread_setpriority(t_systhread thread, int priority) 
+    cdef int systhread_getpriority(t_systhread thread) 
+    cdef char *systhread_getstackbase()
+    cdef void systhread_init()
+    cdef void systhread_mainstacksetup()
+    cdef void systhread_timerstacksetup()
+    cdef short systhread_stackcheck()
+    cdef short systhread_ismainthread()
+    cdef short systhread_istimerthread()
+    cdef short systhread_isaudiothread()
+    cdef long systhread_mutex_new(t_systhread_mutex *pmutex,long flags)
+    cdef long systhread_mutex_free(t_systhread_mutex pmutex)
+    cdef long systhread_mutex_lock(t_systhread_mutex pmutex)
+    cdef long systhread_mutex_unlock(t_systhread_mutex pmutex)
+    cdef long systhread_mutex_trylock(t_systhread_mutex pmutex)
+    cdef long systhread_mutex_newlock(t_systhread_mutex *pmutex,long flags)
+    cdef t_max_err systhread_rwlock_new(t_systhread_rwlock *rwlock, long flags) 
+    cdef t_max_err systhread_rwlock_free(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_rdlock(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_tryrdlock(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_rdunlock(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_wrlock(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_trywrlock(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_wrunlock(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_setspintime(t_systhread_rwlock rwlock, double spintime_ms)
+    cdef t_max_err systhread_rwlock_getspintime(t_systhread_rwlock rwlock, double *spintime_ms) 
+    cdef long systhread_cond_new(t_systhread_cond *pcond, long flags)
+    cdef long systhread_cond_free(t_systhread_cond pcond)
+    cdef long systhread_cond_wait(t_systhread_cond pcond, t_systhread_mutex pmutex)
+    cdef long systhread_cond_signal(t_systhread_cond pcond)
+    cdef long systhread_cond_broadcast(t_systhread_cond pcond)
+    cdef long systhread_key_create(t_systhread_key *key, void (*destructor)(void*))
+    cdef long systhread_key_delete(t_systhread_key key) 
+    cdef void* systhread_getspecific(t_systhread_key key)
+    cdef long systhread_setspecific(t_systhread_key key, const void *value) 
+
 
 
 # cdef extern from "ext_boxstyle.h":
@@ -1737,10 +1828,14 @@ cdef extern from "ext_sysmem.h":
 
 txt = 'Hello from Max!'
 
-cpdef public str hello():
-    return txt
+greeting = 'Hello World'
 
-cpdef public void py_post(str s):
-    post(s)
+cpdef public str hello():
+    return greeting
+
+cpdef public str py_post(str s):
+    post(s.encode('utf-8'))
+    return s
+
 
 

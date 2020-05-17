@@ -334,13 +334,13 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
                 // PyErr_Print();
                 PyObject *ptype, *pvalue, *ptraceback;
                 PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-                //pvalue contains error message
-                //ptraceback contains stack snapshot and many other information
-                //(see python traceback structure)
+                // pvalue contains error message
+                // ptraceback contains stack snapshot and many other information
+                // (see python traceback structure)
 
                 //Get error message
                 const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-                error("%s: %s", pStrErrorMessage, py_argv);
+                error("PyException '%s': %s", pStrErrorMessage, py_argv);
                 Py_DECREF(ptype);
                 Py_DECREF(pvalue);
                 Py_DECREF(ptraceback);

@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 127.0, 121.0, 724.0, 467.0 ],
+		"rect" : [ 127.0, 121.0, 679.0, 467.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -116,8 +116,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 5.0, 13.0, 126.0, 22.0 ],
-					"text" : "eval api.pypost('hello')"
+					"patching_rect" : [ 5.0, 13.0, 133.0, 22.0 ],
+					"text" : "eval api.py_post('hello')"
 				}
 
 			}
@@ -379,7 +379,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 92.0, 342.0, 187.0, 22.0 ],
-					"text" : "bang-bang"
+					"text" : "hello"
 				}
 
 			}
