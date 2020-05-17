@@ -623,6 +623,8 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include "ext_symobject.h"
 #include "ext_sysfile.h"
 #include "ext_sysmem.h"
+#include "ext_atomarray.h"
+#include "ext_systhread.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */
@@ -957,6 +959,12 @@ static PyObject *__Pyx__GetModuleGlobalName(PyObject *name, PY_UINT64_T *dict_ve
 static CYTHON_INLINE PyObject *__Pyx__GetModuleGlobalName(PyObject *name);
 #endif
 
+/* ArgTypeTest.proto */
+#define __Pyx_ArgTypeTest(obj, type, none_allowed, name, exact)\
+    ((likely((Py_TYPE(obj) == type) | (none_allowed && (obj == Py_None)))) ? 1 :\
+        __Pyx__ArgTypeTest(obj, type, name, exact))
+static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
+
 /* PyThreadStateGet.proto */
 #if CYTHON_FAST_THREAD_STATE
 #define __Pyx_PyThreadState_declare  PyThreadState *__pyx_tstate;
@@ -992,17 +1000,6 @@ static CYTHON_INLINE void __Pyx_ErrFetchInState(PyThreadState *tstate, PyObject 
 #define __Pyx_ErrRestore(type, value, tb)  PyErr_Restore(type, value, tb)
 #define __Pyx_ErrFetch(type, value, tb)  PyErr_Fetch(type, value, tb)
 #endif
-
-/* WriteUnraisableException.proto */
-static void __Pyx_WriteUnraisable(const char *name, int clineno,
-                                  int lineno, const char *filename,
-                                  int full_traceback, int nogil);
-
-/* ArgTypeTest.proto */
-#define __Pyx_ArgTypeTest(obj, type, none_allowed, name, exact)\
-    ((likely((Py_TYPE(obj) == type) | (none_allowed && (obj == Py_None)))) ? 1 :\
-        __Pyx__ArgTypeTest(obj, type, name, exact))
-static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
 
 /* CLineInTraceback.proto */
 #ifdef CYTHON_CLINE_IN_TRACEBACK
@@ -1061,7 +1058,7 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 /* Module declarations from 'api' */
 __PYX_EXTERN_C PyObject *hello(int __pyx_skip_dispatch); /*proto*/
-__PYX_EXTERN_C void py_post(PyObject *, int __pyx_skip_dispatch); /*proto*/
+__PYX_EXTERN_C PyObject *py_post(PyObject *, int __pyx_skip_dispatch); /*proto*/
 #define __Pyx_MODULE_NAME "api"
 extern int __pyx_module_is_main_api;
 int __pyx_module_is_main_api = 0;
@@ -1071,11 +1068,15 @@ static const char __pyx_k_txt[] = "txt";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "__name__";
 static const char __pyx_k_test[] = "__test__";
+static const char __pyx_k_greeting[] = "greeting";
+static const char __pyx_k_Hello_World[] = "Hello World";
 static const char __pyx_k_Hello_from_Max[] = "Hello from Max!";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
-static const char __pyx_k_x_the_header_has_been_fully_exp[] = "\n'x' -> the header has been fully exposed to cython\n\n'-' -> the header is not explicitly exposed to cython and presently\n       not required for the external. It is exposed to non-cython c code\n       via the primary includes in \"ext.h\"\n\n' ' -> an empty box means it is planned\n\n- [ ] commonsyms.h\n- [ ] ext.h\n- [ ] ext_atomarray.h\n- [x] ext_atombuf.h\n- [-] ext_atomic.h\n- [x] ext_backgroundtask.h\n- [p] ext_boxstyle.h\n- [-] ext_byteorder.h\n- [-] ext_charset.h\n- [-] ext_common.h\n- [-] ext_critical.h\n- [x] ext_database.h\n- [x] ext_default.h\n- [x] ext_dictionary.h\n- [x] ext_dictobj.h\n- [-] ext_drag.h\n- [x] ext_expr.h\n- [x] ext_globalsymbol.h\n- [x] ext_hashtab.h\n- [x] ext_itm.h\n- [x] ext_linklist.h\n- [x] ext_maxtypes.h\n- [x] ext_mess.h\n- [x] ext_obex.h\n- [x] ext_obex_util.h\n- [-] ext_obstring.h\n- [x] ext_packages.h\n- [x] ext_parameter.h\n- [x] ext_path.h\n- [x] ext_preferences.h\n- [-] ext_prefix.h\n- [-] ext_preprocessor.h\n- [x] ext_proto.h\n- [-] ext_proto_win.h\n- [p] ext_qtimage.h\n- [p] ext_qtstubs.h\n- [-] ext_quickmap.h\n- [p] ext_sndfile.h\n- [x] ext_strings.h\n- [x] ext_symobject.h\n- [x] ext_sysfile.h\n- [x] ext_sysmem.h\n- [x] ext_sysmidi.h\n- [ ] ext_sysparallel.h\n- [ ] ext_sysprocess.h\n- [ ] ext_syssem.h\n- [ ] ext_sysshmem.h\n- [ ] ext_systhread.h\n- [ ] ext_systime.h\n- [x] ext_time.h\n- [ ] ext_wind.h\n- [-] ext_xmltree.h\n- [ ] indexmap.h\n- [ ] jdataview.h\n- [ ] jgraphics.h\n- [ ] jpatcher_api.h\n- [ ] jpatcher_syms.h\n- [ ] jpatcher_utils.h\n- [x] max_types.h\n";
+static const char __pyx_k_x_the_header_has_been_fully_exp[] = "\n'x' -> the header has been fully exposed to cython\n\n'-' -> the header is not explicitly exposed to cython and presently\n       not required for the external. It is exposed to non-cython c code\n       via the primary includes in \"ext.h\"\n\n' ' -> an empty box means it is planned\n\n- [ ] commonsyms.h\n- [ ] ext.h\n- [x] ext_atomarray.h\n- [x] ext_atombuf.h\n- [-] ext_atomic.h\n- [x] ext_backgroundtask.h\n- [p] ext_boxstyle.h\n- [-] ext_byteorder.h\n- [-] ext_charset.h\n- [-] ext_common.h\n- [-] ext_critical.h\n- [x] ext_database.h\n- [x] ext_default.h\n- [x] ext_dictionary.h\n- [x] ext_dictobj.h\n- [-] ext_drag.h\n- [x] ext_expr.h\n- [x] ext_globalsymbol.h\n- [x] ext_hashtab.h\n- [x] ext_itm.h\n- [x] ext_linklist.h\n- [x] ext_maxtypes.h\n- [x] ext_mess.h\n- [x] ext_obex.h\n- [x] ext_obex_util.h\n- [-] ext_obstring.h\n- [x] ext_packages.h\n- [x] ext_parameter.h\n- [x] ext_path.h\n- [x] ext_preferences.h\n- [-] ext_prefix.h\n- [-] ext_preprocessor.h\n- [x] ext_proto.h\n- [-] ext_proto_win.h\n- [p] ext_qtimage.h\n- [p] ext_qtstubs.h\n- [-] ext_quickmap.h\n- [p] ext_sndfile.h\n- [x] ext_strings.h\n- [x] ext_symobject.h\n- [x] ext_sysfile.h\n- [x] ext_sysmem.h\n- [x] ext_sysmidi.h\n- [ ] ext_sysparallel.h\n- [ ] ext_sysprocess.h\n- [ ] ext_syssem.h\n- [ ] ext_sysshmem.h\n- [x] ext_systhread.h\n- [ ] ext_systime.h\n- [x] ext_time.h\n- [ ] ext_wind.h\n- [-] ext_xmltree.h\n- [ ] indexmap.h\n- [ ] jdataview.h\n- [ ] jgraphics.h\n- [ ] jpatcher_api.h\n- [ ] jpatcher_syms.h\n- [ ] jpatcher_utils.h\n- [x] max_types.h\n";
+static PyObject *__pyx_kp_u_Hello_World;
 static PyObject *__pyx_kp_u_Hello_from_Max;
 static PyObject *__pyx_n_s_cline_in_traceback;
+static PyObject *__pyx_n_s_greeting;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_test;
@@ -1084,11 +1085,11 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self); /* pro
 static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
 /* Late includes */
 
-/* "api.pyx":1740
- * txt = 'Hello from Max!'
+/* "api.pyx":1833
+ * greeting = 'Hello World'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
- *     return txt
+ *     return greeting
  * 
  */
 
@@ -1099,26 +1100,26 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
 
-  /* "api.pyx":1741
+  /* "api.pyx":1834
  * 
  * cpdef public str hello():
- *     return txt             # <<<<<<<<<<<<<<
+ *     return greeting             # <<<<<<<<<<<<<<
  * 
- * cpdef public void py_post(str s):
+ * cpdef public str py_post(str s):
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_txt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1741, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_greeting); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1834, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 1741, __pyx_L1_error)
+  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 1834, __pyx_L1_error)
   __pyx_r = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "api.pyx":1740
- * txt = 'Hello from Max!'
+  /* "api.pyx":1833
+ * greeting = 'Hello World'
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
- *     return txt
+ *     return greeting
  * 
  */
 
@@ -1152,7 +1153,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hello", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1740, __pyx_L1_error)
+  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1833, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1169,44 +1170,68 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
   return __pyx_r;
 }
 
-/* "api.pyx":1743
- *     return txt
+/* "api.pyx":1836
+ *     return greeting
  * 
- * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
- *     post(s)
- * 
+ * cpdef public str py_post(str s):             # <<<<<<<<<<<<<<
+ *     post(s.encode('utf-8'))
+ *     return s
  */
 
 static PyObject *__pyx_pw_3api_3py_post(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
-void py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
+PyObject *py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
+  PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  char const *__pyx_t_1;
+  PyObject *__pyx_t_1 = NULL;
+  char const *__pyx_t_2;
   __Pyx_RefNannySetupContext("py_post", 0);
 
-  /* "api.pyx":1744
+  /* "api.pyx":1837
  * 
- * cpdef public void py_post(str s):
- *     post(s)             # <<<<<<<<<<<<<<
+ * cpdef public str py_post(str s):
+ *     post(s.encode('utf-8'))             # <<<<<<<<<<<<<<
+ *     return s
+ * 
+ */
+  if (unlikely(__pyx_v_s == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
+    __PYX_ERR(0, 1837, __pyx_L1_error)
+  }
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1837, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyBytes_AsString(__pyx_t_1); if (unlikely((!__pyx_t_2) && PyErr_Occurred())) __PYX_ERR(0, 1837, __pyx_L1_error)
+  post(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "api.pyx":1838
+ * cpdef public str py_post(str s):
+ *     post(s.encode('utf-8'))
+ *     return s             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_s); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 1744, __pyx_L1_error)
-  post(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_s);
+  __pyx_r = __pyx_v_s;
+  goto __pyx_L0;
 
-  /* "api.pyx":1743
- *     return txt
+  /* "api.pyx":1836
+ *     return greeting
  * 
- * cpdef public void py_post(str s):             # <<<<<<<<<<<<<<
- *     post(s)
- * 
+ * cpdef public str py_post(str s):             # <<<<<<<<<<<<<<
+ *     post(s.encode('utf-8'))
+ *     return s
  */
 
   /* function exit code */
-  goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_WriteUnraisable("api.py_post", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("api.py_post", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
   __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
+  return __pyx_r;
 }
 
 /* Python wrapper */
@@ -1215,7 +1240,7 @@ static PyObject *__pyx_pw_3api_3py_post(PyObject *__pyx_self, PyObject *__pyx_v_
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("py_post (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 1743, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 1836, __pyx_L1_error)
   __pyx_r = __pyx_pf_3api_2py_post(__pyx_self, ((PyObject*)__pyx_v_s));
 
   /* function exit code */
@@ -1233,7 +1258,7 @@ static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyOb
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("py_post", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_void_to_None(py_post(__pyx_v_s, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1743, __pyx_L1_error)
+  __pyx_t_1 = py_post(__pyx_v_s, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1836, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1298,8 +1323,10 @@ static struct PyModuleDef __pyx_moduledef = {
 #endif
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
+  {&__pyx_kp_u_Hello_World, __pyx_k_Hello_World, sizeof(__pyx_k_Hello_World), 0, 1, 0, 0},
   {&__pyx_kp_u_Hello_from_Max, __pyx_k_Hello_from_Max, sizeof(__pyx_k_Hello_from_Max), 0, 1, 0, 0},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
+  {&__pyx_n_s_greeting, __pyx_k_greeting, sizeof(__pyx_k_greeting), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
@@ -1585,14 +1612,23 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "api.pyx":1738
+  /* "api.pyx":1829
  * #     cdef void CLASS_ATTR_STYLE_ALIAS_RGBA_LEGACY(c,attrname,aliasname)
  * 
  * txt = 'Hello from Max!'             # <<<<<<<<<<<<<<
  * 
+ * greeting = 'Hello World'
+ */
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 1829, __pyx_L1_error)
+
+  /* "api.pyx":1831
+ * txt = 'Hello from Max!'
+ * 
+ * greeting = 'Hello World'             # <<<<<<<<<<<<<<
+ * 
  * cpdef public str hello():
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_txt, __pyx_kp_u_Hello_from_Max) < 0) __PYX_ERR(0, 1738, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_greeting, __pyx_kp_u_Hello_World) < 0) __PYX_ERR(0, 1831, __pyx_L1_error)
 
   /* "api.pyx":1
  * # api.pyx             # <<<<<<<<<<<<<<
@@ -1735,6 +1771,27 @@ static CYTHON_INLINE PyObject *__Pyx__GetModuleGlobalName(PyObject *name)
     return __Pyx_GetBuiltinName(name);
 }
 
+/* ArgTypeTest */
+static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact)
+{
+    if (unlikely(!type)) {
+        PyErr_SetString(PyExc_SystemError, "Missing type object");
+        return 0;
+    }
+    else if (exact) {
+        #if PY_MAJOR_VERSION == 2
+        if ((type == &PyBaseString_Type) && likely(__Pyx_PyBaseString_CheckExact(obj))) return 1;
+        #endif
+    }
+    else {
+        if (likely(__Pyx_TypeCheck(obj, type))) return 1;
+    }
+    PyErr_Format(PyExc_TypeError,
+        "Argument '%.200s' has incorrect type (expected %.200s, got %.200s)",
+        name, type->tp_name, Py_TYPE(obj)->tp_name);
+    return 0;
+}
+
 /* PyErrFetchRestore */
 #if CYTHON_FAST_THREAD_STATE
 static CYTHON_INLINE void __Pyx_ErrRestoreInState(PyThreadState *tstate, PyObject *type, PyObject *value, PyObject *tb) {
@@ -1758,69 +1815,6 @@ static CYTHON_INLINE void __Pyx_ErrFetchInState(PyThreadState *tstate, PyObject 
     tstate->curexc_traceback = 0;
 }
 #endif
-
-/* WriteUnraisableException */
-static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
-                                  CYTHON_UNUSED int lineno, CYTHON_UNUSED const char *filename,
-                                  int full_traceback, CYTHON_UNUSED int nogil) {
-    PyObject *old_exc, *old_val, *old_tb;
-    PyObject *ctx;
-    __Pyx_PyThreadState_declare
-#ifdef WITH_THREAD
-    PyGILState_STATE state;
-    if (nogil)
-        state = PyGILState_Ensure();
-#ifdef _MSC_VER
-    else state = (PyGILState_STATE)-1;
-#endif
-#endif
-    __Pyx_PyThreadState_assign
-    __Pyx_ErrFetch(&old_exc, &old_val, &old_tb);
-    if (full_traceback) {
-        Py_XINCREF(old_exc);
-        Py_XINCREF(old_val);
-        Py_XINCREF(old_tb);
-        __Pyx_ErrRestore(old_exc, old_val, old_tb);
-        PyErr_PrintEx(1);
-    }
-    #if PY_MAJOR_VERSION < 3
-    ctx = PyString_FromString(name);
-    #else
-    ctx = PyUnicode_FromString(name);
-    #endif
-    __Pyx_ErrRestore(old_exc, old_val, old_tb);
-    if (!ctx) {
-        PyErr_WriteUnraisable(Py_None);
-    } else {
-        PyErr_WriteUnraisable(ctx);
-        Py_DECREF(ctx);
-    }
-#ifdef WITH_THREAD
-    if (nogil)
-        PyGILState_Release(state);
-#endif
-}
-
-/* ArgTypeTest */
-static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact)
-{
-    if (unlikely(!type)) {
-        PyErr_SetString(PyExc_SystemError, "Missing type object");
-        return 0;
-    }
-    else if (exact) {
-        #if PY_MAJOR_VERSION == 2
-        if ((type == &PyBaseString_Type) && likely(__Pyx_PyBaseString_CheckExact(obj))) return 1;
-        #endif
-    }
-    else {
-        if (likely(__Pyx_TypeCheck(obj, type))) return 1;
-    }
-    PyErr_Format(PyExc_TypeError,
-        "Argument '%.200s' has incorrect type (expected %.200s, got %.200s)",
-        name, type->tp_name, Py_TYPE(obj)->tp_name);
-    return 0;
-}
 
 /* CLineInTraceback */
 #ifndef CYTHON_CLINE_IN_TRACEBACK
