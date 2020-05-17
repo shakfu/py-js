@@ -1,4 +1,4 @@
-# py for max
+# (minimal) py for max
 
 An attempt to make a simple (and extensible) max external for python
 
@@ -73,18 +73,14 @@ Ideally it would be fantastic to launch a python repl per py external instance (
 
 - lack of execfile in python 3 (see https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3)
 
-
-	You are just supposed to read the file and exec the code yourself. 2to3 current replaces
-
 ```python
-	execfile("somefile.py", global_vars, local_vars)
-```
-	as
+execfile("somefile.py", global_vars, local_vars)
 
-```python
-	with open("somefile.py") as f:
-	    code = compile(f.read(), "somefile.py", 'exec')
-	    exec(code, global_vars, local_vars)
+# as
+
+with open("somefile.py") as f:
+    code = compile(f.read(), "somefile.py", 'exec')
+    exec(code, global_vars, local_vars)
 ```
 
 
