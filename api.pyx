@@ -88,6 +88,11 @@ cdef extern from "ext_mess.h":
     ctypedef long (*t_intmethod)(void *, ...)
     ctypedef struct t_object
     ctypedef struct t_symbol
+    cdef long MAGIC
+    cdef long OB_MAGIC
+    cdef int NOGOOD(x)
+    cdef int OB_INVALID(x)
+    cdef int MSG_MAXARG
     ctypedef struct t_atom
     ctypedef struct t_class
     ctypedef struct t_messlist
