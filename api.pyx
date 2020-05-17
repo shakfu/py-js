@@ -37,19 +37,19 @@
 - [x] ext_packages.h
 - [x] ext_parameter.h
 - [x] ext_path.h
-- [ ] ext_preferences.h
-- [ ] ext_prefix.h
-- [ ] ext_preprocessor.h
+- [x] ext_preferences.h
+- [-] ext_prefix.h
+- [-] ext_preprocessor.h
 - [x] ext_proto.h
 - [-] ext_proto_win.h
-- [ ] ext_qtimage.h
-- [ ] ext_qtstubs.h
-- [ ] ext_quickmap.h
-- [ ] ext_sndfile.h
-- [ ] ext_strings.h
-- [ ] ext_symobject.h
-- [ ] ext_sysfile.h
-- [ ] ext_sysmem.h
+- [p] ext_qtimage.h
+- [p] ext_qtstubs.h
+- [-] ext_quickmap.h
+- [p] ext_sndfile.h
+- [x] ext_strings.h
+- [x] ext_symobject.h
+- [x] ext_sysfile.h
+- [x] ext_sysmem.h
 - [x] ext_sysmidi.h
 - [ ] ext_sysparallel.h
 - [ ] ext_sysprocess.h
@@ -1589,6 +1589,124 @@ cdef extern from "ext_path.h":
     # cdef void path_removefromlist(t_pathlink **list, short parent)
     cdef short path_collpathnamefrompath(short vol, short *collvol, char *filename)
     cdef short defvolume()           
+
+
+cdef extern from "ext_preferences.h":
+
+    t_max_err preferences_getatomforkey(t_symbol *key, t_atom *value)
+    t_symbol *preferences_getsym(const char *name)
+    void preferences_setsym(const char *name, t_symbol *value)
+    long preferences_getlong(const char *name)
+    void preferences_setlong(const char *name, long value)
+    long preferences_getchar(const char *name)
+    void preferences_setchar(const char *name, long value)
+    t_max_err preferences_getatoms(const char *name, long *argc, t_atom **argv)
+    t_max_err preferences_setatoms(const char *name, long argc, t_atom *argv)
+    void *preferences_define(const char *name, const char *type, const char *label, const char *style, const char *category, long attrflags, method get, method set, long flags)
+    void *preferences_class_define(t_class *c, const char *name, const char *type, const char *label, const char *style, const char *category, long attrflags, method get, method set, long flags)
+    void *preferences_defineoption(const char *name, const char *label, const char *category, char *ptr, method notify, long flags)
+    void *preferences_class_defineoption(t_class *c, const char *name, const char *label, const char *category, char *ptr, method notify, long flags)
+    t_max_err preferences_writedictionary(const t_dictionary *d, const char *filename)
+    t_max_err preferences_readdictionary(const char *filename, t_dictionary **d)
+    t_dictionary *simpleprefs_dictionary()
+
+    ctypedef enum:
+        PREFERENCES_FLAGS_INVISIBLE = 1
+        PREFERENCES_FLAGS_DONTSAVE = 2
+
+
+cdef extern from "ext_strings.h":
+
+    cdef char *strncpy_zero(char *dst, const char* src, long size)
+    cdef char *strncat_zero(char *dst, const char* src, long size)
+    cdef int snprintf_zero(char *buffer, size_t count, const char *format, ...)
+
+    cdef int SPRINTF_MAXLEN
+    cdef void ctopcpy(unsigned char *p1, char *p2)
+    cdef void ptoccpy(char *p1, unsigned char *p2)
+    cdef void pstrcpy(unsigned char *p2, unsigned char *p1)
+
+
+cdef extern from "ext_symobject.h":
+
+    ctypedef struct t_symobject
+
+    cdef void symobject_initclass()
+    cdef void *symobject_new(t_symbol *sym)
+    cdef long symobject_linklist_match(void *a, void *b)
+
+
+cdef extern from "ext_sysfile.h":
+
+    ctypedef struct t_filestruct 
+    ctypedef t_filestruct *t_filehandle
+
+    ctypedef enum t_sysfile_pos_mode:
+        SYSFILE_ATMARK = 0          
+        SYSFILE_FROMSTART = 1       
+        SYSFILE_FROMLEOF = 2        
+        SYSFILE_FROMMARK = 3        
+
+
+    ctypedef enum t_sysfile_flags:
+        SYSFILE_SUBFILE = 1
+        SYSFILE_HANDLE = 2      
+        SYSFILE_RESOURCE = 4    
+        SYSFILE_MEMORY = 6      
+        SYSFILE_RESFILE = 8 
+        SYSFILE_OPENRESFILE = 16    
+        SYSFILE_EXTERNALDATA = 32   
+        SYSFILE_JUSTAPOINTER = 64   
+        SYSFILE_EXTERNALDATA_CANWRITE = 128  
+        SYSFILE_EXTERNALDATA_CANGROW = 256    
+        SYSFILE_EXTERNALDATA_FREE = 512       
+        SYSFILE_EXTERNALDATA_LATEFREE = 1024
+
+
+    ctypedef enum t_sysfile_text_flags:
+        TEXT_LB_NATIVE =            0x00000001L 
+        TEXT_LB_MAC =               0x00000002L 
+        TEXT_LB_PC =                0x00000004L 
+        TEXT_LB_UNIX =              0x00000008L 
+        TEXT_LB_MASK = 0x0000000FL              
+        TEXT_ENCODING_USE_FILE =    0x00000100L 
+        TEXT_NULL_TERMINATE =       0x00000200L     
+
+    cdef t_max_err sysfile_close(t_filehandle f)
+    cdef t_max_err sysfile_read( t_filehandle f, t_ptr_size *count, void *bufptr)  
+    cdef t_max_err sysfile_readtohandle(t_filehandle f, char ***h)
+    cdef t_max_err sysfile_readtoptr(t_filehandle f, char **p)
+    cdef t_max_err sysfile_write(t_filehandle f, t_ptr_size *count, const void *bufptr)  
+    cdef t_max_err sysfile_seteof(t_filehandle f, t_ptr_size logeof)
+    cdef t_max_err sysfile_geteof(t_filehandle f, t_ptr_size *logeof)
+    cdef t_max_err sysfile_setpos(t_filehandle f, t_sysfile_pos_mode mode, t_ptr_int offset)
+    cdef t_max_err sysfile_getpos(t_filehandle f, t_ptr_size *filepos)
+    cdef t_max_err sysfile_spoolcopy(t_filehandle src, t_filehandle dst, t_ptr_size size)
+    cdef void sysfile_setobject(t_filehandle f, t_object *o)
+    cdef t_max_err sysfile_readtextfile(t_filehandle f, t_handle htext, t_ptr_size maxlen, t_sysfile_text_flags flags)
+    cdef t_max_err sysfile_writetextfile(t_filehandle f, t_handle htext, t_sysfile_text_flags flags)
+    cdef t_max_err sysfile_openhandle(char **h, t_sysfile_flags flags, t_filehandle *fh)
+    cdef t_max_err sysfile_openptrsize(char *p, t_ptr_size length, t_sysfile_flags flags, t_filehandle *fh)
+
+
+cdef extern from "ext_sysmem.h":
+
+    extern t_ptr sysmem_newptr(long size)
+    extern t_ptr sysmem_newptrclear(long size)
+    extern t_ptr sysmem_resizeptr(void *ptr, long newsize)
+    extern t_ptr sysmem_resizeptrclear(void *ptr, long newsize)
+    extern long sysmem_ptrsize(void *ptr)
+    extern void sysmem_freeptr(void *ptr)
+    extern void sysmem_copyptr(const void *src, void *dst, long bytes)
+    extern t_handle sysmem_newhandle(long size)
+    extern t_handle sysmem_newhandleclear(unsigned long size) 
+    extern long sysmem_resizehandle(t_handle handle, long newsize)
+    extern long sysmem_handlesize(t_handle handle)
+    extern void sysmem_freehandle(t_handle handle)
+    extern long sysmem_lockhandle(t_handle handle, long lock)
+    extern long sysmem_ptrandhand(void *p, t_handle h, long size)
+    extern long sysmem_ptrbeforehand(void *p, t_handle h, unsigned long size)
+    extern long sysmem_nullterminatehandle(t_handle h)
 
 
 
