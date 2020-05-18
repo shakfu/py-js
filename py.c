@@ -173,7 +173,8 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
 {
     py_mode mode;
 
-    if (gensym(s->s_name) == gensym("eval") || gensym(s->s_name) == gensym("exec") ||
+    if (gensym(s->s_name) == gensym("eval") || 
+        gensym(s->s_name) == gensym("exec") ||
         gensym(s->s_name) == gensym("execfile")) {
 
         PyObject *pval = NULL; // python value
@@ -191,7 +192,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
             if (fhandle != NULL) {
                 // char *fname = basename(py_argv); // TODO (Causes Crash!)
                 // post("execfile:fname: %s", fname);
-                pval = PyRun_File(fhandle, "script.py", Py_file_input, x->p_globals, locals);
+                pval = PyRun_File(fhandle, "<stdin>", Py_file_input, x->p_globals, locals);
             }
             fclose(fhandle);
             post("execfile:fhandle closed: %s", py_argv);
@@ -201,8 +202,11 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
 
             mode = PY_EXEC;
             post("exec:code: %s", py_argv);
-            
-            pval = PyRun_String(py_argv, Py_single_input, x->p_globals, locals);
+
+            pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+            if (!pval) {
+                goto error;
+            }
         }
 
         else if (gensym(s->s_name) == gensym("eval")) {
