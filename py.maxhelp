@@ -200,8 +200,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 186.0, 256.0, 41.0, 22.0 ],
-					"text" : "eval a"
+					"patching_rect" : [ 116.0, 283.0, 81.0, 22.0 ],
+					"text" : "eval api.test()"
 				}
 
 			}
@@ -379,7 +379,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 92.0, 342.0, 187.0, 22.0 ],
-					"text" : "hello"
+					"text" : "\"Hello World\""
 				}
 
 			}

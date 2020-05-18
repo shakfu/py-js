@@ -10,71 +10,23 @@ t_class *py_class;      // global pointer to the object class - so max can refer
 
 /*--------------------------------------------------------------------------*/
 // helper functions
-void py_init(t_py *x);
+
 
 void post_containers(t_py *x)
 {
     t_patcher *p;
     t_box *b;
-    // t_py *py;
     t_max_err err;
 
     err = object_obex_lookup(x, gensym("#P"), (t_object **)&p);
     err = object_obex_lookup(x, gensym("#B"), (t_object **)&b);
-    // err = object_obex_lookup(x, gensym("py"), (t_object **)&py);
 
     post("my patcher is located at 0x%X", p);
     post("my box is located at 0x%X", b);
-    // post("my py object is located at 0x%X", py); // gives 0x0
 }
 
 /*--------------------------------------------------------------------------*/
-/* helper methods for embedded python interpreter
-    The embedded python interpreter has access to calling application
-    - external modules through imports msgs
-    - embdedded modules:
-        1. emb & emb_<methods> (which gives it selective access to the calling app)
-        2. api: cython wrapped max api
 
-*/
-static PyObject* emb_classname(PyObject *self, PyObject *args)
-{   //            global-------------vvvvvvvv
-    const char *name = class_nameget(py_class)->s_name;
-    return Py_BuildValue("s", name);
-}
-
-static PyObject *emb_check(PyObject *self, PyObject *args)
-{
-    t_object *obj = (t_object *)object_findregistered(gensym("myspace"), gensym("me"));
-    if (obj) {
-        ((t_py *)obj)->p_module = gensym("hello-python");
-        return Py_BuildValue("s", "bang-bang");
-    } else {
-        return Py_BuildValue("s", "no-bang");
-    }
-}
-
-
-static PyMethodDef EmbMethods[] = {
-    {"classname", emb_classname, METH_VARARGS,
-     "Return the classname of the max external."},
-
-    {"check", emb_check, METH_VARARGS,
-     "Bang if test succeeds."},
-
-     /* terminating sentinel */
-    {NULL, NULL, 0, NULL}
-};
-
-static PyModuleDef EmbModule = {
-    PyModuleDef_HEAD_INIT, "emb", NULL, -1, EmbMethods,
-    NULL, NULL, NULL, NULL
-};
-
-static PyObject* PyInit_emb(void)
-{
-    return PyModule_Create(&EmbModule);
-}
 
 
 
@@ -90,8 +42,6 @@ void ext_main(void *r)
     // methods
     class_addmethod(c, (method)py_bang,       "bang",       0);
     class_addmethod(c, (method)py_import,     "import",     A_DEFSYM, 0);
-    class_addmethod(c, (method)py_register,   "register",   A_DEFSYM, 0);
-    class_addmethod(c, (method)py_find,       "find",       A_DEFSYM, 0);
     class_addmethod(c, (method)py_eval,       "anything",   A_GIMME,  0);
     class_addmethod(c, (method)py_run,        "run",        A_GIMME,  0);
 
@@ -104,6 +54,9 @@ void ext_main(void *r)
 
     CLASS_ATTR_SYM(c, "code",    0, t_py, p_code);
     CLASS_ATTR_BASIC(c, "code", 0);
+
+    CLASS_ATTR_SYM(c, "name", 0, t_py, p_name);
+    CLASS_ATTR_BASIC(c, "name", 0);
 
     class_register(CLASS_BOX, c);
     py_class = c;
@@ -121,6 +74,7 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
     x = (t_py *)object_alloc(py_class);
 
     if (x) {
+        x->p_name = symbol_unique();
         x->p_module = gensym("");
         x->p_code = gensym("");
 
@@ -135,14 +89,14 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         py_init(x);
     }
 
-    post("new py object instance added to patch...", 0);
+    post("new py object %s added to patch...", x->p_name->s_name);
     return(x);
 }
 
 void py_init(t_py *x)
 {
     // PyObject *pmodule;
-    // wchar_t *program = "pymx";
+    // wchar_t *program = "pymax";
 
     /* Add a built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
@@ -150,14 +104,24 @@ void py_init(t_py *x)
     }
 
     // Py_SetProgramName(program);
-    PyImport_AppendInittab("emb", &PyInit_emb);
 
     Py_Initialize();
 
     // python init
+    int err;
     PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
     x->p_globals = PyModule_GetDict(main_module);
-    // TODO: add init_py() here add module / import extension ...
+    err = PyDict_SetItemString(x->p_globals, PY_MAX_NAME, PyUnicode_FromString(x->p_name->s_name));
+    if (err != 0) {
+        error("PyDict_SetItemString with key '%s', failed", PY_MAX_NAME);
+    }
+    err = PyDict_SetItemString(x->p_globals, "testing", PyLong_FromLong(20));
+    if (err != 0) {
+        error("PyDict_SetItemString with key 'testing', failed");
+    }
+    post("globals initialized");
+    object_register(gensym(PY_NAMESPACE), x->p_name, x);
+    post("object registered");
 }
 
 
@@ -177,8 +141,8 @@ void py_dblclick(t_py *x)
 }
 
 
-void py_import(t_py *x, t_symbol *s) {
-    //x->p_module = s;
+void py_import(t_py *x, t_symbol *s)
+{
     if (s != gensym("")) {
         PyObject* x_module = PyImport_ImportModule(s->s_name); // x_module borrrowed ref
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
@@ -187,19 +151,15 @@ void py_import(t_py *x, t_symbol *s) {
 }
 
 
-void py_register(t_py *x, t_symbol *s) {
-    object_register(gensym("myspace"), gensym("me"), x);
-    post("object registered");
-}
-
-void py_find(t_py *x, t_symbol *s) {
-    t_object *obj = (t_object *)object_findregistered(gensym("myspace"), gensym("me"));
-    if (obj) py_bang((t_py *)obj);
-}
+// void py_find(t_py *x, t_symbol *s)
+// {
+//     t_object *obj = (t_object *)object_findregistered(gensym(PY_NAMESPACE), x->p_name);
+//     if (obj) py_bang((t_py *)obj);
+// }
 
 
-void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
-
+void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
+{
     if (gensym(s->s_name) == gensym("run")) {
         PyObject *obj = Py_BuildValue("s", atom_getsym(argv)->s_name);
          FILE *file = _Py_fopen_obj(obj, "r+");
@@ -209,7 +169,9 @@ void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv) {
     }
 }
 
-void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
+void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
+{
+    py_mode mode;
 
     if (gensym(s->s_name) == gensym("eval") || gensym(s->s_name) == gensym("exec") ||
         gensym(s->s_name) == gensym("execfile")) {
@@ -223,6 +185,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         PyObject *locals = PyDict_New();
 
         if (gensym(s->s_name) == gensym("execfile")) {
+            mode = PY_EXEC;
             post("execfile:path: %s", py_argv);
             FILE* fhandle = fopen(py_argv, "r");
             if (fhandle != NULL) {
@@ -235,11 +198,15 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
         }
 
         else if (gensym(s->s_name) == gensym("exec")) {
+
+            mode = PY_EXEC;
             post("exec:code: %s", py_argv);
+            
             pval = PyRun_String(py_argv, Py_single_input, x->p_globals, locals);
         }
 
         else if (gensym(s->s_name) == gensym("eval")) {
+            mode = PY_EVAL;
             post("eval:code: %s", py_argv);
             pval = PyRun_String(py_argv, Py_eval_input, x->p_globals, locals);
         } 
@@ -249,7 +216,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
             return;
         }
 
-        if (pval) {
+        if (pval && mode == PY_EVAL) {
 
             if (PyLong_Check(pval)) {
                 long int_result = PyLong_AsLong(pval);
@@ -330,6 +297,11 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
             Py_DECREF(pval);
 
+        } else if (pval && mode == PY_EXEC) {
+
+            post("exec ended.");
+            Py_DECREF(pval);
+
         } else {
             if (PyErr_Occurred()) {
                 // PyErr_Print();
@@ -341,7 +313,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv) {
 
                 //Get error message
                 const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-                error("PyException '%s': %s", pStrErrorMessage, py_argv);
+                error("PyException for '%s': %s", py_argv, pStrErrorMessage);
                 Py_DECREF(ptype);
                 Py_DECREF(pvalue);
                 Py_DECREF(ptraceback);
