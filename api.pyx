@@ -1806,7 +1806,6 @@ cdef extern from "ext_systhread.h":
     cdef long systhread_setspecific(t_systhread_key key, const void *value) 
 
 
-
 # cdef extern from "ext_boxstyle.h":
 
 #     cdef void class_attr_setstyle(t_class *c, const char *s)
@@ -1831,9 +1830,34 @@ cdef extern from "ext_systhread.h":
 #     cdef void CLASS_ATTR_STYLE_ALIAS_COMPATIBILITY(c,attrname,aliasname)
 #     cdef void CLASS_ATTR_STYLE_ALIAS_RGBA_LEGACY(c,attrname,aliasname)
 
+
+cdef extern from "py.h":
+    cdef int PY_MAX_ATOMS
+    # cdef char *PY_NAME
+    cdef char *PY_NAMESPACE
+
+    ctypedef struct t_py
+
+    cdef void py_bang(t_py *x)
+    cdef void py_import(t_py *x, t_symbol *s)
+    # cdef void py_find(t_py *x, t_symbol *s)
+    cdef void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
+    cdef void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
+    cdef void py_dblclick(t_py *x)
+    cdef void *py_new(t_symbol *s, long argc, t_atom *argv)
+    cdef void py_free(t_py *x)
+    cdef void py_init(t_py *x)
+
+
+# PY_NAME = "initial"
+
 txt = 'Hello from Max!'
 
 greeting = 'Hello World'
+
+
+
+# name = lambda: getattr(globals(), 'PY_NAME')
 
 cpdef public str hello():
     return greeting
@@ -1841,6 +1865,31 @@ cpdef public str hello():
 cpdef public str py_post(str s):
     post(s.encode('utf-8'))
     return s
+
+
+cdef class External:
+    cdef t_py *obj
+
+    def __cinit__(self, bytes name):
+        self.obj = <t_py *>object_findregistered(
+            gensym(PY_NAMESPACE),
+            gensym(name))
+
+    cpdef bang(self):
+        py_bang(self.obj)
+
+
+def test():
+    key = 'PY_NAME'
+    if key in globals():
+        s = globals()[key]
+        ext = External(bytes(s))
+        ext.bang()
+    return 'nope'
+        # return __MAXMSP__NAME
+
+
+
 
 
 
