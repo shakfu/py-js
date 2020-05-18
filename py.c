@@ -12,18 +12,18 @@ t_class *py_class;      // global pointer to the object class - so max can refer
 // helper functions
 
 
-void post_containers(t_py *x)
-{
-    t_patcher *p;
-    t_box *b;
-    t_max_err err;
+// void post_containers(t_py *x)
+// {
+//     t_patcher *p;
+//     t_box *b;
+//     t_max_err err;
 
-    err = object_obex_lookup(x, gensym("#P"), (t_object **)&p);
-    err = object_obex_lookup(x, gensym("#B"), (t_object **)&b);
+//     err = object_obex_lookup(x, gensym("#P"), (t_object **)&p);
+//     err = object_obex_lookup(x, gensym("#B"), (t_object **)&b);
 
-    post("my patcher is located at 0x%X", p);
-    post("my box is located at 0x%X", b);
-}
+//     post("my patcher is located at 0x%X", p);
+//     post("my box is located at 0x%X", b);
+// }
 
 /*--------------------------------------------------------------------------*/
 
@@ -42,7 +42,9 @@ void ext_main(void *r)
     // methods
     class_addmethod(c, (method)py_bang,       "bang",       0);
     class_addmethod(c, (method)py_import,     "import",     A_DEFSYM, 0);
-    class_addmethod(c, (method)py_eval,       "anything",   A_GIMME,  0);
+    class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
+    class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
+    class_addmethod(c, (method)py_execfile,   "execfile",   A_GIMME,  0);
     class_addmethod(c, (method)py_run,        "run",        A_GIMME,  0);
 
     /* you CAN'T call this from the patcher */
@@ -151,117 +153,132 @@ void py_import(t_py *x, t_symbol *s)
 }
 
 
-// void py_find(t_py *x, t_symbol *s)
-// {
-//     t_object *obj = (t_object *)object_findregistered(gensym(PY_NAMESPACE), x->p_name);
-//     if (obj) py_bang((t_py *)obj);
-// }
-
-
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
 {
-    if (gensym(s->s_name) == gensym("run")) {
-        PyObject *obj = Py_BuildValue("s", atom_getsym(argv)->s_name);
-         FILE *file = _Py_fopen_obj(obj, "r+");
-         if (file != NULL) {
-             PyRun_SimpleFile(file, "script.py");
-         }        
+    PyObject *obj = Py_BuildValue("s", atom_getsym(argv)->s_name);
+     FILE *file = _Py_fopen_obj(obj, "r+");
+     if (file != NULL) {
+         PyRun_SimpleFile(file, "script.py");
+     }        
+}
+
+
+void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv)
+{
+    char *py_argv = atom_getsym(argv)->s_name;
+
+    post("START %s: %s", s->s_name, py_argv);
+
+    FILE* fhandle = fopen(py_argv, "r");
+    if (!fhandle) {
+        error("execfile: '%s' not found", py_argv);
+        return;
+    }
+
+    PyObject *pval = PyRun_File(fhandle, "<stdin>", Py_file_input, x->p_globals, x->p_globals);
+
+    if (pval != NULL) {
+        fclose(fhandle);
+        Py_DECREF(pval);
+        post("END %s: %s", s->s_name, py_argv);
+    }
+
+    else {
+        if (PyErr_Occurred()) {
+            PyObject *ptype, *pvalue, *ptraceback;
+            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+
+            // get error message
+            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+            error("PyException('%s %s'): %s", s->s_name, py_argv, pStrErrorMessage);
+            Py_DECREF(ptype);
+            Py_DECREF(pvalue);
+            Py_DECREF(ptraceback);
+        }
     }
 }
 
+
+void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv)
+{
+    char *py_argv = atom_getsym(argv)->s_name;
+
+    post("START %s: %s", s->s_name, py_argv);
+
+    PyObject *pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+
+    if (pval != NULL) {
+        Py_DECREF(pval);
+        post("END %s: %s", s->s_name, py_argv);
+    }
+
+    else {
+
+        if (PyErr_Occurred()) {
+            PyObject *ptype, *pvalue, *ptraceback;
+            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+
+            //Get error message
+            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+            error("PyException('%s %s'): %s", s->s_name, py_argv, pStrErrorMessage);
+            Py_DECREF(ptype);
+            Py_DECREF(pvalue);
+            Py_DECREF(ptraceback);
+        }
+    }
+}
+
+
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
 {
-    py_mode mode;
+    char *py_argv = atom_getsym(argv)->s_name;
+    post("%s: %s", s->s_name, py_argv);
 
-    if (gensym(s->s_name) == gensym("eval") || 
-        gensym(s->s_name) == gensym("exec") ||
-        gensym(s->s_name) == gensym("execfile")) {
+    PyObject *locals = PyDict_New();
+    PyObject *pval = PyRun_String(py_argv, Py_eval_input, x->p_globals, locals);
 
-        PyObject *pval = NULL; // python value
+    if (pval != NULL) {
 
-        char *py_argv = atom_getsym(argv)->s_name;
-        post("%s: %s", s->s_name, py_argv);
-
-        // local are per eval
-        PyObject *locals = PyDict_New();
-
-        if (gensym(s->s_name) == gensym("execfile")) {
-            mode = PY_EXEC;
-            post("execfile:path: %s", py_argv);
-            FILE* fhandle = fopen(py_argv, "r");
-            if (fhandle != NULL) {
-                // char *fname = basename(py_argv); // TODO (Causes Crash!)
-                // post("execfile:fname: %s", fname);
-                pval = PyRun_File(fhandle, "<stdin>", Py_file_input, x->p_globals, locals);
-            }
-            fclose(fhandle);
-            post("execfile:fhandle closed: %s", py_argv);
-        }
-
-        else if (gensym(s->s_name) == gensym("exec")) {
-
-            mode = PY_EXEC;
-            post("exec:code: %s", py_argv);
-
-            pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
-            if (!pval) {
-                goto error;
-            }
-        }
-
-        else if (gensym(s->s_name) == gensym("eval")) {
-            mode = PY_EVAL;
-            post("eval:code: %s", py_argv);
-            pval = PyRun_String(py_argv, Py_eval_input, x->p_globals, locals);
+        // handle ints and longs
+        if (PyLong_Check(pval)) {
+            long int_result = PyLong_AsLong(pval);
+            outlet_int(x->p_outlet, int_result);
         } 
 
-        else { // redundant!
-            error("this should not be reached!");
-            return;
+        // handle floats and doubles
+        if (PyFloat_Check(pval)) {
+            float float_result = (float) PyFloat_AsDouble(pval);
+            outlet_float(x->p_outlet, float_result);
         }
 
-        if (pval && mode == PY_EVAL) {
+        // handle strings
+        if (PyUnicode_Check(pval)) {
+            const char *unicode_result = PyUnicode_AsUTF8(pval);
+            outlet_anything(x->p_outlet, gensym(unicode_result), 0, NIL);
+        }
 
-            if (PyLong_Check(pval)) {
-                long int_result = PyLong_AsLong(pval);
-                outlet_int(x->p_outlet, int_result);
-            } 
+        // handle lists, tuples and sets
+        if (PyList_Check(pval) || PyTuple_Check(pval) || PyAnySet_Check(pval)) {
+            PyObject *iter;
+            PyObject *item;
+            int i = 0;
 
-            else if (PyFloat_Check(pval)) {
-                float float_result = (float) PyFloat_AsDouble(pval);
-                outlet_float(x->p_outlet, float_result);
+            t_atom atoms_static[PY_MAX_ATOMS];
+            t_atom *atoms;
+            int is_dynamic = 0;
+
+            Py_ssize_t seq_size = PySequence_Length(pval);
+
+            if (seq_size > PY_MAX_ATOMS) {
+                post("dynamically increasing size of atom array");
+                atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, seq_size+1);
+                is_dynamic = 1;
+
+            } else {
+                atoms = atoms_static;
             }
 
-            else if (PyUnicode_Check(pval)) {
-                const char *unicode_result = PyUnicode_AsUTF8(pval);
-                outlet_anything(x->p_outlet, gensym(unicode_result), 0, NIL);
-            }
-
-            else if (PyList_Check(pval) || PyTuple_Check(pval) || PyAnySet_Check(pval)) {
-                PyObject *iter;
-                PyObject *item;
-                int i = 0;
-
-                t_atom atoms_static[PY_MAX_ATOMS];
-                t_atom *atoms;
-                int is_dynamic = 0;
-
-                Py_ssize_t seq_size = PySequence_Length(pval);
-
-                if (seq_size > PY_MAX_ATOMS) {
-                    post("dynamically increasing size of atom array");
-                    atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, seq_size+1);
-                    is_dynamic = 1;
-
-                } else {
-                    atoms = atoms_static;
-                }
-
-                if ((iter = PyObject_GetIter(pval)) == NULL) {
-                    error("PyObject_GetIter(PyList||PyTuple||PySet) returns NULL");
-                    return;
-                }
-
+            if ((iter = PyObject_GetIter(pval)) != NULL) {
                 while ((item = PyIter_Next(iter)) != NULL) {
                     if (PyLong_Check(item)) {
                         long long_item = PyLong_AsLong(item);
@@ -283,54 +300,39 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
                         atom_setsym(atoms+i, gensym(unicode_item));
                         i++;
                     }
-
                     Py_DECREF(item);
                 }
-                outlet_anything(x->p_outlet, gensym("res"), i, atoms);
-                post("end pylist op: %d", i);
-
-                if (is_dynamic) {
-                    post("restoring to static atom array");
-                    atom_dynamic_end(atoms_static, atoms);
-                }
+                outlet_anything(x->p_outlet, gensym("result"), i, atoms);
+                post("end iter op: %d", i);
             }
 
-            else {
-                error("failure to evaluate expression");
-            }
-
-            Py_DECREF(pval);
-
-        } else if (pval && mode == PY_EXEC) {
-
-            post("exec ended.");
-            Py_DECREF(pval);
-
-        } else {
-            if (PyErr_Occurred()) {
-                // PyErr_Print();
-                PyObject *ptype, *pvalue, *ptraceback;
-                PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-                // pvalue contains error message
-                // ptraceback contains stack snapshot and many other information
-                // (see python traceback structure)
-
-                //Get error message
-                const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-                error("PyException for '%s': %s", py_argv, pStrErrorMessage);
-                Py_DECREF(ptype);
-                Py_DECREF(pvalue);
-                Py_DECREF(ptraceback);
+            if (is_dynamic) {
+                post("restoring to static atom array");
+                atom_dynamic_end(atoms_static, atoms);
             }
         }
-        
-        // --------------
-        // new refs
-        Py_DECREF(locals);
-        // --------------
 
+        // cleanup
+        Py_XDECREF(pval);
+        Py_XDECREF(locals);
     }
-    return;  
+
+    else {
+        if (PyErr_Occurred()) {
+            PyObject *ptype, *pvalue, *ptraceback;
+            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+
+            //Get error message
+            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+            error("PyException('%s %s'): %s", s->s_name, py_argv, pStrErrorMessage);
+            Py_DECREF(ptype);
+            Py_DECREF(pvalue);
+            Py_DECREF(ptraceback);
+        }
+        // cleanup
+        Py_XDECREF(pval);
+        Py_XDECREF(locals);
+    }
 }
 
 

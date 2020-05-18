@@ -100,14 +100,20 @@ typedef enum {
  * Methods
  */
 
-
-/* method prototypes */
-void py_bang(t_py *x);
+/* python methods */
 void py_import(t_py *x, t_symbol *s);
-// void py_find(t_py *x, t_symbol *s);
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
+void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv);
+void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
+
+/* used for testing right now */
+void py_bang(t_py *x);
+
+/* open editor */
 void py_dblclick(t_py *x);
+
+/* object creation and destruction */
 void *py_new(t_symbol *s, long argc, t_atom *argv);
 void py_free(t_py *x);
 

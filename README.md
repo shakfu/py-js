@@ -31,8 +31,11 @@ Only tested on OS X at present.
 
 ## TODO
 
-- [ ] refactor into functions
-- [ ] eval crashes with statement (e.g x=10)
+- [ ] PyIncref and Defref borrowed references
+- [ ] FIX: An 'import statement' in eval, exec or run causes a segmentation fault. see: https://docs.python.org/3/c-api/intro.html exception handling example
+- [ ] Implement section on to-way globals seeting and reading (from python and c) in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
+- [x] refactor into functions
+- [x] eval crashes with statement (e.g x=10)
 - [x] make exec work!
 	  Needs globals in both globals and locals param slots:
 	  ```c
@@ -52,13 +55,64 @@ Only tested on OS X at present.
 ## Development Notes
 
 
-## Object Reference
+### Python C API Patters
+
+see: https://pythonextensionpatterns.readthedocs.io/en/latest/canonical_function.html
+
+Mmmm....
+
+```c
+static PyObject *function(PyObject *arg_1) {
+    PyObject *obj_a    = NULL;
+    PyObject *ret      = NULL;
+
+    goto try;
+try:
+    assert(! PyErr_Occurred());
+    assert(arg_1);
+    Py_INCREF(arg_1);
+
+    /* obj_a = ...; */
+    if (! obj_a) {
+        PyErr_SetString(PyExc_ValueError, "Ooops.");
+        goto except;
+    }
+    /* Only do this if obj_a is a borrowed reference. */
+    Py_INCREF(obj_a);
+
+    /* More of your code to do stuff with obj_a. */
+
+    /* Return object creation, ret must be a new reference. */
+    /* ret = ...; */
+    if (! ret) {
+        PyErr_SetString(PyExc_ValueError, "Ooops again.");
+        goto except;
+    }
+    assert(! PyErr_Occurred());
+    assert(ret);
+    goto finally;
+except:
+    Py_XDECREF(ret);
+    assert(PyErr_Occurred());
+    ret = NULL;
+finally:
+    /* Only do this if obj_a is a borrowed reference. */
+    Py_XDECREF(obj_a);
+    Py_DECREF(arg_1);
+    return ret;
+}
+```
+
+
+
+
+### Object Reference
 
 
 It looks like `obex` is a type `hashtab` (Hash Table), which can be used for storing object references?
 
 
-## Find named object
+### Find named object
 
 see: https://cycling74.com/forums/find-named-object-and-send-it-a-message
 
