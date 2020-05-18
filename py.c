@@ -6,7 +6,7 @@
 #include "api.h"
 
 
-t_class *py_class;      // global pointer to the object class - so max can reference the object
+t_class *py_class;      // global pointer to object class - so max can reference the object
 
 /*--------------------------------------------------------------------------*/
 // helper functions
@@ -112,11 +112,13 @@ void py_init(t_py *x)
     // python init
     int err;
     PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
-    x->p_globals = PyModule_GetDict(main_module);
+    x->p_globals = PyModule_GetDict(main_module);           // borrowed reference
+    // PyUnicode_FromString -- new reference
     err = PyDict_SetItemString(x->p_globals, PY_MAX_NAME, PyUnicode_FromString(x->p_name->s_name));
     if (err != 0) {
         error("PyDict_SetItemString with key '%s', failed", PY_MAX_NAME);
     }
+    // PyLong_FromLong -- new reference
     err = PyDict_SetItemString(x->p_globals, "testing", PyLong_FromLong(20));
     if (err != 0) {
         error("PyDict_SetItemString with key 'testing', failed");
@@ -155,77 +157,129 @@ void py_import(t_py *x, t_symbol *s)
 
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
 {
-    PyObject *obj = Py_BuildValue("s", atom_getsym(argv)->s_name);
-     FILE *file = _Py_fopen_obj(obj, "r+");
-     if (file != NULL) {
-         PyRun_SimpleFile(file, "script.py");
-     }        
+    PyObject *pval = NULL;
+    FILE* fhandle  = NULL;
+    char *py_argv = NULL;
+    int ret = -0;
+
+    py_argv = atom_getsym(argv)->s_name;
+    if (py_argv == NULL) {
+        error("%s: could not retrieve argv", s->s_name);
+        goto error;
+    }
+    post("START %s: %s", s->s_name, py_argv);
+
+    pval = Py_BuildValue("s", py_argv); // new reference
+    if (pval == NULL) {
+        goto error;
+    }
+
+    fhandle = _Py_fopen_obj(pval, "r+");
+    if (fhandle == NULL) {
+        error("could not open file '%s'", py_argv);
+        goto error;
+    }
+
+    ret = PyRun_SimpleFile(fhandle, py_argv);
+    if (ret == -1){
+        goto error;
+    }
+
+    // success
+    fclose(fhandle);
+    Py_DECREF(pval);
+    post("END %s: %s", s->s_name, py_argv);
+
+    error:
+        if(PyErr_Occurred()) {
+            PyObject *ptype, *pvalue, *ptraceback;
+            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+            error("PyException('%s %s'): %s", s->s_name, py_argv, pStrErrorMessage);
+            Py_XDECREF(pval);   
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
+        }
 }
 
 
 void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv)
 {
-    char *py_argv = atom_getsym(argv)->s_name;
 
+    PyObject *pval = NULL;
+    FILE* fhandle  = NULL;
+    char *py_argv = NULL;
+
+    py_argv = atom_getsym(argv)->s_name;
+    if (py_argv == NULL) {
+        error("%s: could not retrieve argv", s->s_name);
+        goto error;
+    }
     post("START %s: %s", s->s_name, py_argv);
 
-    FILE* fhandle = fopen(py_argv, "r");
-    if (!fhandle) {
-        error("execfile: '%s' not found", py_argv);
-        return;
+    fhandle = fopen(py_argv, "r");
+    if (fhandle == NULL) {
+        error("could not open file '%s'", py_argv);
+        goto error;
     }
 
-    PyObject *pval = PyRun_File(fhandle, "<stdin>", Py_file_input, x->p_globals, x->p_globals);
-
-    if (pval != NULL) {
-        fclose(fhandle);
-        Py_DECREF(pval);
-        post("END %s: %s", s->s_name, py_argv);
+    pval = PyRun_File(fhandle, py_argv, Py_file_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
     }
 
-    else {
-        if (PyErr_Occurred()) {
+    // success cleanup
+    fclose(fhandle);
+    Py_DECREF(pval);
+    post("END %s: %s", s->s_name, py_argv);
+
+    error:
+        if(PyErr_Occurred()) {
             PyObject *ptype, *pvalue, *ptraceback;
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-
-            // get error message
             const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
             error("PyException('%s %s'): %s", s->s_name, py_argv, pStrErrorMessage);
-            Py_DECREF(ptype);
-            Py_DECREF(pvalue);
-            Py_DECREF(ptraceback);
+            Py_XDECREF(pval);   
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
         }
-    }
 }
 
 
 void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv)
 {
-    char *py_argv = atom_getsym(argv)->s_name;
+    char *py_argv = NULL;
+    PyObject *pval = NULL;
 
+    py_argv = atom_getsym(argv)->s_name;
+    if (py_argv == NULL) {
+        error("%s: could not retrieve argv", s->s_name);
+        goto error;
+    }
     post("START %s: %s", s->s_name, py_argv);
 
-    PyObject *pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
-
-    if (pval != NULL) {
-        Py_DECREF(pval);
-        post("END %s: %s", s->s_name, py_argv);
+    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
     }
 
-    else {
+    // success cleanup
+    Py_DECREF(pval);
+    post("END %s: %s", s->s_name, py_argv);
 
-        if (PyErr_Occurred()) {
+    error:
+        if(PyErr_Occurred()) {
             PyObject *ptype, *pvalue, *ptraceback;
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-
-            //Get error message
             const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
             error("PyException('%s %s'): %s", s->s_name, py_argv, pStrErrorMessage);
-            Py_DECREF(ptype);
-            Py_DECREF(pvalue);
-            Py_DECREF(ptraceback);
+            Py_XDECREF(pval);   
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
         }
-    }
 }
 
 
