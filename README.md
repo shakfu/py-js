@@ -31,7 +31,14 @@ Only tested on OS X at present.
 
 ## TODO
 
-- [ ] make exec work!
+- [ ] refactor into functions
+- [ ] eval crashes with statement (e.g x=10)
+- [x] make exec work!
+	  Needs globals in both globals and locals param slots:
+	  ```c
+	  pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals); 
+      ```
+- [x] add line repl
 - [ ] add right inlet bang after eval op ends
 - [ ] add text edit object
 - [ ] if attr has same name as method (the import saga), crash. fixed by making them different (should be another better way.)
