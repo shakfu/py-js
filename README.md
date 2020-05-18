@@ -31,6 +31,7 @@ Only tested on OS X at present.
 
 ## TODO
 
+- [ ] make exec work!
 - [ ] add right inlet bang after eval op ends
 - [ ] add text edit object
 - [ ] if attr has same name as method (the import saga), crash. fixed by making them different (should be another better way.)
@@ -135,7 +136,7 @@ object_method(b, gensym("dynlet_begin"));
 object_method(b, gensym("dynlet_end"));
 ```
 
-### REPL possible?
+### Is a real REPL possible?
 
 **Is it possible to launch a python interactive loop / repl from the py external?**
 
