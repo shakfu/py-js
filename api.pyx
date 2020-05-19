@@ -1840,8 +1840,9 @@ cdef extern from "py.h":
 
     cdef void py_bang(t_py *x)
     cdef void py_import(t_py *x, t_symbol *s)
-    # cdef void py_find(t_py *x, t_symbol *s)
     cdef void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
+    cdef void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv)
+    cdef void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv)
     cdef void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
     cdef void py_dblclick(t_py *x)
     cdef void *py_new(t_symbol *s, long argc, t_atom *argv)
