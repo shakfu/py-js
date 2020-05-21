@@ -468,109 +468,13 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-33",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 229.0, 3.0, 100.0, 22.0 ],
-					"text" : "eval emb.check()"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-32",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 362.0, 377.0, 29.5, 22.0 ],
-					"text" : "find"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-31",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 362.0, 338.0, 49.0, 22.0 ],
-					"text" : "register"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-29",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 533.0, 13.0, 123.0, 22.0 ],
-					"text" : "eval str(emb.IPython)"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-30",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 345.5, 13.0, 147.0, 22.0 ],
-					"text" : "eval str(emb.classname())"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-27",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 260.0, 30.0, 69.0, 22.0 ],
-					"text" : "import emb"
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"id" : "obj-25",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 5.0, 13.0, 133.0, 22.0 ],
+					"patching_rect" : [ 6.0, 38.0, 133.0, 22.0 ],
 					"text" : "eval api.py_post('hello')"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-28",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 589.0, 338.0, 50.0, 22.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-26",
-					"maxclass" : "button",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 620.0, 276.0, 24.0, 24.0 ],
-					"varname" : "marty"
 				}
 
 			}
@@ -581,7 +485,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 40.0, 226.0, 187.0, 22.0 ],
+					"patching_rect" : [ 358.5, 324.0, 187.0, 22.0 ],
 					"text" : "run /Users/sa/Downloads/hello.py"
 				}
 
@@ -593,7 +497,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 10.0, 43.0, 87.0, 22.0 ],
+					"patching_rect" : [ 32.5, 62.0, 87.0, 22.0 ],
 					"text" : "eval api.hello()"
 				}
 
@@ -605,7 +509,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 49.0, 67.0, 66.0, 22.0 ],
+					"patching_rect" : [ 73.0, 88.0, 66.0, 22.0 ],
 					"text" : "eval api.txt"
 				}
 
@@ -617,20 +521,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 101.0, 102.0, 61.0, 22.0 ],
+					"patching_rect" : [ 109.0, 114.0, 61.0, 22.0 ],
 					"text" : "import api"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-17",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 116.0, 283.0, 81.0, 22.0 ],
-					"text" : "eval api.test()"
 				}
 
 			}
@@ -712,7 +604,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 369.0, 37.0, 24.0, 24.0 ]
+					"patching_rect" : [ 260.0, 37.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -723,7 +615,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 5.0, 152.0, 184.0, 22.0 ],
+					"patching_rect" : [ 6.0, 181.0, 184.0, 22.0 ],
 					"text" : "eval str(datetime.datetime.now())"
 				}
 
@@ -735,7 +627,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 105.5, 181.0, 91.0, 22.0 ],
+					"patching_rect" : [ 86.0, 226.0, 91.0, 22.0 ],
 					"text" : "import datetime"
 				}
 
@@ -783,7 +675,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 280.0, 71.0, 74.0, 22.0 ],
+					"patching_rect" : [ 310.0, 37.0, 74.0, 22.0 ],
 					"text" : "eval 1.4+2.3"
 				}
 
@@ -807,8 +699,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 92.0, 342.0, 187.0, 22.0 ],
-					"text" : "0123456789abcdefABCDEF"
+					"patching_rect" : [ 92.0, 342.0, 187.0, 22.0 ]
 				}
 
 			}
@@ -894,13 +785,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-17", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-18", 0 ]
 				}
 
@@ -956,57 +840,8 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-28", 1 ],
-					"source" : [ "obj-26", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-27", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-29", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-3", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-30", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-31", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-32", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-33", 0 ]
 				}
 
 			}
