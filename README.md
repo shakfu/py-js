@@ -33,26 +33,20 @@ Only tested on OS X at present.
 
 ## TODO
 
-- [ ] apply 'repr' to eval strings 
-      see `PyObject* PyObject_Repr(PyObject *o)` returns New reference.
-- [ ] PyIncref and Defref borrowed references
-- [ ] FIX: An 'import statement' in eval, exec or run causes a segmentation fault. see: https://docs.python.org/3/c-api/intro.html exception handling example
-- [ ] Implement section on to-way globals seeting and reading (from python and c) in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
-- [x] refactor into functions
-- [x] eval crashes with statement (e.g x=10)
-- [x] make exec work!
-	  Needs globals in both globals and locals param slots:
-	  ```c
-	  pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals); 
-      ```
-- [x] add line repl
+
+- [ ] global object/dict/ref mgmt (so two external can exist without Py_Finalize() causing a crash
+- [ ] Implement section on two-way globals setting and reading (from python and c) in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 - [ ] add right inlet bang after eval op ends
 - [ ] add text edit object
-- [ ] if attr has same name as method (the import saga), crash. fixed by making them different (should be another better way.)
+- [ ] if attr has same name as method (the import saga), crash. fixed by making them different.
 - [x] add `@run <script>`
 - [x] add cythonize access to max c-api..?
 - [x] refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
-
-
+- [x] 'import statement' in eval, exec or run causes a segmentation fault. see: https://docs.python.org/3/c-api/intro.html exception handling example
+- [x] add line repl
+	- [x] add up arrow history (great for 'random.random()')
+- [x] refactor into functions
+- [x] eval crashes with statement (e.g x=10)
+- [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
 
 

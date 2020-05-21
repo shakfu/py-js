@@ -375,8 +375,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
                     }
                     Py_DECREF(item);
                 }
-                // outlet_anything(x->p_outlet, gensym("list"), i, atoms);
-                outlet_list(x->p_outlet, NULL, i, atoms);
+                outlet_anything(x->p_outlet, gensym("list"), i, atoms);
                 post("end iter op: %d", i);
             }
 
