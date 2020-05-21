@@ -111,8 +111,10 @@ void py_init(t_py *x)
 
     // python init
     int err;
-    PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
+    PyObject *main_module = PyImport_AddModule(x->p_name->s_name); // borrowed reference
+    // PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
     x->p_globals = PyModule_GetDict(main_module);           // borrowed reference
+    PyDict_SetItemString(x->p_globals, "__builtins__", PyEval_GetBuiltins());
     // PyUnicode_FromString -- new reference
     err = PyDict_SetItemString(x->p_globals, PY_MAX_NAME, PyUnicode_FromString(x->p_name->s_name));
     if (err != 0) {
@@ -132,7 +134,6 @@ void py_init(t_py *x)
 void py_free(t_py *x)
 {
     post("freeing globals and terminating py interpreter...");
-    Py_DECREF(x->p_globals);
     Py_FinalizeEx();
 }
 
@@ -301,7 +302,6 @@ void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv)
         }
 }
 
-
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
 {
     char *py_argv = atom_getsym(argv)->s_name;
@@ -375,7 +375,8 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
                     }
                     Py_DECREF(item);
                 }
-                outlet_anything(x->p_outlet, gensym("result"), i, atoms);
+                // outlet_anything(x->p_outlet, gensym("list"), i, atoms);
+                outlet_list(x->p_outlet, NULL, i, atoms);
                 post("end iter op: %d", i);
             }
 
@@ -387,7 +388,6 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
 
         // cleanup
         Py_XDECREF(pval);
-        Py_XDECREF(locals);
     }
 
     else {
@@ -404,7 +404,6 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
         }
         // cleanup
         Py_XDECREF(pval);
-        Py_XDECREF(locals);
     }
 }
 
