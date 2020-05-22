@@ -5,8 +5,13 @@
 /* max/msp api */
 #include "api.h"
 
+/*--------------------------------------------------------------------------*/
+// GLOBALS
 
-t_class *py_class;      // global pointer to object class - so max can reference the object
+t_class *py_class;      // global pointer to object class
+
+int py_global_obj_count = 0;
+
 
 /*--------------------------------------------------------------------------*/
 // helper functions
@@ -34,6 +39,9 @@ void ext_main(void *r)
 
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
+
+    // meta
+    class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
 
 
     // code editor
@@ -64,17 +72,17 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 {
     t_py *x = NULL;
 
-    // t_max_err err;
-
-
     x = (t_py *)object_alloc(py_class);
 
     if (x) {
         // core
         x->p_name = symbol_unique();
 
-        // err = object_obex_lookup(x, gensym("#P"), (t_object **)&x->p_patcher);
-        // err = object_obex_lookup(x, gensym("#B"), (t_object **)&x->p_box);
+        // TODO: catch error!
+        // if (!object_obex_lookup(x, gensym("#P"), (t_object **)&x->p_patcher))
+        //     error("patcher object not created.");
+        // if (!object_obex_lookup(x, gensym("#B"), (t_object **)&x->p_box))
+        //     error("box obejct not created.");
 
         // python
         x->p_module = gensym("");
@@ -93,6 +101,10 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
 
         // python init
         py_init(x);
+
+        // increment global object counter
+        py_global_obj_count++;
+
     }
 
     post("new py object %s added to patch...", x->p_name->s_name);
@@ -138,13 +150,20 @@ void py_init(t_py *x)
 
 void py_free(t_py *x)
 {
+    // code editor cleanup
     object_free(x->p_code_editor);
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
-    post("freeing globals and terminating py interpreter...");
-    Py_FinalizeEx();
+    // python objects cleanup
+    py_global_obj_count--;
+    post("py object '%s' deleted", x->p_name->s_name);
+    if (py_global_obj_count == 0) {
+        post("no py objects left: freeing memory / terminating py interpreter.");
+        Py_FinalizeEx();
+    }
 }
+ 
 
 
 /*--------------------------------------------------------------------------*/
@@ -166,6 +185,13 @@ void py_assist(t_py *x, void *b, long m, long a, char *s)
 void py_bang(t_py *x)
 {
     outlet_bang(x->p_outlet);
+}
+
+
+// void py_count(t_py *x, long n)
+void py_count(t_py *x)
+{
+    outlet_int(x->p_outlet, py_global_obj_count);
 }
 
 
