@@ -28,7 +28,6 @@ typedef struct _py {
     /* object attributes */
     t_symbol *p_name;        /* unique name */
     t_symbol *p_module;      /* python-related */
-    t_symbol *p_code;        /* python-related */
 
     /* infra objects */
     // t_patcher *p_patcher; /* to send msgs to objects */
@@ -36,9 +35,9 @@ typedef struct _py {
     // t_object *registry;   /* to keep a local? registry of objects? */
 
     /* text editor attrs */
-    t_object *t_editor;
-    char **t_text;
-    long t_size;
+    t_object *p_code_editor;
+    char **p_code;
+    long p_code_size;
 
     /* outlet creation */
     void *p_outlet;
