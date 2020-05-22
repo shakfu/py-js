@@ -40,6 +40,7 @@ void ext_main(void *r)
     class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
     class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT, 0);
     class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT, 0);
+    class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT, 0);
 
 
     // attributes

@@ -78,7 +78,7 @@ void py_read(t_py *x, t_symbol *s);
 void py_doread(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_dblclick(t_py *x);
 void py_edclose(t_py *x, char **text, long size);
-
+void py_edsave(t_py *x, char **text, long size);
 /* help */
 void py_assist(t_py *x, void *b, long m, long a, char *s);
 
