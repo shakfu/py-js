@@ -12,25 +12,10 @@ t_class *py_class;      // global pointer to object class - so max can reference
 // helper functions
 
 
-// void post_containers(t_py *x)
-// {
-//     t_patcher *p;
-//     t_box *b;
-//     t_max_err err;
-
-//     err = object_obex_lookup(x, gensym("#P"), (t_object **)&p);
-//     err = object_obex_lookup(x, gensym("#B"), (t_object **)&b);
-
-//     post("my patcher is located at 0x%X", p);
-//     post("my box is located at 0x%X", b);
-// }
-
-/*--------------------------------------------------------------------------*/
-
-
 
 
 /*--------------------------------------------------------------------------*/
+// main
 
 void ext_main(void *r)
 {
@@ -48,7 +33,14 @@ void ext_main(void *r)
     class_addmethod(c, (method)py_run,        "run",        A_GIMME,  0);
 
     /* you CAN'T call this from the patcher */
-    class_addmethod(c, (method)py_dblclick, "dblclick", A_CANT, 0);
+    class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
+
+
+    // code editor
+    class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
+    class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT, 0);
+    class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT, 0);
+
 
     // attributes
     CLASS_ATTR_SYM(c, "module", 0, t_py, p_module);
@@ -68,17 +60,32 @@ void ext_main(void *r)
 
 
 /*--------------------------------------------------------------------------*/
+// object creation, initialization and release
 
 void *py_new(t_symbol *s, long argc, t_atom *argv)
 {
-    t_py *x;
+    t_py *x = NULL;
+
+    // t_max_err err;
+
 
     x = (t_py *)object_alloc(py_class);
 
     if (x) {
+        // core
         x->p_name = symbol_unique();
+
+        // err = object_obex_lookup(x, gensym("#P"), (t_object **)&x->p_patcher);
+        // err = object_obex_lookup(x, gensym("#B"), (t_object **)&x->p_box);
+
+        // python
         x->p_module = gensym("");
         x->p_code = gensym("");
+
+        // text editor
+        x->t_text = sysmem_newhandle(0);
+        x->t_size = 0;
+        x->t_editor = NULL;
 
         // create inlet(s)
         // create outlet(s)
@@ -95,6 +102,7 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
     return(x);
 }
 
+
 void py_init(t_py *x)
 {
     // PyObject *pmodule;
@@ -110,21 +118,21 @@ void py_init(t_py *x)
     Py_Initialize();
 
     // python init
-    int err;
+    // int err;
     PyObject *main_module = PyImport_AddModule(x->p_name->s_name); // borrowed reference
-    // PyObject *main_module = PyImport_AddModule("__main__"); // borrowed reference
-    x->p_globals = PyModule_GetDict(main_module);           // borrowed reference
+    x->p_globals = PyModule_GetDict(main_module);                  // borrowed reference
     PyDict_SetItemString(x->p_globals, "__builtins__", PyEval_GetBuiltins());
+
     // PyUnicode_FromString -- new reference
-    err = PyDict_SetItemString(x->p_globals, PY_MAX_NAME, PyUnicode_FromString(x->p_name->s_name));
-    if (err != 0) {
-        error("PyDict_SetItemString with key '%s', failed", PY_MAX_NAME);
-    }
-    // PyLong_FromLong -- new reference
-    err = PyDict_SetItemString(x->p_globals, "testing", PyLong_FromLong(20));
-    if (err != 0) {
-        error("PyDict_SetItemString with key 'testing', failed");
-    }
+    // err = PyDict_SetItemString(x->p_globals, PY_MAX_NAME, PyUnicode_FromString(x->p_name->s_name));
+    // if (err != 0) {
+    //     error("PyDict_SetItemString with key '%s', failed", PY_MAX_NAME);
+    // }
+    // // PyLong_FromLong -- new reference
+    // err = PyDict_SetItemString(x->p_globals, "testing", PyLong_FromLong(20));
+    // if (err != 0) {
+    //     error("PyDict_SetItemString with key 'testing', failed");
+    // }
     post("globals initialized");
     object_register(gensym(PY_NAMESPACE), x->p_name, x);
     post("object registered");
@@ -133,18 +141,108 @@ void py_init(t_py *x)
 
 void py_free(t_py *x)
 {
+    object_free(x->t_editor);
+    if (x->t_text)
+        sysmem_freehandle(x->t_text);
     post("freeing globals and terminating py interpreter...");
     Py_FinalizeEx();
 }
 
 
-//--------------------------------------------------------------------------
+/*--------------------------------------------------------------------------*/
+// help
+
+void py_assist(t_py *x, void *b, long m, long a, char *s)
+{
+    if (m == ASSIST_INLET) { //inlet
+        sprintf(s, "I am inlet %ld", a);
+    }
+    else {  // outlet
+        sprintf(s, "I am outlet %ld", a);
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+// object methods
+
+void py_bang(t_py *x)
+{
+    outlet_bang(x->p_outlet);
+}
+
+
+/*--------------------------------------------------------------------------*/
+// code editor
+
 
 void py_dblclick(t_py *x)
 {
-    object_post((t_object *)x, "I got a double-click");
+    if (x->t_editor)
+        object_attr_setchar(x->t_editor, gensym("visible"), 1);
+    else {
+        x->t_editor = object_new(CLASS_NOBOX, gensym("jed"), x, 0);
+        object_method(x->t_editor, gensym("settext"), *x->t_text, gensym("utf-8"));
+        object_attr_setchar(x->t_editor, gensym("scratch"), 1);
+        object_attr_setsym(x->t_editor, gensym("title"), gensym("py-editor"));
+    }
 }
 
+ 
+void py_read(t_py *x, t_symbol *s)
+{
+    defer((t_object *)x, (method)py_doread, s, 0, NULL);
+}
+
+
+void py_doread(t_py *x, t_symbol *s, long argc, t_atom *argv)
+{
+    char filename[MAX_PATH_CHARS];
+    short path;
+    t_fourcc type = FOUR_CHAR_CODE('TEXT');
+    long err;
+    t_filehandle fh;
+
+    if (s == gensym("")) {
+        filename[0] = 0;
+
+        if (open_dialog(filename, &path, &type, &type, 1))
+            return;
+    } else {
+        strcpy(filename,s->s_name);
+        if (locatefile_extended(filename,&path,&type,&type,1)) {
+            object_error((t_object *)x, "can't find file %s",filename);
+            return;
+        }
+    }
+
+    // success
+    err = path_opensysfile(filename, path, &fh, READ_PERM);
+    if (!err) {
+        sysfile_readtextfile(fh, x->t_text, 0, TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
+        sysfile_close(fh);
+        x->t_size = sysmem_handlesize(x->t_text);
+    }
+}
+
+void py_edclose(t_py *x, char **text, long size)
+{
+    if (x->t_text)
+        sysmem_freehandle(x->t_text);
+
+    x->t_text = sysmem_newhandleclear(size+1);
+    sysmem_copyptr((char *)*text, *x->t_text, size);
+    x->t_size = size+1;
+    x->t_editor = NULL;
+}
+
+void py_edsave(t_py *x, char **text, long size)
+{
+    post("SAVING file");
+}
+
+
+/*--------------------------------------------------------------------------*/
+// python engine services
 
 void py_import(t_py *x, t_symbol *s)
 {
@@ -406,9 +504,3 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv)
     }
 }
 
-
-
-void py_bang(t_py *x)
-{
-    outlet_bang(x->p_outlet);
-}

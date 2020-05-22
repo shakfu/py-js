@@ -1,45 +1,4 @@
-/*
-    py.c - basic experiment in minimal max object for calling python code
-
-    repo - github.com/shakfu/py
-
-    This object has 1 inlet and 2 outlets
-
-    Basic Features
-
-    1.  Per-Object Namespace. It responds to an 'import <module>' message in
-        the left inlet which loads a python module in its namespace. Each new import
-        (like python) adds to the namespace.
-
-    2.  Eval Messages. It responds to an 'eval <expression>' message in the left inlet
-        which is evaluated in the namespace and outputs results to the left outlet
-        and outputs a bang from the right outlet to signal end of evaluation.
-
-    py interpreter object
-        attributes
-            imports
-            code
-
-        messages
-            import <module> [adds to @imports]
-            eval <code> or eval @file <path>
-            exec <code> or exec @file <path>
-            run  <code> or run  @file <path>
-
-            (phase 2)
-            load file <path> -> into code (for persistence) and texeditor edits
-
-            (phase N)
-            embed ipython kernel? (-;
-
-    TODO
-
-        - [ ] add right inlet bang after eval op ends
-        - [ ] add @run <script>
-        - [ ] add text edit object
-
-*/
-
+/* py.h */
 /*--------------------------------------------------------------------
  * Includes
  */
@@ -70,15 +29,20 @@ typedef struct _py {
     t_symbol *p_name;        /* unique name */
     t_symbol *p_module;      /* python-related */
     t_symbol *p_code;        /* python-related */
-    
+
+    /* infra objects */
+    // t_patcher *p_patcher; /* to send msgs to objects */
+    // t_box *p_box;         /* the ui box of the py instance? */
+    // t_object *registry;   /* to keep a local? registry of objects? */
+
+    /* text editor attrs */
+    t_object *t_editor;
+    char **t_text;
+    long t_size;
+
     /* outlet creation */
     void *p_outlet;
 
-    /* useful objects */
-    // t_object *patcher;      /* to send msgs to objects */
-    // t_object *box;          /* the ui box of the py instance? */
-    // t_object *registry;     /* to keep a local registry of objects? */
-    
     /* python-related */
     PyObject *p_globals;    /* global python namespace (new ref) */
 } t_py;
@@ -107,17 +71,23 @@ void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
 
-
-
 /* used for testing right now */
 void py_bang(t_py *x);
 
-/* open editor */
+/* code editor */
+void py_read(t_py *x, t_symbol *s);
+void py_doread(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_dblclick(t_py *x);
+void py_edclose(t_py *x, char **text, long size);
+
+/* help */
+void py_assist(t_py *x, void *b, long m, long a, char *s);
 
 /* object creation and destruction */
 void *py_new(t_symbol *s, long argc, t_atom *argv);
 void py_free(t_py *x);
+
+
 
 /*--------------------------------------------------------------------
  * Helper Functions
