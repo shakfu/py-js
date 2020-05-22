@@ -3,6 +3,53 @@
 An attempt to make a simple (and extensible) max external for python
 
 
+## Overview
+```
+
+    py.c - basic experiment in minimal max object for calling python code
+
+    repo - github.com/shakfu/py
+
+    This object has 1 inlet and 2 outlets
+
+    Basic Features
+
+    1.  Per-Object Namespace. It responds to an 'import <module>' message in
+        the left inlet which loads a python module in its namespace. Each new import
+        (like python) adds to the namespace.
+
+    2.  Eval Messages. It responds to an 'eval <expression>' message in the left inlet
+        which is evaluated in the namespace and outputs results to the left outlet
+        and outputs a bang from the right outlet to signal end of evaluation.
+
+    py interpreter object
+        attributes
+            imports
+            code
+
+        messages
+            import <module> [adds to @imports]
+            eval <code> or eval @file <path>
+            exec <code> or exec @file <path>
+            run  <code> or run  @file <path>
+
+            (phase 2)
+            load file <path> -> into code (for persistence) and texeditor edits
+
+            (phase N)
+            embed ipython kernel? (-;
+
+    TODO
+
+        - [ ] add right inlet bang after eval op ends
+        - [ ] add @run <script>
+        - [ ] add text edit object
+
+s
+```
+
+
+
 ## Features
 
 ### v0.1
@@ -32,12 +79,14 @@ Only tested on OS X at present.
 
 ## TODO
 
-
+- [ ] Refactor conversion logic from object methods
+- [ ] Check out the reference for 'thispatcher'
 - [ ] Global object/dict/ref mgmt (so two external can exist without Py_Finalize() causing a crash
 - [ ] Implement section on two-way globals setting and reading (from python and c) in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 - [ ] Add right inlet bang after eval op ends
-- [ ] Add text edit object
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
+- [x] Add text edit object
+	- [ ] enable code to be run from editor
 - [x] Add `@run <script>`
 - [x] Add cythonize access to max c-api..?
 - [x] Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
