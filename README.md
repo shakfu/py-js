@@ -62,6 +62,29 @@ An attempt to make a simple (and extensible) max external for python
 - [ ] Edit default with text editor
 
 
+## Directory Structure
+
+- py
+	- clippings
+	- docs
+		- refpages (.maxref.xml)
+	- externals (.mxo)
+	- extras
+	- fonts (.otf)
+	- help (.maxhelp)
+	- interfaces (svg)
+	- jsextensions (.mxo / .js)
+	- jsui (.js)
+	- media (.png/...)
+	- object-icons (.svg)
+	- object-prototypes (.maxproto)
+	- patchers
+	- snippets (.maxsnip)
+	- styles (.maxstyle)
+	- templates
+
+
+
 ## Building
 
 The external is being developed using the max-sdk-8.0.3 package (which is installed where packages should be installed in Max 8).

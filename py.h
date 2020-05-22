@@ -17,6 +17,12 @@
 #define PY_NAMESPACE "PY_SPACE"
 
 /*--------------------------------------------------------------------
+ * Global variables
+ */
+
+static int py_global_obj_count;
+
+/*--------------------------------------------------------------------
  * Object Types
  */
 
@@ -73,7 +79,6 @@ void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
 /* used for meta info or testing right now */
 void py_bang(t_py *x);
 void py_count(t_py *x);
-// void py_count(t_py *x, long n);
 
 /* code editor */
 void py_read(t_py *x, t_symbol *s);
@@ -81,6 +86,7 @@ void py_doread(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_dblclick(t_py *x);
 void py_edclose(t_py *x, char **text, long size);
 void py_edsave(t_py *x, char **text, long size);
+
 /* help */
 void py_assist(t_py *x, void *b, long m, long a, char *s);
 

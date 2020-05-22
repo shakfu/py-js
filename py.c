@@ -10,7 +10,7 @@
 
 t_class *py_class;      // global pointer to object class
 
-int py_global_obj_count = 0;
+static int py_global_obj_count = 0;
 
 
 /*--------------------------------------------------------------------------*/
@@ -52,11 +52,13 @@ void ext_main(void *r)
 
 
     // attributes
-    CLASS_ATTR_SYM(c, "module", 0, t_py, p_module);
-    CLASS_ATTR_BASIC(c, "module", 0);
-
     CLASS_ATTR_SYM(c, "name", 0, t_py, p_name);
+    // CLASS_ATTR_INVISIBLE(c, "name", 0);
     CLASS_ATTR_BASIC(c, "name", 0);
+
+    CLASS_ATTR_SYM(c, "module", 0, t_py, p_module);
+    CLASS_ATTR_ENUM(c, "module", 0, "abc def ghi");
+    CLASS_ATTR_BASIC(c, "module", 0);
 
     class_register(CLASS_BOX, c);
     py_class = c;
@@ -78,7 +80,6 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         // core
         x->p_name = symbol_unique();
 
-        // TODO: catch error!
         // if (!object_obex_lookup(x, gensym("#P"), (t_object **)&x->p_patcher))
         //     error("patcher object not created.");
         // if (!object_obex_lookup(x, gensym("#B"), (t_object **)&x->p_box))
@@ -188,7 +189,6 @@ void py_bang(t_py *x)
 }
 
 
-// void py_count(t_py *x, long n)
 void py_count(t_py *x)
 {
     outlet_int(x->p_outlet, py_global_obj_count);
