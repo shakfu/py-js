@@ -70,8 +70,10 @@ void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
 
-/* used for testing right now */
+/* used for meta info or testing right now */
 void py_bang(t_py *x);
+void py_count(t_py *x);
+// void py_count(t_py *x, long n);
 
 /* code editor */
 void py_read(t_py *x, t_symbol *s);

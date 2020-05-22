@@ -39,13 +39,7 @@ An attempt to make a simple (and extensible) max external for python
             (phase N)
             embed ipython kernel? (-;
 
-    TODO
 
-        - [ ] add right inlet bang after eval op ends
-        - [ ] add @run <script>
-        - [ ] add text edit object
-
-s
 ```
 
 
@@ -79,12 +73,16 @@ Only tested on OS X at present.
 
 ## TODO
 
+- [ ] Convert py into a js extension class
 - [ ] Refactor conversion logic from object methods
 - [ ] Check out the reference for 'thispatcher'
-- [ ] Global object/dict/ref mgmt (so two external can exist without Py_Finalize() causing a crash
 - [ ] Implement section on two-way globals setting and reading (from python and c) in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 - [ ] Add right inlet bang after eval op ends
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
+
+## Done
+
+- [x] Global object/dict/ref mgmt (so two external can exist without Py_Finalize() causing a crash
 - [x] Add text edit object
 	- [ ] enable code to be run from editor
 - [x] Add `@run <script>`
