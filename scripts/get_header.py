@@ -4,7 +4,7 @@ import sys
 import subprocess
 
 #----------------------------------------------------------------------
-## generic pipe functions
+## generic pipe-like cleaning functions
 
 def rpl(x, y=''):
     def _func(s):
