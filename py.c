@@ -53,6 +53,18 @@ void ext_main(void *r)
 
 
     // attributes
+    // testing
+    CLASS_ATTR_CHAR(c, "test_char", 0,              t_py, test_char);
+    CLASS_ATTR_LONG(c, "test_long", 0,              t_py, test_long);
+    CLASS_ATTR_ATOM_LONG(c, "test_atom_long", 0,    t_py, test_atom_long);
+    CLASS_ATTR_FLOAT(c, "test_float", 0,            t_py, test_float);
+    CLASS_ATTR_DOUBLE(c, "test_double", 0,          t_py, test_double);
+    CLASS_ATTR_SYM_ARRAY(c, "imports1", 0,          t_py, imports1, MAX_IMPORTS);
+    CLASS_ATTR_SYM_VARSIZE(c, "imports2", 0,        t_py, imports2, imports2_count, MAX_IMPORTS);
+    CLASS_ATTR_SYM(c, "filepath", 0,                t_py, filepath);
+    CLASS_ATTR_STYLE(c, "filepath", 0,              "file");
+
+    // actual
     CLASS_ATTR_SYM(c, "name", 0, t_py, p_name);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
     CLASS_ATTR_BASIC(c, "name", 0);
@@ -107,11 +119,15 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         // increment global object counter
         py_global_obj_count++;
 
-        post("argc: %ld argv: %s", argc, atom_getsym(argv)->s_name);
-        if (argc == 2) {
-            post("1 arg: %s", atom_getsym(argv)->s_name);
-            post("2 arg: %s", atom_getsym(argv+1)->s_name);
+        // post("argc: %ld argv: %s", argc, atom_getsym(argv)->s_name);
+        for (int i=0; i < argc; i++) {
+            post("argc: %d  argv: %s", i, atom_getsym(argv+i)->s_name);
+            // post("i: %d", i);
         }
+        // if (argc == 2) {
+        //     post("1 arg: %s", atom_getsym(argv)->s_name);
+        //     post("2 arg: %s", atom_getsym(argv+1)->s_name);
+        // }
     }
 
     post("new py object %s added to patch...", x->p_name->s_name);
