@@ -6,6 +6,8 @@
        not required for the external. It is exposed to non-cython c code
        via the primary includes in "ext.h"
 
+'p' -> partial analyzed but not yet included in api.pxd
+
 ' ' -> an empty box means it is planned
 
 - [x] commonsyms.h
@@ -42,10 +44,10 @@
 - [-] ext_preprocessor.h
 - [x] ext_proto.h
 - [-] ext_proto_win.h
-- [p] ext_qtimage.h
-- [p] ext_qtstubs.h
+- [ ] ext_qtimage.h
+- [ ] ext_qtstubs.h
 - [-] ext_quickmap.h
-- [p] ext_sndfile.h
+- [ ] ext_sndfile.h
 - [x] ext_strings.h
 - [x] ext_symobject.h
 - [x] ext_sysfile.h
@@ -62,7 +64,7 @@
 - [-] ext_xmltree.h
 - [ ] indexmap.h
 - [ ] jdataview.h
-- [ ] jgraphics.h
+- [p] jgraphics.h
 - [ ] jpatcher_api.h
 - [ ] jpatcher_syms.h
 - [ ] jpatcher_utils.h
@@ -1900,6 +1902,7 @@ cdef extern from "commonsyms.h":
     cdef extern t_common_symbols_table *_common_symbols
     cdef void common_symbols_init()
     cdef t_common_symbols_table *common_symbols_gettable()
+    
 
 
 cdef extern from "ext_wind.h":

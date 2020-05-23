@@ -1381,7 +1381,7 @@ static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self) {
  *     return greeting
  * 
  * cpdef public str py_post(str s):             # <<<<<<<<<<<<<<
- *     post(s.encode('utf-8'))
+ *     mx.post(s.encode('utf-8'))
  *     return s
  */
 
@@ -1399,7 +1399,7 @@ PyObject *py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
   /* "api.pyx":34
  * 
  * cpdef public str py_post(str s):
- *     post(s.encode('utf-8'))             # <<<<<<<<<<<<<<
+ *     mx.post(s.encode('utf-8'))             # <<<<<<<<<<<<<<
  *     return s
  * 
  */
@@ -1415,7 +1415,7 @@ PyObject *py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
 
   /* "api.pyx":35
  * cpdef public str py_post(str s):
- *     post(s.encode('utf-8'))
+ *     mx.post(s.encode('utf-8'))
  *     return s             # <<<<<<<<<<<<<<
  * 
  * 
@@ -1429,7 +1429,7 @@ PyObject *py_post(PyObject *__pyx_v_s, CYTHON_UNUSED int __pyx_skip_dispatch) {
  *     return greeting
  * 
  * cpdef public str py_post(str s):             # <<<<<<<<<<<<<<
- *     post(s.encode('utf-8'))
+ *     mx.post(s.encode('utf-8'))
  *     return s
  */
 
@@ -1495,8 +1495,8 @@ static PyObject *__pyx_pf_3api_2py_post(CYTHON_UNUSED PyObject *__pyx_self, PyOb
  *     cdef t_py *obj
  * 
  *     def __cinit__(self, bytes name):             # <<<<<<<<<<<<<<
- *         self.obj = <t_py *>object_findregistered(
- *             gensym(PY_NAMESPACE),
+ *         self.obj = <t_py *>mx.object_findregistered(
+ *             mx.gensym(PY_NAMESPACE),
  */
 
 /* Python wrapper */
@@ -1567,9 +1567,9 @@ static int __pyx_pf_3api_10PyExternal___cinit__(struct __pyx_obj_3api_PyExternal
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
   /* "api.pyx":44
- *         self.obj = <t_py *>object_findregistered(
- *             gensym(PY_NAMESPACE),
- *             gensym(name))             # <<<<<<<<<<<<<<
+ *         self.obj = <t_py *>mx.object_findregistered(
+ *             mx.gensym(PY_NAMESPACE),
+ *             mx.gensym(name))             # <<<<<<<<<<<<<<
  * 
  *     cpdef bang(self):
  */
@@ -1582,9 +1582,9 @@ static int __pyx_pf_3api_10PyExternal___cinit__(struct __pyx_obj_3api_PyExternal
   /* "api.pyx":42
  * 
  *     def __cinit__(self, bytes name):
- *         self.obj = <t_py *>object_findregistered(             # <<<<<<<<<<<<<<
- *             gensym(PY_NAMESPACE),
- *             gensym(name))
+ *         self.obj = <t_py *>mx.object_findregistered(             # <<<<<<<<<<<<<<
+ *             mx.gensym(PY_NAMESPACE),
+ *             mx.gensym(name))
  */
   __pyx_v_self->obj = ((t_py *)object_findregistered(gensym(PY_NAMESPACE), gensym(__pyx_t_1)));
 
@@ -1592,8 +1592,8 @@ static int __pyx_pf_3api_10PyExternal___cinit__(struct __pyx_obj_3api_PyExternal
  *     cdef t_py *obj
  * 
  *     def __cinit__(self, bytes name):             # <<<<<<<<<<<<<<
- *         self.obj = <t_py *>object_findregistered(
- *             gensym(PY_NAMESPACE),
+ *         self.obj = <t_py *>mx.object_findregistered(
+ *             mx.gensym(PY_NAMESPACE),
  */
 
   /* function exit code */
@@ -1608,7 +1608,7 @@ static int __pyx_pf_3api_10PyExternal___cinit__(struct __pyx_obj_3api_PyExternal
 }
 
 /* "api.pyx":46
- *             gensym(name))
+ *             mx.gensym(name))
  * 
  *     cpdef bang(self):             # <<<<<<<<<<<<<<
  *         py_bang(self.obj)
@@ -1684,7 +1684,7 @@ static PyObject *__pyx_f_3api_10PyExternal_bang(struct __pyx_obj_3api_PyExternal
   py_bang(__pyx_v_self->obj);
 
   /* "api.pyx":46
- *             gensym(name))
+ *             mx.gensym(name))
  * 
  *     cpdef bang(self):             # <<<<<<<<<<<<<<
  *         py_bang(self.obj)
@@ -2558,7 +2558,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "api.pyx":1
- * from api cimport *             # <<<<<<<<<<<<<<
+ * cimport api as mx # api is a cython keyword!             # <<<<<<<<<<<<<<
  * 
  * cdef extern from "py.h":
  */

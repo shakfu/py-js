@@ -1,4 +1,4 @@
-from api cimport *
+cimport api as mx # api is a cython keyword!
 
 cdef extern from "py.h":
     cdef int PY_MAX_ATOMS
@@ -31,7 +31,7 @@ cpdef public str hello():
     return greeting
 
 cpdef public str py_post(str s):
-    post(s.encode('utf-8'))
+    mx.post(s.encode('utf-8'))
     return s
 
 
@@ -39,9 +39,9 @@ cdef class PyExternal:
     cdef t_py *obj
 
     def __cinit__(self, bytes name):
-        self.obj = <t_py *>object_findregistered(
-            gensym(PY_NAMESPACE),
-            gensym(name))
+        self.obj = <t_py *>mx.object_findregistered(
+            mx.gensym(PY_NAMESPACE),
+            mx.gensym(name))
 
     cpdef bang(self):
         py_bang(self.obj)

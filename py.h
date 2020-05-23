@@ -1,3 +1,6 @@
+#ifndef PY_H
+#define PY_H
+
 /* py.h */
 /*--------------------------------------------------------------------
  * Includes
@@ -75,6 +78,7 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
+void py_load(t_py *x, char *fpath);
 
 /* used for meta info or testing right now */
 void py_bang(t_py *x);
@@ -96,8 +100,11 @@ void py_free(t_py *x);
 
 
 
+
 /*--------------------------------------------------------------------
  * Helper Functions
  */
 
 void py_init(t_py *x);
+
+#endif // PY_H

@@ -1,3 +1,4 @@
+// py.c
 
 /* py external api */
 #include "py.h"
@@ -106,6 +107,11 @@ void *py_new(t_symbol *s, long argc, t_atom *argv)
         // increment global object counter
         py_global_obj_count++;
 
+        post("argc: %ld argv: %s", argc, atom_getsym(argv)->s_name);
+        if (argc == 2) {
+            post("1 arg: %s", atom_getsym(argv)->s_name);
+            post("2 arg: %s", atom_getsym(argv+1)->s_name);
+        }
     }
 
     post("new py object %s added to patch...", x->p_name->s_name);
@@ -198,7 +204,6 @@ void py_count(t_py *x)
 /*--------------------------------------------------------------------------*/
 // code editor
 
-
 void py_dblclick(t_py *x)
 {
     if (x->p_code_editor)
@@ -248,6 +253,7 @@ void py_doread(t_py *x, t_symbol *s, long argc, t_atom *argv)
     }
 }
 
+
 void py_edclose(t_py *x, char **text, long size)
 {
     if (x->p_code)
@@ -259,9 +265,11 @@ void py_edclose(t_py *x, char **text, long size)
     x->p_code_editor = NULL;
 }
 
+
 void py_edsave(t_py *x, char **text, long size)
 {
     post("SAVING file");
+    // py_load(t_py *x, char *fpath)
 }
 
 
@@ -339,6 +347,47 @@ void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
             const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
             error("PyException('%s %s'): %s", s->s_name, py_argv, pStrErrorMessage);
+            Py_XDECREF(pval);   
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
+        }
+}
+
+
+void py_load(t_py *x, char *fpath)
+{
+    PyObject *pval = NULL;
+    FILE* fhandle  = NULL;
+
+    if (fpath == NULL) {
+        error("load: no path given to load");
+        goto error;
+    }
+    post("START load: %s", fpath);
+
+    fhandle = fopen(fpath, "r");
+    if (fhandle == NULL) {
+        error("could not open file path '%s'", fpath);
+        goto error;
+    }
+
+    pval = PyRun_File(fhandle, fpath, Py_file_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    fclose(fhandle);
+    Py_DECREF(pval);
+    post("END load: %s", fpath);
+
+    error:
+        if(PyErr_Occurred()) {
+            PyObject *ptype, *pvalue, *ptraceback;
+            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+            error("PyException('load %s'): %s", fpath, pStrErrorMessage);
             Py_XDECREF(pval);   
             Py_XDECREF(ptype);
             Py_XDECREF(pvalue);
