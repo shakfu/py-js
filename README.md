@@ -14,13 +14,14 @@ An attempt to make a simple (and extensible) max external for python
 
     Basic Features
 
-    1.  Per-Object Namespace. It responds to an 'import <module>' message in
-        the left inlet which loads a python module in its namespace. Each new import
-        (like python) adds to the namespace.
+    1.  Per-object namespaces. It responds to an 'import <module>' message in
+        the left inlet which loads a python module in its namespace. Each new
+        import (like python) adds to the namespace.
 
-    2.  Eval Messages. It responds to an 'eval <expression>' message in the left inlet
-        which is evaluated in the namespace and outputs results to the left outlet
-        and outputs a bang from the right outlet to signal end of evaluation.
+    2.  Eval Messages. It responds to an 'eval <expression>' message in the
+        left inlet  which is evaluated in the namespace and outputs results
+        to the left outlet and outputs a bang from the right outlet to signal
+        end of evaluation.
 
     py interpreter object
         attributes
