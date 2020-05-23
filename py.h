@@ -18,6 +18,7 @@
 #define PY_MAX_ATOMS 128
 #define PY_MAX_NAME  "PY_NAME"
 #define PY_NAMESPACE "PY_SPACE"
+#define MAX_IMPORTS 3
 
 /*--------------------------------------------------------------------
  * Global variables
@@ -53,6 +54,22 @@ typedef struct _py {
 
     /* python-related */
     PyObject *p_globals;    /* global python namespace (new ref) */
+
+
+
+    // TESTING
+    char test_char;
+    long test_long;
+    t_atom_long *test_atom_long;
+
+    float test_float;
+    double test_double;
+    t_symbol *imports1;
+    t_symbol *imports2[MAX_IMPORTS];
+    long imports2_count;
+
+    t_symbol *filepath;
+
 } t_py;
 
 
