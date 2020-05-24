@@ -38,7 +38,13 @@ typedef struct _py {
 
     /* object attributes */
     t_symbol *p_name;        /* unique name */
-    t_symbol *p_module;      /* python-related */
+    t_symbol *p_module;      /* TO REMOVE */
+
+    /* default python file to 'exec' into the global namespace to be exposed in editor */
+    t_symbol *p_code_filepath;          // the path itself
+    short *p_code_filepath_id;          // path id (I'm not sure what this is!)
+    t_filehandle p_code_filehandle;     // filehandle 
+    char **p_code_text_handle;          // handle to code text
 
     /* infra objects */
     // t_patcher *p_patcher; /* to send msgs to objects */
