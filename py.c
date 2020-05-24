@@ -30,13 +30,15 @@ void ext_main(void* r)
     //------------------------------------------------------------------------
     // methods
     class_addmethod(c, (method)py_bang,       "bang",       0);
+    class_addmethod(c, (method)py_sym,        "sym",        A_SYM, 0);
 
     // core
-    class_addmethod(c, (method)py_import,     "import",     A_DEFSYM, 0);
+    class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
-    class_addmethod(c, (method)py_execfile,   "execfile",   A_GIMME,  0);
-    class_addmethod(c, (method)py_run,        "run",        A_GIMME,  0);
+    class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
+    class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
+    
 
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -50,27 +52,14 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT, 0);
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT, 0);
 
-
     // attributes
-    // testing
-    CLASS_ATTR_CHAR(c, "test_char", 0,             t_py, test_char);
-    CLASS_ATTR_LONG(c, "test_long", 0,             t_py, test_long);
-    CLASS_ATTR_ATOM_LONG(c, "test_atom_long", 0,   t_py, test_atom_long);
-    CLASS_ATTR_FLOAT(c, "test_float", 0,           t_py, test_float);
-    CLASS_ATTR_DOUBLE(c, "test_double", 0,         t_py, test_double);
-    CLASS_ATTR_SYM_ARRAY(c, "imports1", 0,         t_py, imports1, MAX_IMPORTS);
-    CLASS_ATTR_SYM_VARSIZE(c, "imports2", 0,       t_py, imports2, imports2_count, MAX_IMPORTS);
-    CLASS_ATTR_SYM(c, "filepath", 0,               t_py, filepath);
-    CLASS_ATTR_STYLE(c, "filepath", 0,             "file");
-
-    // actual
-    CLASS_ATTR_SYM(c, "name", 0, t_py, p_name);
+    CLASS_ATTR_SYM(c, "name", 0,        t_py, p_name);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
     CLASS_ATTR_BASIC(c, "name", 0);
 
-    CLASS_ATTR_SYM(c, "module", 0, t_py, p_module);
-    CLASS_ATTR_ENUM(c, "module", 0, "abc def ghi");
-    CLASS_ATTR_BASIC(c, "module", 0);
+    CLASS_ATTR_SYM(c,   "file", 0,      t_py, p_code_filepath);
+    CLASS_ATTR_STYLE(c, "file", 0,      "file");
+    CLASS_ATTR_BASIC(c, "file", 0);
 
     //------------------------------------------------------------------------
     // clang-format on
@@ -100,13 +89,11 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // if (!object_obex_lookup(x, gensym("#B"), (t_object **)&x->p_box))
         //     error("box obejct not created.");
 
-        // python
-        x->p_module = gensym("");
-
         // text editor
         x->p_code = sysmem_newhandle(0);
         x->p_code_size = 0;
         x->p_code_editor = NULL;
+        x->p_code_filepath = gensym("");
 
         // create inlet(s)
         // create outlet(s)
@@ -189,6 +176,8 @@ void py_bang(t_py* x) { outlet_bang(x->p_outlet); }
 // retrieves a count of the number of 'active' py objects from a global var
 void py_count(t_py* x) { outlet_int(x->p_outlet, py_global_obj_count); }
 
+void py_sym(t_py* x, t_symbol* s) { post("py.sym %s", s->s_name); }
+
 /*--------------------------------------------------------------------------*/
 // code editor
 
@@ -220,16 +209,22 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_filehandle fh;
 
     if (s == gensym("")) {
-        filename[0] = 0;
-
-        if (open_dialog(filename, &path, &type, &type, 1))
-            return;
-    } else {
-        strcpy(filename, s->s_name);
-        if (locatefile_extended(filename, &path, &type, &type, 1)) {
-            object_error((t_object*)x, "can't find file %s", filename);
+        if (x->p_code_filepath != gensym("")) {
+            strcpy(filename, x->p_code_filepath->s_name);
+        } else {
+            filename[0] = 0;
+            if (open_dialog(filename, &path, &type, &type, 1))
+                x->p_code_filepath = gensym(filename);
             return;
         }
+    } else {
+        strcpy(filename, s->s_name);
+        x->p_code_filepath = s;
+    }
+
+    if (locatefile_extended(filename, &path, &type, &type, 1)) {
+        object_error((t_object*)x, "can't find file %s", filename);
+        return;
     }
 
     // success
@@ -255,8 +250,8 @@ void py_edclose(t_py* x, char** text, long size)
 
 void py_edsave(t_py* x, char** text, long size)
 {
-    post("SAVING file");
-    // py_load(t_py *x, char *fpath)
+    post("saving editor code to %s", x->p_code_filepath->s_name);
+    py_execfile(x, x->p_code_filepath);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -271,11 +266,8 @@ void py_import(t_py* x, t_symbol* s)
         if (x_module == NULL) {
             goto error;
         }
-        // TODO: should I Py_INCREF here  and Py_DECREF at the end
-        // Py_INCREF(x_module);
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
-        // Py_XDECREF(x_module);
-        post("imported: %s", s->s_name);
+        post("py.imported: %s", s->s_name);
     }
 
 error:
@@ -283,177 +275,7 @@ error:
         PyObject *ptype, *pvalue, *ptraceback;
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);
         const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('import %s'): %s", s->s_name, pStrErrorMessage);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-        // Py_XDECREF(x_module);
-    }
-}
-
-void py_run(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    PyObject* pval = NULL;
-    FILE* fhandle = NULL;
-    char* py_argv = NULL;
-    int ret = -0;
-
-    py_argv = atom_getsym(argv)->s_name;
-    if (py_argv == NULL) {
-        error("%s: could not retrieve argv", s->s_name);
-        goto error;
-    }
-    post("START %s: %s", s->s_name, py_argv);
-
-    pval = Py_BuildValue("s", py_argv); // new reference
-    if (pval == NULL) {
-        goto error;
-    }
-
-    fhandle = _Py_fopen_obj(pval, "r+");
-    if (fhandle == NULL) {
-        error("could not open file '%s'", py_argv);
-        goto error;
-    }
-
-    ret = PyRun_SimpleFile(fhandle, py_argv);
-    if (ret == -1) {
-        goto error;
-    }
-
-    // success
-    fclose(fhandle);
-    Py_DECREF(pval);
-    post("END %s: %s", s->s_name, py_argv);
-
-error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('%s %s'): %s", s->s_name, py_argv,
-              pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
-}
-
-void py_load(t_py* x, char* fpath)
-{
-    PyObject* pval = NULL;
-    FILE* fhandle = NULL;
-
-    if (fpath == NULL) {
-        error("load: no path given to load");
-        goto error;
-    }
-    post("START load: %s", fpath);
-
-    fhandle = fopen(fpath, "r");
-    if (fhandle == NULL) {
-        error("could not open file path '%s'", fpath);
-        goto error;
-    }
-
-    pval = PyRun_File(fhandle, fpath, Py_file_input, x->p_globals,
-                      x->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-
-    // success cleanup
-    fclose(fhandle);
-    Py_DECREF(pval);
-    post("END load: %s", fpath);
-
-error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('load %s'): %s", fpath, pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
-}
-
-void py_execfile(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    PyObject* pval = NULL;
-    FILE* fhandle = NULL;
-    char* py_argv = NULL;
-
-    py_argv = atom_getsym(argv)->s_name;
-    if (py_argv == NULL) {
-        error("%s: could not retrieve argv", s->s_name);
-        goto error;
-    }
-    post("START %s: %s", s->s_name, py_argv);
-
-    fhandle = fopen(py_argv, "r");
-    if (fhandle == NULL) {
-        error("could not open file '%s'", py_argv);
-        goto error;
-    }
-
-    pval = PyRun_File(fhandle, py_argv, Py_file_input, x->p_globals,
-                      x->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-
-    // success cleanup
-    fclose(fhandle);
-    Py_DECREF(pval);
-    post("END %s: %s", s->s_name, py_argv);
-
-error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('%s %s'): %s", s->s_name, py_argv,
-              pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
-}
-
-void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    char* py_argv = NULL;
-    PyObject* pval = NULL;
-
-    py_argv = atom_getsym(argv)->s_name;
-    if (py_argv == NULL) {
-        error("%s: could not retrieve argv", s->s_name);
-        goto error;
-    }
-    post("START %s: %s", s->s_name, py_argv);
-
-    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-
-    // success cleanup
-    Py_DECREF(pval);
-    post("END %s: %s", s->s_name, py_argv);
-
-error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('%s %s'): %s", s->s_name, py_argv,
-              pStrErrorMessage);
-        Py_XDECREF(pval);
+        error("PyException('py.import %s'): %s", s->s_name, pStrErrorMessage);
         Py_XDECREF(ptype);
         Py_XDECREF(pvalue);
         Py_XDECREF(ptraceback);
@@ -463,16 +285,17 @@ error:
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = atom_getsym(argv)->s_name;
-    post("%s: %s", s->s_name, py_argv);
+    post("py.%s: %s", s->s_name, py_argv);
 
     PyObject* locals = PyDict_New();
     PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
                                   locals);
 
     if (pval != NULL) {
-        if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-            error("Cannot import in 'eval', use 'import' msg instead.");
-        }
+        // if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        //     error("Cannot import in 'eval', use 'import' msg instead.");
+        //     PyErr_Clear();
+        // }
 
         // handle ints and longs
         if (PyLong_Check(pval)) {
@@ -563,7 +386,7 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
             // Get error message
             const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-            error("PyException('%s %s'): %s", s->s_name, py_argv,
+            error("PyException('py.%s %s'): %s", s->s_name, py_argv,
                   pStrErrorMessage);
             Py_DECREF(ptype);
             Py_DECREF(pvalue);
@@ -572,4 +395,88 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
         // cleanup
         Py_XDECREF(pval);
     }
+}
+
+void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    char* py_argv = NULL;
+    PyObject* pval = NULL;
+
+    py_argv = atom_getsym(argv)->s_name;
+    if (py_argv == NULL) {
+        error("py.%s: could not retrieve argv", s->s_name);
+        goto error;
+    }
+    post("START py.%s: %s", s->s_name, py_argv);
+
+    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    Py_DECREF(pval);
+    post("END py.%s: %s", s->s_name, py_argv);
+
+error:
+    if (PyErr_Occurred()) {
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+        error("PyException('py.%s %s'): %s", s->s_name, py_argv,
+              pStrErrorMessage);
+        Py_XDECREF(pval);
+        Py_XDECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+    }
+}
+
+void py_execfile(t_py* x, t_symbol* s)
+{
+    PyObject* pval = NULL;
+    FILE* fhandle = NULL;
+
+    if (s == gensym("")) {
+        error("py.execfile: missing filepath");
+        goto error;
+    }
+    post("START py.execfile: %s", s->s_name);
+
+    fhandle = fopen(s->s_name, "r");
+    if (fhandle == NULL) {
+        error("could not open file '%s'", s->s_name);
+        goto error;
+    }
+
+    pval = PyRun_File(fhandle, s->s_name, Py_file_input, x->p_globals,
+                      x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    fclose(fhandle);
+    Py_DECREF(pval);
+    post("END py.execfile: %s", s->s_name);
+
+error:
+    if (PyErr_Occurred()) {
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+        error("PyException('py.execfile %s'): %s", s->s_name,
+              pStrErrorMessage);
+        Py_XDECREF(pval);
+        Py_XDECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+    }
+}
+
+void py_load(t_py* x, t_symbol* s)
+{
+    post("py.load: %s", s->s_name);
+    py_read(x, s);
+    py_execfile(x, s);
 }
