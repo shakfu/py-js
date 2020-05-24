@@ -97,10 +97,13 @@ Only tested on OS X at present.
 
 ## TODO
 
+- [x] `import` statement in eval, exec or run causes a segmentation fault.
+       see: https://docs.python.org/3/c-api/intro.html exception handling example
 - [ ] Convert py into a js extension class
 - [ ] Refactor conversion logic from object methods
 - [ ] Check out the reference for 'thispatcher'
-- [ ] Implement section on two-way globals setting and reading (from python and c) in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
+- [ ] Implement section on two-way globals setting and reading (from python and c)
+	  in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 - [ ] send example (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [ ] Add right inlet bang after eval op ends
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
@@ -113,7 +116,6 @@ Only tested on OS X at present.
 - [x] Add `@run <script>`
 - [x] Add cythonize access to max c-api..?
 - [x] Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
-- [x] 'import statement' in eval, exec or run causes a segmentation fault. see: https://docs.python.org/3/c-api/intro.html exception handling example
 - [x] Add line repl
 	- [x] Add up-arrow last line recall (great for 'random.random()')
 - [x] Refactor into functions

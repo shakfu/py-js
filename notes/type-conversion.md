@@ -57,7 +57,8 @@ t_max_err atom_setdouble_array(long ac, t_atom *av, long count, double *vals);
 t_max_err atom_setparse(long *ac, t_atom **av, C74_CONST char *parsestr);
 
 // Create an array of atoms populated with values using sprintf-like syntax.
-t_max_err atom_setformat(long *ac, t_atom **av, C74_CONST char *fmt, ...); 
+t_max_err atom_setformat(long *ac, t_atom **av, C74_CONST char *fmt, ...);
+
 // same as atom_setformat using va_list
 t_max_err atom_setformat_va(long *ac, t_atom **av, C74_CONST char *fmt, va_list args);
 
