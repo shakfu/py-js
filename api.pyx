@@ -39,9 +39,7 @@ cdef class PyExternal:
     cdef t_py *obj
 
     def __cinit__(self, bytes name):
-        self.obj = <t_py *>mx.object_findregistered(
-            mx.gensym(PY_NAMESPACE),
-            mx.gensym(name))
+        self.obj = <t_py *>mx.object_findregistered(mx.CLASS_BOX, mx.gensym(name))
 
     cpdef bang(self):
         py_bang(self.obj)

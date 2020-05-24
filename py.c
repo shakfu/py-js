@@ -27,8 +27,11 @@ void ext_main(void* r)
                   0L /* leave NULL!! */, A_GIMME, 0);
 
     // clang-format off
+    //------------------------------------------------------------------------
     // methods
     class_addmethod(c, (method)py_bang,       "bang",       0);
+
+    // core
     class_addmethod(c, (method)py_import,     "import",     A_DEFSYM, 0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
@@ -50,15 +53,15 @@ void ext_main(void* r)
 
     // attributes
     // testing
-    CLASS_ATTR_CHAR(c, "test_char", 0,              t_py, test_char);
-    CLASS_ATTR_LONG(c, "test_long", 0,              t_py, test_long);
-    CLASS_ATTR_ATOM_LONG(c, "test_atom_long", 0,    t_py, test_atom_long);
-    CLASS_ATTR_FLOAT(c, "test_float", 0,            t_py, test_float);
-    CLASS_ATTR_DOUBLE(c, "test_double", 0,          t_py, test_double);
-    CLASS_ATTR_SYM_ARRAY(c, "imports1", 0,          t_py, imports1, MAX_IMPORTS);
-    CLASS_ATTR_SYM_VARSIZE(c, "imports2", 0,        t_py, imports2, imports2_count, MAX_IMPORTS);
-    CLASS_ATTR_SYM(c, "filepath", 0,                t_py, filepath);
-    CLASS_ATTR_STYLE(c, "filepath", 0,              "file");
+    CLASS_ATTR_CHAR(c, "test_char", 0,             t_py, test_char);
+    CLASS_ATTR_LONG(c, "test_long", 0,             t_py, test_long);
+    CLASS_ATTR_ATOM_LONG(c, "test_atom_long", 0,   t_py, test_atom_long);
+    CLASS_ATTR_FLOAT(c, "test_float", 0,           t_py, test_float);
+    CLASS_ATTR_DOUBLE(c, "test_double", 0,         t_py, test_double);
+    CLASS_ATTR_SYM_ARRAY(c, "imports1", 0,         t_py, imports1, MAX_IMPORTS);
+    CLASS_ATTR_SYM_VARSIZE(c, "imports2", 0,       t_py, imports2, imports2_count, MAX_IMPORTS);
+    CLASS_ATTR_SYM(c, "filepath", 0,               t_py, filepath);
+    CLASS_ATTR_STYLE(c, "filepath", 0,             "file");
 
     // actual
     CLASS_ATTR_SYM(c, "name", 0, t_py, p_name);
@@ -69,6 +72,7 @@ void ext_main(void* r)
     CLASS_ATTR_ENUM(c, "module", 0, "abc def ghi");
     CLASS_ATTR_BASIC(c, "module", 0);
 
+    //------------------------------------------------------------------------
     // clang-format on
 
     class_register(CLASS_BOX, c);
@@ -114,18 +118,9 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // python init
         py_init(x);
 
-        // increment global object counter
-        py_global_obj_count++;
-
-        // post("argc: %ld argv: %s", argc, atom_getsym(argv)->s_name);
         for (int i = 0; i < argc; i++) {
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
-            // post("i: %d", i);
         }
-        // if (argc == 2) {
-        //     post("1 arg: %s", atom_getsym(argv)->s_name);
-        //     post("2 arg: %s", atom_getsym(argv+1)->s_name);
-        // }
     }
 
     post("new py object %s added to patch...", x->p_name->s_name);
@@ -134,38 +129,27 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
 void py_init(t_py* x)
 {
-    // PyObject *pmodule;
-    // wchar_t *program = "pymax";
-
-    /* Add a built-in module, before Py_Initialize */
+    /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
         error("Error: could not extend in-built modules table\n");
     }
 
-    // Py_SetProgramName(program);
-
     Py_Initialize();
 
     // python init
-    // int err;
-    PyObject* main_module = PyImport_AddModule(
-        x->p_name->s_name); // borrowed reference
-    x->p_globals = PyModule_GetDict(main_module); // borrowed reference
+    PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
+    x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
     PyDict_SetItemString(x->p_globals, "__builtins__", PyEval_GetBuiltins());
 
-    // PyUnicode_FromString -- new reference
-    // err = PyDict_SetItemString(x->p_globals, PY_MAX_NAME,
-    // PyUnicode_FromString(x->p_name->s_name)); if (err != 0) {
-    //     error("PyDict_SetItemString with key '%s', failed", PY_MAX_NAME);
-    // }
-    // // PyLong_FromLong -- new reference
-    // err = PyDict_SetItemString(x->p_globals, "testing",
-    // PyLong_FromLong(20)); if (err != 0) {
-    //     error("PyDict_SetItemString with key 'testing', failed");
-    // }
+    /* start: add additional python objects to the globals dict here */
+    /* end */
+
     post("globals initialized");
-    object_register(gensym(PY_NAMESPACE), x->p_name, x);
+    object_register(CLASS_BOX, x->p_name, x);
     post("object registered");
+
+    // increment global object counter
+    py_global_obj_count++;
 }
 
 void py_free(t_py* x)
@@ -202,6 +186,7 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 
 void py_bang(t_py* x) { outlet_bang(x->p_outlet); }
 
+// retrieves a count of the number of 'active' py objects from a global var
 void py_count(t_py* x) { outlet_int(x->p_outlet, py_global_obj_count); }
 
 /*--------------------------------------------------------------------------*/
@@ -566,6 +551,9 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     else {
+        // if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        //     error("Cannot import in 'eval', use 'import' msg instead.");
+        // }
         if (PyErr_Occurred()) {
             PyObject *ptype, *pvalue, *ptraceback;
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
