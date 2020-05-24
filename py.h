@@ -18,7 +18,7 @@
 /* constants */
 #define PY_MAX_ATOMS 128
 #define PY_MAX_NAME  "PY_NAME"
-#define PY_NAMESPACE "PY_SPACE"
+//#define PY_NAMESPACE "PY_SPACE"
 #define MAX_IMPORTS 3
 
 /*--------------------------------------------------------------------
@@ -37,14 +37,10 @@ typedef struct _py {
     t_object p_ob;
 
     /* object attributes */
-    t_symbol *p_name;        /* unique name */
-    t_symbol *p_module;      /* TO REMOVE */
+    t_symbol *p_name;               /* unique name */
 
     /* default python file to 'exec' into the global namespace to be exposed in editor */
-    t_symbol *p_code_filepath;          // the path itself
-    short *p_code_filepath_id;          // path id (I'm not sure what this is!)
-    t_filehandle p_code_filehandle;     // filehandle 
-    char **p_code_text_handle;          // handle to code text
+    t_symbol *p_code_filepath;      /* the path itself */
 
     /* infra objects */
     // t_patcher *p_patcher; /* to send msgs to objects */
@@ -62,21 +58,6 @@ typedef struct _py {
     /* python-related */
     PyObject *p_globals;    /* global python namespace (new ref) */
 
-
-
-    // TESTING
-    char test_char;
-    long test_long;
-    t_atom_long *test_atom_long;
-
-    float test_float;
-    double test_double;
-    t_symbol *imports1;
-    t_symbol *imports2[MAX_IMPORTS];
-    long imports2_count;
-
-    t_symbol *filepath;
-
 } t_py;
 
 
@@ -88,7 +69,7 @@ typedef struct _py {
 typedef enum {
     PY_EVAL,
     PY_EXEC,
-    PY_RUN
+    PY_EXECFILE
 } py_mode;
 
 
@@ -100,13 +81,16 @@ typedef enum {
 void py_import(t_py *x, t_symbol *s);
 void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv);
-void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv);
-void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv);
-void py_load(t_py *x, char *fpath);
+void py_execfile(t_py* x, t_symbol* s);
+void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
-/* used for meta info or testing right now */
-void py_bang(t_py *x);
+/* used for meta info */
 void py_count(t_py *x);
+
+/* used for testing */
+void py_bang(t_py *x);
+void py_sym(t_py* x, t_symbol* s);
+
 
 /* code editor */
 void py_read(t_py *x, t_symbol *s);
