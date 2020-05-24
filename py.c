@@ -470,6 +470,9 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
                                   locals);
 
     if (pval != NULL) {
+        if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+            error("Cannot import in 'eval', use 'import' msg instead.");
+        }
 
         // handle ints and longs
         if (PyLong_Check(pval)) {
