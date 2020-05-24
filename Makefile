@@ -16,7 +16,7 @@ MAXHELP=${NAME}.maxhelp
 
 .PHONY: all
 
-all: clean test build
+all: clean test style build
 	@echo "All DONE!"
 
 
@@ -66,13 +66,13 @@ test:
 
 # STYLING
 # -----------------------------------------------------------------------
-.PHONY: style
+.PHONY: style clang-format
 
 style: clang-format
 
 clang-format:
 	$(call section,"clang-format")
-	@clang-format -i -style="{BasedOnStyle: llvm, IndentWidth: 4}" ${EXTERNAL}
+	@clang-format -i -style=file ${EXTERNAL}
 
 
 # CLEANING
