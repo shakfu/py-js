@@ -9,10 +9,7 @@ int py_import(char *name, PyObject *globals_dict)
         if (x_module == NULL) {
             goto error;
         }
-        // TODO: should I Py_INCREF here  and Py_DECREF at the end
-        // Py_INCREF(x_module);
         PyDict_SetItemString(globals_dict, name, x_module);
-        // Py_XDECREF(x_module);
         post("imported: %s", name);
         return 0;
     }
@@ -26,7 +23,6 @@ int py_import(char *name, PyObject *globals_dict)
             Py_XDECREF(ptype);
             Py_XDECREF(pvalue);
             Py_XDECREF(ptraceback);
-            // Py_XDECREF(x_module);
         }
         return -1
 }
@@ -178,9 +174,9 @@ PyObject *py_eval_obj(char *expression, PyObject *globals_dict)
             //Get error message
             const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
             error("PyException('eval %s'): %s", expression, pStrErrorMessage);
-            Py_DECREF(ptype);
-            Py_DECREF(pvalue);
-            Py_DECREF(ptraceback);
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
         }
         return NULL;
     }
