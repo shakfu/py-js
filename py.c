@@ -251,7 +251,33 @@ void py_edclose(t_py* x, char** text, long size)
 void py_edsave(t_py* x, char** text, long size)
 {
     post("saving editor code to %s", x->p_code_filepath->s_name);
-    py_execfile(x, x->p_code_filepath);
+    // py_execfile(x, x->p_code_filepath);
+
+    PyObject* pval = NULL;
+
+    if (text == NULL) {
+        goto error;
+    }
+
+    pval = PyRun_String(*text, Py_file_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    Py_DECREF(pval);
+
+error:
+    if (PyErr_Occurred()) {
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+        error("PyException: %s", pStrErrorMessage);
+        Py_XDECREF(pval);
+        Py_XDECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
