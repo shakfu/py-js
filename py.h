@@ -6,6 +6,8 @@
 /*--------------------------------------------------------------------
  * Includes
  */
+// #include <stdio.h>
+// #include <stdarg.h>
 
 /* max api */
 #include "ext.h"
@@ -103,10 +105,6 @@ void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_execfile(t_py* x, t_symbol* s);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
-int _py_import(char* name, PyObject* globals_dict);
-int _py_exec(char* statement, PyObject* globals_dict);
-int _py_execfile(char *fpath, PyObject *globals_dict);
-
 /* used for meta info */
 void py_count(t_py *x);
 
@@ -137,5 +135,6 @@ void py_free(t_py *x);
  */
 
 void py_init(t_py *x);
+void handle_py_error(t_py* x, char* fmt, ...);
 
 #endif // PY_H
