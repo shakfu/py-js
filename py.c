@@ -14,7 +14,7 @@ t_class* py_class; // global pointer to object class
 static int py_global_obj_count = 0;
 
 /*--------------------------------------------------------------------------*/
-// helper functions
+// general helper functions
 
 /*--------------------------------------------------------------------------*/
 // main
@@ -190,6 +190,42 @@ void py_bang(t_py* x) { outlet_bang(x->p_outlet); }
 void py_count(t_py* x) { outlet_int(x->p_outlet, py_global_obj_count); }
 
 /*--------------------------------------------------------------------------*/
+// python hehlper functions
+
+/* python error handler helper function */
+void handle_py_error(t_py* x, char* fmt, ...)
+{
+    if (PyErr_Occurred()) {
+
+        // build custom msg
+        char msg[50];
+
+        va_list va;
+        va_start(va, fmt);
+        vsprintf(msg, fmt, va);
+        va_end(va);
+
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+
+        // PyObject* ptype_pstr = PyObject_Repr(ptype);
+        // const char* ptype_str = PyUnicode_AsUTF8(ptype_pstr);
+        Py_XDECREF(ptype);
+        // Py_XDECREF(ptype_pstr);
+
+        PyObject* pvalue_pstr = PyObject_Repr(pvalue);
+        const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(pvalue_pstr);
+
+        Py_XDECREF(ptraceback);
+
+        error("[py '%s'] <- (%s): %s", x->p_name->s_name, msg, pvalue_str);
+    }
+}
+
+/*--------------------------------------------------------------------------*/
 // code editor
 
 void py_dblclick(t_py* x)
@@ -280,16 +316,8 @@ void py_edsave(t_py* x, char** text, long size)
     Py_DECREF(pval);
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException: %s", pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error(x, "edclose-exec %s", x->p_code_filepath->s_name);
+    Py_XDECREF(pval);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -310,15 +338,7 @@ void py_import(t_py* x, t_symbol* s)
     }
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('py.import %s'): %s", s->s_name, pStrErrorMessage);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error(x, "import %s", s->s_name);
 }
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -419,18 +439,7 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     else {
-        if (PyErr_Occurred()) {
-            PyObject *ptype, *pvalue, *ptraceback;
-            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-
-            // Get error message
-            const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-            error("PyException('py.%s %s'): %s", s->s_name, py_argv,
-                  pStrErrorMessage);
-            Py_XDECREF(ptype);
-            Py_XDECREF(pvalue);
-            Py_XDECREF(ptraceback);
-        }
+        handle_py_error(x, "eval %s", py_argv);
         // cleanup
         Py_XDECREF(pval);
     }
@@ -460,17 +469,8 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
         post("END py.%s: %s", s->s_name, py_argv);
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('py.%s %s'): %s", s->s_name, py_argv,
-              pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error(x, "exec %s", py_argv);
+    Py_XDECREF(pval);
 }
 
 void py_execfile(t_py* x, t_symbol* s)
@@ -504,17 +504,8 @@ void py_execfile(t_py* x, t_symbol* s)
         post("END py.execfile: %s", s->s_name);
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('py.execfile %s'): %s", s->s_name,
-              pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error(x, "execfile %s", s->s_name);
+    Py_XDECREF(pval);
 }
 
 void py_load(t_py* x, t_symbol* s)
