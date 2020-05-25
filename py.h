@@ -37,10 +37,10 @@ typedef struct _py {
     t_object p_ob;
 
     /* object attributes */
-    t_symbol *p_name;               /* unique name */
+    t_symbol *p_name;        /* unique object name (not scripting name) */
+    t_bool p_debug;          /* boolean var to switch per-object debug state */
 
-    /* default python file to 'exec' into the global namespace to be exposed in editor */
-    t_symbol *p_code_filepath;      /* the path itself */
+
 
     /* infra objects */
     // t_patcher *p_patcher; /* to send msgs to objects */
@@ -51,7 +51,8 @@ typedef struct _py {
     t_object *p_code_editor;
     char **p_code;
     long p_code_size;
-
+    t_symbol *p_code_filepath;      /* default python filepath to load into 
+                                       the code editor and global namespace */
     /* outlet creation */
     void *p_outlet;
 
@@ -59,6 +60,13 @@ typedef struct _py {
     PyObject *p_globals;    /* global python namespace (new ref) */
 
 } t_py;
+
+
+/*--------------------------------------------------------------------
+ * Function Types
+ */
+
+typedef void (*printf_like) (const char *str, ...);
 
 
 /*--------------------------------------------------------------------
@@ -74,6 +82,17 @@ typedef enum {
 
 
 /*--------------------------------------------------------------------
+ * Macros
+ */
+
+#define foreach(i, n)      \
+    int i;                 \
+    for(i=0; i < n; i++)
+
+
+
+
+/*--------------------------------------------------------------------
  * Methods
  */
 
@@ -83,6 +102,10 @@ void py_eval(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_exec(t_py *x, t_symbol *s, long argc, t_atom *argv);
 void py_execfile(t_py* x, t_symbol* s);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
+
+int _py_import(char* name, PyObject* globals_dict);
+int _py_exec(char* statement, PyObject* globals_dict);
+int _py_execfile(char *fpath, PyObject *globals_dict);
 
 /* used for meta info */
 void py_count(t_py *x);

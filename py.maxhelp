@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 329.0, 110.0, 753.0, 589.0 ],
+		"rect" : [ 147.0, 118.0, 753.0, 589.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -68,7 +68,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 329.0, 136.0, 753.0, 563.0 ],
+						"rect" : [ 147.0, 144.0, 753.0, 563.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -187,8 +187,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 426.5, 368.0, 194.0, 22.0 ],
-									"text" : "read /Users/sa/Downloads/hello.py"
+									"patching_rect" : [ 426.5, 330.0, 193.0, 22.0 ],
+									"text" : "load /Users/sa/Downloads/hello.py"
 								}
 
 							}
@@ -237,18 +237,6 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 177.0, 140.0, 61.0, 22.0 ],
 									"text" : "import api"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-21",
-									"maxclass" : "message",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 426.5, 320.0, 218.0, 22.0 ],
-									"text" : "execfile /Users/sa/Downloads/world.py"
 								}
 
 							}
@@ -449,6 +437,11 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 328.0, 258.0, 29.5, 22.0 ],
+									"saved_object_attributes" : 									{
+										"debug" : 0,
+										"file" : ""
+									}
+,
 									"text" : "py"
 								}
 
@@ -528,13 +521,6 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-20", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-1", 0 ],
-									"source" : [ "obj-21", 0 ]
 								}
 
 							}
@@ -939,6 +925,11 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 325.25, 472.0, 29.5, 22.0 ],
+									"saved_object_attributes" : 									{
+										"debug" : 0,
+										"file" : ""
+									}
+,
 									"text" : "py"
 								}
 

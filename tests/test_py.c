@@ -1,6 +1,15 @@
 
-// void py_import(t_py *x, t_symbol *s)
-int py_import(char *name, PyObject *globals_dict)
+void py_import(t_py* x, t_symbol* s)
+{
+    if (s != gensym("")) {
+        int err = _py_import(s->s_name, x->p_globals);
+        if (err == -1) {
+            error("import error occurred");
+        }
+    }
+}
+
+int _py_import(char* name, PyObject* globals_dict)
 {
     PyObject* x_module = NULL;
 
@@ -10,22 +19,133 @@ int py_import(char *name, PyObject *globals_dict)
             goto error;
         }
         PyDict_SetItemString(globals_dict, name, x_module);
-        post("imported: %s", name);
+        if (x->p_debug)
+            post("imported: %s", name);
+        // post("imported: %s", name);
         return 0;
     }
 
-    error:
-        if(PyErr_Occurred()) {
-            PyObject *ptype, *pvalue, *ptraceback;
-            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-            error("PyException('import %s'): %s", s->s_name, pStrErrorMessage);
-            Py_XDECREF(ptype);
-            Py_XDECREF(pvalue);
-            Py_XDECREF(ptraceback);
-        }
-        return -1
+error:
+    if (PyErr_Occurred()) {
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+        error("PyException('import %s'): %s", name, pStrErrorMessage);
+        Py_XDECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+    }
+    return -1;
 }
+
+
+void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    char* stmt = NULL;
+    stmt = atom_getsym(argv)->s_name;
+
+    if (stmt != NULL) {
+        int err = _py_exec(stmt, x->p_globals);
+        if (err == -1) {
+            error("exec error occurred");
+        }
+    }
+}
+
+int _py_exec(char* statement, PyObject* globals_dict)
+{
+    PyObject* pval = NULL;
+
+    if (statement == NULL) {
+        error("no statement to execute");
+        goto error;
+    }
+    if (x->p_debug)
+        post("START exec: %s", statement);
+
+    pval = PyRun_String(statement, Py_single_input, globals_dict,
+                        globals_dict);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    Py_DECREF(pval);
+    if (x->p_debug)
+        post("END exec: %s", statement);
+    return 0;
+
+error:
+    if (PyErr_Occurred()) {
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+        error("PyException('exec %s'): %s", statement, pStrErrorMessage);
+        Py_XDECREF(pval);
+        Py_XDECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+    }
+    return -1;
+}
+
+
+
+void py_execfile(t_py* x, t_symbol* s)
+{
+    if (s != gensym("")) {
+        int err = _py_execfile(s->s_name, x->p_globals);
+        if (err == -1) {
+            error("execfile error occurred");
+        }
+    }
+}
+
+int _py_execfile(char* fpath, PyObject* globals_dict)
+{
+    PyObject* pval = NULL;
+    FILE* fhandle = NULL;
+
+    if (fpath == NULL) {
+        error("No filepath given.");
+        goto error;
+    }
+    if (x->p_debug)
+        post("START execfile: %s", fpath);
+
+    fhandle = fopen(fpath, "r");
+    if (fhandle == NULL) {
+        error("could not open file '%s'", fpath);
+        goto error;
+    }
+
+    pval = PyRun_File(fhandle, fpath, Py_file_input, globals_dict,
+                      globals_dict);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    fclose(fhandle);
+    Py_DECREF(pval);
+    if (x->p_debug)
+        post("END execfile: %s", fpath);
+    return 0;
+
+error:
+    if (PyErr_Occurred()) {
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+        error("PyException('execfile %s'): %s", fpath, pStrErrorMessage);
+        Py_XDECREF(pval);
+        Py_XDECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+    }
+    return -1;
+}
+
 
 
 // void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
@@ -78,83 +198,6 @@ int py_run(char *fpath)
 }
 
 
-// void py_execfile(t_py *x, t_symbol *s, long argc, t_atom *argv)
-int py_execfile(char *fpath, PyObject *globals_dict)
-{
-    PyObject *pval = NULL;
-    FILE* fhandle  = NULL;
-
-    if (fpath == NULL) {
-        error("No filepath given.");
-        goto error;
-    }
-    post("START execfile: %s", fpath);
-
-    fhandle = fopen(fpath, "r");
-    if (fhandle == NULL) {
-        error("could not open file '%s'", fpath);
-        goto error;
-    }
-
-    pval = PyRun_File(fhandle, py_argv, Py_file_input, globals_dict, globals_dict);
-    if (pval == NULL) {
-        goto error;
-    }
-
-    // success cleanup
-    fclose(fhandle);
-    Py_DECREF(pval);
-    post("END execfile: %s", fpath);
-    return 0;
-
-    error:
-        if(PyErr_Occurred()) {
-            PyObject *ptype, *pvalue, *ptraceback;
-            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-            error("PyException('execfile %s'): %s", fpath, pStrErrorMessage);
-            Py_XDECREF(pval);   
-            Py_XDECREF(ptype);
-            Py_XDECREF(pvalue);
-            Py_XDECREF(ptraceback);
-        }
-        return -1;
-}
-
-
-int py_exec(char *statement, PyObject *globals_dict)
-{
-    PyObject *pval = NULL;
-
-    if (statement == NULL) {
-        error("no statement to execute");
-        goto error;
-    }
-    post("START exec: %s", statement);
-
-    pval = PyRun_String(statement, Py_single_input, globals_dict, globals_dict);
-    if (pval == NULL) {
-        goto error;
-    }
-
-    // success cleanup
-    Py_DECREF(pval);
-    post("END exec: %s", statement);
-    return 0;
-
-    error:
-        if(PyErr_Occurred()) {
-            PyObject *ptype, *pvalue, *ptraceback;
-            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-            error("PyException('exec %s'): %s", statement, pStrErrorMessage);
-            Py_XDECREF(pval);   
-            Py_XDECREF(ptype);
-            Py_XDECREF(pvalue);
-            Py_XDECREF(ptraceback);
-        }
-        return -1;
-}
 
 PyObject *py_eval_obj(char *expression, PyObject *globals_dict)
 {
