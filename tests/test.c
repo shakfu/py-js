@@ -287,18 +287,30 @@ void py_eval(t_py *x, char *args)
 
     error:
         if (PyErr_Occurred()) {
+            // PyErr_Print();
             PyObject *ptype, *pvalue, *ptraceback;
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 
             // get error message
             const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
             printf("PyException('eval %s'): %s\n", args, pStrErrorMessage);
-            Py_DECREF(ptype);
-            Py_DECREF(pvalue);
-            Py_DECREF(ptraceback);
-        }
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
+        } 
+        // else if (PyErr_ExceptionMatches (PyExc_SyntaxError)) {
+        //     // PyErr_Print ();
+        //     PyObject *ptype, *pvalue, *ptraceback;
+        //     PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+
+        //     // get error message
+        //     const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+        //     printf("PyException('eval %s'): %s\n", args, pStrErrorMessage);
+        //     Py_DECREF(ptype);
+        //     Py_DECREF(pvalue);
+        //     Py_DECREF(ptraceback);    
+        // }
         // cleanup
         Py_XDECREF(pval);
         // Py_XDECREF(locals);
-    
 }

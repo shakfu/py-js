@@ -95,15 +95,13 @@ In my case, the `py` external is developed as a project in the `msx-sdk/sources/
 Only tested on OS X at present.
 
 
-## BUGS 
-
+## BUGS
 - [ ] space in `eval` will cause a crash!
-- [ ] `import` statement in eval causes a segmentation fault.
-       see: https://docs.python.org/3/c-api/intro.html exception handling example
-
 
 ## TODO
 
+- [ ] try again to refactor 'py_eval' to make it more consistent with the others
+- [ ] refactor error handling code (if possible)
 - [ ] Convert py into a js extension class
 - [ ] Refactor conversion logic from object methods
 - [ ] Check out the reference for 'thispatcher'
@@ -115,6 +113,9 @@ Only tested on OS X at present.
 
 ## Done
 
+- [x] `import` statement in eval causes a segmentation fault.
+       see: https://docs.python.org/3/c-api/intro.html exception handling example
+       -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 - [x] Global object/dict/ref mgmt (so two external can exist without Py_Finalize() causing a crash
 - [x] Add text edit object
 	- [ ] enable code to be run from editor

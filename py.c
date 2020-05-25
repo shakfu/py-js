@@ -403,9 +403,6 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     else {
-        // if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-        //     error("Cannot import in 'eval', use 'import' msg instead.");
-        // }
         if (PyErr_Occurred()) {
             PyObject *ptype, *pvalue, *ptraceback;
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
@@ -414,9 +411,9 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
             const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
             error("PyException('py.%s %s'): %s", s->s_name, py_argv,
                   pStrErrorMessage);
-            Py_DECREF(ptype);
-            Py_DECREF(pvalue);
-            Py_DECREF(ptraceback);
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
         }
         // cleanup
         Py_XDECREF(pval);
