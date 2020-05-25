@@ -23,23 +23,27 @@ An attempt to make a simple (and extensible) max external for python
         to the left outlet and outputs a bang from the right outlet to signal
         end of evaluation.
 
+    globals:
+        object_count: number of active py objects
+        registry: lookup for script and objects names
+
     py interpreter object
         attributes
-            imports
-            code
+            name:  unique name
+            file:  file to load into editor
+            debug: switch debug logging on and off
+
+            (planned)
+            patcher: parent patcher object
+            box: box object??
 
         messages
-            import <module> [adds to @imports]
-            eval <code> or eval @file <path>
-            exec <code> or exec @file <path>
-            run  <code> or run  @file <path>
-
-            (phase 2)
-            load file <path> -> into code (for persistence) and texeditor edits
-
-            (phase N)
-            embed ipython kernel? (-;
-
+            import <module>   : python import to object globals
+            eval <expression> : python 'eval' semantics
+            exec <statement>  : python 'exec' semantics
+            execfile <path>   : python 'execfile' semantics 
+            read <path>       : read text file into editor
+            load <path>       : combo of read <path> -> execfile <path>
 
 ```
 
@@ -92,17 +96,16 @@ The external is being developed using the max-sdk-8.0.3 package (which is instal
 
 In my case, the `py` external is developed as a project in the `msx-sdk/sources/basics` folder. Feel free to adjust the `Makefile` if your directory structure is different.
 
-Only tested on OS X at present.
+Only tested on OS X at present. Should be relatively easy to port to windows.
 
 
 ## BUGS
-- [ ] space in `eval` will cause a crash!
+- [ ] space in `eval` without quotes will cause a crash!
 
 ## TODO
 
 - [ ] try again to refactor 'py_eval' to make it more consistent with the others
 - [ ] refactor error handling code (if possible)
-- [ ] Convert py into a js extension class
 - [ ] Refactor conversion logic from object methods
 - [ ] Check out the reference for 'thispatcher'
 - [ ] Implement section on two-way globals setting and reading (from python and c)
@@ -110,6 +113,7 @@ Only tested on OS X at present.
 - [ ] send example (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [ ] Add right inlet bang after eval op ends
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
+- [ ] Convert py into a js extension class
 
 ## Done
 
@@ -118,9 +122,8 @@ Only tested on OS X at present.
        -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 - [x] Global object/dict/ref mgmt (so two external can exist without Py_Finalize() causing a crash
 - [x] Add text edit object
-	- [ ] enable code to be run from editor
-- [x] Add `@run <script>`
-- [x] Add cythonize access to max c-api..?
+	- [x] enable code to be run from editor
+- [x] Add cythonized access to max c-api..?
 - [x] Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
 - [x] Add line repl
 	- [x] Add up-arrow last line recall (great for 'random.random()')

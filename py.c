@@ -29,8 +29,9 @@ void ext_main(void* r)
     // clang-format off
     //------------------------------------------------------------------------
     // methods
+
+    // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
-    class_addmethod(c, (method)py_sym,        "sym",        A_SYM, 0);
 
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
@@ -39,7 +40,6 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
     class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
     
-
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
 
@@ -53,21 +53,26 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT, 0);
 
     // attributes
-    CLASS_ATTR_SYM(c, "name", 0,        t_py, p_name);
+    CLASS_ATTR_SYM(c,       "name", 0,   t_py, p_name);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
-    CLASS_ATTR_BASIC(c, "name", 0);
+    CLASS_ATTR_BASIC(c,     "name", 0);
 
-    CLASS_ATTR_SYM(c,   "file", 0,      t_py, p_code_filepath);
-    CLASS_ATTR_STYLE(c, "file", 0,      "file");
-    CLASS_ATTR_BASIC(c, "file", 0);
+    CLASS_ATTR_CHAR(c,      "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,     "debug", 0,      "onoff");
+    // CLASS_ATTR_DEFAULT(c,   "debug", "1");
+    CLASS_ATTR_DEFAULT_SAVE(c, "debug", 0, "1");
 
+    CLASS_ATTR_SYM(c,       "file", 0,      t_py, p_code_filepath);
+    CLASS_ATTR_STYLE(c,     "file", 0,      "file");
+    CLASS_ATTR_BASIC(c,     "file", 0);
+    CLASS_ATTR_SAVE(c,      "file", 0);
     //------------------------------------------------------------------------
     // clang-format on
 
     class_register(CLASS_BOX, c);
     py_class = c;
 
-    post("py object loaded...", 0);
+    // post("py class loaded...", 0);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -83,11 +88,14 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // core
         x->p_name = symbol_unique();
 
+        // meta
+        x->p_debug = 0;
+
         // if (!object_obex_lookup(x, gensym("#P"), (t_object
         // **)&x->p_patcher))
         //     error("patcher object not created.");
         // if (!object_obex_lookup(x, gensym("#B"), (t_object **)&x->p_box))
-        //     error("box obejct not created.");
+        //     error("box object not created.");
 
         // text editor
         x->p_code = sysmem_newhandle(0);
@@ -110,7 +118,8 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         }
     }
 
-    post("new py object %s added to patch...", x->p_name->s_name);
+    if (x->p_debug)
+        post("new py object %s added to patch...", x->p_name->s_name);
     return (x);
 }
 
@@ -131,9 +140,11 @@ void py_init(t_py* x)
     /* start: add additional python objects to the globals dict here */
     /* end */
 
-    post("globals initialized");
+    if (x->p_debug)
+        post("globals initialized");
     object_register(CLASS_BOX, x->p_name, x);
-    post("object registered");
+    if (x->p_debug)
+        post("object registered");
 
     // increment global object counter
     py_global_obj_count++;
@@ -148,10 +159,12 @@ void py_free(t_py* x)
 
     // python objects cleanup
     py_global_obj_count--;
-    post("py object '%s' deleted", x->p_name->s_name);
+    if (x->p_debug)
+        post("py object '%s' deleted", x->p_name->s_name);
     if (py_global_obj_count == 0) {
-        post("no py objects left: freeing memory / terminating py "
-             "interpreter.");
+        if (x->p_debug) {
+            post("no py objects left: freeing memory / py interpreter");
+        }
         Py_FinalizeEx();
     }
 }
@@ -175,8 +188,6 @@ void py_bang(t_py* x) { outlet_bang(x->p_outlet); }
 
 // retrieves a count of the number of 'active' py objects from a global var
 void py_count(t_py* x) { outlet_int(x->p_outlet, py_global_obj_count); }
-
-void py_sym(t_py* x, t_symbol* s) { post("py.sym %s", s->s_name); }
 
 /*--------------------------------------------------------------------------*/
 // code editor
@@ -250,7 +261,8 @@ void py_edclose(t_py* x, char** text, long size)
 
 void py_edsave(t_py* x, char** text, long size)
 {
-    post("saving editor code to %s", x->p_code_filepath->s_name);
+    if (x->p_debug)
+        post("saving editor code to %s", x->p_code_filepath->s_name);
     // py_execfile(x, x->p_code_filepath);
 
     PyObject* pval = NULL;
@@ -293,7 +305,8 @@ void py_import(t_py* x, t_symbol* s)
             goto error;
         }
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
-        post("py.imported: %s", s->s_name);
+        if (x->p_debug)
+            post("py.imported: %s", s->s_name);
     }
 
 error:
@@ -311,7 +324,8 @@ error:
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = atom_getsym(argv)->s_name;
-    post("py.%s: %s", s->s_name, py_argv);
+    if (x->p_debug)
+        post("py.%s: %s", s->s_name, py_argv);
 
     PyObject* locals = PyDict_New();
     PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
@@ -351,7 +365,8 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
             Py_ssize_t seq_size = PySequence_Length(pval);
 
             if (seq_size > PY_MAX_ATOMS) {
-                post("dynamically increasing size of atom array");
+                if (x->p_debug)
+                    post("dynamically increasing size of atom array");
                 atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
                                            seq_size + 1);
                 is_dynamic = 1;
@@ -365,31 +380,36 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
                     if (PyLong_Check(item)) {
                         long long_item = PyLong_AsLong(item);
                         atom_setlong(atoms + i, long_item);
-                        post("%d long: %ld\n", i, long_item);
+                        if (x->p_debug)
+                            post("%d long: %ld\n", i, long_item);
                         i++;
                     }
 
                     if PyFloat_Check (item) {
                         float float_item = PyFloat_AsDouble(item);
                         atom_setfloat(atoms + i, float_item);
-                        post("%d float: %f\n", i, float_item);
+                        if (x->p_debug)
+                            post("%d float: %f\n", i, float_item);
                         i++;
                     }
 
                     if PyUnicode_Check (item) {
                         const char* unicode_item = PyUnicode_AsUTF8(item);
-                        post("%d unicode: %s\n", i, unicode_item);
+                        if (x->p_debug)
+                            post("%d unicode: %s\n", i, unicode_item);
                         atom_setsym(atoms + i, gensym(unicode_item));
                         i++;
                     }
                     Py_DECREF(item);
                 }
                 outlet_anything(x->p_outlet, gensym("list"), i, atoms);
-                post("end iter op: %d", i);
+                if (x->p_debug)
+                    post("end iter op: %d", i);
             }
 
             if (is_dynamic) {
-                post("restoring to static atom array");
+                if (x->p_debug)
+                    post("restoring to static atom array");
                 atom_dynamic_end(atoms_static, atoms);
             }
         }
@@ -426,7 +446,8 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
         error("py.%s: could not retrieve argv", s->s_name);
         goto error;
     }
-    post("START py.%s: %s", s->s_name, py_argv);
+    if (x->p_debug)
+        post("START py.%s: %s", s->s_name, py_argv);
 
     pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
     if (pval == NULL) {
@@ -435,7 +456,8 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // success cleanup
     Py_DECREF(pval);
-    post("END py.%s: %s", s->s_name, py_argv);
+    if (x->p_debug)
+        post("END py.%s: %s", s->s_name, py_argv);
 
 error:
     if (PyErr_Occurred()) {
@@ -460,7 +482,8 @@ void py_execfile(t_py* x, t_symbol* s)
         error("py.execfile: missing filepath");
         goto error;
     }
-    post("START py.execfile: %s", s->s_name);
+    if (x->p_debug)
+        post("START py.execfile: %s", s->s_name);
 
     fhandle = fopen(s->s_name, "r");
     if (fhandle == NULL) {
@@ -477,7 +500,8 @@ void py_execfile(t_py* x, t_symbol* s)
     // success cleanup
     fclose(fhandle);
     Py_DECREF(pval);
-    post("END py.execfile: %s", s->s_name);
+    if (x->p_debug)
+        post("END py.execfile: %s", s->s_name);
 
 error:
     if (PyErr_Occurred()) {
@@ -495,7 +519,8 @@ error:
 
 void py_load(t_py* x, t_symbol* s)
 {
-    post("py.load: %s", s->s_name);
+    if (x->p_debug)
+        post("py.load: %s", s->s_name);
     py_read(x, s);
     py_execfile(x, s);
 }
