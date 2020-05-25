@@ -413,8 +413,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 368.0, 187.0, 22.0 ],
-									"text" : "\"HELLO WORLD.\""
+									"patching_rect" : [ 160.0, 368.0, 187.0, 22.0 ]
 								}
 
 							}
