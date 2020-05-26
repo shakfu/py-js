@@ -69,6 +69,7 @@ Only tested on OS X at present. Should be relatively easy to port to windows.
 
 ## TODO
 
+- [ ] Implement Max text
 - [ ] Check out the reference for 'thispatcher'
 - [ ] Implement send to named objects 
       (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
