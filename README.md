@@ -56,68 +56,68 @@ Basic Features
 
 Only tested on OS X at present. Should be relatively easy to port to windows.
 
-
-### Requirements to build:
-
-1. xcode
-
-  Not sure if full xcode is required, perhaps with only the command line tools)
-
-  ```
-  $ xcode-select --install
-  ```
-
-  otherwise download xcode from the app store.
+The following is required:
 
 
-2. max-sdk
+### Xcode
 
-  The py external is developed as a max package with the max-sdk as a subfolder. This should really be incorporated as a git-module, but that's not implemented right now, so just download the [max-sdk](https://github.com/Cycling74/max-sdk.git) as `maxsdk` (i.e. without a dash in the name) into the source directory of this package:
+Not sure if full xcode is required, perhaps with only the command line tools)
 
-  - py
-    - docs
-    - ...
-    - source
-      - **maxsdk**
-      - py
+```
+$ xcode-select --install
+```
 
-
-3. python3
-
-  I'm using MacOS Mojave 10.14.6, and the latest python3 version which can be installed as follows:
-
-  ```
-  $ brew install python
-  ```
-
-  see: https://installpython3.com/mac
+otherwise download xcode from the app store.
 
 
-4. cython
+### max-sdk
 
-  [Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts.
+The py external is developed as a max package with the max-sdk as a subfolder. This should really be incorporated as a git-module, but that's not implemented right now, so just download the [max-sdk](https://github.com/Cycling74/max-sdk.git) as `maxsdk` (i.e. without a dash in the name) into the source directory of this package:
 
-  Install cython as follows:
-
-  ```
-  pip install cython
-
-  ```
-
-5. Build it
-
-  Then run `make build` in the `py/sources/py` directory.
+- py
+  - docs
+  - ...
+  - source
+    - **maxsdk**
+    - py
 
 
-6. Develop it
+### python3
 
-  The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
+I'm using MacOS Mojave 10.14.6, and the latest python3 version which can be installed as follows:
 
-  ```
-  $ brew install clang-format
-  ```
+```
+$ brew install python
+```
 
-  The style used in this project is specified in the .clang-format file.
+see: https://installpython3.com/mac
+
+
+### cython (optional)
+
+[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts.
+
+Install cython as follows:
+
+```
+pip install cython
+
+```
+
+### Build it
+
+Run `make build` in the `py/sources/py` directory.
+
+
+### Develop it
+
+The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
+
+```
+$ brew install clang-format
+```
+
+The style used in this project is specified in the `.clang-format` file.
 
 
 
@@ -128,10 +128,11 @@ Only tested on OS X at present. Should be relatively easy to port to windows.
 
 ## TODO
 
-- [ ] Add .maxref.xml to docs
+- [x] Add .maxref.xml to docs
 - [ ] Add `call` method to call python callables in a namespace
 - [ ] Add bpatcher line repl
 - [ ] Check out the reference for 'thispatcher'
+- [ ] Autoload default code
 - [ ] Implement send to named objects 
       (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [ ] Implement section on two-way globals setting and reading (from python and c)
@@ -140,6 +141,7 @@ Only tested on OS X at present. Should be relatively easy to port to windows.
 - [ ] Refactor 'py_eval' to make it more consistent with the others
 - [ ] Refactor conversion logic from object methods
 - [ ] Convert py into a js extension class
+
 
 
 ### Done
@@ -175,8 +177,7 @@ Only tested on OS X at present. Should be relatively easy to port to windows.
 
 - [x] Extensible by embedded cython based python extensions which can call a library of wrapped max_api functions in python code. There is a proof of concept of the python code in the namsepace calling the max api `post` function successfully.
 - [x] Exposing of good portion of the max api to cython scripting
-- [ ] Autoload default code
-- [ ] Edit default with text editor
+- [x] Edit default with text editor
 
 
 
