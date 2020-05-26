@@ -44,8 +44,8 @@ build: build-extension build-external build-help
 	$(call section,"build project")
 
 build-help:
-	$(call section,"moving ${MAXHELP} to package help folder")
-	@cp -rf ./py.maxhelp ../../help/
+	$(call section,"copying ${MAXHELP} to package help folder")
+	@cp -rf py.maxhelp ../../help
 
 build-external:
 	$(call section,"build with xcode")
