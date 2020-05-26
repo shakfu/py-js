@@ -45,7 +45,7 @@ build: build-extension build-external build-help
 
 build-help:
 	$(call section,"moving ${MAXHELP} to package help folder")
-	@cp -rf py.maxhelp ../../../help
+	@cp -rf ./py.maxhelp ../../help/
 
 build-external:
 	$(call section,"build with xcode")
@@ -88,7 +88,7 @@ clean: clean-build
 clean-build:
 	$(call section,"cleaning build artifacts")
 	@rm -rf build
-	@rm -rf ../../../externals/py.mxo
-	@rm -rf ../../../help/py.maxhelp
+	@rm -rf ../../externals/py.mxo
+	@rm -rf ../../help/py.maxhelp
 
 
