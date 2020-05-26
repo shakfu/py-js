@@ -9,18 +9,21 @@ repo - https://github.com/shakfu/py
 
 ## Overview
 
-The `py` object has 1 inlet and 2 outlets
+The `py` object provides a very high level python code interface to max objects.
+It has 1 inlet and 2 outlets
 
 Basic Features
 
-1.  Per-object namespaces. It responds to an `import <module>` message in
-    the left inlet which loads a python module in its namespace. Each new
-    import (like python) adds to the namespace.
+1. Per-object namespaces. It responds to an `import <module>` message in
+   the left inlet which loads a python module in its namespace. Each new
+   import (like python) adds to the namespace.
 
-2.  Eval Messages. It responds to an `eval <expression>` message in the
-    left inlet  which is evaluated in the namespace and outputs results
-    to the left outlet and outputs a bang from the right outlet to signal
-    end of evaluation.
+2. Eval Messages. It responds to an `eval <expression>` message in the
+   left inlet which is evaluated in the context of the namespace and outputs 
+   results to the left outlet and outputs a bang from the right outlet to signal
+   end of evaluation.
+
+3. Executing code string or a file into a namespace (modifying it)
 
 ...
 
@@ -66,18 +69,20 @@ Only tested on OS X at present. Should be relatively easy to port to windows.
 
 ## TODO
 
-- [ ] try again to refactor 'py_eval' to make it more consistent with the others
-- [ ] Refactor conversion logic from object methods
 - [ ] Check out the reference for 'thispatcher'
+- [ ] Implement send to named objects 
+      (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [ ] Implement section on two-way globals setting and reading (from python and c)
       in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
-- [ ] send example (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
-- [ ] Add right inlet bang after eval op ends
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
+- [ ] Refactor 'py_eval' to make it more consistent with the others
+- [ ] Refactor conversion logic from object methods
 - [ ] Convert py into a js extension class
+
 
 ### Done
 
+- [x] Add right inlet bang after eval op ends
 - [x] refactor error handling code (if possible)
 - [x] `import` statement in eval causes a segmentation fault.
        see: https://docs.python.org/3/c-api/intro.html exception handling example
