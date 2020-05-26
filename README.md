@@ -25,7 +25,6 @@ Basic Features
 
 3. Executing code string or a file into a namespace (modifying it)
 
-...
 
 ```
     globals:
@@ -55,11 +54,71 @@ Basic Features
 
 ## Building
 
-The external is being developed using the max-sdk-8.0.3 package (which is installed where packages should be installed in Max 8).
-
-In my case, the `py` external is developed as a project in the `msx-sdk/sources/basics` folder. Feel free to adjust the `Makefile` if your directory structure is different.
-
 Only tested on OS X at present. Should be relatively easy to port to windows.
+
+
+### Requirements to build:
+
+1. xcode
+
+  Not sure if full xcode is required, perhaps with only the command line tools)
+
+  ```
+  $ xcode-select --install
+  ```
+
+  otherwise download xcode from the app store.
+
+
+2. max-sdk
+
+  The py external is developed as a max package with the max-sdk as a subfolder. This should really be incorporated as a git-module, but that's not implemented right now, so just download the [max-sdk](https://github.com/Cycling74/max-sdk.git) as `maxsdk` (i.e. without a dash in the name) into the source directory of this package:
+
+  - py
+    - docs
+    - ...
+    - source
+      - **maxsdk**
+      - py
+
+
+3. python3
+
+  I'm using MacOS Mojave 10.14.6, and the latest python3 version which can be installed as follows:
+
+  ```
+  $ brew install python
+  ```
+
+  see: https://installpython3.com/mac
+
+
+4. cython
+
+  [Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts.
+
+  Install cython as follows:
+
+  ```
+  pip install cython
+
+  ```
+
+5. Build it
+
+  Then run `make build` in the `py/sources/py` directory.
+
+
+6. Develop it
+
+  The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
+
+  ```
+  $ brew install clang-format
+  ```
+
+  The style used in this project is specified in the .clang-format file.
+
 
 
 ## BUGS
