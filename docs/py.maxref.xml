@@ -13,7 +13,38 @@
 		<metadata name="author">shakfu</metadata>
 		<metadata name="tag">Python</metadata>
 	</metadatalist>
-	
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>
+				py object inlet
+			</digest>
+			<description>
+				The py object has only one inlet.
+			</description>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="OUTLET_TYPE">
+			<digest>
+				Right inlet for bang notification
+			</digest>
+			<description>
+				Used for sending a bang out after end of an operation.
+			</description>
+		</outlet>
+		<outlet id="1" type="OUTLET_TYPE">
+			<digest>
+				Left inlet for all out outputs.
+			</digest>
+			<description>
+				Used for sending output of python operations.
+			</description>
+		</outlet>
+	</outletlist>
 
 	<!--ARGUMENTS-->
 	<objarglist>
@@ -26,11 +57,10 @@
 		<objarg name="file" optional="0" type="symbol">
 			<digest>Path to a python file</digest>
 			<description>
-				A python file to load into the code editor.
+				A python file to <m>load</m> into the code editor.
 			</description>
 		</objarg>
-	</objarglist>		
-	<objarg name="debug" optional="1" type="bool">
+		<objarg name="debug" optional="1" type="bool">
 			<digest>Debug mode</digest>
 			<description>
 				Switch on/off debug logging of the py object to the console.
@@ -43,12 +73,7 @@
 	<methodlist>
 		<method name="import">
 			<arglist>
-				<objarg name="module" optional="0" type="symbol">
-					<digest>Name of module</digest>
-					<description>
-						Must be a valid name of an importable python module. 
-					</description>
-				</objarg>
+				<arg name="module" optional="0" type="symbol" />
 			</arglist>
 			<digest>import a python module</digest>
 			<description>
@@ -59,7 +84,9 @@
 	
 	<methodlist>
 		<method name="eval">
-			<arglist />
+			<arglist>
+				<arg name="expression" optional="0" type="symbol" />
+			</arglist>
 			<digest>Evaluate a python expression</digest>
 			<description>
 				If no input is received, the assertion is deemed to have failed.
@@ -69,7 +96,9 @@
 	
 	<methodlist>
 		<method name="exec">
-			<arglist />
+			<arglist>
+				<arg name="statement" optional="0" type="symbol" />
+			</arglist>
 			<digest>Execute a python statement into the object namespace</digest>
 			<description>
 				Can modify and inject new code and data into the namespace.
@@ -79,7 +108,9 @@
 	
 	<methodlist>
 		<method name="execfile">
-			<arglist />
+			<arglist>
+				<arg name="filepath" optional="0" type="symbol" />
+			</arglist>
 			<digest>Execute a python file into the object namespace</digest>
 			<description>
 				Can modify and inject new code and data into the namespace.
@@ -89,7 +120,9 @@
 	
 	<methodlist>
 		<method name="read">
-			<arglist />
+			<arglist>
+				<arg name="filepath" optional="0" type="symbol" />
+			</arglist>
 			<digest>Read a python file into the code-editor</digest>
 			<description>
 				Loads a python file into the code-editor.
@@ -100,8 +133,10 @@
 	
 	<methodlist>
 		<method name="load">
-			<arglist />
-			<digest>Loads a python file into the code editor and excutees in the object namespace/digest>
+			<arglist>
+				<arg name="filepath" optional="0" type="symbol" />
+			</arglist>
+			<digest>Loads a python file into the code editor and excutees in the object namespace</digest>
 			<description>
 				Loads and executes a file (like a 'read' msg followed by 'execfile' on the same file.)
 			</description>
@@ -120,6 +155,8 @@
 			</description>
 		</attribute>
 	</attributelist>
+
+	<!--EXAMPLE-->
 
 
 	<!--SEEALSO-->

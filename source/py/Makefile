@@ -40,12 +40,12 @@ dist:
 # -----------------------------------------------------------------------
 .PHONY: build
 
-build: build-extension build-external build-help
+build: build-help build-extension build-external
 	$(call section,"build project")
 
 build-help:
 	$(call section,"copying ${MAXHELP} to package help folder")
-	@cp -rf py.maxhelp ../../help
+	@cp py.maxhelp ../../help
 
 build-external:
 	$(call section,"build with xcode")
