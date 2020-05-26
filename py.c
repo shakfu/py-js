@@ -119,7 +119,8 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // create inlet(s)
         // create outlet(s)
-        x->p_outlet = outlet_new(x, NULL);
+        x->p_outlet0 = outlet_new(x, NULL);
+        x->p_outlet1 = outlet_new(x, NULL);
 
         // process @arg attributes
         attr_args_process(x, argc, argv);
@@ -170,9 +171,10 @@ void py_free(t_py* x)
 
     // python objects cleanup
     py_global_obj_count--;
-    py_log(x, "deleted");
+    py_log(x, "will be deleted");
     if (py_global_obj_count == 0) {
-        py_log(x, "no py objects left: freeing memory / interpreter");
+        py_log(x,
+               "last py object freed -> finalizing py memory / interpreter.");
         Py_FinalizeEx();
     }
 }
@@ -192,10 +194,10 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 /*--------------------------------------------------------------------------*/
 // object methods
 
-void py_bang(t_py* x) { outlet_bang(x->p_outlet); }
+void py_bang(t_py* x) { outlet_bang(x->p_outlet1); }
 
 // retrieves a count of the number of 'active' py objects from a global var
-void py_count(t_py* x) { outlet_int(x->p_outlet, py_global_obj_count); }
+void py_count(t_py* x) { outlet_int(x->p_outlet1, py_global_obj_count); }
 
 /*--------------------------------------------------------------------------*/
 // python helper functions
@@ -340,6 +342,7 @@ void py_import(t_py* x, t_symbol* s)
             goto error;
         }
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
+        outlet_bang(x->p_outlet0);
         py_log(x, "imported: %s", s->s_name);
     }
 
@@ -361,19 +364,22 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
         // handle ints and longs
         if (PyLong_Check(pval)) {
             long int_result = PyLong_AsLong(pval);
-            outlet_int(x->p_outlet, int_result);
+            outlet_int(x->p_outlet1, int_result);
+            outlet_bang(x->p_outlet0);
         }
 
         // handle floats and doubles
         if (PyFloat_Check(pval)) {
             float float_result = (float)PyFloat_AsDouble(pval);
-            outlet_float(x->p_outlet, float_result);
+            outlet_float(x->p_outlet1, float_result);
+            outlet_bang(x->p_outlet0);
         }
 
         // handle strings
         if (PyUnicode_Check(pval)) {
             const char* unicode_result = PyUnicode_AsUTF8(pval);
-            outlet_anything(x->p_outlet, gensym(unicode_result), 0, NIL);
+            outlet_anything(x->p_outlet1, gensym(unicode_result), 0, NIL);
+            outlet_bang(x->p_outlet0);
         }
 
         // handle lists, tuples and sets
@@ -423,7 +429,8 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
                     }
                     Py_DECREF(item);
                 }
-                outlet_anything(x->p_outlet, gensym("list"), i, atoms);
+                outlet_anything(x->p_outlet1, gensym("list"), i, atoms);
+                outlet_bang(x->p_outlet0);
                 py_log(x, "end iter op: %d", i);
             }
 
@@ -453,12 +460,12 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     if (py_argv == NULL) {
         goto error;
     }
-    // py_log(x, "START %s: %s", s->s_name, py_argv);
 
     pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
     if (pval == NULL) {
         goto error;
     }
+    outlet_bang(x->p_outlet0);
 
     // success cleanup
     Py_DECREF(pval);
@@ -478,7 +485,6 @@ void py_execfile(t_py* x, t_symbol* s)
         error("py execfile: missing filepath");
         goto error;
     }
-    // py_log(x, "START py execfile: %s", s->s_name);
 
     fhandle = fopen(s->s_name, "r");
     if (fhandle == NULL) {
@@ -491,6 +497,7 @@ void py_execfile(t_py* x, t_symbol* s)
     if (pval == NULL) {
         goto error;
     }
+    outlet_bang(x->p_outlet0);
 
     // success cleanup
     fclose(fhandle);
@@ -504,7 +511,7 @@ error:
 
 void py_load(t_py* x, t_symbol* s)
 {
-    py_log(x, "py.load: %s", s->s_name);
+    py_log(x, "load: %s", s->s_name);
     py_read(x, s);
     py_execfile(x, s);
 }

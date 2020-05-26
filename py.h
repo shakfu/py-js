@@ -55,7 +55,8 @@ typedef struct _py {
     t_symbol* p_code_filepath; /* default python filepath to load into
                                   the code editor and global namespace */
     /* outlet creation */
-    void* p_outlet;
+    void* p_outlet0; // for bang notifications
+    void* p_outlet1; // for msg output
 
     /* python-related */
     PyObject* p_globals; /* global python namespace (new ref) */
