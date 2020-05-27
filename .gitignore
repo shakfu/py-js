@@ -1,3 +1,6 @@
 # dirs to exclude
 .DS_Store
+
+externals/*.mxo
+extensions/*.mxo
 source/maxsdk
