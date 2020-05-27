@@ -11,7 +11,7 @@
 
 t_class* py_class; // global pointer to object class
 
-static int py_global_obj_count = 0;
+static int py_global_obj_count = 0; // when 0 free interpreter
 
 /*--------------------------------------------------------------------------*/
 // main
@@ -50,19 +50,34 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT, 0);
 
     // attributes
+    // CLASS_ATTR_ORDER(c,     "name", 0,  "1");
+    CLASS_ATTR_LABEL(c,     "name", 0,  "unique object id");
     CLASS_ATTR_SYM(c,       "name", 0,   t_py, p_name);
-    // CLASS_ATTR_INVISIBLE(c, "name", 0);
     CLASS_ATTR_BASIC(c,     "name", 0);
+    // CLASS_ATTR_INVISIBLE(c, "name", 0);
 
-    CLASS_ATTR_CHAR(c,      "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,     "debug", 0,      "onoff");
-    // CLASS_ATTR_DEFAULT(c,   "debug", "1");
-    CLASS_ATTR_DEFAULT_SAVE(c, "debug", 0, "1");
+    // CLASS_ATTR_ORDER(c,      "file", 0,  "2");
+    CLASS_ATTR_LABEL(c,      "file", 0,  "default python script");
+    CLASS_ATTR_SYM(c,        "file", 0,   t_py,  p_code_filepath);
+    CLASS_ATTR_STYLE(c,      "file", 0,   "file");
+    CLASS_ATTR_BASIC(c,      "file", 0);
+    CLASS_ATTR_SAVE(c,       "file", 0);
 
-    CLASS_ATTR_SYM(c,       "file", 0,      t_py, p_code_filepath);
-    CLASS_ATTR_STYLE(c,     "file", 0,      "file");
-    CLASS_ATTR_BASIC(c,     "file", 0);
-    CLASS_ATTR_SAVE(c,      "file", 0);
+    // CLASS_ATTR_ORDER(c,      "pythonpath", 0,  "3");
+    CLASS_ATTR_LABEL(c,      "pythonpath", 0,  "per-object pythonpath");
+    CLASS_ATTR_SYM(c,        "pythonpath", 0,  t_py, p_pythonpath);
+    CLASS_ATTR_STYLE(c,      "pythonpath", 0,      "file");
+    CLASS_ATTR_BASIC(c,      "pythonpath", 0);
+    CLASS_ATTR_SAVE(c,       "pythonpath", 0);
+
+    // CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
+    CLASS_ATTR_LABEL(c,      "debug", 0,  "debug log to console");
+    CLASS_ATTR_CHAR(c,       "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,      "debug", 0, "onoff");
+    CLASS_ATTR_DEFAULT(c,    "debug", 0, "1");
+    CLASS_ATTR_BASIC(c,      "debug", 0);
+
+    
     //------------------------------------------------------------------------
     // clang-format on
 

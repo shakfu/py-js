@@ -5,7 +5,7 @@
 
 echo "compiling..."
 
-for fname in test test_print
+for fname in test_interactive
 do
     echo "compiling $fname"
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then

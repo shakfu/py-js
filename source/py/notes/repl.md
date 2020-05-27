@@ -14,8 +14,22 @@ Ideally it would be fantastic to launch a python repl per py external instance (
 - Iain Duncan's [Schema for Max](https://github.com/iainctduncan/scheme-for-max) has a novel repl which work nicely. Could be another way
 
 
+## Javascript terminal emulators
+
+- core tech https://xtermjs.org
+
+- https://github.com/cloudcmd/gritty (based on xtermjs and https://github.com/microsoft/node-pty)
+
+- this is probably not suitable - http://www.erikosterberg.com/terminaljs/
+
+
 ## Alternatives
 
 - websockets: https://websockets.readthedocs.io/en/stable/intro.html
+
+
+
 - osc ...
+
+
 

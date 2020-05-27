@@ -13,8 +13,8 @@ AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Right
 # maybe -> add AlignAfterOperator 
 AlignOperands:   false
-# maybe
-AlignTrailingComments: false
+# maybe -> true
+AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: true
 AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true

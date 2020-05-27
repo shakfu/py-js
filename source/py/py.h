@@ -40,7 +40,11 @@ typedef struct _py {
 
     /* object attributes */
     t_symbol* p_name; /* unique object name (not scripting name) */
-    t_bool p_debug; /* boolean var to switch per-object debug state */
+
+    /* python-related */
+    t_symbol* p_pythonpath; /* path to python directory */
+    t_bool p_debug;         /* boolean var to switch per-object debug state */
+    PyObject* p_globals;    /* global python namespace (new ref) */
 
     /* infra objects */
     // t_patcher *p_patcher; /* to send msgs to objects */
@@ -58,16 +62,11 @@ typedef struct _py {
     void* p_outlet0; // for bang notifications
     void* p_outlet1; // for msg output
 
-    /* python-related */
-    PyObject* p_globals; /* global python namespace (new ref) */
-
 } t_py;
 
 /*--------------------------------------------------------------------
  * Function Types
  */
-
-typedef void (*printf_like)(const char* str, ...);
 
 /*--------------------------------------------------------------------
  * Enums
