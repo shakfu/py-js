@@ -33,9 +33,11 @@ void ext_main(void* r)
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
+    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
     class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
     class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
+    
     
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -117,14 +119,16 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // core
         x->p_name = symbol_unique();
 
+        if (!object_obex_lookup(x, gensym("#P"), (t_object**)&x->p_patcher))
+            error("patcher object not created.");
+        if (!object_obex_lookup(x, gensym("#B"), (t_object**)&x->p_box))
+            error("box object not created.");
+
         // meta
         x->p_debug = 0;
 
-        // if (!object_obex_lookup(x, gensym("#P"), (t_object
-        // **)&x->p_patcher))
-        //     error("patcher object not created.");
-        // if (!object_obex_lookup(x, gensym("#B"), (t_object **)&x->p_box))
-        //     error("box object not created.");
+        // python-related
+        x->p_pythonpath = gensym("");
 
         // text editor
         x->p_code = sysmem_newhandle(0);
@@ -364,6 +368,8 @@ void py_import(t_py* x, t_symbol* s)
 error:
     handle_py_error(x, "import %s", s->s_name);
 }
+
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {

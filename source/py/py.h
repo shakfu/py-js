@@ -47,8 +47,8 @@ typedef struct _py {
     PyObject* p_globals;    /* global python namespace (new ref) */
 
     /* infra objects */
-    // t_patcher *p_patcher; /* to send msgs to objects */
-    // t_box *p_box;         /* the ui box of the py instance? */
+    t_patcher* p_patcher; /* to send msgs to objects */
+    t_box* p_box;         /* the ui box of the py instance? */
     // t_object *registry;   /* to keep a local (or global?) registry of
     // objects? */
 
@@ -90,6 +90,7 @@ typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 /* python methods */
 void py_import(t_py* x, t_symbol* s);
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
