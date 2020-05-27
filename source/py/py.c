@@ -37,7 +37,7 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
 
     // extra python
-    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
+    // class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
     class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,  0);
     
@@ -572,8 +572,46 @@ error:
 /*--------------------------------------------------------------------------*/
 // extra python methods
 
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
+// void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
 
-void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
+// TODO XXXX: CAUSING MAX TO CRASH!
+void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+
+    char* varname = NULL;
+
+    if (s != gensym(""))
+        py_log(x, "s: %s", s->s_name);
+
+    // first atom in argv must be a symbol
+    if (argv->a_type != A_SYM) {
+        error("first atom must be a symbol!");
+        return;
+    } else {
+        varname = atom_getsym(argv)->s_name;
+        py_log(x, "varname: %s", varname);
+    }
+
+    for (int i = 1; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT:
+            py_log(x, "argc: %d  argv: %f", i, atom_getfloat(argv + i));
+            break;
+        case A_LONG:
+            py_log(x, "argc: %d  argv: %ld", i, atom_getlong(argv + i));
+            break;
+        case A_SYM:
+            py_log(x, "argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
+            break;
+        default:
+            py_log(x, "cannot tell unknown type");
+            break;
+        }
+    }
+
+    // PyDict_SetItemString(x->p_globals, "__builtins__",
+    // PyEval_GetBuiltins());
+    // outlet_anything(x->p_outlet1, gensym(unicode_result), 0, NIL);
+}
 
 void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }

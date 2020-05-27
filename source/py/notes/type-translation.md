@@ -68,7 +68,6 @@ t_max_err atom_setformat_va(long *ac, t_atom **av, C74_CONST char *fmt, va_list 
 
 ```c
 
-
 // Retrieve values from an array of atoms using sscanf-like syntax.
 t_max_err atom_getformat(long ac, t_atom *av, C74_CONST char *fmt, ...);
 // same as atom_getformat using va_list
