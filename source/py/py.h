@@ -85,20 +85,24 @@ typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
  * Methods
  */
 
-/* python methods */
+/* object creation and destruction */
+void* py_new(t_symbol* s, long argc, t_atom* argv);
+void py_free(t_py* x);
+
+/* core python methods */
 void py_import(t_py* x, t_symbol* s);
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
-void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
-/* used for meta info */
+/* extra python methods */
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
+
+/* documentation and meta info */
 void py_count(t_py* x);
-
-/* used for testing */
-void py_bang(t_py* x);
-void py_sym(t_py* x, t_symbol* s);
+void py_assist(t_py* x, void* b, long m, long a, char* s);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
@@ -106,19 +110,19 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
+void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
-/* help */
-void py_assist(t_py* x, void* b, long m, long a, char* s);
-
-/* object creation and destruction */
-void* py_new(t_symbol* s, long argc, t_atom* argv);
-void py_free(t_py* x);
+/* used for testing */
+void py_bang(t_py* x);
+void py_sym(t_py* x, t_symbol* s);
 
 /*--------------------------------------------------------------------
  * Helper Functions
  */
 
 void py_init(t_py* x);
+void py_locatefile(t_py* x, char* filename);
+void py_log(t_py* x, char* fmt, ...);
 void handle_py_error(t_py* x, char* fmt, ...);
 
 #endif // PY_H
