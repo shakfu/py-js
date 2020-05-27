@@ -30,14 +30,16 @@ void ext_main(void* r)
     // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
 
-    // core
+    // core python
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
-    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
     class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
-    class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
-    
+
+    // extra python
+    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
+    class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
+    class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,  0);
     
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -47,9 +49,10 @@ void ext_main(void* r)
 
     // code editor
     class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
-    class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT, 0);
-    class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT, 0);
-    class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT, 0);
+    class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT,   0);
+    class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,   0);
+    class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
+    class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
 
     // attributes
     // CLASS_ATTR_ORDER(c,     "name", 0,  "1");
@@ -103,6 +106,32 @@ void py_log(t_py* x, char* fmt, ...)
         va_end(va);
 
         post("[py '%s']: %s", x->p_name->s_name, msg);
+    }
+}
+
+void py_locatefile(t_py* x, char* filename)
+{
+    // works for folders as well
+    char name[MAX_FILENAME_CHARS];
+    short path;
+    t_fourcc type;
+
+    char pathname[MAX_PATH_CHARS];
+    short err;
+
+    if (filename == NULL)
+        return;
+
+    strncpy_zero(name, filename, MAX_FILENAME_CHARS);
+
+    if (locatefile_extended(name, &path, &type, NULL, 0)) {
+        error("path %s not found", name);
+    } else {
+        post("path %s, path %d", name, path);
+        err = path_topathname(path, name, pathname);
+        if (err == 0) {
+            post("absolute path: %s", pathname);
+        }
     }
 }
 
@@ -353,8 +382,15 @@ error:
     Py_XDECREF(pval);
 }
 
+void py_load(t_py* x, t_symbol* s)
+{
+    py_log(x, "load: %s", s->s_name);
+    py_read(x, s);
+    py_execfile(x, s);
+}
+
 /*--------------------------------------------------------------------------*/
-// python engine services
+// core python methods
 
 void py_import(t_py* x, t_symbol* s)
 {
@@ -372,51 +408,6 @@ void py_import(t_py* x, t_symbol* s)
 
 error:
     handle_py_error(x, "import %s", s->s_name);
-}
-
-// void locatefolder(t_symbol *foldername)
-// {
-//     char name[MAX_FILENAME_CHARS];
-//     short path;
-//     t_fourcc type;
-
-//     strncpy_zero(name, foldername->s_name, MAX_FILENAME_CHARS);
-//     if (locatefile_extended(name, &path, &type, NULL, 0)) {
-//         error("folder %s not found", name);
-//     } else {
-//         post("folder %s, path %d", name, path);
-//     }
-// }
-
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    char name[MAX_FILENAME_CHARS];
-    short path;
-    t_fourcc type;
-
-    char pathname[MAX_PATH_CHARS];
-    short err;
-
-    char* py_argv = atom_getsym(argv)->s_name;
-    py_log(x, "%s %s", s->s_name, py_argv);
-
-    strncpy_zero(name, py_argv, MAX_FILENAME_CHARS);
-
-    if (locatefile_extended(name, &path, &type, NULL, 0)) {
-        error("path %s not found", name);
-    } else {
-        post("path %s, path %d", name, path);
-        err = path_topathname(path, name, pathname);
-        if (err == 0) {
-            post("absolute path: %s", pathname);
-        }
-    }
-
-    // if (res != 0) {
-    //     outlet_int(x->p_outlet1, (long)path_id);
-    // } else {
-    //     outlet_int(x->p_outlet1, 0);
-    // }
 }
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -578,9 +569,11 @@ error:
     Py_XDECREF(pval);
 }
 
-void py_load(t_py* x, t_symbol* s)
-{
-    py_log(x, "load: %s", s->s_name);
-    py_read(x, s);
-    py_execfile(x, s);
-}
+/*--------------------------------------------------------------------------*/
+// extra python methods
+
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
+
+void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
+
+void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
