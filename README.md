@@ -128,24 +128,24 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## TODO
 
-- [x] Add .maxref.xml to docs
+- [ ] add python scripts to 'misc'
+- [ ] Refactor conversion logic from object methods
 - [ ] Add `call` method to call python callables in a namespace
 - [ ] Add bpatcher line repl
-- [ ] Check out the reference for 'thispatcher'
 - [ ] Autoload default code
+- [ ] Check out the reference for 'thispatcher'
 - [ ] Implement send to named objects 
       (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [ ] Implement section on two-way globals setting and reading (from python and c)
       in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
 - [ ] Refactor 'py_eval' to make it more consistent with the others
-- [ ] Refactor conversion logic from object methods
 - [ ] Convert py into a js extension class
-
 
 
 ### Done
 
+- [x] Add .maxref.xml to docs
 - [x] Add right inlet bang after eval op ends
 - [x] refactor error handling code (if possible)
 - [x] `import` statement in eval causes a segmentation fault.

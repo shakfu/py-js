@@ -21,6 +21,7 @@
 
 __PYX_EXTERN_C PyObject *hello(int __pyx_skip_dispatch);
 __PYX_EXTERN_C PyObject *py_post(PyObject *, int __pyx_skip_dispatch);
+__PYX_EXTERN_C PyObject *py_error(PyObject *, int __pyx_skip_dispatch);
 
 #endif /* !__PYX_HAVE_API__api */
 

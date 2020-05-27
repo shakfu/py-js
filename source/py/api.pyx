@@ -18,14 +18,12 @@ cdef extern from "py.h":
     cdef void py_free(t_py *x)
     cdef void py_init(t_py *x)
 
-
-
-
-txt = 'Hello from Max!'
+txt = "Hey MAX!"
 
 greeting = 'Hello World'
 
 # name = lambda: getattr(globals(), 'PY_NAME')
+
 
 cpdef public str hello():
     return greeting
@@ -34,6 +32,9 @@ cpdef public str py_post(str s):
     mx.post(s.encode('utf-8'))
     return s
 
+cpdef public str py_error(str s):
+    mx.error(s.encode('utf-8'))
+    return s
 
 cdef class PyExternal:
     cdef t_py *obj
@@ -45,15 +46,13 @@ cdef class PyExternal:
         py_bang(self.obj)
 
 
-def test():
-    key = 'PY_NAME'
-    if key in globals():
-        s = globals()[key]
-        ext = PyExternal(bytes(s))
-        ext.bang()
-    return 'nope'
-        # return __MAXMSP__NAME
-
+# def test(key='PY_NAME'):
+#     if key in globals():
+#         s = globals()[key]
+#         ext = PyExternal(bytes(s))
+#         ext.bang()
+#     else:
+#         return 'nope'
 
 
 
