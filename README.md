@@ -1,7 +1,5 @@
 # (minimal) py for max
 
-py.c - basic experiment in minimal max object for calling python code
-
 An attempt to make a simple (and extensible) max external for python
 
 repo - https://github.com/shakfu/py
@@ -59,7 +57,7 @@ Only tested on OS X at present. Should be relatively easy to port to windows.
 The following is required:
 
 
-### Xcode
+### xcode
 
 Not sure if full xcode is required, perhaps with only the command line tools)
 
@@ -106,7 +104,21 @@ pip install cython
 
 ### Build it
 
-Run `make build` in the `py/sources/py` directory.
+In the root of the package:
+
+```
+make -C source/py build
+```
+
+or in the `py/sources/py` directory
+
+```
+make build
+```
+
+### Sidenote about building on a Mac
+
+You will find that make will fail with 1 error, and it will be a codesigning error that is particular to Apple's process. You can ignore this error (provided there areno other errors), since since infuriatingly this error appears and disapears when it feels like. You will be surprised that the same code that produced a codesign error builds successfully without one!
 
 
 ### Develop it

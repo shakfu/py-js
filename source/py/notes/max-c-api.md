@@ -2,6 +2,14 @@
 # Max C API Notes
 
 
+## Path operations
+
+see: https://cycling74.com/forums/locatefolder
+
+
+
+
+
 ## Writing a text file
 
 see: https://cycling74.com/forums/problem-with-sysfile_writetextfile

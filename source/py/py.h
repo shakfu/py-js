@@ -49,8 +49,6 @@ typedef struct _py {
     /* infra objects */
     t_patcher* p_patcher; /* to send msgs to objects */
     t_box* p_box;         /* the ui box of the py instance? */
-    // t_object *registry;   /* to keep a local (or global?) registry of
-    // objects? */
 
     /* text editor attrs */
     t_object* p_code_editor;

@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 147.0, 118.0, 753.0, 589.0 ],
+		"rect" : [ 324.0, 122.0, 753.0, 589.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -68,7 +68,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 147.0, 144.0, 753.0, 563.0 ],
+						"rect" : [ 324.0, 148.0, 753.0, 563.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -97,6 +97,31 @@
 						"subpatcher_template" : "",
 						"showontab" : 2,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-21",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 528.0, 367.0, 90.0, 22.0 ],
+									"presentation_linecount" : 2,
+									"text" : "call py.maxhelp"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-33",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 426.5, 367.0, 71.0, 22.0 ],
+									"text" : "call hello.py"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-26",
 									"maxclass" : "button",
@@ -413,7 +438,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
+									"text" : "2"
 								}
 
 							}
@@ -450,8 +476,8 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 328.0, 258.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
-										"debug" : 0,
-										"file" : ""
+										"file" : "",
+										"pythonpath" : ""
 									}
 ,
 									"text" : "py"
@@ -546,6 +572,13 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-21", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-22", 0 ]
 								}
 
@@ -610,6 +643,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-32", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-33", 0 ]
 								}
 
 							}
@@ -957,8 +997,8 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 325.25, 472.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
-										"debug" : 0,
-										"file" : ""
+										"file" : "",
+										"pythonpath" : ""
 									}
 ,
 									"text" : "py"
