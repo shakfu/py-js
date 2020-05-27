@@ -119,16 +119,13 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // core
         x->p_name = symbol_unique();
 
-        if (!object_obex_lookup(x, gensym("#P"), (t_object**)&x->p_patcher))
-            error("patcher object not created.");
-        if (!object_obex_lookup(x, gensym("#B"), (t_object**)&x->p_box))
-            error("box object not created.");
-
-        // meta
-        x->p_debug = 0;
+        // communication
+        x->p_patcher = NULL;
+        x->p_box = NULL;
 
         // python-related
         x->p_pythonpath = gensym("");
+        x->p_debug = 0;
 
         // text editor
         x->p_code = sysmem_newhandle(0);
@@ -143,6 +140,14 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // process @arg attributes
         attr_args_process(x, argc, argv);
+
+        object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
+        if (x->p_patcher == NULL)
+            error("patcher object not created.");
+
+        object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
+        if (x->p_box == NULL)
+            error("patcher object not created.");
 
         // python init
         py_init(x);
@@ -369,7 +374,50 @@ error:
     handle_py_error(x, "import %s", s->s_name);
 }
 
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
+// void locatefolder(t_symbol *foldername)
+// {
+//     char name[MAX_FILENAME_CHARS];
+//     short path;
+//     t_fourcc type;
+
+//     strncpy_zero(name, foldername->s_name, MAX_FILENAME_CHARS);
+//     if (locatefile_extended(name, &path, &type, NULL, 0)) {
+//         error("folder %s not found", name);
+//     } else {
+//         post("folder %s, path %d", name, path);
+//     }
+// }
+
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    char name[MAX_FILENAME_CHARS];
+    short path;
+    t_fourcc type;
+
+    char pathname[MAX_PATH_CHARS];
+    short err;
+
+    char* py_argv = atom_getsym(argv)->s_name;
+    py_log(x, "%s %s", s->s_name, py_argv);
+
+    strncpy_zero(name, py_argv, MAX_FILENAME_CHARS);
+
+    if (locatefile_extended(name, &path, &type, NULL, 0)) {
+        error("path %s not found", name);
+    } else {
+        post("path %s, path %d", name, path);
+        err = path_topathname(path, name, pathname);
+        if (err == 0) {
+            post("absolute path: %s", pathname);
+        }
+    }
+
+    // if (res != 0) {
+    //     outlet_int(x->p_outlet1, (long)path_id);
+    // } else {
+    //     outlet_int(x->p_outlet1, 0);
+    // }
+}
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {

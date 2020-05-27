@@ -40,12 +40,8 @@ dist:
 # -----------------------------------------------------------------------
 .PHONY: build
 
-build: build-help build-extension build-external
+build: build-extension build-external
 	$(call section,"build project")
-
-build-help:
-	$(call section,"copying ${MAXHELP} to package help folder")
-	@cp py.maxhelp ../../help
 
 build-external:
 	$(call section,"build with xcode")
@@ -89,6 +85,5 @@ clean-build:
 	$(call section,"cleaning build artifacts")
 	@rm -rf build
 	@rm -rf ../../externals/py.mxo
-	@rm -rf ../../help/py.maxhelp
 
 

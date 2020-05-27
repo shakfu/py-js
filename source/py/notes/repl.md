@@ -23,13 +23,11 @@ Ideally it would be fantastic to launch a python repl per py external instance (
 - this is probably not suitable - http://www.erikosterberg.com/terminaljs/
 
 
-## Alternatives
+## Protocols
 
 - websockets: https://websockets.readthedocs.io/en/stable/intro.html
 
-
-
-- osc ...
+- OSC ...
 
 
 

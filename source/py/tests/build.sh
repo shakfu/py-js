@@ -1,11 +1,9 @@
-
-
 # see: https://stackoverflow.com/questions/27672572/embedding-python-in-c-linking-fails-with-undefined-reference-to-py-initialize
 
 
 echo "compiling..."
 
-for fname in test_interactive
+for fname in test_call
 do
     echo "compiling $fname"
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -19,6 +17,4 @@ done
 
 echo "cleaning up..."
 rm -rf *.dSYM
-
-
 
