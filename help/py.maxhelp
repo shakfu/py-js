@@ -139,8 +139,8 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 38.0, 141.0, 22.0 ],
-									"text" : "sprintf eval api.post('%s')"
+									"patching_rect" : [ 23.0, 38.0, 160.0, 22.0 ],
+									"text" : "sprintf eval api.py_post('%s')"
 								}
 
 							}
@@ -211,8 +211,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 74.0, 64.0, 114.0, 22.0 ],
-									"text" : "eval api.post('hello')"
+									"patching_rect" : [ 74.0, 64.0, 133.0, 22.0 ],
+									"text" : "eval api.py_post('hello')"
 								}
 
 							}
@@ -710,18 +710,6 @@
 						"showontab" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
-									"id" : "obj-9",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "bang" ],
-									"patching_rect" : [ 89.5, 40.0, 58.0, 22.0 ],
-									"text" : "loadbang"
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"id" : "obj-10",
 									"maxclass" : "button",
 									"numinlets" : 1,
@@ -1208,13 +1196,6 @@
 									"destination" : [ "obj-24", 0 ],
 									"midpoints" : [ 247.333333333333428, 341.0, 198.0, 341.0, 198.0, 76.0, 220.833333333333485, 76.0 ],
 									"source" : [ "obj-8", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-33", 0 ],
-									"source" : [ "obj-9", 0 ]
 								}
 
 							}
