@@ -96,7 +96,7 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
 
 /* extra python methods */
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
+// void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 

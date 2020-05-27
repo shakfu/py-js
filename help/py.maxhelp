@@ -4,13 +4,13 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 3,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 102.0, 157.0, 700.0, 640.0 ],
+		"rect" : [ 281.0, 122.0, 700.0, 640.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,7 @@
 		"subpatcher_template" : "",
 		"showrootpatcherontab" : 0,
 		"showontab" : 0,
+		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
 					"id" : "obj-9",
@@ -50,7 +51,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 3,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -84,6 +85,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 2,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"id" : "obj-10",
@@ -601,7 +603,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 3,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -635,6 +637,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 2,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"id" : "obj-21",
@@ -1252,13 +1255,13 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 3,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 102.0, 183.0, 700.0, 614.0 ],
+						"rect" : [ 281.0, 148.0, 700.0, 614.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1286,6 +1289,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 2,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"id" : "obj-43",
@@ -1293,7 +1297,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 363.5, 163.0, 155.0, 22.0 ],
+									"patching_rect" : [ 363.5, 173.0, 155.0, 22.0 ],
 									"text" : "assign x list[symbol] a b c d"
 								}
 
@@ -1305,7 +1309,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 363.5, 131.0, 110.0, 22.0 ],
+									"patching_rect" : [ 363.5, 141.0, 110.0, 22.0 ],
 									"text" : "assign x list a b c d"
 								}
 
@@ -1316,7 +1320,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 491.5, 370.0, 150.0, 20.0 ],
+									"patching_rect" : [ 491.5, 392.0, 150.0, 20.0 ],
 									"text" : "the prepend object"
 								}
 
@@ -1328,7 +1332,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 363.5, 368.0, 111.0, 22.0 ],
+									"patching_rect" : [ 363.5, 390.0, 111.0, 22.0 ],
 									"text" : "prepend <callable>"
 								}
 
@@ -1339,7 +1343,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 491.5, 331.0, 150.0, 20.0 ],
+									"patching_rect" : [ 491.5, 353.0, 150.0, 20.0 ],
 									"text" : "given max data"
 								}
 
@@ -1350,7 +1354,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 363.5, 236.0, 296.0, 20.0 ],
+									"patching_rect" : [ 363.5, 264.0, 296.0, 20.0 ],
 									"text" : "assume this function exists in the python namespace"
 								}
 
@@ -1362,7 +1366,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 363.5, 331.0, 120.0, 22.0 ],
+									"patching_rect" : [ 363.5, 353.0, 120.0, 22.0 ],
 									"text" : "list 1 2 3 4 5 6 7 9 10"
 								}
 
@@ -1371,12 +1375,12 @@
 								"box" : 								{
 									"fontface" : 1,
 									"id" : "obj-32",
+									"linecount" : 3,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 363.5, 206.0, 252.0, 20.0 ],
-									"presentation_linecount" : 2,
-									"text" : "anything must be python callable strategy"
+									"patching_rect" : [ 363.5, 214.0, 263.0, 47.0 ],
+									"text" : "2. Anything other than the defined methods refer to a python callable than can handle the data coming in."
 								}
 
 							}
@@ -1388,7 +1392,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 506.5, 408.0, 24.0, 24.0 ]
+									"patching_rect" : [ 506.5, 433.0, 24.0, 24.0 ]
 								}
 
 							}
@@ -1399,7 +1403,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 353.5, 509.0, 172.0, 22.0 ],
+									"patching_rect" : [ 353.5, 534.0, 172.0, 22.0 ],
 									"text" : "handle_list 1 2 3 4 5 6 7 9 10"
 								}
 
@@ -1411,7 +1415,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 506.5, 443.0, 120.0, 22.0 ],
+									"patching_rect" : [ 506.5, 468.0, 120.0, 22.0 ],
 									"text" : "list 1 2 3 4 5 6 7 9 10"
 								}
 
@@ -1423,7 +1427,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 506.5, 477.0, 113.0, 22.0 ],
+									"patching_rect" : [ 506.5, 502.0, 113.0, 22.0 ],
 									"text" : "prepend handle_list"
 								}
 
@@ -1435,7 +1439,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 353.5, 568.0, 29.5, 22.0 ],
+									"patching_rect" : [ 353.5, 571.0, 29.5, 22.0 ],
 									"text" : "py"
 								}
 
@@ -1468,12 +1472,14 @@
 							}
 , 							{
 								"box" : 								{
+									"fontface" : 1,
 									"id" : "obj-16",
+									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 363.5, 70.0, 182.0, 20.0 ],
-									"text" : "create py var through assigment"
+									"patching_rect" : [ 363.5, 70.0, 256.0, 33.0 ],
+									"text" : "1. Assign max data to new python var in the py object namespace."
 								}
 
 							}
@@ -1484,7 +1490,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 363.5, 98.0, 92.0, 22.0 ],
+									"patching_rect" : [ 363.5, 108.0, 92.0, 22.0 ],
 									"text" : "assign x a b c d"
 								}
 
@@ -1500,7 +1506,7 @@
 									"numoutlets" : 4,
 									"outlettype" : [ "", "int", "", "" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 363.5, 266.0, 286.0, 56.0 ],
+									"patching_rect" : [ 363.5, 288.0, 286.0, 56.0 ],
 									"text" : "def handle_list(xs: List[t_atom]) -> List[t_atom]:\n    xs = process(xs)\n    return xs\n"
 								}
 
@@ -1537,7 +1543,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 52.5, 266.0, 41.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "float 1"
 								}
 
