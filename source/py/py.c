@@ -457,9 +457,11 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
             outlet_bang(x->p_outlet0);
         }
 
-        // handle lists, tuples and sets
-        if (PyList_Check(pval) || PyTuple_Check(pval)
-            || PyAnySet_Check(pval)) {
+
+        // handle any sequence except strings, and presently 
+        // bytes and byte arrays (until there is a reason to)
+        if (PySequence_Check(pval) && !PyUnicode_Check(pval)
+            && !PyBytes_Check(pval) && !PyByteArray_Check(pval)) {
             PyObject* iter;
             PyObject* item;
             int i = 0;
