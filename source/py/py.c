@@ -378,6 +378,7 @@ void py_edsave(t_py* x, char** text, long size)
 
     // success cleanup
     Py_DECREF(pval);
+    return;
 
 error:
     handle_py_error(x, "edclose-exec %s", x->p_code_filepath->s_name);
@@ -407,7 +408,7 @@ void py_import(t_py* x, t_symbol* s)
         outlet_bang(x->p_outlet0);
         py_log(x, "imported: %s", s->s_name);
     }
-
+    return;
 error:
     handle_py_error(x, "import %s", s->s_name);
 }
@@ -532,6 +533,7 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // success cleanup
     Py_DECREF(pval);
     py_log(x, "exec %s", py_argv);
+    return;
 
 error:
     handle_py_error(x, "exec %s", py_argv);
@@ -565,6 +567,7 @@ void py_execfile(t_py* x, t_symbol* s)
     fclose(fhandle);
     Py_DECREF(pval);
     py_log(x, "execfile %s", s->s_name);
+    return;
 
 error:
     handle_py_error(x, "execfile %s", s->s_name);
@@ -589,7 +592,8 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // first atom in argv must be a symbol
     if (argv->a_type != A_SYM) {
         error("first atom must be a symbol!");
-        return;
+        goto error;
+
     } else {
         // strncpy_zero(varname, atom_getsym(argv)->s_name, 50);
         varname = atom_getsym(argv)->s_name;
@@ -649,6 +653,8 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     if (PyList_Size(list) != argc - 1) {
         error("PyList_Size(list) != argc - 1");
         goto error;
+    } else {
+        py_log(x, "length of list: %d", PyList_Size(list));
     }
 
     // finally, assign list to varname in object namespace
@@ -658,12 +664,10 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         error("assign varname to list failed");
         goto error;
     }
-    py_log(x, "cleaning up");
-    Py_DECREF(list);
-    py_log(x, "finished cleaning up");
+    // Py_XDECREF(list);
+    return;
 
 error:
-    error("'goto error' called");
     handle_py_error(x, "assign %s", s->s_name);
     Py_XDECREF(list);
 }
