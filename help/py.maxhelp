@@ -646,8 +646,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 173.5, 34.0, 138.0, 22.0 ],
-									"text" : "eval list(api.random(10))"
+									"patching_rect" : [ 173.5, 34.0, 115.0, 22.0 ],
+									"text" : "eval api.random(10)"
 								}
 
 							}
@@ -1004,8 +1004,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "\"Hello World\""
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
 								}
 
 							}
