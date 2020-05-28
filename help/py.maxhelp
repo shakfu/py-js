@@ -646,9 +646,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 173.5, 34.0, 115.0, 22.0 ],
-									"presentation_linecount" : 3,
-									"text" : "eval api.random(10)"
+									"patching_rect" : [ 173.5, 34.0, 138.0, 22.0 ],
+									"text" : "eval list(api.random(10))"
 								}
 
 							}
@@ -709,18 +708,6 @@
 									"outlettype" : [ "bang" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 356.0, 367.0, 24.0, 24.0 ]
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-32",
-									"maxclass" : "message",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 307.0, 7.0, 69.0, 22.0 ],
-									"text" : "sym \"1 + 1\""
 								}
 
 							}
@@ -1223,13 +1210,6 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-31", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-1", 0 ],
-									"source" : [ "obj-32", 0 ]
 								}
 
 							}
