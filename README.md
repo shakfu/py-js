@@ -14,7 +14,7 @@ It provide the following methods:
 
 
 category | method          | param(s)      | in/out | changes ns | done 
--------- | --------------- | ------------- | ------ | ---------- | ----
+:------- | :-------------- | :------------ | :----: | :--------: | :--:
 core     | import          | module        | in     | yes        | [x]
 core     | eval            | expression    | out    | no         | [x]
 core     | exec            | statement     | in     | yes        | [x]
