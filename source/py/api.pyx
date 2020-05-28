@@ -1,5 +1,7 @@
 cimport api_max as mx # api is a cython keyword!
 
+import numpy as np
+
 cdef extern from "py.h":
     cdef int PY_MAX_ATOMS
     # cdef char *PY_NAME
@@ -28,6 +30,10 @@ greeting = 'Hello World'
 
 cpdef public str hello():
     return greeting
+
+
+def random(int n):
+    return np.random.rand(n)
 
 def post(str s):
      mx.post(s.encode('utf-8'))

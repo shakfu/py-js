@@ -43,8 +43,9 @@ typedef struct _py {
 
     /* python-related */
     t_symbol* p_pythonpath; /* path to python directory */
-    t_bool p_debug;         /* boolean var to switch per-object debug state */
-    PyObject* p_globals;    /* global python namespace (new ref) */
+    t_bool p_debug;         /* bool to switch per-object debug state */
+    // int p_debug;
+    PyObject* p_globals; /* global python namespace (new ref) */
 
     /* infra objects */
     t_patcher* p_patcher; /* to send msgs to objects */

@@ -75,13 +75,13 @@ void ext_main(void* r)
     CLASS_ATTR_BASIC(c,      "pythonpath", 0);
     CLASS_ATTR_SAVE(c,       "pythonpath", 0);
 
-    // CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
+    CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
     CLASS_ATTR_LABEL(c,      "debug", 0,  "debug log to console");
     CLASS_ATTR_CHAR(c,       "debug", 0,  t_py, p_debug);
     CLASS_ATTR_STYLE(c,      "debug", 0, "onoff");
-    CLASS_ATTR_DEFAULT(c,    "debug", 0, "1");
+    // CLASS_ATTR_DEFAULT(c, "debug", 0, "1");
     CLASS_ATTR_BASIC(c,      "debug", 0);
-
+    CLASS_ATTR_SAVE(c,       "debug", 0);
     
     //------------------------------------------------------------------------
     // clang-format on
@@ -95,6 +95,7 @@ void ext_main(void* r)
 /*--------------------------------------------------------------------------*/
 // general helper functions
 
+// NOTE: try to not call it at init or at free
 void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
@@ -154,7 +155,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // python-related
         x->p_pythonpath = gensym("");
-        x->p_debug = 0;
+        x->p_debug = 1;
 
         // text editor
         x->p_code = sysmem_newhandle(0);
@@ -183,7 +184,8 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         py_log(x, "object created");
         for (int i = 0; i < argc; i++) {
-            py_log(x, "argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
+            py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
+            post("argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
         }
     }
 
@@ -207,9 +209,9 @@ void py_init(t_py* x)
     /* start: add additional python objects to the globals dict here */
     /* end */
 
-    py_log(x, "globals initialized");
+    // py_log(x, "globals initialized");
     object_register(CLASS_BOX, x->p_name, x);
-    py_log(x, "object registered");
+    // py_log(x, "object registered");
 
     // increment global object counter
     py_global_obj_count++;
@@ -223,11 +225,11 @@ void py_free(t_py* x)
         sysmem_freehandle(x->p_code);
 
     // python objects cleanup
-    py_global_obj_count--;
     py_log(x, "will be deleted");
+    py_global_obj_count--;
     if (py_global_obj_count == 0) {
-        py_log(x,
-               "last py object freed -> finalizing py memory / interpreter.");
+        /* WARNING: don't call x here or max will crash */
+        post("last py obj freed -> finalizing py mem / interpreter.");
         Py_FinalizeEx();
     }
 }
@@ -361,7 +363,7 @@ void py_edclose(t_py* x, char** text, long size)
 
 void py_edsave(t_py* x, char** text, long size)
 {
-    py_log(x, "saving editor code to %s", x->p_code_filepath->s_name);
+    // py_log(x, "saving editor code to %s", x->p_code_filepath->s_name);
 
     PyObject* pval = NULL;
 
@@ -384,7 +386,7 @@ error:
 
 void py_load(t_py* x, t_symbol* s)
 {
-    py_log(x, "load: %s", s->s_name);
+    // py_log(x, "load: %s", s->s_name);
     py_read(x, s);
     py_execfile(x, s);
 }
@@ -574,13 +576,13 @@ error:
 
 // void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
 
-// TODO XXXX: CAUSING MAX TO CRASH!
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-
     char* varname = NULL;
+    // char varname[50];
 
     if (s != gensym(""))
+        // post("s: %s", s->s_name);
         py_log(x, "s: %s", s->s_name);
 
     // first atom in argv must be a symbol
@@ -588,20 +590,22 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         error("first atom must be a symbol!");
         return;
     } else {
+        // strncpy_zero(varname, atom_getsym(argv)->s_name, 50);
         varname = atom_getsym(argv)->s_name;
         py_log(x, "varname: %s", varname);
+        // post("varname: %s", varname);
     }
 
     for (int i = 1; i < argc; i++) {
         switch ((argv + i)->a_type) {
         case A_FLOAT:
-            py_log(x, "argc: %d  argv: %f", i, atom_getfloat(argv + i));
+            py_log(x, "%d: %f", i, atom_getfloat(argv + i));
             break;
         case A_LONG:
-            py_log(x, "argc: %d  argv: %ld", i, atom_getlong(argv + i));
+            py_log(x, "%d: %ld", i, atom_getlong(argv + i));
             break;
         case A_SYM:
-            py_log(x, "argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
+            py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
             break;
         default:
             py_log(x, "cannot tell unknown type");
