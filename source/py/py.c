@@ -95,7 +95,7 @@ void ext_main(void* r)
 /*--------------------------------------------------------------------------*/
 // general helper functions
 
-// NOTE: try to not call it at init or at free
+// NOTE: try to not call it at all objects are freed!
 void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
@@ -108,6 +108,18 @@ void py_log(t_py* x, char* fmt, ...)
 
         post("[py '%s']: %s", x->p_name->s_name, msg);
     }
+}
+
+void py_error(t_py* x, char* fmt, ...)
+{
+    char msg[50];
+
+    va_list va;
+    va_start(va, fmt);
+    vsprintf(msg, fmt, va);
+    va_end(va);
+
+    error("[py '%s']: %s", x->p_name->s_name, msg);
 }
 
 void py_locatefile(t_py* x, char* filename)
@@ -336,7 +348,7 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     if (locatefile_extended(filename, &path, &type, &type, 1)) {
-        object_error((t_object*)x, "can't find file %s", filename);
+        py_error(x, "can't find file %s", filename);
         return;
     }
 
@@ -546,13 +558,13 @@ void py_execfile(t_py* x, t_symbol* s)
     FILE* fhandle = NULL;
 
     if (s == gensym("")) {
-        error("py execfile: missing filepath");
+        py_error(x, "py execfile: missing filepath");
         goto error;
     }
 
     fhandle = fopen(s->s_name, "r");
     if (fhandle == NULL) {
-        error("could not open file '%s'", s->s_name);
+        py_error(x, "could not open file '%s'", s->s_name);
         goto error;
     }
 
@@ -579,8 +591,6 @@ error:
 
 // void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
 
-void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
-
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* varname = NULL;
@@ -591,7 +601,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // first atom in argv must be a symbol
     if (argv->a_type != A_SYM) {
-        error("first atom must be a symbol!");
+        py_error(x, "first atom must be a symbol!");
         goto error;
 
     } else {
@@ -601,7 +611,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     if ((list = PyList_New(0)) == NULL) {
-        error("list == NULL");
+        py_error(x, "list == NULL");
         goto error;
     }
 
@@ -624,7 +634,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         case A_LONG: {
             PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
             if (p_long == NULL) {
-                error("p_long == NULL");
+                py_error(x, "p_long == NULL");
                 goto error;
             }
             PyList_Append(list, p_long);
@@ -636,7 +646,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
             PyObject* p_str = PyUnicode_FromString(
                 atom_getsym(argv + i)->s_name);
             if (p_str == NULL) {
-                error("p_str == NULL");
+                py_error(x, "p_str == NULL");
                 goto error;
             }
             PyList_Append(list, p_str);
@@ -661,13 +671,15 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     py_log(x, "setting %s to list in namespace", varname);
     int res = PyDict_SetItemString(x->p_globals, varname, list);
     if (res != 0) {
-        error("assign varname to list failed");
+        py_error(x, "assign varname to list failed");
         goto error;
     }
-    // Py_XDECREF(list);
+    // Py_XDECREF(list); // causes a crash
     return;
 
 error:
     handle_py_error(x, "assign %s", s->s_name);
     Py_XDECREF(list);
 }
+
+void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv) { }
