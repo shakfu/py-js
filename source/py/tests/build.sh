@@ -3,7 +3,7 @@
 
 echo "compiling..."
 
-for fname in test_call
+for fname in test_goto
 do
     echo "compiling $fname"
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
