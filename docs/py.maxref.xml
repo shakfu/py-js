@@ -2,6 +2,7 @@
 <?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
 
 <c74object name="py" module="max" category="Python">
+
 	<digest>Evaluate python code</digest>
 	<description>
 		<o>py</o> takes as input to evaluate the success of an operation in a test patcher. 
@@ -16,34 +17,23 @@
 
 	<!--INLETS-->
 	<inletlist>
-		<inlet id="0" type="INLET_TYPE">
-			<digest>
-				py object inlet
-			</digest>
-			<description>
-				The py object has only one inlet.
-			</description>
+		<inlet id="0" type="anything">
+			<digest>py object inlet</digest>
+			<description>The py object has only one inlet.</description>
 		</inlet>
 	</inletlist>
 
 	<!--OUTLETS-->
 	<outletlist>
-		<outlet id="0" type="OUTLET_TYPE">
-			<digest>
-				Right inlet for bang notification
-			</digest>
-			<description>
-				Used for sending a bang out after end of an operation.
-			</description>
+		
+		<outlet id="0" type="bang">
+			<digest>Right inlet for bang notification after end of an operation</digest>
 		</outlet>
-		<outlet id="1" type="OUTLET_TYPE">
-			<digest>
-				Left inlet for all out outputs.
-			</digest>
-			<description>
-				Used for sending output of python operations.
-			</description>
+
+		<outlet id="1" type="anything">
+			<digest>Left inlet for all outputs from python operations</digest>
 		</outlet>
+
 	</outletlist>
 
 	<!--ARGUMENTS-->
@@ -79,22 +69,16 @@
 			<description>
 				Can import standard builtin modules, a custom builtin 'api' to access the max api from python or any modules available on python's sys.path.
 			</description>
-		</method>	
-	</methodlist>
-	
-	<methodlist>
+		</method>
 		<method name="eval">
 			<arglist>
 				<arg name="expression" optional="0" type="symbol" />
 			</arglist>
 			<digest>Evaluate a python expression</digest>
 			<description>
-				If no input is received, the assertion is deemed to have failed.
+				The <a>expression</a> is evaluated in the context of the <o>py</o> object namespace and outputs results to the left outlet and a bang from the right outlet to signal end of evaluation.
 			</description>
 		</method>	
-	</methodlist>
-	
-	<methodlist>
 		<method name="exec">
 			<arglist>
 				<arg name="statement" optional="0" type="symbol" />
@@ -103,10 +87,7 @@
 			<description>
 				Can modify and inject new code and data into the namespace.
 			</description>
-		</method>	
-	</methodlist>
-	
-	<methodlist>
+		</method>
 		<method name="execfile">
 			<arglist>
 				<arg name="filepath" optional="0" type="symbol" />
@@ -115,10 +96,17 @@
 			<description>
 				Can modify and inject new code and data into the namespace.
 			</description>
-		</method>	
-	</methodlist>
-	
-	<methodlist>
+		</method>
+		<method name="assign">
+			<arglist>
+				<arg name="varname" optional="0" type="symbol" />
+				<arg name="data" optional="0" type="atom" />
+			</arglist>
+			<digest>Creates a new variable in the python namespace with a list of the data</digest>
+			<description>
+				User for sending max data into the <o>py</o> instance's namespace, so it can be used by python code. 
+			</description>
+		</method>
 		<method name="read">
 			<arglist>
 				<arg name="filepath" optional="0" type="symbol" />
@@ -127,11 +115,7 @@
 			<description>
 				Loads a python file into the code-editor.
 			</description>
-		</method>	
-	</methodlist>
-	
-	
-	<methodlist>
+		</method>
 		<method name="load">
 			<arglist>
 				<arg name="filepath" optional="0" type="symbol" />
@@ -142,22 +126,6 @@
 			</description>
 		</method>	
 	</methodlist>
-	
-	
-	<!--ATTRIBUTES-->
-	<attributelist>
-		<attribute name="tags" get="1" set="1" type="symbol" size="1">
-			<digest>Optional tags to assist searching</digest>
-			<description>
-				Tags can be used to assist with searching the database of test results after automated testing has been executed.
-				Tags are optional and are space-delimited.
-				You can define up to 16 tags.
-			</description>
-		</attribute>
-	</attributelist>
-
-	<!--EXAMPLE-->
-
 
 	<!--SEEALSO-->
 	<seealsolist>
