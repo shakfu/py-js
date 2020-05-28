@@ -1,22 +1,9 @@
 cimport api_max as mx # api is a cython keyword!
+cimport api_py as px
 
 import numpy
 import numpy as np
 
-cdef extern from "py.h":
-    cdef int PY_MAX_ATOMS
-    cdef char *PY_NAMESPACE
-    ctypedef struct t_py
-    cdef void py_bang(t_py *x)
-    cdef void py_import(t_py *x, mx.t_symbol *s)
-    cdef void py_eval(t_py *x, mx.t_symbol *s, long argc, mx.t_atom *argv)
-    cdef void py_exec(t_py *x, mx.t_symbol *s, long argc, mx.t_atom *argv)
-    cdef void py_execfile(t_py *x, mx.t_symbol *s, long argc, mx.t_atom *argv)
-    cdef void py_run(t_py *x, mx.t_symbol *s, long argc, mx.t_atom *argv)
-    cdef void py_dblclick(t_py *x)
-    cdef void *py_new(mx.t_symbol *s, long argc, mx.t_atom *argv)
-    cdef void py_free(t_py *x)
-    cdef void py_init(t_py *x)
 
 
 txt = "Hey MAX!"
@@ -32,7 +19,7 @@ cpdef public str hello():
 
 # there's a namespace collision with c's 'random' function
 # included from "py.h". Hence the rename to py_random
-def py_random(int n):
+def random(int n):
     return np.random.rand(n)
 
 
@@ -44,13 +31,13 @@ def error(str s):
 
 
 cdef class PyExternal:
-    cdef t_py *obj
+    cdef px.t_py *obj
 
     def __cinit__(self, bytes name):
-        self.obj = <t_py *>mx.object_findregistered(mx.CLASS_BOX, mx.gensym(name))
+        self.obj = <px.t_py *>mx.object_findregistered(mx.CLASS_BOX, mx.gensym(name))
 
     cpdef bang(self):
-        py_bang(self.obj)
+        px.py_bang(self.obj)
 
 
 def test(key='PY_NAME'):

@@ -1,4 +1,4 @@
-# api.pyx
+# api_max.pyx
 """
 'x' -> the header has been fully exposed to cython
 
