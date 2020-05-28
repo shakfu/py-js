@@ -335,6 +335,7 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 325.25, 472.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
+										"debug" : 1,
 										"file" : "",
 										"pythonpath" : ""
 									}
@@ -609,7 +610,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 700.0, 614.0 ],
+						"rect" : [ 281.0, 148.0, 700.0, 614.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -639,6 +640,31 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-36",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 460.5, 7.0, 54.0, 22.0 ],
+									"presentation_linecount" : 2,
+									"text" : "eval bob"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-35",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 464.0, 34.0, 156.0, 22.0 ],
+									"text" : "assign bob 1 2.1 3 4.5 a b c"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-21",
 									"maxclass" : "message",
@@ -980,7 +1006,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "2"
+									"text" : "3.7"
 								}
 
 							}
@@ -1017,6 +1043,7 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 328.0, 258.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
+										"debug" : 1,
 										"file" : "",
 										"pythonpath" : ""
 									}
@@ -1197,6 +1224,20 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-35", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-36", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-4", 0 ]
 								}
 
@@ -1261,7 +1302,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 281.0, 148.0, 700.0, 614.0 ],
+						"rect" : [ 0.0, 26.0, 700.0, 614.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
