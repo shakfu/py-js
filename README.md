@@ -1,6 +1,6 @@
 # (minimal) py for max
 
-An attempt to make a simple (and extensible) max external for python
+An attempt to make a simple (and extensible) max external for python3
 
 repo - https://github.com/shakfu/py
 
@@ -9,6 +9,21 @@ repo - https://github.com/shakfu/py
 
 The `py` object provides a very high level python code interface to max objects.
 It has 1 inlet and 2 outlets
+
+It provide the following methods:
+
+
+category | method          | param(s)      | in/out | changes ns | done 
+-------- | --------------- | ------------- | ------ | ---------- | ----
+core     | import          | module        | in     | yes        | [x]
+core     | eval            | expression    | out    | no         | [x]
+core     | exec            | statement     | in     | yes        | [x]
+core     | execfile        | file          | in     | yes        | [x]
+extra    | assign          | var, data     | in     | yes        | [ ]
+extra    | call (anything) | var(s), data  | out    | no         | [ ]
+editor   | read            | file          | n/a    | no         | [x]
+editor   | load            | file          | yes    | no         | [x]
+
 
 Basic Features
 
