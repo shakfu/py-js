@@ -576,13 +576,14 @@ error:
 
 // void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
 
+void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
+
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* varname = NULL;
-    // char varname[50];
+    PyObject* list = NULL;
 
     if (s != gensym(""))
-        // post("s: %s", s->s_name);
         py_log(x, "s: %s", s->s_name);
 
     // first atom in argv must be a symbol
@@ -593,29 +594,76 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         // strncpy_zero(varname, atom_getsym(argv)->s_name, 50);
         varname = atom_getsym(argv)->s_name;
         py_log(x, "varname: %s", varname);
-        // post("varname: %s", varname);
     }
 
+    if ((list = PyList_New(0)) == NULL) {
+        error("list == NULL");
+        goto error;
+    }
+
+    // NOTE: n C it’s illegal to have a declaration as the first statement
+    // after a label enclosing the whole subblock in a {} seems to work
     for (int i = 1; i < argc; i++) {
         switch ((argv + i)->a_type) {
-        case A_FLOAT:
+        case A_FLOAT: {
+            double c_float = atom_getfloat(argv + i);
+            PyObject* p_float = PyFloat_FromDouble(c_float);
+            if (p_float == NULL) {
+                error("p_float == NULL");
+                goto error;
+            }
+            PyList_Append(list, p_float);
+            Py_DECREF(p_float);
             py_log(x, "%d: %f", i, atom_getfloat(argv + i));
             break;
-        case A_LONG:
+        }
+        case A_LONG: {
+            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
+            if (p_long == NULL) {
+                error("p_long == NULL");
+                goto error;
+            }
+            PyList_Append(list, p_long);
+            Py_DECREF(p_long);
             py_log(x, "%d: %ld", i, atom_getlong(argv + i));
             break;
-        case A_SYM:
+        }
+        case A_SYM: {
+            PyObject* p_str = PyUnicode_FromString(
+                atom_getsym(argv + i)->s_name);
+            if (p_str == NULL) {
+                error("p_str == NULL");
+                goto error;
+            }
+            PyList_Append(list, p_str);
+            Py_DECREF(p_str);
             py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
             break;
+        }
         default:
-            py_log(x, "cannot tell unknown type");
+            py_log(x, "cannot process unknown type");
             break;
         }
     }
 
-    // PyDict_SetItemString(x->p_globals, "__builtins__",
-    // PyEval_GetBuiltins());
-    // outlet_anything(x->p_outlet1, gensym(unicode_result), 0, NIL);
-}
+    if (PyList_Size(list) != argc - 1) {
+        error("PyList_Size(list) != argc - 1");
+        goto error;
+    }
 
-void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
+    // finally, assign list to varname in object namespace
+    py_log(x, "setting %s to list in namespace", varname);
+    int res = PyDict_SetItemString(x->p_globals, varname, list);
+    if (res != 0) {
+        error("assign varname to list failed");
+        goto error;
+    }
+    py_log(x, "cleaning up");
+    Py_DECREF(list);
+    py_log(x, "finished cleaning up");
+
+error:
+    error("'goto error' called");
+    handle_py_error(x, "assign %s", s->s_name);
+    Py_XDECREF(list);
+}
