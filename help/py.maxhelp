@@ -641,13 +641,25 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-31",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 173.5, 34.0, 115.0, 22.0 ],
+									"presentation_linecount" : 3,
+									"text" : "eval api.random(10)"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-36",
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 460.5, 7.0, 54.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "eval bob"
 								}
 
@@ -731,8 +743,8 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 38.0, 160.0, 22.0 ],
-									"text" : "sprintf eval api.py_post('%s')"
+									"patching_rect" : [ 23.0, 38.0, 144.0, 22.0 ],
+									"text" : "sprintf eval api.error('%s')"
 								}
 
 							}
@@ -803,8 +815,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 74.0, 64.0, 133.0, 22.0 ],
-									"text" : "eval api.py_post('hello')"
+									"patching_rect" : [ 74.0, 64.0, 114.0, 22.0 ],
+									"text" : "eval api.post('hello')"
 								}
 
 							}
@@ -1006,7 +1018,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "3.7"
+									"text" : "\"Hello World\""
 								}
 
 							}
@@ -1204,6 +1216,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-22", 0 ],
 									"source" : [ "obj-30", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-31", 0 ]
 								}
 
 							}

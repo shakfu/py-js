@@ -1,14 +1,12 @@
 cimport api_max as mx # api is a cython keyword!
 
+import numpy
 import numpy as np
 
 cdef extern from "py.h":
     cdef int PY_MAX_ATOMS
-    # cdef char *PY_NAME
     cdef char *PY_NAMESPACE
-
     ctypedef struct t_py
-
     cdef void py_bang(t_py *x)
     cdef void py_import(t_py *x, mx.t_symbol *s)
     cdef void py_eval(t_py *x, mx.t_symbol *s, long argc, mx.t_atom *argv)
@@ -32,8 +30,11 @@ cpdef public str hello():
     return greeting
 
 
-def random(int n):
+# there's a namespace collision with c's 'random' function
+# included from "py.h". Hence the rename to py_random
+def py_random(int n):
     return np.random.rand(n)
+
 
 def post(str s):
      mx.post(s.encode('utf-8'))
