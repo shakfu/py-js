@@ -610,7 +610,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 281.0, 148.0, 700.0, 614.0 ],
+						"rect" : [ 0.0, 26.0, 700.0, 614.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -682,8 +682,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 528.0, 367.0, 90.0, 22.0 ],
-									"text" : "call py.maxhelp"
+									"patching_rect" : [ 156.0, 7.0, 118.0, 22.0 ],
+									"text" : "total 10.1 12.2 40 50"
 								}
 
 							}
@@ -694,8 +694,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 426.5, 367.0, 71.0, 22.0 ],
-									"text" : "call hello.py"
+									"patching_rect" : [ 299.5, 7.0, 65.0, 22.0 ],
+									"text" : "echo 1 2 3"
 								}
 
 							}
@@ -1004,7 +1004,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
+									"text" : "\"Hey MAX!\""
 								}
 
 							}
@@ -1300,7 +1301,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 700.0, 614.0 ],
+						"rect" : [ 281.0, 148.0, 700.0, 614.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
