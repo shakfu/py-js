@@ -188,6 +188,9 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         attr_args_process(x, argc, argv);
 
         object_obex_lookup(x, gensym("#P"), (t_object**)&x->p_patcher);
+        // if (err != MAX_ERR_NONE)
+        //     return;
+
         if (x->p_patcher == NULL)
             error("patcher object not created.");
 
@@ -273,8 +276,6 @@ void py_bang(t_py* x) { outlet_bang(x->p_outlet1); }
 
 void py_scan(t_py* x)
 {
-
-    t_max_err err;
     long result = 0;
 
     object_method(x->p_patcher, gensym("iterate"), (method)scan_callback, x,
@@ -286,13 +287,19 @@ long scan_callback(t_py* x, t_object* obj)
     t_rect jr;
     t_object* p;
     t_symbol* s;
+    t_symbol* varname;
+    t_symbol* obj_id;
 
     jbox_get_patching_rect(obj, &jr);
     p = jbox_get_patcher(obj);
+    varname = jbox_get_varname(obj);
+    obj_id = jbox_get_id(obj);
     s = jpatcher_get_name(p);
-    object_post((t_object*)x, "in %s, box @ x %ld y %ld, w %ld, h %ld",
-                s->s_name, (long)jr.x, (long)jr.y, (long)jr.width,
-                (long)jr.height);
+    object_post(
+        (t_object*)x,
+        "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
+        s->s_name, varname->s_name, obj_id->s_name, (long)jr.x, (long)jr.y,
+        (long)jr.width, (long)jr.height);
     return 0;
 }
 
