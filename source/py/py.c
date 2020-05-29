@@ -590,8 +590,6 @@ error:
 /*--------------------------------------------------------------------------*/
 // extra python methods
 
-// void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv) { ; }
-
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* varname = NULL;
@@ -687,7 +685,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = NULL;
     PyObject* pval = NULL;
-    PyObject* py_callable_str = NULL;
+    // PyObject* py_callable_str = NULL;
     PyObject* py_callable = NULL;
     PyObject* py_argslist = NULL; // python list
     PyObject* py_args = NULL;     // python tuple
@@ -697,9 +695,10 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    py_callable_str = PyUnicode_FromString(s->s_name);
-    if (py_callable_str == NULL) {
-        py_error(x, "%s: could not convert callable name to python string");
+    py_callable = PyRun_String(s->s_name, Py_eval_input, x->p_globals,
+                               x->p_globals);
+    if (py_callable == NULL) {
+        py_error(x, "could not evaluate '%s' as a python callable", s->s_name);
         goto error;
     }
 
@@ -756,26 +755,6 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     } else {
         py_log(x, "length of list: %d", PyList_Size(py_argslist));
-    }
-
-    // namespace check
-
-    if (PyDict_Contains(x->p_globals, py_callable_str) != 1) {
-        py_error(x, "callable name not found in py object namespace");
-        goto error;
-    }
-
-    py_callable = PyDict_GetItemWithError(x->p_globals, py_callable_str);
-    if (py_callable == NULL) {
-        py_error(x, "not able to retrieve callable from object namespace");
-        goto error;
-    }
-
-    if (PyCallable_Check(py_callable) != 1) {
-        py_error(
-            x,
-            "given callable is actually not callable from object namespace");
-        goto error;
     }
 
     // convert py_args to tuple
@@ -873,7 +852,6 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     // success cleanup
-    Py_XDECREF(py_callable_str);
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
@@ -883,7 +861,6 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 error:
     handle_py_error(x, "anythinh %s", s->s_name);
     // cleanup
-    Py_XDECREF(py_callable_str);
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);

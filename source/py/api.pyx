@@ -26,6 +26,7 @@ def random(int n):
 def echo(*args, **kwargs):
     return args
 
+
 def total(*args, **kwargs):
     return sum(args)
 
@@ -33,8 +34,10 @@ def total(*args, **kwargs):
 def post(str s):
      mx.post(s.encode('utf-8'))
 
+
 def error(str s):
      mx.error(s.encode('utf-8'))
+
 
 
 cdef class PyExternal:

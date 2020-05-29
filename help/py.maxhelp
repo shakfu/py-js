@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 281.0, 122.0, 700.0, 640.0 ],
+		"rect" : [ 242.0, 110.0, 764.0, 609.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 700.0, 614.0 ],
+						"rect" : [ 0.0, 26.0, 764.0, 583.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 1,
 						"default_fontsize" : 12.0,
@@ -610,7 +610,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 700.0, 614.0 ],
+						"rect" : [ 242.0, 136.0, 764.0, 583.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -640,6 +640,30 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-32",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 507.0, 352.0, 137.0, 22.0 ],
+									"text" : "api.total 10.1 12.2 40 50"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-34",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 507.0, 385.0, 84.0, 22.0 ],
+									"text" : "api.echo 1 2 3"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-31",
 									"maxclass" : "message",
@@ -682,8 +706,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 156.0, 7.0, 118.0, 22.0 ],
-									"text" : "total 10.1 12.2 40 50"
+									"patching_rect" : [ 112.0, 7.0, 186.0, 22.0 ],
+									"text" : "eval \"api.total(10.1, 12.2, 40, 50)\""
 								}
 
 							}
@@ -694,8 +718,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 299.5, 7.0, 65.0, 22.0 ],
-									"text" : "echo 1 2 3"
+									"patching_rect" : [ 299.5, 7.0, 129.0, 22.0 ],
+									"text" : "eval \"api.echo(1, 2, 3)\""
 								}
 
 							}
@@ -790,7 +814,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 426.5, 330.0, 193.0, 22.0 ],
+									"patching_rect" : [ 507.0, 319.0, 193.0, 22.0 ],
 									"text" : "load /Users/sa/Downloads/hello.py"
 								}
 
@@ -850,7 +874,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 426.5, 290.0, 218.0, 22.0 ],
+									"patching_rect" : [ 507.0, 287.0, 218.0, 22.0 ],
 									"text" : "execfile /Users/sa/Downloads/hello.py"
 								}
 
@@ -1005,7 +1029,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "\"Hey MAX!\""
+									"text" : "112.3"
 								}
 
 							}
@@ -1216,7 +1240,21 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-32", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-33", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-34", 0 ]
 								}
 
 							}
@@ -1301,7 +1339,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 281.0, 148.0, 700.0, 614.0 ],
+						"rect" : [ 0.0, 26.0, 764.0, 583.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
