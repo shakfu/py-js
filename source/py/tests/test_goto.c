@@ -1,10 +1,9 @@
 #include <stdio.h>
 
-
-int main() {
+int main()
+{
 
     int x = 10;
-
 
 hello:
     x++;
@@ -16,4 +15,3 @@ bye:
 
     return 0;
 }
-

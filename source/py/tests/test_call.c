@@ -1,15 +1,14 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-int
-main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     PyObject *pName, *pModule, *pFunc;
     PyObject *pArgs, *pValue;
     int i;
 
     if (argc < 3) {
-        fprintf(stderr,"Usage: call pythonfile funcname [args]\n");
+        fprintf(stderr, "Usage: call pythonfile funcname [args]\n");
         return 1;
     }
 
@@ -42,24 +41,21 @@ main(int argc, char *argv[])
             if (pValue != NULL) {
                 printf("Result of call: %ld\n", PyLong_AsLong(pValue));
                 Py_DECREF(pValue);
-            }
-            else {
+            } else {
                 Py_DECREF(pFunc);
                 Py_DECREF(pModule);
                 PyErr_Print();
-                fprintf(stderr,"Call failed\n");
+                fprintf(stderr, "Call failed\n");
                 return 1;
             }
-        }
-        else {
+        } else {
             if (PyErr_Occurred())
                 PyErr_Print();
             fprintf(stderr, "Cannot find function \"%s\"\n", argv[2]);
         }
         Py_XDECREF(pFunc);
         Py_DECREF(pModule);
-    }
-    else {
+    } else {
         PyErr_Print();
         fprintf(stderr, "Failed to load \"%s\"\n", argv[1]);
         return 1;
