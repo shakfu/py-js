@@ -48,8 +48,9 @@ typedef struct _py {
     PyObject* p_globals; /* global python namespace (new ref) */
 
     /* infra objects */
-    t_patcher* p_patcher; /* to send msgs to objects */
-    t_box* p_box;         /* the ui box of the py instance? */
+    // t_patcher* p_patcher; /* to send msgs to objects */
+    t_object* p_patcher;
+    // t_box* p_box;         /* the ui box of the py instance? */
 
     /* text editor attrs */
     t_object* p_code_editor;
@@ -58,8 +59,8 @@ typedef struct _py {
     t_symbol* p_code_filepath; /* default python filepath to load into
                                   the code editor and global namespace */
     /* outlet creation */
-    void* p_outlet0; // for bang notifications
-    void* p_outlet1; // for msg output
+    void* p_outlet0; // right outlet for bang notifications
+    void* p_outlet1; // left outleet for msg output
 
 } t_py;
 
@@ -115,7 +116,8 @@ void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
 /* used for testing */
 void py_bang(t_py* x);
-void py_sym(t_py* x, t_symbol* s);
+void py_scan(t_py* x);
+long scan_callback(t_py* x, t_object* obj);
 
 /*--------------------------------------------------------------------
  * Helper Functions

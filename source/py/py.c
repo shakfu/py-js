@@ -11,6 +11,8 @@
 
 t_class* py_class; // global pointer to object class
 
+// t_hashtab *registry; // global object lookups
+
 static int py_global_obj_count = 0; // when 0 free interpreter
 
 /*--------------------------------------------------------------------------*/
@@ -46,6 +48,7 @@ void ext_main(void* r)
 
     // meta
     class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
+    class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
 
     // code editor
     class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
@@ -163,7 +166,8 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // communication
         x->p_patcher = NULL;
-        x->p_box = NULL;
+        // x->p_box = NULL;
+        // t_hashtab* registry; // experimental (perhaps better as a global)
 
         // python-related
         x->p_pythonpath = gensym("");
@@ -183,13 +187,17 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // process @arg attributes
         attr_args_process(x, argc, argv);
 
-        object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
+        object_obex_lookup(x, gensym("#P"), (t_object**)&x->p_patcher);
         if (x->p_patcher == NULL)
             error("patcher object not created.");
 
-        object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
-        if (x->p_box == NULL)
-            error("patcher object not created.");
+        // object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
+        // if (x->p_patcher == NULL)
+        //     error("patcher object not created.");
+
+        // object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
+        // if (x->p_box == NULL)
+        //     error("patcher object not created.");
 
         // python init
         py_init(x);
@@ -262,6 +270,31 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 // object methods
 
 void py_bang(t_py* x) { outlet_bang(x->p_outlet1); }
+
+void py_scan(t_py* x)
+{
+
+    t_max_err err;
+    long result = 0;
+
+    object_method(x->p_patcher, gensym("iterate"), (method)scan_callback, x,
+                  PI_DEEP | PI_WANTBOX, &result);
+}
+
+long scan_callback(t_py* x, t_object* obj)
+{
+    t_rect jr;
+    t_object* p;
+    t_symbol* s;
+
+    jbox_get_patching_rect(obj, &jr);
+    p = jbox_get_patcher(obj);
+    s = jpatcher_get_name(p);
+    object_post((t_object*)x, "in %s, box @ x %ld y %ld, w %ld, h %ld",
+                s->s_name, (long)jr.x, (long)jr.y, (long)jr.width,
+                (long)jr.height);
+    return 0;
+}
 
 // retrieves a count of the number of 'active' py objects from a global var
 void py_count(t_py* x) { outlet_int(x->p_outlet1, py_global_obj_count); }
