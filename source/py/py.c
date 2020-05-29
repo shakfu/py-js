@@ -457,8 +457,7 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
             outlet_bang(x->p_outlet0);
         }
 
-
-        // handle any sequence except strings, and presently 
+        // handle any sequence except strings, and presently
         // bytes and byte arrays (until there is a reason to)
         if (PySequence_Check(pval) && !PyUnicode_Check(pval)
             && !PyBytes_Check(pval) && !PyByteArray_Check(pval)) {
@@ -684,7 +683,6 @@ error:
     Py_XDECREF(list);
 }
 
-
 void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = NULL;
@@ -692,11 +690,10 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     PyObject* py_callable_str = NULL;
     PyObject* py_callable = NULL;
     PyObject* py_argslist = NULL; // python list
-    PyObject* py_args = NULL; // python tuple
-    PyObject* locals = NULL;
+    PyObject* py_args = NULL;     // python tuple
 
     if (s == gensym("")) {
-        py_error("could not retrieve callable name", s->s_name);
+        py_error(x, "could not retrieve callable name", s->s_name);
         goto error;
     }
 
@@ -706,7 +703,6 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    
     if ((py_argslist = PyList_New(0)) == NULL) {
         py_error(x, "could not create an empyt python list");
         goto error;
@@ -771,12 +767,14 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     py_callable = PyDict_GetItemWithError(x->p_globals, py_callable_str);
     if (py_callable == NULL) {
-        py_error("not able to retrieve callable from object namespace");
+        py_error(x, "not able to retrieve callable from object namespace");
         goto error;
     }
 
     if (PyCallable_Check(py_callable) != 1) {
-        py_error(x, "given callable is actually not callable from object namespace");
+        py_error(
+            x,
+            "given callable is actually not callable from object namespace");
         goto error;
     }
 
@@ -793,23 +791,22 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-
     // handle ints and longs
     if (PyLong_Check(pval)) {
         long int_result = PyLong_AsLong(pval);
-        outlet_int(x->p_outlet, int_result);
+        outlet_int(x->p_outlet1, int_result);
     }
 
     // handle floats and doubles
     if (PyFloat_Check(pval)) {
         float float_result = (float)PyFloat_AsDouble(pval);
-        outlet_float(x->p_outlet, float_result);
+        outlet_float(x->p_outlet1, float_result);
     }
 
     // handle strings
     if (PyUnicode_Check(pval)) {
         const char* unicode_result = PyUnicode_AsUTF8(pval);
-        outlet_anything(x->p_outlet, gensym(unicode_result), 0, NIL);
+        outlet_anything(x->p_outlet1, gensym(unicode_result), 0, NIL);
     }
 
     // handle lists, tuples and sets
@@ -866,7 +863,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
             }
             Py_DECREF(item);
         }
-        outlet_list(x->p_outlet, NULL, i, atoms);
+        outlet_list(x->p_outlet1, NULL, i, atoms);
         post("end iter op: %d", i);
 
         if (is_dynamic) {
@@ -876,26 +873,18 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     // success cleanup
+    Py_XDECREF(py_callable_str);
+    Py_XDECREF(py_callable);
+    Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
     post("END %s: %s", s->s_name, py_argv);
     return;
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-
-        // get error message
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('%s %s'): %s", s->s_name, py_argv,
-              pStrErrorMessage);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error(x, "anythinh %s", s->s_name);
     // cleanup
+    Py_XDECREF(py_callable_str);
+    Py_XDECREF(py_callable);
+    Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
-    // Py_XDECREF(locals);
 }
-
-
