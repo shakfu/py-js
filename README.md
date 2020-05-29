@@ -20,7 +20,7 @@ core     | eval            | expression    | out    | no         | [x]
 core     | exec            | statement     | in     | yes        | [x]
 core     | execfile        | file          | in     | yes        | [x]
 extra    | assign          | var, data     | in     | yes        | [x]
-extra    | call (anything) | var(s), data  | out    | no         | [ ]
+extra    | call (anything) | var(s), data  | out    | no         | [x]
 editor   | read            | file          | n/a    | no         | [x]
 editor   | load            | file          | yes    | no         | [x]
 
