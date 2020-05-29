@@ -1,15 +1,11 @@
-
-void py_import(t_py* x, t_symbol* s)
+void handle_py_error(void)
 {
-    if (s != gensym("")) {
-        int err = _py_import(s->s_name, x->p_globals);
-        if (err == -1) {
-            error("import error occurred");
-        }
+    if (PyErr_Occurred()) {
+        PyErr_Print();
     }
 }
 
-int _py_import(char* name, PyObject* globals_dict)
+int py_import(char* name, PyObject* globals_dict)
 {
     PyObject* x_module = NULL;
 
@@ -19,49 +15,21 @@ int _py_import(char* name, PyObject* globals_dict)
             goto error;
         }
         PyDict_SetItemString(globals_dict, name, x_module);
-        if (x->p_debug)
-            post("imported: %s", name);
-        // post("imported: %s", name);
         return 0;
     }
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('import %s'): %s", name, pStrErrorMessage);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error();
     return -1;
 }
 
-
-void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    char* stmt = NULL;
-    stmt = atom_getsym(argv)->s_name;
-
-    if (stmt != NULL) {
-        int err = _py_exec(stmt, x->p_globals);
-        if (err == -1) {
-            error("exec error occurred");
-        }
-    }
-}
-
-int _py_exec(char* statement, PyObject* globals_dict)
+int py_exec(char* statement, PyObject* globals_dict)
 {
     PyObject* pval = NULL;
 
     if (statement == NULL) {
-        error("no statement to execute");
         goto error;
     }
-    if (x->p_debug)
-        post("START exec: %s", statement);
 
     pval = PyRun_String(statement, Py_single_input, globals_dict,
                         globals_dict);
@@ -69,53 +37,26 @@ int _py_exec(char* statement, PyObject* globals_dict)
         goto error;
     }
 
-    // success cleanup
     Py_DECREF(pval);
-    if (x->p_debug)
-        post("END exec: %s", statement);
     return 0;
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('exec %s'): %s", statement, pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error();
+    Py_XDECREF(pval);
     return -1;
 }
 
-
-
-void py_execfile(t_py* x, t_symbol* s)
-{
-    if (s != gensym("")) {
-        int err = _py_execfile(s->s_name, x->p_globals);
-        if (err == -1) {
-            error("execfile error occurred");
-        }
-    }
-}
-
-int _py_execfile(char* fpath, PyObject* globals_dict)
+int py_execfile(char* fpath, PyObject* globals_dict)
 {
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
 
     if (fpath == NULL) {
-        error("No filepath given.");
         goto error;
     }
-    if (x->p_debug)
-        post("START execfile: %s", fpath);
 
     fhandle = fopen(fpath, "r");
     if (fhandle == NULL) {
-        error("could not open file '%s'", fpath);
         goto error;
     }
 
@@ -128,38 +69,23 @@ int _py_execfile(char* fpath, PyObject* globals_dict)
     // success cleanup
     fclose(fhandle);
     Py_DECREF(pval);
-    if (x->p_debug)
-        post("END execfile: %s", fpath);
     return 0;
 
 error:
-    if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        const char* pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-        error("PyException('execfile %s'): %s", fpath, pStrErrorMessage);
-        Py_XDECREF(pval);
-        Py_XDECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-    }
+    handle_py_error();
+    Py_XDECREF(pval);
     return -1;
 }
 
-
-
-// void py_run(t_py *x, t_symbol *s, long argc, t_atom *argv)
-int py_run(char *fpath)
+int py_run(char* fpath)
 {
-    PyObject *pval = NULL;
-    FILE* fhandle  = NULL;
+    PyObject* pval = NULL;
+    FILE* fhandle = NULL;
     int ret = -0;
 
     if (fpath == NULL) {
-        error("No filepath given.");
         goto error;
     }
-    post("START run: %s", fpath);
 
     pval = Py_BuildValue("s", fpath); // new reference
     if (pval == NULL) {
@@ -168,127 +94,127 @@ int py_run(char *fpath)
 
     fhandle = _Py_fopen_obj(pval, "r+");
     if (fhandle == NULL) {
-        error("could not open file '%s'", py_argv);
         goto error;
     }
 
     ret = PyRun_SimpleFile(fhandle, py_argv);
-    if (ret == -1){
+    if (ret == -1) {
         goto error;
     }
 
     // success
     fclose(fhandle);
     Py_DECREF(pval);
-    post("END run: %s", fpath);
     return 0;
 
-    error:
-        if(PyErr_Occurred()) {
-            PyObject *ptype, *pvalue, *ptraceback;
-            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-            error("PyException('run %s'): %s", fpath, pStrErrorMessage);
-            Py_XDECREF(pval);   
-            Py_XDECREF(ptype);
-            Py_XDECREF(pvalue);
-            Py_XDECREF(ptraceback);
-        }
-        return -1;
+error:
+    handle_py_error();
+    Py_XDECREF(pval);
+    return -1;
 }
 
-
-
-PyObject *py_eval_obj(char *expression, PyObject *globals_dict)
+PyObject* py_eval_obj(char* expression, PyObject* globals_dict)
 {
-    post("eval: %s", expression);
-
-    PyObject *locals = PyDict_New();
-    PyObject *pval = PyRun_String(expression, Py_eval_input, globals_dict, locals);
-
+    PyObject* pval = PyRun_String(expression, Py_eval_input, globals_dict,
+                                  globals_dict);
     if (pval != NULL) {
         return pval;
-
-    else {
-        if (PyErr_Occurred()) {
-            PyObject *ptype, *pvalue, *ptraceback;
-            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-
-            //Get error message
-            const char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
-            error("PyException('eval %s'): %s", expression, pStrErrorMessage);
-            Py_XDECREF(ptype);
-            Py_XDECREF(pvalue);
-            Py_XDECREF(ptraceback);
-        }
+    } else {
+        handle_py_error();
         return NULL;
     }
 }
 
-long py_eval_long(char *expression, PyObject *globals_dict)
+long py_eval_long(char* expression, PyObject* globals_dict)
 {
-    PyObject *pval = py_eval_obj(expression, globals_dict);
-    if (pval != NULL) {
-        if (PyLong_Check(pval)) {
-            long result = PyLong_AsLong(pval);
-            return result;
-        }                
+
+    PyObject* pval = NULL;
+
+    pval = py_eval_obj(expression, globals_dict);
+
+    if (pval == NULL) {
+        goto error;
     }
-}
 
+    if (!PyLong_Check(pval)) {
+        goto error;
+    }
 
-int py_eval_int(char *expression, PyObject *globals_dict)
-{
-    int result = (int) py_eval_long(expression, globals_dict);
+    long result = PyLong_AsLong(pval);
+
+    Py_XDECREF(pval);
     return result;
+
+error:
+    handle_py_error();
+    Py_XDECREF(pval);
+    return NULL;
 }
 
-
-float py_eval_float(char *expression, PyObject *globals_dict)
+double py_eval_double(char* expression, PyObject* globals_dict)
 {
-    PyObject *pval = py_eval_obj(expression, globals_dict);
-    if (pval != NULL) {
-        if (PyFloat_Check(pval)) {
-            float result = (float) PyFloat_AsDouble(pval);
-            return result;
-        }
+
+    PyObject* pval = NULL;
+
+    pval = py_eval_obj(expression, globals_dict);
+
+    if (pval == NULL) {
+        goto error;
     }
-}
 
-double py_eval_double(char *expression, PyObject *globals_dict)
-{
-    PyObject *pval = py_eval_obj(expression, globals_dict);
-    if (pval != NULL) {
-        if (PyFloat_Check(pval)) {
-            double result = PyFloat_AsDouble(pval);
-            return result;
-        }
+    if (!PyFloat_Check(pval)) {
+        goto error;
     }
+
+    double result = PyFloat_AsDouble(pval);
+
+    Py_XDECREF(pval);
+    return result;
+
+error:
+    handle_py_error();
+    Py_XDECREF(pval);
+    return NULL;
 }
 
-char *py_eval_unicode(char *expression, PyObject *globals_dict)
+char* py_eval_unicode(char* expression, PyObject* globals_dict)
 {
-    PyObject *pval = py_eval_obj(expression, globals_dict);
-    if (pval != NULL) {
-        if (PyUnicode_Check(pval)) {
-            const char *result = PyUnicode_AsUTF8(pval);
-            return result;
-        }
+
+    PyObject* pval = NULL;
+
+    pval = py_eval_obj(expression, globals_dict);
+
+    if (pval == NULL) {
+        goto error;
     }
+
+    if (!PyUnicode_Check(pval)) {
+        goto error;
+    }
+
+    const char* result = PyUnicode_AsUTF8(pval);
+
+    Py_XDECREF(pval);
+    return result;
+
+error:
+    handle_py_error();
+    Py_XDECREF(pval);
+    return NULL;
 }
 
-long *py_eval_long_seq(char *expression, PyObject *globals_dict)
+long* py_eval_long_seq(char* expression, PyObject* globals_dict)
 {
-    long *result = NULL;
-    PyObject *iter = NULL;
-    PyObject *item = NULL;
+    long* result = NULL;
+    PyObject* iter = NULL;
+    PyObject* item = NULL;
     int i = 0;
 
-    PyObject *pval = py_eval_obj(expression, globals_dict);
+    PyObject* pval = py_eval_obj(expression, globals_dict);
     if (pval != NULL) {
         if (PySequence_Check(pval)) {
             Py_ssize_t length = PySequence_Length(pval);
-            result = (long*) malloc(length * sizeof(long));
+            result = (long*)malloc(length * sizeof(long));
             if ((iter = PyObject_GetIter(pval)) != NULL) {
                 while ((item = PyIter_Next(iter)) != NULL) {
                     if (PyLong_Check(item)) {
@@ -304,23 +230,22 @@ long *py_eval_long_seq(char *expression, PyObject *globals_dict)
     return result;
 }
 
-
-float *py_eval_float_seq(char *expression, PyObject *globals_dict)
+float* py_eval_float_seq(char* expression, PyObject* globals_dict)
 {
-    float *result = NULL;
-    PyObject *iter = NULL;
-    PyObject *item = NULL;
+    float* result = NULL;
+    PyObject* iter = NULL;
+    PyObject* item = NULL;
     int i = 0;
 
-    PyObject *pval = py_eval_obj(expression, globals_dict);
+    PyObject* pval = py_eval_obj(expression, globals_dict);
     if (pval != NULL) {
         if (PySequence_Check(pval)) {
             Py_ssize_t length = PySequence_Length(pval);
-            result = (float*) malloc(length * sizeof(float));
+            result = (float*)malloc(length * sizeof(float));
             if ((iter = PyObject_GetIter(pval)) != NULL) {
                 while ((item = PyIter_Next(iter)) != NULL) {
                     if (PyFloat_Check(item)) {
-                        result[i] = (float) PyFloat_AsDouble(item);
+                        result[i] = (float)PyFloat_AsDouble(item);
                         i++;
                     }
                     Py_DECREF(item);
@@ -331,6 +256,3 @@ float *py_eval_float_seq(char *expression, PyObject *globals_dict)
     Py_XDECREF(pval);
     return result;
 }
-
-
-

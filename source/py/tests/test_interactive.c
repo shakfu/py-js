@@ -43,20 +43,20 @@ int main(int argc, char* argv[])
             if (NULL == code) /* out of memory */
                 exit(1);
 
-            if (0 == j) /* code was empty, so */
+            if (0 == j)         /* code was empty, so */
                 code[0] = '\0'; /* keep strncat happy */
 
             strncat(code, line, i); /* append line to code */
-            code[i + j] = '\n'; /* append '\n' to code */
+            code[i + j] = '\n';     /* append '\n' to code */
             code[i + j + 1] = '\0';
 
             src = Py_CompileString(code, "<stdin>", Py_single_input);
 
             if (NULL != src) /* compiled just fine - */
             {
-                if (ps1 == prompt || /* ">>> " or */
+                if (ps1 == prompt ||         /* ">>> " or */
                     '\n' == code[i + j - 1]) /* "... " and double '\n' */
-                { /* so execute it */
+                {                            /* so execute it */
                     dum = PyEval_EvalCode(src, glb, loc);
                     Py_XDECREF(dum);
                     Py_XDECREF(src);
@@ -70,8 +70,9 @@ int main(int argc, char* argv[])
             else if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
                 PyErr_Fetch(&exc, &val, &trb); /* clears exception! */
 
-                if (PyArg_ParseTuple(val, "sO", &msg, &obj) &&
-                   !strcmp(msg, "unexpected EOF while parsing")) /* E_EOF */
+                if (PyArg_ParseTuple(val, "sO", &msg, &obj)
+                    && !strcmp(msg,
+                               "unexpected EOF while parsing")) /* E_EOF */
                 {
                     Py_XDECREF(exc);
                     Py_XDECREF(val);
