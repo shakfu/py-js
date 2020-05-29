@@ -23,6 +23,13 @@ def random(int n):
     return np.random.rand(n)
 
 
+def echo(*args, **kwargs):
+    return args
+
+def total(*args, **kwargs):
+    return sum(args)
+
+
 def post(str s):
      mx.post(s.encode('utf-8'))
 
