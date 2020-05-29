@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 764.0, 583.0 ],
+						"rect" : [ 112.0, 204.0, 764.0, 583.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 1,
 						"default_fontsize" : 12.0,
@@ -87,6 +87,18 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-9",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "bang" ],
+									"patching_rect" : [ 89.5, 22.0, 58.0, 22.0 ],
+									"text" : "loadbang"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-10",
 									"maxclass" : "button",
@@ -153,7 +165,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 237.833333333333428, 303.0, 181.0, 22.0 ]
+									"patching_rect" : [ 237.833333333333428, 303.0, 181.0, 22.0 ],
+									"text" : "eval 1+1"
 								}
 
 							}
@@ -244,8 +257,17 @@
 , 							{
 								"box" : 								{
 									"align" : 1,
+									"arrow" : 0,
+									"bgcolor" : [ 0.07843137254902, 0.07843137254902, 0.07843137254902, 1.0 ],
+									"bgfillcolor_angle" : 0.0,
+									"bgfillcolor_autogradient" : 0.0,
+									"bgfillcolor_color" : [ 0.07843137254902, 0.07843137254902, 0.07843137254902, 1.0 ],
+									"bgfillcolor_color1" : [ 0.117647058823529, 0.117647058823529, 0.117647058823529, 1.0 ],
+									"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
+									"bgfillcolor_proportion" : 0.0,
+									"bgfillcolor_type" : "color",
 									"id" : "obj-33",
-									"items" : [ "disabled", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "read" ],
+									"items" : [ ">>>", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "read" ],
 									"maxclass" : "umenu",
 									"numinlets" : 1,
 									"numoutlets" : 3,
@@ -253,7 +275,7 @@
 									"parameter_enable" : 0,
 									"patching_rect" : [ 89.5, 88.0, 69.0, 22.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 138.0, 172.0, 73.0, 22.0 ],
+									"presentation_rect" : [ 164.0, 172.0, 55.0, 22.0 ],
 									"textjustification" : 1
 								}
 
@@ -298,6 +320,8 @@
 								"box" : 								{
 									"autoscroll" : 0,
 									"bangmode" : 1,
+									"bgcolor" : [ 0.07843137254902, 0.07843137254902, 0.07843137254902, 1.0 ],
+									"bordercolor" : [ 0.137254901960784, 0.137254901960784, 0.137254901960784, 1.0 ],
 									"id" : "obj-24",
 									"keymode" : 1,
 									"lines" : 1,
@@ -309,6 +333,7 @@
 									"patching_rect" : [ 211.333333333333485, 88.0, 222.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 218.0, 172.0, 222.0, 22.0 ],
+									"rounded" : 0.0,
 									"tabmode" : 0
 								}
 
@@ -578,6 +603,13 @@
 								}
 
 							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-33", 0 ],
+									"source" : [ "obj-9", 0 ]
+								}
+
+							}
  ]
 					}
 ,
@@ -610,7 +642,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 112.0, 204.0, 764.0, 583.0 ],
+						"rect" : [ 0.0, 26.0, 764.0, 583.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -826,8 +858,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 319.0, 193.0, 22.0 ],
-									"text" : "load /Users/sa/Downloads/hello.py"
+									"patching_rect" : [ 507.0, 319.0, 76.0, 22.0 ],
+									"text" : "load hello.py"
 								}
 
 							}
@@ -886,8 +918,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 287.0, 218.0, 22.0 ],
-									"text" : "execfile /Users/sa/Downloads/hello.py"
+									"patching_rect" : [ 507.0, 287.0, 94.0, 22.0 ],
+									"text" : "execfile hello.py"
 								}
 
 							}
@@ -1042,7 +1074,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "2"
+									"text" : "0 1"
 								}
 
 							}

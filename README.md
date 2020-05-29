@@ -155,6 +155,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## TODO
 
+- [ ] Add file location feature (try pkg/examples/scripts then absolute paths)
 - [ ] Refactor 'py_eval' to make it more consistent with the others
 - [ ] Refactor conversion logic from object methods
 - [ ] Add bpatcher line repl

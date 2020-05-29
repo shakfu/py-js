@@ -162,7 +162,11 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
     if (x) {
         // core
-        x->p_name = symbol_unique();
+        if (py_global_obj_count == 0) {
+            x->p_name = gensym("__main__"); // first is __main__
+        } else {
+            x->p_name = symbol_unique();
+        }
 
         // communication
         x->p_patcher = NULL;
@@ -219,7 +223,7 @@ void py_init(t_py* x)
 {
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
-        error("Error: could not extend in-built modules table\n");
+        py_error(x, "could not add 'api' to builtin modules table");
     }
 
     Py_Initialize();

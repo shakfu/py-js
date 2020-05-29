@@ -1,5 +1,20 @@
 # Python C API
 
+## Methods to use
+
+
+```c
+
+
+
+
+```
+
+## What stdlib includes are included in `<Python.h>`
+
+```
+<stdio.h>, <string.h>, <errno.h>, <limits.h>, <assert.h> and <stdlib.h>
+```
 
 ## How do I call an object’s method from C?
 

@@ -17,8 +17,6 @@ cpdef public str hello():
     return greeting
 
 
-# there's a namespace collision with c's 'random' function
-# included from "py.h". Hence the rename to py_random
 def random(int n):
     return np.random.rand(n)
 
@@ -44,7 +42,8 @@ cdef class PyExternal:
     cdef px.t_py *obj
 
     def __cinit__(self, bytes name):
-        self.obj = <px.t_py *>mx.object_findregistered(mx.CLASS_BOX, mx.gensym(name))
+        self.obj = <px.t_py *>mx.object_findregistered(
+            mx.CLASS_BOX, mx.gensym(name))
 
     cpdef bang(self):
         px.py_bang(self.obj)
