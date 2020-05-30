@@ -84,7 +84,7 @@ void py_run(t_py* x, char* args)
 {
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
-    int ret = -0;
+    int ret = 0;
 
     if (args == NULL) {
         printf("%s: could not retrieve args\n", args);
@@ -146,6 +146,7 @@ void py_execfile(t_py* x, char* args)
     pval = PyRun_File(fhandle, args, Py_file_input, x->p_globals,
                       x->p_globals);
     if (pval == NULL) {
+        fclose(fhandle);
         goto error;
     }
 
@@ -281,6 +282,7 @@ void py_eval(t_py* x, char* args)
     Py_XDECREF(pval);
     // Py_XDECREF(locals);
     printf("END eval: %s\n", args);
+    return;
 
 error:
     if (PyErr_Occurred()) {

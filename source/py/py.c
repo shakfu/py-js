@@ -762,7 +762,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
             double c_float = atom_getfloat(argv + i);
             PyObject* p_float = PyFloat_FromDouble(c_float);
             if (p_float == NULL) {
-                error("p_float == NULL");
+                py_error(x, "p_float == NULL");
                 goto error;
             }
             PyList_Append(py_argslist, p_float);
@@ -849,8 +849,9 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
         Py_ssize_t seq_size = PySequence_Length(pval);
         if (seq_size <= 0) {
-            error("cannot convert python sequence with zero or less length to "
-                  "atoms");
+            py_error(x,
+                     "cannot convert python sequence with zero or less length "
+                     "to atoms");
             goto error;
         }
 
@@ -859,7 +860,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         }
 
         if (seq_size > PY_MAX_ATOMS) {
-            post("dynamically increasing size of atom array");
+            py_log(x, "dynamically increasing size of atom array");
             atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
                                        seq_size + 1);
             is_dynamic = 1;
@@ -872,30 +873,30 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
                 atom_setlong(atoms + i, long_item);
-                post("%d long: %ld\n", i, long_item);
+                py_log(x, "%d long: %ld\n", i, long_item);
                 i++;
             }
 
             if PyFloat_Check (item) {
                 float float_item = PyFloat_AsDouble(item);
                 atom_setfloat(atoms + i, float_item);
-                post("%d float: %f\n", i, float_item);
+                py_log(x, "%d float: %f\n", i, float_item);
                 i++;
             }
 
             if PyUnicode_Check (item) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
-                post("%d unicode: %s\n", i, unicode_item);
+                py_log(x, "%d unicode: %s\n", i, unicode_item);
                 atom_setsym(atoms + i, gensym(unicode_item));
                 i++;
             }
             Py_DECREF(item);
         }
         outlet_list(x->p_outlet1, NULL, i, atoms);
-        post("end iter op: %d", i);
+        py_log(x, "end iter op: %d", i);
 
         if (is_dynamic) {
-            post("restoring to static atom array");
+            py_log(x, "restoring to static atom array");
             atom_dynamic_end(atoms_static, atoms);
         }
     }
@@ -904,7 +905,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
-    post("END %s: %s", s->s_name, py_argv);
+    py_log(x, "END %s: %s", s->s_name, py_argv);
     return;
 
 error:
