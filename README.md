@@ -155,7 +155,13 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## TODO
 
+- [ ] enhance `py_anything` method to eval if identifier exists in ns and is not callable
 - [ ] Add file location feature (try pkg/examples/scripts then absolute paths)
+```c
+PyObject *sysPath = PySys_GetObject((char*)"path");
+PyList_Append(sysPath, PyString_FromString("."));
+
+```
 - [ ] Refactor 'py_eval' to make it more consistent with the others
 - [ ] Refactor conversion logic from object methods
 - [ ] Add bpatcher line repl

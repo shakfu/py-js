@@ -1,6 +1,7 @@
 # dirs to exclude
 header.h
 build/
+infer-out
 example.c
 .DS_Store
 
