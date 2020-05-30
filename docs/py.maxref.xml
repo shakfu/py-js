@@ -104,7 +104,17 @@
 			</arglist>
 			<digest>Creates a new variable in the python namespace with a list of the data</digest>
 			<description>
-				User for sending max data into the <o>py</o> instance's namespace, so it can be used by python code. 
+				Used for sending max data into the <o>py</o> instance's namespace, so it can be used by python code. 
+			</description>
+		</method>
+		<method name="anything">
+			<arglist>
+				<arg name="identifier" optional="0" type="symbol" />
+				<arg name="args" optional="0" type="atom" />
+			</arglist>
+			<digest>Tries to call or evaluate identifier based on simple rules</digest>
+			<description>
+				Checks whether idetifier exists in py namespace, if is a callable, and then calls the corresponding callable with the args and outputs the result.
 			</description>
 		</method>
 		<method name="read">

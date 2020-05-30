@@ -168,9 +168,10 @@ The style used in this project is specified in the `.clang-format` file.
       in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
-- [ ] Convert py into a js extension class
-- [ ] try to build a cython extension types as a max external class
 
+- [ ] try to build a cython extension types as a max external class
+- [x] Convert py into a js extension class
+      - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
 
 ### Done
 

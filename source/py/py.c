@@ -90,6 +90,11 @@ void ext_main(void* r)
     // clang-format on
 
     class_register(CLASS_BOX, c);
+
+    /* for js registration (can't be both box and nobox) */
+    // c->c_flags = CLASS_FLAG_POLYGLOT;
+    // class_register(CLASS_NOBOX, c);
+
     py_class = c;
 
     // post("py class loaded...", 0);

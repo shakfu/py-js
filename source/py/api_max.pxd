@@ -65,9 +65,9 @@
 - [ ] indexmap.h
 - [ ] jdataview.h
 - [p] jgraphics.h
-- [ ] jpatcher_api.h
-- [ ] jpatcher_syms.h
-- [ ] jpatcher_utils.h
+- [x] jpatcher_api.h
+- [-] jpatcher_syms.h
+- [x] jpatcher_utils.h
 - [x] max_types.h
 """
 
@@ -1920,4 +1920,965 @@ cdef extern from "ext_wind.h":
     cdef short wind_advise(t_object *w, char *s, ...)
     cdef short wind_advise_explain(t_object *w, char *note, char *explanation, char *b1, char *b2, char *b3)
     cdef void wind_setcursor(short which)
+
+
+
+
+cdef extern from "jpatcher_api.h":
+
+    cdef int JPATCHER_API_CURRENT_FILE_VERSION
+
+    ctypedef enum t_clipboard_datatype:
+        JCLIPBOARD_TYPE_TEXT = 1
+        JCLIPBOARD_TYPE_BINBUF = 2
+        JCLIPBOARD_TYPE_JSON = 4
+        JCLIPBOARD_TYPE_IMAGE = 8
+        JCLIPBOARD_TYPE_JSON_ATTRIBUTES = 16
+        JCLIPBOARD_TYPE_UNKNOWN = 256
+
+    cdef t_symbol *fontmap_getmapping(t_symbol *from_, char *mapped)
+    cdef double fontinfo_getsize(short oldsize)     
+    cdef t_symbol *fontinfo_getname(short number)
+    cdef short fontinfo_getnumber(t_symbol *s)
+    ctypedef struct t_rect
+    ctypedef struct t_pt
+    ctypedef struct t_size
+    ctypedef struct t_jrgb
+    ctypedef struct t_jrgba
+    ctypedef struct t_jboxdrawparams
+
+    cdef int JBOX_SPOOL_CONTENTS
+    cdef int JBOX_SPOOL_WHOLEBOX
+    #// cdef int JBOX_RELINE_DEFER
+    cdef int JBOX_FLAG_READ
+    cdef int JBOX_FLAG_FIRST_PAINT
+
+    ctypedef struct t_jbox
+    ctypedef struct t_pvselinfo
+
+    cdef t_max_err object_attr_get_rect(t_object *o, t_symbol *name, t_rect *rect)
+    cdef t_max_err object_attr_set_rect(t_object *o, t_symbol *name, t_rect *rect)
+    cdef void object_attr_set_xywh(t_object *o, t_symbol *attr, double x, double y, double w, double h)
+    cdef t_max_err object_attr_getpt(t_object *o, t_symbol *name, t_pt *pt)
+    cdef t_max_err object_attr_setpt(t_object *o, t_symbol *name, t_pt *pt) 
+    cdef t_max_err object_attr_getsize(t_object *o, t_symbol *name, t_size *size)
+    cdef t_max_err object_attr_setsize(t_object *o, t_symbol *name, t_size *size) 
+    cdef t_max_err object_attr_getcolor(t_object *b, t_symbol *attrname, t_jrgba *prgba)
+    cdef t_max_err object_attr_setcolor(t_object *b, t_symbol *attrname, t_jrgba *prgba)
+    cdef t_max_err jrgba_attr_get(t_jrgba *jrgba, long *argc, t_atom **argv)
+    cdef t_max_err jrgba_attr_set(t_jrgba *jrgba, long argc, t_atom *argv)
+    cdef void set_jrgba_from_palette_index(short index, t_jrgba *jrgba) 
+    cdef void set_jrgba_from_boxcolor_index(short index, t_jrgba *jrgba) 
+    cdef short get_boxcolor_index_from_jrgba(t_jrgba *jrgba) 
+    cdef void jgraphics_clip_rgba(t_jrgba *rgba) 
+    cdef void object_openhelp(t_object *x)
+    cdef void object_openrefpage(t_object *x)
+    cdef void object_openquery(t_object *x)
+    cdef void classname_openhelp(char *classname)
+    cdef void classname_openrefpage(char *classname)
+    cdef void classname_openquery(char *classname) 
+    cdef t_object* patcherview_findpatcherview(int x, int y)
+    cdef void patcherview_makepalette()
+    cdef int jpatcher_is_patcher(t_object *p)
+    cdef t_object* jpatcher_get_box(t_object *p)
+    cdef long jpatcher_get_count(t_object *p)
+    cdef char jpatcher_get_locked(t_object *p) 
+    cdef t_max_err jpatcher_set_locked(t_object *p, char c)
+    cdef char jpatcher_get_presentation(t_object *p)
+    cdef t_max_err jpatcher_set_presentation(t_object *p, char c)
+    cdef t_object* jpatcher_get_firstobject(t_object *p)
+    cdef t_object* jpatcher_get_lastobject(t_object *p)
+    cdef t_object* jpatcher_get_firstline(t_object *p)
+    cdef t_object* jpatcher_get_firstview(t_object *p)
+    cdef t_symbol* jpatcher_get_title(t_object *p)
+    cdef t_max_err jpatcher_set_title(t_object *p, t_symbol *ps)
+    cdef t_symbol* jpatcher_get_name(t_object *p)
+    cdef t_symbol* jpatcher_get_filepath(t_object *p)
+    cdef t_symbol* jpatcher_get_filename(t_object *p)
+    cdef char jpatcher_get_dirty(t_object *p)
+    cdef t_max_err jpatcher_set_dirty(t_object *p, char c)
+    cdef char jpatcher_get_bglocked(t_object *p)
+    cdef t_max_err jpatcher_set_bglocked(t_object *p, char c)
+    cdef char jpatcher_get_bghidden(t_object *p)
+    cdef t_max_err jpatcher_set_bghidden(t_object *p, char c)
+    cdef char jpatcher_get_fghidden(t_object *p)
+    cdef t_max_err jpatcher_set_fghidden(t_object *p, char c)
+    cdef t_max_err jpatcher_get_editing_bgcolor(t_object *p, t_jrgba *prgba)
+    cdef t_max_err jpatcher_set_editing_bgcolor(t_object *p, t_jrgba *prgba)
+    cdef t_max_err jpatcher_get_bgcolor(t_object *p, t_jrgba *prgba)
+    cdef t_max_err jpatcher_get_locked_bgcolor(t_object *p, t_jrgba *prgba)
+    cdef t_max_err jpatcher_set_bgcolor(t_object *p, t_jrgba *prgba)
+    cdef t_max_err jpatcher_set_locked_bgcolor(t_object *p, t_jrgba *prgba)
+    cdef t_max_err jpatcher_get_gridsize(t_object *p, double *gridsizeX, double *gridsizeY)
+    cdef t_max_err jpatcher_set_gridsize(t_object *p, double gridsizeX, double gridsizeY)
+    cdef t_object* jpatcher_get_controller(t_object *p)
+    cdef void jpatcher_deleteobj(t_object *p, t_jbox *b)
+    cdef t_object* jpatcher_get_parentpatcher(t_object *p)
+    cdef t_object* jpatcher_get_toppatcher(t_object *p)
+    cdef t_object* jpatcher_get_hubholder(t_object *p)
+    cdef t_symbol* jpatcher_get_maxclass(t_object *p)
+    cdef t_symbol* jpatcher_get_parentclass(t_object *p) 
+    cdef t_max_err jpatcher_get_rect(t_object *p, t_rect *pr)
+    cdef t_max_err jpatcher_set_rect(t_object *p, t_rect *pr)
+    cdef t_max_err jpatcher_get_defrect(t_object *p, t_rect *pr)
+    cdef t_max_err jpatcher_set_defrect(t_object *p, t_rect *pr)
+    cdef char jpatcher_get_noedit(t_object *p) 
+    cdef t_object *jpatcher_get_collective(t_object *p) 
+    cdef char jpatcher_get_cansave(t_object *p) 
+    cdef t_symbol *jpatcher_uniqueboxname(t_object *p, t_symbol *classname)
+    cdef short jpatcher_getboxfont(t_object *p, short fnum, double *fsize, t_symbol **fontname)
+    cdef t_symbol *jpatcher_get_default_fontname(t_object *p)
+    cdef float jpatcher_get_default_fontsize(t_object *p)
+    cdef long jpatcher_get_default_fontface(t_object *p)
+    cdef t_max_err jpatcher_set_imprint(t_object *p, char c)
+    cdef char jpatcher_get_imprint(t_object *p)
+    cdef void jpatcher_addboxlistener(t_object *p, t_object *listener)
+    cdef void jpatcher_removeboxlistener(t_object *p, t_object *listener)
+    cdef long jpatcher_get_fileversion(t_object *p)
+    cdef long jpatcher_get_currentfileversion()
+    cdef t_max_err jbox_get_rect_for_view(t_object *box, t_object *patcherview, t_rect *rect)
+    cdef t_max_err jbox_set_rect_for_view(t_object *box, t_object *patcherview, t_rect *rect)
+    cdef t_max_err jbox_get_rect_for_sym(t_object *box, t_symbol *which, t_rect *pr)
+    cdef t_max_err jbox_set_rect_for_sym(t_object *box, t_symbol *which, t_rect *pr)
+    cdef t_max_err jbox_set_rect(t_object *box, t_rect *pr)
+    cdef t_max_err jbox_get_patching_rect(t_object *box, t_rect *pr)         
+    cdef t_max_err jbox_set_patching_rect(t_object *box, t_rect *pr)         
+    cdef t_max_err jbox_get_presentation_rect(t_object *box, t_rect *pr) 
+    cdef t_max_err jbox_set_presentation_rect(t_object *box, t_rect *pr) 
+    cdef t_max_err jbox_set_position(t_object *box, t_pt *pos)
+    cdef t_max_err jbox_get_patching_position(t_object *box, t_pt *pos)  
+    cdef t_max_err jbox_set_patching_position(t_object *box, t_pt *pos)      
+    cdef t_max_err jbox_get_presentation_position(t_object *box, t_pt *pos) 
+    cdef t_max_err jbox_set_presentation_position(t_object *box, t_pt *pos) 
+    cdef t_max_err jbox_set_size(t_object *box, t_size *size)
+    cdef t_max_err jbox_get_patching_size(t_object *box, t_size *size)  
+    cdef t_max_err jbox_set_patching_size(t_object *box, t_size *size)       
+    cdef t_max_err jbox_get_presentation_size(t_object *box, t_size *size) 
+    cdef t_max_err jbox_set_presentation_size(t_object *box, t_size *size) 
+    cdef t_symbol* jbox_get_maxclass(t_object *b)
+    cdef t_object* jbox_get_object(t_object *b)
+    cdef t_object* jbox_get_patcher(t_object *b) 
+    cdef char jbox_get_hidden(t_object *b)
+    cdef t_max_err jbox_set_hidden(t_object *b, char c)
+    cdef t_symbol* jbox_get_fontname(t_object *b)
+    cdef t_max_err jbox_set_fontname(t_object *b, t_symbol *ps) 
+    cdef double jbox_get_fontsize(t_object *b)
+    cdef t_max_err jbox_set_fontsize(t_object *b, double d) 
+    cdef t_max_err jbox_get_color(t_object *b, t_jrgba *prgba)
+    cdef t_max_err jbox_set_color(t_object *b, t_jrgba *prgba) 
+    cdef t_symbol *jbox_get_hint(t_object *b) 
+    cdef t_max_err jbox_set_hint(t_object *b, t_symbol *s) 
+    cdef char *jbox_get_hintstring(t_object *bb)
+    cdef void jbox_set_hintstring(t_object *bb, char *s)
+    cdef char jbox_get_hinttrack(t_object *b) 
+    cdef t_max_err jbox_set_hinttrack(t_object *b, char h) 
+    cdef char *jbox_get_annotation(t_object *bb)
+    cdef void jbox_set_annotation(t_object *bb, char *s)
+    cdef t_object* jbox_get_nextobject(t_object *b)
+    cdef t_object* jbox_get_prevobject(t_object *b)
+    cdef t_symbol* jbox_get_varname(t_object *b)
+    cdef t_max_err jbox_set_varname(t_object *b, t_symbol *ps)
+    cdef t_symbol* jbox_get_id(t_object *b)
+    cdef char jbox_get_canhilite(t_object *b)
+    cdef char jbox_get_background(t_object *b)
+    cdef t_max_err jbox_set_background(t_object *b, char c)
+    cdef char jbox_get_ignoreclick(t_object *b)
+    cdef t_max_err jbox_set_ignoreclick(t_object *b, char c)
+    cdef char jbox_get_drawfirstin(t_object *b)
+    cdef char jbox_get_outline(t_object *b)
+    cdef t_max_err jbox_set_outline(t_object *b, char c)
+    cdef char jbox_get_growy(t_object *b)
+    cdef char jbox_get_growboth(t_object *b)
+    cdef char jbox_get_nogrow(t_object *b)
+    cdef char jbox_get_drawinlast(t_object *b)
+    cdef char jbox_get_mousedragdelta(t_object *b)
+    cdef t_max_err jbox_set_mousedragdelta(t_object *b, char c)
+    cdef t_object* jbox_get_textfield(t_object *b)
+    cdef long jbox_get_understanding(t_object *b, t_symbol *msg)
+    cdef char jbox_get_presentation(t_object *b)
+    cdef t_max_err jbox_set_presentation(t_object *b, char c)
+    cdef t_object *jbox_get_autocompletion(t_object *b)
+    cdef t_symbol *jbox_get_prototypename(t_object *b)
+    cdef void jbox_set_prototypename(t_object *b, t_symbol *name)
+    cdef t_atom_long jclipboard_datatypes()
+    cdef void jbox_validaterects(t_jbox *b)
+
+    ctypedef enum t_patchline_updatetype:
+        JPATCHLINE_DISCONNECT = 0
+        JPATCHLINE_CONNECT = 1
+        JPATCHLINE_ORDER = 2
+
+        
+    cdef t_max_err jpatchline_get_startpoint(t_object *l, double *x, double *y)
+    cdef t_max_err jpatchline_get_endpoint(t_object *l, double *x, double *y)
+    cdef long jpatchline_get_nummidpoints(t_object *l) 
+    cdef char jpatchline_get_pending(t_object *l) 
+    cdef t_object* jpatchline_get_box1(t_object *l) 
+    cdef long jpatchline_get_outletnum(t_object *l)
+    cdef t_object* jpatchline_get_box2(t_object *l) 
+    cdef long jpatchline_get_inletnum(t_object *l)
+    cdef double jpatchline_get_straightthresh(t_object *l)
+    cdef t_max_err jpatchline_set_straightthresh(t_object *l, double d)
+    cdef char jpatchline_get_straightstart(t_object *l) 
+    cdef char jpatchline_get_straightend(t_object *l) 
+    cdef t_max_err jpatchline_set_straightstart(t_object *l, char c) 
+    cdef t_max_err jpatchline_set_straightend(t_object *l, char c)
+    cdef t_object* jpatchline_get_nextline(t_object *b)
+    cdef char jpatchline_get_hidden(t_object *l) 
+    cdef t_max_err jpatchline_set_hidden(t_object *l, char c) 
+    cdef t_max_err jpatchline_get_color(t_object *l, t_jrgba *prgba) 
+    cdef t_max_err jpatchline_set_color(t_object *l, t_jrgba *prgba)
+    cdef t_object *jpatchline_get_wiretap(t_object *l)
+    cdef long wiretap_get_id(t_object *w)
+    cdef long wiretap_get_flags(t_object *w)
+    cdef void wiretap_set_flags(t_object *w, long n)
+    cdef char patcherview_get_visible(t_object *pv) 
+    cdef t_max_err patcherview_set_visible(t_object *pv, char c) 
+    cdef t_max_err patcherview_get_rect(t_object *pv, t_rect *pr)
+    cdef t_max_err patcherview_set_rect(t_object *pv, t_rect *pr)
+    cdef void patcherview_canvas_to_screen(t_object *pv, double cx, double cy, long *sx, long *sy) 
+    cdef void patcherview_screen_to_canvas(t_object *pv, long sx, long sy, double *cx, double *cy)
+    cdef char patcherview_get_locked(t_object *p) 
+    cdef t_max_err patcherview_set_locked(t_object *p, char c) 
+    cdef char patcherview_get_presentation(t_object *pv)
+    cdef t_max_err patcherview_set_presentation(t_object *p, char c)
+    cdef double patcherview_get_zoomfactor(t_object *pv)
+    cdef t_max_err patcherview_set_zoomfactor(t_object *pv, double d) 
+    cdef t_object* patcherview_get_nextview(t_object *pv)
+    cdef t_object* patcherview_get_jgraphics(t_object *pv)
+    cdef t_max_err patcherview_set_jgraphics(t_object *pv, t_object *po)
+    cdef t_object* patcherview_get_patcher(t_object *pv) 
+    cdef t_object* patcherview_get_topview(t_object *pv)
+    cdef t_object* textfield_get_owner(t_object *tf)
+    cdef t_max_err textfield_get_textcolor(t_object *tf, t_jrgba *prgba) 
+    cdef t_max_err textfield_set_textcolor(t_object *tf, t_jrgba *prgba) 
+    cdef t_max_err textfield_get_bgcolor(t_object *tf, t_jrgba *prgba) 
+    cdef t_max_err textfield_set_bgcolor(t_object *tf, t_jrgba *prgba) 
+    cdef t_max_err textfield_get_textmargins(t_object *tf, double *pleft, double *ptop, double *pright, double *pbottom)
+    cdef t_max_err textfield_set_textmargins(t_object *tf, double left, double top, double right, double bottom) 
+    cdef char textfield_get_editonclick(t_object *tf)
+    cdef t_max_err textfield_set_editonclick(t_object *tf, char c) 
+    cdef char textfield_get_selectallonedit(t_object *tf)
+    cdef t_max_err textfield_set_selectallonedit(t_object *tf, char c) 
+    cdef char textfield_get_noactivate(t_object *tf)
+    cdef t_max_err textfield_set_noactivate(t_object *tf, char c) 
+    cdef char textfield_get_readonly(t_object *tf)
+    cdef t_max_err textfield_set_readonly(t_object *tf, char c) 
+    cdef char textfield_get_wordwrap(t_object *tf)
+    cdef t_max_err textfield_set_wordwrap(t_object *tf, char c) 
+    cdef char textfield_get_useellipsis(t_object *tf)
+    cdef t_max_err textfield_set_useellipsis(t_object *tf, char c) 
+    cdef char textfield_get_autoscroll(t_object *tf)
+    cdef t_max_err textfield_set_autoscroll(t_object *tf, char c) 
+    cdef char textfield_get_wantsreturn(t_object *tf)
+    cdef t_max_err textfield_set_wantsreturn(t_object *tf, char c) 
+    cdef char textfield_get_wantstab(t_object *tf)
+    cdef t_max_err textfield_set_wantstab(t_object *tf, char c) 
+    cdef char textfield_get_underline(t_object *tf)
+    cdef t_max_err textfield_set_underline(t_object *tf, char c)
+    cdef char textfield_get_justification(t_object *tf)
+    cdef t_max_err textfield_set_justification(t_object *tf, char c)
+    cdef char textfield_get_autofixwidth(t_object *tf)
+    cdef t_max_err textfield_set_autofixwidth(t_object *tf, char c) 
+    cdef t_max_err textfield_set_emptytext(t_object *tf, t_symbol *txt)
+    cdef t_symbol *textfield_get_emptytext(t_object *tf)
+
+
+    cdef int TEXTFIELD_DEF_LEFTMARGIN
+    cdef int TEXTFIELD_DEF_TOPMARGIN   
+    cdef int TEXTFIELD_DEF_RIGHTMARGIN  
+    cdef int TEXTFIELD_DEF_BOTTOMMARGIN 
+    cdef int JBOX_DRAWFIRSTIN                 
+    cdef int JBOX_NODRAWBOX                   
+    cdef int JBOX_DRAWINLAST                  
+    cdef int JBOX_TRANSPARENT                 
+    cdef int JBOX_NOGROW                      
+    cdef int JBOX_GROWY                       
+    cdef int JBOX_GROWBOTH                    
+    cdef int JBOX_IGNORELOCKCLICK             
+    cdef int JBOX_HILITE                      
+    cdef int JBOX_BACKGROUND                  
+    cdef int JBOX_NOFLOATINSPECTOR                
+    cdef int JBOX_TEXTFIELD                       
+    cdef int JBOX_FIXWIDTH                        
+    cdef int JBOX_FONTATTR                        
+    cdef int JBOX_TEXTJUSTIFICATIONATTR        
+    cdef int JBOX_BINBUF                          
+    cdef int JBOX_MOUSEDRAGDELTA                  
+    cdef int JBOX_COLOR                           
+    cdef int JBOX_DRAWIOLOCKED                    
+    cdef int JBOX_DRAWBACKGROUND                  
+    cdef int JBOX_NOINSPECTFIRSTIN                
+                                              
+    cdef int JBOX_FOCUS                       
+    cdef int JBOX_BOXVIEW                     
+    cdef int JBOX_LEGACYCOLOR                 
+    cdef int JBOX_COPYLEGACYDEFAULT           
+    cdef int JBOX_NOLEGACYDEFAULT      
+
+    ctypedef enum:
+        JBOX_FONTFACE_REGULAR = 0
+        JBOX_FONTFACE_BOLD = 1      
+        JBOX_FONTFACE_ITALIC = 2        
+        JBOX_FONTFACE_BOLDITALIC = 3    
+
+    ctypedef enum HitTestResult:
+        HitNothing = 0      
+        HitBox = 1          
+        HitInlet = 2        
+        HitOutlet = 3       
+        HitGrowBox = 4      
+        HitLine = 5     
+        HitLineLocked = 6   
+
+    ctypedef enum DecoratorPaintFlags:
+        BoxSelected = 1 << 0
+        DrawFirstIn = 1 << 1
+        NoGrow = 1 << 2
+        Outline = 1 << 3 
+        Locked = 1 << 4
+        InletHighlighted = 1 << 5           
+        OutletHighlighted = 1 << 6          
+
+    cdef void jbox_initclass(t_class *c, long flags)  
+    cdef t_max_err jbox_new(t_jbox *b, long flags, long argc, t_atom *argv)
+    cdef void jbox_free(t_jbox *b)
+    cdef void jbox_ready(t_jbox *b)
+    cdef void jbox_redraw(t_jbox *b)
+    cdef void jbox_redrawcontents(t_jbox *b) 
+    cdef void *jbox_getoutlet(t_jbox *x, long index)
+    cdef void *jbox_getinlet(t_jbox *x, long index)
+    cdef void jbox_updatetextfield(t_jbox *b)
+    cdef int LEGACYDEFAULTS_FLAGS_FORCE
+
+    cdef void jbox_processlegacydefaults(t_jbox *b, t_dictionary *d, long flags)
+    cdef t_max_err jbox_notify(t_jbox *b, t_symbol *s, t_symbol *msg, void *sender, void *data)
+    cdef t_max_err jbox_set_to_defaultsize(t_jbox *b, t_symbol *s, short argc, t_atom *argv)
+    cdef void jbox_grabfocus(t_jbox *b) 
+    cdef void jbox_redrawpeers(t_jbox *b)
+    cdef long jbox_getinletindex(t_jbox *b, void *inlet)
+    cdef long jbox_getoutletindex(t_jbox *b, void *outlet)
+    cdef void jbox_show_caption(t_jbox *b)
+    cdef void jbox_hide_caption(t_jbox *b)
+
+    cdef int DICT_JRGBA  
+
+    cdef t_max_err dictionary_appendjrgba(t_dictionary *d, t_symbol *key, t_jrgba *jc)
+    cdef t_max_err dictionary_getdefjrgba(t_dictionary *d, t_symbol *key, t_jrgba *jc, t_jrgba *def_)
+    cdef t_max_err dictionary_gettrect(t_dictionary *d, t_symbol *key, t_rect *rect)
+    cdef t_max_err dictionary_appendtrect(t_dictionary *d, t_symbol *key, t_rect *rect)
+    cdef t_max_err dictionary_gettpt(t_dictionary *d, t_symbol *key, t_pt *pt)
+    cdef t_max_err dictionary_appendtpt(t_dictionary *d, t_symbol *key, t_pt *pt)
+    cdef void atomstojrgba(long argc, t_atom *argv, t_jrgba *dest)
+    cdef void jrgbatoatoms(t_jrgba *src, t_atom *argv)
+    cdef t_max_err dictionary_read(char *filename, short path, t_dictionary **d)
+    cdef t_max_err dictionary_write(t_dictionary *d, char *filename, short path)
+    cdef t_max_err dictionary_read_yaml(const char *filename, const short path, t_dictionary **d)
+    cdef t_max_err dictionary_write_yaml(const t_dictionary *d, const char *filename, const short path)
+    #define newobject_fromdictionary_delete(p,d) newobject_fromdictionary(p,d), freeobject((t_object *)d)
+
+    ctypedef enum t_modifiers:
+        eCommandKey = 1     
+        eShiftKey = 2           
+        eControlKey = 4     
+        eAltKey = 8         
+        eLeftButton = 16        
+        eRightButton = 32       
+        eMiddleButton = 64      
+        ePopupMenu = 128        
+        eCapsLock = 256     
+        eAutoRepeat = 512       
+
+    cdef t_modifiers jkeyboard_getcurrentmodifiers() 
+    cdef t_modifiers jkeyboard_getcurrentmodifiers_realtime()
+
+    ctypedef enum t_keycode:
+        
+        
+        JKEY_NONE               = -1
+        JKEY_SPACEBAR           = -2
+        JKEY_ESC                = -3
+        JKEY_RETURN             = -4
+        JKEY_ENTER              = -4  
+        JKEY_TAB                = -5
+        JKEY_DELETE             = -6
+        JKEY_BACKSPACE          = -7
+        JKEY_INSERT             = -8
+        JKEY_UPARROW            = -9
+        JKEY_DOWNARROW          = -10
+        JKEY_LEFTARROW          = -11
+        JKEY_RIGHTARROW         = -12
+        JKEY_PAGEUP             = -13
+        JKEY_PAGEDOWN           = -14
+        JKEY_HOME               = -15
+        JKEY_END                = -16
+        JKEY_F1                 = -17
+        JKEY_F2                 = -18
+        JKEY_F3                 = -19
+        JKEY_F4                 = -20
+        JKEY_F5                 = -21
+        JKEY_F6                 = -22
+        JKEY_F7                 = -23
+        JKEY_F8                 = -24
+        JKEY_F9                 = -25
+        JKEY_F10                = -26
+        JKEY_F11                = -27
+        JKEY_F12                = -28
+        JKEY_F13                = -29
+        JKEY_F14                = -30
+        JKEY_F15                = -31
+        JKEY_F16                = -32
+        JKEY_NUMPAD0            = -33
+        JKEY_NUMPAD1            = -34
+        JKEY_NUMPAD2            = -35
+        JKEY_NUMPAD3            = -36
+        JKEY_NUMPAD4            = -37
+        JKEY_NUMPAD5            = -38
+        JKEY_NUMPAD6            = -39
+        JKEY_NUMPAD7            = -40
+        JKEY_NUMPAD8            = -41
+        JKEY_NUMPAD9            = -42
+        JKEY_NUMPADADD          = -43
+        JKEY_NUMPADSUBTRACT     = -44
+        JKEY_NUMPADMULTIPLY     = -45
+        JKEY_NUMPADDIVIDE       = -46
+        JKEY_NUMPADSEPARATOR    = -47
+        JKEY_NUMPADDECIMALPOINT = -48
+        JKEY_NUMPADEQUALS       = -49
+        JKEY_NUMPADDELETE       = -50
+        JKEY_PLAYPAUSE          = -51
+        JKEY_STOP               = -52
+        JKEY_NEXTTRACK          = -53
+        JKEY_PREVTRACK          = -54
+        JKEY_HELP               = -55
+
+    cdef void jmouse_getposition_global(int *x, int *y)
+    cdef void jmouse_setposition_global(int x, int y)
+    cdef void jmouse_setposition_view(t_object *patcherview, double cx, double cy)
+    cdef void jmouse_setposition_box(t_object *patcherview, t_object *box, double bx, double by)
+    cdef void *jmouse_getobject()
+
+    ctypedef enum t_jmouse_cursortype:
+        JMOUSE_CURSOR_NONE                      
+        JMOUSE_CURSOR_ARROW                         
+        JMOUSE_CURSOR_WAIT                      
+        JMOUSE_CURSOR_IBEAM                         
+        JMOUSE_CURSOR_CROSSHAIR                     
+        JMOUSE_CURSOR_COPYING                       
+        JMOUSE_CURSOR_POINTINGHAND                  
+        JMOUSE_CURSOR_DRAGGINGHAND                  
+        JMOUSE_CURSOR_RESIZE_LEFTRIGHT              
+        JMOUSE_CURSOR_RESIZE_UPDOWN             
+        JMOUSE_CURSOR_RESIZE_FOURWAY                
+        JMOUSE_CURSOR_RESIZE_TOPEDGE                
+        JMOUSE_CURSOR_RESIZE_BOTTOMEDGE         
+        JMOUSE_CURSOR_RESIZE_LEFTEDGE               
+        JMOUSE_CURSOR_RESIZE_RIGHTEDGE              
+        JMOUSE_CURSOR_RESIZE_TOPLEFTCORNER          
+        JMOUSE_CURSOR_RESIZE_TOPRIGHTCORNER     
+        JMOUSE_CURSOR_RESIZE_BOTTOMLEFTCORNER       
+        JMOUSE_CURSOR_RESIZE_BOTTOMRIGHTCORNER      
+
+    cdef void jmouse_setcursor(t_object *patcherview, t_object *box, t_jmouse_cursortype type)
+    cdef t_object* jwind_getactive()
+    cdef long jwind_getcount()
+    cdef t_object* jwind_getat(long index)
+    cdef long jmonitor_getnumdisplays()
+    cdef void jmonitor_getdisplayrect(long workarea, long displayindex, t_rect *rect)
+    cdef void jmonitor_getdisplayrect_foralldisplays(long workarea, t_rect *rect)           
+    cdef void jmonitor_getdisplayrect_forpoint(long workarea, t_pt pt, t_rect *rect)
+    cdef void swatches_init()
+    cdef void swatches_shutdown()
+    cdef void *jpatcher_load(char *name, short volume, short ac, t_atom *av)
+    cdef void *jpatcher_load_frombuffer(char *name, short vol, const char *json, long len, short ac, t_atom *av)
+    cdef void *jpatcher_load_fromdictionary(char *name, short vol, t_object *rd, short ac, t_atom *av)
+    cdef void *jpatcher_load_namespace(char *name, short volume, short ac, t_atom *av, t_symbol *classnamespace)
+    cdef void *jpatcher_load_frombuffer_namespace(char *name, short vol, const char *json, long len, short ac, t_atom *av, t_symbol *classnamespace)
+    cdef void *jpatcher_load_fromdictionary_namespace(char *name, short vol, t_object *rd, short ac, t_atom *av, t_symbol *classnamespace)
+    cdef void classname_openrefpage_ext(t_symbol *classnamespace, char *classname)
+    cdef long jpatcher_is_box_namespace(t_object *p)
+    cdef t_object *jbox_get_dragtarget(t_jbox *b, char locked)
+    cdef long jpatcher_inc_maxsendcontext()
+    cdef long jbox_is_selected_in_view(t_object *box, t_object *view)
+    cdef t_atom_long jpatcher_dictionary_modernui(t_dictionary *d)
+    cdef t_atom_long jpatcher_dictionary_version()
+    cdef t_dictionary *jpatcher_fallback_version()
+    cdef long jbox_isdefaultattribute(t_jbox *x, t_symbol *attrname)
+    cdef const char *systemfontname()
+    cdef const char *systemfontname_bold()
+    cdef const char *systemfontname_light()
+    cdef t_symbol *systemfontsym()
+    #//#define JPATCHER_DEFAULT_EXTENSION ".maxpat"
+
+cdef extern from "jpatcher_utils.h":
+
+    cdef void atom_copy(long argc1, t_atom *argv1, t_atom *argv2)
+    cdef void postargs(long argc, t_atom *argv)
+    cdef void postdictionary(t_object *d)
+    cdef t_max_err atom_arg_getobjclass(t_object **x, long idx, long argc, t_atom *argv, t_symbol *cls)
+    cdef void *atom_getobjclass(t_atom *av, t_symbol *cls)
+    cdef method my_object_getmethod(void *obj, t_symbol *s)
+
+
+cdef extern from "jgraphics.h":
+    ctypedef struct t_jgraphics 
+    ctypedef struct t_jpath     
+    ctypedef struct t_jpattern      
+    ctypedef struct t_jfont     
+    ctypedef struct t_jtextlayout   
+    ctypedef struct t_jtransform    
+    ctypedef struct t_jsurface  
+    ctypedef struct t_jdesktopui    
+    ctypedef struct t_jpopupmenu    
+    ctypedef struct t_jsvg      
+    ctypedef struct t_jsvg_remap    
+
+    cdef int JGRAPHICS_RECT_BOTTOM(rect)
+    cdef int JGRAPHICS_RECT_RIGHT(rect)
+    cdef int JGRAPHICS_PI
+    cdef int JGRAPHICS_2PI
+    cdef int JGRAPHICS_PIOVER2
+    cdef int JGRAPHICS_3PIOVER2
+
+    ctypedef enum t_jgraphics_line_join:
+        JGRAPHICS_LINE_JOIN_MITER
+        JGRAPHICS_LINE_JOIN_ROUND
+        JGRAPHICS_LINE_JOIN_BEVEL
+
+
+    ctypedef enum t_jgraphics_line_cap:
+        JGRAPHICS_LINE_CAP_BUTT
+        JGRAPHICS_LINE_CAP_ROUND
+        JGRAPHICS_LINE_CAP_SQUARE
+
+
+    ctypedef enum t_jgraphics_bubble_side:
+        JGRAPHICS_BUBBLE_SIDE_TOP
+        JGRAPHICS_BUBBLE_SIDE_LEFT
+        JGRAPHICS_BUBBLE_SIDE_BOTTOM
+        JGRAPHICS_BUBBLE_SIDE_RIGHT
+
+
+    ctypedef enum t_jgraphics_path_type:
+        JGRAPHICS_PATH_STARTNEWSUBPATH
+        JGRAPHICS_PATH_LINETO
+        JGRAPHICS_PATH_QUADRATICTO
+        JGRAPHICS_PATH_CUBICTO
+        JGRAPHICS_PATH_CLOSEPATH
+
+
+    cdef int jgraphics_round(double d)
+
+    ctypedef enum t_jgraphics_format:
+        JGRAPHICS_FORMAT_ARGB32   
+        JGRAPHICS_FORMAT_RGB24         
+        JGRAPHICS_FORMAT_A8             
+
+    ctypedef enum t_jgraphics_fileformat:
+        JGRAPHICS_FILEFORMAT_PNG
+        JGRAPHICS_FILEFORMAT_JPEG
+
+    cdef t_jsurface* jgraphics_image_surface_create(t_jgraphics_format format, int width, int height)
+    cdef t_jsurface *jgraphics_image_surface_create_referenced(const char *filename, short path)
+    cdef t_jsurface* jgraphics_image_surface_create_from_file(const char *filename, short path)
+    cdef t_jsurface* jgraphics_image_surface_create_for_data(unsigned char *data, t_jgraphics_format format,  int width, int height, int stride, method freefun, void *freearg)
+    cdef t_jsurface* jgraphics_image_surface_create_for_data_premult(unsigned char *data, t_jgraphics_format format, int width, int height, int stride, method freefun, void *freearg)
+    cdef t_jsurface* jgraphics_image_surface_create_from_filedata(const void *data, unsigned long datalen)
+    cdef t_jsurface* jgraphics_image_surface_create_from_resource(const void* moduleRef, const char *resname)
+    cdef t_max_err jgraphics_get_resource_data(const void *moduleRef, const char *resname, long extcount, t_atom *exts, void **data, unsigned long *datasize)
+    cdef t_jsurface* jgraphics_surface_reference(t_jsurface *s)      
+    cdef void        jgraphics_surface_destroy(t_jsurface *s)        
+    cdef t_max_err   jgraphics_image_surface_writepng(t_jsurface *surface, const char *filename, short path, long dpi) 
+    cdef t_max_err   jgraphics_image_surface_writejpeg(t_jsurface *surface, const char *filename, short path)
+    cdef void        jgraphics_surface_set_device_offset(t_jsurface *s, double x_offset, double y_offset) 
+    cdef void        jgraphics_surface_get_device_offset(t_jsurface *s, double *x_offset, double *y_offset) 
+    cdef int         jgraphics_image_surface_get_width(t_jsurface *s)
+    cdef int         jgraphics_image_surface_get_height(t_jsurface *s) 
+    cdef void        jgraphics_image_surface_set_pixel(t_jsurface *s, int x, int y, t_jrgba color) 
+    cdef void        jgraphics_image_surface_get_pixel(t_jsurface *s, int x, int y, t_jrgba *color)
+    cdef void        jgraphics_image_surface_scroll(t_jsurface *s, int x, int y, int width, int height, int dx, int dy, t_jpath **path)      
+    cdef const unsigned char* jgraphics_image_surface_lockpixels_readonly(t_jsurface *s, int x, int y, int width, int height, int *linestride, int *pixelstride)
+    cdef void                 jgraphics_image_surface_unlockpixels_readonly(t_jsurface *s, const unsigned char *data) 
+    cdef unsigned char*       jgraphics_image_surface_lockpixels(t_jsurface *s, int x, int y, int width, int height, int *linestride, int *pixelstride)
+    cdef void                 jgraphics_image_surface_unlockpixels(t_jsurface *s, unsigned char *data) 
+    cdef void        jgraphics_image_surface_draw(t_jgraphics *g, t_jsurface *s, t_rect srcRect, t_rect destRect)
+    cdef void        jgraphics_image_surface_draw_fast(t_jgraphics *g, t_jsurface *s)        
+    cdef void jgraphics_write_image_surface_to_filedata(t_jsurface *surf, long fmt, void **data, long *size)
+    cdef t_jsurface* jgraphics_image_surface_create_from_base64(const char *base64, unsigned long datalen)
+    cdef void jgraphics_write_image_surface_to_base64(t_jsurface *surf, long fmt, char **base64, long *size)
+    cdef void jgraphics_image_surface_clear(t_jsurface *s, int x, int y, int width, int height)
+    cdef t_jsvg*     jsvg_create_from_file(const char *filename, short path) 
+    cdef t_jsvg*     jsvg_create_from_resource(const void *moduleRef, const char *resname)
+    cdef t_jsvg*     jsvg_create_from_xmlstring(const char *svgXML) 
+    cdef void        jsvg_get_size(t_jsvg *svg, double *width, double *height) 
+    cdef void        jsvg_destroy(t_jsvg *svg) 
+    cdef void        jsvg_render(t_jsvg *svg, t_jgraphics *g)
+    cdef void jsvg_load_cached(t_symbol *name, t_jsvg **psvg)
+    cdef t_jsvg_remap *jsvg_remap_create(t_jsvg *svg)
+    cdef void jsvg_remap_addcolor(t_jsvg_remap *r, t_jrgba *src, t_jrgba *dst)
+    cdef void jsvg_remap_perform(t_jsvg_remap *r, t_jsvg **remapped)
+    cdef void jsvg_remap_destroy(t_jsvg_remap *r)
+    cdef void jgraphics_draw_jsvg(t_jgraphics *g, t_jsvg *svg, t_rect *r, int flags, double opacity)
+    cdef t_jgraphics*    jgraphics_create(t_jsurface *target)
+    cdef t_jgraphics*    jgraphics_reference(t_jgraphics *g)
+    cdef void            jgraphics_destroy(t_jgraphics *g)
+
+    ctypedef struct t_jgraphics_path_elem
+
+    cdef void        jgraphics_new_path(t_jgraphics *g)
+    cdef t_jpath*    jgraphics_copy_path(t_jgraphics *g)
+    cdef t_jpath*    jgraphics_path_createstroked(t_jpath *p, double thickness, t_jgraphics_line_join join, t_jgraphics_line_cap cap) 
+    cdef void        jgraphics_path_destroy(t_jpath *path) 
+    cdef void        jgraphics_append_path(t_jgraphics *g, t_jpath *path)
+    cdef void        jgraphics_close_path(t_jgraphics *g)     
+    cdef void        jgraphics_path_roundcorners(t_jgraphics *g, double cornerRadius)
+    cdef long        jgraphics_path_contains(t_jpath *path, double x, double y) 
+    cdef long        jgraphics_path_intersectsline(t_jpath *path, double x1, double y1, double x2, double y2) 
+    cdef double      jgraphics_path_getlength(t_jpath *path) 
+    cdef void        jgraphics_path_getpointalongpath(t_jpath *path, double distancefromstart, double *x, double *y) 
+    cdef double      jgraphics_path_getnearestpoint(t_jpath *path, double x, double y, double *path_x, double *path_y)
+    cdef long        jgraphics_path_getpathelems(t_jpath *path, t_jgraphics_path_elem **elems)
+    cdef void        jgraphics_get_current_point(t_jgraphics *g, double *x, double *y) 
+    cdef void        jgraphics_arc(t_jgraphics *g, double xc, double yc, double radius, double angle1, double angle2)
+
+    cdef void jgraphics_piesegment(t_jgraphics *g, double xc, double yc, double radius, double angle1, double angle2, double innercircleproportionalsize)
+    cdef void jgraphics_ovalarc(t_jgraphics *g, double xc, double yc, double radiusx, double radiusy, double angle1, double angle2)
+    cdef void jgraphics_arc_negative(t_jgraphics *g, double xc, double yc, double radius, double angle1, double angle2)
+    cdef void jgraphics_curve_to(t_jgraphics *g,double x1, double y1, double x2, double y2, double x3, double y3)
+    cdef void jgraphics_rel_curve_to(t_jgraphics *g, double x1, double y1, double x2, double y2, double x3, double y3)
+    cdef void jgraphics_line_to(t_jgraphics *g, double x, double y)     
+    cdef void jgraphics_rel_line_to(t_jgraphics *g, double x, double y)
+    cdef void jgraphics_move_to(t_jgraphics *g, double x, double y)     
+    cdef void jgraphics_rel_move_to(t_jgraphics *g, double x, double y) 
+    cdef void jgraphics_rectangle(t_jgraphics *g, double x, double y, double width, double height)
+    cdef void jgraphics_oval(t_jgraphics *g,    double x, double y, double width, double height)
+    cdef void jgraphics_rectangle_rounded(t_jgraphics *g, double x, double y, double width, double height, double ovalwidth, double ovalheight)
+    cdef void jgraphics_ellipse(t_jgraphics *g,  double x, double y, double width, double height)
+    cdef void jgraphics_bubble(t_jgraphics *g, double bodyx, double bodyy,  double bodywidth, double bodyheight, double cornersize, double arrowtipx, double arrowtipy, t_jgraphics_bubble_side whichside, double arrowedgeprop, double arrowwidth)
+    cdef void jgraphics_triangle(t_jgraphics *g, double x1, double y1, double x2, double y2, double x3, double y3)
+    cdef void jgraphics_diagonal_line_fill(t_jgraphics *g, double pixels, double x, double y, double width, double height)
+
+    ctypedef enum t_jgraphics_font_slant:
+        JGRAPHICS_FONT_SLANT_NORMAL,        
+        JGRAPHICS_FONT_SLANT_ITALIC         
+
+    ctypedef enum t_jgraphics_font_weight:
+        JGRAPHICS_FONT_WEIGHT_NORMAL
+        JGRAPHICS_FONT_WEIGHT_BOLD
+
+    cdef void jgraphics_select_font_face(t_jgraphics *g, const char *family, t_jgraphics_font_slant slant, t_jgraphics_font_weight weight)
+    cdef void jgraphics_select_jfont(t_jgraphics *g, t_jfont *jfont) 
+    cdef void jgraphics_set_font_size(t_jgraphics *g, double size)
+    cdef void jgraphics_set_underline(t_jgraphics *g, char underline)
+    cdef void jgraphics_show_text(t_jgraphics *g, const char *utf8) 
+    cdef void jgraphics_text_path(t_jgraphics *g, const char *utf8)
+
+    ctypedef struct t_jgraphics_font_extents
+
+    cdef void jgraphics_font_extents(t_jgraphics *g, t_jgraphics_font_extents *extents)
+    cdef void jgraphics_text_measure(t_jgraphics *g, const char *utf8, double *width, double *height)
+    cdef void jgraphics_text_measuretext_wrapped(t_jgraphics *g, const char *utf8, double wrapwidth, long includewhitespace, double *width, double *height, long *numlines) 
+    cdef double jgraphics_getfontscale()
+    cdef t_jfont* jfont_create_from_maxfont(short number, short size)
+    cdef t_jfont* jfont_create(const char *family, t_jgraphics_font_slant slant, t_jgraphics_font_weight weight, double size) 
+    cdef t_jfont* jfont_reference(t_jfont *font) 
+    cdef void jfont_destroy(t_jfont *font) 
+    cdef long jfont_isequalto(t_jfont *font, t_jfont *other)
+    cdef void jfont_set_family(t_jfont *font, t_symbol *family)
+    cdef t_symbol* jfont_get_family(t_jfont *font)
+    cdef void jfont_set_slant(t_jfont *font, t_jgraphics_font_slant slant)
+    cdef t_jgraphics_font_slant jfont_get_slant(t_jfont *font)
+    cdef void jfont_set_weight(t_jfont *font, t_jgraphics_font_weight weight)
+    cdef t_jgraphics_font_weight jfont_get_weight(t_jfont *font)
+    cdef void jfont_set_font_size(t_jfont *font, double size)
+    cdef double jfont_get_font_size(t_jfont *font)
+    cdef void jfont_set_underline(t_jfont *font, char ul)
+    cdef char jfont_get_underline(t_jfont *font)
+    cdef double jfont_get_heighttocharheightratio(t_jfont *font) 
+    cdef void jfont_extents(t_jfont *font, t_jgraphics_font_extents *extents)
+    cdef void jfont_text_measure(t_jfont *font, const char *utf8, double *width, double *height)
+    cdef void jfont_text_measuretext_wrapped(t_jfont *font, const char *utf8, double wrapwidth, long includewhitespace, double *width, double *height, long *numlines)
+    cdef void jfont_get_em_dimensions(t_jfont *font, double *width, double *height) 
+    cdef t_max_err  jfont_getfontlist(long *count, t_symbol ***list)
+    cdef long jfont_isfixedwidth(const char *name) 
+    cdef const char *jfont_get_default_fixedwidth_name()
+    cdef void jfont_set_juce_default_fontname(char *s)
+    cdef void jfont_copy_juce_default_fontname(char *s, long maxlen)
+    cdef void jfont_copy_juce_platform_fontname(char *s, long maxlen)
+    cdef void jfont_set_juce_fallback_fontname(char *s)
+    cdef void jfont_copy_juce_fallback_fontname(char *s, long maxlen)
+    cdef long jgraphics_system_canantialiastexttotransparentbg() 
+    cdef long jgraphics_fontname_hasglyph(char *name, long code)
+    cdef t_jtextlayout* jtextlayout_create() 
+    cdef t_jtextlayout* jtextlayout_withbgcolor(t_jgraphics *g, t_jrgba *bgcolor) 
+    cdef void jtextlayout_destroy(t_jtextlayout* textlayout)
+
+    ctypedef enum t_jgraphics_text_justification:
+        JGRAPHICS_TEXT_JUSTIFICATION_LEFT = 1           
+        JGRAPHICS_TEXT_JUSTIFICATION_RIGHT = 2          
+        JGRAPHICS_TEXT_JUSTIFICATION_HCENTERED = 4      
+        JGRAPHICS_TEXT_JUSTIFICATION_TOP = 8            
+        JGRAPHICS_TEXT_JUSTIFICATION_BOTTOM = 16        
+        JGRAPHICS_TEXT_JUSTIFICATION_VCENTERED = 32 
+        JGRAPHICS_TEXT_JUSTIFICATION_HJUSTIFIED = 64    
+        JGRAPHICS_TEXT_JUSTIFICATION_CENTERED = JGRAPHICS_TEXT_JUSTIFICATION_HCENTERED + JGRAPHICS_TEXT_JUSTIFICATION_VCENTERED 
+
+    ctypedef enum t_jgraphics_textlayout_flags:
+        JGRAPHICS_TEXTLAYOUT_NOWRAP = 1     
+        JGRAPHICS_TEXTLAYOUT_USEELLIPSIS = 3    
+
+    cdef void jtextlayout_set(t_jtextlayout *textlayout, const char *utf8,  t_jfont *jfont, double x, double y, double width, double height, t_jgraphics_text_justification justification, t_jgraphics_textlayout_flags flags) 
+    cdef void jtextlayout_settext(t_jtextlayout *textlayout, const char *utf8, t_jfont *jfont)
+    cdef void jtextlayout_settextcolor(t_jtextlayout *textlayout, t_jrgba *textcolor) 
+    cdef void jtextlayout_measuretext(t_jtextlayout *textlayout, long startindex, long numchars, long includewhitespace, double *width, double *height, long *numlines)
+    cdef void jtextlayout_draw(t_jtextlayout *tl, t_jgraphics *g) 
+    cdef long jtextlayout_getnumchars(t_jtextlayout *tl) 
+    cdef t_max_err jtextlayout_getcharbox(t_jtextlayout *tl, long index, t_rect *rect) 
+    cdef t_max_err jtextlayout_getchar(t_jtextlayout *tl, long index, long *pch)
+    cdef t_jpath* jtextlayout_createpath(t_jtextlayout *tl)
+
+    ctypedef struct t_jmatrix
+
+
+    cdef void jgraphics_matrix_init(t_jmatrix *x, double xx, double yx, double xy, double yy, double x0, double y0)
+    cdef void jgraphics_matrix_init_identity(t_jmatrix *x) 
+    cdef void jgraphics_matrix_init_translate(t_jmatrix *x, double tx, double ty) 
+    cdef void jgraphics_matrix_init_scale(t_jmatrix *x, double sx, double sy) 
+    cdef void jgraphics_matrix_init_rotate(t_jmatrix *x, double radians) 
+    cdef void jgraphics_matrix_translate(t_jmatrix *x, double tx, double ty) 
+    cdef void jgraphics_matrix_scale(t_jmatrix *x, double sx, double sy) 
+    cdef void jgraphics_matrix_rotate(t_jmatrix *x, double radians) 
+    cdef void jgraphics_matrix_invert(t_jmatrix *x) 
+    cdef void jgraphics_matrix_multiply(t_jmatrix *result, const t_jmatrix *a, const t_jmatrix *b) 
+    cdef void jgraphics_matrix_transform_point(const t_jmatrix *matrix, double *x, double *y)  
+    cdef t_jpattern*    jgraphics_pattern_create_rgba(double red, double green, double blue, double alpha)  
+    cdef t_jpattern*    jgraphics_pattern_create_for_surface(t_jsurface *surface) 
+    cdef t_jpattern* jgraphics_pattern_create_linear(double x0, double y0, double x1, double y1)
+    cdef t_jpattern* jgraphics_pattern_create_radial(double cx0, double cy0, double radius0, double cx1, double cy1, double radius1)
+    cdef void jgraphics_pattern_add_color_stop_rgba(t_jpattern* pattern, double offset, double red, double green, double blue, double alpha)
+    cdef void jgraphics_pattern_add_color_for_proportion(t_jpattern* pattern, double proportion)
+    cdef t_jpattern *jgraphics_pattern_reference(t_jpattern *pattern)
+    cdef void jgraphics_pattern_destroy(t_jpattern *pattern)
+
+    ctypedef enum t_jgraphics_pattern_type:
+        JGRAPHICS_PATTERN_TYPE_SOLID
+        JGRAPHICS_PATTERN_TYPE_SURFACE
+        JGRAPHICS_PATTERN_TYPE_LINEAR
+        JGRAPHICS_PATTERN_TYPE_RADIAL
+
+    t_jgraphics_pattern_type jgraphics_pattern_get_type(t_jpattern *pattern) 
+
+    ctypedef enum t_jgraphics_extend:
+        JGRAPHICS_EXTEND_NONE
+        JGRAPHICS_EXTEND_REPEAT
+        JGRAPHICS_EXTEND_REFLECT       
+        JGRAPHICS_EXTEND_PAD            
+
+    ##define JGRAPHICS_EXTEND_GRADIENT_DEFAULT JGRAPHICS_EXTEND_PAD
+    ##define JGRAPHICS_EXTEND_SURFACE_DEFAULT JGRAPHICS_EXTEND_NONE
+
+    cdef void jgraphics_pattern_set_extend(t_jpattern *pattern, t_jgraphics_extend extend) 
+    cdef t_jgraphics_extend jgraphics_pattern_get_extend(t_jpattern *pattern) 
+    cdef void jgraphics_pattern_set_matrix(t_jpattern *pattern, const t_jmatrix *matrix) 
+    cdef void jgraphics_pattern_get_matrix(t_jpattern *pattern, t_jmatrix *matrix)
+    cdef void jgraphics_pattern_translate(t_jpattern *pattern, double tx, double ty)
+    cdef void jgraphics_pattern_scale(t_jpattern *pattern, double sx, double sy)
+    cdef void jgraphics_pattern_rotate(t_jpattern *pattern, double angle)
+    cdef void jgraphics_pattern_transform(t_jpattern *pattern, const t_jmatrix *matrix)
+    cdef void jgraphics_pattern_identity_matrix(t_jpattern *pattern)
+    cdef t_jsurface *jgraphics_pattern_get_surface(t_jpattern *pattern)
+    cdef void jgraphics_translate(t_jgraphics *g, double tx, double ty)
+    cdef void jgraphics_scale(t_jgraphics *g, double sx, double sy)
+    cdef void jgraphics_rotate(t_jgraphics *g, double angle)
+    cdef void jgraphics_transform(t_jgraphics *g, const t_jmatrix *matrix)
+    cdef void jgraphics_set_matrix(t_jgraphics *g, const t_jmatrix *matrix)
+    cdef void jgraphics_get_matrix(t_jgraphics *g, t_jmatrix *matrix) 
+    cdef void jgraphics_identity_matrix(t_jgraphics *g)
+    cdef void jgraphics_user_to_device(t_jgraphics *g, double *x, double *y)
+    cdef void jgraphics_device_to_user(t_jgraphics *g, double *x, double *y)
+    cdef void jgraphics_save(t_jgraphics* g)                
+    cdef void jgraphics_restore(t_jgraphics *g)
+    cdef t_jsurface* jgraphics_get_target(t_jgraphics *g) 
+    cdef void jgraphics_push_group(t_jgraphics *g)
+    cdef t_jpattern* jgraphics_pop_group(t_jgraphics *g) 
+    cdef void jgraphics_pop_group_to_source(t_jgraphics *g) 
+    cdef t_jsurface* jgraphics_get_group_target(t_jgraphics *g) 
+    cdef t_jsurface* jgraphics_pop_group_surface(t_jgraphics *g) 
+    cdef void jgraphics_set_source_rgba(t_jgraphics *g,double red, double green, double blue, double alpha)
+    cdef void jgraphics_set_source_jrgba(t_jgraphics *g, t_jrgba *rgba) 
+    cdef void jgraphics_set_source_rgb(t_jgraphics *g, double red, double green, double blue) 
+    cdef void jgraphics_set_source(t_jgraphics *g, t_jpattern *source)
+    cdef void jgraphics_set_source_surface(t_jgraphics *g, t_jsurface *surface, double x, double y) 
+
+
+    ctypedef enum t_jgraphics_pattern_shared:
+        JGRAPHICS_PATTERN_GRAY = 0
+        JGRAPHICS_NUM_SHARED_PATTERNS
+
+
+
+    cdef void jgraphics_set_source_shared(t_jgraphics *g, t_jgraphics_pattern_shared patindex) 
+    cdef void jgraphics_scale_source_rgba(t_jgraphics *g, double redscale, double greenscale, double bluescale, double alphascale)
+    cdef void jgraphics_translate_source_rgba(t_jgraphics *g, double redoffset, double greenoffset, double blueoffset, double alphaoffset)
+    cdef void jgraphics_set_dash(t_jgraphics *g, double *dashes, int numdashes, double offset)
+
+    ctypedef enum t_jgraphics_fill_rule:
+        JGRAPHICS_FILL_RULE_WINDING
+        JGRAPHICS_FILL_RULE_EVEN_ODD
+
+
+    cdef void jgraphics_set_fill_rule(t_jgraphics *g, t_jgraphics_fill_rule fill_rule)
+    cdef t_jgraphics_fill_rule jgraphics_get_fill_rule(t_jgraphics *g)
+    cdef void jgraphics_set_line_cap(t_jgraphics *g, t_jgraphics_line_cap line_cap)
+    cdef t_jgraphics_line_cap jgraphics_get_line_cap(t_jgraphics *g)
+    cdef void jgraphics_set_line_join(t_jgraphics *g, t_jgraphics_line_join line_join)
+    cdef t_jgraphics_line_join  jgraphics_get_line_join(t_jgraphics *g)
+    cdef void jgraphics_set_line_width(t_jgraphics *g, double width)
+    cdef double jgraphics_get_line_width(t_jgraphics *g)
+    cdef void jgraphics_fill(t_jgraphics *g)
+    cdef void jgraphics_fill_preserve(t_jgraphics *g) 
+    cdef void jgraphics_fill_with_alpha(t_jgraphics *g, double alpha)
+    cdef void jgraphics_fill_preserve_with_alpha(t_jgraphics *g, double alpha)
+    cdef int jgraphics_in_fill(t_jgraphics *g, double x, double y)      
+    cdef int    jgraphics_path_intersects_line(t_jgraphics *g, double x1, double y1, double x2, double y2)      
+    cdef int jgraphics_ptinrect(t_pt pt, t_rect rect)
+    cdef int jgraphics_lines_intersect(double l1x1, double l1y1, double l1x2, double l1y2, double l2x1, double l2y1, double l2x2, double l2y2, double *ix, double *iy)
+    cdef int jgraphics_line_intersects_rect(double linex1, double liney1, double linex2, double liney2, t_rect r, double *ix, double *iy)
+    cdef int jgraphics_ptaboveline(t_pt pt, double lx1, double ly1, double lx2, double ly2)
+    cdef int jgraphics_points_on_same_side_of_line(t_pt a, t_pt b, double lx1, double ly1, double lx2, double ly2)
+    cdef int jgraphics_ptinroundedrect(t_pt pt, t_rect rect, double ovalwidth, double ovalheight) 
+
+
+    cdef void jgraphics_fill_extents(t_jgraphics *g, double *x1, double *y1, double *x2, double *y2)
+    cdef void jgraphics_paint(t_jgraphics *g)       
+    cdef void jgraphics_paint_with_alpha(t_jgraphics *g, double alpha)
+    cdef void jgraphics_stroke(t_jgraphics *g)
+    cdef void jgraphics_stroke_preserve(t_jgraphics *g)
+    cdef void jgraphics_stroke_with_alpha(t_jgraphics *g, double alpha)
+    cdef void jgraphics_stroke_preserve_with_alpha(t_jgraphics *g, double alpha)
+    cdef void jgraphics_rectangle_fill_fast(t_jgraphics *g, double x, double y, double width, double height)
+    cdef void jgraphics_rectangle_draw_fast(t_jgraphics *g, double x, double y, double width, double height, double border)
+    cdef void jgraphics_line_draw_fast(t_jgraphics *g, double x1, double y1, double x2, double y2, double linewidth)
+
+    ctypedef enum t_jdesktopui_flags:
+        JDESKTOPUI_FLAGS_FIRSTFLAG = 1              
+
+    cdef t_jdesktopui* jdesktopui_new(t_object *owner, t_jdesktopui_flags flags, t_rect rect) 
+    cdef void jdesktopui_destroy(t_jdesktopui *x) 
+    cdef void jdesktopui_setvisible(t_jdesktopui *x, long way) 
+    cdef void jdesktopui_setalwaysontop(t_jdesktopui *x, long way) 
+    cdef void jdesktopui_setrect(t_jdesktopui *x, t_rect rect) 
+    cdef void jdesktopui_getrect(t_jdesktopui *x, t_rect *rect) 
+    cdef void jdesktopui_setposition(t_jdesktopui *x, t_pt pt) 
+    cdef void jdesktopui_setfadetimes(t_jdesktopui *x, int fade_in_ms, int fade_out_ms) 
+    cdef t_jgraphics* jdesktopui_get_jgraphics(t_jdesktopui *x) 
+    cdef void jdesktopui_redraw(t_jdesktopui *x) 
+    cdef void jdesktopui_redrawrect(t_jdesktopui *x, t_rect rect) 
+    cdef double jdesktopui_getopacity(t_jdesktopui *x)
+    cdef void *jdesktopui_createtimer(t_jdesktopui *x, t_symbol *msg, void *arg)
+    cdef void jdesktopui_starttimer(void *ref, int interval)
+    cdef void jdesktopui_stoptimer(void *ref, int alsodelete)
+    cdef void jdesktopui_destroytimer(void *ref)
+    cdef t_jrgba jgraphics_jrgba_contrasting(t_jrgba *c, double amount)
+    cdef t_jrgba jgraphics_jrgba_contrastwith(t_jrgba *c1, t_jrgba *c2)
+    cdef t_jrgba jgraphics_jrgba_darker(t_jrgba *c, double amount)
+    cdef t_jrgba jgraphics_jrgba_brighter(t_jrgba *c, double amount)
+    cdef t_jrgba jgraphics_jrgba_overlay(t_jrgba *c1, t_jrgba *c2)
+    cdef t_jrgba jgraphics_jrgba_interpolate(t_jrgba *c1, t_jrgba *c2, double proportion)
+    cdef void jgraphics_jrgba_gethsb(t_jrgba *c, double *h, double *s, double *b)
+    cdef t_jrgba jgraphics_jrgba_fromhsb(double h, double s, double b, double a)
+    cdef long jcolor_getcolor(t_symbol *name, t_jrgba *on, t_jrgba *off)
+    cdef t_jpopupmenu* jpopupmenu_create() 
+    cdef void jpopupmenu_destroy(t_jpopupmenu *menu)
+    cdef void jpopupmenu_clear(t_jpopupmenu *menu)
+    cdef void jpopupmenu_setitemcallback(method fun, void *arg)
+
+    cdef void jpopupmenu_setcolors(t_jpopupmenu *menu, t_jrgba text, t_jrgba bg, t_jrgba highlightedtext, t_jrgba highlightedbg) 
+    cdef void jpopupmenu_setheadercolor(t_jpopupmenu *menu, t_jrgba *hc)
+    cdef void jpopupmenu_setfont(t_jpopupmenu *menu, t_jfont *font)
+    cdef void jpopupmenu_additem(t_jpopupmenu *menu, int itemid, const char *utf8Text, t_jrgba *textColor, int checked, int disabled, t_jsurface *icon)
+    cdef void jpopupmenu_addsubmenu(t_jpopupmenu *menu, const char *utf8Name, t_jpopupmenu *submenu, int disabled) 
+    cdef void jpopupmenu_addseperator(t_jpopupmenu *menu) 
+    cdef void jpopupmenu_addheader(t_jpopupmenu *menu, const char *utf8Text)
+    cdef void jpopupmenu_addownerdrawitem(t_jpopupmenu *menu, int itemid, t_object *owner)
+    cdef int jpopupmenu_popup(t_jpopupmenu *menu, t_pt screen, int defitemid)
+    cdef int jpopupmenu_popup_abovebox(t_jpopupmenu *menu, t_object *box, t_object *view, int offset, int defitemid)
+    cdef int jpopupmenu_popup_nearbox(t_jpopupmenu *menu, t_object *box, t_object *view, int defitemid) 
+    cdef int jpopupmenu_popup_belowrect(t_jpopupmenu *menu, t_rect rect, int defitemid)
+    cdef int jpopupmenu_popup_aboverect(t_jpopupmenu *menu, t_rect rect, int defitemid)
+    cdef int jpopupmenu_popup_leftofpt(t_jpopupmenu *menu, t_pt pt, int defitemid, int flags)
+    cdef void jpopupmenu_estimatesize(t_jpopupmenu *menu, int *width, int *height)
+    cdef void jpopupmenu_setitemtooltip(void *itemref, char *tip)
+
+    ctypedef enum:
+        JPOPUPMENU_DARKSTYLE = 1
+
+    cdef void jpopupmenu_setstandardstyle(t_jpopupmenu *menu, long styleindex, double fontsize, int margin)
+    cdef void jpopupmenu_setstandardstyle_forjucemenu(void *jpm, long styleindex, double fontsize, t_jrgba *headertextcolor)
+    cdef void jpopupmenu_closeall() 
+    cdef void jmouse_setcursor_surface(t_object *patcherview, t_object *box, t_jsurface *surface, int xHotSpot, int yHotSpot)   
+    cdef void jbox_fontface_to_weight_slant(t_object *b, long *weight, long *slant)
+    cdef long jbox_get_font_weight(t_object *b)
+    cdef long jbox_get_font_slant(t_object *b)
+    cdef t_jfont *jbox_createfont(t_object *b)
+    cdef void jgraphics_jrgba_set_brightness(t_jrgba *c, double amt)
+    cdef t_max_err jgraphics_attr_setrgba(t_object *x, t_object *attr, long argc, t_atom *argv)
+    cdef t_max_err jgraphics_attr_setrgb_alias(t_object *x, t_object *attr, long argc, t_atom *argv)
+
+    # #define CLASS_ATTR_RGBA(c,attrname,flags,structname,structmember) \
+    #     {   CLASS_ATTR_DOUBLE_ARRAY(c,attrname,flags,structname,structmember,4) \
+    #         CLASS_ATTR_ACCESSORS(c,attrname,NULL,jgraphics_attr_setrgba) \
+    #         CLASS_ATTR_PAINT(c,attrname,0) }
+    # #define CLASS_ATTR_RGBA_LEGACY(c,attrname,aliasname,flags,structname,structmember) \
+    #     {   CLASS_ATTR_RGBA(c,attrname,flags,structname,structmember) \
+    #         CLASS_ATTR_ALIAS(c,attrname,aliasname) \
+    #         CLASS_ATTR_INVISIBLE(c,aliasname,0) \
+    #         CLASS_ATTR_ACCESSORS(c,aliasname,NULL,jgraphics_attr_setrgb_alias) }
+
+    cdef t_max_err object_attr_getjrgba(void *ob, t_symbol *s, t_jrgba *c)
+    cdef t_max_err object_attr_setjrgba(void *ob, t_symbol *s, t_jrgba *c)
+    cdef void jrgba_to_atoms(t_jrgba *c, t_atom *argv)
+    cdef t_max_err atoms_to_jrgba(long argc, t_atom *argv, t_jrgba *c)
+    cdef void jrgba_set(t_jrgba *prgba, double r, double g, double b, double a)
+    cdef void jrgba_copy(t_jrgba *dest, t_jrgba *src)
+    cdef long jrgba_compare(t_jrgba *rgba1, t_jrgba *rgba2)
+    cdef void jgraphics_getfiletypes(void *dummy, long *count, t_fourcc **filetypes, char *alloc)
+    cdef t_max_err jbox_invalidate_layer(t_object *b, t_object *view, t_symbol *name)
+    cdef t_max_err jbox_remove_layer(t_object *b, t_object *view, t_symbol *name)
+    cdef t_jgraphics* jbox_start_layer(t_object *b, t_object *view, t_symbol *name, double width, double height)
+    cdef t_max_err jbox_end_layer(t_object *b, t_object *view, t_symbol *name)
+    cdef t_max_err jbox_paint_layer(t_object *b, t_object *view, t_symbol *name, double x, double y)
+    cdef long jgraphics_rectintersectsrect(t_rect *r1, t_rect *r2)
+    cdef long jgraphics_rectcontainsrect(t_rect *outer, t_rect *inner)
+    cdef void jgraphics_position_one_rect_near_another_rect_but_keep_inside_a_third_rect( t_rect *positioned_rect, const t_rect *positioned_near_this_rect, const t_rect *keep_inside_this_rect)
+    cdef void jgraphics_clip(t_jgraphics *g, double x, double y, double width, double height)
+
+
+
+cdef extern from "ext_boxstyle.h":
+
+    cdef void class_attr_setstyle(t_class *c, const char *s)
+    cdef void class_attr_style_alias(t_class *c, const char *name, const char *aliasname, long legacy)
+    cdef int FILL_ATTR_SAVE
+    cdef void class_attr_setfill(t_class *c, const char *name, long flags)
+    cdef void jgraphics_attr_fillrect(t_object *b, t_jgraphics *g, t_symbol *attrname, t_rect *area)
+    cdef t_jpattern *jgraphics_attr_setfill(t_object *b, t_jgraphics *g, t_symbol *attrname, t_rect *area)
+    cdef void object_attr_getfillcolor_atposition(t_object *b, const char *attrname, double pos, t_jrgba *c)
+    cdef long object_attr_getfill(t_object *obj, t_symbol *attrname)
+    cdef void object_style_setfillattribute(t_object *x, t_symbol *fillattr, t_symbol *entry, long argc, t_atom *argv)
+    cdef void class_attr_stylemap(t_class *c, char *attrname, char *mapname)
+    cdef t_symbol *object_attr_attrname_forstylemap(t_object *x, t_symbol *mapname)     
+    cdef t_symbol *object_attr_stylemapname(t_object *x, t_symbol *attrname)            
+    cdef t_jpopupmenu *style_getmenu(t_object *context, t_symbol *current, long mask, long *selecteditem, long *headercount)        
+    cdef void style_handlemenu(t_object *context, long itemindex, t_symbol **current)
+
+    cdef void CLASS_ATTR_STYLE_RGBA_NOSAVE(c,attrname,flags,structname,structmember,label)
+    cdef void CLASS_ATTR_STYLE_RGBA(c,attrname,flags,structname,structmember,label)
+    cdef void CLASS_ATTR_STYLE_RGBA_PREVIEW(c,attrname,flags,structname,structmember,label,previewtype)
+    cdef void CLASS_ATTR_STYLE_ALIAS_NOSAVE(c,attrname,aliasname)
+    cdef void CLASS_ATTR_STYLE_ALIAS_COMPATIBILITY(c,attrname,aliasname)
+    cdef void CLASS_ATTR_STYLE_ALIAS_RGBA_LEGACY(c,attrname,aliasname)
+
+
+
 
