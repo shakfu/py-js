@@ -1,0 +1,3 @@
+
+maxclasswrap("py", "PyExternal");
+
