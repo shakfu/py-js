@@ -1,4 +1,3 @@
-#include "readline.h"
 #include <stdio.h>
 
 #define PY_SSIZE_T_CLEAN
@@ -6,6 +5,10 @@
 #include <compile.h>
 #include <eval.h>
 #include <object.h>
+
+#include "readline.h"
+
+int add_history(char*);
 
 int main(int argc, char* argv[])
 {
