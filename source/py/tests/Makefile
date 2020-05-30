@@ -1,43 +1,89 @@
-# 'make'        build executable file
-# 'make clean'  removes all .o and executable files
-# 'make check'	checks for memory leaks
 
-# define the executable file 
-MAIN = prog
-
-INCLUDES = -I<add here>
-LFLAGS = -L<add here>
-LIBS = -lpq
-
-# directories
-SRCDIR = src
-OBJDIR = obj
-
-# define the C compiler and flags to use
 CC = gcc
 CFLAGS = -Wall -g -std=c99
+INCLUDES=`python3.7-config --cflags`
+LDFLAGS=`python3.7-config --ldflags`
 
 
-# The following part of the makefile is generic:
+READLINE_INCLUDES=-I/usr/local/Cellar/readline/8.0.4/include \
+				  -I/usr/local/Cellar/readline/8.0.4/include/readline
+READLINE_LDFLAGS=-L/usr/local/Cellar/readline/8.0.4/lib -lreadline
 
-SOURCES := $(wildcard $(SRCDIR)/*.c)
-OBJECTS := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+TARGETS=test_interactive test_py
+
 
 .PHONY: clean
 
-all: $(MAIN)
-	@echo $(MAIN) has been compiled
+all: 
 
-$(MAIN): $(OBJECTS) 
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJECTS) $(LFLAGS) $(LIBS)
-	strip $(MAIN)
 
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+# BUILDING
+# -----------------------------------------------------------------------
+.PHONY: build test_py test_interactive
 
-clean:
-	$(RM) $(OBJDIR)/*.o *~ $(MAIN)
+build: test_py test_interactive
+	$(call section,"build tests")
 
-check:
-	valgrind --leak-check=yes ./$(MAIN)
+test_py:
+	$(call section,"build test_py")
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $(LDFLAGS) $@.c
+
+
+test_interactive:
+	$(call section,"build test_interactive")
+	$(CC) $(CFLAGS) $(INCLUDES) $(READLINE_INCLUDES) -o $@ $(LDFLAGS) $(READLINE_LDFLAGS) $@.c
+
+
+
+# TESTING
+# -----------------------------------------------------------------------
+.PHONY: test
+
+test:
+	$(call section,"testing planned")
+	echo "remember to test!"
+
+
+# CHECK
+# -----------------------------------------------------------------------
+.PHONY: memcheck
+
+memcheck: test_py
+	$(call section,"checking for memory leaks")
+	valgrind --tool=memcheck \
+			 --dsymutil=yes \
+			 --track-origins=yes \
+			 --show-leak-kinds=all \
+			 --trace-children=yes \
+			 --suppressions=$HOME/.valgrind-python.supp \
+	 		 --leak-check=full $<
+			 # --gen-suppressions=yes \
+
+
+# STYLING
+# -----------------------------------------------------------------------
+.PHONY: style clang-format
+
+style: clang-format
+
+clang-format:
+	$(call section,"clang-format")
+	@clang-format -i -style=../.clang-format *.c
+
+
+# CLEANING
+# -----------------------------------------------------------------------
+.PHONY: clean
+
+clean: clean-build
+	$(call section,"cleaning DONE")
+
+
+clean-build:
+	$(call section,"cleaning build artifacts")
+	@rm -rf *.dSYM
+	@for f in $(TARGETS) ; do \
+		rm -rf $$f ; \
+	done
+
+
