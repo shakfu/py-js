@@ -78,13 +78,13 @@ void ext_main(void* r)
     CLASS_ATTR_BASIC(c,      "pythonpath", 0);
     CLASS_ATTR_SAVE(c,       "pythonpath", 0);
 
-    CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
+    // CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
     CLASS_ATTR_LABEL(c,      "debug", 0,  "debug log to console");
     CLASS_ATTR_CHAR(c,       "debug", 0,  t_py, p_debug);
     CLASS_ATTR_STYLE(c,      "debug", 0, "onoff");
-    // CLASS_ATTR_DEFAULT(c, "debug", 0, "1");
     CLASS_ATTR_BASIC(c,      "debug", 0);
     CLASS_ATTR_SAVE(c,       "debug", 0);
+    // CLASS_ATTR_DEFAULT(c, "debug", 0, "1");
     
     //------------------------------------------------------------------------
     // clang-format on

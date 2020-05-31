@@ -634,6 +634,7 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include "jpatcher_utils.h"
 #include "jgraphics.h"
 #include "ext_boxstyle.h"
+#include "jdataview.h"
 #include "py.h"
 #ifdef _OPENMP
 #include <omp.h>
