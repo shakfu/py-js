@@ -4,6 +4,33 @@ An attempt to make a simple (and extensible) max external for python3
 
 repo - https://github.com/shakfu/py
 
+## Summary
+
+```
+    globals:
+        object_count: number of active py objects
+        registry: global lookup for script and objects names
+
+    py interpreter object
+        attributes
+            name:  unique name
+            file:  file to load into editor
+            debug: switch debug logging on and off
+            patcher: parent patcher object
+            box: parent patcher object
+
+        messages
+            import <module>     : python import to object namespace
+            eval <expression>   : python 'eval' semantics
+            exec <statement>    : python 'exec' semantics
+            execfile <path>     : python 'execfile' semantics
+            assign <var> [data] : max friendly assignments to object namespace
+            call (anything)     : max friendly python function calling
+            read <path>         : read text file into editor
+            load <path>         : combo of read <path> -> execfile <path>
+
+```
+
 
 ## Overview
 
@@ -56,29 +83,7 @@ editor   | load            | file          | yes    | no         | [x]
 
 
 
-```
-    globals:
-        object_count: number of active py objects
-        registry: lookup for script and objects names
 
-    py interpreter object
-        attributes
-            name:  unique name
-            file:  file to load into editor
-            debug: switch debug logging on and off
-
-            (planned)
-            patcher: parent patcher object
-            box: box object??
-
-        messages
-            import <module>   : python import to object namespace
-            eval <expression> : python 'eval' semantics
-            exec <statement>  : python 'exec' semantics
-            execfile <path>   : python 'execfile' semantics 
-            read <path>       : read text file into editor
-            load <path>       : combo of read <path> -> execfile <path>
-```
 
 
 
