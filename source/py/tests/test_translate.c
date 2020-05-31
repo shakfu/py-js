@@ -31,9 +31,8 @@ int main(int argc, char* argv[])
     Py_Initialize();
 
     // python init
-    PyObject* main_module = PyImport_AddModule(
-        "__main__");                              // borrowed reference
-    x->p_globals = PyModule_GetDict(main_module); // borrowed reference
+    PyObject* module = PyImport_AddModule("__main__"); // borrowed reference
+    x->p_globals = PyModule_GetDict(module); // borrowed reference
 
     if (argc > 2) {
         if (strcmp(argv[1], "import") == 0)
@@ -136,6 +135,7 @@ error:
     return -1;
 }
 
+
 int py_run(t_py* x, char* fpath)
 {
     PyObject* pval = NULL;
@@ -172,6 +172,7 @@ error:
     return -1;
 }
 
+
 PyObject* py_eval_obj(t_py* x, char* expression)
 {
     PyObject* pval = PyRun_String(expression, Py_eval_input, x->p_globals,
@@ -183,6 +184,7 @@ PyObject* py_eval_obj(t_py* x, char* expression)
         return NULL;
     }
 }
+
 
 long py_eval_long(t_py* x, char* expression)
 {
@@ -210,6 +212,7 @@ error:
     return -1;
 }
 
+
 double py_eval_double(t_py* x, char* expression)
 {
 
@@ -236,9 +239,9 @@ error:
     return -1;
 }
 
+
 const char* py_eval_unicode(t_py* x, char* expression)
 {
-
     PyObject* pval = NULL;
 
     pval = py_eval_obj(x, expression);
@@ -262,36 +265,10 @@ error:
     return NULL;
 }
 
-long* py_eval_long_seq1(t_py* x, char* expression)
+// caller must free
+long* py_eval_long_seq(t_py* x, char* expression)
 {
-    long result[PY_MAX_LONG];
-    PyObject* iter = NULL;
-    PyObject* item = NULL;
-    int i = 0;
-
-    PyObject* pval = py_eval_obj(x, expression);
-    if (pval != NULL) {
-        if (PySequence_Check(pval)) {
-            if ((iter = PyObject_GetIter(pval)) != NULL) {
-                while ((item = PyIter_Next(iter)) != NULL) {
-                    if (PyLong_Check(item)) {
-                        if (PyLong_AsLong(item) != -1) {
-                            result[i] = PyLong_AsLong(item);
-                            i++;              
-                        }    
-                    }
-                    Py_DECREF(item);
-                }
-            }
-        }
-    }
-    Py_XDECREF(pval);
-    return result;
-}
-
-long* py_eval_long_seq2(t_py* x, char* expression)
-{
-    long result[PY_MAX_LONG];
+    long *result;
     PyObject* iter = NULL;
     PyObject* item = NULL;
     int i = 0;
@@ -304,6 +281,16 @@ long* py_eval_long_seq2(t_py* x, char* expression)
     if (!PySequence_Check(pval)) {
         goto error;
      }
+
+    Py_ssize_t length = PySequence_Length(pval);
+    if (length == -1) {
+        goto error;
+    }
+
+    result = (long*)malloc(length * sizeof(long));
+    if (result == NULL) {
+        goto error;
+    }
 
     if ((iter = PyObject_GetIter(pval)) != NULL) {
         while ((item = PyIter_Next(iter)) != NULL) {
@@ -319,43 +306,18 @@ long* py_eval_long_seq2(t_py* x, char* expression)
 
     // success
     Py_XDECREF(pval);
-    return result;
+    return result; // caller must free
 
     error:
+        handle_py_error();
         Py_XDECREF(pval);
+        return NULL;
 }
 
-float* py_eval_float_seq1(t_py* x, char* expression)
+// caller must free
+float* py_eval_float_seq(t_py* x, char* expression)
 {
-    float result[PY_MAX_FLOAT];
-    PyObject* iter = NULL;
-    PyObject* item = NULL;
-    int i = 0;
-
-    PyObject* pval = py_eval_obj(x, expression);
-    if (pval != NULL) {
-        if (PySequence_Check(pval)) {
-            if ((iter = PyObject_GetIter(pval)) != NULL) {
-                while ((item = PyIter_Next(iter)) != NULL) {
-                    if (PyFloat_Check(item)) {
-                        if (PyFloat_AsDouble(item) != -1) {
-                            result[i] = (float)PyFloat_AsDouble(item);
-                            i++;
-                        }
-                    }
-                    Py_DECREF(item);
-                }
-            }
-        }
-    }
-    Py_XDECREF(pval);
-    return result;
-}
-
-
-long* py_eval_float_seq2(t_py* x, char* expression)
-{
-    float result[PY_MAX_FLOAT];
+    float *result;
     PyObject* iter = NULL;
     PyObject* item = NULL;
     int i = 0;
@@ -367,7 +329,17 @@ long* py_eval_float_seq2(t_py* x, char* expression)
 
     if (!PySequence_Check(pval)) {
         goto error;
-     }
+    }
+
+    Py_ssize_t length = PySequence_Length(pval);
+    if (length == -1) {
+        goto error;
+    }
+
+    result = (float*)malloc(length * sizeof(float));
+    if (result == NULL) {
+        goto error;
+    }
 
     if ((iter = PyObject_GetIter(pval)) != NULL) {
         while ((item = PyIter_Next(iter)) != NULL) {
@@ -383,9 +355,11 @@ long* py_eval_float_seq2(t_py* x, char* expression)
 
     // success
     Py_XDECREF(pval);
-    return result;
+    return result; // caller must free
 
     error:
+        handle_py_error();
         Py_XDECREF(pval);
+        return NULL;
 }
 
