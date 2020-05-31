@@ -190,8 +190,9 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // create inlet(s)
         // create outlet(s)
-        x->p_outlet0 = outlet_new(x, NULL);
-        x->p_outlet1 = outlet_new(x, NULL);
+        x->p_outlet_right = outlet_new(x, NULL);
+        x->p_outlet_middle = outlet_new(x, NULL);
+        x->p_outlet_left = outlet_new(x, NULL);
 
         // process @arg attributes
         attr_args_process(x, argc, argv);
@@ -281,7 +282,7 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 /*--------------------------------------------------------------------------*/
 // object methods
 
-void py_bang(t_py* x) { outlet_bang(x->p_outlet1); }
+void py_bang(t_py* x) { outlet_bang(x->p_outlet_left); }
 
 void py_scan(t_py* x)
 {
@@ -313,7 +314,7 @@ long scan_callback(t_py* x, t_object* obj)
 }
 
 // retrieves a count of the number of 'active' py objects from a global var
-void py_count(t_py* x) { outlet_int(x->p_outlet1, py_global_obj_count); }
+void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 
 /*--------------------------------------------------------------------------*/
 // python helper functions
@@ -466,12 +467,13 @@ void py_import(t_py* x, t_symbol* s)
             goto error;
         }
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
-        outlet_bang(x->p_outlet0);
+        outlet_bang(x->p_outlet_right);
         py_log(x, "imported: %s", s->s_name);
     }
     return;
 error:
     handle_py_error(x, "import %s", s->s_name);
+    outlet_bang(x->p_outlet_middle);
 }
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -488,22 +490,22 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
         // handle ints and longs
         if (PyLong_Check(pval)) {
             long int_result = PyLong_AsLong(pval);
-            outlet_int(x->p_outlet1, int_result);
-            outlet_bang(x->p_outlet0);
+            outlet_int(x->p_outlet_left, int_result);
+            outlet_bang(x->p_outlet_right);
         }
 
         // handle floats and doubles
         if (PyFloat_Check(pval)) {
             float float_result = (float)PyFloat_AsDouble(pval);
-            outlet_float(x->p_outlet1, float_result);
-            outlet_bang(x->p_outlet0);
+            outlet_float(x->p_outlet_left, float_result);
+            outlet_bang(x->p_outlet_right);
         }
 
         // handle strings
         if (PyUnicode_Check(pval)) {
             const char* unicode_result = PyUnicode_AsUTF8(pval);
-            outlet_anything(x->p_outlet1, gensym(unicode_result), 0, NIL);
-            outlet_bang(x->p_outlet0);
+            outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
+            outlet_bang(x->p_outlet_right);
         }
 
         // handle any sequence except strings, and presently
@@ -554,8 +556,8 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
                     }
                     Py_DECREF(item);
                 }
-                outlet_anything(x->p_outlet1, gensym("list"), i, atoms);
-                outlet_bang(x->p_outlet0);
+                outlet_anything(x->p_outlet_left, gensym("list"), i, atoms);
+                outlet_bang(x->p_outlet_right);
                 py_log(x, "end iter op: %d", i);
             }
 
@@ -590,7 +592,7 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     if (pval == NULL) {
         goto error;
     }
-    outlet_bang(x->p_outlet0);
+    outlet_bang(x->p_outlet_right);
 
     // success cleanup
     Py_DECREF(pval);
@@ -600,6 +602,7 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 error:
     handle_py_error(x, "exec %s", py_argv);
     Py_XDECREF(pval);
+    outlet_bang(x->p_outlet_middle);
 }
 
 void py_execfile(t_py* x, t_symbol* s)
@@ -623,7 +626,7 @@ void py_execfile(t_py* x, t_symbol* s)
     if (pval == NULL) {
         goto error;
     }
-    outlet_bang(x->p_outlet0);
+    outlet_bang(x->p_outlet_right);
 
     // success cleanup
     fclose(fhandle);
@@ -634,6 +637,7 @@ void py_execfile(t_py* x, t_symbol* s)
 error:
     handle_py_error(x, "execfile %s", s->s_name);
     Py_XDECREF(pval);
+    outlet_bang(x->p_outlet_middle);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -723,12 +727,13 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
     // Py_XDECREF(list); // causes a crash
-    outlet_bang(x->p_outlet0);
+    outlet_bang(x->p_outlet_right);
     return;
 
 error:
     handle_py_error(x, "assign %s", s->s_name);
     Py_XDECREF(list);
+    outlet_bang(x->p_outlet_middle);
 }
 
 void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -823,19 +828,19 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // handle ints and longs
     if (PyLong_Check(pval)) {
         long int_result = PyLong_AsLong(pval);
-        outlet_int(x->p_outlet1, int_result);
+        outlet_int(x->p_outlet_left, int_result);
     }
 
     // handle floats and doubles
     if (PyFloat_Check(pval)) {
         float float_result = (float)PyFloat_AsDouble(pval);
-        outlet_float(x->p_outlet1, float_result);
+        outlet_float(x->p_outlet_left, float_result);
     }
 
     // handle strings
     if (PyUnicode_Check(pval)) {
         const char* unicode_result = PyUnicode_AsUTF8(pval);
-        outlet_anything(x->p_outlet1, gensym(unicode_result), 0, NIL);
+        outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
     }
 
     // handle lists, tuples and sets
@@ -893,7 +898,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
             }
             Py_DECREF(item);
         }
-        outlet_list(x->p_outlet1, NULL, i, atoms);
+        outlet_list(x->p_outlet_left, NULL, i, atoms);
         py_log(x, "end iter op: %d", i);
 
         if (is_dynamic) {
@@ -907,7 +912,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
     py_log(x, "END %s: %s", s->s_name, py_argv);
-    outlet_bang(x->p_outlet0);
+    outlet_bang(x->p_outlet_right);
     return;
 
 error:
@@ -916,4 +921,5 @@ error:
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
+    outlet_bang(x->p_outlet_middle);
 }

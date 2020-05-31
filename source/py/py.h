@@ -59,8 +59,9 @@ typedef struct _py {
     t_symbol* p_code_filepath; /* default python filepath to load into
                                   the code editor and global namespace */
     /* outlet creation */
-    void* p_outlet0; // right outlet for bang notifications
-    void* p_outlet1; // left outleet for msg output
+    void* p_outlet_right;  // right outlet to bang success
+    void* p_outlet_middle; // middle outleet to bang error
+    void* p_outlet_left;   // left outleet for msg output
 
 } t_py;
 

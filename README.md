@@ -155,6 +155,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## TODO
 
+- [ ] add third (middle) outlet which bangs on an error
 - [ ] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
 - [ ] enhance `py_anything` method to eval if identifier exists in ns and is not callable
 - [ ] Add file location feature (try pkg/examples/scripts then absolute paths)
