@@ -25,18 +25,35 @@ editor   | read            | file          | n/a    | no         | [x]
 editor   | load            | file          | yes    | no         | [x]
 
 
-Basic Features
+### Basic Features
 
-1. Per-object namespaces. It responds to an `import <module>` message in
-   the left inlet which loads a python module in its namespace. Each new
-   import (like python) adds to the namespace.
+1. **Per-object namespaces**. The `py` object responds to an `import <module>` 
+   message in the left inlet which loads a python module in its namespace. Each
+   new import (like python) adds modules to the namespace.
 
-2. Eval Messages. It responds to an `eval <expression>` message in the
+2. **Eval Messages**. It responds to an `eval <expression>` message in the
    left inlet which is evaluated in the context of the namespace and outputs 
    results to the left outlet and outputs a bang from the right outlet to signal
    end of evaluation.
 
-3. Executing code string or a file into a namespace (modifying it)
+3. **Exec Messages**. It responds to an `exec <statement>` message and an 
+   `execfile <filepath>` message which executes the statement or the file code in 
+   the object's namespace. This produces no output from the left outlet, but a bang
+   is output from the right outlet to signal the end of a successful operation.
+
+4. **Assign Messages**. It responds to an `assign <varname> [x1, x2, ..., xN]`
+   which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace.
+   This is a way of creating variables in python of max data. This produces no 
+   output from the left outlet, but a bang is output from the right outlet to
+   signal the end of a successful operation.
+
+5. **Anything Messages**. It responds to any kind of messages other than the
+   standard ones specified, but practically can `evalualte` (in the `eval` sense above) a message format which is a similar to a python generic function call:
+   `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`
+
+6. **Code Editor**. Double-clicking on the object open a code-editor which can have
+   a `read` message which reads a file, specified as an attribute, into the editor, and also a `load` message which `reads` the file and then `execfile` it into the editor.
+
 
 
 ```
