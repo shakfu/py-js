@@ -356,8 +356,8 @@
 									"id" : "obj-1",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
-									"numoutlets" : 2,
-									"outlettype" : [ "", "" ],
+									"numoutlets" : 3,
+									"outlettype" : [ "", "", "" ],
 									"patching_rect" : [ 325.25, 472.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
 										"debug" : 1,
@@ -673,6 +673,19 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"bgcolor" : [ 0.498039215686275, 0.282352941176471, 0.282352941176471, 1.0 ],
+									"id" : "obj-39",
+									"maxclass" : "button",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "bang" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 356.0, 365.0, 24.0, 24.0 ]
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"hidden" : 1,
 									"id" : "obj-40",
 									"maxclass" : "message",
@@ -795,13 +808,14 @@
 							}
 , 							{
 								"box" : 								{
+									"bgcolor" : [ 0.235294117647059, 0.474509803921569, 0.258823529411765, 1.0 ],
 									"id" : "obj-26",
 									"maxclass" : "button",
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 356.0, 367.0, 24.0, 24.0 ]
+									"patching_rect" : [ 390.0, 365.0, 24.0, 24.0 ]
 								}
 
 							}
@@ -1100,7 +1114,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "0 1"
+									"text" : "1 2 3"
 								}
 
 							}
@@ -1133,12 +1147,12 @@
 									"id" : "obj-1",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
-									"numoutlets" : 2,
-									"outlettype" : [ "", "" ],
+									"numoutlets" : 3,
+									"outlettype" : [ "", "", "" ],
 									"patching_rect" : [ 328.0, 258.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
 										"debug" : 1,
-										"file" : "",
+										"file" : "hello.py",
 										"pythonpath" : ""
 									}
 ,
@@ -1150,6 +1164,13 @@
 						"lines" : [ 							{
 								"patchline" : 								{
 									"destination" : [ "obj-26", 0 ],
+									"source" : [ "obj-1", 2 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-39", 0 ],
 									"source" : [ "obj-1", 1 ]
 								}
 
