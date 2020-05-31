@@ -3,13 +3,16 @@
 
 echo "compiling..."
 
-for fname in test_args
+
+
+for fname in $@
 do
     echo "compiling $fname"
+    bname=$(basename $fname .c)
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    clang -g -I /usr/include/python3.8 -lpython3.8 $fname.c -o $fname
+    clang -g -I /usr/include/python3.8 -lpython3.8 $fname -o $bname
 	elif [[ "$OSTYPE" == "darwin"* ]]; then
-    gcc -g `python3.7-config --cflags --ldflags` $fname.c -o $fname
+    gcc -g `python3.7-config --cflags --ldflags` $fname -o $bname
 	else
 		echo "not implemented"
 	fi

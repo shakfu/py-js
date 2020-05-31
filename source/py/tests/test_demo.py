@@ -1,28 +1,47 @@
 import os
 
+import pytest
 from conftest import cwd, join
 
-# content of test_sample.py
-def func(x):
-    return x + 1
+MODULES = ["os", "sys", "math"]
+
+EXPRESSIONS = {
+    "1+1": "int: 2",
+    "2*10": "int: 20"
+}
 
 
-def test_answer():
-    assert func(3) == 4
-
-# def test_system_echo(capfd):
-#     os.system('echo "hello"')
-#     captured = capfd.readouterr()
-#     assert captured.out == "hello\n"
-
-def test_me():
-    py = join(cwd, 'test_py')
-    print(py)
-    assert 1==1
 
 
-def test_system_echo(capfd):
-    os.system(f'./tests/test_py import os')
+@pytest.fixture(scope="module", params=MODULES)
+def module(request):
+    expr = request.param
+    yield expr
+
+@pytest.fixture(scope="module", params=EXPRESSIONS.keys())
+def expression(request):
+    mod = request.param
+    yield mod
+
+
+
+def test_import(capfd, module):
+    arg = f'import {module}'
+    os.system(f'./tests/test_py {arg}')
     captured = capfd.readouterr()
-    assert captured.out == "imported: os\n"
+    assert captured.out == f"imported: {module}\n"
+
+
+def test_import_error(capfd):
+    arg = f'import hello'
+    os.system(f'./tests/test_py {arg}')
+    captured = capfd.readouterr()
+    assert captured.out == f"PyException('{arg}'): Ooops again.\n"
+
+def test_eval(capfd, expression):
+    arg = f'eval {expression}'
+    os.system(f'./tests/test_py {arg}')
+    captured = capfd.readouterr()
+    result = EXPRESSIONS[expression]
+    assert captured.out == f"{result}\n"
 
