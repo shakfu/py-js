@@ -85,5 +85,8 @@ clean-build:
 	@for f in $(TARGETS) ; do \
 		rm -rf $$f ; \
 	done
+	@rm -rf infer-out
+	@rm -rf __pycache__
+
 
 
