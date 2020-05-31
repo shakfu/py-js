@@ -11,9 +11,9 @@
 
 t_class* py_class; // global pointer to object class
 
-// t_hashtab *registry; // global object lookups
-
 static int py_global_obj_count = 0; // when 0 free interpreter
+
+static t_hashtab* py_global_registry; // global object lookups
 
 // static wchar_t* program;
 
@@ -25,7 +25,7 @@ void ext_main(void* r)
     t_class* c;
 
     c = class_new("py", (method)py_new, (method)py_free, (long)sizeof(t_py),
-                  0L /* leave NULL!! */, A_GIMME, 0);
+                  0L, A_GIMME, 0);
 
     // clang-format off
     //------------------------------------------------------------------------
@@ -51,6 +51,7 @@ void ext_main(void* r)
     // meta
     class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
     class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
+    class_addmethod(c, (method)py_send,       "send",       A_GIMME,   0);
 
     // code editor
     class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
@@ -260,6 +261,12 @@ void py_init(t_py* x)
 
     // increment global object counter
     py_global_obj_count++;
+
+    if (py_global_obj_count == 1) {
+        // if first py object create the py_global_registry;
+        py_global_registry = (t_hashtab*)hashtab_new(0);
+        hashtab_flags(py_global_registry, OBJ_FLAG_REF);
+    }
 }
 
 void py_free(t_py* x)
@@ -274,6 +281,8 @@ void py_free(t_py* x)
     py_global_obj_count--;
     if (py_global_obj_count == 0) {
         /* WARNING: don't call x here or max will crash */
+        hashtab_chuck(py_global_registry);
+
         post("last py obj freed -> finalizing py mem / interpreter.");
         // PyMem_RawFree(program);
         Py_FinalizeEx();
@@ -301,22 +310,34 @@ void py_scan(t_py* x)
 {
     long result = 0;
 
+    hashtab_clear(py_global_registry);
+
     object_method(x->p_patcher, gensym("iterate"), (method)scan_callback, x,
                   PI_DEEP | PI_WANTBOX, &result);
 }
 
-long scan_callback(t_py* x, t_object* obj)
+long scan_callback(t_py* x, t_object* box)
 {
     t_rect jr;
     t_object* p;
     t_symbol* s;
     t_symbol* varname;
+    t_object* obj;
     t_symbol* obj_id;
 
-    jbox_get_patching_rect(obj, &jr);
-    p = jbox_get_patcher(obj);
-    varname = jbox_get_varname(obj);
-    obj_id = jbox_get_id(obj);
+    jbox_get_patching_rect(box, &jr);
+    p = jbox_get_patcher(box);
+    varname = jbox_get_varname(box);
+    obj = jbox_get_object(box);
+
+    // lifted from scheme-for-max (Thanks, Iain!)
+    if (varname != gensym("")) {
+        py_log(x, "storing object '%s' in the global registry",
+               varname->s_name);
+        hashtab_store(py_global_registry, varname, obj);
+    }
+
+    obj_id = jbox_get_id(box);
     s = jpatcher_get_name(p);
     object_post(
         (t_object*)x,
@@ -324,6 +345,53 @@ long scan_callback(t_py* x, t_object* obj)
         s->s_name, varname->s_name, obj_id->s_name, (long)jr.x, (long)jr.y,
         (long)jr.width, (long)jr.height);
     return 0;
+}
+
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    t_object* obj = NULL;
+    char* obj_name = NULL;
+    t_max_err err = NULL;
+
+    obj_name = atom_getsym(argv)->s_name;
+    if (obj_name == NULL) {
+        goto error;
+    }
+    
+    // lifted from scheme-for-max (Thanks, Iain!)
+    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
+    if (err) {
+        py_error(x, "no object found in the registry with the name %s",
+                 obj_name);
+        goto error;
+    }
+
+    // TEMPORARY!!
+    char* obj_msg = atom_getsym(argv + 1)->s_name;
+    if (obj_msg == NULL) { // should check type here
+        goto error;
+    }
+
+    // address the minimum case: e.g a bang
+    if (argc - 2 == 0) {
+        argc = 0;
+        argv = NULL;
+    } else {
+        argc = argc - 2;
+        argv = argv + 2;
+    }
+
+    err = object_method_typed(obj, gensym(obj_msg), argc, argv, NULL);
+    if (err) {
+        py_error(x, "failed to send a message to object %s", obj_name);
+        goto error;
+    }
+
+    // success
+    return;
+
+error:
+    return;
 }
 
 // retrieves a count of the number of 'active' py objects from a global var
