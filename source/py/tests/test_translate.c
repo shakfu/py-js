@@ -287,7 +287,8 @@ long* py_eval_long_seq(t_py* x, char* expression)
         goto error;
     }
 
-    result = (long*)malloc(length * sizeof(long));
+    // use calloc instead of malloc to init zeros
+    result = (long*)calloc(length, sizeof(long));
     if (result == NULL) {
         goto error;
     }
@@ -336,7 +337,8 @@ float* py_eval_float_seq(t_py* x, char* expression)
         goto error;
     }
 
-    result = (float*)malloc(length * sizeof(float));
+    // use calloc instead of malloc to init zeros
+    result = (float*)calloc(length, sizeof(float));
     if (result == NULL) {
         goto error;
     }
