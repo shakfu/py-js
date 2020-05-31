@@ -673,6 +673,30 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-44",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 50.0, 199.0, 127.0, 22.0 ],
+									"text" : "eval api.np.__name__"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-42",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 19.5, 172.0, 151.0, 22.0 ],
+									"text" : "eval api.np.version.version"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"bgcolor" : [ 0.498039215686275, 0.282352941176471, 0.282352941176471, 1.0 ],
 									"id" : "obj-39",
 									"maxclass" : "button",
@@ -717,7 +741,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 20.75, 92.0, 34.0, 22.0 ],
+									"patching_rect" : [ 23.0, 227.0, 34.0, 22.0 ],
 									"text" : "scan"
 								}
 
@@ -729,7 +753,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 352.0, 137.0, 22.0 ],
+									"patching_rect" : [ 19.5, 146.0, 137.0, 22.0 ],
 									"text" : "api.total 10.1 12.2 40 50"
 								}
 
@@ -741,7 +765,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 385.0, 84.0, 22.0 ],
+									"patching_rect" : [ 23.0, 120.0, 84.0, 22.0 ],
 									"text" : "api.echo 1 2 3"
 								}
 
@@ -1029,7 +1053,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 230.0, 184.0, 22.0 ],
+									"patching_rect" : [ 507.0, 388.0, 184.0, 22.0 ],
 									"text" : "eval str(datetime.datetime.now())"
 								}
 
@@ -1041,7 +1065,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 20.75, 168.0, 91.0, 22.0 ],
+									"patching_rect" : [ 507.0, 354.0, 91.0, 22.0 ],
 									"text" : "import datetime"
 								}
 
@@ -1114,7 +1138,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "1 2 3"
+									"text" : "numpy"
 								}
 
 							}
@@ -1391,6 +1415,20 @@
 									"destination" : [ "obj-7", 0 ],
 									"hidden" : 1,
 									"source" : [ "obj-40", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-42", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-44", 0 ]
 								}
 
 							}

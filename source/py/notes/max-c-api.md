@@ -6,6 +6,9 @@
 
 see: https://cycling74.com/forums/locatefolder
 
+## Compiling on Ubuntu 20.04
+
+https://stackoverflow.com/questions/27672572/embedding-python-in-c-linking-fails-with-undefined-reference-to-py-initialize
 
 
 

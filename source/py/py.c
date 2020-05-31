@@ -15,6 +15,8 @@ t_class* py_class; // global pointer to object class
 
 static int py_global_obj_count = 0; // when 0 free interpreter
 
+// static wchar_t* program;
+
 /*--------------------------------------------------------------------------*/
 // main
 
@@ -227,10 +229,20 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
 void py_init(t_py* x)
 {
+    // wchar_t *program;
+
+    // program = Py_DecodeLocale(argv[0], NULL);
+    // program = Py_DecodeLocale("py", NULL);
+    // if (program == NULL) {
+    //     exit(1);
+    // }
+
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
         py_error(x, "could not add 'api' to builtin modules table");
     }
+
+    // Py_SetProgramName(program);
 
     Py_Initialize();
 
@@ -263,6 +275,7 @@ void py_free(t_py* x)
     if (py_global_obj_count == 0) {
         /* WARNING: don't call x here or max will crash */
         post("last py obj freed -> finalizing py mem / interpreter.");
+        // PyMem_RawFree(program);
         Py_FinalizeEx();
     }
 }
