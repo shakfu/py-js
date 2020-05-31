@@ -90,7 +90,6 @@ void py_run(t_py* x, char* args)
         printf("%s: could not retrieve args\n", args);
         goto error;
     }
-    printf("START run: %s\n", args);
 
     pval = Py_BuildValue("s", args); // new reference
     if (pval == NULL) {
@@ -111,7 +110,6 @@ void py_run(t_py* x, char* args)
     // success
     fclose(fhandle);
     Py_DECREF(pval);
-    printf("END run: %s\n", args);
 
 error:
     if (PyErr_Occurred()) {
@@ -135,7 +133,6 @@ void py_execfile(t_py* x, char* args)
         printf("execfile: could not retrieve arg: %s\n", args);
         goto error;
     }
-    printf("START execfile: %s\n", args);
 
     fhandle = fopen(args, "r");
     if (fhandle == NULL) {
@@ -153,7 +150,6 @@ void py_execfile(t_py* x, char* args)
     // success cleanup
     fclose(fhandle);
     Py_DECREF(pval);
-    printf("END execfile: %s\n", args);
 
 error:
     if (PyErr_Occurred()) {
@@ -176,7 +172,6 @@ void py_exec(t_py* x, char* args)
         printf("exec: could not retrieve args: %s\n", args);
         goto error;
     }
-    printf("START exec: %s\n", args);
 
     pval = PyRun_String(args, Py_single_input, x->p_globals, x->p_globals);
     if (pval == NULL) {
@@ -185,7 +180,6 @@ void py_exec(t_py* x, char* args)
 
     // success cleanup
     Py_DECREF(pval);
-    printf("END exec: %s\n", args);
 
 error:
     if (PyErr_Occurred()) {
@@ -209,7 +203,6 @@ void py_eval(t_py* x, char* args)
         printf("eval: could not retrieve quoted args: %s\n", args);
         goto error;
     }
-    printf("START eval: %s\n", args);
 
     locals = PyDict_New();
     if (locals == NULL) {
@@ -281,7 +274,6 @@ void py_eval(t_py* x, char* args)
     // success cleanup
     Py_XDECREF(pval);
     // Py_XDECREF(locals);
-    printf("END eval: %s\n", args);
     return;
 
 error:

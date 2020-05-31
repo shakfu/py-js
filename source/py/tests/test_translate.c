@@ -1,3 +1,60 @@
+
+/* python */
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
+/* --------------------------------------- */
+// types
+
+typedef struct _py {
+    PyObject* p_globals;
+} t_py;
+
+
+#define PY_MAX_LONG 256
+#define PY_MAX_FLOAT PY_MAX_LONG
+
+/* --------------------------------------- */
+// forward func declarations
+
+int py_import(t_py* x, char* args);
+// int py_eval(t_py* x, char* args);
+int py_exec(t_py* x, char* args);
+int py_execfile(t_py* x, char* args);
+int py_run(t_py* x, char* args);
+
+int main(int argc, char* argv[])
+{
+    t_py obj = { .p_globals = NULL };
+    t_py* x = &obj;
+
+    Py_Initialize();
+
+    // python init
+    PyObject* main_module = PyImport_AddModule(
+        "__main__");                              // borrowed reference
+    x->p_globals = PyModule_GetDict(main_module); // borrowed reference
+
+    if (argc > 2) {
+        if (strcmp(argv[1], "import") == 0)
+            py_import(x, argv[2]);
+        // if (strcmp(argv[1], "eval") == 0)
+        //     py_eval(x, argv[2]);
+        if (strcmp(argv[1], "exec") == 0)
+            py_exec(x, argv[2]);
+        if (strcmp(argv[1], "execfile") == 0)
+            py_execfile(x, argv[2]);
+        if (strcmp(argv[1], "run") == 0)
+            py_run(x, argv[2]);
+    } else {
+        printf("usage: test [import, eval, exec, execfile, run] args\n");
+    }
+
+    Py_FinalizeEx();
+    return 0;
+}
+
+
 void handle_py_error(void)
 {
     if (PyErr_Occurred()) {
@@ -5,7 +62,7 @@ void handle_py_error(void)
     }
 }
 
-int py_import(char* name, PyObject* globals_dict)
+int py_import(t_py* x, char* name)
 {
     PyObject* x_module = NULL;
 
@@ -14,7 +71,7 @@ int py_import(char* name, PyObject* globals_dict)
         if (x_module == NULL) {
             goto error;
         }
-        PyDict_SetItemString(globals_dict, name, x_module);
+        PyDict_SetItemString(x->p_globals, name, x_module);
         return 0;
     }
 
@@ -23,7 +80,7 @@ error:
     return -1;
 }
 
-int py_exec(char* statement, PyObject* globals_dict)
+int py_exec(t_py* x, char* statement)
 {
     PyObject* pval = NULL;
 
@@ -31,8 +88,8 @@ int py_exec(char* statement, PyObject* globals_dict)
         goto error;
     }
 
-    pval = PyRun_String(statement, Py_single_input, globals_dict,
-                        globals_dict);
+    pval = PyRun_String(statement, Py_single_input, x->p_globals,
+                        x->p_globals);
     if (pval == NULL) {
         goto error;
     }
@@ -46,7 +103,7 @@ error:
     return -1;
 }
 
-int py_execfile(char* fpath, PyObject* globals_dict)
+int py_execfile(t_py* x, char* fpath)
 {
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
@@ -60,9 +117,11 @@ int py_execfile(char* fpath, PyObject* globals_dict)
         goto error;
     }
 
-    pval = PyRun_File(fhandle, fpath, Py_file_input, globals_dict,
-                      globals_dict);
+    pval = PyRun_File(fhandle, fpath, Py_file_input, x->p_globals,
+                      x->p_globals);
+
     if (pval == NULL) {
+        fclose(fhandle);
         goto error;
     }
 
@@ -77,11 +136,11 @@ error:
     return -1;
 }
 
-int py_run(char* fpath)
+int py_run(t_py* x, char* fpath)
 {
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
-    int ret = -0;
+    int ret = 0;
 
     if (fpath == NULL) {
         goto error;
@@ -97,7 +156,7 @@ int py_run(char* fpath)
         goto error;
     }
 
-    ret = PyRun_SimpleFile(fhandle, py_argv);
+    ret = PyRun_SimpleFile(fhandle, fpath);
     if (ret == -1) {
         goto error;
     }
@@ -113,10 +172,10 @@ error:
     return -1;
 }
 
-PyObject* py_eval_obj(char* expression, PyObject* globals_dict)
+PyObject* py_eval_obj(t_py* x, char* expression)
 {
-    PyObject* pval = PyRun_String(expression, Py_eval_input, globals_dict,
-                                  globals_dict);
+    PyObject* pval = PyRun_String(expression, Py_eval_input, x->p_globals,
+                                  x->p_globals);
     if (pval != NULL) {
         return pval;
     } else {
@@ -125,12 +184,12 @@ PyObject* py_eval_obj(char* expression, PyObject* globals_dict)
     }
 }
 
-long py_eval_long(char* expression, PyObject* globals_dict)
+long py_eval_long(t_py* x, char* expression)
 {
 
     PyObject* pval = NULL;
 
-    pval = py_eval_obj(expression, globals_dict);
+    pval = py_eval_obj(x, expression);
 
     if (pval == NULL) {
         goto error;
@@ -148,15 +207,15 @@ long py_eval_long(char* expression, PyObject* globals_dict)
 error:
     handle_py_error();
     Py_XDECREF(pval);
-    return NULL;
+    return -1;
 }
 
-double py_eval_double(char* expression, PyObject* globals_dict)
+double py_eval_double(t_py* x, char* expression)
 {
 
     PyObject* pval = NULL;
 
-    pval = py_eval_obj(expression, globals_dict);
+    pval = py_eval_obj(x, expression);
 
     if (pval == NULL) {
         goto error;
@@ -174,15 +233,15 @@ double py_eval_double(char* expression, PyObject* globals_dict)
 error:
     handle_py_error();
     Py_XDECREF(pval);
-    return NULL;
+    return -1;
 }
 
-char* py_eval_unicode(char* expression, PyObject* globals_dict)
+const char* py_eval_unicode(t_py* x, char* expression)
 {
 
     PyObject* pval = NULL;
 
-    pval = py_eval_obj(expression, globals_dict);
+    pval = py_eval_obj(x, expression);
 
     if (pval == NULL) {
         goto error;
@@ -203,23 +262,23 @@ error:
     return NULL;
 }
 
-long* py_eval_long_seq(char* expression, PyObject* globals_dict)
+long* py_eval_long_seq1(t_py* x, char* expression)
 {
-    long* result = NULL;
+    long result[PY_MAX_LONG];
     PyObject* iter = NULL;
     PyObject* item = NULL;
     int i = 0;
 
-    PyObject* pval = py_eval_obj(expression, globals_dict);
+    PyObject* pval = py_eval_obj(x, expression);
     if (pval != NULL) {
         if (PySequence_Check(pval)) {
-            Py_ssize_t length = PySequence_Length(pval);
-            result = (long*)malloc(length * sizeof(long));
             if ((iter = PyObject_GetIter(pval)) != NULL) {
                 while ((item = PyIter_Next(iter)) != NULL) {
                     if (PyLong_Check(item)) {
-                        result[i] = PyLong_AsLong(item);
-                        i++;
+                        if (PyLong_AsLong(item) != -1) {
+                            result[i] = PyLong_AsLong(item);
+                            i++;              
+                        }    
                     }
                     Py_DECREF(item);
                 }
@@ -230,23 +289,59 @@ long* py_eval_long_seq(char* expression, PyObject* globals_dict)
     return result;
 }
 
-float* py_eval_float_seq(char* expression, PyObject* globals_dict)
+long* py_eval_long_seq2(t_py* x, char* expression)
 {
-    float* result = NULL;
+    long result[PY_MAX_LONG];
     PyObject* iter = NULL;
     PyObject* item = NULL;
     int i = 0;
 
-    PyObject* pval = py_eval_obj(expression, globals_dict);
+    PyObject* pval = py_eval_obj(x, expression);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    if (!PySequence_Check(pval)) {
+        goto error;
+     }
+
+    if ((iter = PyObject_GetIter(pval)) != NULL) {
+        while ((item = PyIter_Next(iter)) != NULL) {
+            if (PyLong_Check(item)) {
+                if (PyLong_AsLong(item) != -1) {
+                    result[i] = PyLong_AsLong(item);
+                    i++;              
+                }    
+            }
+            Py_DECREF(item);
+        }
+    }
+
+    // success
+    Py_XDECREF(pval);
+    return result;
+
+    error:
+        Py_XDECREF(pval);
+}
+
+float* py_eval_float_seq1(t_py* x, char* expression)
+{
+    float result[PY_MAX_FLOAT];
+    PyObject* iter = NULL;
+    PyObject* item = NULL;
+    int i = 0;
+
+    PyObject* pval = py_eval_obj(x, expression);
     if (pval != NULL) {
         if (PySequence_Check(pval)) {
-            Py_ssize_t length = PySequence_Length(pval);
-            result = (float*)malloc(length * sizeof(float));
             if ((iter = PyObject_GetIter(pval)) != NULL) {
                 while ((item = PyIter_Next(iter)) != NULL) {
                     if (PyFloat_Check(item)) {
-                        result[i] = (float)PyFloat_AsDouble(item);
-                        i++;
+                        if (PyFloat_AsDouble(item) != -1) {
+                            result[i] = (float)PyFloat_AsDouble(item);
+                            i++;
+                        }
                     }
                     Py_DECREF(item);
                 }
@@ -256,3 +351,41 @@ float* py_eval_float_seq(char* expression, PyObject* globals_dict)
     Py_XDECREF(pval);
     return result;
 }
+
+
+long* py_eval_float_seq2(t_py* x, char* expression)
+{
+    float result[PY_MAX_FLOAT];
+    PyObject* iter = NULL;
+    PyObject* item = NULL;
+    int i = 0;
+
+    PyObject* pval = py_eval_obj(x, expression);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    if (!PySequence_Check(pval)) {
+        goto error;
+     }
+
+    if ((iter = PyObject_GetIter(pval)) != NULL) {
+        while ((item = PyIter_Next(iter)) != NULL) {
+            if (PyFloat_Check(item)) {
+                if (PyFloat_AsDouble(item) != -1) {
+                    result[i] = (float)PyFloat_AsDouble(item);
+                    i++;              
+                }    
+            }
+            Py_DECREF(item);
+        }
+    }
+
+    // success
+    Py_XDECREF(pval);
+    return result;
+
+    error:
+        Py_XDECREF(pval);
+}
+
