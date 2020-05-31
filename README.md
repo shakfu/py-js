@@ -75,11 +75,14 @@ editor   | load            | file          | yes    | no         | [x]
    signal the end of a successful operation.
 
 5. **Anything Messages**. It responds to any kind of messages other than the
-   standard ones specified, but practically can `evalualte` (in the `eval` sense above) a message format which is a similar to a python generic function call:
+   standard ones specified, but practically can `evalualte` (in the `eval` sense 
+   above) a message format which is a similar to a python generic function call:
    `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`
 
 6. **Code Editor**. Double-clicking on the object open a code-editor which can have
-   a `read` message which reads a file, specified as an attribute, into the editor, and also a `load` message which `reads` the file and then `execfile` it into the editor.
+   a `read` message which reads a file, specified as an attribute, into the editor, 
+   and also a `load` message which `reads` the file and then `execfile` it into
+   the editor.
 
 
 
@@ -177,6 +180,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## TODO
 
+- [ ] pytest testing harness
 - [ ] add third (middle) outlet which bangs on an error
 - [ ] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
 - [ ] enhance `py_anything` method to eval if identifier exists in ns and is not callable
@@ -198,10 +202,9 @@ PyList_Append(sysPath, PyString_FromString("."));
       in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
-
-- [ ] try to build a cython extension types as a max external class
 - [x] Convert py into a js extension class
       - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
+- [ ] try to build a cython extension types as a max external class
 
 ### Done
 

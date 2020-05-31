@@ -5,6 +5,10 @@ infer-out
 example.c
 .DS_Store
 
+# py related
+__pycache__
+.pytest_cache
+
 # Prerequisites
 *.d
 
