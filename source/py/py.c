@@ -723,6 +723,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
     // Py_XDECREF(list); // causes a crash
+    outlet_bang(x->p_outlet0);
     return;
 
 error:
@@ -906,10 +907,11 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
     py_log(x, "END %s: %s", s->s_name, py_argv);
+    outlet_bang(x->p_outlet0);
     return;
 
 error:
-    handle_py_error(x, "anythinh %s", s->s_name);
+    handle_py_error(x, "anything %s", s->s_name);
     // cleanup
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
