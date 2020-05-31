@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 112.0, 178.0, 764.0, 609.0 ],
+		"rect" : [ 278.0, 171.0, 764.0, 609.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -642,7 +642,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 112.0, 204.0, 764.0, 583.0 ],
+						"rect" : [ 278.0, 197.0, 764.0, 583.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -672,6 +672,54 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-50",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 550.0, 436.0, 150.0, 20.0 ],
+									"text" : "check console for success"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-48",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 507.0, 472.0, 121.0, 22.0 ],
+									"text" : "send bigbanger bang"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-46",
+									"linecount" : 6,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 118.0, 448.0, 150.0, 87.0 ],
+									"text" : "name: bigbanger\n\ntest for getting scripting from patcher, name lookup in the global registry and msg send!"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-43",
+									"maxclass" : "button",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "bang" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 23.0, 448.0, 87.0, 87.0 ],
+									"varname" : "bigbanger"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-44",
 									"maxclass" : "message",
@@ -741,7 +789,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 227.0, 34.0, 22.0 ],
+									"patching_rect" : [ 507.0, 435.0, 34.0, 22.0 ],
 									"text" : "scan"
 								}
 
@@ -874,7 +922,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 346.0, 41.0, 22.0 ],
+									"patching_rect" : [ 23.0, 315.0, 41.0, 22.0 ],
 									"text" : "eval b"
 								}
 
@@ -886,7 +934,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 306.0, 194.0, 22.0 ],
+									"patching_rect" : [ 19.5, 277.0, 194.0, 22.0 ],
 									"text" : "read /Users/sa/Downloads/hello.py"
 								}
 
@@ -898,7 +946,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 267.0, 33.0, 22.0 ],
+									"patching_rect" : [ 19.5, 237.0, 33.0, 22.0 ],
 									"text" : "read"
 								}
 
@@ -1137,8 +1185,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "numpy"
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
 								}
 
 							}
@@ -1429,6 +1476,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-44", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-48", 0 ]
 								}
 
 							}

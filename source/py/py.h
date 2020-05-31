@@ -119,6 +119,7 @@ void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 void py_bang(t_py* x);
 void py_scan(t_py* x);
 long scan_callback(t_py* x, t_object* obj);
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /*--------------------------------------------------------------------
  * Helper Functions
