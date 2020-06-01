@@ -673,11 +673,94 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-55",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 538.0, 476.0, 99.0, 22.0 ],
+									"text" : "send missint 101"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-54",
+									"linecount" : 4,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 197.0, 406.0, 150.0, 60.0 ],
+									"text" : "test for getting scripting from patcher, name lookup in the global registry and msg send!"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-52",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 269.5, 474.0, 150.0, 20.0 ],
+									"text" : "name: missint"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-49",
+									"maxclass" : "number",
+									"numinlets" : 1,
+									"numoutlets" : 2,
+									"outlettype" : [ "", "bang" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 213.5, 474.0, 50.0, 22.0 ],
+									"varname" : "missint"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-51",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 269.5, 553.5, 150.0, 20.0 ],
+									"text" : "name: mrmsg"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-47",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 538.0, 448.0, 147.0, 22.0 ],
+									"text" : "send mrmsg append hello"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-45",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 213.5, 553.5, 50.0, 22.0 ],
+									"varname" : "mrmsg"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-50",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 550.0, 436.0, 150.0, 20.0 ],
+									"patching_rect" : [ 581.0, 387.0, 150.0, 20.0 ],
 									"text" : "check console for success"
 								}
 
@@ -689,7 +772,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 472.0, 121.0, 22.0 ],
+									"patching_rect" : [ 538.0, 416.0, 121.0, 22.0 ],
 									"text" : "send bigbanger bang"
 								}
 
@@ -697,12 +780,11 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-46",
-									"linecount" : 6,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 118.0, 448.0, 150.0, 87.0 ],
-									"text" : "name: bigbanger\n\ntest for getting scripting from patcher, name lookup in the global registry and msg send!"
+									"patching_rect" : [ 264.5, 500.0, 142.0, 20.0 ],
+									"text" : "name: bigbanger"
 								}
 
 							}
@@ -714,7 +796,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 23.0, 448.0, 87.0, 87.0 ],
+									"patching_rect" : [ 213.5, 500.0, 50.0, 50.0 ],
 									"varname" : "bigbanger"
 								}
 
@@ -789,7 +871,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 435.0, 34.0, 22.0 ],
+									"patching_rect" : [ 538.0, 386.0, 34.0, 22.0 ],
 									"text" : "scan"
 								}
 
@@ -970,7 +1052,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 319.0, 76.0, 22.0 ],
+									"patching_rect" : [ 530.0, 285.0, 76.0, 22.0 ],
 									"text" : "load hello.py"
 								}
 
@@ -1030,7 +1112,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 287.0, 94.0, 22.0 ],
+									"patching_rect" : [ 530.0, 253.0, 94.0, 22.0 ],
 									"text" : "execfile hello.py"
 								}
 
@@ -1042,7 +1124,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 252.0, 57.0, 22.0 ],
+									"patching_rect" : [ 530.0, 218.0, 57.0, 22.0 ],
 									"text" : "exec x=1"
 								}
 
@@ -1053,7 +1135,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 614.0, 213.0, 128.0, 20.0 ],
+									"patching_rect" : [ 635.0, 189.0, 128.0, 20.0 ],
 									"text" : "> 128 (dynamic alloc.)"
 								}
 
@@ -1064,7 +1146,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 606.0, 178.0, 113.0, 20.0 ],
+									"patching_rect" : [ 627.0, 154.0, 113.0, 20.0 ],
 									"text" : "< 128 (static alloc.)"
 								}
 
@@ -1076,7 +1158,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 497.0, 213.0, 115.0, 22.0 ],
+									"patching_rect" : [ 518.0, 189.0, 115.0, 22.0 ],
 									"text" : "eval list(range(150))"
 								}
 
@@ -1101,7 +1183,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 388.0, 184.0, 22.0 ],
+									"patching_rect" : [ 530.0, 354.0, 184.0, 22.0 ],
 									"text" : "eval str(datetime.datetime.now())"
 								}
 
@@ -1113,7 +1195,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 507.0, 354.0, 91.0, 22.0 ],
+									"patching_rect" : [ 530.0, 320.0, 91.0, 22.0 ],
 									"text" : "import datetime"
 								}
 
@@ -1125,7 +1207,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 485.0, 105.0, 114.0, 22.0 ],
+									"patching_rect" : [ 498.0, 93.0, 114.0, 22.0 ],
 									"text" : "eval string.hexdigits"
 								}
 
@@ -1149,7 +1231,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 497.0, 178.0, 102.0, 22.0 ],
+									"patching_rect" : [ 518.0, 154.0, 102.0, 22.0 ],
 									"text" : "eval list(range(2))"
 								}
 
@@ -1185,7 +1267,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
+									"text" : "2"
 								}
 
 							}
@@ -1196,7 +1279,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 485.0, 146.0, 191.0, 22.0 ],
+									"patching_rect" : [ 514.0, 124.0, 191.0, 22.0 ],
 									"text" : "eval list(reversed(string.hexdigits))"
 								}
 
@@ -1482,6 +1565,13 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-47", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-48", 0 ]
 								}
 
@@ -1490,6 +1580,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-5", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-55", 0 ]
 								}
 
 							}

@@ -28,14 +28,13 @@ repo - https://github.com/shakfu/py
             call (anything)     : max friendly python function calling
             read <path>         : read text file into editor
             load <path>         : combo of read <path> -> execfile <path>
-
+            send <msg>          : send an arbitrary message to a named object
 ```
 
 
 ## Overview
 
-The `py` object provides a very high level python code interface to max objects.
-It has 1 inlet and 2 outlets
+The `py` object provides a very high level python code interface to max objects. It has 1 inlet and 3 outlets, with the left providing main object output, the right outlet sending a bang on success, and the middle sending a bang on failure.
 
 It provides the following methods:
 
@@ -54,39 +53,17 @@ editor   | load            | file          | yes    | no         | [x]
 
 ### Basic Features
 
-1. **Per-object namespaces**. The `py` object responds to an `import <module>` 
-   message in the left inlet which loads a python module in its namespace. Each
-   new import (like python) adds modules to the namespace.
+1. **Per-object namespaces**. The `py` object responds to an `import <module>` message in the left inlet which loads a python module in its namespace. Each new import (like python) adds modules to the namespace.
 
-2. **Eval Messages**. It responds to an `eval <expression>` message in the
-   left inlet which is evaluated in the context of the namespace and outputs 
-   results to the left outlet and outputs a bang from the right outlet to signal
-   end of evaluation.
+2. **Eval Messages**. It responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace and outputs results to the left outlet and outputs a bang from the right outlet to signal end of evaluation.
 
-3. **Exec Messages**. It responds to an `exec <statement>` message and an 
-   `execfile <filepath>` message which executes the statement or the file code in 
-   the object's namespace. This produces no output from the left outlet, but a bang
-   is output from the right outlet to signal the end of a successful operation.
+3. **Exec Messages**. It responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file code in the object's namespace. This produces no output from the left outlet, but a bang is output from the right outlet to signal the end of a successful operation.
 
-4. **Assign Messages**. It responds to an `assign <varname> [x1, x2, ..., xN]`
-   which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace.
-   This is a way of creating variables in python of max data. This produces no 
-   output from the left outlet, but a bang is output from the right outlet to
-   signal the end of a successful operation.
+4. **Assign Messages**. It responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in python of max data. This produces no output from the left outlet, but a bang is output from the right outlet to signal the end of a successful operation.
 
-5. **Anything Messages**. It responds to any kind of messages other than the
-   standard ones specified, but practically can `evalualte` (in the `eval` sense 
-   above) a message format which is a similar to a python generic function call:
-   `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`
+5. **Anything Messages**. It responds to any kind of messages other than the standard ones specified, but practically can `evalualte` (in the `eval` sense above) a message format which is a similar to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`
 
-6. **Code Editor**. Double-clicking on the object open a code-editor which can have
-   a `read` message which reads a file, specified as an attribute, into the editor, 
-   and also a `load` message which `reads` the file and then `execfile` it into
-   the editor.
-
-
-
-
+6. **Code Editor**. Double-clicking on the object open a code-editor which can have a `read` message which reads a file, specified as an attribute, into the editor, and also a `load` message which `reads` the file and then `execfile` it into the editor.
 
 
 
@@ -180,9 +157,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## TODO
 
-- [ ] pytest testing harness
-- [ ] add third (middle) outlet which bangs on an error
-- [ ] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
+
 - [ ] enhance `py_anything` method to eval if identifier exists in ns and is not callable
 - [ ] Add file location feature (try pkg/examples/scripts then absolute paths)
 ```c
@@ -196,7 +171,7 @@ PyList_Append(sysPath, PyString_FromString("."));
 - [ ] Autoload default code
 
 - [ ] Check out the reference for 'thispatcher'
-- [ ] Implement send to named objects 
+- [80%] Implement send to named objects
       (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [ ] Implement section on two-way globals setting and reading (from python and c)
       in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
@@ -208,6 +183,9 @@ PyList_Append(sysPath, PyString_FromString("."));
 
 ### Done
 
+- [x] pytest testing harness
+- [x] add third (middle) outlet which bangs on an error
+- [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
 - [x] Add `call (anything)` method to call python callables in a namespace
 - [x] add python scripts to 'examples/scripts'
 - [x] Add .maxref.xml to docs

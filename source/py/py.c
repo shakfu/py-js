@@ -201,6 +201,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         attr_args_process(x, argc, argv);
 
         object_obex_lookup(x, gensym("#P"), (t_object**)&x->p_patcher);
+        // object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
         // if (err != MAX_ERR_NONE)
         //     return;
 
@@ -349,39 +350,103 @@ long scan_callback(t_py* x, t_object* box)
 
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    // see:
+    // https://cycling74.com/forums/error-handling-with-object_method_typed
     t_object* obj = NULL;
     char* obj_name = NULL;
+    t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
+    // argv+0 is the object name
     obj_name = atom_getsym(argv)->s_name;
     if (obj_name == NULL) {
         goto error;
     }
-    
+
     // lifted from scheme-for-max (Thanks, Iain!)
     err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
-    if (err) {
+    if (err || obj == NULL) {
         py_error(x, "no object found in the registry with the name %s",
                  obj_name);
         goto error;
     }
 
-    // TEMPORARY!!
-    char* obj_msg = atom_getsym(argv + 1)->s_name;
-    if (obj_msg == NULL) { // should check type here
-        goto error;
+    // atom after the name of the destination
+    switch ((argv + 1)->a_type) {
+    case A_SYM: {
+        msg_sym = atom_getsym(argv + 1);
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+        // address the minimum case: e.g a bang
+        if (argc - 2 == 0) { //
+            argc = 0;
+            argv = NULL;
+        } else {
+            argc = argc - 2;
+            argv = argv + 2;
+        }
+        break;
+    }
+    case A_FLOAT: {
+        msg_sym = gensym("float");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        // py_send
+        //
+        //    sym     argv0   argv1
+        // 0. <name>  <msg>   ....
+        //
+
+        // from-to
+        //    sym        argv0   argv1
+        // 1. send       <name>  <sym_msg> ...
+        // 1. <sym_msg>  <name>   ...
+        // shift = 2
+
+        // from-to
+        //    sym   argv0   argv1
+        // 2. send  <name>  <int_msg> ...
+        // 2. float  NULL   <int_msg> ...
+
+        argc = argc - 1;
+        argv = argv + 1;
+
+        // if (argc - 1 == 0) {
+        //     argc = 0;
+        //     argv = NULL;
+        // } else {
+        //     argc = argc - 1;
+        //     argv = argv + 1;
+        // }
+        break;
+    }
+    case A_LONG: {
+        msg_sym = gensym("int");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        argv = argv + 1;
+
+        // if (argc - 1 == 0) {
+        //     argc = 0;
+        //     argv = NULL;
+        // } else {
+        //     argc = argc - 1;
+        //     argv = argv + 1;
+        // }
+        break;
+    }
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
     }
 
-    // address the minimum case: e.g a bang
-    if (argc - 2 == 0) {
-        argc = 0;
-        argv = NULL;
-    } else {
-        argc = argc - 2;
-        argv = argv + 2;
-    }
-
-    err = object_method_typed(obj, gensym(obj_msg), argc, argv, NULL);
+    err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {
         py_error(x, "failed to send a message to object %s", obj_name);
         goto error;
