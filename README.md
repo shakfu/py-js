@@ -173,16 +173,16 @@ PyList_Append(sysPath, PyString_FromString("."));
 - [ ] Check out the reference for 'thispatcher'
 - [80%] Implement send to named objects
       (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
-- [ ] Implement section on two-way globals setting and reading (from python and c)
-      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
-- [x] Convert py into a js extension class
+- [ ] Convert py into a js extension class
       - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
 - [ ] try to build a cython extension types as a max external class
 
 ### Done
 
+- [x] Implement section on two-way globals setting and reading (from python and c)
+      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 - [x] pytest testing harness
 - [x] add third (middle) outlet which bangs on an error
 - [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
