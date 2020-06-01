@@ -5,6 +5,9 @@
 
 ## Sending arbitrary messages to an object
 
+In https://cycling74.com/forums/error-handling-with-object_method_typed, there is a need to figure the type of the method which is being called in sending.
+
+
 It looks like the `t_messlist` struct in `t_object` is key!
 
 ### in `ext_mess.h`:
@@ -23,22 +26,7 @@ typedef struct messlist
 } t_messlist;
 C74_DEPRECATED( typedef struct messlist Messlist );
 
-
-/** The tiny object structure sits at the head of any object to which you may
-  pass messages (and which you may feed to freeobject()).
-  In general, you should use #t_object instead.
-  @ingroup obj
-*/
-typedef struct tinyobject
-{
-  struct messlist *t_messlist;  ///< list of messages and methods 
-                  // (also used as freelist link)
-#ifdef CAREFUL
-  long t_magic;         ///< magic number
-#endif
-} t_tinyobject;
-C74_DEPRECATED( typedef struct tinyobject Tinyobject );
-
+//...
 
 /** The structure for the head of any object which wants to have inlets or outlets,
   or support attributes.
@@ -58,7 +46,7 @@ C74_DEPRECATED( typedef struct object Object );
 
 ```
 
-No to looks for functions which return `t_messlist`
+Look for functions which return `t_messlist`
 
 ### In `ext_obex.h`
 

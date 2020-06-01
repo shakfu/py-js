@@ -1,13 +1,15 @@
 # dirs to exclude
-header.h
 build/
+scratch/
 infer-out
-example.c
 .DS_Store
 
 # py related
 __pycache__
 .pytest_cache
+
+project.xcworkspace
+xcuserdata
 
 # Prerequisites
 *.d
