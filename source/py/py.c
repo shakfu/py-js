@@ -348,6 +348,86 @@ long scan_callback(t_py* x, t_object* box)
     return 0;
 }
 
+void py_send2(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    // see:
+    // https://cycling74.com/forums/error-handling-with-object_method_typed
+    t_object* obj = NULL;
+    char* obj_name = NULL;
+    t_symbol* msg_sym = NULL;
+    t_max_err err = NULL;
+
+    // argv+0 is the object name
+    obj_name = atom_getsym(argv)->s_name;
+    if (obj_name == NULL) {
+        goto error;
+    }
+
+    // lifted from scheme-for-max (Thanks, Iain!)
+    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
+    if (err || obj == NULL) {
+        py_error(x, "no object found in the registry with the name %s",
+                 obj_name);
+        goto error;
+    }
+
+    // atom after the name of the destination
+    switch ((argv + 1)->a_type) {
+    case A_SYM: {
+        msg_sym = atom_getsym(argv + 1);
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+        // address the minimum case: e.g a bang
+        if (argc - 2 == 0) { //
+            argc = 0;
+            argv = NULL;
+        } else {
+            argc = argc - 2;
+            argv = argv + 2;
+        }
+        break;
+    }
+    case A_FLOAT: {
+        msg_sym = gensym("float");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        argv = argv + 1;
+
+        break;
+    }
+    case A_LONG: {
+        msg_sym = gensym("int");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        argv = argv + 1;
+
+        break;
+    }
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
+    }
+
+    err = object_method_typed(obj, msg_sym, argc, argv, NULL);
+    if (err) {
+        py_error(x, "failed to send a message to object %s", obj_name);
+        goto error;
+    }
+
+    // success
+    return;
+
+error:
+    return;
+}
+
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     // see:
@@ -394,33 +474,9 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
             goto error;
         }
 
-        // py_send
-        //
-        //    sym     argv0   argv1
-        // 0. <name>  <msg>   ....
-        //
-
-        // from-to
-        //    sym        argv0   argv1
-        // 1. send       <name>  <sym_msg> ...
-        // 1. <sym_msg>  <name>   ...
-        // shift = 2
-
-        // from-to
-        //    sym   argv0   argv1
-        // 2. send  <name>  <int_msg> ...
-        // 2. float  NULL   <int_msg> ...
-
         argc = argc - 1;
         argv = argv + 1;
 
-        // if (argc - 1 == 0) {
-        //     argc = 0;
-        //     argv = NULL;
-        // } else {
-        //     argc = argc - 1;
-        //     argv = argv + 1;
-        // }
         break;
     }
     case A_LONG: {
@@ -432,19 +488,53 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
         argc = argc - 1;
         argv = argv + 1;
 
-        // if (argc - 1 == 0) {
-        //     argc = 0;
-        //     argv = NULL;
-        // } else {
-        //     argc = argc - 1;
-        //     argv = argv + 1;
-        // }
         break;
     }
     default:
         py_log(x, "cannot process unknown type");
         break;
     }
+
+    /*
+    clang-format off
+    see: https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
+
+    template<typename T1, typename T2>
+            atom operator()(symbol method_name, T1 arg1, T2 arg2) {
+                auto m { find_method(method_name) };
+
+                if (m.type == max::A_GIMME) {
+                    atoms   as { arg1, arg2 };
+                    return max::object_method_typed(m.ob, method_name,
+    as.size(), &as[0], nullptr);
+                }
+                else if (m.type == max::A_GIMMEBACK) {
+                    atoms       as { arg1, arg2 };
+                    max::t_atom rv {};
+
+                    max::object_method_typed(m.ob, method_name, as.size(),
+    &as[0], &rv); return rv;
+                }
+                else {
+                    if (typeid(T1) != typeid(atom))
+                        return m.fn(m.ob, arg1, arg2);
+                    else {
+                        // atoms must be converted to native types and then
+    reinterpreted as void*
+                        // doubles cannot be converted -- supporting those will
+    need to be handled separately return m.fn(m.ob, atom_to_generic(arg1),
+    atom_to_generic(arg2));
+                    }
+                }
+            }
+    clang-format on
+    */
+    // method m = object_getmethod(obj, msg_sym);
+    // if (m.type == A_GIMME) {
+    //     post("NICE");
+    // } else {
+    //     post("NOT NICE");
+    // }
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {
