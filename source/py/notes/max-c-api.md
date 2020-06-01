@@ -5,6 +5,9 @@
 
 ## Sending arbitrary messages to an object
 
+In https://cycling74.com/forums/error-handling-with-object_method_typed, there is a need to figure the type of the method which is being called in sending.
+
+
 It looks like the `t_messlist` struct in `t_object` is key!
 
 ### in `ext_mess.h`:
@@ -58,7 +61,7 @@ C74_DEPRECATED( typedef struct object Object );
 
 ```
 
-No to looks for functions which return `t_messlist`
+Look for functions which return `t_messlist`
 
 ### In `ext_obex.h`
 
