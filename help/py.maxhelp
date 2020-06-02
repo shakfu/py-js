@@ -673,6 +673,42 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-60",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 625.0, 510.0, 117.0, 22.0 ],
+									"text" : "send marty eval 1+1"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-61",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 538.0, 539.0, 92.0, 22.0 ],
+									"text" : "eval globex.INT"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-58",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 538.0, 510.0, 61.0, 22.0 ],
+									"text" : "globex 10"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-59",
 									"maxclass" : "message",
 									"numinlets" : 2,
@@ -726,7 +762,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 13.0, 416.0, 133.0, 60.0 ],
+									"patching_rect" : [ 13.0, 416.0, 136.0, 60.0 ],
 									"text" : "test for getting scripting from patcher, name lookup in the global registry and msg send!"
 								}
 
@@ -786,6 +822,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 19.5, 555.5, 50.0, 22.0 ],
+									"text" : "hello",
 									"varname" : "mrmsg"
 								}
 
@@ -1303,7 +1340,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
+									"text" : "2"
 								}
 
 							}
@@ -1345,7 +1383,8 @@
 										"pythonpath" : ""
 									}
 ,
-									"text" : "py"
+									"text" : "py",
+									"varname" : "marty"
 								}
 
 							}
@@ -1641,6 +1680,13 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-58", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-40", 0 ],
 									"hidden" : 1,
 									"source" : [ "obj-59", 0 ]
@@ -1651,6 +1697,20 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-6", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-60", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-61", 0 ]
 								}
 
 							}

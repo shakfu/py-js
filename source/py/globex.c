@@ -169,7 +169,7 @@ finally:
 
 static PyMethodDef globex_methods[] = {
     { "print", (PyCFunction)_print_globals, METH_NOARGS,
-      "Access and print out th globals." },
+      "Access and print out the globals." },
     { NULL, NULL, 0, NULL } /* Sentinel */
 };
 

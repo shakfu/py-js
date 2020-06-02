@@ -543,19 +543,29 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     //     post("NOT NICE");
     // }
 
-    // 1
-    // t_messlist* mlist1 = object_mess(obj, msg_sym);
+    // typedef struct messlist
+    // {
+    //     struct symbol *m_sym;       ///< Name of the message
+    //     method m_fun;               ///< Method associated with the message
+    //     char m_type[MSG_MAXARG + 1];    ///< Argument type information
+    // } t_messlist;
 
+    // 1
+    // t_messlist *object_mess(t_object *x, t_symbol *methodname);
+    //
+    t_messlist* messlist = object_mess(obj, msg_sym);
+    post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
+    post("messlist->m_type (type of msg): %s", messlist->m_type);
     // // 2
     // t_messlist* mlist2 = obj->o_messlist;
 
     // 3
-    t_method_object* mobj = object_getmethod_object(obj, msg_sym);
+    // t_method_object* mobj = object_getmethod_object(obj, msg_sym);
 
-    t_messlist m_entry = mobj->messlist_entry;
+    // t_messlist m_entry = mobj->messlist_entry;
 
-    post("MESSLIST_ENTRY method_name %s type %s", m_entry.m_sym->s_name,
-         m_entry.m_type);
+    // post("MESSLIST_ENTRY method_name %s type %s", m_entry.m_sym->s_name,
+    //      m_entry.m_type);
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {
@@ -735,33 +745,6 @@ void py_import(t_py* x, t_symbol* s)
     return;
 error:
     handle_py_error(x, "import %s", s->s_name);
-    outlet_bang(x->p_outlet_middle);
-}
-
-void py_globex(t_py* x, long n)
-{
-    PyObject* globex_mod = NULL;
-
-    globex_mod = PyImport_ImportModule("globex"); // x_module borrrowed ref
-    if (globex_mod == NULL) {
-        goto error;
-    }
-
-    PyDict_SetItemString(x->p_globals, "globex", globex_mod);
-
-    PyObject* globex_dict = PyModule_GetDict(globex_mod);
-
-    if (PyDict_SetItemString(globex_dict, NAME_INT, PyLong_FromLong(n))
-        == -1) {
-        py_error(x, "cannot set long to NAME_INT");
-        goto error;
-    }
-
-    outlet_bang(x->p_outlet_right);
-    py_log(x, "globex import and globex.INT = %ld", n);
-    return;
-error:
-    handle_py_error(x, "globex %ld", n);
     outlet_bang(x->p_outlet_middle);
 }
 
@@ -1210,5 +1193,32 @@ error:
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
+    outlet_bang(x->p_outlet_middle);
+}
+
+void py_globex(t_py* x, long n)
+{
+    PyObject* globex_mod = NULL;
+
+    globex_mod = PyImport_ImportModule("globex"); // x_module borrrowed ref
+    if (globex_mod == NULL) {
+        goto error;
+    }
+
+    PyDict_SetItemString(x->p_globals, "globex", globex_mod);
+
+    PyObject* globex_dict = PyModule_GetDict(globex_mod);
+
+    if (PyDict_SetItemString(globex_dict, NAME_INT, PyLong_FromLong(n))
+        == -1) {
+        py_error(x, "cannot set long to NAME_INT");
+        goto error;
+    }
+
+    outlet_bang(x->p_outlet_right);
+    py_log(x, "globex import and globex.INT = %ld", n);
+    return;
+error:
+    handle_py_error(x, "globex %ld", n);
     outlet_bang(x->p_outlet_middle);
 }

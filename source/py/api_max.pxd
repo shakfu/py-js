@@ -2880,6 +2880,7 @@ cdef extern from "ext_boxstyle.h":
     cdef void CLASS_ATTR_STYLE_ALIAS_RGBA_LEGACY(c,attrname,aliasname)
 
 
+
 cdef extern from "jdataview.h":
 
     cdef int JDATAVIEW_CELLMAX
@@ -3244,5 +3245,6 @@ cdef extern from "jdataview.h":
     cdef t_object *jdataview_getrowobject(t_object *dv, t_rowref rr)    
     cdef void jdataview_entermodalstate(t_object *dv, long way)
     cdef void *jdataview_getdragreceiver(t_object *dv)
+
 
 
