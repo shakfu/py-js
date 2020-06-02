@@ -21,7 +21,7 @@
 - py_assist
 - py_bang
 - py_scan
-- scan_callback
+- scan_callback -> py_scan_callback
 - py_count
 
 - handle_py_error

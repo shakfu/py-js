@@ -31,7 +31,6 @@ repo - https://github.com/shakfu/py
             send <msg>          : send an arbitrary message to a named object
 ```
 
-
 ## Overview
 
 The `py` object provides a very high level python code interface to max objects. It has 1 inlet and 3 outlets, with the left providing main object output, the right outlet sending a bang on success, and the middle sending a bang on failure.
@@ -49,7 +48,6 @@ extra    | assign          | var, data     | in     | yes        | [x]
 extra    | call (anything) | var(s), data  | out    | no         | [x]
 editor   | read            | file          | n/a    | no         | [x]
 editor   | load            | file          | yes    | no         | [x]
-
 
 ### Key Features
 
@@ -70,14 +68,11 @@ editor   | load            | file          | yes    | no         | [x]
 
 8. **Globals Exchange**. The `py` external has special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
 
-
-
 ## Building
 
 Only tested on OS X at present. Should be relatively easy to port to windows.
 
 The following is required:
-
 
 ### xcode
 
@@ -88,7 +83,6 @@ $ xcode-select --install
 ```
 
 otherwise download xcode from the app store.
-
 
 ### max-sdk
 
@@ -101,7 +95,6 @@ The py external is developed as a max package with the max-sdk as a subfolder. T
     - **maxsdk**
     - py
 
-
 ### python3
 
 I'm using MacOS Mojave 10.14.6, and the latest python3 version which can be installed as follows:
@@ -111,7 +104,6 @@ $ brew install python
 ```
 
 see: https://installpython3.com/mac
-
 
 ### cython (optional)
 
@@ -142,7 +134,6 @@ make build
 
 You will find that make will fail with 1 error, and it will be a codesigning error that is particular to Apple's process. You can ignore this error (provided there areno other errors), since since infuriatingly this error appears and disapears when it feels like. You will be surprised that the same code that produced a codesign error builds successfully without one!
 
-
 ### Develop it
 
 The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
@@ -153,12 +144,9 @@ $ brew install clang-format
 
 The style used in this project is specified in the `.clang-format` file.
 
-
-
 ## BUGS
 
 - [ ] space in `eval` without quotes will cause a crash!
-
 
 ## TODO
 
@@ -210,24 +198,20 @@ PyList_Append(sysPath, PyString_FromString("."));
 - [x] Refactor into functions
 - [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
 
-
-
 ## CHANGELOG
+
 
 ### v0.1
 
 - [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
 - [x] Each py object has its own python 'globals' namespace and responds to the following msgs
-	- [x] `import <module>`: adds module to the namespace
-	- [x] `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
-	- [x] `exec <statement>`: executes statement into the namespace (can modify ns)
-	- [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
-	- [x] `run <file.py>`: executes python file into the namespace (can modify ns)
+    - [x] `import <module>`: adds module to the namespace
+    - [x] `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
+    - [x] `exec <statement>`: executes statement into the namespace (can modify ns)
+    - [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
+    - [x] `run <file.py>`: executes python file into the namespace (can modify ns)
 
 - [x] Extensible by embedded cython based python extensions which can call a library of wrapped max_api functions in python code. There is a proof of concept of the python code in the namsepace calling the max api `post` function successfully.
 - [x] Exposing of good portion of the max api to cython scripting
 - [x] Edit default with text editor
-
-
-
 

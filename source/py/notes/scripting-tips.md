@@ -2,7 +2,7 @@
 
 Here are some tips when scripting max with python using the py external. This only applies to python
 
-### Don't
+## Don't
 
 - redirect stdout and try to read from the python script. The following will crash Max:
 

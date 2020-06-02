@@ -2,9 +2,7 @@
 
 int main()
 {
-
     int x = 10;
-
     // fall through with no return!
 
 hello:

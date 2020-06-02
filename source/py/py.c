@@ -1,12 +1,14 @@
 // py.c
 
+/*--------------------------------------------------------------------------*/
+// INCLUDES
+
 /* py external api */
 #include "py.h"
 
 /* max/msp api */
 #include "api.h"
 #include "globex.h"
-
 /*--------------------------------------------------------------------------*/
 // GLOBALS
 
@@ -17,99 +19,8 @@ static int py_global_obj_count = 0; // when 0 free interpreter
 static t_hashtab* py_global_registry; // global object lookups
 
 // static wchar_t* program;
-
 /*--------------------------------------------------------------------------*/
-// main
-
-void ext_main(void* r)
-{
-    t_class* c;
-
-    c = class_new("py", (method)py_new, (method)py_free, (long)sizeof(t_py),
-                  0L, A_GIMME, 0);
-
-    // clang-format off
-    //------------------------------------------------------------------------
-    // methods
-
-    // testing
-    class_addmethod(c, (method)py_bang,       "bang",       0);
-
-    // core python
-    class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
-    class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
-    class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
-    class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
-
-    class_addmethod(c, (method)py_globex,     "globex",     A_LONG, 0);
-
-    // extra python
-    // class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
-    class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
-    class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,  0);
-    
-    /* you CAN'T call this from the patcher */
-    class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
-
-    // meta
-    class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
-    class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
-    class_addmethod(c, (method)py_send,       "send",       A_GIMME,   0);
-
-    // code editor
-    class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
-    class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT,   0);
-    class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,   0);
-    class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
-    class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
-
-    // attributes
-    // CLASS_ATTR_ORDER(c,     "name", 0,  "1");
-    CLASS_ATTR_LABEL(c,     "name", 0,  "unique object id");
-    CLASS_ATTR_SYM(c,       "name", 0,   t_py, p_name);
-    CLASS_ATTR_BASIC(c,     "name", 0);
-    // CLASS_ATTR_INVISIBLE(c, "name", 0);
-
-    // CLASS_ATTR_ORDER(c,      "file", 0,  "2");
-    CLASS_ATTR_LABEL(c,      "file", 0,  "default python script");
-    CLASS_ATTR_SYM(c,        "file", 0,   t_py,  p_code_filepath);
-    CLASS_ATTR_STYLE(c,      "file", 0,   "file");
-    CLASS_ATTR_BASIC(c,      "file", 0);
-    CLASS_ATTR_SAVE(c,       "file", 0);
-
-    // CLASS_ATTR_ORDER(c,      "pythonpath", 0,  "3");
-    CLASS_ATTR_LABEL(c,      "pythonpath", 0,  "per-object pythonpath");
-    CLASS_ATTR_SYM(c,        "pythonpath", 0,  t_py, p_pythonpath);
-    CLASS_ATTR_STYLE(c,      "pythonpath", 0,      "file");
-    CLASS_ATTR_BASIC(c,      "pythonpath", 0);
-    CLASS_ATTR_SAVE(c,       "pythonpath", 0);
-
-    // CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
-    CLASS_ATTR_LABEL(c,      "debug", 0,  "debug log to console");
-    CLASS_ATTR_CHAR(c,       "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,      "debug", 0, "onoff");
-    CLASS_ATTR_BASIC(c,      "debug", 0);
-    CLASS_ATTR_SAVE(c,       "debug", 0);
-    // CLASS_ATTR_DEFAULT(c, "debug", 0, "1");
-    
-    //------------------------------------------------------------------------
-    // clang-format on
-
-    class_register(CLASS_BOX, c);
-
-    /* for js registration (can't be both box and nobox) */
-    // c->c_flags = CLASS_FLAG_POLYGLOT;
-    // class_register(CLASS_NOBOX, c);
-
-    py_class = c;
-
-    // post("py class loaded...", 0);
-}
-
-/*--------------------------------------------------------------------------*/
-// general helper functions
-
-// NOTE: try to not call it at all objects are freed!
+// HELPERS
 void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
@@ -162,9 +73,121 @@ void py_locatefile(t_py* x, char* filename)
     }
 }
 
-/*--------------------------------------------------------------------------*/
-// object creation, initialization and release
+void handle_py_error(t_py* x, char* fmt, ...)
+{
+    if (PyErr_Occurred()) {
 
+        // build custom msg
+        char msg[50];
+
+        va_list va;
+        va_start(va, fmt);
+        vsprintf(msg, fmt, va);
+        va_end(va);
+
+        // get error info
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+
+        // PyObject* ptype_pstr = PyObject_Repr(ptype);
+        // const char* ptype_str = PyUnicode_AsUTF8(ptype_pstr);
+        Py_XDECREF(ptype);
+        // Py_XDECREF(ptype_pstr);
+
+        PyObject* pvalue_pstr = PyObject_Repr(pvalue);
+        const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(pvalue_pstr);
+
+        Py_XDECREF(ptraceback);
+
+        error("[py '%s'] <- (%s): %s", x->p_name->s_name, msg, pvalue_str);
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+// INIT & FREE
+void ext_main(void* r)
+{
+    t_class* c;
+
+    c = class_new("py", (method)py_new, (method)py_free, (long)sizeof(t_py),
+                  0L, A_GIMME, 0);
+
+    // object methods
+    //------------------------------------------------------------------------
+    // clang-format off
+     
+
+    // testing
+    class_addmethod(c, (method)py_bang,       "bang",       0);
+
+    // core python
+    class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
+    class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
+    class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
+    class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
+
+    // extra python
+    class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
+    class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,  0);
+    class_addmethod(c, (method)py_globex,     "globex",     A_LONG,   0);
+    
+    /* you CAN'T call this from the patcher */
+    class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
+
+    // meta
+    class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
+    class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
+    class_addmethod(c, (method)py_send,       "send",       A_GIMME,   0);
+
+    // code editor
+    class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
+    class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT,   0);
+    class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,   0);
+    class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
+    class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
+
+    // attributes
+    CLASS_ATTR_ORDER(c,     "name", 0,  "1");
+    CLASS_ATTR_LABEL(c,     "name", 0,  "unique object id");
+    CLASS_ATTR_SYM(c,       "name", 0,   t_py, p_name);
+    CLASS_ATTR_BASIC(c,     "name", 0);
+    // CLASS_ATTR_INVISIBLE(c, "name", 0);
+
+    CLASS_ATTR_ORDER(c,      "file", 0,  "2");
+    CLASS_ATTR_LABEL(c,      "file", 0,  "default python script");
+    CLASS_ATTR_SYM(c,        "file", 0,   t_py,  p_code_filepath);
+    CLASS_ATTR_STYLE(c,      "file", 0,   "file");
+    CLASS_ATTR_BASIC(c,      "file", 0);
+    CLASS_ATTR_SAVE(c,       "file", 0);
+
+    CLASS_ATTR_ORDER(c,      "pythonpath", 0,  "3");
+    CLASS_ATTR_LABEL(c,      "pythonpath", 0,  "per-object pythonpath");
+    CLASS_ATTR_SYM(c,        "pythonpath", 0,  t_py, p_pythonpath);
+    CLASS_ATTR_STYLE(c,      "pythonpath", 0,      "file");
+    CLASS_ATTR_BASIC(c,      "pythonpath", 0);
+    CLASS_ATTR_SAVE(c,       "pythonpath", 0);
+
+    CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
+    CLASS_ATTR_LABEL(c,      "debug", 0,  "debug log to console");
+    CLASS_ATTR_CHAR(c,       "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,      "debug", 0, "onoff");
+    CLASS_ATTR_BASIC(c,      "debug", 0);
+    CLASS_ATTR_SAVE(c,       "debug", 0);
+
+    // clang-format on
+    //------------------------------------------------------------------------
+
+    class_register(CLASS_BOX, c);
+
+    /* for js registration (can't be both box and nobox) */
+    // c->c_flags = CLASS_FLAG_POLYGLOT;
+    // class_register(CLASS_NOBOX, c);
+
+    py_class = c;
+}
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_py* x = NULL;
@@ -181,8 +204,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // communication
         x->p_patcher = NULL;
-        // x->p_box = NULL;
-        // t_hashtab* registry; // experimental (perhaps better as a global)
+        x->p_box = NULL;
 
         // python-related
         x->p_pythonpath = gensym("");
@@ -203,21 +225,13 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // process @arg attributes
         attr_args_process(x, argc, argv);
 
-        object_obex_lookup(x, gensym("#P"), (t_object**)&x->p_patcher);
-        // object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
-        // if (err != MAX_ERR_NONE)
-        //     return;
-
+        object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
         if (x->p_patcher == NULL)
             error("patcher object not created.");
 
-        // object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
-        // if (x->p_patcher == NULL)
-        //     error("patcher object not created.");
-
-        // object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
-        // if (x->p_box == NULL)
-        //     error("patcher object not created.");
+        object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
+        if (x->p_box == NULL)
+            error("patcher object not created.");
 
         // python init
         py_init(x);
@@ -298,8 +312,7 @@ void py_free(t_py* x)
 }
 
 /*--------------------------------------------------------------------------*/
-// help
-
+// DOCUMENTATION
 void py_assist(t_py* x, void* b, long m, long a, char* s)
 {
     if (m == ASSIST_INLET) { // inlet
@@ -308,321 +321,17 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
         sprintf(s, "I am outlet %ld", a);
     }
 }
-
 /*--------------------------------------------------------------------------*/
-// object methods
+// TESTING
 
-void py_bang(t_py* x) { outlet_bang(x->p_outlet_left); }
-
-void py_scan(t_py* x)
+void py_bang(t_py* x)
 {
-    long result = 0;
-
-    hashtab_clear(py_global_registry);
-
-    object_method(x->p_patcher, gensym("iterate"), (method)scan_callback, x,
-                  PI_DEEP | PI_WANTBOX, &result);
-}
-
-long scan_callback(t_py* x, t_object* box)
-{
-    t_rect jr;
-    t_object* p;
-    t_symbol* s;
-    t_symbol* varname;
-    t_object* obj;
-    t_symbol* obj_id;
-
-    jbox_get_patching_rect(box, &jr);
-    p = jbox_get_patcher(box);
-    varname = jbox_get_varname(box);
-    obj = jbox_get_object(box);
-
-    // lifted from scheme-for-max (Thanks, Iain!)
-    if (varname != gensym("")) {
-        py_log(x, "storing object '%s' in the global registry",
-               varname->s_name);
-        hashtab_store(py_global_registry, varname, obj);
-    }
-
-    obj_id = jbox_get_id(box);
-    s = jpatcher_get_name(p);
-    object_post(
-        (t_object*)x,
-        "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
-        s->s_name, varname->s_name, obj_id->s_name, (long)jr.x, (long)jr.y,
-        (long)jr.width, (long)jr.height);
-    return 0;
-}
-
-void py_send2(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    // see:
-    // https://cycling74.com/forums/error-handling-with-object_method_typed
-    t_object* obj = NULL;
-    char* obj_name = NULL;
-    t_symbol* msg_sym = NULL;
-    t_max_err err = NULL;
-
-    // argv+0 is the object name
-    obj_name = atom_getsym(argv)->s_name;
-    if (obj_name == NULL) {
-        goto error;
-    }
-
-    // lifted from scheme-for-max (Thanks, Iain!)
-    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
-    if (err || obj == NULL) {
-        py_error(x, "no object found in the registry with the name %s",
-                 obj_name);
-        goto error;
-    }
-
-    // atom after the name of the destination
-    switch ((argv + 1)->a_type) {
-    case A_SYM: {
-        msg_sym = atom_getsym(argv + 1);
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-        // address the minimum case: e.g a bang
-        if (argc - 2 == 0) { //
-            argc = 0;
-            argv = NULL;
-        } else {
-            argc = argc - 2;
-            argv = argv + 2;
-        }
-        break;
-    }
-    case A_FLOAT: {
-        msg_sym = gensym("float");
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-
-        argc = argc - 1;
-        argv = argv + 1;
-
-        break;
-    }
-    case A_LONG: {
-        msg_sym = gensym("int");
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-
-        argc = argc - 1;
-        argv = argv + 1;
-
-        break;
-    }
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-    }
-
-    err = object_method_typed(obj, msg_sym, argc, argv, NULL);
-    if (err) {
-        py_error(x, "failed to send a message to object %s", obj_name);
-        goto error;
-    }
-
-    // success
-    return;
-
-error:
-    return;
-}
-
-void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    // see:
-    // https://cycling74.com/forums/error-handling-with-object_method_typed
-    t_object* obj = NULL;
-    char* obj_name = NULL;
-    t_symbol* msg_sym = NULL;
-    t_max_err err = NULL;
-
-    // argv+0 is the object name
-    obj_name = atom_getsym(argv)->s_name;
-    if (obj_name == NULL) {
-        goto error;
-    }
-
-    // lifted from scheme-for-max (Thanks, Iain!)
-    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
-    if (err || obj == NULL) {
-        py_error(x, "no object found in the registry with the name %s",
-                 obj_name);
-        goto error;
-    }
-
-    // atom after the name of the destination
-    switch ((argv + 1)->a_type) {
-    case A_SYM: {
-        msg_sym = atom_getsym(argv + 1);
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-        // address the minimum case: e.g a bang
-        if (argc - 2 == 0) { //
-            argc = 0;
-            argv = NULL;
-        } else {
-            argc = argc - 2;
-            argv = argv + 2;
-        }
-        break;
-    }
-    case A_FLOAT: {
-        msg_sym = gensym("float");
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-
-        argc = argc - 1;
-        argv = argv + 1;
-
-        break;
-    }
-    case A_LONG: {
-        msg_sym = gensym("int");
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-
-        argc = argc - 1;
-        argv = argv + 1;
-
-        break;
-    }
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-    }
-
-    /*
-    clang-format off
-    see: https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
-
-    template<typename T1, typename T2>
-            atom operator()(symbol method_name, T1 arg1, T2 arg2) {
-                auto m { find_method(method_name) };
-
-                if (m.type == max::A_GIMME) {
-                    atoms   as { arg1, arg2 };
-                    return max::object_method_typed(m.ob, method_name,
-    as.size(), &as[0], nullptr);
-                }
-                else if (m.type == max::A_GIMMEBACK) {
-                    atoms       as { arg1, arg2 };
-                    max::t_atom rv {};
-
-                    max::object_method_typed(m.ob, method_name, as.size(),
-    &as[0], &rv); return rv;
-                }
-                else {
-                    if (typeid(T1) != typeid(atom))
-                        return m.fn(m.ob, arg1, arg2);
-                    else {
-                        // atoms must be converted to native types and then
-    reinterpreted as void*
-                        // doubles cannot be converted -- supporting those will
-    need to be handled separately return m.fn(m.ob, atom_to_generic(arg1),
-    atom_to_generic(arg2));
-                    }
-                }
-            }
-    clang-format on
-    */
-    // method m = object_getmethod(obj, msg_sym);
-    // if (m.type == A_GIMME) {
-    //     post("NICE");
-    // } else {
-    //     post("NOT NICE");
-    // }
-
-    // typedef struct messlist
-    // {
-    //     struct symbol *m_sym;       ///< Name of the message
-    //     method m_fun;               ///< Method associated with the message
-    //     char m_type[MSG_MAXARG + 1];    ///< Argument type information
-    // } t_messlist;
-
-    // 1
-    // t_messlist *object_mess(t_object *x, t_symbol *methodname);
-    //
-    t_messlist* messlist = object_mess(obj, msg_sym);
-    post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-    post("messlist->m_type (type of msg): %s", messlist->m_type);
-    // // 2
-    // t_messlist* mlist2 = obj->o_messlist;
-
-    // 3
-    // t_method_object* mobj = object_getmethod_object(obj, msg_sym);
-
-    // t_messlist m_entry = mobj->messlist_entry;
-
-    // post("MESSLIST_ENTRY method_name %s type %s", m_entry.m_sym->s_name,
-    //      m_entry.m_type);
-
-    err = object_method_typed(obj, msg_sym, argc, argv, NULL);
-    if (err) {
-        py_error(x, "failed to send a message to object %s", obj_name);
-        goto error;
-    }
-
-    // success
-    return;
-
-error:
-    return;
-}
-
-// retrieves a count of the number of 'active' py objects from a global var
-void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
-
-/*--------------------------------------------------------------------------*/
-// python helper functions
-
-/* python error handler helper function */
-void handle_py_error(t_py* x, char* fmt, ...)
-{
-    if (PyErr_Occurred()) {
-
-        // build custom msg
-        char msg[50];
-
-        va_list va;
-        va_start(va, fmt);
-        vsprintf(msg, fmt, va);
-        va_end(va);
-
-        // get error info
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-
-        // PyObject* ptype_pstr = PyObject_Repr(ptype);
-        // const char* ptype_str = PyUnicode_AsUTF8(ptype_pstr);
-        Py_XDECREF(ptype);
-        // Py_XDECREF(ptype_pstr);
-
-        PyObject* pvalue_pstr = PyObject_Repr(pvalue);
-        const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(pvalue_pstr);
-
-        Py_XDECREF(ptraceback);
-
-        error("[py '%s'] <- (%s): %s", x->p_name->s_name, msg, pvalue_str);
-    }
+    // just a basic bang out the left outlet method
+    outlet_bang(x->p_outlet_left);
 }
 
 /*--------------------------------------------------------------------------*/
-// code editor
-
+// EDITOR
 void py_dblclick(t_py* x)
 {
     if (x->p_code_editor)
@@ -727,8 +436,7 @@ void py_load(t_py* x, t_symbol* s)
 }
 
 /*--------------------------------------------------------------------------*/
-// core python methods
-
+// CORE
 void py_import(t_py* x, t_symbol* s)
 {
     PyObject* x_module = NULL;
@@ -913,7 +621,7 @@ error:
 }
 
 /*--------------------------------------------------------------------------*/
-// extra python methods
+// EXTRA
 
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -1196,6 +904,192 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    // see:
+    // https://cycling74.com/forums/error-handling-with-object_method_typed
+    t_object* obj = NULL;
+    char* obj_name = NULL;
+    t_symbol* msg_sym = NULL;
+    t_max_err err = NULL;
+
+    // argv+0 is the object name
+    obj_name = atom_getsym(argv)->s_name;
+    if (obj_name == NULL) {
+        goto error;
+    }
+
+    // lifted from scheme-for-max (Thanks, Iain!)
+    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
+    if (err || obj == NULL) {
+        py_error(x, "no object found in the registry with the name %s",
+                 obj_name);
+        goto error;
+    }
+
+    // atom after the name of the destination
+    switch ((argv + 1)->a_type) {
+    case A_SYM: {
+        msg_sym = atom_getsym(argv + 1);
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+        // address the minimum case: e.g a bang
+        if (argc - 2 == 0) { //
+            argc = 0;
+            argv = NULL;
+        } else {
+            argc = argc - 2;
+            argv = argv + 2;
+        }
+        break;
+    }
+    case A_FLOAT: {
+        msg_sym = gensym("float");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        argv = argv + 1;
+
+        break;
+    }
+    case A_LONG: {
+        msg_sym = gensym("int");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        argv = argv + 1;
+
+        break;
+    }
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
+    }
+
+    /*
+    clang-format off
+    see: https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
+
+    template<typename T1, typename T2>
+            atom operator()(symbol method_name, T1 arg1, T2 arg2) {
+                auto m { find_method(method_name) };
+
+                if (m.type == max::A_GIMME) {
+                    atoms   as { arg1, arg2 };
+                    return max::object_method_typed(m.ob, method_name,
+    as.size(), &as[0], nullptr);
+                }
+                else if (m.type == max::A_GIMMEBACK) {
+                    atoms       as { arg1, arg2 };
+                    max::t_atom rv {};
+
+                    max::object_method_typed(m.ob, method_name, as.size(),
+    &as[0], &rv); return rv;
+                }
+                else {
+                    if (typeid(T1) != typeid(atom))
+                        return m.fn(m.ob, arg1, arg2);
+                    else {
+                        // atoms must be converted to native types and then
+    reinterpreted as void*
+                        // doubles cannot be converted -- supporting those will
+    need to be handled separately return m.fn(m.ob, atom_to_generic(arg1),
+    atom_to_generic(arg2));
+                    }
+                }
+            }
+    clang-format on
+    */
+    // method m = object_getmethod(obj, msg_sym);
+    // if (m.type == A_GIMME) {
+    //     post("NICE");
+    // } else {
+    //     post("NOT NICE");
+    // }
+
+    // typedef struct messlist
+    // {
+    //     struct symbol *m_sym;       ///< Name of the message
+    //     method m_fun;               ///< Method associated with the message
+    //     char m_type[MSG_MAXARG + 1];    ///< Argument type information
+    // } t_messlist;
+
+    // 1
+    // t_messlist *object_mess(t_object *x, t_symbol *methodname);
+    //
+    t_messlist* messlist = object_mess(obj, msg_sym);
+    post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
+    post("messlist->m_type (type of msg): %s", messlist->m_type);
+    // // 2
+    // t_messlist* mlist2 = obj->o_messlist;
+
+    // 3
+    // t_method_object* mobj = object_getmethod_object(obj, msg_sym);
+
+    // t_messlist m_entry = mobj->messlist_entry;
+
+    // post("MESSLIST_ENTRY method_name %s type %s", m_entry.m_sym->s_name,
+    //      m_entry.m_type);
+
+    err = object_method_typed(obj, msg_sym, argc, argv, NULL);
+    if (err) {
+        py_error(x, "failed to send a message to object %s", obj_name);
+        goto error;
+    }
+
+    // success
+    return;
+
+error:
+    return;
+}
+
+void py_scan(t_py* x)
+{
+    long result = 0;
+
+    hashtab_clear(py_global_registry);
+
+    object_method(x->p_patcher, gensym("iterate"), (method)scan_callback, x,
+                  PI_DEEP | PI_WANTBOX, &result);
+}
+
+long scan_callback(t_py* x, t_object* box)
+{
+    t_rect jr;
+    t_object* p;
+    t_symbol* s;
+    t_symbol* varname;
+    t_object* obj;
+    t_symbol* obj_id;
+
+    jbox_get_patching_rect(box, &jr);
+    p = jbox_get_patcher(box);
+    varname = jbox_get_varname(box);
+    obj = jbox_get_object(box);
+
+    // lifted from scheme-for-max (Thanks, Iain!)
+    if (varname != gensym("")) {
+        py_log(x, "storing object '%s' in the global registry",
+               varname->s_name);
+        hashtab_store(py_global_registry, varname, obj);
+    }
+
+    obj_id = jbox_get_id(box);
+    s = jpatcher_get_name(p);
+    object_post(
+        (t_object*)x,
+        "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
+        s->s_name, varname->s_name, obj_id->s_name, (long)jr.x, (long)jr.y,
+        (long)jr.width, (long)jr.height);
+    return 0;
+}
+
 void py_globex(t_py* x, long n)
 {
     PyObject* globex_mod = NULL;
@@ -1222,3 +1116,5 @@ error:
     handle_py_error(x, "globex %ld", n);
     outlet_bang(x->p_outlet_middle);
 }
+
+void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }

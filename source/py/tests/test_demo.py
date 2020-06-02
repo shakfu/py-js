@@ -10,6 +10,8 @@ EXPRESSIONS = {
     "2*10": "int: 20"
 }
 
+ERRORS_EVAL = []
+ERRORS_EXEC = []
 
 @pytest.fixture(scope="module", params=MODULES)
 def module(request):
