@@ -2,8 +2,59 @@
 # Max C API Notes
 
 
+## Memory management
+
+```c
+char *ptr;
+char **hand;
+ptr = sysmem_newptr(2000);
+post("I have a pointer %lx and it is %ld bytes in size",ptr, sysmem_ptrsize(ptr));
+ptr = sysmem_resizeptrclear(ptr, 3000);
+post("Now I have a pointer %lx and it is %ld bytes in size",ptr,
+      sysmem_ptrsize(ptr));
+sysmem_freeptr(ptr);
+hand = sysmem_newhandle(2000);
+post("I have a handle %lx and it is %ld bytes in size",hand,
+      sysmem_handlesize(hand));
+sysmem_resizehandle(hand, 3000);
+post("Now the handle %lx is %ld bytes in size",hand, sysmem_ptrsize(hand));
+sysmem_freehandle(hand);
+```
+
+## Typed vs Untyped Methods
+
+
+
+
+
+
+
+
+
+
+This is from the Max API docs:
+
+Max objects, such as the one you write, are C data structures in which methods are dynamically bound to functions. Your object's methods are called by Max, but your object can also call methods itself. When you call a method, it is
+essential to know whether the method you are calling is typed or not.
+
+Calling a typed method requires passing arguments as an array of atoms. Calling an untyped method requires that you know the exact arguments of the C function implementing the method. In both cases, you supply a symbol that names the method.
+
+In the typed method case, Max will take the array of atoms and pass the arguments to the object according to the method's argument type specifier list. For example, if the method is declared to have an argument type specifier list of A_LONG, 0, the first atom in the array you pass will be converted to an int and passed to the function on the stack. If there are no arguments supplied, invoking a typed method that has A_LONG, 0 as an argument type specifier will fail. To make typed method calls, use `object_method_typed()` or `typedmess()`.
+
+In the untyped method case, Max merely does a lookup of the symbol in the object, and, if a matching function is found, calls the function with the arguments you pass.
+Certain methods you write for your object, such as the assist method for describing your object and the DSP method in audio objects, are declared as untyped using the A_CANT argument type specifier. This means that Max will not typecheck the arguments you pass to these methods, but, most importantly, a user cannot hook up a message box to your object and send it a message to invoke an untyped method. (Try this for yourself – send the assist message to a standard Max object.)
+
+When you use an outlet, you're effectively making a typed method call on any objects connected to the outlet.
+
+
+
+
 
 ## Sending arbitrary messages to an object
+
+
+
+
 
 In https://cycling74.com/forums/error-handling-with-object_method_typed, there is a need to figure the type of the method which is being called in sending.
 
@@ -162,6 +213,67 @@ In this example since the message "clear" has no arguments the typed/untyped dis
 
 ### ext_obex.h
 
+For Untyped Methods (A_CANT)
+
+```c
+
+/**
+  Sends an untyped message to an object. 
+  There are some caveats to its use, however, particularly for 64-bit architectures.
+  object_method_direct() should be used in cases where floating-point or other non-integer types are being passed on the stack or in return values.
+
+  @ingroup obj
+
+  @param  x   The object that will receive the message 
+  @param  s   The message selector
+  @param  ...   Any arguments to the message
+
+  @return     If the receiver object can respond to the message, object_method() returns the result. Otherwise, the function will return 0. 
+
+  @remark     Example: To send the message <tt>bang</tt> to the object <tt>bang_me</tt>:
+  @code
+  void *bang_result;
+  bang_result = object_method(bang_me, gensym("bang"));
+  @endcode
+*/
+
+void *object_method(void *x, t_symbol *s, ...);
+
+/**
+  do a strongly typed direct call to a method of an object
+
+  @ingroup obj
+
+  
+  @param  rt    The type of the return value (double, void*, void...)
+  @param  sig   the actual signature of the function in brackets ! 
+          something like (t_object *, double, long)   
+  @param  x   The object where the method we want to call will be looked for,
+          it will also always be the first argument to the function call
+  @param  s   The message selector
+  @param  ...   Any arguments to the call, the first one will always be the object (x)
+
+  @return     will return anything that the called function returns, typed by (rt)
+ 
+  @remark     Example: To call the function identified by <tt>getcolorat</tt> on the object <tt>pwindow</tt>
+          which is declared like:
+          t_jrgba pwindow_getcolorat(t_object *window, double x, double y)
+  @code
+  double x = 44.73;
+  double y = 79.21;
+  t_object *pwindow;
+  t_jrgba result = object_method_direct(t_jrgba, (t_object *, double, double), pwindow, gensym("getcolorat"), x, y);
+  @endcode
+*/
+    
+#define object_method_direct(rt, sig, x, s, ...) ((rt (*)sig)object_method_direct_getmethod((t_object *)x, s))(object_method_direct_getobject((t_object *)x, s), __VA_ARGS__)
+
+method object_method_direct_getmethod(t_object *x, t_symbol *sym);
+void *object_method_direct_getobject(t_object *x, t_symbol *sym);
+```
+
+
+For Typed Methods (A_GIMME)
 ```c
 /**
   Sends a type-checked message to an object.

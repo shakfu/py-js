@@ -678,7 +678,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 393.0, 35.0, 22.0 ],
+									"patching_rect" : [ 277.5, 325.0, 35.0, 22.0 ],
 									"text" : "clear"
 								}
 
@@ -726,7 +726,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 197.0, 406.0, 150.0, 60.0 ],
+									"patching_rect" : [ 13.0, 416.0, 133.0, 60.0 ],
 									"text" : "test for getting scripting from patcher, name lookup in the global registry and msg send!"
 								}
 
@@ -737,7 +737,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 269.5, 474.0, 150.0, 20.0 ],
+									"patching_rect" : [ 75.5, 476.0, 99.0, 20.0 ],
 									"text" : "name: missint"
 								}
 
@@ -750,7 +750,7 @@
 									"numoutlets" : 2,
 									"outlettype" : [ "", "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 213.5, 474.0, 50.0, 22.0 ],
+									"patching_rect" : [ 19.5, 476.0, 50.0, 22.0 ],
 									"varname" : "missint"
 								}
 
@@ -761,7 +761,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 269.5, 553.5, 150.0, 20.0 ],
+									"patching_rect" : [ 75.5, 555.5, 83.0, 20.0 ],
 									"text" : "name: mrmsg"
 								}
 
@@ -785,7 +785,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 213.5, 553.5, 50.0, 22.0 ],
+									"patching_rect" : [ 19.5, 555.5, 50.0, 22.0 ],
 									"varname" : "mrmsg"
 								}
 
@@ -819,7 +819,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 269.5, 500.0, 142.0, 20.0 ],
+									"patching_rect" : [ 75.5, 502.0, 99.0, 20.0 ],
 									"text" : "name: bigbanger"
 								}
 
@@ -832,7 +832,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 213.5, 500.0, 50.0, 50.0 ],
+									"patching_rect" : [ 19.5, 502.0, 50.0, 50.0 ],
 									"varname" : "bigbanger"
 								}
 
@@ -882,7 +882,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 270.0, 325.0, 29.5, 22.0 ],
+									"patching_rect" : [ 231.5, 325.0, 29.5, 22.0 ],
 									"text" : "set"
 								}
 
