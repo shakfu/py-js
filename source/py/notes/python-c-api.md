@@ -1,14 +1,5 @@
 # Python C API
 
-## Methods to use
-
-
-```c
-
-
-
-
-```
 
 ## What stdlib includes are included in `<Python.h>`
 
@@ -43,7 +34,6 @@ else {
 ```
 Note that since `PyObject_CallObject()` always wants a tuple for the argument list, to call a function without arguments, pass “()” for the format, and to call a function with one argument, surround the argument in parentheses, e.g. “(i)”.
 
-
 ## Redirecting stdout to a variable
 
 
@@ -66,13 +56,9 @@ hello world!
 
 also see: https://stackoverflow.com/questions/4307187/how-to-catch-python-stdout-in-c-code
 
-
-
 ## Setting Module Globals in Embedded Python Extensions
 
 see: https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
-
-
 
 ## Evaluation types
 
@@ -138,5 +124,4 @@ finally:
     return ret;
 }
 ```
-
 

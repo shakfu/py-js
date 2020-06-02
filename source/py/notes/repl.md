@@ -1,5 +1,5 @@
-
 # Is a real REPL possible?
+
 
 ## Is it possible to launch a python interactive loop / repl from the py external?
 
@@ -13,7 +13,6 @@ Ideally it would be fantastic to launch a python repl per py external instance (
 
 - Iain Duncan's [Schema for Max](https://github.com/iainctduncan/scheme-for-max) has a novel repl which work nicely. Could be another way
 
-
 ## Javascript terminal emulators
 
 - core tech https://xtermjs.org
@@ -22,12 +21,9 @@ Ideally it would be fantastic to launch a python repl per py external instance (
 
 - this is probably not suitable - http://www.erikosterberg.com/terminaljs/
 
-
 ## Protocols
 
 - websockets: https://websockets.readthedocs.io/en/stable/intro.html
 
 - OSC ...
-
-
 

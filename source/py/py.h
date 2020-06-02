@@ -3,11 +3,8 @@
 
 /* py.h */
 
-/*--------------------------------------------------------------------
- * Includes
- */
-// #include <stdio.h>
-// #include <stdarg.h>
+/*--------------------------------------------------------------------------*/
+// INCLUDES
 
 /* max api */
 #include "ext.h"
@@ -16,24 +13,22 @@
 /* python */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+/*--------------------------------------------------------------------------*/
+// CONSTANTS
 
-/* constants */
 #define PY_MAX_ATOMS 128
 #define PY_MAX_NAME "PY_NAME"
 //#define PY_NAMESPACE "PY_SPACE"
 #define MAX_IMPORTS 3
+/*--------------------------------------------------------------------------*/
+// GLOBALS
 
-/*--------------------------------------------------------------------
- * Global variables
- */
 
 static int py_global_obj_count;
+/*--------------------------------------------------------------------------*/
+// OBJECT TYPES
 
-/*--------------------------------------------------------------------
- * Object Types
- */
 
-/* [py] external type */
 typedef struct _py {
     /* object header */
     t_object p_ob;
@@ -48,9 +43,8 @@ typedef struct _py {
     PyObject* p_globals; /* global python namespace (new ref) */
 
     /* infra objects */
-    // t_patcher* p_patcher; /* to send msgs to objects */
-    t_object* p_patcher;
-    // t_box* p_box;         /* the ui box of the py instance? */
+    t_patcher* p_patcher; /* to send msgs to objects */
+    t_box* p_box;         /* the ui box of the py instance? */
 
     /* text editor attrs */
     t_object* p_code_editor;
@@ -65,28 +59,24 @@ typedef struct _py {
 
 } t_py;
 
-/*--------------------------------------------------------------------
- * Function Types
- */
+/*--------------------------------------------------------------------------*/
+// FUNCTION TYPES
+/*--------------------------------------------------------------------------*/
+// ENUMS
 
-/*--------------------------------------------------------------------
- * Enums
- */
 
 /* python execution mode */
 typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
+/*--------------------------------------------------------------------------*/
+// MACROS
 
-/*--------------------------------------------------------------------
- * Macros
- */
 
 #define foreach(i, n)                                                         \
     int i;                                                                    \
     for (i = 0; i < n; i++)
+/*--------------------------------------------------------------------------*/
+// METHODS
 
-/*--------------------------------------------------------------------
- * Methods
- */
 
 /* object creation and destruction */
 void* py_new(t_symbol* s, long argc, t_atom* argv);
@@ -121,10 +111,9 @@ void py_scan(t_py* x);
 long scan_callback(t_py* x, t_object* obj);
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_globex(t_py* x, long n);
+/*--------------------------------------------------------------------------*/
+// HELPERS
 
-/*--------------------------------------------------------------------
- * Helper Functions
- */
 
 void py_init(t_py* x);
 void py_locatefile(t_py* x, char* filename);

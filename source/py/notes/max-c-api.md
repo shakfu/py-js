@@ -1,4 +1,3 @@
-
 # Max C API Notes
 
 
@@ -22,16 +21,6 @@ sysmem_freehandle(hand);
 ```
 
 ## Typed vs Untyped Methods
-
-
-
-
-
-
-
-
-
-
 This is from the Max API docs:
 
 Max objects, such as the one you write, are C data structures in which methods are dynamically bound to functions. Your object's methods are called by Max, but your object can also call methods itself. When you call a method, it is
@@ -46,103 +35,11 @@ Certain methods you write for your object, such as the assist method for describ
 
 When you use an outlet, you're effectively making a typed method call on any objects connected to the outlet.
 
-
-
-
-
 ## Sending arbitrary messages to an object
-
-
-
-
-
 In https://cycling74.com/forums/error-handling-with-object_method_typed, there is a need to figure the type of the method which is being called in sending.
 
 
 It looks like the `t_messlist` struct in `t_object` is key!
-
-### in `ext_mess.h`:
-
-```c
-
-/** A list of symbols and their corresponding methods,
-  complete with typechecking information. 
-  @ingroup obj
-*/
-typedef struct messlist
-{
-  struct symbol *m_sym;   ///< Name of the message
-  method m_fun;       ///< Method associated with the message
-  char m_type[MSG_MAXARG + 1];  ///< Argument type information
-} t_messlist;
-C74_DEPRECATED( typedef struct messlist Messlist );
-
-//...
-
-/** The structure for the head of any object which wants to have inlets or outlets,
-  or support attributes.
-  @ingroup obj
-*/
-typedef struct object
-{
-  struct messlist *o_messlist;  ///<  list of messages and methods. The -1 entry of the message list of an object contains a pointer to its #t_class entry.
-                  // (also used as freelist link)
-#ifdef CAREFUL
-  t_ptr_int o_magic;          ///< magic number
-#endif
-  struct inlet *o_inlet;      ///<  list of inlets
-  struct outlet *o_outlet;    ///<  list of outlets
-} t_object;
-C74_DEPRECATED( typedef struct object Object );
-
-```
-
-Look for functions which return `t_messlist`
-
-### In `ext_obex.h`
-
-
-
-Undocumented:
-
-```c
-t_messlist *class_mess(t_class *x, t_symbol *methodname);
-t_messlist *object_mess(t_object *x, t_symbol *methodname); // <- promising!
-t_messlist *class_typedwrapper_get(t_class *x, t_symbol *s);
-t_messlist *object_typedwrapper_get(t_object *x, t_symbol *s);
-```
-
-There is a `t_method_object` as well:
-
-```c
-typedef struct _method_object
-{
-  t_object  ob;
-  t_messlist  messlist_entry;
-} t_method_object;
-```
-
-Undocumented:
-```c
-t_method_object *method_object_new(method m, C74_CONST char *name, ...);
-t_method_object *method_object_new_messlist(t_messlist *m);
-void method_object_free(t_method_object *x);
-t_symbol *method_object_getname(t_method_object *x);
-void method_object_setname(t_method_object *x, t_symbol *s);
-method method_object_getmethod(t_method_object *x);
-void method_object_setmethod(t_method_object *x, method m);
-t_messlist *method_object_getmesslist(t_method_object *x);
-void method_object_setmesslist(t_method_object *x, t_messlist *m);
-
-t_method_object *class_getmethod_object(t_class *x, t_symbol *methodname);
-
-// these methods are private -- instance methods are not actually fully implemented at this time
-t_method_object *object_getmethod_object(t_object *x, t_symbol *methodname);
-```
-
-
-
-
 
 ### Forum Discussions
 
@@ -208,10 +105,85 @@ or shorter version: (untyped)
 
 In this example since the message "clear" has no arguments the typed/untyped distinction doesn't really matter and you could use them interchangeably.
 
+### ext_mess.h
 
+```c
 
+/** A list of symbols and their corresponding methods,
+  complete with typechecking information. 
+  @ingroup obj
+*/
+typedef struct messlist
+{
+  struct symbol *m_sym;   ///< Name of the message
+  method m_fun;       ///< Method associated with the message
+  char m_type[MSG_MAXARG + 1];  ///< Argument type information
+} t_messlist;
+C74_DEPRECATED( typedef struct messlist Messlist );
+
+//...
+
+/** The structure for the head of any object which wants to have inlets or outlets,
+  or support attributes.
+  @ingroup obj
+*/
+typedef struct object
+{
+  struct messlist *o_messlist;  ///<  list of messages and methods. The -1 entry of the message list of an object contains a pointer to its #t_class entry.
+                  // (also used as freelist link)
+#ifdef CAREFUL
+  t_ptr_int o_magic;          ///< magic number
+#endif
+  struct inlet *o_inlet;      ///<  list of inlets
+  struct outlet *o_outlet;    ///<  list of outlets
+} t_object;
+C74_DEPRECATED( typedef struct object Object );
+
+```
+
+Look for functions which return `t_messlist`
 
 ### ext_obex.h
+
+
+
+Undocumented:
+
+```c
+t_messlist *class_mess(t_class *x, t_symbol *methodname);
+t_messlist *object_mess(t_object *x, t_symbol *methodname); // <- promising!
+t_messlist *class_typedwrapper_get(t_class *x, t_symbol *s);
+t_messlist *object_typedwrapper_get(t_object *x, t_symbol *s);
+```
+
+There is a `t_method_object` as well:
+
+```c
+typedef struct _method_object
+{
+  t_object  ob;
+  t_messlist  messlist_entry;
+} t_method_object;
+```
+
+Undocumented:
+```c
+t_method_object *method_object_new(method m, C74_CONST char *name, ...);
+t_method_object *method_object_new_messlist(t_messlist *m);
+void method_object_free(t_method_object *x);
+t_symbol *method_object_getname(t_method_object *x);
+void method_object_setname(t_method_object *x, t_symbol *s);
+method method_object_getmethod(t_method_object *x);
+void method_object_setmethod(t_method_object *x, method m);
+t_messlist *method_object_getmesslist(t_method_object *x);
+void method_object_setmesslist(t_method_object *x, t_messlist *m);
+
+t_method_object *class_getmethod_object(t_class *x, t_symbol *methodname);
+
+// these methods are private -- instance methods are not actually fully implemented at this time
+t_method_object *object_getmethod_object(t_object *x, t_symbol *methodname);
+```
+
 
 For Untyped Methods (A_CANT)
 
@@ -231,7 +203,6 @@ For Untyped Methods (A_CANT)
   @return     If the receiver object can respond to the message, object_method() returns the result. Otherwise, the function will return 0. 
 
   @remark     Example: To send the message <tt>bang</tt> to the object <tt>bang_me</tt>:
-  @code
   void *bang_result;
   bang_result = object_method(bang_me, gensym("bang"));
   @endcode
@@ -258,7 +229,6 @@ void *object_method(void *x, t_symbol *s, ...);
   @remark     Example: To call the function identified by <tt>getcolorat</tt> on the object <tt>pwindow</tt>
           which is declared like:
           t_jrgba pwindow_getcolorat(t_object *window, double x, double y)
-  @code
   double x = 44.73;
   double y = 79.21;
   t_object *pwindow;
@@ -294,7 +264,6 @@ For Typed Methods (A_GIMME)
 t_max_err object_method_typed(void *x, t_symbol *s, long ac, t_atom *av, t_atom *rv);
 ```
 
-
 ### ext_obex_util.h
 
 ```c
@@ -314,16 +283,8 @@ t_max_err object_method_typed(void *x, t_symbol *s, long ac, t_atom *av, t_atom 
 t_max_err object_method_parse(t_object *x, t_symbol *s, C74_CONST char *parsestr, t_atom *rv);
 ```
 
-
-
-
-
-
 ## Object Reference
-
-
 It looks like `obex` is a type `hashtab` (Hash Table), which can be used for storing object references?
-
 
 ## Find named object
 
@@ -392,20 +353,14 @@ t_max_err object_send_method_typed(void *x, t_symbol *name, t_symbol *s, long ac
 }
 ```
 
-
-
 ## Storing Refs on a Hashtable
-
 see: https://cycling74.com/forums/help!-crashing-when-scripting-patcher-and-storing-refs-in-a-hashtable
 
 ```
 solution for future readers: I needed to use the OBJ_FLAG_REF flag to the hashtab so that it wouldn't try to free pointers to objects.
- ```
-
-
+```
 
 ## Coding GIMMEBACK
-
 see: https://cycling74.com/forums/multiple-atoms-return-by-a_gimmeback
 
 
@@ -435,21 +390,13 @@ void max_jit_obex_gimmeback_dumpout(void *x, t_symbol *s, long ac, t_atom *av)
 }
 ```
 
-
-
 ## Path operations
-
 see: https://cycling74.com/forums/locatefolder
 
 ## Compiling on Ubuntu 20.04
-
-https://stackoverflow.com/questions/27672572/embedding-python-in-c-linking-fails-with-undefined-reference-to-py-initialize
-
-
-
+see: https://stackoverflow.com/questions/27672572/embedding-python-in-c-linking-fails-with-undefined-reference-to-py-initialize
 
 ## Writing a text file
-
 see: https://cycling74.com/forums/problem-with-sysfile_writetextfile
 
 ```c
@@ -469,11 +416,8 @@ see: https://cycling74.com/forums/problem-with-sysfile_writetextfile
 }
 ```
 
-
-
-## Getting Atoms from Arguments
-
-### ext_obex.h
+## Getting Atoms from Argument
+in ext_obex.h:
 
 ```c
 /**
@@ -484,8 +428,6 @@ see: https://cycling74.com/forums/problem-with-sysfile_writetextfile
   @return     This function returns the type of the specified t_atom as defined in #e_max_atomtypes
 */
 long atom_gettype(const t_atom *a);
-#endif
-
 
 //the following are useful for setting the values _only_ if there is an arg
 //rather than setting it to 0 or _sym_nothing
@@ -506,7 +448,6 @@ long atom_gettype(const t_atom *a);
 
   @remark     The atom_arg_getlong() function only changes the value of <tt>c</tt> if the function is successful. 
           For instance, the following code snippet illustrates a simple, but typical use:
-  @code
   void myobject_mymessage(t_myobject *x, t_symbol *s, long ac, t_atom *av)
   {
     t_atom_long var = -1;
@@ -574,7 +515,6 @@ long atom_arg_getdouble(double *c, long idx, long ac, const t_atom *av);
 
   @remark     The atom_arg_getsym() function only changes the value of <tt>c</tt> if the function is successful. 
           For instance, the following code snippet illustrates a simple, but typical use:
-  @code
   void myobject_open(t_myobject *x, t_symbol *s, long ac, t_atom *av)
   {
     t_symbol *filename = _sym_nothing;
@@ -593,11 +533,9 @@ long atom_arg_getdouble(double *c, long idx, long ac, const t_atom *av);
 long atom_arg_getsym(t_symbol **c, long idx, long ac, const t_atom *av);
 ```
 
+## Object Creation & Freeing
 
-
-## Object creation / freeing
-
-### ext_obex.h
+in ext_obex.h
 
 ```c
 /**
@@ -636,12 +574,8 @@ void *object_new_typed(t_symbol *name_space, t_symbol *classname, long ac, t_ato
 t_max_err object_free(void *x);
 ```
 
-
-
 ## Checking whether an object is an instance of a class
-
-
-### ext_obex.h
+in ext_obex.h
 
 ```c
 /**
@@ -654,16 +588,17 @@ t_max_err object_free(void *x);
   @return     This function returns 1 if the object is an instance of the named class. Otherwise, 0 is returned.
   @remark     For instance, to determine whether an unknown object pointer is a pointer to a print object, one would call:
 
-  @code
   long isprint = object_classname_compare(x, gensym("print"));
   @endcode
 */
 long object_classname_compare(void *x, t_symbol *name);
 ```
 
+## Outlets
+- outlet creation order is important in `outlet_new(x, NULL)`?
 
+### Dynamic Outlets
 
-## Dynamic Outlets?
 
 see: https://cycling74.com/forums/dynamic-inlets-outlets
 
@@ -681,8 +616,3 @@ object_method(b, gensym("dynlet_begin"));
 object_method(b, gensym("dynlet_end"));
 ```
 
-
-
-## Outlets
-
-- outlet creation order is important in `outlet_new(x, NULL)`?

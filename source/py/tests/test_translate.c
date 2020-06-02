@@ -1,7 +1,9 @@
-
 /* python */
+
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+
+
 
 /* --------------------------------------- */
 // types
@@ -268,6 +270,7 @@ error:
 // caller must free
 long* py_eval_long_seq(t_py* x, char* expression)
 {
+    // caller must free
     long *result;
     PyObject* iter = NULL;
     PyObject* item = NULL;
@@ -318,6 +321,7 @@ long* py_eval_long_seq(t_py* x, char* expression)
 // caller must free
 float* py_eval_float_seq(t_py* x, char* expression)
 {
+    // caller must free
     float *result;
     PyObject* iter = NULL;
     PyObject* item = NULL;
@@ -364,4 +368,4 @@ float* py_eval_float_seq(t_py* x, char* expression)
         Py_XDECREF(pval);
         return NULL;
 }
-
+// caller must free
