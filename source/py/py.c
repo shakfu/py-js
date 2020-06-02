@@ -641,14 +641,19 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_filehandle fh;
 
     if (s == gensym("")) {
-        if (x->p_code_filepath != gensym("")) {
-            strcpy(filename, x->p_code_filepath->s_name);
-        } else {
-            filename[0] = 0;
-            if (open_dialog(filename, &path, &type, &type, 1))
-                x->p_code_filepath = gensym(filename);
+        filename[0] = 0;
+
+        if (open_dialog(filename, &path, &type, &type, 1))
             return;
-        }
+
+        // if (x->p_code_filepath != gensym("")) {
+        //     strcpy(filename, x->p_code_filepath->s_name);
+        // } else {
+        //     filename[0] = 0;
+        //     if (open_dialog(filename, &path, &type, &type, 1))
+        //         x->p_code_filepath = gensym(filename);
+        //     return;
+        // }
     } else {
         strcpy(filename, s->s_name);
         x->p_code_filepath = s;
