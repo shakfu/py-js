@@ -147,6 +147,8 @@ The style used in this project is specified in the `.clang-format` file.
 ## BUGS
 
 - [ ] space in `eval` without quotes will cause a crash!
+- [ ] codesigning errors are due to Package being developed in Documents/...
+  which causes issues. If it's a non icloud exposed folder it works ok.
 
 ## TODO
 

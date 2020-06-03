@@ -10,17 +10,6 @@
 <v t="sta.20200602165801.1"><vh>@settings</vh>
 <v t="sta.20200602165801.470"><vh>Import options</vh>
 <v t="sta.20200602165801.471"><vh>@bool add-context-to-headlines = False</vh></v>
-<v t="sta.20200602165801.472"><vh>@bool put-python-decorators-in-imported-headlines = False</vh></v>
-<v t="sta.20200602165801.473"><vh>@bool suppress-import-parsing = False</vh></v>
-<v t="sta.20200602165801.474"><vh>@data c-import-typedefs</vh></v>
-<v t="sta.20200602165801.475"><vh>@data import-html-tags</vh></v>
-<v t="sta.20200602165801.476"><vh>@data import-xml-tags</vh></v>
-<v t="sta.20200602165801.477"><vh>zim importer options</vh>
-<v t="sta.20200602165801.478"><vh>@int zim-rst-level = 0</vh></v>
-<v t="sta.20200602165801.479"><vh>@string path-to-zim = None</vh></v>
-<v t="sta.20200602165801.480"><vh>@string zim-node-name = Imported Zim Tree</vh></v>
-<v t="sta.20200602165801.481"><vh>@string zim-rst-type = rst</vh></v>
-</v>
 </v>
 </v>
 <v t="sta.20200602110822.1"><vh>py</vh>
@@ -146,6 +135,7 @@
 <v t="sta.20200602120251.25"><vh>void py_anything</vh></v>
 <v t="sta.20200602120251.12"><vh>void py_send</vh></v>
 <v t="sta.20200602120251.11"><vh>void py_scan</vh></v>
+<v t="sta.20200603072826.1"><vh>long py_scan_callback</vh></v>
 <v t="sta.20200602120251.26"><vh>void py_globex</vh></v>
 <v t="sta.20200602122617.1"><vh>void py_count</vh></v>
 </v>
@@ -191,37 +181,6 @@
 
     object_method(x-&gt;p_patcher, gensym("iterate"), (method)scan_callback, x,
                   PI_DEEP | PI_WANTBOX, &amp;result);
-}
-
-long scan_callback(t_py* x, t_object* box)
-{
-    t_rect jr;
-    t_object* p;
-    t_symbol* s;
-    t_symbol* varname;
-    t_object* obj;
-    t_symbol* obj_id;
-
-    jbox_get_patching_rect(box, &amp;jr);
-    p = jbox_get_patcher(box);
-    varname = jbox_get_varname(box);
-    obj = jbox_get_object(box);
-
-    // lifted from scheme-for-max (Thanks, Iain!)
-    if (varname != gensym("")) {
-        py_log(x, "storing object '%s' in the global registry",
-               varname-&gt;s_name);
-        hashtab_store(py_global_registry, varname, obj);
-    }
-
-    obj_id = jbox_get_id(box);
-    s = jpatcher_get_name(p);
-    object_post(
-        (t_object*)x,
-        "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
-        s-&gt;s_name, varname-&gt;s_name, obj_id-&gt;s_name, (long)jr.x, (long)jr.y,
-        (long)jr.width, (long)jr.height);
-    return 0;
 }
 
 </t>
@@ -344,8 +303,12 @@ long scan_callback(t_py* x, t_object* box)
     // t_messlist *object_mess(t_object *x, t_symbol *methodname);
     //
     t_messlist* messlist = object_mess(obj, msg_sym);
+    if (messlist) {
+        post(NULL, "method name: %s, type: %d", 
+             messlist-&gt;m_sym-&gt;s_name, mess-&gt;m_type[0]);
+    }
     post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
-    post("messlist-&gt;m_type (type of msg): %s", messlist-&gt;m_type);
+    post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
     // // 2
     // t_messlist* mlist2 = obj-&gt;o_messlist;
 
@@ -799,7 +762,6 @@ error:
 {
     char* py_argv = NULL;
     PyObject* pval = NULL;
-    // PyObject* py_callable_str = NULL;
     PyObject* py_callable = NULL;
     PyObject* py_argslist = NULL; // python list
     PyObject* py_args = NULL;     // python tuple
@@ -879,8 +841,15 @@ error:
     }
 
     pval = PyObject_Call(py_callable, py_args, NULL);
+    if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
+        py_error(x, "could not retrieve result of callable(*args)");
+        goto error;
+    }
+    PyErr_Clear();
+
+    pval = PyObject_CallFunctionObjArgs(py_callable, py_argslist, NULL);
     if (pval == NULL) {
-        py_error(x, "could not retrieve result of call");
+        py_error(x, "could not retrieve result of callable(list)");
         goto error;
     }
 
@@ -1293,7 +1262,8 @@ error:
 // DOCUMENTATION
 </t>
 <t tx="sta.20200602122226.1">/*--------------------------------------------------------------------------*/
-// TESTING</t>
+// TESTING
+</t>
 <t tx="sta.20200602122244.1">
 void py_bang(t_py* x)
 {
@@ -1340,7 +1310,6 @@ static t_hashtab* py_global_registry; // global object lookups
 <t tx="sta.20200602145517.1">/*--------------------------------------------------------------------------*/
 // OBJECT TYPES
 
-
 typedef struct _py {
     /* object header */
     t_object p_ob;
@@ -1375,7 +1344,6 @@ typedef struct _py {
 <t tx="sta.20200602145807.1">/*--------------------------------------------------------------------------*/
 // GLOBALS
 
-
 static int py_global_obj_count;
 </t>
 <t tx="sta.20200602150052.1">/*--------------------------------------------------------------------------*/
@@ -1384,13 +1352,11 @@ static int py_global_obj_count;
 <t tx="sta.20200602150129.1">/*--------------------------------------------------------------------------*/
 // ENUMS
 
-
 /* python execution mode */
 typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 </t>
 <t tx="sta.20200602150250.1">/*--------------------------------------------------------------------------*/
 // MACROS
-
 
 #define foreach(i, n)                                                         \
     int i;                                                                    \
@@ -1398,7 +1364,6 @@ typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 </t>
 <t tx="sta.20200602150324.1">/*--------------------------------------------------------------------------*/
 // METHODS
-
 
 /* object creation and destruction */
 void* py_new(t_symbol* s, long argc, t_atom* argv);
@@ -1432,10 +1397,10 @@ void py_bang(t_py* x);
 void py_scan(t_py* x);
 long scan_callback(t_py* x, t_object* obj);
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_globex(t_py* x, long n);</t>
+void py_globex(t_py* x, long n);
+</t>
 <t tx="sta.20200602150415.1">/*--------------------------------------------------------------------------*/
 // HELPERS
-
 
 void py_init(t_py* x);
 void py_locatefile(t_py* x, char* filename);
@@ -1459,7 +1424,8 @@ void handle_py_error(t_py* x, char* fmt, ...);
 #define PY_MAX_ATOMS 128
 #define PY_MAX_NAME "PY_NAME"
 //#define PY_NAMESPACE "PY_SPACE"
-#define MAX_IMPORTS 3</t>
+#define MAX_IMPORTS 3
+</t>
 <t tx="sta.20200602151837.1">@path source/py/notes</t>
 <t tx="sta.20200602164507.1">@path source/py/tests
 </t>
@@ -1868,130 +1834,6 @@ not obvious from context.
 
 If False, does not do the above, useful if you don't use clones
 and don't want the visual clutter of repeated class / file names.</t>
-<t tx="sta.20200602165801.472">True: The python importer will copy the first decorator preceding a
-      function/method into the headline of the imported node.
-      
-**Note**: The importer will copy only the first line of a multiline decorator.</t>
-<t tx="sta.20200602165801.473">False: (recommended) Enable import parsing for @shadow and @auto
-True: @shadow and @auto create a single node for the entire file.</t>
-<t tx="sta.20200602165801.474"># typedef names, one per line
-
-# These fix #545:
-
-    # _Bool
-    # scr_enter_status_t
-    # scr_exec_status_t
-    # scr_exit_status_t
-    # scr_node_api_t
-    # scr_update_status_t
-    # uint16_t
-    # uint8_t
-</t>
-<t tx="sta.20200602165801.475"># lowercase html tags, one per line.
-
-a
-abbr
-acronym
-address
-applet
-area
-b
-base
-basefont
-bdo
-big
-blockquote
-body
-br
-button
-caption
-center
-cite
-code
-col
-colgroup
-dd
-del
-dfn
-dir
-div
-dl
-dt
-em
-fieldset
-font
-form
-frame
-frameset
-head
-h1
-h2
-h3
-h4
-h5
-h6
-hr
-html
-i
-iframe
-img
-input
-ins
-kbd
-label
-legend
-li
-link
-map
-menu
-meta
-noframes
-noscript
-object
-ol
-optgroup
-option
-p
-param
-pre
-q
-s
-samp
-script
-select
-small
-span
-strike
-strong
-style
-sub
-sup
-table
-tbody
-td
-textarea
-tfoot
-th
-thead
-title
-tr
-tt
-u
-ul
-var</t>
-<t tx="sta.20200602165801.476"># lowercase xml tags, one per line.
-
-html
-body
-head
-div
-table
-</t>
-<t tx="sta.20200602165801.477"></t>
-<t tx="sta.20200602165801.478"></t>
-<t tx="sta.20200602165801.479"></t>
-<t tx="sta.20200602165801.480"></t>
-<t tx="sta.20200602165801.481"></t>
 <t tx="sta.20200602165810.1"></t>
 <t tx="sta.20200602170210.1">
 /* python */
@@ -3405,6 +3247,38 @@ int add_history(char*);
     Py_Finalize();
     exit(0);
 }
+</t>
+<t tx="sta.20200603072826.1">long py_scan_callback(t_py* x, t_object* box)
+{
+    t_rect jr;
+    t_object* p;
+    t_symbol* s;
+    t_symbol* varname;
+    t_object* obj;
+    t_symbol* obj_id;
+
+    jbox_get_patching_rect(box, &amp;jr);
+    p = jbox_get_patcher(box);
+    varname = jbox_get_varname(box);
+    obj = jbox_get_object(box);
+
+    // lifted from scheme-for-max (Thanks, Iain!)
+    if (varname != gensym("")) {
+        py_log(x, "storing object '%s' in the global registry",
+               varname-&gt;s_name);
+        hashtab_store(py_global_registry, varname, obj);
+    }
+
+    obj_id = jbox_get_id(box);
+    s = jpatcher_get_name(p);
+    object_post(
+        (t_object*)x,
+        "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
+        s-&gt;s_name, varname-&gt;s_name, obj_id-&gt;s_name, (long)jr.x, (long)jr.y,
+        (long)jr.width, (long)jr.height);
+    return 0;
+}
+
 </t>
 </tnodes>
 </leo_file>
