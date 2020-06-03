@@ -720,7 +720,6 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = NULL;
     PyObject* pval = NULL;
-    // PyObject* py_callable_str = NULL;
     PyObject* py_callable = NULL;
     PyObject* py_argslist = NULL; // python list
     PyObject* py_args = NULL;     // python tuple
@@ -800,8 +799,15 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     pval = PyObject_Call(py_callable, py_args, NULL);
+    if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
+        py_error(x, "could not retrieve result of callable(*args)");
+        goto error;
+    }
+    PyErr_Clear();
+
+    pval = PyObject_CallFunctionObjArgs(py_callable, py_argslist, NULL);
     if (pval == NULL) {
-        py_error(x, "could not retrieve result of call");
+        py_error(x, "could not retrieve result of callable(list)");
         goto error;
     }
 
