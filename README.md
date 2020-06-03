@@ -61,12 +61,13 @@ editor   | load            | file          | yes    | no         | [x]
 
 5. **Anything Messages**. It responds to any kind of messages other than the standard ones specified, but practically can `evalualte` (in the `eval` sense above) a message format which is a similar to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`
 
-6. **Code Editor**. Double-clicking on the object open a code-editor which can have a `read` message which reads a file, specified as an attribute, into the editor, and also a `load` message which `reads` the file and then `execfile` it into the editor.
+6. **line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repl includes a convenient menu with all a `py` object's methods and also have a coll-based history features which provides arrow-up/arrow-down recall of all entries in a session. Of course, a coll can made to save all commands if required.
 
+7. **Code Editor**. Double-clicking on the object open a code-editor which can have a `read` message which reads a file, specified as an attribute, into the editor, and also a `load` message which `reads` the file and then `execfile` it into the editor.
 
-7. **Exposing Max API to Python** A significant part of the `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd` and available to `api.pyx` cython module which is converted to c-code and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects and also via `import` messages. What this effectively means is that python scripts in `py` objects can directly call max c-api functions.
+8. **Exposing Max API to Python** A significant part of the `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd` and available to `api.pyx` cython module which is converted to c-code and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects and also via `import` messages. What this effectively means is that python scripts in `py` objects can directly call max c-api functions.
 
-8. **Globals Exchange**. The `py` external has special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
+9. **Globals Exchange**. The `py` external has special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
 
 ## Building
 
@@ -147,28 +148,28 @@ The style used in this project is specified in the `.clang-format` file.
 ## BUGS
 
 - [ ] space in `eval` without quotes will cause a crash!
-- [ ] codesigning errors are due to Package being developed in Documents/...
+- [x] codesigning errors are due to Package being developed in Documents/...
   which causes issues. If it's a non icloud exposed folder it works ok.
 
 ## TODO
 
-
+- [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl` 
+- [ ] shift type conversion to python (cython) api calls which should be easier than doing it in c
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes
 - [ ] enhance `py_anything` method to eval if identifier exists in ns and is not callable
 - [ ] Add file location feature (try pkg/examples/scripts then absolute paths)
-```c
-PyObject *sysPath = PySys_GetObject((char*)"path");
-PyList_Append(sysPath, PyString_FromString("."));
+      ```c
+      PyObject *sysPath = PySys_GetObject((char*)"path");
+      PyList_Append(sysPath, PyString_FromString("."));
 
-```
-- [ ] Refactor 'py_eval' to make it more consistent with the others
-- [ ] Refactor conversion logic from object methods
-- [ ] Add bpatcher line repl
-- [ ] Autoload default code
-
+      ```
 - [ ] Check out the reference for 'thispatcher'
 - [80%] Implement send to named objects
       (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
+- [ ] Refactor 'py_eval' to make it more consistent with the others
+- [ ] Refactor conversion logic from object methods
+
+- [ ] Autoload default code
 
 - [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
 - [ ] Convert py into a js extension class
@@ -177,6 +178,7 @@ PyList_Append(sysPath, PyString_FromString("."));
 
 ### Done
 
+- [x] Add bpatcher line repl
 - [x] Implement section on two-way globals setting and reading (from python and c)
       in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
 - [x] pytest testing harness
