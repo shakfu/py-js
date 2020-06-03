@@ -93,7 +93,7 @@ except:
     Py_XDECREF(ret);
     ret = NULL;
 finally:
-    Py_DECREF(pItem);
+    Py_XDECREF(pItem);
     return ret;
 }
 
