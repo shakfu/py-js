@@ -1340,8 +1340,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "2"
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
 								}
 
 							}
@@ -1791,6 +1790,19 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-3",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 52.5, 129.0, 216.0, 22.0 ],
+									"presentation_linecount" : 2,
+									"text" : "func arg1 arg2 arg3 dict(k1=a1, k2=a2)"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-43",
 									"maxclass" : "message",
 									"numinlets" : 2,
@@ -2087,7 +2099,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 52.5, 139.0, 225.0, 22.0 ],
+									"patching_rect" : [ 52.5, 165.0, 225.0, 22.0 ],
 									"text" : "obj.func arg1 arg2 key1=arg3 key2=arg4"
 								}
 
@@ -2099,7 +2111,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 52.5, 107.0, 205.0, 22.0 ],
+									"patching_rect" : [ 52.5, 95.0, 205.0, 22.0 ],
 									"text" : "func arg1 arg2 key1=arg3 key2=arg4"
 								}
 
