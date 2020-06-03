@@ -673,6 +673,30 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-64",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 417.5, 63.0, 63.0, 22.0 ],
+									"text" : "eval False"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-62",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 409.0, 34.0, 58.0, 22.0 ],
+									"text" : "eval True"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-60",
 									"maxclass" : "message",
 									"numinlets" : 2,
@@ -992,7 +1016,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 460.5, 7.0, 54.0, 22.0 ],
+									"patching_rect" : [ 505.0, 7.0, 54.0, 22.0 ],
 									"text" : "eval bob"
 								}
 
@@ -1004,7 +1028,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 464.0, 34.0, 156.0, 22.0 ],
+									"patching_rect" : [ 509.5, 34.0, 156.0, 22.0 ],
 									"text" : "assign bob 1 2.1 3 4.5 a b c"
 								}
 
@@ -1113,7 +1137,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 356.0, 34.0, 38.0, 22.0 ],
+									"patching_rect" : [ 360.0, 63.0, 38.0, 22.0 ],
 									"text" : "count"
 								}
 
@@ -1280,7 +1304,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 498.0, 93.0, 114.0, 22.0 ],
+									"patching_rect" : [ 514.5, 97.0, 114.0, 22.0 ],
 									"text" : "eval string.hexdigits"
 								}
 
@@ -1316,7 +1340,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 378.0, 63.0, 74.0, 22.0 ],
+									"patching_rect" : [ 313.0, 34.0, 74.0, 22.0 ],
 									"text" : "eval 1.4+2.3"
 								}
 
@@ -1340,7 +1364,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
+									"text" : "1"
 								}
 
 							}
@@ -1351,7 +1376,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 514.0, 124.0, 191.0, 22.0 ],
+									"patching_rect" : [ 518.0, 124.0, 191.0, 22.0 ],
 									"text" : "eval list(reversed(string.hexdigits))"
 								}
 
@@ -1363,7 +1388,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 485.0, 63.0, 75.0, 22.0 ],
+									"patching_rect" : [ 514.5, 63.0, 75.0, 22.0 ],
 									"text" : "import string"
 								}
 
@@ -1716,6 +1741,20 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-62", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-64", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-8", 0 ]
 								}
 
@@ -1796,7 +1835,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 52.5, 129.0, 216.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "func arg1 arg2 arg3 dict(k1=a1, k2=a2)"
 								}
 
