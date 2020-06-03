@@ -7,5 +7,4 @@
 
 2. If the pxd is not named as the pyx file then all references the c-name have to be qualified but then it is possible to redefine the c-name in python 'def'
 
-
 Note: with (2), you have to close Max to reload c api otherwise it will read as None. (1) needs to be tested for the same behaviour

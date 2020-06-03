@@ -23,11 +23,9 @@
 /*--------------------------------------------------------------------------*/
 // GLOBALS
 
-
 static int py_global_obj_count;
 /*--------------------------------------------------------------------------*/
 // OBJECT TYPES
-
 
 typedef struct _py {
     /* object header */
@@ -64,19 +62,16 @@ typedef struct _py {
 /*--------------------------------------------------------------------------*/
 // ENUMS
 
-
 /* python execution mode */
 typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 /*--------------------------------------------------------------------------*/
 // MACROS
-
 
 #define foreach(i, n)                                                         \
     int i;                                                                    \
     for (i = 0; i < n; i++)
 /*--------------------------------------------------------------------------*/
 // METHODS
-
 
 /* object creation and destruction */
 void* py_new(t_symbol* s, long argc, t_atom* argv);
@@ -113,7 +108,6 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_globex(t_py* x, long n);
 /*--------------------------------------------------------------------------*/
 // HELPERS
-
 
 void py_init(t_py* x);
 void py_locatefile(t_py* x, char* filename);
