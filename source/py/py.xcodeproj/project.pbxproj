@@ -114,6 +114,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0610;
+				TargetAttributes = {
+					2FBBEAD608F335360078DB84 = {
+						DevelopmentTeam = GXY97B2JBX;
+					};
+				};
 			};
 			buildConfigurationList = 2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "py" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -182,7 +187,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 22CF10220EE984600054F513 /* maxmspsdk.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = GXY97B2JBX;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
@@ -196,6 +204,7 @@
 					"-lpython3.7m",
 					"-ldl",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibtakr.py;
 			};
 			name = Development;
 		};
@@ -203,7 +212,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 22CF10220EE984600054F513 /* maxmspsdk.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = GXY97B2JBX;
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
@@ -216,6 +228,7 @@
 					"-lpython3.7m",
 					"-ldl",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibtakr.py;
 			};
 			name = Deployment;
 		};
