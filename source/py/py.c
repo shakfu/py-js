@@ -1028,9 +1028,20 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // 1
     // t_messlist *object_mess(t_object *x, t_symbol *methodname);
     //
-    t_messlist* messlist = object_mess(obj, msg_sym);
-    post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-    post("messlist->m_type (type of msg): %s", messlist->m_type);
+    // t_messlist* messlist = object_mess(obj, msg_sym);
+    // if (messlist) {
+    //     post(NULL, "method name: %s, type: %d", messlist->m_sym->s_name,
+    //          messlist->m_type[0]);
+    // }
+
+    t_messlist* mess = object_mess((t_object*)obj, msg_sym);
+    if (mess) {
+        object_post(NULL, "method name: %s, type: %d", mess->m_sym->s_name,
+                    mess->m_type[0]);
+    }
+
+    // post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
+    // post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
     // // 2
     // t_messlist* mlist2 = obj->o_messlist;
 
@@ -1061,11 +1072,11 @@ void py_scan(t_py* x)
 
     hashtab_clear(py_global_registry);
 
-    object_method(x->p_patcher, gensym("iterate"), (method)scan_callback, x,
+    object_method(x->p_patcher, gensym("iterate"), (method)py_scan_callback, x,
                   PI_DEEP | PI_WANTBOX, &result);
 }
 
-long scan_callback(t_py* x, t_object* box)
+long py_scan_callback(t_py* x, t_object* box)
 {
     t_rect jr;
     t_object* p;
