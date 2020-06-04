@@ -1,4 +1,4 @@
-# (minimal) py for max
+# minimal py for max
 
 An attempt to make a simple (and extensible) max external for python3
 
@@ -7,28 +7,28 @@ repo - https://github.com/shakfu/py
 ## Summary
 
 ```
-    globals:
-        object_count: number of active py objects
-        registry: global lookup for script and objects names
+globals:
+    object_count: number of active py objects
+    registry: global lookup for script and object names
 
-    py interpreter object
-        attributes
-            name:  unique name
-            file:  file to load into editor
-            debug: switch debug logging on and off
-            patcher: parent patcher object
-            box: parent patcher object
+py interpreter object
+    attributes
+        name:  unique name
+        file:  file to load into editor
+        debug: switch debug logging on and off
+        patcher: parent patcher object
+        box: parent box object
 
-        messages
-            import <module>     : python import to object namespace
-            eval <expression>   : python 'eval' semantics
-            exec <statement>    : python 'exec' semantics
-            execfile <path>     : python 'execfile' semantics
-            assign <var> [data] : max friendly assignments to object namespace
-            call (anything)     : max friendly python function calling
-            read <path>         : read text file into editor
-            load <path>         : combo of read <path> -> execfile <path>
-            send <msg>          : send an arbitrary message to a named object
+    messages
+        import <module>     : python import to object namespace
+        eval <expression>   : python 'eval' semantics
+        exec <statement>    : python 'exec' semantics
+        execfile <path>     : python 'execfile' semantics
+        assign <var> [data] : max msg assignments to object namespace
+        call (anything)     : max friendly python function calling
+        read <path>         : read text file into editor
+        load <path>         : combo of read <path> -> execfile <path>
+        send <msg>          : send an arbitrary message to a named object
 ```
 
 ## Overview
@@ -51,23 +51,23 @@ editor   | load            | file          | yes    | no         | [x]
 
 ### Key Features
 
-1. **Per-object namespaces**. The `py` object responds to an `import <module>` message in the left inlet which loads a python module in its namespace. Each new import (like python) adds modules to the namespace.
+1. **Per-object namespaces**. Responds to an `import <module>` message in the left inlet which loads a python module in its namespace. Each new import adds modules to the object's namespace (essentially a `globals dict`), which can be different in each instance.
 
-2. **Eval Messages**. It responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace and outputs results to the left outlet and outputs a bang from the right outlet to signal end of evaluation.
+2. **Eval Messages**. Responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace and outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-3. **Exec Messages**. It responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file code in the object's namespace. This produces no output from the left outlet, but a bang is output from the right outlet to signal the end of a successful operation.
+3. **Exec Messages**. Responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file's code in the object's namespace. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-4. **Assign Messages**. It responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in python of max data. This produces no output from the left outlet, but a bang is output from the right outlet to signal the end of a successful operation.
+4. **Assign Messages**. Responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in the objects python namespace using max message syntax. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-5. **Anything Messages**. It responds to any kind of messages other than the standard ones specified, but practically can `evalualte` (in the `eval` sense above) a message format which is a similar to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`
+5. **Anything Messages**. Responds to any kind of messages other than those specifically implemented. Practically it can evaluate (in the `eval` sense above) a message format which is a similar to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`. This outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-6. **line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repl includes a convenient menu with all a `py` object's methods and also have a coll-based history features which provides arrow-up/arrow-down recall of all entries in a session. Of course, a coll can made to save all commands if required.
+6. **Line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of all entries in a session. Of course, a coll can made to save all commands if required.
 
-7. **Code Editor**. Double-clicking on the object open a code-editor which can have a `read` message which reads a file, specified as an attribute, into the editor, and also a `load` message which `reads` the file and then `execfile` it into the editor.
+7. **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace. 
 
-8. **Exposing Max API to Python** A significant part of the `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd` and available to `api.pyx` cython module which is converted to c-code and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects and also via `import` messages. What this effectively means is that python scripts in `py` objects can directly call max c-api functions.
+8. **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and is embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects and also via `import` messages. What this effectively means is that python scripts in `py` objects can directly call max c-api functions.
 
-9. **Globals Exchange**. The `py` external has special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
+9. **Globals Exchange**. The `py` external has a special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
 
 ## Building
 
@@ -98,6 +98,7 @@ The py external is developed as a max package with the max-sdk as a subfolder. T
 
 ### python3
 
+
 I'm using MacOS Mojave 10.14.6, and the latest python3 version which can be installed as follows:
 
 ```
@@ -105,6 +106,7 @@ $ brew install python
 ```
 
 see: https://installpython3.com/mac
+
 
 ### cython (optional)
 
@@ -135,6 +137,7 @@ make build
 
 You will find that make will fail with 1 error, and it will be a codesigning error that is particular to Apple's process. You can ignore this error (provided there areno other errors), since since infuriatingly this error appears and disapears when it feels like. You will be surprised that the same code that produced a codesign error builds successfully without one!
 
+
 ### Develop it
 
 The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
@@ -145,11 +148,13 @@ $ brew install clang-format
 
 The style used in this project is specified in the `.clang-format` file.
 
+
 ## BUGS
 
 - [ ] space in `eval` without quotes will cause a crash!
 - [x] codesigning errors are due to Package being developed in Documents/...
   which causes issues. If it's a non icloud exposed folder it works ok.
+
 
 ## TODO
 
@@ -176,6 +181,7 @@ The style used in this project is specified in the `.clang-format` file.
       - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
 - [ ] try to build a cython extension types as a max external class
 
+
 ### Done
 
 - [x] Add bpatcher line repl
@@ -201,6 +207,7 @@ The style used in this project is specified in the `.clang-format` file.
     - [x] Add up-arrow last line recall (great for 'random.random()')
 - [x] Refactor into functions
 - [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
+
 
 ## CHANGELOG
 

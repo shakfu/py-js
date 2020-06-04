@@ -295,8 +295,9 @@
     // typedef struct messlist
     // {
     //     struct symbol *m_sym;       ///&lt; Name of the message
-    //     method m_fun;               ///&lt; Method associated with the message
-    //     char m_type[MSG_MAXARG + 1];    ///&lt; Argument type information
+    //     method m_fun;               ///&lt; Method associated with the
+    //     message char m_type[MSG_MAXARG + 1];    ///&lt; Argument type
+    //     information
     // } t_messlist;
 
     // 1
@@ -398,58 +399,38 @@ error:
 </t>
 <t tx="sta.20200602120251.16">void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
     char filename[MAX_PATH_CHARS];
     short path;
-    t_fourcc type = FOUR_CHAR_CODE('TEXT');
     long err;
     t_filehandle fh;
 
-    /*
-    process logic
-        
-        if [read] (without symbol):
-        
-            open a dialog to get a filepath
-        
-        else [read &lt;filepath&gt;] (has symbol):
-        
-            use it
-         
-         set x-&gt;p_code_filepath to chosen new filepath   
-        
-    */
-    
-    if (s == gensym("")) {
+    if (s == gensym("")) { // if no arg supplied ask for file
         filename[0] = 0;
 
-        if (open_dialog(filename, &amp;path, &amp;type, &amp;type, 1))
+        if (open_dialog(filename, &amp;path, &amp;outtype, &amp;filetype, 1))
+            // non-zero cancelled
             return;
 
-        // if (x-&gt;p_code_filepath != gensym("")) {
-        //     strcpy(filename, x-&gt;p_code_filepath-&gt;s_name);
-        // } else {
-        //     filename[0] = 0;
-        //     if (open_dialog(filename, &amp;path, &amp;type, &amp;type, 1))
-        //         x-&gt;p_code_filepath = gensym(filename);
-        //     return;
-        // }
     } else {
+        // must copy symbol before calling locatefile_extended
         strcpy(filename, s-&gt;s_name);
-        x-&gt;p_code_filepath = s;
-    }
+        // x-&gt;p_code_filepath = s;
+        if (locatefile_extended(filename, &amp;path, &amp;outtype, &amp;filetype, 1)) {
+            // nozero: not found
+            py_error(x, "can't find file %s", s-&gt;s_name);
+            return;
+        }
 
-    if (locatefile_extended(filename, &amp;path, &amp;type, &amp;type, 1)) {
-        py_error(x, "can't find file %s", filename);
-        return;
-    }
-
-    // success
-    err = path_opensysfile(filename, path, &amp;fh, READ_PERM);
-    if (!err) {
-        sysfile_readtextfile(fh, x-&gt;p_code, 0,
-                             TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
-        sysfile_close(fh);
-        x-&gt;p_code_size = sysmem_handlesize(x-&gt;p_code);
+        // success
+        x-&gt;p_code_filepath = s; // set attribute to filename symbol
+        err = path_opensysfile(filename, path, &amp;fh, READ_PERM);
+        if (!err) {
+            sysfile_readtextfile(fh, x-&gt;p_code, 0,
+                                 TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
+            sysfile_close(fh);
+            x-&gt;p_code_size = sysmem_handlesize(x-&gt;p_code);
+        }
     }
 }
 
@@ -468,8 +449,6 @@ error:
 </t>
 <t tx="sta.20200602120251.18">void py_edsave(t_py* x, char** text, long size)
 {
-    // py_log(x, "saving editor code to %s", x-&gt;p_code_filepath-&gt;s_name);
-
     PyObject* pval = NULL;
 
     if (text == NULL) {
@@ -493,9 +472,16 @@ error:
 </t>
 <t tx="sta.20200602120251.19">void py_load(t_py* x, t_symbol* s)
 {
-    // py_log(x, "load: %s", s-&gt;s_name);
-    py_read(x, s);
-    py_execfile(x, s);
+    if (s == gensym("")) {
+        if (x-&gt;p_code_filepath != gensym("")) {
+            py_read(x, x-&gt;p_code_filepath);
+            py_execfile(x, x-&gt;p_code_filepath);
+            return;
+        }
+    } else {
+        py_read(x, s);
+        py_execfile(x, s);
+    }
 }
 
 </t>
@@ -504,7 +490,8 @@ error:
     PyObject* x_module = NULL;
 
     if (s != gensym("")) {
-        x_module = PyImport_ImportModule(s-&gt;s_name); // x_module borrrowed ref
+        x_module = PyImport_ImportModule(s-&gt;s_name);
+        // x_module borrrowed ref
         if (x_module == NULL) {
             goto error;
         }
@@ -905,9 +892,8 @@ error:
 
         Py_ssize_t seq_size = PySequence_Length(pval);
         if (seq_size &lt;= 0) {
-            py_error(x,
-                     "cannot convert python sequence with zero or less length "
-                     "to atoms");
+            py_error(
+                x, "cannot convert python sequence with length &lt;= 0 to atoms");
             goto error;
         }
 
@@ -1041,35 +1027,35 @@ error:
     class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT,   0);
     class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,   0);
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
-    class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
+    class_addmethod(c, (method)py_load,       "load",       A_DEFSYM, 0);
 
     // attributes
-    CLASS_ATTR_ORDER(c,     "name", 0,  "1");
-    CLASS_ATTR_LABEL(c,     "name", 0,  "unique object id");
-    CLASS_ATTR_SYM(c,       "name", 0,   t_py, p_name);
-    CLASS_ATTR_BASIC(c,     "name", 0);
+    CLASS_ATTR_ORDER(c, "name", 0,  "1");
+    CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
+    CLASS_ATTR_SYM(c,   "name", 0,   t_py, p_name);
+    CLASS_ATTR_BASIC(c, "name", 0);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
 
-    CLASS_ATTR_ORDER(c,      "file", 0,  "2");
-    CLASS_ATTR_LABEL(c,      "file", 0,  "default python script");
-    CLASS_ATTR_SYM(c,        "file", 0,   t_py,  p_code_filepath);
-    CLASS_ATTR_STYLE(c,      "file", 0,   "file");
-    CLASS_ATTR_BASIC(c,      "file", 0);
-    CLASS_ATTR_SAVE(c,       "file", 0);
+    CLASS_ATTR_ORDER(c,  "file", 0,  "2");
+    CLASS_ATTR_LABEL(c,  "file", 0,  "default python script");
+    CLASS_ATTR_SYM(c,    "file", 0,   t_py,  p_code_filepath);
+    // CLASS_ATTR_STYLE(c,  "file", 0,   "file");
+    CLASS_ATTR_BASIC(c,  "file", 0);
+    CLASS_ATTR_SAVE(c,   "file", 0);
 
-    CLASS_ATTR_ORDER(c,      "pythonpath", 0,  "3");
-    CLASS_ATTR_LABEL(c,      "pythonpath", 0,  "per-object pythonpath");
-    CLASS_ATTR_SYM(c,        "pythonpath", 0,  t_py, p_pythonpath);
-    CLASS_ATTR_STYLE(c,      "pythonpath", 0,      "file");
-    CLASS_ATTR_BASIC(c,      "pythonpath", 0);
-    CLASS_ATTR_SAVE(c,       "pythonpath", 0);
+    CLASS_ATTR_ORDER(c,  "pythonpath", 0,  "3");
+    CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
+    CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
+    CLASS_ATTR_STYLE(c,  "pythonpath", 0,      "file");
+    CLASS_ATTR_BASIC(c,  "pythonpath", 0);
+    CLASS_ATTR_SAVE(c,   "pythonpath", 0);
 
-    CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
-    CLASS_ATTR_LABEL(c,      "debug", 0,  "debug log to console");
-    CLASS_ATTR_CHAR(c,       "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,      "debug", 0, "onoff");
-    CLASS_ATTR_BASIC(c,      "debug", 0);
-    CLASS_ATTR_SAVE(c,       "debug", 0);
+    CLASS_ATTR_ORDER(c,  "debug", 0,  "4");
+    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
+    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
+    CLASS_ATTR_BASIC(c,  "debug", 0);
+    CLASS_ATTR_SAVE(c,   "debug", 0);
 
     // clang-format on
     //------------------------------------------------------------------------
@@ -1082,6 +1068,7 @@ error:
 
     py_class = c;
 }
+
 </t>
 <t tx="sta.20200602120251.4">void py_log(t_py* x, char* fmt, ...)
 {
@@ -1266,15 +1253,19 @@ error:
 </t>
 <t tx="sta.20200602120318.1">/*--------------------------------------------------------------------------*/
 // CORE
+
 </t>
 <t tx="sta.20200602120447.1">/*--------------------------------------------------------------------------*/
 // EDITOR
+
 </t>
 <t tx="sta.20200602120514.1">/*--------------------------------------------------------------------------*/
 // INIT &amp; FREE
+
 </t>
 <t tx="sta.20200602120540.1">/*--------------------------------------------------------------------------*/
 // HELPERS
+
 </t>
 <t tx="sta.20200602120740.1">/*--------------------------------------------------------------------------*/
 // EXTRA
@@ -1282,6 +1273,7 @@ error:
 </t>
 <t tx="sta.20200602121012.1">/*--------------------------------------------------------------------------*/
 // DOCUMENTATION
+
 </t>
 <t tx="sta.20200602122226.1">/*--------------------------------------------------------------------------*/
 // TESTING
@@ -1306,6 +1298,7 @@ void py_count(t_py* x) { outlet_int(x-&gt;p_outlet_left, py_global_obj_count); }
 /* max/msp api */
 #include "api.h"
 #include "globex.h"
+
 </t>
 <t tx="sta.20200602131131.1">/*--------------------------------------------------------------------------*/
 // GLOBALS
@@ -1317,6 +1310,7 @@ static int py_global_obj_count = 0; // when 0 free interpreter
 static t_hashtab* py_global_registry; // global object lookups
 
 // static wchar_t* program;
+
 </t>
 <t tx="sta.20200602145459.1">#ifndef PY_H
 #define PY_H
