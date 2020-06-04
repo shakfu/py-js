@@ -9,6 +9,7 @@
 /* max/msp api */
 #include "api.h"
 #include "globex.h"
+
 /*--------------------------------------------------------------------------*/
 // GLOBALS
 
@@ -19,8 +20,10 @@ static int py_global_obj_count = 0; // when 0 free interpreter
 static t_hashtab* py_global_registry; // global object lookups
 
 // static wchar_t* program;
+
 /*--------------------------------------------------------------------------*/
 // HELPERS
+
 void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
@@ -108,6 +111,7 @@ void handle_py_error(t_py* x, char* fmt, ...)
 
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
+
 void ext_main(void* r)
 {
     t_class* c;
@@ -147,35 +151,35 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT,   0);
     class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,   0);
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
-    class_addmethod(c, (method)py_load,       "load",       A_SYM,    0);
+    class_addmethod(c, (method)py_load,       "load",       A_DEFSYM, 0);
 
     // attributes
-    CLASS_ATTR_ORDER(c,     "name", 0,  "1");
-    CLASS_ATTR_LABEL(c,     "name", 0,  "unique object id");
-    CLASS_ATTR_SYM(c,       "name", 0,   t_py, p_name);
-    CLASS_ATTR_BASIC(c,     "name", 0);
+    CLASS_ATTR_ORDER(c, "name", 0,  "1");
+    CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
+    CLASS_ATTR_SYM(c,   "name", 0,   t_py, p_name);
+    CLASS_ATTR_BASIC(c, "name", 0);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
 
-    CLASS_ATTR_ORDER(c,      "file", 0,  "2");
-    CLASS_ATTR_LABEL(c,      "file", 0,  "default python script");
-    CLASS_ATTR_SYM(c,        "file", 0,   t_py,  p_code_filepath);
-    CLASS_ATTR_STYLE(c,      "file", 0,   "file");
-    CLASS_ATTR_BASIC(c,      "file", 0);
-    CLASS_ATTR_SAVE(c,       "file", 0);
+    CLASS_ATTR_ORDER(c,  "file", 0,  "2");
+    CLASS_ATTR_LABEL(c,  "file", 0,  "default python script");
+    CLASS_ATTR_SYM(c,    "file", 0,   t_py,  p_code_filepath);
+    // CLASS_ATTR_STYLE(c,  "file", 0,   "file");
+    CLASS_ATTR_BASIC(c,  "file", 0);
+    CLASS_ATTR_SAVE(c,   "file", 0);
 
-    CLASS_ATTR_ORDER(c,      "pythonpath", 0,  "3");
-    CLASS_ATTR_LABEL(c,      "pythonpath", 0,  "per-object pythonpath");
-    CLASS_ATTR_SYM(c,        "pythonpath", 0,  t_py, p_pythonpath);
-    CLASS_ATTR_STYLE(c,      "pythonpath", 0,      "file");
-    CLASS_ATTR_BASIC(c,      "pythonpath", 0);
-    CLASS_ATTR_SAVE(c,       "pythonpath", 0);
+    CLASS_ATTR_ORDER(c,  "pythonpath", 0,  "3");
+    CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
+    CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
+    CLASS_ATTR_STYLE(c,  "pythonpath", 0,      "file");
+    CLASS_ATTR_BASIC(c,  "pythonpath", 0);
+    CLASS_ATTR_SAVE(c,   "pythonpath", 0);
 
-    CLASS_ATTR_ORDER(c,      "debug", 0,  "4");
-    CLASS_ATTR_LABEL(c,      "debug", 0,  "debug log to console");
-    CLASS_ATTR_CHAR(c,       "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,      "debug", 0, "onoff");
-    CLASS_ATTR_BASIC(c,      "debug", 0);
-    CLASS_ATTR_SAVE(c,       "debug", 0);
+    CLASS_ATTR_ORDER(c,  "debug", 0,  "4");
+    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
+    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
+    CLASS_ATTR_BASIC(c,  "debug", 0);
+    CLASS_ATTR_SAVE(c,   "debug", 0);
 
     // clang-format on
     //------------------------------------------------------------------------
@@ -188,6 +192,7 @@ void ext_main(void* r)
 
     py_class = c;
 }
+
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_py* x = NULL;
@@ -313,6 +318,7 @@ void py_free(t_py* x)
 
 /*--------------------------------------------------------------------------*/
 // DOCUMENTATION
+
 void py_assist(t_py* x, void* b, long m, long a, char* s)
 {
     if (m == ASSIST_INLET) { // inlet
@@ -332,6 +338,7 @@ void py_bang(t_py* x)
 
 /*--------------------------------------------------------------------------*/
 // EDITOR
+
 void py_dblclick(t_py* x)
 {
     if (x->p_code_editor)
@@ -353,43 +360,38 @@ void py_read(t_py* x, t_symbol* s)
 
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
     char filename[MAX_PATH_CHARS];
     short path;
-    t_fourcc type = FOUR_CHAR_CODE('TEXT');
     long err;
     t_filehandle fh;
 
-    if (s == gensym("")) {
+    if (s == gensym("")) { // if no arg supplied ask for file
         filename[0] = 0;
 
-        if (open_dialog(filename, &path, &type, &type, 1))
+        if (open_dialog(filename, &path, &outtype, &filetype, 1))
+            // non-zero cancelled
             return;
 
-        // if (x->p_code_filepath != gensym("")) {
-        //     strcpy(filename, x->p_code_filepath->s_name);
-        // } else {
-        //     filename[0] = 0;
-        //     if (open_dialog(filename, &path, &type, &type, 1))
-        //         x->p_code_filepath = gensym(filename);
-        //     return;
-        // }
     } else {
+        // must copy symbol before calling locatefile_extended
         strcpy(filename, s->s_name);
-        x->p_code_filepath = s;
-    }
+        // x->p_code_filepath = s;
+        if (locatefile_extended(filename, &path, &outtype, &filetype, 1)) {
+            // nozero: not found
+            py_error(x, "can't find file %s", s->s_name);
+            return;
+        }
 
-    if (locatefile_extended(filename, &path, &type, &type, 1)) {
-        py_error(x, "can't find file %s", filename);
-        return;
-    }
-
-    // success
-    err = path_opensysfile(filename, path, &fh, READ_PERM);
-    if (!err) {
-        sysfile_readtextfile(fh, x->p_code, 0,
-                             TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
-        sysfile_close(fh);
-        x->p_code_size = sysmem_handlesize(x->p_code);
+        // success
+        x->p_code_filepath = s; // set attribute to filename symbol
+        err = path_opensysfile(filename, path, &fh, READ_PERM);
+        if (!err) {
+            sysfile_readtextfile(fh, x->p_code, 0,
+                                 TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
+            sysfile_close(fh);
+            x->p_code_size = sysmem_handlesize(x->p_code);
+        }
     }
 }
 
@@ -406,8 +408,6 @@ void py_edclose(t_py* x, char** text, long size)
 
 void py_edsave(t_py* x, char** text, long size)
 {
-    // py_log(x, "saving editor code to %s", x->p_code_filepath->s_name);
-
     PyObject* pval = NULL;
 
     if (text == NULL) {
@@ -430,19 +430,28 @@ error:
 
 void py_load(t_py* x, t_symbol* s)
 {
-    // py_log(x, "load: %s", s->s_name);
-    py_read(x, s);
-    py_execfile(x, s);
+    if (s == gensym("")) {
+        if (x->p_code_filepath != gensym("")) {
+            py_read(x, x->p_code_filepath);
+            py_execfile(x, x->p_code_filepath);
+            return;
+        }
+    } else {
+        py_read(x, s);
+        py_execfile(x, s);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
 // CORE
+
 void py_import(t_py* x, t_symbol* s)
 {
     PyObject* x_module = NULL;
 
     if (s != gensym("")) {
-        x_module = PyImport_ImportModule(s->s_name); // x_module borrrowed ref
+        x_module = PyImport_ImportModule(s->s_name);
+        // x_module borrrowed ref
         if (x_module == NULL) {
             goto error;
         }
@@ -841,9 +850,8 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
         Py_ssize_t seq_size = PySequence_Length(pval);
         if (seq_size <= 0) {
-            py_error(x,
-                     "cannot convert python sequence with zero or less length "
-                     "to atoms");
+            py_error(
+                x, "cannot convert python sequence with length <= 0 to atoms");
             goto error;
         }
 
@@ -1021,8 +1029,9 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // typedef struct messlist
     // {
     //     struct symbol *m_sym;       ///< Name of the message
-    //     method m_fun;               ///< Method associated with the message
-    //     char m_type[MSG_MAXARG + 1];    ///< Argument type information
+    //     method m_fun;               ///< Method associated with the
+    //     message char m_type[MSG_MAXARG + 1];    ///< Argument type
+    //     information
     // } t_messlist;
 
     // 1
