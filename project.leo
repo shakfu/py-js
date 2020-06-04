@@ -179,7 +179,7 @@
 
     hashtab_clear(py_global_registry);
 
-    object_method(x-&gt;p_patcher, gensym("iterate"), (method)scan_callback, x,
+    object_method(x-&gt;p_patcher, gensym("iterate"), (method)py_scan_callback, x,
                   PI_DEEP | PI_WANTBOX, &amp;result);
 }
 
@@ -302,13 +302,20 @@
     // 1
     // t_messlist *object_mess(t_object *x, t_symbol *methodname);
     //
-    t_messlist* messlist = object_mess(obj, msg_sym);
-    if (messlist) {
-        post(NULL, "method name: %s, type: %d", 
-             messlist-&gt;m_sym-&gt;s_name, mess-&gt;m_type[0]);
+    // t_messlist* messlist = object_mess(obj, msg_sym);
+    // if (messlist) {
+    //     post(NULL, "method name: %s, type: %d", messlist-&gt;m_sym-&gt;s_name,
+    //          messlist-&gt;m_type[0]);
+    // }
+
+    t_messlist* mess = object_mess((t_object*)obj, msg_sym);
+    if (mess) {
+        object_post(NULL, "method name: %s, type: %d", mess-&gt;m_sym-&gt;s_name,
+                    mess-&gt;m_type[0]);
     }
-    post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
-    post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
+
+    // post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
+    // post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
     // // 2
     // t_messlist* mlist2 = obj-&gt;o_messlist;
 
@@ -397,6 +404,21 @@ error:
     long err;
     t_filehandle fh;
 
+    /*
+    process logic
+        
+        if [read] (without symbol):
+        
+            open a dialog to get a filepath
+        
+        else [read &lt;filepath&gt;] (has symbol):
+        
+            use it
+         
+         set x-&gt;p_code_filepath to chosen new filepath   
+        
+    */
+    
     if (s == gensym("")) {
         filename[0] = 0;
 
@@ -1395,7 +1417,7 @@ void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
 /* used for testing */
 void py_bang(t_py* x);
 void py_scan(t_py* x);
-long scan_callback(t_py* x, t_object* obj);
+long py_scan_callback(t_py* x, t_object* obj);
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_globex(t_py* x, long n);
 </t>
