@@ -608,17 +608,15 @@ void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-
-
     co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
 
-    if (PyErr_ExceptionMatches(PyExc_TypeError)) {
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
         PyErr_Clear();
         co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
         is_eval = 0;
     }
 
-    if (co == NULL) { // here it can be eval or exec or NULL
+    if (co == NULL) { // it can be eval-co or exec-co or NULL here
         goto error;
     }
     sysmem_freeptr(text);
