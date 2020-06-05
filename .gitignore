@@ -3,6 +3,5 @@
 
 externals/*.mxo
 extensions/*.mxo
-source/maxsdk
 leoenv
 
