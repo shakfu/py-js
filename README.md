@@ -151,69 +151,63 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] space in path causes execfile to crash max.
 - [ ] space in `eval` without quotes will cause a crash!
-- [x] codesigning errors are due to Package being developed in Documents/...
-  which causes issues. If it's a non icloud exposed folder it works ok.
+
 
 
 ## TODO
 
-- [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl` 
-- [ ] shift type conversion to python (cython) api calls which should be easier than doing it in c
-- [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes
+almost done
+
+- [80%] Implement send to named objects
+      (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
+
+core
+
 - [ ] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
-- [ ] Add file location feature (try pkg/examples/scripts then absolute paths)
+- [ ] Refactor 'py_eval' to make it more consistent with the others
+- [ ] Refactor conversion logic from object methods
+- [ ] idea: shift type conversion to python (cython) api calls which should be easier than doing it in c
+
+attributes & infrastructure
+
+- [ ] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
+- [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes
+- [ ] Add file location feature (try pkg/examples/scripts then absolute paths) for pythonpath
       ```c
       PyObject *sysPath = PySys_GetObject((char*)"path");
       PyList_Append(sysPath, PyString_FromString("."));
-
       ```
-- [ ] Check out the reference for 'thispatcher'
-- [80%] Implement send to named objects
-      (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
-- [ ] Refactor 'py_eval' to make it more consistent with the others
-- [ ] Refactor conversion logic from object methods
 
-- [ ] Autoload default code
+testing
 
-- [ ] If attr has same name as method (the import saga), crash. fixed by making them different.
+- [ ] complete comprehensive test suite
+  - [ ] complete c test suite
+  - [ ] complete max test suite
+  - [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl` 
+  - [ ] BUG: if attr has same name as method (the import saga), crash. fix by making them different. Investigate.
+
+
+future experiments
+
 - [ ] Convert py into a js extension class
       - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
 - [ ] try to build a cython extension types as a max external class
 
 
-### Done
+### DONE
 
-- [x] Add bpatcher line repl
-- [x] Implement section on two-way globals setting and reading (from python and c)
-      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
-- [x] pytest testing harness
-- [x] add third (middle) outlet which bangs on an error
-- [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
-- [x] Add `call (anything)` method to call python callables in a namespace
-- [x] add python scripts to 'examples/scripts'
-- [x] Add .maxref.xml to docs
-- [x] Add right inlet bang after eval op ends
-- [x] refactor error handling code (if possible)
-- [x] `import` statement in eval causes a segmentation fault.
-       see: https://docs.python.org/3/c-api/intro.html exception handling example
-       -> needed to changed Py_DECREF to Py_XDECREF in error handling code
-- [x] Global object/dict/ref mgmt (so two external can exist without Py_Finalize() causing a crash
-- [x] Add text edit object
-    - [x] enable code to be run from editor
-- [x] Add cythonized access to max c-api..?
-- [x] Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
-- [x] Add line repl
-    - [x] Add up-arrow last line recall (great for 'random.random()')
-- [x] Refactor into functions
-- [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
 
 
 ## CHANGELOG
 
 
 ### v0.1
+
+#### Features
+
+
+Core Features
 
 - [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
 - [x] Each py object has its own python 'globals' namespace and responds to the following msgs
@@ -222,8 +216,70 @@ The style used in this project is specified in the `.clang-format` file.
     - [x] `exec <statement>`: executes statement into the namespace (can modify ns)
     - [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
     - [x] `run <file.py>`: executes python file into the namespace (can modify ns)
+- [x] Add right inlet bang after eval op ends
+- [x] add third (middle) outlet which bangs on an error
 
+
+Core Extra Features
+
+- [x] Add `call (anything)` method to call python callables in a namespace
+
+
+Code Editor (Usability)
+
+- [x] Edit default with text editor
+- [x] Add text edit object
+    - [x] enable code to be run from editor
+
+
+Line REPL (Usability)
+
+- [x] Add line repl
+    - [x] Add up-arrow last line recall (great for 'random.random()')
+
+
+Extensibility
+
+- [x] Implement section on two-way globals setting and reading (from python and c)
+      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
+- [x] Add bpatcher line repl
+- [x] add python scripts to 'examples/scripts'
+- [x] Add cythonized access to max c-api..?
 - [x] Extensible by embedded cython based python extensions which can call a library of wrapped max_api functions in python code. There is a proof of concept of the python code in the namsepace calling the max api `post` function successfully.
 - [x] Exposing of good portion of the max api to cython scripting
-- [x] Edit default with text editor
+
+
+Architectural
+
+- [x] Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
+
+
+Documentation
+
+- [x] Add .maxref.xml to docs
+
+
+Code Quality
+
+- [x] refactor error handling code (if possible)
+- [x] Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
+- [x] Refactor into functions
+
+
+Testing
+
+- [x] pytest testing harness
+- [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
+
+
+
+#### Bug Fixes
+
+- [x] space in path causes "sprintf" type debugging in execfile to crash max!
+- [x] codesigning errors are due to Package being developed in Documents/...
+  which causes issues. If it's a non icloud exposed folder it works ok.
+- [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
+- [x] `import` statement in eval causes a segmentation fault.
+       see: https://docs.python.org/3/c-api/intro.html exception handling example
+       -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
