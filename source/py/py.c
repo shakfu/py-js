@@ -100,7 +100,7 @@ void ext_main(void* r)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
-    class_addmethod(c, (method)py_call,       "call",       A_SYM,    0);
+    class_addmethod(c, (method)py_call,       "call",       A_GIMME,    0);
 
     // core python
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
@@ -591,6 +591,140 @@ void postargs(long argc, t_atom* argv)
     }
 }
 
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+    int is_eval = 1;
+
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        py_log(x, "call %s", text);
+    } else {
+        goto error;
+    }
+
+
+
+    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+
+    if (PyErr_ExceptionMatches(PyExc_TypeError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+        is_eval = 0;
+    }
+
+    if (co == NULL) { // here it can be eval or exec or NULL
+        goto error;
+    }
+    sysmem_freeptr(text);
+
+    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(co);
+
+    if (is_eval) {
+
+        // handle ints and longs
+        if (PyLong_Check(pval)) {
+            long int_result = PyLong_AsLong(pval);
+            outlet_int(x->p_outlet_left, int_result);
+            outlet_bang(x->p_outlet_right);
+        }
+
+        // handle floats and doubles
+        if (PyFloat_Check(pval)) {
+            float float_result = (float)PyFloat_AsDouble(pval);
+            outlet_float(x->p_outlet_left, float_result);
+            outlet_bang(x->p_outlet_right);
+        }
+
+        // handle strings
+        if (PyUnicode_Check(pval)) {
+            const char* unicode_result = PyUnicode_AsUTF8(pval);
+            outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
+            outlet_bang(x->p_outlet_right);
+        }
+
+        // handle any sequence except strings, and presently
+        // bytes and byte arrays (until there is a reason to)
+        if (PySequence_Check(pval) && !PyUnicode_Check(pval)
+            && !PyBytes_Check(pval) && !PyByteArray_Check(pval)) {
+            PyObject* iter;
+            PyObject* item;
+            int i = 0;
+
+            t_atom atoms_static[PY_MAX_ATOMS];
+            t_atom* atoms;
+            int is_dynamic = 0;
+
+            Py_ssize_t seq_size = PySequence_Length(pval);
+
+            if (seq_size > PY_MAX_ATOMS) {
+                py_log(x, "dynamically increasing size of atom array");
+                atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+                                           seq_size + 1);
+                is_dynamic = 1;
+
+            } else {
+                atoms = atoms_static;
+            }
+
+            if ((iter = PyObject_GetIter(pval)) != NULL) {
+                while ((item = PyIter_Next(iter)) != NULL) {
+                    if (PyLong_Check(item)) {
+                        long long_item = PyLong_AsLong(item);
+                        atom_setlong(atoms + i, long_item);
+                        py_log(x, "%d long: %ld\n", i, long_item);
+                        i++;
+                    }
+
+                    if PyFloat_Check (item) {
+                        float float_item = PyFloat_AsDouble(item);
+                        atom_setfloat(atoms + i, float_item);
+                        py_log(x, "%d float: %f\n", i, float_item);
+                        i++;
+                    }
+
+                    if PyUnicode_Check (item) {
+                        const char* unicode_item = PyUnicode_AsUTF8(item);
+                        py_log(x, "%d unicode: %s\n", i, unicode_item);
+                        atom_setsym(atoms + i, gensym(unicode_item));
+                        i++;
+                    }
+                    Py_DECREF(item);
+                }
+                outlet_anything(x->p_outlet_left, gensym("list"), i, atoms);
+                outlet_bang(x->p_outlet_right);
+                py_log(x, "end iter op: %d", i);
+            }
+
+            if (is_dynamic) {
+                py_log(x, "restoring to static atom array");
+                atom_dynamic_end(atoms_static, atoms);
+            }
+        }
+    }
+
+    // success cleanup
+    Py_DECREF(pval);
+    // success bang
+    outlet_bang(x->p_outlet_right);
+    return;
+
+error:
+    handle_py_error(x, "call failed");
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x->p_outlet_middle);
+}
+
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     long textsize = 0;
@@ -622,33 +756,6 @@ error:
     handle_py_error(x, "exec failed");
     Py_XDECREF(pval);
     // fail bang
-    outlet_bang(x->p_outlet_middle);
-}
-
-void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    char* py_argv = NULL;
-    PyObject* pval = NULL;
-
-    py_argv = atom_getsym(argv)->s_name;
-    if (py_argv == NULL) {
-        goto error;
-    }
-
-    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-    outlet_bang(x->p_outlet_right);
-
-    // success cleanup
-    Py_DECREF(pval);
-    py_log(x, "exec %s", py_argv);
-    return;
-
-error:
-    handle_py_error(x, "exec %s", py_argv);
-    Py_XDECREF(pval);
     outlet_bang(x->p_outlet_middle);
 }
 
@@ -1237,5 +1344,3 @@ error:
 }
 
 void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
-
-void py_call(t_py* x, t_symbol* s) { post("call symbol(s): %s", s->s_name); }
