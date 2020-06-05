@@ -151,6 +151,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
+- [ ] space in path causes execfile to crash max.
 - [ ] space in `eval` without quotes will cause a crash!
 - [x] codesigning errors are due to Package being developed in Documents/...
   which causes issues. If it's a non icloud exposed folder it works ok.
@@ -161,7 +162,7 @@ The style used in this project is specified in the `.clang-format` file.
 - [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl` 
 - [ ] shift type conversion to python (cython) api calls which should be easier than doing it in c
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes
-- [ ] enhance `py_anything` method to eval if identifier exists in ns and is not callable
+- [ ] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
 - [ ] Add file location feature (try pkg/examples/scripts then absolute paths)
       ```c
       PyObject *sysPath = PySys_GetObject((char*)"path");
