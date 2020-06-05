@@ -75,7 +75,7 @@ To build a variable-length list from C, you can do the same thing with `PyList_N
 
 
 
-## What stdlib includes are included in `<Python.h>`
+## Which stdlib includes are included in `<Python.h>`
 
 ```
 <stdio.h>, <string.h>, <errno.h>, <limits.h>, <assert.h> and <stdlib.h>
@@ -199,3 +199,12 @@ finally:
 }
 ```
 
+## High Level Examples
+
+```c
+PyObject *obj = Py_BuildValue("s", "test.py");
+ FILE *file = _Py_fopen_obj(obj, "r+");
+ if(file != NULL) {
+     PyRun_SimpleFile(file, "test.py");
+ }
+ ```
