@@ -17,7 +17,7 @@ t_class* py_class; // global pointer to object class
 
 static int py_global_obj_count = 0; // when 0 free interpreter
 
-static t_hashtab* py_global_registry; // global object lookups
+static t_hashtab* py_global_registry = NULL; // global object lookups
 
 // static wchar_t* program;
 
@@ -48,32 +48,6 @@ void py_error(t_py* x, char* fmt, ...)
     va_end(va);
 
     error("[py '%s']: %s", x->p_name->s_name, msg);
-}
-
-void py_locatefile(t_py* x, char* filename)
-{
-    // works for folders as well
-    char name[MAX_FILENAME_CHARS];
-    short path;
-    t_fourcc type;
-
-    char pathname[MAX_PATH_CHARS];
-    short err;
-
-    if (filename == NULL)
-        return;
-
-    strncpy_zero(name, filename, MAX_FILENAME_CHARS);
-
-    if (locatefile_extended(name, &path, &type, NULL, 0)) {
-        error("path %s not found", name);
-    } else {
-        post("path %s, path %d", name, path);
-        err = path_topathname(path, name, pathname);
-        if (err == 0) {
-            post("absolute path: %s", pathname);
-        }
-    }
 }
 
 void handle_py_error(t_py* x, char* fmt, ...)
@@ -131,7 +105,7 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
-    class_addmethod(c, (method)py_execfile,   "execfile",   A_SYM,    0);
+    class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM, 0);
 
     // extra python
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
@@ -353,6 +327,32 @@ void py_dblclick(t_py* x)
     }
 }
 
+void py_locatefile(t_py* x, char* filename)
+{
+    // works for folders as well
+    char name[MAX_FILENAME_CHARS];
+    short path;
+    t_fourcc type;
+
+    char pathname[MAX_PATH_CHARS];
+    short err;
+
+    if (filename == NULL)
+        return;
+
+    strncpy_zero(name, filename, MAX_FILENAME_CHARS);
+
+    if (locatefile_extended(name, &path, &type, NULL, 0)) {
+        error("path %s not found", name);
+    } else {
+        post("path %s, path %d", name, path);
+        err = path_topathname(path, name, pathname);
+        if (err == 0) {
+            post("absolute path: %s", pathname);
+        }
+    }
+}
+
 void py_read(t_py* x, t_symbol* s)
 {
     defer((t_object*)x, (method)py_doread, s, 0, NULL);
@@ -362,8 +362,9 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
     char filename[MAX_PATH_CHARS];
+    char pathname[MAX_PATH_CHARS];
     short path;
-    long err;
+    t_max_err err;
     t_filehandle fh;
 
     if (s == gensym("")) { // if no arg supplied ask for file
@@ -381,10 +382,16 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
             // nozero: not found
             py_error(x, "can't find file %s", s->s_name);
             return;
+        } else {
+            err = path_toabsolutesystempath(path, filename, pathname);
+
+            // err = path_topathname(path, filename, pathname);
         }
 
         // success
-        x->p_code_filepath = s; // set attribute to filename symbol
+        // x->p_code_filepath = s; // set attribute to filename symbol
+        x->p_code_filepath = gensym(
+            pathname); // set attribute to pathname symbol
         err = path_opensysfile(filename, path, &fh, READ_PERM);
         if (!err) {
             sysfile_readtextfile(fh, x->p_code, 0,
@@ -596,35 +603,57 @@ error:
 
 void py_execfile(t_py* x, t_symbol* s)
 {
+    /*
+
+    IMPORTANT: do not use post, logging or error, error
+    heandler to  print name of file during debugging or error
+    report as it will crash due to a the 'sprintf mecanism'
+    which cannot handle paths with a space inside even
+    with quotes!!
+    */
+
+    // char quoted_path[MAX_PATH_CHARS];
+    t_symbol* pathname = gensym("");
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
 
     if (s == gensym("")) {
-        py_error(x, "py execfile: missing filepath");
-        goto error;
+        if (x->p_code_filepath == gensym("")) {
+            // py_error(x, "py execfile: missing filepath");
+            goto error;
+        } else {
+            pathname = x->p_code_filepath;
+        }
+    } else {
+        pathname = s;
     }
 
-    fhandle = fopen(s->s_name, "r");
+    // snprintf(quoted_path, sizeof quoted_path, "\'%s\'", pathname->s_name);
+    // fhandle = fopen(quoted_path, "r");
+    fhandle = fopen(pathname->s_name, "r+");
+
     if (fhandle == NULL) {
-        py_error(x, "could not open file '%s'", s->s_name);
+        // py_error(x, "could not open file '%s'", pathname->s_name);
         goto error;
     }
 
-    pval = PyRun_File(fhandle, s->s_name, Py_file_input, x->p_globals,
+    pval = PyRun_File(fhandle, pathname->s_name, Py_file_input, x->p_globals,
                       x->p_globals);
     if (pval == NULL) {
+        // fclose(fhandle);
         goto error;
     }
-    outlet_bang(x->p_outlet_right);
 
     // success cleanup
     fclose(fhandle);
     Py_DECREF(pval);
-    py_log(x, "execfile %s", s->s_name);
+    // py_log(x, "execfile %s", pathname->s_name);
+    outlet_bang(x->p_outlet_right);
     return;
 
 error:
-    handle_py_error(x, "execfile %s", s->s_name);
+    // handle_py_error(x, "execfile %s", pathname->s_name);
+    handle_py_error(x, "execfile");
     Py_XDECREF(pval);
     outlet_bang(x->p_outlet_middle);
 }
@@ -931,6 +960,10 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     obj_name = atom_getsym(argv)->s_name;
     if (obj_name == NULL) {
         goto error;
+    }
+
+    if (hashtab_getsize(py_global_registry) == 0) {
+        py_scan(x);
     }
 
     // lifted from scheme-for-max (Thanks, Iain!)

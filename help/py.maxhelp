@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 278.0, 171.0, 785.0, 634.0 ],
+		"rect" : [ 291.0, 115.0, 785.0, 634.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -642,7 +642,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 278.0, 197.0, 785.0, 608.0 ],
+						"rect" : [ 291.0, 141.0, 785.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -673,12 +673,24 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-65",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 23.0, 220.0, 76.0, 22.0 ],
+									"text" : "load hello.py"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-41",
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 442.0, 126.0, 22.0 ],
+									"patching_rect" : [ 534.5, 373.0, 126.0, 22.0 ],
 									"text" : "send mrmsg set world"
 								}
 
@@ -714,7 +726,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 557.0, 117.0, 22.0 ],
+									"patching_rect" : [ 534.5, 425.0, 117.0, 22.0 ],
 									"text" : "send marty eval 1+1"
 								}
 
@@ -726,7 +738,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 529.0, 92.0, 22.0 ],
+									"patching_rect" : [ 534.5, 476.0, 92.0, 22.0 ],
 									"text" : "eval globex.INT"
 								}
 
@@ -738,7 +750,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 500.0, 61.0, 22.0 ],
+									"patching_rect" : [ 534.5, 453.0, 61.0, 22.0 ],
 									"text" : "globex 10"
 								}
 
@@ -786,7 +798,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 470.0, 99.0, 22.0 ],
+									"patching_rect" : [ 534.5, 399.0, 99.0, 22.0 ],
 									"text" : "send missint 101"
 								}
 
@@ -845,7 +857,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 414.0, 147.0, 22.0 ],
+									"patching_rect" : [ 534.5, 347.0, 147.0, 22.0 ],
 									"text" : "send mrmsg append hello"
 								}
 
@@ -869,7 +881,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 575.5, 355.0, 150.0, 20.0 ],
+									"patching_rect" : [ 628.5, 212.0, 150.0, 20.0 ],
 									"text" : "check console for success"
 								}
 
@@ -881,7 +893,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 385.0, 121.0, 22.0 ],
+									"patching_rect" : [ 534.5, 321.0, 121.0, 22.0 ],
 									"text" : "send bigbanger bang"
 								}
 
@@ -917,7 +929,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 212.0, 127.0, 22.0 ],
+									"patching_rect" : [ 23.0, 193.0, 127.0, 22.0 ],
 									"text" : "eval api.np.__name__"
 								}
 
@@ -929,7 +941,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 178.0, 151.0, 22.0 ],
+									"patching_rect" : [ 23.0, 166.0, 151.0, 22.0 ],
 									"text" : "eval api.np.version.version"
 								}
 
@@ -980,7 +992,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 355.0, 34.0, 22.0 ],
+									"patching_rect" : [ 534.5, 295.0, 34.0, 22.0 ],
 									"text" : "scan"
 								}
 
@@ -992,7 +1004,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 146.0, 137.0, 22.0 ],
+									"patching_rect" : [ 23.0, 140.0, 137.0, 22.0 ],
 									"text" : "api.total 10.1 12.2 40 50"
 								}
 
@@ -1125,8 +1137,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 281.0, 194.0, 22.0 ],
-									"text" : "read /Users/sa/Downloads/hello.py"
+									"patching_rect" : [ 23.0, 281.0, 77.0, 22.0 ],
+									"text" : "read hello.py"
 								}
 
 							}
@@ -1137,7 +1149,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 246.0, 33.0, 22.0 ],
+									"patching_rect" : [ 23.0, 249.0, 33.0, 22.0 ],
 									"text" : "read"
 								}
 
@@ -1161,7 +1173,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 269.0, 76.0, 22.0 ],
+									"patching_rect" : [ 534.5, 502.0, 76.0, 22.0 ],
 									"text" : "load hello.py"
 								}
 
@@ -1221,7 +1233,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 240.0, 94.0, 22.0 ],
+									"patching_rect" : [ 534.5, 530.0, 94.0, 22.0 ],
 									"text" : "execfile hello.py"
 								}
 
@@ -1292,7 +1304,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 327.0, 184.0, 22.0 ],
+									"patching_rect" : [ 534.5, 267.0, 184.0, 22.0 ],
 									"text" : "eval str(datetime.datetime.now())"
 								}
 
@@ -1304,7 +1316,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 534.5, 298.0, 91.0, 22.0 ],
+									"patching_rect" : [ 534.5, 238.0, 91.0, 22.0 ],
 									"text" : "import datetime"
 								}
 
@@ -1376,8 +1388,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "\"Hello World\""
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
 								}
 
 							}
@@ -1415,7 +1426,7 @@
 									"patching_rect" : [ 328.0, 258.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
 										"debug" : 1,
-										"file" : "hello.py",
+										"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
 										"pythonpath" : ""
 									}
 ,
@@ -1768,6 +1779,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-64", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-65", 0 ]
 								}
 
 							}
