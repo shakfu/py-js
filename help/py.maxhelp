@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 291.0, 115.0, 785.0, 634.0 ],
+		"rect" : [ 766.0, 89.0, 785.0, 634.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 785.0, 608.0 ],
+						"rect" : [ 766.0, 115.0, 785.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 1,
 						"default_fontsize" : 12.0,
@@ -166,7 +166,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 237.833333333333428, 303.0, 181.0, 22.0 ],
-									"text" : "eval 1+1"
+									"text" : "import pkg.mod"
 								}
 
 							}
@@ -258,14 +258,13 @@
 								"box" : 								{
 									"align" : 1,
 									"arrow" : 0,
-									"bgcolor" : [ 0.07843137254902, 0.07843137254902, 0.07843137254902, 1.0 ],
 									"bgfillcolor_angle" : 0.0,
 									"bgfillcolor_autogradient" : 0.0,
 									"bgfillcolor_color" : [ 0.07843137254902, 0.07843137254902, 0.07843137254902, 1.0 ],
-									"bgfillcolor_color1" : [ 0.117647058823529, 0.117647058823529, 0.117647058823529, 1.0 ],
+									"bgfillcolor_color1" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
 									"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
 									"bgfillcolor_proportion" : 0.0,
-									"bgfillcolor_type" : "color",
+									"bgfillcolor_type" : "gradient",
 									"id" : "obj-33",
 									"items" : [ ">>>", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "read" ],
 									"maxclass" : "umenu",
@@ -642,7 +641,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 291.0, 141.0, 785.0, 608.0 ],
+						"rect" : [ 0.0, 26.0, 785.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1865,6 +1864,57 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-13",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 52.5, 502.0, 296.0, 22.0 ],
+									"presentation_linecount" : 2,
+									"text" : "import <module.submodule> <obj1> <obj2> ... <objN>"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-11",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 52.5, 472.0, 224.0, 22.0 ],
+									"presentation_linecount" : 2,
+									"text" : "import <module.submodule> as <name>"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-10",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 52.5, 441.0, 161.0, 22.0 ],
+									"presentation_linecount" : 3,
+									"text" : "import <module.submodule>"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-8",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 52.5, 409.0, 99.0, 22.0 ],
+									"text" : "import <module>"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-3",
 									"maxclass" : "message",

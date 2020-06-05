@@ -100,6 +100,7 @@ void ext_main(void* r)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
+    class_addmethod(c, (method)py_call,       "call",       A_SYM,    0);
 
     // core python
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
@@ -144,7 +145,7 @@ void ext_main(void* r)
     CLASS_ATTR_ORDER(c,  "pythonpath", 0,  "3");
     CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
     CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
-    CLASS_ATTR_STYLE(c,  "pythonpath", 0,      "file");
+    CLASS_ATTR_STYLE(c,  "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,  "pythonpath", 0);
     CLASS_ATTR_SAVE(c,   "pythonpath", 0);
 
@@ -770,12 +771,17 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     py_callable = PyRun_String(s->s_name, Py_eval_input, x->p_globals,
                                x->p_globals);
     if (py_callable == NULL) {
-        py_error(x, "could not evaluate '%s' as a python callable", s->s_name);
+        py_error(x, "could not evaluate '%s'", s->s_name);
         goto error;
     }
 
+    if (!PyCallable_Check(py_callable)) {
+        pval = py_callable;
+        goto process_output;
+    }
+
     if ((py_argslist = PyList_New(0)) == NULL) {
-        py_error(x, "could not create an empyt python list");
+        py_error(x, "could not create an empty python list");
         goto error;
     }
 
@@ -848,6 +854,10 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_error(x, "could not retrieve result of callable(list)");
         goto error;
     }
+
+    // ------------------------------------------------------------------
+
+process_output:
 
     // handle ints and longs
     if (PyLong_Check(pval)) {
@@ -1177,3 +1187,5 @@ error:
 }
 
 void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
+
+void py_call(t_py* x, t_symbol* s) { post("call symbol(s): %s", s->s_name); }

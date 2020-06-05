@@ -4,6 +4,7 @@ An attempt to make a simple (and extensible) max external for python3
 
 repo - https://github.com/shakfu/py
 
+
 ## Summary
 
 ```
@@ -31,6 +32,7 @@ py interpreter object
         send <msg>          : send an arbitrary message to a named object
 ```
 
+
 ## Overview
 
 The `py` object provides a very high level python code interface to max objects. It has 1 inlet and 3 outlets, with the left providing main object output, the right outlet sending a bang on success, and the middle sending a bang on failure.
@@ -50,6 +52,7 @@ editor   | read            | file          | n/a    | no         | [x]
 editor   | load            | file          | yes    | no         | [x]
 interobj | scan            |               | n/a    | no         | [x]
 interobj | send            | msg           | n/a    | no         | [x]
+
 
 ### Key Features
 
@@ -71,15 +74,17 @@ interobj | send            | msg           | n/a    | no         | [x]
 
 9. **Globals Exchange**. The `py` external has a special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
 
+
 ## Building
 
 Only tested on OS X at present. Should be relatively easy to port to windows.
 
 The following is required:
 
+
 ### xcode
 
-Not sure if full xcode is required, perhaps with only the command line tools)
+Not sure if full xcode is required, perhaps only the command line tools are sufficient
 
 ```
 $ xcode-select --install
@@ -87,16 +92,22 @@ $ xcode-select --install
 
 otherwise download xcode from the app store.
 
-### max-sdk
 
-The py external is developed as a max package with the max-sdk as a subfolder. This should really be incorporated as a git-module, but that's not implemented right now, so just download the [max-sdk](https://github.com/Cycling74/max-sdk.git) as `maxsdk` (i.e. without a dash in the name) into the source directory of this package:
+### py external source and maxsdk
 
-- py
-  - docs
-  - ...
-  - source
-    - **maxsdk**
-    - py
+The py external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
+
+```
+$ git clone https://github.com/shakfu/py.git
+```
+
+Then cd into the newly cloned source directory and run the following to get the max-sdk
+
+```
+$ git submodule init
+$ git submodule update 
+
+```
 
 ### python3
 
@@ -166,7 +177,8 @@ almost done
 
 core
 
-- [ ] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
+- [ ] enhance `py_exec` method to create a single string from argv so it can import easily
+- [x] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
 - [ ] Refactor 'py_eval' to make it more consistent with the others
 - [ ] Refactor conversion logic from object methods
 - [ ] idea: shift type conversion to python (cython) api calls which should be easier than doing it in c
