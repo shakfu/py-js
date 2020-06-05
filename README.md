@@ -48,6 +48,8 @@ extra    | assign          | var, data     | in     | yes        | [x]
 extra    | call (anything) | var(s), data  | out    | no         | [x]
 editor   | read            | file          | n/a    | no         | [x]
 editor   | load            | file          | yes    | no         | [x]
+interobj | scan            |               | n/a    | no         | [x]
+interobj | send            | msg           | n/a    | no         | [x]
 
 ### Key Features
 
