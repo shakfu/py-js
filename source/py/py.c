@@ -575,22 +575,6 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
-void postargs(long argc, t_atom* argv)
-{
-    long textsize = 0;
-    char* text = NULL;
-    t_max_err err;
-
-    err = atom_gettext(argc, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err == MAX_ERR_NONE && textsize && text) {
-        post(text);
-    }
-    if (text) {
-        sysmem_freeptr(text);
-    }
-}
-
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     long textsize = 0;
