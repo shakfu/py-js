@@ -1,0 +1,3 @@
+[submodule "source/maxsdk"]
+	path = source/maxsdk
+	url = https://github.com/Cycling74/max-sdk.git
