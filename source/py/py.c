@@ -575,7 +575,57 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
+void postargs(long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    t_max_err err;
+
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        post(text);
+    }
+    if (text) {
+        sysmem_freeptr(text);
+    }
+}
+
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        py_log(x, "exec %s", text);
+    } else {
+        goto error;
+    }
+
+    pval = PyRun_String(text, Py_single_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    sysmem_freeptr(text);
+    Py_DECREF(pval);
+    // success bang
+    outlet_bang(x->p_outlet_right);
+    return;
+
+error:
+    handle_py_error(x, "exec failed");
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x->p_outlet_middle);
+}
+
+void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = NULL;
     PyObject* pval = NULL;
