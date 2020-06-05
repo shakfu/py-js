@@ -101,6 +101,7 @@ void py_edsave(t_py* x, char** text, long size);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
 /* used for testing */
+void py_call(t_py* x, t_symbol* s);
 void py_bang(t_py* x);
 void py_scan(t_py* x);
 long py_scan_callback(t_py* x, t_object* obj);
