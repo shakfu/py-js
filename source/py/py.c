@@ -276,6 +276,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
     x = (t_py*)object_alloc(py_class);
 
     if (x) {
+
         // core
         if (py_global_obj_count == 0) {
             x->p_name = gensym("__main__"); // first is __main__
@@ -313,6 +314,12 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
         if (x->p_box == NULL)
             error("patcher object not created.");
+
+        // create scripting name
+        t_max_err err = jbox_set_varname(x->p_box, x->p_name);
+        if (err != MAX_ERR_NONE) {
+            error("could not set scripting name");
+        }
 
         // python init
         py_init(x);
@@ -457,6 +464,7 @@ void py_locatefile(t_py* x, char* filename)
         }
     }
 }
+
 void py_read(t_py* x, t_symbol* s)
 {
     defer((t_object*)x, (method)py_doread, s, 0, NULL);
@@ -575,6 +583,22 @@ error:
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    char* py_argv = atom_getsym(argv)->s_name;
+    py_log(x, "%s %s", s->s_name, py_argv);
+
+    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
+                                  x->p_globals);
+
+    if (pval != NULL) {
+        py_handle_output(x, pval);
+        return;
+    } else {
+        py_handle_error(x, "eval %s", py_argv);
+    }
+}
+
+void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
 
     long textsize = 0;
     char* text = NULL;
@@ -640,6 +664,34 @@ error:
     // fail bang
     outlet_bang(x->p_outlet_middle);
 }
+
+void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    char* py_argv = NULL;
+    PyObject* pval = NULL;
+
+    py_argv = atom_getsym(argv)->s_name;
+    if (py_argv == NULL) {
+        goto error;
+    }
+
+    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    outlet_bang(x->p_outlet_right);
+
+    // success cleanup
+    Py_DECREF(pval);
+    py_log(x, "exec %s", py_argv);
+    return;
+
+error:
+    handle_py_error(x, "exec %s", py_argv);
+    Py_XDECREF(pval);
+    outlet_bang(x->p_outlet_middle);
+}
+
 
 void py_execfile(t_py* x, t_symbol* s)
 {
