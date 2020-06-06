@@ -4,7 +4,6 @@ An attempt to make a simple (and extensible) max external for python3
 
 repo - https://github.com/shakfu/py
 
-
 ## Summary
 
 ```
@@ -32,7 +31,6 @@ py interpreter object
         send <msg>          : send an arbitrary message to a named object
 ```
 
-
 ## Overview
 
 The `py` object provides a very high level python code interface to max objects. It has 1 inlet and 3 outlets, with the left providing main object output, the right outlet sending a bang on success, and the middle sending a bang on failure.
@@ -52,7 +50,6 @@ editor   | read            | file          | n/a    | no         | [x]
 editor   | load            | file          | yes    | no         | [x]
 interobj | scan            |               | n/a    | no         | [x]
 interobj | send            | msg           | n/a    | no         | [x]
-
 
 ### Key Features
 
@@ -74,13 +71,11 @@ interobj | send            | msg           | n/a    | no         | [x]
 
 9. **Globals Exchange**. The `py` external has a special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
 
-
 ## Building
 
 Only tested on OS X at present. Should be relatively easy to port to windows.
 
 The following is required:
-
 
 ### xcode
 
@@ -91,7 +86,6 @@ $ xcode-select --install
 ```
 
 otherwise download xcode from the app store.
-
 
 ### py external source and maxsdk
 
@@ -120,10 +114,9 @@ $ brew install python
 
 see: https://installpython3.com/mac
 
-
 ### cython (optional)
 
-[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts.
+[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside py objects.
 
 Install cython as follows:
 
@@ -148,8 +141,13 @@ make build
 
 ### Sidenote about building on a Mac
 
-You will find that make will fail with 1 error, and it will be a codesigning error that is particular to Apple's process. You can ignore this error (provided there areno other errors), since since infuriatingly this error appears and disapears when it feels like. You will be surprised that the same code that produced a codesign error builds successfully without one!
+You will find that make will fail with 1 error, and it will be a codesigning error that is particular to Apple's process. While this can mostly ignored (unless your only focus is codesigning the external).
 
+The issue I found is that if one develops the external in the natural place of testing (on a mac at least) in ~/Documents/Max 8/Packages/<external> and iCloud Drive is switched on then the latter interferes with the code signing step on xcodebuild.
+
+The solution is to move the external project folder to a non iCloud drive folder (such as ~/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). 
+
+I've tried this twice and  and it works (for  "sign to run locally" case and for the "Development" case).
 
 ### Develop it
 
@@ -161,12 +159,9 @@ $ brew install clang-format
 
 The style used in this project is specified in the `.clang-format` file.
 
-
 ## BUGS
 
 - [ ] space in `eval` without quotes will cause a crash!
-
-
 
 ## TODO
 
@@ -208,15 +203,14 @@ future experiments
       - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
 - [ ] try to build a cython extension types as a max external class
 
-
 ### DONE
-
 
 
 ## CHANGELOG
 
 
 ### v0.1
+
 
 #### Features
 
@@ -284,8 +278,6 @@ Testing
 
 - [x] pytest testing harness
 - [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
-
-
 
 #### Bug Fixes
 
