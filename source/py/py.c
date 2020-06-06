@@ -1022,82 +1022,55 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
         break;
     }
 
+
     /*
     clang-format off
-    see: https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
 
-    template<typename T1, typename T2>
-            atom operator()(symbol method_name, T1 arg1, T2 arg2) {
-                auto m { find_method(method_name) };
+    if m.type == A_GIMME:
+        object_method_typed(obj, methodname, argc, argv, NULL)
 
-                if (m.type == max::A_GIMME) {
-                    atoms   as { arg1, arg2 };
-                    return max::object_method_typed(m.ob, method_name,
-    as.size(), &as[0], nullptr);
-                }
-                else if (m.type == max::A_GIMMEBACK) {
-                    atoms       as { arg1, arg2 };
-                    max::t_atom rv {};
+    else if m.type == A_GIMMEBACK:
+        t_atom rv {};
+        object_method_typed(obj, methodname, argc, argv, NULL, &rv)
 
-                    max::object_method_typed(m.ob, method_name, as.size(),
-    &as[0], &rv); return rv;
-                }
-                else {
-                    if (typeid(T1) != typeid(atom))
-                        return m.fn(m.ob, arg1, arg2);
-                    else {
-                        // atoms must be converted to native types and then
-    reinterpreted as void*
-                        // doubles cannot be converted -- supporting those will
-    need to be handled separately return m.fn(m.ob, atom_to_generic(arg1),
-    atom_to_generic(arg2));
-                    }
-                }
-            }
+    else:
+        if arg1.type != type(atom):
+            return fn(obj, arg1, arg2)
+        else:
+            return fn(obj, atom_to_generic(arg1), atom_to_generic(arg2)
+
+
+
+    ctypedef enum e_max_atomtypes:
+        A_NOTHING = 0  # no type, thus no atom
+        A_LONG         # long integer
+        A_FLOAT        # 32-bit float
+        A_SYM          # t_symbol pointer
+        A_OBJ          # t_object pointer (for argtype lists; passes the value of sym)
+        A_DEFLONG      # long but defaults to zero
+        A_DEFFLOAT     # float, but defaults to zero
+        A_DEFSYM       # symbol, defaults to ""
+        A_GIMME        # request that args be passed as an array, the routine will check the types itself.
+        A_CANT         # cannot typecheck args
+        A_SEMI         # semicolon
+        A_COMMA        # comma
+        A_DOLLAR       # dollar
+        A_DOLLSYM      # dollar
+        A_GIMMEBACK    # request that args be passed as an array, the routine will check the types itself. can return atom value in final atom ptr arg. function returns long error code 0 = no err. see gimmeback_meth typedef
+        A_DEFER =       0x41   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred.
+        A_USURP =       0x42   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred and multiple calls within one servicing of the queue are filtered down to one call.
+        A_DEFER_LOW =   0x43   # A special signature for declaring methods. This is like A_GIMME, but the call is deferref to the back of the queue.
+        A_USURP_LOW =   0x44   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred to the back of the queue and multiple calls within one servicing of the queue are filtered down to one call.
+
     clang-format on
     */
-    // method m = object_getmethod(obj, msg_sym);
-    // if (m.type == A_GIMME) {
-    //     post("NICE");
-    // } else {
-    //     post("NOT NICE");
-    // }
 
-    // typedef struct messlist
-    // {
-    //     struct symbol *m_sym;       ///< Name of the message
-    //     method m_fun;               ///< Method associated with the
-    //     message char m_type[MSG_MAXARG + 1];    ///< Argument type
-    //     information
-    // } t_messlist;
-
-    // 1
-    // t_messlist *object_mess(t_object *x, t_symbol *methodname);
-    //
-    // t_messlist* messlist = object_mess(obj, msg_sym);
-    // if (messlist) {
-    //     post(NULL, "method name: %s, type: %d", messlist->m_sym->s_name,
-    //          messlist->m_type[0]);
-    // }
-
-    t_messlist* mess = object_mess((t_object*)obj, msg_sym);
-    if (mess) {
-        object_post(NULL, "method name: %s, type: %d", mess->m_sym->s_name,
-                    mess->m_type[0]);
+    // methods to get method type
+    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
+    if (messlist) {
+        post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
+        post("messlist->m_type (type of msg): %d", messlist->m_type[0]);        
     }
-
-    // post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-    // post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
-    // // 2
-    // t_messlist* mlist2 = obj->o_messlist;
-
-    // 3
-    // t_method_object* mobj = object_getmethod_object(obj, msg_sym);
-
-    // t_messlist m_entry = mobj->messlist_entry;
-
-    // post("MESSLIST_ENTRY method_name %s type %s", m_entry.m_sym->s_name,
-    //      m_entry.m_type);
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {

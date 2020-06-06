@@ -1,5 +1,67 @@
 # Max C API Notes
 
+## Getting the Type of Methods Programmatically
+
+methods to get method type
+
+see: https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
+
+
+```cpp
+<template<typename T1, typename T2>
+atom operator()(symbol method_name, T1 arg1, T2 arg2) {
+    auto m { find_method(method_name) };
+
+    if (m.type == max::A_GIMME) {
+        atoms   as { arg1, arg2 };
+        return max::object_method_typed(m.ob, method_name, as.size(), &as[0], nullptr);
+    }
+    else if (m.type == max::A_GIMMEBACK) {
+        atoms       as { arg1, arg2 };
+        max::t_atom rv {};
+
+        max::object_method_typed(m.ob, method_name, as.size(), &as[0], &rv); 
+        return rv;
+    }
+    else {
+        if (typeid(T1) != typeid(atom))
+            return m.fn(m.ob, arg1, arg2);
+        else {
+          // atoms must be converted to native types and then reinterpreted as void*
+          // doubles cannot be converted -- supporting those will
+          // need to be handled separately 
+          return m.fn(m.ob, atom_to_generic(arg1), atom_to_generic(arg2));
+        }
+    }
+}
+```
+
+### object_mess
+
+- object **must** cast to `(t_object*)` or fail
+
+- the `char` type of `m_type` is confusing, m_type[0] as a `int` is what is needed!
+
+```c
+t_messlist* mess = object_mess((t_object*)obj, msg_sym);
+if (mess) {
+    object_post(NULL, "method name: %s, type: %d", mess->m_sym->s_name,
+                mess->m_type[0]);
+}
+```
+
+### object_getmethod_object
+
+```c
+t_method_object* mobj = object_getmethod_object(obj, msg_sym);
+t_messlist m_entry = mobj->messlist_entry;
+post("MESSLIST_ENTRY method_name %s type %d", m_entry.m_sym->s_name,
+     m_entry.m_type[0]);
+
+```
+
+
+
 
 ## Memory management
 
