@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 766.0, 89.0, 785.0, 634.0 ],
+		"rect" : [ 316.0, 95.0, 785.0, 634.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 766.0, 115.0, 785.0, 608.0 ],
+						"rect" : [ 0.0, 26.0, 785.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 1,
 						"default_fontsize" : 12.0,
@@ -641,7 +641,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 785.0, 608.0 ],
+						"rect" : [ 316.0, 121.0, 785.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1003,8 +1003,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 140.0, 137.0, 22.0 ],
-									"text" : "api.total 10.1 12.2 40 50"
+									"patching_rect" : [ 23.0, 140.0, 81.0, 22.0 ],
+									"text" : "api.total 1 2 3"
 								}
 
 							}
@@ -1871,7 +1871,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 52.5, 502.0, 296.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "import <module.submodule> <obj1> <obj2> ... <objN>"
 								}
 
@@ -1884,7 +1883,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 52.5, 472.0, 224.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "import <module.submodule> as <name>"
 								}
 
@@ -1897,7 +1895,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 52.5, 441.0, 161.0, 22.0 ],
-									"presentation_linecount" : 3,
 									"text" : "import <module.submodule>"
 								}
 
