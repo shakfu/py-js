@@ -100,7 +100,7 @@ void ext_main(void* r)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
-    class_addmethod(c, (method)py_call,       "call",       A_GIMME,    0);
+    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
 
     // core python
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
@@ -353,7 +353,6 @@ void py_locatefile(t_py* x, char* filename)
         }
     }
 }
-
 void py_read(t_py* x, t_symbol* s)
 {
     defer((t_object*)x, (method)py_doread, s, 0, NULL);
@@ -896,7 +895,6 @@ error:
 
 void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    char* py_argv = NULL;
     PyObject* pval = NULL;
     PyObject* py_callable = NULL;
     PyObject* py_argslist = NULL; // python list
@@ -981,10 +979,14 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    pval = PyObject_Call(py_callable, py_args, NULL);
+    // pval = PyObject_Call(py_callable, py_args, NULL);
+    pval = PyObject_CallObject(py_callable, py_args);
     if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
-        py_error(x, "could not retrieve result of callable(*args)");
-        goto error;
+        if (pval == NULL) {
+            py_error(x, "unable to apply callable(*args)");
+            goto error;
+        }
+        goto process_output;
     }
     PyErr_Clear();
 
@@ -993,10 +995,10 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_error(x, "could not retrieve result of callable(list)");
         goto error;
     }
+    goto process_output; // this is redundant because of fall through
+                         // but just in case, and for sake of being explicit!
 
-    // ------------------------------------------------------------------
-
-process_output:
+process_output :
 
     // handle ints and longs
     if (PyLong_Check(pval)) {
@@ -1028,8 +1030,8 @@ process_output:
 
         Py_ssize_t seq_size = PySequence_Length(pval);
         if (seq_size <= 0) {
-            py_error(
-                x, "cannot convert python sequence with length <= 0 to atoms");
+            py_error(x,
+                     "cannot convert python sequence with length <= 0 to atoms");
             goto error;
         }
 
@@ -1039,8 +1041,7 @@ process_output:
 
         if (seq_size > PY_MAX_ATOMS) {
             py_log(x, "dynamically increasing size of atom array");
-            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
-                                       seq_size + 1);
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, seq_size + 1);
             is_dynamic = 1;
 
         } else {
@@ -1070,6 +1071,7 @@ process_output:
             }
             Py_DECREF(item);
         }
+
         outlet_list(x->p_outlet_left, NULL, i, atoms);
         py_log(x, "end iter op: %d", i);
 
@@ -1083,11 +1085,12 @@ process_output:
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
-    py_log(x, "END %s: %s", s->s_name, py_argv);
+    py_log(x, "END %s", s->s_name);
     outlet_bang(x->p_outlet_right);
     return;
 
 error:
+
     handle_py_error(x, "anything %s", s->s_name);
     // cleanup
     Py_XDECREF(py_callable);

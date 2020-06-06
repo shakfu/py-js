@@ -17,7 +17,7 @@ MAXHELP=${NAME}.maxhelp
 
 .PHONY: all
 
-all: clean test style build
+all: clean test build
 	@echo "All DONE!"
 
 

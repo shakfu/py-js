@@ -1276,7 +1276,6 @@ static const char __pyx_k_error[] = "error";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_total[] = "total";
 static const char __pyx_k_import[] = "__import__";
-static const char __pyx_k_kwargs[] = "kwargs";
 static const char __pyx_k_name_2[] = "__name__";
 static const char __pyx_k_random[] = "random";
 static const char __pyx_k_reduce[] = "__reduce__";
@@ -1313,7 +1312,6 @@ static PyObject *__pyx_n_s_getstate;
 static PyObject *__pyx_n_s_greeting;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_key;
-static PyObject *__pyx_n_s_kwargs;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_n;
 static PyObject *__pyx_n_s_name;
@@ -1339,8 +1337,8 @@ static PyObject *__pyx_n_s_total;
 static PyObject *__pyx_n_s_txt;
 static PyObject *__pyx_pf_3api_hello(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
 static PyObject *__pyx_pf_3api_2random(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_n); /* proto */
-static PyObject *__pyx_pf_3api_4echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args, CYTHON_UNUSED PyObject *__pyx_v_kwargs); /* proto */
-static PyObject *__pyx_pf_3api_6total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args, CYTHON_UNUSED PyObject *__pyx_v_kwargs); /* proto */
+static PyObject *__pyx_pf_3api_4echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
+static PyObject *__pyx_pf_3api_6total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
 static PyObject *__pyx_pf_3api_8post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
 static PyObject *__pyx_pf_3api_10error(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
 static int __pyx_pf_3api_10PyExternal___cinit__(struct __pyx_obj_3api_PyExternal *__pyx_v_self, PyObject *__pyx_v_name); /* proto */
@@ -1566,7 +1564,7 @@ static PyObject *__pyx_pf_3api_2random(CYTHON_UNUSED PyObject *__pyx_self, int _
 /* "api.pyx":24
  * 
  * 
- * def echo(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def echo(*args):             # <<<<<<<<<<<<<<
  *     return args
  * 
  */
@@ -1576,30 +1574,28 @@ static PyObject *__pyx_pw_3api_5echo(PyObject *__pyx_self, PyObject *__pyx_args,
 static PyMethodDef __pyx_mdef_3api_5echo = {"echo", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_3api_5echo, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_3api_5echo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_args = 0;
-  CYTHON_UNUSED PyObject *__pyx_v_kwargs = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("echo (wrapper)", 0);
-  if (unlikely(__pyx_kwds) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "echo", 1))) return NULL;
+  if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "echo", 0))) return NULL;
   __Pyx_INCREF(__pyx_args);
   __pyx_v_args = __pyx_args;
-  __pyx_r = __pyx_pf_3api_4echo(__pyx_self, __pyx_v_args, __pyx_v_kwargs);
+  __pyx_r = __pyx_pf_3api_4echo(__pyx_self, __pyx_v_args);
 
   /* function exit code */
   __Pyx_XDECREF(__pyx_v_args);
-  __Pyx_XDECREF(__pyx_v_kwargs);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_4echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args, CYTHON_UNUSED PyObject *__pyx_v_kwargs) {
+static PyObject *__pyx_pf_3api_4echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("echo", 0);
 
   /* "api.pyx":25
  * 
- * def echo(*args, **kwargs):
+ * def echo(*args):
  *     return args             # <<<<<<<<<<<<<<
  * 
  * 
@@ -1612,7 +1608,7 @@ static PyObject *__pyx_pf_3api_4echo(CYTHON_UNUSED PyObject *__pyx_self, PyObjec
   /* "api.pyx":24
  * 
  * 
- * def echo(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def echo(*args):             # <<<<<<<<<<<<<<
  *     return args
  * 
  */
@@ -1627,7 +1623,7 @@ static PyObject *__pyx_pf_3api_4echo(CYTHON_UNUSED PyObject *__pyx_self, PyObjec
 /* "api.pyx":28
  * 
  * 
- * def total(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
  * 
  */
@@ -1637,23 +1633,21 @@ static PyObject *__pyx_pw_3api_7total(PyObject *__pyx_self, PyObject *__pyx_args
 static PyMethodDef __pyx_mdef_3api_7total = {"total", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_3api_7total, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_3api_7total(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_args = 0;
-  CYTHON_UNUSED PyObject *__pyx_v_kwargs = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("total (wrapper)", 0);
-  if (unlikely(__pyx_kwds) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "total", 1))) return NULL;
+  if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "total", 0))) return NULL;
   __Pyx_INCREF(__pyx_args);
   __pyx_v_args = __pyx_args;
-  __pyx_r = __pyx_pf_3api_6total(__pyx_self, __pyx_v_args, __pyx_v_kwargs);
+  __pyx_r = __pyx_pf_3api_6total(__pyx_self, __pyx_v_args);
 
   /* function exit code */
   __Pyx_XDECREF(__pyx_v_args);
-  __Pyx_XDECREF(__pyx_v_kwargs);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_6total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args, CYTHON_UNUSED PyObject *__pyx_v_kwargs) {
+static PyObject *__pyx_pf_3api_6total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1664,7 +1658,7 @@ static PyObject *__pyx_pf_3api_6total(CYTHON_UNUSED PyObject *__pyx_self, PyObje
 
   /* "api.pyx":29
  * 
- * def total(*args, **kwargs):
+ * def total(*args):
  *     return sum(args)             # <<<<<<<<<<<<<<
  * 
  * 
@@ -1679,7 +1673,7 @@ static PyObject *__pyx_pf_3api_6total(CYTHON_UNUSED PyObject *__pyx_self, PyObje
   /* "api.pyx":28
  * 
  * 
- * def total(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
  * 
  */
@@ -2573,7 +2567,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_greeting, __pyx_k_greeting, sizeof(__pyx_k_greeting), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_key, __pyx_k_key, sizeof(__pyx_k_key), 0, 0, 1, 1},
-  {&__pyx_n_s_kwargs, __pyx_k_kwargs, sizeof(__pyx_k_kwargs), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_n, __pyx_k_n, sizeof(__pyx_k_n), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
@@ -2645,26 +2638,26 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "api.pyx":24
  * 
  * 
- * def echo(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def echo(*args):             # <<<<<<<<<<<<<<
  *     return args
  * 
  */
-  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_n_s_args, __pyx_n_s_kwargs); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 24, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_n_s_args); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 24, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_echo, 24, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 24, __pyx_L1_error)
+  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_echo, 24, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 24, __pyx_L1_error)
 
   /* "api.pyx":28
  * 
  * 
- * def total(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
  * 
  */
-  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_n_s_args, __pyx_n_s_kwargs); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_n_s_args); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_total, 28, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_total, 28, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 28, __pyx_L1_error)
 
   /* "api.pyx":32
  * 
@@ -3057,7 +3050,7 @@ if (!__Pyx_RefNanny) {
   /* "api.pyx":24
  * 
  * 
- * def echo(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def echo(*args):             # <<<<<<<<<<<<<<
  *     return args
  * 
  */
@@ -3069,7 +3062,7 @@ if (!__Pyx_RefNanny) {
   /* "api.pyx":28
  * 
  * 
- * def total(*args, **kwargs):             # <<<<<<<<<<<<<<
+ * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
  * 
  */

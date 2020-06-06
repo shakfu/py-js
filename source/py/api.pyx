@@ -21,11 +21,11 @@ def random(int n):
     return np.random.rand(n)
 
 
-def echo(*args, **kwargs):
+def echo(*args):
     return args
 
 
-def total(*args, **kwargs):
+def total(*args):
     return sum(args)
 
 
