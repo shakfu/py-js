@@ -110,8 +110,9 @@
 <v t="sta.20200602120251.8"><vh>void py_init</vh></v>
 <v t="sta.20200602120251.9"><vh>void py_free</vh></v>
 </v>
-<v t="sta.20200602121012.1"><vh>documentation</vh>
+<v t="sta.20200602121012.1"><vh>information</vh>
 <v t="sta.20200602120251.10"><vh>void py_assist</vh></v>
+<v t="sta.20200602122617.1"><vh>void py_count</vh></v>
 </v>
 <v t="sta.20200602122226.1"><vh>testing</vh>
 <v t="sta.20200602122244.1"><vh>void py_bang</vh></v>
@@ -128,18 +129,19 @@
 <v t="sta.20200602120318.1"><vh>core</vh>
 <v t="sta.20200602120251.20"><vh>void py_import</vh></v>
 <v t="sta.20200602120251.21"><vh>void py_eval</vh></v>
-<v t="sta.20200605120324.1"><vh>void py_call</vh></v>
 <v t="sta.20200602120251.22"><vh>void py_exec</vh></v>
 <v t="sta.20200602120251.23"><vh>void py_execfile</vh></v>
 </v>
 <v t="sta.20200602120740.1"><vh>extra</vh>
+<v t="sta.20200605120324.1"><vh>void py_call</vh></v>
 <v t="sta.20200602120251.24"><vh>void py_assign</vh></v>
 <v t="sta.20200602120251.25"><vh>void py_anything</vh></v>
-<v t="sta.20200602120251.12"><vh>void py_send</vh></v>
+</v>
+<v t="sta.20200606073716.1"><vh>interobject</vh>
 <v t="sta.20200602120251.11"><vh>void py_scan</vh></v>
 <v t="sta.20200603072826.1"><vh>long py_scan_callback</vh></v>
+<v t="sta.20200602120251.12"><vh>void py_send</vh></v>
 <v t="sta.20200602120251.26"><vh>void py_globex</vh></v>
-<v t="sta.20200602122617.1"><vh>void py_count</vh></v>
 </v>
 </v>
 <v t="sta.20200602145459.1"><vh>@clean py.h</vh>
@@ -3289,5 +3291,6 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 </t>
+<t tx="sta.20200606073716.1"></t>
 </tnodes>
 </leo_file>

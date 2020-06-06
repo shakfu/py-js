@@ -83,7 +83,6 @@ void py_handle_error(t_py* x, char* fmt, ...)
     }
 }
 
-
 void py_handle_output(t_py* x, PyObject* pval)
 {
 
@@ -124,8 +123,8 @@ void py_handle_output(t_py* x, PyObject* pval)
         Py_ssize_t seq_size = PySequence_Length(pval);
 
         if (seq_size <= 0) {
-            py_error(x, 
-                "cannot convert python sequence with length <= 0 to atoms");
+            py_error(
+                x, "cannot convert python sequence with length <= 0 to atoms");
             goto error;
         }
 
@@ -404,6 +403,8 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
         sprintf(s, "I am outlet %ld", a);
     }
 }
+
+void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 /*--------------------------------------------------------------------------*/
 // TESTING
 
@@ -471,7 +472,7 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     if (s == gensym("")) { // if no arg supplied ask for file
         filename[0] = 0;
-        
+
         if (open_dialog(filename, &path, &outtype, &filetype, 1))
             // non-zero: cancelled
             return;
@@ -575,8 +576,8 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     char* py_argv = atom_getsym(argv)->s_name;
     py_log(x, "%s %s", s->s_name, py_argv);
 
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, 
-        x->p_globals, x->p_globals);
+    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
+                                  x->p_globals);
 
     if (pval != NULL) {
         py_handle_output(x, pval);
@@ -584,56 +585,6 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     } else {
         py_handle_error(x, "eval %s", py_argv);
     }
-}
-
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    long textsize = 0;
-    char* text = NULL;
-    PyObject* co = NULL;
-    PyObject* pval = NULL;
-    t_max_err err;
-    int is_eval = 1;
-
-    err = atom_gettext(argc, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err == MAX_ERR_NONE && textsize && text) {
-        py_log(x, "call %s", text);
-    } else {
-        goto error;
-    }
-
-    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
-
-    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-        PyErr_Clear();
-        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
-        is_eval = 0;
-    }
-
-    if (co == NULL) { // can be eval-co or exec-co or NULL here
-        goto error;
-    }
-    sysmem_freeptr(text);
-
-    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-    Py_DECREF(co);
-
-    if (!is_eval) {
-        // bang for exec-type op
-        outlet_bang(x->p_outlet_right);
-    } else {
-        py_handle_output(x, pval);
-    }
-    return;
-
-error:
-    py_handle_error(x, "call failed");
-    // fail bang
-    outlet_bang(x->p_outlet_middle);
 }
 
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -723,6 +674,56 @@ error:
 
 /*--------------------------------------------------------------------------*/
 // EXTRA
+
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+    int is_eval = 1;
+
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        py_log(x, "call %s", text);
+    } else {
+        goto error;
+    }
+
+    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+        is_eval = 0;
+    }
+
+    if (co == NULL) { // can be eval-co or exec-co or NULL here
+        goto error;
+    }
+    sysmem_freeptr(text);
+
+    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(co);
+
+    if (!is_eval) {
+        // bang for exec-type op
+        outlet_bang(x->p_outlet_right);
+    } else {
+        py_handle_output(x, pval);
+    }
+    return;
+
+error:
+    py_handle_error(x, "call failed");
+    // fail bang
+    outlet_bang(x->p_outlet_middle);
+}
 
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -921,7 +922,6 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
     goto handle_output; // this is redundant but safe
 
-
 handle_output:
 
     py_handle_output(x, pval);
@@ -940,6 +940,47 @@ error:
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
     outlet_bang(x->p_outlet_middle);
+}
+
+void py_scan(t_py* x)
+{
+    long result = 0;
+
+    hashtab_clear(py_global_registry);
+
+    object_method(x->p_patcher, gensym("iterate"), (method)py_scan_callback, x,
+                  PI_DEEP | PI_WANTBOX, &result);
+}
+
+long py_scan_callback(t_py* x, t_object* box)
+{
+    t_rect jr;
+    t_object* p;
+    t_symbol* s;
+    t_symbol* varname;
+    t_object* obj;
+    t_symbol* obj_id;
+
+    jbox_get_patching_rect(box, &jr);
+    p = jbox_get_patcher(box);
+    varname = jbox_get_varname(box);
+    obj = jbox_get_object(box);
+
+    // lifted from scheme-for-max (Thanks, Iain!)
+    if (varname != gensym("")) {
+        py_log(x, "storing object '%s' in the global registry",
+               varname->s_name);
+        hashtab_store(py_global_registry, varname, obj);
+    }
+
+    obj_id = jbox_get_id(box);
+    s = jpatcher_get_name(p);
+    object_post(
+        (t_object*)x,
+        "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
+        s->s_name, varname->s_name, obj_id->s_name, (long)jr.x, (long)jr.y,
+        (long)jr.width, (long)jr.height);
+    return 0;
 }
 
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -1017,7 +1058,7 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
     // if (messlist) {
     //     post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-    //     post("messlist->m_type (type of msg): %d", messlist->m_type[0]);        
+    //     post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
     // }
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
@@ -1031,47 +1072,6 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 error:
     return;
-}
-
-void py_scan(t_py* x)
-{
-    long result = 0;
-
-    hashtab_clear(py_global_registry);
-
-    object_method(x->p_patcher, gensym("iterate"), 
-        (method)py_scan_callback, x, PI_DEEP | PI_WANTBOX, &result);
-}
-
-long py_scan_callback(t_py* x, t_object* box)
-{
-    t_rect jr;
-    t_object* p;
-    t_symbol* s;
-    t_symbol* varname;
-    t_object* obj;
-    t_symbol* obj_id;
-
-    jbox_get_patching_rect(box, &jr);
-    p = jbox_get_patcher(box);
-    varname = jbox_get_varname(box);
-    obj = jbox_get_object(box);
-
-    // lifted from scheme-for-max (Thanks, Iain!)
-    if (varname != gensym("")) {
-        py_log(x, "storing object '%s' in the global registry",
-               varname->s_name);
-        hashtab_store(py_global_registry, varname, obj);
-    }
-
-    obj_id = jbox_get_id(box);
-    s = jpatcher_get_name(p);
-    object_post(
-        (t_object*)x,
-        "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
-        s->s_name, varname->s_name, obj_id->s_name, (long)jr.x, (long)jr.y,
-        (long)jr.width, (long)jr.height);
-    return 0;
 }
 
 void py_globex(t_py* x, long n)
@@ -1100,5 +1100,3 @@ error:
     py_handle_error(x, "globex %ld", n);
     outlet_bang(x->p_outlet_middle);
 }
-
-void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
