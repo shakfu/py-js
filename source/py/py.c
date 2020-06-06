@@ -184,7 +184,6 @@ error:
     Py_XDECREF(pval);
     outlet_bang(x->p_outlet_middle);
 }
-
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
 
@@ -615,7 +614,7 @@ void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
         is_eval = 0;
     }
 
-    if (co == NULL) { // it can be eval-co or exec-co or NULL here
+    if (co == NULL) { // can be eval-co or exec-co or NULL here
         goto error;
     }
     sysmem_freeptr(text);
@@ -625,7 +624,6 @@ void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
     Py_DECREF(co);
-
 
     if (!is_eval) {
         // bang for exec-type op
