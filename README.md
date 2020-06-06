@@ -162,7 +162,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-
+- [ ] more of a development question: if attr has same name as method (the import saga), crash. fix by making them different. Investigate.
 
 
 ## TODO
@@ -170,19 +170,26 @@ The style used in this project is specified in the `.clang-format` file.
 
 core
 
-- [ ] Refactor conversion logic from object methods
-- [ ] idea: shift type conversion to python (cython) api calls which should be easier than doing it in c
+- [ ] finalize method interface `py_anything` vs 'py_call'
+      rename `py_anything` -> `py_call`, `py_call` -> `py_code`
+      create new `py_anything` with heuristics to decide whether to delegate
+      to `py_call` or `py_anything`.
 
+- [ ] check whether setting a normal attr name, can also set scripting name
+
+extension
+
+- [ ] create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
 
 attributes & infrastructure
 
 - [ ] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
-- [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes
 - [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
       ```c
       PyObject *sysPath = PySys_GetObject((char*)"path");
       PyList_Append(sysPath, PyString_FromString("."));
       ```
+- [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes (NO REASON for using this found so far)
 
 testing
 
@@ -190,11 +197,11 @@ testing
   - [ ] complete c test suite
   - [ ] complete max test suite
   - [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl` 
-  - [ ] BUG: if attr has same name as method (the import saga), crash. fix by making them different. Investigate.
 
 
 future experiments
 
+- [ ] Consider local python install in `misc`
 - [ ] Convert py into a js extension class
       - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
 - [ ] try to build a cython extension types as a max external class
