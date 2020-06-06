@@ -15,7 +15,7 @@
 
 t_class* py_class; // global pointer to object class
 
-static int py_global_obj_count = 0; // when 0 free interpreter
+static int py_global_obj_count = 0; // when 0 then free interpreter
 
 static t_hashtab* py_global_registry = NULL; // global object lookups
 
@@ -108,8 +108,9 @@ void py_handle_output(t_py* x, PyObject* pval)
         outlet_bang(x->p_outlet_right);
     }
 
-    // handle any sequence except strings, and presently
-    // bytes and byte arrays (until there is a reason to)
+    /* handle any sequence except strings, and presently
+       bytes and byte arrays (until there is a reason to)
+    */
     if (PySequence_Check(pval) && !PyUnicode_Check(pval)
         && !PyBytes_Check(pval) && !PyByteArray_Check(pval)) {
         PyObject* iter = NULL;
@@ -470,29 +471,25 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     if (s == gensym("")) { // if no arg supplied ask for file
         filename[0] = 0;
-
+        
         if (open_dialog(filename, &path, &outtype, &filetype, 1))
-            // non-zero cancelled
+            // non-zero: cancelled
             return;
 
     } else {
         // must copy symbol before calling locatefile_extended
         strcpy(filename, s->s_name);
-        // x->p_code_filepath = s;
         if (locatefile_extended(filename, &path, &outtype, &filetype, 1)) {
             // nozero: not found
             py_error(x, "can't find file %s", s->s_name);
             return;
         } else {
             err = path_toabsolutesystempath(path, filename, pathname);
-
-            // err = path_topathname(path, filename, pathname);
         }
 
         // success
-        // x->p_code_filepath = s; // set attribute to filename symbol
-        x->p_code_filepath = gensym(
-            pathname); // set attribute to pathname symbol
+        // set attribute to pathname symbol
+        x->p_code_filepath = gensym(pathname);
         err = path_opensysfile(filename, path, &fh, READ_PERM);
         if (!err) {
             sysfile_readtextfile(fh, x->p_code, 0,
@@ -656,6 +653,7 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     pval = PyRun_String(text, Py_single_input, x->p_globals, x->p_globals);
     if (pval == NULL) {
+        sysmem_freeptr(text);
         goto error;
     }
 
@@ -676,22 +674,19 @@ error:
 void py_execfile(t_py* x, t_symbol* s)
 {
     /*
-
     IMPORTANT: do not use post, logging or error, error
-    heandler to  print name of file during debugging or error
-    report as it will crash due to a the 'sprintf mecanism'
-    which cannot handle paths with a space inside even
-    with quotes!!
+    handler to which uses name of file during debugging or error
+    report as it will crash due to underlying 'sprintf' mechanism
+    not handling (even quoted) paths with a space inside!
     */
 
-    // char quoted_path[MAX_PATH_CHARS];
     t_symbol* pathname = gensym("");
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
 
     if (s == gensym("")) {
         if (x->p_code_filepath == gensym("")) {
-            // py_error(x, "py execfile: missing filepath");
+            py_error(x, "py execfile: missing filepath");
             goto error;
         } else {
             pathname = x->p_code_filepath;
@@ -700,31 +695,27 @@ void py_execfile(t_py* x, t_symbol* s)
         pathname = s;
     }
 
-    // snprintf(quoted_path, sizeof quoted_path, "\'%s\'", pathname->s_name);
-    // fhandle = fopen(quoted_path, "r");
     fhandle = fopen(pathname->s_name, "r+");
 
     if (fhandle == NULL) {
-        // py_error(x, "could not open file '%s'", pathname->s_name);
+        py_error(x, "could not open file");
         goto error;
     }
 
     pval = PyRun_File(fhandle, pathname->s_name, Py_file_input, x->p_globals,
                       x->p_globals);
     if (pval == NULL) {
-        // fclose(fhandle);
+        fclose(fhandle);
         goto error;
     }
 
     // success cleanup
     fclose(fhandle);
     Py_DECREF(pval);
-    // py_log(x, "execfile %s", pathname->s_name);
     outlet_bang(x->p_outlet_right);
     return;
 
 error:
-    // py_handle_error(x, "execfile %s", pathname->s_name);
     py_handle_error(x, "execfile");
     Py_XDECREF(pval);
     outlet_bang(x->p_outlet_middle);
@@ -1022,55 +1013,12 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
         break;
     }
 
-
-    /*
-    clang-format off
-
-    if m.type == A_GIMME:
-        object_method_typed(obj, methodname, argc, argv, NULL)
-
-    else if m.type == A_GIMMEBACK:
-        t_atom rv {};
-        object_method_typed(obj, methodname, argc, argv, NULL, &rv)
-
-    else:
-        if arg1.type != type(atom):
-            return fn(obj, arg1, arg2)
-        else:
-            return fn(obj, atom_to_generic(arg1), atom_to_generic(arg2)
-
-
-
-    ctypedef enum e_max_atomtypes:
-        A_NOTHING = 0  # no type, thus no atom
-        A_LONG         # long integer
-        A_FLOAT        # 32-bit float
-        A_SYM          # t_symbol pointer
-        A_OBJ          # t_object pointer (for argtype lists; passes the value of sym)
-        A_DEFLONG      # long but defaults to zero
-        A_DEFFLOAT     # float, but defaults to zero
-        A_DEFSYM       # symbol, defaults to ""
-        A_GIMME        # request that args be passed as an array, the routine will check the types itself.
-        A_CANT         # cannot typecheck args
-        A_SEMI         # semicolon
-        A_COMMA        # comma
-        A_DOLLAR       # dollar
-        A_DOLLSYM      # dollar
-        A_GIMMEBACK    # request that args be passed as an array, the routine will check the types itself. can return atom value in final atom ptr arg. function returns long error code 0 = no err. see gimmeback_meth typedef
-        A_DEFER =       0x41   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred.
-        A_USURP =       0x42   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred and multiple calls within one servicing of the queue are filtered down to one call.
-        A_DEFER_LOW =   0x43   # A special signature for declaring methods. This is like A_GIMME, but the call is deferref to the back of the queue.
-        A_USURP_LOW =   0x44   # A special signature for declaring methods. This is like A_GIMME, but the call is deferred to the back of the queue and multiple calls within one servicing of the queue are filtered down to one call.
-
-    clang-format on
-    */
-
     // methods to get method type
-    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
-    if (messlist) {
-        post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-        post("messlist->m_type (type of msg): %d", messlist->m_type[0]);        
-    }
+    // t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
+    // if (messlist) {
+    //     post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
+    //     post("messlist->m_type (type of msg): %d", messlist->m_type[0]);        
+    // }
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {
@@ -1091,8 +1039,8 @@ void py_scan(t_py* x)
 
     hashtab_clear(py_global_registry);
 
-    object_method(x->p_patcher, gensym("iterate"), (method)py_scan_callback, x,
-                  PI_DEEP | PI_WANTBOX, &result);
+    object_method(x->p_patcher, gensym("iterate"), 
+        (method)py_scan_callback, x, PI_DEEP | PI_WANTBOX, &result);
 }
 
 long py_scan_callback(t_py* x, t_object* box)

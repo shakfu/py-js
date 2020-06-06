@@ -181,8 +181,8 @@
 
     hashtab_clear(py_global_registry);
 
-    object_method(x-&gt;p_patcher, gensym("iterate"), (method)py_scan_callback, x,
-                  PI_DEEP | PI_WANTBOX, &amp;result);
+    object_method(x-&gt;p_patcher, gensym("iterate"), 
+        (method)py_scan_callback, x, PI_DEEP | PI_WANTBOX, &amp;result);
 }
 
 </t>
@@ -257,82 +257,12 @@
         break;
     }
 
-    /*
-    clang-format off
-    see: https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
-
-    template&lt;typename T1, typename T2&gt;
-            atom operator()(symbol method_name, T1 arg1, T2 arg2) {
-                auto m { find_method(method_name) };
-
-                if (m.type == max::A_GIMME) {
-                    atoms   as { arg1, arg2 };
-                    return max::object_method_typed(m.ob, method_name,
-    as.size(), &amp;as[0], nullptr);
-                }
-                else if (m.type == max::A_GIMMEBACK) {
-                    atoms       as { arg1, arg2 };
-                    max::t_atom rv {};
-
-                    max::object_method_typed(m.ob, method_name, as.size(),
-    &amp;as[0], &amp;rv); return rv;
-                }
-                else {
-                    if (typeid(T1) != typeid(atom))
-                        return m.fn(m.ob, arg1, arg2);
-                    else {
-                        // atoms must be converted to native types and then
-    reinterpreted as void*
-                        // doubles cannot be converted -- supporting those will
-    need to be handled separately return m.fn(m.ob, atom_to_generic(arg1),
-    atom_to_generic(arg2));
-                    }
-                }
-            }
-    clang-format on
-    */
-    // method m = object_getmethod(obj, msg_sym);
-    // if (m.type == A_GIMME) {
-    //     post("NICE");
-    // } else {
-    //     post("NOT NICE");
-    // }
-
-    // typedef struct messlist
-    // {
-    //     struct symbol *m_sym;       ///&lt; Name of the message
-    //     method m_fun;               ///&lt; Method associated with the
-    //     message char m_type[MSG_MAXARG + 1];    ///&lt; Argument type
-    //     information
-    // } t_messlist;
-
-    // 1
-    // t_messlist *object_mess(t_object *x, t_symbol *methodname);
-    //
-    // t_messlist* messlist = object_mess(obj, msg_sym);
+    // methods to get method type
+    // t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
     // if (messlist) {
-    //     post(NULL, "method name: %s, type: %d", messlist-&gt;m_sym-&gt;s_name,
-    //          messlist-&gt;m_type[0]);
+    //     post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
+    //     post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);        
     // }
-
-    t_messlist* mess = object_mess((t_object*)obj, msg_sym);
-    if (mess) {
-        object_post(NULL, "method name: %s, type: %d", mess-&gt;m_sym-&gt;s_name,
-                    mess-&gt;m_type[0]);
-    }
-
-    // post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
-    // post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
-    // // 2
-    // t_messlist* mlist2 = obj-&gt;o_messlist;
-
-    // 3
-    // t_method_object* mobj = object_getmethod_object(obj, msg_sym);
-
-    // t_messlist m_entry = mobj-&gt;messlist_entry;
-
-    // post("MESSLIST_ENTRY method_name %s type %s", m_entry.m_sym-&gt;s_name,
-    //      m_entry.m_type);
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {
@@ -415,29 +345,25 @@ error:
 
     if (s == gensym("")) { // if no arg supplied ask for file
         filename[0] = 0;
-
+        
         if (open_dialog(filename, &amp;path, &amp;outtype, &amp;filetype, 1))
-            // non-zero cancelled
+            // non-zero: cancelled
             return;
 
     } else {
         // must copy symbol before calling locatefile_extended
         strcpy(filename, s-&gt;s_name);
-        // x-&gt;p_code_filepath = s;
         if (locatefile_extended(filename, &amp;path, &amp;outtype, &amp;filetype, 1)) {
             // nozero: not found
             py_error(x, "can't find file %s", s-&gt;s_name);
             return;
         } else {
             err = path_toabsolutesystempath(path, filename, pathname);
-
-            // err = path_topathname(path, filename, pathname);
         }
 
         // success
-        // x-&gt;p_code_filepath = s; // set attribute to filename symbol
-        x-&gt;p_code_filepath = gensym(
-            pathname); // set attribute to pathname symbol
+        // set attribute to pathname symbol
+        x-&gt;p_code_filepath = gensym(pathname);
         err = path_opensysfile(filename, path, &amp;fh, READ_PERM);
         if (!err) {
             sysfile_readtextfile(fh, x-&gt;p_code, 0,
@@ -554,6 +480,7 @@ error:
 
     pval = PyRun_String(text, Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
     if (pval == NULL) {
+        sysmem_freeptr(text);
         goto error;
     }
 
@@ -575,22 +502,19 @@ error:
 <t tx="sta.20200602120251.23">void py_execfile(t_py* x, t_symbol* s)
 {
     /*
-
     IMPORTANT: do not use post, logging or error, error
-    heandler to  print name of file during debugging or error
-    report as it will crash due to a the 'sprintf mecanism'
-    which cannot handle paths with a space inside even
-    with quotes!!
+    handler to which uses name of file during debugging or error
+    report as it will crash due to underlying 'sprintf' mechanism
+    not handling (even quoted) paths with a space inside!
     */
 
-    // char quoted_path[MAX_PATH_CHARS];
     t_symbol* pathname = gensym("");
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
 
     if (s == gensym("")) {
         if (x-&gt;p_code_filepath == gensym("")) {
-            // py_error(x, "py execfile: missing filepath");
+            py_error(x, "py execfile: missing filepath");
             goto error;
         } else {
             pathname = x-&gt;p_code_filepath;
@@ -599,31 +523,27 @@ error:
         pathname = s;
     }
 
-    // snprintf(quoted_path, sizeof quoted_path, "\'%s\'", pathname-&gt;s_name);
-    // fhandle = fopen(quoted_path, "r");
     fhandle = fopen(pathname-&gt;s_name, "r+");
 
     if (fhandle == NULL) {
-        // py_error(x, "could not open file '%s'", pathname-&gt;s_name);
+        py_error(x, "could not open file");
         goto error;
     }
 
     pval = PyRun_File(fhandle, pathname-&gt;s_name, Py_file_input, x-&gt;p_globals,
                       x-&gt;p_globals);
     if (pval == NULL) {
-        // fclose(fhandle);
+        fclose(fhandle);
         goto error;
     }
 
     // success cleanup
     fclose(fhandle);
     Py_DECREF(pval);
-    // py_log(x, "execfile %s", pathname-&gt;s_name);
     outlet_bang(x-&gt;p_outlet_right);
     return;
 
 error:
-    // py_handle_error(x, "execfile %s", pathname-&gt;s_name);
     py_handle_error(x, "execfile");
     Py_XDECREF(pval);
     outlet_bang(x-&gt;p_outlet_middle);
@@ -1168,7 +1088,7 @@ void py_count(t_py* x) { outlet_int(x-&gt;p_outlet_left, py_global_obj_count); }
 
 t_class* py_class; // global pointer to object class
 
-static int py_global_obj_count = 0; // when 0 free interpreter
+static int py_global_obj_count = 0; // when 0 then free interpreter
 
 static t_hashtab* py_global_registry = NULL; // global object lookups
 
@@ -3291,8 +3211,9 @@ error:
         outlet_bang(x-&gt;p_outlet_right);
     }
 
-    // handle any sequence except strings, and presently
-    // bytes and byte arrays (until there is a reason to)
+    /* handle any sequence except strings, and presently
+       bytes and byte arrays (until there is a reason to)
+    */
     if (PySequence_Check(pval) &amp;&amp; !PyUnicode_Check(pval)
         &amp;&amp; !PyBytes_Check(pval) &amp;&amp; !PyByteArray_Check(pval)) {
         PyObject* iter = NULL;
@@ -3366,6 +3287,7 @@ error:
     py_handle_error(x, "python exception occurred");
     Py_XDECREF(pval);
     outlet_bang(x-&gt;p_outlet_middle);
-}</t>
+}
+</t>
 </tnodes>
 </leo_file>
