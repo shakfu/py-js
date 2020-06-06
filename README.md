@@ -143,9 +143,9 @@ make build
 
 You will find that make will fail with 1 error, and it will be a codesigning error that is particular to Apple's process. While this can mostly ignored (unless your only focus is codesigning the external).
 
-The issue I found is that if one develops the external in the natural place of testing (on a mac at least) in ~/Documents/Max 8/Packages/<external> and iCloud Drive is switched on then the latter interferes with the code signing step on xcodebuild.
+The issue I found is that if one develops the external in the natural place of testing (on a mac at least) in $HOME/Documents/Max 8/Packages/external and iCloud Drive is switched on then the latter interferes with the code signing step on xcodebuild.
 
-The solution is to move the external project folder to a non iCloud drive folder (such as ~/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). 
+The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). 
 
 I've tried this twice and  and it works (for  "sign to run locally" case and for the "Development" case).
 
@@ -161,28 +161,20 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] space in `eval` without quotes will cause a crash!
 
 ## TODO
 
-almost done
-
-- [80%] Implement send to named objects
-      (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
-
 core
 
-- [ ] enhance `py_exec` method to create a single string from argv so it can import easily
-- [x] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
-- [ ] Refactor 'py_eval' to make it more consistent with the others
 - [ ] Refactor conversion logic from object methods
 - [ ] idea: shift type conversion to python (cython) api calls which should be easier than doing it in c
+
 
 attributes & infrastructure
 
 - [ ] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes
-- [ ] Add file location feature (try pkg/examples/scripts then absolute paths) for pythonpath
+- [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
       ```c
       PyObject *sysPath = PySys_GetObject((char*)"path");
       PyList_Append(sysPath, PyString_FromString("."));
@@ -217,6 +209,10 @@ future experiments
 
 Core Features
 
+- [x] enhance `py_exec` method to create a single string from argv so it can import easily
+- [x] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
+- [x] Refactor 'py_eval' to make it more consistent with the others
+
 - [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
 - [x] Each py object has its own python 'globals' namespace and responds to the following msgs
     - [x] `import <module>`: adds module to the namespace
@@ -230,6 +226,8 @@ Core Features
 
 Core Extra Features
 
+- [x] Implement 'send' msg, which sends typed messages to (script) named objects
+      (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [x] Add `call (anything)` method to call python callables in a namespace
 
 
@@ -281,6 +279,7 @@ Testing
 
 #### Bug Fixes
 
+- [x] space in `eval` without quotes will cause a crash!
 - [x] space in path causes "sprintf" type debugging in execfile to crash max!
 - [x] codesigning errors are due to Package being developed in Documents/...
   which causes issues. If it's a non icloud exposed folder it works ok.

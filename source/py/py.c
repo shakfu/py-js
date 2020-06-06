@@ -566,6 +566,7 @@ void py_import(t_py* x, t_symbol* s)
         py_log(x, "imported: %s", s->s_name);
     }
     return;
+
 error:
     py_handle_error(x, "import %s", s->s_name);
     outlet_bang(x->p_outlet_middle);
@@ -573,18 +574,35 @@ error:
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    char* py_argv = atom_getsym(argv)->s_name;
-    py_log(x, "%s %s", s->s_name, py_argv);
 
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
-                                  x->p_globals);
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
 
-    if (pval != NULL) {
-        py_handle_output(x, pval);
-        return;
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+
+    if (err == MAX_ERR_NONE && textsize && text) {
+        py_log(x, "eval %s", text);
     } else {
-        py_handle_error(x, "eval %s", py_argv);
+        goto error;
     }
+
+    pval = PyRun_String(text, Py_eval_input, x->p_globals, x->p_globals);
+
+    if (pval == NULL) {
+        sysmem_freeptr(text);
+        goto error;   
+    }
+
+    // success
+    sysmem_freeptr(text);
+    py_handle_output(x, pval);
+    return;
+
+error:
+    py_handle_error(x, "eval failure");
 }
 
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)

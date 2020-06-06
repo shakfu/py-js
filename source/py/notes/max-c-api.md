@@ -60,9 +60,6 @@ post("MESSLIST_ENTRY method_name %s type %d", m_entry.m_sym->s_name,
 
 ```
 
-
-
-
 ## Memory management
 
 ```c
@@ -85,8 +82,7 @@ sysmem_freehandle(hand);
 ## Typed vs Untyped Methods
 This is from the Max API docs:
 
-Max objects, such as the one you write, are C data structures in which methods are dynamically bound to functions. Your object's methods are called by Max, but your object can also call methods itself. When you call a method, it is
-essential to know whether the method you are calling is typed or not.
+Max objects, such as the one you write, are C data structures in which methods are dynamically bound to functions. Your object's methods are called by Max, but your object can also call methods itself. When you call a method, it is essential to know whether the method you are calling is typed or not.
 
 Calling a typed method requires passing arguments as an array of atoms. Calling an untyped method requires that you know the exact arguments of the C function implementing the method. In both cases, you supply a symbol that names the method.
 
