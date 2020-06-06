@@ -159,10 +159,14 @@ $ brew install clang-format
 
 The style used in this project is specified in the `.clang-format` file.
 
+
 ## BUGS
 
 
+
+
 ## TODO
+
 
 core
 
@@ -279,6 +283,8 @@ Testing
 
 #### Bug Fixes
 
+- [x] globex remains after all objects are freed.
+      solution: `PyXDECREF x->p_globals` on `py_free`
 - [x] space in `eval` without quotes will cause a crash!
 - [x] space in path causes "sprintf" type debugging in execfile to crash max!
 - [x] codesigning errors are due to Package being developed in Documents/...

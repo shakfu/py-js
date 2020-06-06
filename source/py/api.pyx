@@ -48,6 +48,10 @@ cdef class PyExternal:
     cpdef bang(self):
         px.py_bang(self.obj)
 
+    # cpdef send(self, str msg, list args):
+
+    #     mx.object_method_typed(self.obj, msg_sym, argc, argv, NULL);
+
 
 def test(key='PY_NAME'):
     if key in globals():
