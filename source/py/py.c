@@ -379,6 +379,7 @@ void py_free(t_py* x)
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
+    Py_XDECREF(x->p_globals);
     // python objects cleanup
     py_log(x, "will be deleted");
     py_global_obj_count--;
