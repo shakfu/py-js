@@ -41,7 +41,7 @@ def error(str s):
 cdef class PyExternal:
     cdef px.t_py *obj
 
-    def __cinit__(self, bytes name):
+    def __cinit__(self, bytes name=b'__main__'):
         self.obj = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(name))
 
@@ -53,13 +53,9 @@ cdef class PyExternal:
     #     mx.object_method_typed(self.obj, msg_sym, argc, argv, NULL);
 
 
-def test(key='PY_NAME'):
-    if key in globals():
-        s = globals()[key]
-        ext = PyExternal(bytes(s))
-        ext.bang()
-    else:
-        return 'nope'
+def test():
+    ext = PyExternal()
+    ext.bang()
 
 
 

@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 675.0, 163.0, 835.0, 634.0 ],
+		"rect" : [ 571.0, 163.0, 835.0, 634.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -364,7 +364,8 @@
 										"pythonpath" : ""
 									}
 ,
-									"text" : "py"
+									"text" : "py",
+									"varname" : "u143000910"
 								}
 
 							}
@@ -641,7 +642,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 675.0, 189.0, 835.0, 608.0 ],
+						"rect" : [ 571.0, 189.0, 835.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -672,13 +673,25 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-66",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 118.0, 107.0, 81.0, 22.0 ],
+									"presentation_linecount" : 2,
+									"text" : "eval api.test()"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-53",
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 473.5, 7.0, 95.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "eval globex.LST"
 								}
 
@@ -702,7 +715,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 220.0, 76.0, 22.0 ],
+									"patching_rect" : [ 14.5, 220.0, 76.0, 22.0 ],
 									"text" : "load hello.py"
 								}
 
@@ -798,7 +811,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 379.0, 61.0, 22.0 ],
+									"patching_rect" : [ 14.5, 379.0, 61.0, 22.0 ],
 									"text" : "all 1 0 0 1"
 								}
 
@@ -810,7 +823,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 347.0, 68.0, 22.0 ],
+									"patching_rect" : [ 14.5, 347.0, 68.0, 22.0 ],
 									"text" : "any 1 0 0 1"
 								}
 
@@ -834,7 +847,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 23.0, 410.0, 136.0, 60.0 ],
+									"patching_rect" : [ 14.5, 411.0, 136.0, 60.0 ],
 									"text" : "test for getting scripting from patcher, name lookup in the global registry and msg send!"
 								}
 
@@ -845,7 +858,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 79.0, 476.0, 99.0, 20.0 ],
+									"patching_rect" : [ 70.5, 477.0, 99.0, 20.0 ],
 									"text" : "name: missint"
 								}
 
@@ -858,7 +871,7 @@
 									"numoutlets" : 2,
 									"outlettype" : [ "", "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 23.0, 476.0, 50.0, 22.0 ],
+									"patching_rect" : [ 14.5, 477.0, 50.0, 22.0 ],
 									"varname" : "missint"
 								}
 
@@ -869,7 +882,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 79.0, 555.5, 83.0, 20.0 ],
+									"patching_rect" : [ 70.5, 556.5, 83.0, 20.0 ],
 									"text" : "name: mrmsg"
 								}
 
@@ -893,7 +906,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 555.5, 50.0, 22.0 ],
+									"patching_rect" : [ 14.5, 556.5, 50.0, 22.0 ],
 									"text" : "world",
 									"varname" : "mrmsg"
 								}
@@ -928,7 +941,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 79.0, 502.0, 99.0, 20.0 ],
+									"patching_rect" : [ 70.5, 503.0, 99.0, 20.0 ],
 									"text" : "name: bigbanger"
 								}
 
@@ -941,7 +954,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 23.0, 502.0, 50.0, 50.0 ],
+									"patching_rect" : [ 14.5, 503.0, 50.0, 50.0 ],
 									"varname" : "bigbanger"
 								}
 
@@ -953,7 +966,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 193.0, 127.0, 22.0 ],
+									"patching_rect" : [ 14.5, 193.0, 127.0, 22.0 ],
 									"text" : "eval api.np.__name__"
 								}
 
@@ -965,7 +978,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 166.0, 151.0, 22.0 ],
+									"patching_rect" : [ 14.5, 166.0, 151.0, 22.0 ],
 									"text" : "eval api.np.version.version"
 								}
 
@@ -1028,7 +1041,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 140.0, 81.0, 22.0 ],
+									"patching_rect" : [ 14.5, 140.0, 81.0, 22.0 ],
 									"text" : "api.total 1 2 3"
 								}
 
@@ -1040,7 +1053,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 114.0, 84.0, 22.0 ],
+									"patching_rect" : [ 14.5, 114.0, 84.0, 22.0 ],
 									"text" : "api.echo 1 2 3"
 								}
 
@@ -1125,7 +1138,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 7.0, 29.5, 22.0 ],
+									"patching_rect" : [ 2.0, 3.0, 29.5, 22.0 ],
 									"text" : "bye"
 								}
 
@@ -1137,7 +1150,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 38.0, 144.0, 22.0 ],
+									"patching_rect" : [ 2.0, 34.0, 144.0, 22.0 ],
 									"text" : "sprintf eval api.error('%s')"
 								}
 
@@ -1149,7 +1162,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 315.0, 41.0, 22.0 ],
+									"patching_rect" : [ 14.5, 315.0, 41.0, 22.0 ],
 									"text" : "eval b"
 								}
 
@@ -1161,7 +1174,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 281.0, 77.0, 22.0 ],
+									"patching_rect" : [ 14.5, 281.0, 77.0, 22.0 ],
 									"text" : "read hello.py"
 								}
 
@@ -1173,7 +1186,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 249.0, 33.0, 22.0 ],
+									"patching_rect" : [ 14.5, 249.0, 33.0, 22.0 ],
 									"text" : "read"
 								}
 
@@ -1209,7 +1222,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 74.0, 64.0, 114.0, 22.0 ],
+									"patching_rect" : [ 48.0, 58.0, 114.0, 22.0 ],
 									"text" : "eval api.post('hello')"
 								}
 
@@ -1221,7 +1234,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 100.5, 88.0, 87.0, 22.0 ],
+									"patching_rect" : [ 86.5, 84.0, 87.0, 22.0 ],
 									"text" : "eval api.hello()"
 								}
 
@@ -1233,7 +1246,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 141.0, 114.0, 66.0, 22.0 ],
+									"patching_rect" : [ 149.0, 131.0, 66.0, 22.0 ],
 									"text" : "eval api.txt"
 								}
 
@@ -1245,7 +1258,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 177.0, 140.0, 61.0, 22.0 ],
+									"patching_rect" : [ 192.0, 155.0, 61.0, 22.0 ],
 									"text" : "import api"
 								}
 
@@ -1412,8 +1425,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "10"
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
 								}
 
 							}
@@ -1456,7 +1468,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "marty"
+									"varname" : "u136000918"
 								}
 
 							}
@@ -1825,6 +1837,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-65", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-66", 0 ]
 								}
 
 							}
