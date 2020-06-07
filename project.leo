@@ -95,6 +95,17 @@
 </v>
 </v>
 <v t="sta.20200602110836.1"><vh>src</vh>
+<v t="sta.20200602145459.1"><vh>@clean py.h</vh>
+<v t="sta.20200602150733.1"><vh>includes</vh></v>
+<v t="sta.20200602150814.1"><vh>constants</vh></v>
+<v t="sta.20200602145807.1"><vh>global variables</vh></v>
+<v t="sta.20200602145517.1"><vh>object types</vh></v>
+<v t="sta.20200602150052.1"><vh>function types</vh></v>
+<v t="sta.20200602150129.1"><vh>enums</vh></v>
+<v t="sta.20200602150250.1"><vh>macros</vh></v>
+<v t="sta.20200602150324.1"><vh>methods</vh></v>
+<v t="sta.20200602150415.1"><vh>helpers</vh></v>
+</v>
 <v t="sta.20200602110841.1"><vh>@clean py.c</vh>
 <v t="sta.20200602131126.1"><vh>includes</vh></v>
 <v t="sta.20200602131131.1"><vh>globals</vh></v>
@@ -129,7 +140,9 @@
 <v t="sta.20200602120318.1"><vh>core</vh>
 <v t="sta.20200602120251.20"><vh>void py_import</vh></v>
 <v t="sta.20200602120251.21"><vh>void py_eval</vh></v>
+<v t="sta.20200607084251.1"><vh>void py_eval2</vh></v>
 <v t="sta.20200602120251.22"><vh>void py_exec</vh></v>
+<v t="sta.20200607084300.1"><vh>void py_exec2</vh></v>
 <v t="sta.20200602120251.23"><vh>void py_execfile</vh></v>
 </v>
 <v t="sta.20200602120740.1"><vh>extra</vh>
@@ -143,17 +156,6 @@
 <v t="sta.20200602120251.12"><vh>void py_send</vh></v>
 <v t="sta.20200602120251.26"><vh>void py_globex</vh></v>
 </v>
-</v>
-<v t="sta.20200602145459.1"><vh>@clean py.h</vh>
-<v t="sta.20200602150733.1"><vh>includes</vh></v>
-<v t="sta.20200602150814.1"><vh>constants</vh></v>
-<v t="sta.20200602145807.1"><vh>global variables</vh></v>
-<v t="sta.20200602145517.1"><vh>object types</vh></v>
-<v t="sta.20200602150052.1"><vh>function types</vh></v>
-<v t="sta.20200602150129.1"><vh>enums</vh></v>
-<v t="sta.20200602150250.1"><vh>macros</vh></v>
-<v t="sta.20200602150324.1"><vh>methods</vh></v>
-<v t="sta.20200602150415.1"><vh>helpers</vh></v>
 </v>
 </v>
 </v>
@@ -183,8 +185,18 @@
 
     hashtab_clear(py_global_registry);
 
-    object_method(x-&gt;p_patcher, gensym("iterate"), 
-        (method)py_scan_callback, x, PI_DEEP | PI_WANTBOX, &amp;result);
+    if (x-&gt;p_patcher == NULL) {
+        post("p_patcher == NULL");
+    } else {
+        post("p_patcher != NULL");
+    }
+
+    if (x-&gt;p_patcher) {
+        object_method(x-&gt;p_patcher, gensym("iterate"), (method)py_scan_callback, x,
+                      PI_DEEP | PI_WANTBOX, &amp;result);        
+    } else {
+        py_error(x, "scan failed");
+    }
 }
 
 </t>
@@ -263,7 +275,7 @@
     // t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
     // if (messlist) {
     //     post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
-    //     post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);        
+    //     post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
     // }
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
@@ -309,10 +321,9 @@ error:
 
         Py_XDECREF(ptraceback);
 
-        error("[py '%s'] &lt;- (%s): %s", x-&gt;p_name-&gt;s_name, msg, pvalue_str);
+        error("[py %s] &lt;- (%s): %s", x-&gt;p_name-&gt;s_name, msg, pvalue_str);
     }
 }
-
 
 </t>
 <t tx="sta.20200602120251.14">void py_dblclick(t_py* x)
@@ -347,7 +358,7 @@ error:
 
     if (s == gensym("")) { // if no arg supplied ask for file
         filename[0] = 0;
-        
+
         if (open_dialog(filename, &amp;path, &amp;outtype, &amp;filetype, 1))
             // non-zero: cancelled
             return;
@@ -442,6 +453,7 @@ error:
         py_log(x, "imported: %s", s-&gt;s_name);
     }
     return;
+
 error:
     py_handle_error(x, "import %s", s-&gt;s_name);
     outlet_bang(x-&gt;p_outlet_middle);
@@ -453,8 +465,8 @@ error:
     char* py_argv = atom_getsym(argv)-&gt;s_name;
     py_log(x, "%s %s", s-&gt;s_name, py_argv);
 
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, 
-        x-&gt;p_globals, x-&gt;p_globals);
+    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x-&gt;p_globals,
+                                  x-&gt;p_globals);
 
     if (pval != NULL) {
         py_handle_output(x, pval);
@@ -467,36 +479,28 @@ error:
 </t>
 <t tx="sta.20200602120251.22">void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    long textsize = 0;
-    char* text = NULL;
+    char* py_argv = NULL;
     PyObject* pval = NULL;
-    t_max_err err;
 
-    err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
-        py_log(x, "exec %s", text);
-    } else {
+    py_argv = atom_getsym(argv)-&gt;s_name;
+    if (py_argv == NULL) {
         goto error;
     }
 
-    pval = PyRun_String(text, Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+    pval = PyRun_String(py_argv, Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
     if (pval == NULL) {
-        sysmem_freeptr(text);
         goto error;
     }
+    outlet_bang(x-&gt;p_outlet_right);
 
     // success cleanup
-    sysmem_freeptr(text);
     Py_DECREF(pval);
-    // success bang
-    outlet_bang(x-&gt;p_outlet_right);
+    py_log(x, "exec %s", py_argv);
     return;
 
 error:
-    py_handle_error(x, "exec failed");
+    py_handle_error(x, "exec %s", py_argv);
     Py_XDECREF(pval);
-    // fail bang
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
@@ -661,7 +665,7 @@ error:
     py_callable = PyRun_String(s-&gt;s_name, Py_eval_input, x-&gt;p_globals,
                                x-&gt;p_globals);
     if (py_callable == NULL) {
-        py_error(x, "could not evaluate '%s'", s-&gt;s_name);
+        py_error(x, "could not evaluate %s", s-&gt;s_name);
         goto error;
     }
 
@@ -750,7 +754,6 @@ error:
     }
     goto handle_output; // this is redundant but safe
 
-
 handle_output:
 
     py_handle_output(x, pval);
@@ -818,7 +821,9 @@ error:
     // core python
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
+    class_addmethod(c, (method)py_eval2,      "eval2",      A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
+    class_addmethod(c, (method)py_exec2,      "exec2",      A_GIMME,  0);
     class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM, 0);
 
     // extra python
@@ -892,7 +897,7 @@ error:
         vsprintf(msg, fmt, va);
         va_end(va);
 
-        post("[py '%s']: %s", x-&gt;p_name-&gt;s_name, msg);
+        post("[py %s]: %s", x-&gt;p_name-&gt;s_name, msg);
     }
 }
 
@@ -906,7 +911,7 @@ error:
     vsprintf(msg, fmt, va);
     va_end(va);
 
-    error("[py '%s']: %s", x-&gt;p_name-&gt;s_name, msg);
+    error("[py %s]: %s", x-&gt;p_name-&gt;s_name, msg);
 }
 
 </t>
@@ -917,6 +922,7 @@ error:
     x = (t_py*)object_alloc(py_class);
 
     if (x) {
+
         // core
         if (py_global_obj_count == 0) {
             x-&gt;p_name = gensym("__main__"); // first is __main__
@@ -955,6 +961,12 @@ error:
         if (x-&gt;p_box == NULL)
             error("patcher object not created.");
 
+        // create scripting name
+        t_max_err err = jbox_set_varname(x-&gt;p_box, x-&gt;p_name);
+        if (err != MAX_ERR_NONE) {
+            error("could not set scripting name");
+        }
+
         // python init
         py_init(x);
 
@@ -981,11 +993,11 @@ error:
 
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
-        py_error(x, "could not add 'api' to builtin modules table");
+        py_error(x, "could not add api to builtin modules table");
     }
 
     if (PyImport_AppendInittab("globex", PyInit_globex) == -1) {
-        py_error(x, "could not add 'globex' to builtin modules table");
+        py_error(x, "could not add globex to builtin modules table");
     }
 
     // Py_SetProgramName(program);
@@ -1022,6 +1034,7 @@ error:
     if (x-&gt;p_code)
         sysmem_freehandle(x-&gt;p_code);
 
+    Py_XDECREF(x-&gt;p_globals);
     // python objects cleanup
     py_log(x, "will be deleted");
     py_global_obj_count--;
@@ -1173,7 +1186,9 @@ void py_free(t_py* x);
 /* core python methods */
 void py_import(t_py* x, t_symbol* s);
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
 
 /* extra python methods */
@@ -3094,10 +3109,10 @@ int add_history(char*);
     varname = jbox_get_varname(box);
     obj = jbox_get_object(box);
 
-    // lifted from scheme-for-max (Thanks, Iain!)
-    if (varname != gensym("")) {
-        py_log(x, "storing object '%s' in the global registry",
-               varname-&gt;s_name);
+    // STRANGE BUG: single quotes in py_log cause a crash but not with post!!
+    if (varname &amp;&amp; varname != gensym("")) {
+        // post("XXXX -&gt; '%s'", varname-&gt;s_name);
+        py_log(x, "storing object %s in the global registry", varname-&gt;s_name);
         hashtab_store(py_global_registry, varname, obj);
     }
 
@@ -3137,6 +3152,7 @@ int add_history(char*);
         }
     }
 }
+
 </t>
 <t tx="sta.20200605120324.1">void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -3229,8 +3245,8 @@ error:
         Py_ssize_t seq_size = PySequence_Length(pval);
 
         if (seq_size &lt;= 0) {
-            py_error(x, 
-                "cannot convert python sequence with length &lt;= 0 to atoms");
+            py_error(
+                x, "cannot convert python sequence with length &lt;= 0 to atoms");
             goto error;
         }
 
@@ -3292,5 +3308,76 @@ error:
 }
 </t>
 <t tx="sta.20200606073716.1"></t>
+<t tx="sta.20200607084251.1">void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+
+    err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+                       // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUxOTE);
+
+    if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
+        py_log(x, "eval %s", text);
+    } else {
+        goto error;
+    }
+
+    pval = PyRun_String(text, Py_eval_input, x-&gt;p_globals, x-&gt;p_globals);
+
+    if (pval == NULL) {
+        sysmem_freeptr(text);
+        goto error;   
+    }
+
+    // success
+    sysmem_freeptr(text);
+    py_handle_output(x, pval);
+    return;
+
+error:
+    py_handle_error(x, "eval failure");
+}
+
+</t>
+<t tx="sta.20200607084300.1">void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+
+    err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
+        py_log(x, "exec %s", text);
+    } else {
+        goto error;
+    }
+
+    pval = PyRun_String(text, Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+    if (pval == NULL) {
+        sysmem_freeptr(text);
+        goto error;
+    }
+
+    // success cleanup
+    sysmem_freeptr(text);
+    Py_DECREF(pval);
+    // success bang
+    outlet_bang(x-&gt;p_outlet_right);
+    return;
+
+error:
+    py_handle_error(x, "exec failed");
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x-&gt;p_outlet_middle);
+}
+
+</t>
 </tnodes>
 </leo_file>

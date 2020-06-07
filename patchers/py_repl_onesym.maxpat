@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 75.0, 97.0, 467.0, 390.0 ],
+		"rect" : [ 149.0, 189.0, 467.0, 390.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -134,7 +134,8 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 198.833333333333485, 658.0, 227.416666666666515, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 1.0, 26.0, 276.0, 22.0 ]
+					"presentation_rect" : [ 1.0, 26.0, 276.0, 22.0 ],
+					"text" : "15"
 				}
 
 			}
@@ -153,6 +154,7 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-44",
+					"int" : 1,
 					"maxclass" : "gswitch",
 					"numinlets" : 3,
 					"numoutlets" : 1,
@@ -409,11 +411,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-17",
+					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 238.833333333333485, 355.0, 96.0, 22.0 ]
+					"patching_rect" : [ 238.833333333333485, 355.0, 96.0, 35.0 ],
+					"text" : "13 symbol sum([1\\,2\\,3])"
 				}
 
 			}
@@ -430,7 +434,7 @@
 					"bgfillcolor_proportion" : 0.0,
 					"bgfillcolor_type" : "color",
 					"id" : "obj-33",
-					"items" : [ ">>>", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "read" ],
+					"items" : [ ">>>", ",", "import", ",", "eval", ",", "eval2", ",", "exec", ",", "exec2", ",", "execfile", ",", "load", ",", "read", ",", "send" ],
 					"maxclass" : "umenu",
 					"numinlets" : 1,
 					"numoutlets" : 3,

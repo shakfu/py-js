@@ -170,12 +170,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 core
 
-- [ ] finalize method interface `py_anything` vs 'py_call'
-      rename `py_anything` -> `py_call`, `py_call` -> `py_code`
-      create new `py_anything` with heuristics to decide whether to delegate
-      to `py_call` or `py_anything`.
+- [ ] finalize method interface `py_anything` vs 'py_call'. rename `py_anything` -> `py_call`, `py_call` -> `py_code` create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_anything`.
 
-- [ ] check whether setting a normal attr name, can also set scripting name
 
 extension
 
@@ -238,6 +234,7 @@ Core Features
 
 Core Extra Features
 
+- [x] check whether setting a normal attr name, can also set scripting name
 - [x] Implement 'send' msg, which sends typed messages to (script) named objects
       (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 - [x] Add `call (anything)` method to call python callables in a namespace
@@ -291,8 +288,7 @@ Testing
 
 #### Bug Fixes
 
-- [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but
-      post alone with the same does not cause a crash. Should simplify logging!
+- [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
 - [x] globex remains after all objects are freed.
       solution: `PyXDECREF x->p_globals` on `py_free`
 - [x] space in `eval` without quotes will cause a crash!
