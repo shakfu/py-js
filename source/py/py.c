@@ -206,8 +206,9 @@ void ext_main(void* r)
     // core python
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
-    class_addmethod(c, (method)py_eval2,      "eval2",       A_GIMME,  0);
+    class_addmethod(c, (method)py_eval2,      "eval2",      A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
+    class_addmethod(c, (method)py_exec2,      "exec2",      A_GIMME,  0);
     class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM, 0);
 
     // extra python
@@ -582,7 +583,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
-void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
+void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = atom_getsym(argv)->s_name;
     py_log(x, "%s %s", s->s_name, py_argv);
@@ -598,7 +599,7 @@ void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
-void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
+void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
 
     long textsize = 0;
@@ -607,7 +608,8 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_max_err err;
 
     err = atom_gettext(argc, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE);
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+                       // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUxOTE);
 
     if (err == MAX_ERR_NONE && textsize && text) {
         py_log(x, "eval %s", text);
@@ -632,6 +634,33 @@ error:
 }
 
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    char* py_argv = NULL;
+    PyObject* pval = NULL;
+
+    py_argv = atom_getsym(argv)->s_name;
+    if (py_argv == NULL) {
+        goto error;
+    }
+
+    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    outlet_bang(x->p_outlet_right);
+
+    // success cleanup
+    Py_DECREF(pval);
+    py_log(x, "exec %s", py_argv);
+    return;
+
+error:
+    py_handle_error(x, "exec %s", py_argv);
+    Py_XDECREF(pval);
+    outlet_bang(x->p_outlet_middle);
+}
+
+void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     long textsize = 0;
     char* text = NULL;
@@ -665,34 +694,6 @@ error:
     // fail bang
     outlet_bang(x->p_outlet_middle);
 }
-
-// void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     char* py_argv = NULL;
-//     PyObject* pval = NULL;
-
-//     py_argv = atom_getsym(argv)->s_name;
-//     if (py_argv == NULL) {
-//         goto error;
-//     }
-
-//     pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
-//     if (pval == NULL) {
-//         goto error;
-//     }
-//     outlet_bang(x->p_outlet_right);
-
-//     // success cleanup
-//     Py_DECREF(pval);
-//     py_log(x, "exec %s", py_argv);
-//     return;
-
-// error:
-//     handle_py_error(x, "exec %s", py_argv);
-//     Py_XDECREF(pval);
-//     outlet_bang(x->p_outlet_middle);
-// }
-
 
 void py_execfile(t_py* x, t_symbol* s)
 {
