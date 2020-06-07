@@ -25,6 +25,11 @@ import numpy
 import numpy as np
 
 
+DEF MAX_CHARS = 32767
+
+
+
+
 
 txt = "Hey MAX!"
 
@@ -75,26 +80,26 @@ cdef class PyAtom:
             self.argc = 0
             self.argv = NULL
 
-    cdef cstr_to_atoms(self, char *parsestr):
-        cdef long ac = 0
-        cdef mx.t_atom *av = NULL
-        cdef mx.t_max_err err = mx.atom_setparse(&ac, &av, parsestr)
-        #t_max_err atom_setparse(long *ac, t_atom **av, C74_CONST char *parsestr)
 
-    cdef atoms_to_cstr(self, long argc, mx.t_atom *argv):
-        """ atoms -> c string """
-        cdef long textsize = 0
-        cdef char* text = NULL
-        cdef mx.t_max_err err = mx.atom_gettext(argc, argv, &textsize, &text, 
-            mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
-        #t_max_err atom_gettext(long ac, t_atom *av, long *textsize, char **text, long flags);
+    cdef int from_cstr(self, char *parsestr) except -1:
+        cdef mx.t_max_err err = mx.atom_setparse(&self.argc, &self.argv, parsestr)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
+        else:
+            return 0
 
+    cpdef from_pstr(self, str parsestr):
+        cdef char cparsestring[MAX_CHARS]
+        cparsestring = unicode.PyUnicode_AsUTF8(parsestr)
+        cdef mx.t_max_err err = mx.atom_setparse(&self.argc, &self.argv, cparsestring)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
 
-    cdef str atoms_to_pstr(self, long argc, mx.t_atom *argv):
+    cpdef str to_pstr(self):
         """ atoms -> python string """
         cdef long textsize = 0
         cdef char* text = NULL
-        cdef mx.t_max_err err = mx.atom_gettext(argc, argv, &textsize, &text, 
+        cdef mx.t_max_err err = mx.atom_gettext(self.argc, self.argv, &textsize, &text, 
             mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
         pstr = unicode.PyUnicode_FromString(text)
         mx.sysmem_freeptr(text)
