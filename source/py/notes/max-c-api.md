@@ -1,5 +1,28 @@
 # Max C API Notes
 
+
+## Memory Management
+
+
+see: https://cycling74.com/forums/multislider-like-ui
+
+example
+
+```c
+t_max_err MY_getvalueof(t_MY *x, long *ac, t_atom **av)
+{
+    if (ac && av) {
+        char alloc;
+        if (atom_alloc_array(x->listlen, ac, av, &alloc)) {
+            return MAX_ERR_OUT_OF_MEM;
+        }
+        atom_setfloat_array(*ac, *av, x->listlen, x->myval);
+    }
+    return MAX_ERR_NONE;
+}
+```
+
+
 ## Getting the Type of Methods Programmatically
 
 methods to get method type
