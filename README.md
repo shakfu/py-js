@@ -291,6 +291,8 @@ Testing
 
 #### Bug Fixes
 
+- [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but
+      post alone with the same does not cause a crash. Should simplify logging!
 - [x] globex remains after all objects are freed.
       solution: `PyXDECREF x->p_globals` on `py_free`
 - [x] space in `eval` without quotes will cause a crash!
