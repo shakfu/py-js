@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 571.0, 163.0, 835.0, 634.0 ],
+		"rect" : [ 287.0, 163.0, 836.0, 634.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 835.0, 608.0 ],
+						"rect" : [ 0.0, 26.0, 836.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 1,
 						"default_fontsize" : 12.0,
@@ -365,7 +365,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u143000910"
+									"varname" : "__main__"
 								}
 
 							}
@@ -642,7 +642,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 571.0, 189.0, 835.0, 608.0 ],
+						"rect" : [ 287.0, 189.0, 836.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -679,7 +679,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 118.0, 107.0, 81.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "eval api.test()"
 								}
 
@@ -1468,7 +1467,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u136000918"
+									"varname" : "u988000502"
 								}
 
 							}
@@ -1893,7 +1892,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 835.0, 608.0 ],
+						"rect" : [ 0.0, 26.0, 836.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
