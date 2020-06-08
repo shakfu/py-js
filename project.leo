@@ -7,9 +7,14 @@
 <find_panel_settings/>
 <vnodes>
 <v t="sta.20200602165810.1"><vh>project py</vh>
+<v t="sta.20200608031946.1"><vh>startup</vh>
+<v t="sta.20200608031546.1"><vh>scripts</vh>
+<v t="sta.20200608031559.1"><vh>@script at_directory</vh></v>
+</v>
 <v t="sta.20200602165801.1"><vh>@settings</vh>
 <v t="sta.20200602165801.470"><vh>Import options</vh>
 <v t="sta.20200602165801.471"><vh>@bool add-context-to-headlines = False</vh></v>
+</v>
 </v>
 </v>
 <v t="sta.20200602110822.1"><vh>py</vh>
@@ -94,7 +99,7 @@
 <v t="sta.20200602170553.6"><vh>test_eval</vh></v>
 </v>
 </v>
-<v t="sta.20200602110836.1"><vh>src</vh>
+<v t="sta.20200602110836.1"><vh>@chapter src</vh>
 <v t="sta.20200602145459.1"><vh>@clean py.h</vh>
 <v t="sta.20200602150733.1"><vh>includes</vh></v>
 <v t="sta.20200602150814.1"><vh>constants</vh></v>
@@ -104,7 +109,6 @@
 <v t="sta.20200602150129.1"><vh>enums</vh></v>
 <v t="sta.20200602150250.1"><vh>macros</vh></v>
 <v t="sta.20200602150324.1"><vh>methods</vh></v>
-<v t="sta.20200602150415.1"><vh>helpers</vh></v>
 </v>
 <v t="sta.20200602110841.1"><vh>@clean py.c</vh>
 <v t="sta.20200602131126.1"><vh>includes</vh></v>
@@ -112,8 +116,6 @@
 <v t="sta.20200602120540.1"><vh>helpers</vh>
 <v t="sta.20200602120251.4"><vh>void py_log</vh></v>
 <v t="sta.20200602120251.5"><vh>void py_error</vh></v>
-<v t="sta.20200602120251.13"><vh>void py_handle_error</vh></v>
-<v t="sta.20200606044751.1"><vh>void py_handle_output</vh></v>
 </v>
 <v t="sta.20200602120514.1"><vh>init &amp; free</vh>
 <v t="sta.20200602120251.3"><vh>void ext_main</vh></v>
@@ -128,14 +130,9 @@
 <v t="sta.20200602122226.1"><vh>testing</vh>
 <v t="sta.20200602122244.1"><vh>void py_bang</vh></v>
 </v>
-<v t="sta.20200602120447.1"><vh>editor</vh>
-<v t="sta.20200602120251.14"><vh>void py_dblclick</vh></v>
-<v t="sta.20200605120205.1"><vh>void py_locatefile</vh></v>
-<v t="sta.20200602120251.15"><vh>void py_read</vh></v>
-<v t="sta.20200602120251.16"><vh>void py_doread</vh></v>
-<v t="sta.20200602120251.17"><vh>void py_edclose</vh></v>
-<v t="sta.20200602120251.18"><vh>void py_edsave</vh></v>
-<v t="sta.20200602120251.19"><vh>void py_load</vh></v>
+<v t="sta.20200608042323.1"><vh>common handlers</vh>
+<v t="sta.20200602120251.13"><vh>void py_handle_error</vh></v>
+<v t="sta.20200606044751.1"><vh>void py_handle_output</vh></v>
 </v>
 <v t="sta.20200602120318.1"><vh>core</vh>
 <v t="sta.20200602120251.20"><vh>void py_import</vh></v>
@@ -146,15 +143,25 @@
 <v t="sta.20200602120251.23"><vh>void py_execfile</vh></v>
 </v>
 <v t="sta.20200602120740.1"><vh>extra</vh>
-<v t="sta.20200605120324.1"><vh>void py_call</vh></v>
+<v t="sta.20200602120251.25"><vh>void py_call</vh></v>
 <v t="sta.20200602120251.24"><vh>void py_assign</vh></v>
-<v t="sta.20200602120251.25"><vh>void py_anything</vh></v>
+<v t="sta.20200605120324.1"><vh>void py_code</vh></v>
 </v>
 <v t="sta.20200606073716.1"><vh>interobject</vh>
 <v t="sta.20200602120251.11"><vh>void py_scan</vh></v>
 <v t="sta.20200603072826.1"><vh>long py_scan_callback</vh></v>
 <v t="sta.20200602120251.12"><vh>void py_send</vh></v>
+<v t="sta.20200608043930.1"><vh>void py_lookup</vh></v>
 <v t="sta.20200602120251.26"><vh>void py_globex</vh></v>
+</v>
+<v t="sta.20200602120447.1"><vh>editor</vh>
+<v t="sta.20200602120251.14"><vh>void py_dblclick</vh></v>
+<v t="sta.20200605120205.1"><vh>void py_locatefile</vh></v>
+<v t="sta.20200602120251.15"><vh>void py_read</vh></v>
+<v t="sta.20200602120251.16"><vh>void py_doread</vh></v>
+<v t="sta.20200602120251.17"><vh>void py_edclose</vh></v>
+<v t="sta.20200602120251.18"><vh>void py_edsave</vh></v>
+<v t="sta.20200602120251.19"><vh>void py_load</vh></v>
 </v>
 </v>
 </v>
@@ -650,28 +657,30 @@ error:
 }
 
 </t>
-<t tx="sta.20200602120251.25">void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
+<t tx="sta.20200602120251.25">void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    char* callable_name = NULL;
     PyObject* pval = NULL;
     PyObject* py_callable = NULL;
     PyObject* py_argslist = NULL; // python list
     PyObject* py_args = NULL;     // python tuple
 
-    if (s == gensym("")) {
-        py_error(x, "could not retrieve callable name", s-&gt;s_name);
+
+    // first atom in argv must be a symbol
+    if (argv-&gt;a_type != A_SYM) {
+        py_error(x, "first atom must be a symbol!");
         goto error;
+
+    } else {
+        callable_name = atom_getsym(argv)-&gt;s_name;
+        py_log(x, "callable_name: %s", callable_name);
     }
 
-    py_callable = PyRun_String(s-&gt;s_name, Py_eval_input, x-&gt;p_globals,
+    py_callable = PyRun_String(callable_name, Py_eval_input, x-&gt;p_globals,
                                x-&gt;p_globals);
     if (py_callable == NULL) {
-        py_error(x, "could not evaluate %s", s-&gt;s_name);
+        py_error(x, "could not evaluate %s", callable_name);
         goto error;
-    }
-
-    if (!PyCallable_Check(py_callable)) {
-        pval = py_callable;
-        goto handle_output;
     }
 
     if ((py_argslist = PyList_New(0)) == NULL) {
@@ -679,7 +688,7 @@ error:
         goto error;
     }
 
-    for (int i = 0; i &lt; argc; i++) {
+    for (int i = 1; i &lt; argc; i++) {
         switch ((argv + i)-&gt;a_type) {
         case A_FLOAT: {
             double c_float = atom_getfloat(argv + i);
@@ -722,12 +731,13 @@ error:
         }
     }
 
-    if (PyList_Size(py_argslist) != argc) {
-        py_error(x, "PyList_Size(list) != argc");
-        goto error;
-    } else {
-        py_log(x, "length of list: %d", PyList_Size(py_argslist));
-    }
+    py_log(x, "length of argc:%ld list: %d", argc, PyList_Size(py_argslist));
+    // if (PyList_Size(py_argslist) != argc) {
+    //     py_error(x, "PyList_Size(list) != argc");
+    //     goto error;
+    // } else {
+    //     py_log(x, "length of list: %d", PyList_Size(py_argslist));
+    // }
 
     // convert py_args to tuple
     py_args = PyList_AsTuple(py_argslist);
@@ -816,9 +826,8 @@ error:
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
-    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
 
-    // core python
+    // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
     class_addmethod(c, (method)py_eval2,      "eval2",      A_GIMME,  0);
@@ -826,18 +835,20 @@ error:
     class_addmethod(c, (method)py_exec2,      "exec2",      A_GIMME,  0);
     class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM, 0);
 
-    // extra python
+    // core extra
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
-    class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,  0);
+    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
+    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
     class_addmethod(c, (method)py_globex,     "globex",     A_LONG,   0);
     
-    /* you CAN'T call this from the patcher */
-    class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
-
     // meta
+    class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
     class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
+
+    // interobject
     class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
     class_addmethod(c, (method)py_send,       "send",       A_GIMME,   0);
+    class_addmethod(c, (method)py_lookup,     "lookup",     A_SYM,     0);
 
     // code editor
     class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
@@ -1158,7 +1169,9 @@ typedef struct _py {
 <t tx="sta.20200602145807.1">/*--------------------------------------------------------------------------*/
 // GLOBALS
 
-static int py_global_obj_count;
+t_class* py_class; // global pointer to object class
+static int py_global_obj_count; // when 0 then free interpreter
+static t_hashtab* py_global_registry; // global object lookups
 </t>
 <t tx="sta.20200602150052.1">/*--------------------------------------------------------------------------*/
 // FUNCTION TYPES
@@ -1182,6 +1195,15 @@ typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 /* object creation and destruction */
 void* py_new(t_symbol* s, long argc, t_atom* argv);
 void py_free(t_py* x);
+void py_init(t_py* x);
+
+/* helpers */
+void py_log(t_py* x, char* fmt, ...);
+void py_error(t_py* x, char* fmt, ...);
+
+/* common handlers */
+void py_handle_error(t_py* x, char* fmt, ...);
+void py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
 void py_import(t_py* x, t_symbol* s);
@@ -1192,13 +1214,23 @@ void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
 
 /* extra python methods */
-// void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_globex(t_py* x, long n);
 
-/* documentation and meta info */
+/* informational */
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
+
+/* testing */
+void py_bang(t_py* x);
+
+/* interobject communications */
+void py_scan(t_py* x);
+long py_scan_callback(t_py* x, t_object* obj);
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_lookup(t_py* x, t_symbol* s);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
@@ -1206,23 +1238,10 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
+void py_locatefile(t_py* x, char* filename);
 void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
 
-/* used for testing */
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_bang(t_py* x);
-void py_scan(t_py* x);
-long py_scan_callback(t_py* x, t_object* obj);
-void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_globex(t_py* x, long n);
-</t>
-<t tx="sta.20200602150415.1">/*--------------------------------------------------------------------------*/
-// HELPERS
 
-void py_init(t_py* x);
-void py_locatefile(t_py* x, char* filename);
-void py_log(t_py* x, char* fmt, ...);
-void handle_py_error(t_py* x, char* fmt, ...);
 </t>
 <t tx="sta.20200602150733.1">/*--------------------------------------------------------------------------*/
 // INCLUDES
@@ -1239,8 +1258,6 @@ void handle_py_error(t_py* x, char* fmt, ...);
 // CONSTANTS
 
 #define PY_MAX_ATOMS 128
-#define PY_MAX_NAME "PY_NAME"
-//#define PY_NAMESPACE "PY_SPACE"
 #define MAX_IMPORTS 3
 </t>
 <t tx="sta.20200602151837.1">@path source/py/notes</t>
@@ -3154,7 +3171,7 @@ int add_history(char*);
 }
 
 </t>
-<t tx="sta.20200605120324.1">void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
+<t tx="sta.20200605120324.1">void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     long textsize = 0;
     char* text = NULL;
@@ -3376,6 +3393,125 @@ error:
     Py_XDECREF(pval);
     // fail bang
     outlet_bang(x-&gt;p_outlet_middle);
+}
+
+</t>
+<t tx="sta.20200608031546.1">
+@language python</t>
+<t tx="sta.20200608031559.1">from os import listdir
+from fnmatch import fnmatch
+from os.path import join, abspath, basename, normpath, isfile, isdir, splitext
+
+DEFAULT_IGNORE = ['*.pyc', '*.leo', '*.gif', '*.png', '*.jpg', '*.json']
+DEFAULT_PARSE = { 'py':'clean', 'txt':'auto', 'css':'auto', 'html':'auto'}
+
+
+class LeoDirectory(object):
+    def __init__(self, path, to_parse=DEFAULT_PARSE, to_ignore=DEFAULT_IGNORE,
+            relative_paths=True, sort=True):
+        self.path = path
+        self.to_parse = to_parse
+        self.to_ignore = to_ignore
+        self.relative_paths = relative_paths
+        self.sort = sort
+        assert isdir(path), "%s is not a directory" % path
+
+    def match_to_ignore(self, string):
+        return any(fnmatch(string, p) for p in self.to_ignore)
+
+    def is_ignorable(self, string):
+        return any([string.startswith('.'), self.match_to_ignore(string)])
+
+    def parse(self, path):
+        name, ext = splitext(path)
+        ext = ext[1:]
+        return name, ext
+
+    def is_parsable(self, path):
+        if isfile(path):
+            name, ext = self.parse(path)
+            if ext in self.to_parse:
+                return True
+        if isdir(path):
+            # is directory can pass
+            g.es('---&gt; '+ path)
+            return True
+
+        return False
+
+    def headline_from_path(self, path):
+        filename = basename(path)
+        name, ext = self.parse(path)
+        nodetype = self.to_parse[ext] if (ext in self.to_parse) else 'asis'
+        return "@%s %s" % (nodetype, filename)
+
+    def body_from_path(self, path):
+        body = "@path %s" % normpath(path)
+        return body
+
+    def leo_from_directory(self, directory, parent=None, isroot=True, sort=True):
+        if not self.relative_paths: directory = abspath(directory)
+        if isroot:
+            body = self.body_from_path(directory)
+            c.setBodyString(p, body)
+
+        dirlist = sorted(listdir(directory)) if sort else listdir(directory)
+        for name in dirlist:
+            if self.is_ignorable(name):
+                g.es("ignore: "+name)
+                continue
+            path = join(directory, name)
+            if isfile(path):
+                g.es('file:', path)
+                headline = self.headline_from_path(path)
+                if parent:
+                    node = parent
+                else:
+                    node = p
+                child = node.insertAsLastChild()
+                child.initHeadString(headline)
+            else:
+                g.es('dir:', path)
+                headline = basename(path)
+                body = self.body_from_path(path)
+                if parent:
+                    node = parent
+                else:
+                    node = p
+                child = node.insertAsLastChild()
+                child.initHeadString(headline)
+                child.initBodyString(body)
+                self.leo_from_directory(path, parent=child, isroot=False)
+
+    def render(self):
+        try:
+            self.leo_from_directory(self.path, sort=self.sort)
+        finally:
+            c.redraw()
+
+LeoDirectory('.').render()</t>
+<t tx="sta.20200608031946.1"></t>
+<t tx="sta.20200608042323.1">/*--------------------------------------------------------------------------*/
+// COMMON HANDLERS
+
+</t>
+<t tx="sta.20200608043930.1">void py_lookup(t_py* x, t_symbol* s)
+{
+    t_object* obj = NULL;
+    t_max_err err = NULL;
+
+    if (hashtab_getsize(py_global_registry) == 0) {
+        py_error(x, "registry not populated");
+        return;
+    }
+
+    err = hashtab_lookup(py_global_registry, s, &amp;obj);
+    if (err != MAX_ERR_NONE || obj == NULL) {
+        py_error(x, "no object found with name %s", s-&gt;s_name);
+    } else {
+        py_log(x, "found object: %s", s-&gt;s_name);
+    }
+    return;
 }
 
 </t>

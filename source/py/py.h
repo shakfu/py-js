@@ -17,13 +17,13 @@
 // CONSTANTS
 
 #define PY_MAX_ATOMS 128
-#define PY_MAX_NAME "PY_NAME"
-//#define PY_NAMESPACE "PY_SPACE"
 #define MAX_IMPORTS 3
 /*--------------------------------------------------------------------------*/
 // GLOBALS
 
-static int py_global_obj_count;
+t_class* py_class; // global pointer to object class
+static int py_global_obj_count; // when 0 then free interpreter
+static t_hashtab* py_global_registry; // global object lookups
 /*--------------------------------------------------------------------------*/
 // OBJECT TYPES
 
@@ -76,6 +76,15 @@ typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 /* object creation and destruction */
 void* py_new(t_symbol* s, long argc, t_atom* argv);
 void py_free(t_py* x);
+void py_init(t_py* x);
+
+/* helpers */
+void py_log(t_py* x, char* fmt, ...);
+void py_error(t_py* x, char* fmt, ...);
+
+/* common handlers */
+void py_handle_error(t_py* x, char* fmt, ...);
+void py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
 void py_import(t_py* x, t_symbol* s);
@@ -86,13 +95,23 @@ void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
 
 /* extra python methods */
-// void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_globex(t_py* x, long n);
 
-/* documentation and meta info */
+/* informational */
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
+
+/* testing */
+void py_bang(t_py* x);
+
+/* interobject communications */
+void py_scan(t_py* x);
+long py_scan_callback(t_py* x, t_object* obj);
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_lookup(t_py* x, t_symbol* s);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
@@ -100,21 +119,9 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
+void py_locatefile(t_py* x, char* filename);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
-/* used for testing */
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_bang(t_py* x);
-void py_scan(t_py* x);
-long py_scan_callback(t_py* x, t_object* obj);
-void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_globex(t_py* x, long n);
-/*--------------------------------------------------------------------------*/
-// HELPERS
 
-void py_init(t_py* x);
-void py_locatefile(t_py* x, char* filename);
-void py_log(t_py* x, char* fmt, ...);
-void handle_py_error(t_py* x, char* fmt, ...);
 
 #endif // PY_H

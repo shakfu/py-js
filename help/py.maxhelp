@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 287.0, 163.0, 836.0, 634.0 ],
+		"rect" : [ 260.0, 117.0, 836.0, 634.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -642,7 +642,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 287.0, 189.0, 836.0, 608.0 ],
+						"rect" : [ 260.0, 143.0, 836.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -673,12 +673,49 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-67",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 706.5, 331.0, 94.0, 22.0 ],
+									"presentation_linecount" : 2,
+									"text" : "lookup notfound"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-69",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 613.5, 331.0, 84.0, 22.0 ],
+									"text" : "lookup mrmsg"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-68",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 2.0, 327.0, 83.0, 22.0 ],
+									"text" : "call sum 1 2 3"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-66",
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 118.0, 107.0, 81.0, 22.0 ],
+									"patching_rect" : [ 2.0, 153.0, 81.0, 22.0 ],
 									"text" : "eval api.test()"
 								}
 
@@ -714,7 +751,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 220.0, 76.0, 22.0 ],
+									"patching_rect" : [ 688.0, 495.5, 76.0, 22.0 ],
 									"text" : "load hello.py"
 								}
 
@@ -810,8 +847,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 379.0, 61.0, 22.0 ],
-									"text" : "all 1 0 0 1"
+									"patching_rect" : [ 2.0, 385.0, 82.0, 22.0 ],
+									"text" : "call all 1 0 0 1"
 								}
 
 							}
@@ -822,8 +859,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 347.0, 68.0, 22.0 ],
-									"text" : "any 1 0 0 1"
+									"patching_rect" : [ 2.0, 353.0, 89.0, 22.0 ],
+									"text" : "call any 1 0 0 1"
 								}
 
 							}
@@ -965,7 +1002,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 193.0, 127.0, 22.0 ],
+									"patching_rect" : [ 2.0, 226.0, 127.0, 22.0 ],
 									"text" : "eval api.np.__name__"
 								}
 
@@ -977,7 +1014,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 166.0, 151.0, 22.0 ],
+									"patching_rect" : [ 2.0, 250.0, 151.0, 22.0 ],
 									"text" : "eval api.np.version.version"
 								}
 
@@ -1040,8 +1077,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 140.0, 81.0, 22.0 ],
-									"text" : "api.total 1 2 3"
+									"patching_rect" : [ 2.0, 300.0, 102.0, 22.0 ],
+									"text" : "call api.total 1 2 3"
 								}
 
 							}
@@ -1052,8 +1089,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 114.0, 84.0, 22.0 ],
-									"text" : "api.echo 1 2 3"
+									"patching_rect" : [ 2.0, 274.0, 105.0, 22.0 ],
+									"text" : "call api.echo 1 2 3"
 								}
 
 							}
@@ -1064,7 +1101,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 173.5, 34.0, 115.0, 22.0 ],
+									"patching_rect" : [ 37.5, 55.0, 115.0, 22.0 ],
 									"text" : "eval api.random(10)"
 								}
 
@@ -1100,7 +1137,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 112.0, 7.0, 186.0, 22.0 ],
+									"patching_rect" : [ 2.0, 2.0, 186.0, 22.0 ],
 									"text" : "eval \"api.total(10.1, 12.2, 40, 50)\""
 								}
 
@@ -1112,7 +1149,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 299.5, 7.0, 129.0, 22.0 ],
+									"patching_rect" : [ 2.0, 26.0, 129.0, 22.0 ],
 									"text" : "eval \"api.echo(1, 2, 3)\""
 								}
 
@@ -1137,7 +1174,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 2.0, 3.0, 29.5, 22.0 ],
+									"patching_rect" : [ 2.0, 55.0, 29.5, 22.0 ],
 									"text" : "bye"
 								}
 
@@ -1149,7 +1186,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 2.0, 34.0, 144.0, 22.0 ],
+									"patching_rect" : [ 2.0, 81.0, 144.0, 22.0 ],
 									"text" : "sprintf eval api.error('%s')"
 								}
 
@@ -1161,7 +1198,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 315.0, 41.0, 22.0 ],
+									"patching_rect" : [ 575.5, 561.0, 41.0, 22.0 ],
 									"text" : "eval b"
 								}
 
@@ -1173,7 +1210,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 281.0, 77.0, 22.0 ],
+									"patching_rect" : [ 688.0, 556.5, 77.0, 22.0 ],
 									"text" : "read hello.py"
 								}
 
@@ -1185,7 +1222,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 14.5, 249.0, 33.0, 22.0 ],
+									"patching_rect" : [ 688.0, 524.5, 33.0, 22.0 ],
 									"text" : "read"
 								}
 
@@ -1221,7 +1258,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 48.0, 58.0, 114.0, 22.0 ],
+									"patching_rect" : [ 2.0, 201.0, 114.0, 22.0 ],
 									"text" : "eval api.post('hello')"
 								}
 
@@ -1233,7 +1270,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 86.5, 84.0, 87.0, 22.0 ],
+									"patching_rect" : [ 2.0, 177.0, 87.0, 22.0 ],
 									"text" : "eval api.hello()"
 								}
 
@@ -1245,7 +1282,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 149.0, 131.0, 66.0, 22.0 ],
+									"patching_rect" : [ 2.0, 129.0, 66.0, 22.0 ],
 									"text" : "eval api.txt"
 								}
 
@@ -1257,7 +1294,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 192.0, 155.0, 61.0, 22.0 ],
+									"patching_rect" : [ 2.0, 105.0, 61.0, 22.0 ],
 									"text" : "import api"
 								}
 
@@ -1467,7 +1504,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u988000502"
+									"varname" : "u398000502"
 								}
 
 							}
@@ -1843,6 +1880,27 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-66", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-67", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-68", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-69", 0 ]
 								}
 
 							}
