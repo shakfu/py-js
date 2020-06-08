@@ -16,8 +16,8 @@ C data structures and provide a Python-like interface to them.
 """
 
 from cpython cimport unicode
-from cpython.float import PyFloat_AsDouble
-from cpython.int import PyLong_AsLong
+from cpython cimport PyFloat_AsDouble
+from cpython cimport PyLong_AsLong
 #from cpython.unicode import PyUnicode_FromString
 
 cimport api_max as mx # api is a cython keyword!
