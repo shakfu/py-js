@@ -1,5 +1,44 @@
 # Packaging notes
 
+
+
+
+## Python Distribution
+
+```
+
+
+./configure \
+  --prefix=PREFIX \
+  --exec-prefix=EPREFIX \
+  --enable-framework[=INSTALLDIR] \
+  --enable-shared \
+  --with-universal-archs=ARCH \
+
+```
+
+see: https://bugs.python.org/issue16537
+
+
+
+
+## `sys.prefix`
+
+A string giving the site-specific directory prefix where the platform independent Python files are installed; by default, this is the string '/usr/local'. This can be set at build time with the --prefix argument to the configure script. The main collection of Python library modules is installed in the directory prefix/lib/pythonX.Y while the platform independent header files (all except pyconfig.h) are stored in prefix/include/pythonX.Y, where X.Y is the version number of Python, for example 3.2.
+
+Note If a virtual environment is in effect, this value will be changed in site.py to point to the virtual environment. The value for the Python installation will still be available, via base_prefix.
+
+
+## `sys.exec_prefix`
+
+A string giving the site-specific directory prefix where the platform-dependent Python files are installed; by default, this is also '/usr/local'. This can be set at build time with the --exec-prefix argument to the configure script. Specifically, all configuration files (e.g. the pyconfig.h header file) are installed in the directory exec_prefix/lib/pythonX.Y/config, and shared library modules are installed in exec_prefix/lib/pythonX.Y/lib-dynload, where X.Y is the version number of Python, for example 3.2.
+
+Note If a virtual environment is in effect, this value will be changed in site.py to point to the virtual environment. The value for the Python installation will still be available, via base_exec_prefix.
+
+
+
+
+## Max Package Elements
 see: https://docs.cycling74.com/max7/vignettes/packages
 
 You may create your own packages, either for your own use or for distribution to others. The folders (ending with a slash) and files comprising a package may optionally include the following (items in folders marked with a star will automatically be included in the searchpath):
