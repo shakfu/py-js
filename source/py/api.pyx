@@ -110,7 +110,7 @@ cdef class PyAtom:
 
 
     @staticmethod
-    cdef PyAtom from_list(list elements, bint owner=False):
+    cdef PyAtom from_list(list elements):
         """Factory function to create PyAtom objects from a python list
         """
         cdef char cstr[MAX_CHARS]
@@ -147,6 +147,7 @@ cdef class PyExternal:
         cdef PyAtom atom = PyAtom.from_list(_args)
         # msg = "send".encode('utf-8')
         px.py_send(self.obj, mx.gensym("send"), atom.argc, atom.argv)
+        # mx.sysmem_freeptr(atom.argv)
 
     #  mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
     #  t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
@@ -161,6 +162,7 @@ def sendtest(name, value=10.5):
     ext = PyExternal()
     # ext.send('mrfloat', [10.5])
     ext.send(name, [value])
+    # del ext
 
 
 # ext = PyExternal()
