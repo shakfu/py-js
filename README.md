@@ -47,7 +47,7 @@ core     | execfile        | file          | in     | yes        | [x]
 extra    | assign          | var, data     | in     | yes        | [x]
 extra    | call (anything) | var(s), data  | out    | no         | [x]
 editor   | read            | file          | n/a    | no         | [x]
-editor   | load            | file          | yes    | no         | [x]
+editor   | load            | file          | n/a    | no         | [x]
 interobj | scan            |               | n/a    | no         | [x]
 interobj | send            | msg           | n/a    | no         | [x]
 
@@ -170,7 +170,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 core
 
-- [ ] finalize method interface `py_anything` vs 'py_call'. rename `py_anything` -> `py_call`, `py_call` -> `py_code` create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_anything`.
+- [ ] revisit `py_error` and `py_log` which is a source of many errors
+- [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
 
 extension
@@ -201,12 +202,6 @@ future experiments
 - [ ] Convert py into a js extension class
       - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
 - [ ] try to build a cython extension types as a max external class
-
-### DONE
-
-- [ ] ...
-
-
 
 
 ## CHANGELOG
@@ -288,6 +283,7 @@ Testing
 
 #### Bug Fixes
 
+- [x] fixed 'send' which did not have enough error checking and was crashing frequently
 - [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
 - [x] globex remains after all objects are freed.
       solution: `PyXDECREF x->p_globals` on `py_free`

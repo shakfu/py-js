@@ -947,25 +947,36 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
-    // argv+0 is the object name
+
+    if (argc < 2) {
+        py_error(x, "need at least 2 args to send msg");
+        goto error;
+    }
+
+    if ((argv+0)->a_type != A_SYM) {
+        py_error(x, "1st arg of send needs to be a symbol name of receiver object");
+        goto error;
+    }
+
+    // argv+0 is the object name to send to
     obj_name = atom_getsym(argv)->s_name;
     if (obj_name == NULL) {
         goto error;
     }
 
+    // if registry is empty, scan it
     if (hashtab_getsize(py_global_registry) == 0) {
         py_scan(x);
     }
 
-    // lifted from scheme-for-max (Thanks, Iain!)
+    // // lookup name in registry
     err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
-    if (err || obj == NULL) {
-        py_error(x, "no object found in the registry with the name %s",
-                 obj_name);
+    if (err != MAX_ERR_NONE || obj == NULL) {
+        py_error(x, "no object found in the registry");
         goto error;
     }
 
-    // atom after the name of the destination
+    // atom after the name of the receiver
     switch ((argv + 1)->a_type) {
     case A_SYM: {
         msg_sym = atom_getsym(argv + 1);
@@ -1010,11 +1021,11 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     // methods to get method type
-    // t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
-    // if (messlist) {
-    //     post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-    //     post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
-    // }
+    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
+    if (messlist) {
+        post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
+        post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
+    }
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {
@@ -1026,6 +1037,7 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     return;
 
 error:
+    py_error(x, "send failed");
     return;
 }
 

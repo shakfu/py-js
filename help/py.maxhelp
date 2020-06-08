@@ -673,13 +673,48 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-70",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 578.0, 489.0, 77.0, 22.0 ],
+									"text" : "lookup marty"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-72",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 701.5, 489.0, 107.0, 22.0 ],
+									"text" : "send bob eval 1+1"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-71",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 701.5, 463.0, 117.0, 22.0 ],
+									"text" : "send bob something"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-67",
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 706.5, 331.0, 94.0, 22.0 ],
-									"presentation_linecount" : 2,
 									"text" : "lookup notfound"
 								}
 
@@ -734,6 +769,16 @@
 							}
 , 							{
 								"box" : 								{
+									"bgcolor" : [ 0.792156862745098, 0.043137254901961, 0.043137254901961, 1.0 ],
+									"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
+									"bgfillcolor_angle" : 270.0,
+									"bgfillcolor_autogradient" : 0.0,
+									"bgfillcolor_color" : [ 0.2, 0.2, 0.2, 1.0 ],
+									"bgfillcolor_color1" : [ 0.792156862745098, 0.043137254901961, 0.043137254901961, 1.0 ],
+									"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
+									"bgfillcolor_proportion" : 0.5,
+									"bgfillcolor_type" : "gradient",
+									"gradient" : 1,
 									"id" : "obj-63",
 									"maxclass" : "message",
 									"numinlets" : 2,
@@ -741,18 +786,6 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 258.5, 120.0, 61.0, 22.0 ],
 									"text" : "eval 1 + 1"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-65",
-									"maxclass" : "message",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 688.0, 495.5, 76.0, 22.0 ],
-									"text" : "load hello.py"
 								}
 
 							}
@@ -794,6 +827,16 @@
 							}
 , 							{
 								"box" : 								{
+									"bgcolor" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
+									"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
+									"bgfillcolor_angle" : 270.0,
+									"bgfillcolor_autogradient" : 0.0,
+									"bgfillcolor_color" : [ 0.2, 0.2, 0.2, 1.0 ],
+									"bgfillcolor_color1" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
+									"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
+									"bgfillcolor_proportion" : 0.5,
+									"bgfillcolor_type" : "gradient",
+									"gradient" : 1,
 									"id" : "obj-60",
 									"maxclass" : "message",
 									"numinlets" : 2,
@@ -1198,7 +1241,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 575.5, 561.0, 41.0, 22.0 ],
+									"patching_rect" : [ 575.5, 577.0, 41.0, 22.0 ],
 									"text" : "eval b"
 								}
 
@@ -1210,7 +1253,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 688.0, 556.5, 77.0, 22.0 ],
+									"patching_rect" : [ 624.5, 577.0, 77.0, 22.0 ],
 									"text" : "read hello.py"
 								}
 
@@ -1222,7 +1265,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 688.0, 524.5, 33.0, 22.0 ],
+									"patching_rect" : [ 659.5, 520.0, 33.0, 22.0 ],
 									"text" : "read"
 								}
 
@@ -1246,7 +1289,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 575.5, 504.0, 76.0, 22.0 ],
+									"patching_rect" : [ 575.5, 520.0, 76.0, 22.0 ],
 									"text" : "load hello.py"
 								}
 
@@ -1306,7 +1349,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 575.5, 531.0, 94.0, 22.0 ],
+									"patching_rect" : [ 575.5, 547.0, 94.0, 22.0 ],
 									"text" : "execfile hello.py"
 								}
 
@@ -1504,7 +1547,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u398000502"
+									"varname" : "u213000818"
 								}
 
 							}
@@ -1872,13 +1915,6 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
-									"source" : [ "obj-65", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-66", 0 ]
 								}
 
@@ -1901,6 +1937,27 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-69", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-70", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-71", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-72", 0 ]
 								}
 
 							}
