@@ -80,8 +80,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 202.0, 81.0, 186.0, 22.0 ],
-					"text" : "eval \"api.sendtest('mrfloat', 10.5)\""
+					"patching_rect" : [ 202.0, 81.0, 148.0, 22.0 ],
+					"text" : "eval api.sendtest('mrfloat')"
 				}
 
 			}
