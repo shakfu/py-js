@@ -15,10 +15,12 @@ Because of this limitation, you can use extension types to wrap arbitrary
 C data structures and provide a Python-like interface to them.
 """
 
-from cpython cimport unicode
+
 from cpython cimport PyFloat_AsDouble
 from cpython cimport PyLong_AsLong
-#from cpython.unicode import PyUnicode_FromString
+
+from libc.stdlib cimport malloc
+from libc.string cimport strcpy, strlen
 
 cimport api_max as mx # api is a cython keyword!
 cimport api_py as px
@@ -28,6 +30,11 @@ import numpy as np
 
 
 DEF MAX_CHARS = 32767
+
+
+cdef extern from "Python.h":
+    const char* PyUnicode_AsUTF8(object unicode)
+    unicode PyUnicode_FromString(const char *u)
 
 
 
@@ -60,7 +67,7 @@ cdef class PyAtom:
 
     cpdef from_pstr(self, str parsestr):
         cdef char cparsestring[MAX_CHARS]
-        cparsestring = unicode.PyUnicode_AsUTF8(parsestr)
+        cparsestring = PyUnicode_AsUTF8(parsestr)
         cdef mx.t_max_err err = mx.atom_setparse(&self.argc, &self.argv, cparsestring)
         if err != mx.MAX_ERR_NONE: # test this!!
             raise Exception("cannot convert c parsestring to atom array")
@@ -71,7 +78,7 @@ cdef class PyAtom:
         cdef char* text = NULL
         cdef mx.t_max_err err = mx.atom_gettext(self.argc, self.argv, &textsize, &text, 
             mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
-        pstr = unicode.PyUnicode_FromString(text)
+        pstr = PyUnicode_FromString(text)
         mx.sysmem_freeptr(text)
         return pstr
 
@@ -116,7 +123,7 @@ cdef class PyAtom:
             elif type(elem) == int:
                 mx.atom_setlong((&argv[i]), <long>PyLong_AsLong)
             elif type(elem) == str:
-                cstr = unicode.PyUnicode_AsUTF8(elem)
+                cstr = PyUnicode_AsUTF8(elem)
                 mx.atom_setsym((&argv[i]), mx.gensym(cstr))
             else:
                 continue
@@ -134,11 +141,15 @@ cdef class PyExternal:
     cpdef bang(self):
         px.py_bang(self.obj)
 
-    # cpdef send(self, bytes msg, list args):
-    #     cdef int length = len(args)
+    # CRITICAL: works but then crashes!!
+    cpdef send(self, str name, list args):
+        _args = [name] + args
+        cdef PyAtom atom = PyAtom.from_list(_args)
+        # msg = "send".encode('utf-8')
+        px.py_send(self.obj, mx.gensym("send"), atom.argc, atom.argv)
 
-    #     mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
-        #t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
+    #  mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
+    #  t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
 
 
 def test():
@@ -146,6 +157,13 @@ def test():
     ext.bang()
 
 
+def sendtest(name, value=10.5):
+    ext = PyExternal()
+    # ext.send('mrfloat', [10.5])
+    ext.send(name, [value])
+
+
+# ext = PyExternal()
 
 txt = "Hey MAX!"
 

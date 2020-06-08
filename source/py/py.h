@@ -17,7 +17,7 @@
 // CONSTANTS
 
 #define PY_MAX_ATOMS 128
-#define MAX_IMPORTS 3
+
 /*--------------------------------------------------------------------------*/
 // GLOBALS
 
