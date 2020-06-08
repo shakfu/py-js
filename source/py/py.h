@@ -49,7 +49,10 @@ typedef struct _py {
     char** p_code;
     long p_code_size;
     t_symbol* p_code_filepath; /* default python filepath to load into
-                                  the code editor and global namespace */
+                                  the code editor and object 'globals'
+                                  namespace */
+    t_bool p_autoload;         /* bool to autoload of p_code_filepath  */
+
     /* outlet creation */
     void* p_outlet_right;  // right outlet to bang success
     void* p_outlet_middle; // middle outleet to bang error

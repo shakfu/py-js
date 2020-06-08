@@ -216,25 +216,36 @@
     t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
-    // argv+0 is the object name
+
+    if (argc &lt; 2) {
+        py_error(x, "need at least 2 args to send msg");
+        goto error;
+    }
+
+    if ((argv+0)-&gt;a_type != A_SYM) {
+        py_error(x, "1st arg of send needs to be a symbol name of receiver object");
+        goto error;
+    }
+
+    // argv+0 is the object name to send to
     obj_name = atom_getsym(argv)-&gt;s_name;
     if (obj_name == NULL) {
         goto error;
     }
 
+    // if registry is empty, scan it
     if (hashtab_getsize(py_global_registry) == 0) {
         py_scan(x);
     }
 
-    // lifted from scheme-for-max (Thanks, Iain!)
+    // // lookup name in registry
     err = hashtab_lookup(py_global_registry, gensym(obj_name), &amp;obj);
-    if (err || obj == NULL) {
-        py_error(x, "no object found in the registry with the name %s",
-                 obj_name);
+    if (err != MAX_ERR_NONE || obj == NULL) {
+        py_error(x, "no object found in the registry");
         goto error;
     }
 
-    // atom after the name of the destination
+    // atom after the name of the receiver
     switch ((argv + 1)-&gt;a_type) {
     case A_SYM: {
         msg_sym = atom_getsym(argv + 1);
@@ -279,11 +290,11 @@
     }
 
     // methods to get method type
-    // t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
-    // if (messlist) {
-    //     post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
-    //     post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
-    // }
+    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
+    if (messlist) {
+        post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
+        post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
+    }
 
     err = object_method_typed(obj, msg_sym, argc, argv, NULL);
     if (err) {
@@ -295,6 +306,7 @@
     return;
 
 error:
+    py_error(x, "send failed");
     return;
 }
 
@@ -857,26 +869,35 @@ error:
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
     class_addmethod(c, (method)py_load,       "load",       A_DEFSYM, 0);
 
-    // attributes
-    CLASS_ATTR_ORDER(c, "name", 0,  "1");
+    // object attributes
+    //------------------------------------------------------------------------
+
+    CLASS_ATTR_ORDER(c, "name", 0,  "0");
     CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
     CLASS_ATTR_SYM(c,   "name", 0,   t_py, p_name);
     CLASS_ATTR_BASIC(c, "name", 0);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
 
-    CLASS_ATTR_ORDER(c,  "file", 0,  "2");
+    CLASS_ATTR_ORDER(c,  "file", 0,  "1");
     CLASS_ATTR_LABEL(c,  "file", 0,  "default python script");
     CLASS_ATTR_SYM(c,    "file", 0,   t_py,  p_code_filepath);
     // CLASS_ATTR_STYLE(c,  "file", 0,   "file");
     CLASS_ATTR_BASIC(c,  "file", 0);
     CLASS_ATTR_SAVE(c,   "file", 0);
 
-    CLASS_ATTR_ORDER(c,  "pythonpath", 0,  "3");
+    CLASS_ATTR_ORDER(c,  "pythonpath", 0,  "2");
     CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
     CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_STYLE(c,  "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,  "pythonpath", 0);
     CLASS_ATTR_SAVE(c,   "pythonpath", 0);
+
+    CLASS_ATTR_ORDER(c,  "debug", 0,  "3");
+    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
+    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
+    CLASS_ATTR_BASIC(c,  "debug", 0);
+    CLASS_ATTR_SAVE(c,   "debug", 0);
 
     CLASS_ATTR_ORDER(c,  "debug", 0,  "4");
     CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
@@ -1258,7 +1279,7 @@ void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
 // CONSTANTS
 
 #define PY_MAX_ATOMS 128
-#define MAX_IMPORTS 3
+
 </t>
 <t tx="sta.20200602151837.1">@path source/py/notes</t>
 <t tx="sta.20200602164507.1">@path source/py/tests
