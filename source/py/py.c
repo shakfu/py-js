@@ -114,7 +114,7 @@ void ext_main(void* r)
 
     CLASS_ATTR_LABEL(c,  "file", 0,  "default python script");
     CLASS_ATTR_SYM(c,    "file", 0,   t_py,  p_code_filepath);
-    // CLASS_ATTR_STYLE(c,  "file", 0,   "file");
+    CLASS_ATTR_STYLE(c,  "file", 0,   "file");
     CLASS_ATTR_BASIC(c,  "file", 0);
     CLASS_ATTR_SAVE(c,   "file", 0);
 
@@ -131,12 +131,12 @@ void ext_main(void* r)
     CLASS_ATTR_BASIC(c,  "pythonpath", 0);
     CLASS_ATTR_SAVE(c,   "pythonpath", 0);
 
-    CLASS_ATTR_ORDER(c, "name", 0,  "1");
-    CLASS_ATTR_ORDER(c,  "debug", 0,  "2");
-    CLASS_ATTR_ORDER(c,  "file", 0,  "3");
-    CLASS_ATTR_ORDER(c,  "autoload", 0,  "4");
-    CLASS_ATTR_ORDER(c,  "pythonpath", 0,  "5");
-
+    CLASS_ATTR_ORDER(c,  "name",        0,  "1");
+    CLASS_ATTR_ORDER(c,  "file",        0,  "2");
+    CLASS_ATTR_ORDER(c,  "autoload",    0,  "3");
+    CLASS_ATTR_ORDER(c,  "pythonpath",  0,  "4");
+    CLASS_ATTR_ORDER(c,  "debug",       0,  "5");
+    
     // clang-format on
     //------------------------------------------------------------------------
 

@@ -25,15 +25,17 @@
 
 	<!--OUTLETS-->
 	<outletlist>
-		
 		<outlet id="0" type="bang">
-			<digest>Right inlet for bang notification after end of an operation</digest>
+			<digest>Right outlet for bang notification when an operation succeeds.</digest>
 		</outlet>
-
+		
 		<outlet id="1" type="anything">
-			<digest>Left inlet for all outputs from python operations</digest>
+			<digest>Middle outlet for bang notification when an operation fails</digest>
 		</outlet>
 
+		<outlet id="2" type="anything">
+			<digest>Left outlet for all outputs from python operations</digest>
+		</outlet>
 	</outletlist>
 
 	<!--ARGUMENTS-->
@@ -41,15 +43,31 @@
 		<objarg name="name" optional="0" type="symbol">
 			<digest>Name of object</digest>
 			<description>
-				Every py object in a patcher must be named.
+				Every <o>py</o> object in a patcher must be named. A unique automatically generated name is assigned if the user doesn't pick a name for the object.
 			</description>
 		</objarg>
+		
 		<objarg name="file" optional="0" type="symbol">
-			<digest>Path to a python file</digest>
+			<digest>Path to a default python file</digest>
 			<description>
-				A python file to <m>load</m> into the code editor.
+				A python file to <m>load</m> into the code editor. This path is saved.
 			</description>
 		</objarg>
+		
+		<objarg name="autoload" optional="0" type="bool">
+			<digest>Autoload default python file at start</digest>
+			<description>
+				Enabling this will <m>load</m> the default python file at start. This decision is saved.
+			</description>
+		</objarg>
+		
+		<objarg name="pythonpath" optional="1" type="symbol">
+			<digest>Additional <m>import</m> path for python interpreter</digest>
+			<description>
+				Provide an optional additional path which will be automatically added to the python interpreter's sys.path to enable <m>import</m> messages from that directory.
+			</description>
+		</objarg>
+
 		<objarg name="debug" optional="1" type="bool">
 			<digest>Debug mode</digest>
 			<description>
@@ -107,14 +125,40 @@
 				Used for sending max data into the <o>py</o> instance's namespace, so it can be used by python code. 
 			</description>
 		</method>
-		<method name="anything">
+		<method name="call">
 			<arglist>
 				<arg name="identifier" optional="0" type="symbol" />
 				<arg name="args" optional="0" type="atom" />
 			</arglist>
-			<digest>Tries to call or evaluate identifier based on simple rules</digest>
+			<digest>Tries to call the identifier based on simple rules</digest>
 			<description>
-				Checks whether idetifier exists in py namespace, if is a callable, and then calls the corresponding callable with the args and outputs the result.
+				Checks whether first argument is a symbol, if it exists in <o>py</o> object's namespace, if is a callable, and then using the following arguments as arguments to the callable and outputs the result.
+			</description>
+		</method>
+		<method name="code">
+			<arglist>
+				<arg name="identifier" optional="0" type="symbol" />
+			</arglist>
+			<digest>Tries to <m>eval</m> or <m>exec</m> the message as python code based on simple rules</digest>
+			<description>
+				Attempts to compile the message body, if it succeeds tries to <m>eval</m> it and return the results, or <m>exec</m> it and return.
+			</description>
+		</method>
+		<method name="scan">
+			<arglist/>
+			<digest>Scan the parent patcher for scripting names</digest>
+			<description>
+				Scans the parent patcher for scripting names and stores them in an internal registry that is accessible by all <o>py</o> objects.
+			</description>
+		</method>
+		<method name="send">
+			<arglist>
+				<arg name="object name" optional="0" type="symbol" />
+				<arg name="args" optional="0" type="atom" />
+			</arglist>
+			<digest>Sends a message to the named object</digest>
+			<description>
+				Similar to <o>thispatcher</o> message send, the <m>send</m>message following by the objct name and the body of the message allows the <o>py</o> object to call the method of any object in the parent patcher (including subpatchers).
 			</description>
 		</method>
 		<method name="read">
