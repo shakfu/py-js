@@ -155,10 +155,6 @@ cdef class PyExternal:
     cdef fail(self):
         mx.outlet_bang(<void*>self.obj.p_outlet_middle)
 
-    cdef out(self, str arg):
-        mx.outlet_anything(<void*>self.obj.p_outlet_left, 
-            mx.gensym(arg.encode('utf-8')), 0, NULL)
-
     cdef out_sym(self, str arg):
         mx.outlet_anything(<void*>self.obj.p_outlet_left, 
             mx.gensym(arg.encode('utf-8')), 0, NULL)
@@ -169,10 +165,18 @@ cdef class PyExternal:
     cdef out_int(self, int arg):
         mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
 
-    cdef out2(self, object arg):
+    # CRITICAL: this is crashing!!
+    cdef out_list(self, list arg):
+        cdef PyAtom atom = PyAtom.from_list(arg)
+        mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
+            atom.argc, atom.argv)
+        #void *outlet_list(void *o, t_symbol *s, short ac, t_atom *av)
+
+    cdef out(self, object arg):
         if isinstance(arg, float): self.out_float(arg)
         elif isinstance(arg, int): self.out_int(arg)
         elif isinstance(arg, str): self.out_sym(arg)
+        elif isinstance(arg, list): self.out_list(arg)
         else:
             return
 
@@ -201,16 +205,19 @@ def fail():
 
 def out_sym():
     ext = PyExternal()
-    ext.out2('hello outlet!')
+    ext.out('hello outlet!')
 
 def out_int():
     ext = PyExternal()
-    ext.out2(100)
+    ext.out(100)
 
 def out_float():
     ext = PyExternal()
-    ext.out2(12.75)
+    ext.out(12.75)
 
+def out_list():
+    ext = PyExternal()
+    ext.out([1,2,3,4,5])
 
 def sendtest(name, value=10.5):
     ext = PyExternal()
