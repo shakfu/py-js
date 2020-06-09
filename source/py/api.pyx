@@ -149,6 +149,23 @@ cdef class PyExternal:
         px.py_send(self.obj, mx.gensym("send"), atom.argc, atom.argv)
         # mx.sysmem_freeptr(atom.argv)
 
+    cdef success(self):
+        mx.outlet_bang(<void*>self.obj.p_outlet_right)
+
+    cdef fail(self):
+        mx.outlet_bang(<void*>self.obj.p_outlet_middle)
+
+    cdef out(self, str arg):
+        mx.outlet_anything(<void*>self.obj.p_outlet_left, 
+            mx.gensym(arg.encode('utf-8')), 0, NULL)
+
+    # cpdef output(self, list args):
+    #     for arg in args:
+    #         if type(arg) == str:
+    #             mx.outlet_anything(self.obj.left_outlet, 
+    #                 arg.encode('utf-8'))
+            #....
+
     #  mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
     #  t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
 
@@ -156,6 +173,18 @@ cdef class PyExternal:
 def test():
     ext = PyExternal()
     ext.bang()
+
+def success():
+    ext = PyExternal()
+    ext.success()
+
+def fail():
+    ext = PyExternal()
+    ext.fail()
+
+def out():
+    ext = PyExternal()
+    ext.out('hello outlet!')
 
 
 def sendtest(name, value=10.5):
@@ -170,8 +199,6 @@ def sendtest(name, value=10.5):
 txt = "Hey MAX!"
 
 greeting = 'Hello World'
-
-# name = lambda: getattr(globals(), 'PY_NAME')
 
 
 cpdef public str hello():
