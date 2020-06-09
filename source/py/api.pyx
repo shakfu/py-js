@@ -18,6 +18,7 @@ C data structures and provide a Python-like interface to them.
 
 from cpython cimport PyFloat_AsDouble
 from cpython cimport PyLong_AsLong
+from cpython.ref cimport PyObject
 
 from libc.stdlib cimport malloc
 from libc.string cimport strcpy, strlen
@@ -140,20 +141,16 @@ cdef class PyExternal:
         px.py_bang(self.obj)
 
     # CRITICAL: works but then crashes!!
-    cdef send2(self, str name, list args):
+    cdef send(self, str name, list args):
         _args = [name] + args
         cdef PyAtom atom = PyAtom.from_list(_args)
         # msg = "send".encode('utf-8')
         px.py_send(self.obj, mx.gensym("list"), atom.argc, atom.argv)
         # mx.sysmem_freeptr(atom.argv)
 
-    cdef int send(self, str name, list args) except -1:
-        cdef PyAtom atom = PyAtom.from_list(args)
-        cdef mx.t_max_err err = mx.object_method_typed(self.obj, 
-            mx.gensym(name.encode('utf-8')), atom.argc, atom.argv, NULL)
-        if (err != mx.MAX_ERR_NONE):
-            raise Exception("could not send message")
-        return 0
+    cdef send2(self, str name, list args):
+        _args = [name] + args
+        px.py_send_from_seq(self.obj, <PyObject*>_args)
 
 
     cdef success(self):
@@ -219,9 +216,14 @@ def out_list():
 
 def sendtest(name, value=10.5):
     ext = PyExternal()
-    # ext.send('mrfloat', [10.5])
     ext.send(name, [value])
     # del ext
+
+def sendtest2(name, value=10.5):
+    ext = PyExternal()
+    ext.send2(name, [value])
+    # del ext
+
 
 
 # ext = PyExternal()
