@@ -40,12 +40,24 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-6",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 404.0, 186.0, 34.0, 22.0 ],
+					"text" : "scan"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-9",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 404.0, 142.0, 84.0, 22.0 ],
+					"patching_rect" : [ 404.0, 118.0, 84.0, 22.0 ],
 					"text" : "lookup mrfloat"
 				}
 
@@ -57,7 +69,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 404.0, 179.0, 95.0, 22.0 ],
+					"patching_rect" : [ 404.0, 151.0, 95.0, 22.0 ],
 					"text" : "send mrfloat 2.5"
 				}
 
@@ -131,6 +143,7 @@
 					"outlettype" : [ "", "", "" ],
 					"patching_rect" : [ 261.0, 213.0, 40.0, 22.0 ],
 					"saved_object_attributes" : 					{
+						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
 						"pythonpath" : ""
@@ -160,6 +173,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-5", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-6", 0 ]
 				}
 
 			}
