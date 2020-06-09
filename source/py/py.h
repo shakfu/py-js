@@ -125,6 +125,8 @@ void py_edsave(t_py* x, char** text, long size);
 void py_locatefile(t_py* x, char* filename);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
+// helpers for api
+void py_send_from_seq(t_py* x, PyObject* seq);
 
 
 #endif // PY_H

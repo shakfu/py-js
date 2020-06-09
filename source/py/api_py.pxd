@@ -31,9 +31,11 @@ cdef extern from "py.h":
 
     cdef void py_bang(t_py *x)
 
-    void py_scan(t_py* x);
-    void py_send(t_py* x, mx.t_symbol* s, long argc, mx.t_atom* argv);
-    void py_lookup(t_py* x, mx.t_symbol* s);
+    void py_scan(t_py* x)
+    void py_send(t_py* x, mx.t_symbol* s, long argc, mx.t_atom* argv)
+    void py_lookup(t_py* x, mx.t_symbol* s)
 
-    void py_read(t_py* x, mx.t_symbol* s);
+    void py_read(t_py* x, mx.t_symbol* s)
+
+    void py_send_from_seq(t_py* x, PyObject* seq)
 

@@ -1052,6 +1052,182 @@ error:
     return;
 }
 
+
+
+void py_send_from_seq(t_py* x, PyObject* seq)
+{
+
+    if (seq == NULL) {
+        goto error;
+    }
+
+    if (!PySequence_Check(seq) || PyUnicode_Check(seq) ||
+        PyBytes_Check(seq) || PyByteArray_Check(seq)) {
+        goto error;
+    }
+    
+    // list -> t_atom vars
+    PyObject* iter = NULL;
+    PyObject* item = NULL;
+    int i = 0;
+
+    t_atom atoms_static[PY_MAX_ATOMS];
+    t_atom* atoms = NULL;
+    int is_dynamic = 0;
+
+    Py_ssize_t seq_size = PySequence_Length(seq);
+    long argc = (long)seq_size;
+
+    if (seq_size < 2) {
+        py_error(
+            x, "cannot convert python sequence with length <= 0 to atoms");
+        goto error;
+    }
+
+    if (seq_size > PY_MAX_ATOMS) {
+        py_log(x, "dynamically increasing size of atom array");
+        atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+                                   seq_size + 1);
+        is_dynamic = 1;
+
+    } else {
+        atoms = atoms_static;
+    }
+
+    if ((iter = PyObject_GetIter(seq)) == NULL) {
+        goto error;
+    }
+
+    while ((item = PyIter_Next(iter)) != NULL) {
+        if (PyLong_Check(item)) {
+            long long_item = PyLong_AsLong(item);
+            atom_setlong(atoms + i, long_item);
+            py_log(x, "%d long: %ld\n", i, long_item);
+            i++;
+        }
+
+        if PyFloat_Check (item) {
+            float float_item = PyFloat_AsDouble(item);
+            atom_setfloat(atoms + i, float_item);
+            py_log(x, "%d float: %f\n", i, float_item);
+            i++;
+        }
+
+        if PyUnicode_Check (item) {
+            const char* unicode_item = PyUnicode_AsUTF8(item);
+            py_log(x, "%d unicode: %s\n", i, unicode_item);
+            atom_setsym(atoms + i, gensym(unicode_item));
+            i++;
+        }
+        Py_DECREF(item);
+    }
+
+    // send vars
+    t_object* obj = NULL;
+    char* obj_name = NULL;
+    t_symbol* msg_sym = NULL;
+    t_max_err err = NULL;
+
+    if ((atoms+0)->a_type != A_SYM) {
+        py_error(x, "1st arg of send needs to be a symbol name of receiver object");
+        goto error;
+    }
+
+    // argv+0 is the object name to send to
+    obj_name = atom_getsym(atoms)->s_name;
+    if (obj_name == NULL) {
+        goto error;
+    }
+
+    // if registry is empty, scan it
+    if (hashtab_getsize(py_global_registry) == 0) {
+        py_scan(x);
+    }
+
+    // // lookup name in registry
+    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
+    if (err != MAX_ERR_NONE || obj == NULL) {
+        py_error(x, "no object found in the registry");
+        goto error;
+    }
+
+    // atom after the name of the receiver
+    switch ((atoms + 1)->a_type) {
+    case A_SYM: {
+        msg_sym = atom_getsym(atoms + 1);
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+        // address the minimum case: e.g a bang
+        if (argc - 2 == 0) { //
+            argc = 0;
+            atoms = NULL;
+        } else {
+            argc = argc - 2;
+            atoms = atoms + 2;
+        }
+        break;
+    }
+    case A_FLOAT: {
+        msg_sym = gensym("float");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        atoms = atoms + 1;
+
+        break;
+    }
+    case A_LONG: {
+        msg_sym = gensym("int");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        atoms = atoms + 1;
+
+        break;
+    }
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
+    }
+
+    // methods to get method type
+    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
+    if (messlist) {
+        post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
+        post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
+    }
+
+    err = object_method_typed(obj, msg_sym, argc, atoms, NULL);
+    if (err) {
+        py_error(x, "failed to send a message to object %s", obj_name);
+        goto error;
+    }
+
+
+    // process here
+    outlet_bang(x->p_outlet_right);
+    py_log(x, "end iter op: %d", i);
+
+    if (is_dynamic) {
+        py_log(x, "restoring to static atom array");
+        atom_dynamic_end(atoms_static, atoms);
+    }
+    
+    // final cleanup
+    Py_XDECREF(seq);
+    return;
+
+
+error:
+    py_error(x, "send failed");
+    return;
+}
+
 void py_lookup(t_py* x, t_symbol* s)
 {
     t_object* obj = NULL;
