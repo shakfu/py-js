@@ -140,12 +140,21 @@ cdef class PyExternal:
         px.py_bang(self.obj)
 
     # CRITICAL: works but then crashes!!
-    cpdef send(self, str name, list args):
+    cdef send2(self, str name, list args):
         _args = [name] + args
         cdef PyAtom atom = PyAtom.from_list(_args)
         # msg = "send".encode('utf-8')
-        px.py_send(self.obj, mx.gensym("send"), atom.argc, atom.argv)
+        px.py_send(self.obj, mx.gensym("list"), atom.argc, atom.argv)
         # mx.sysmem_freeptr(atom.argv)
+
+    cdef int send(self, str name, list args) except -1:
+        cdef PyAtom atom = PyAtom.from_list(args)
+        cdef mx.t_max_err err = mx.object_method_typed(self.obj, 
+            mx.gensym(name.encode('utf-8')), atom.argc, atom.argv, NULL)
+        if (err != mx.MAX_ERR_NONE):
+            raise Exception("could not send message")
+        return 0
+
 
     cdef success(self):
         mx.outlet_bang(<void*>self.obj.p_outlet_right)
@@ -163,12 +172,10 @@ cdef class PyExternal:
     cdef out_int(self, int arg):
         mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
 
-    # CRITICAL: this is crashing!!
     cdef out_list(self, list arg):
         cdef PyAtom atom = PyAtom.from_list(arg)
         mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
             atom.argc, atom.argv)
-        #void *outlet_list(void *o, t_symbol *s, short ac, t_atom *av)
 
     cdef out(self, object arg):
         if isinstance(arg, float): self.out_float(arg)
@@ -177,13 +184,6 @@ cdef class PyExternal:
         elif isinstance(arg, list): self.out_list(arg)
         else:
             return
-
-    # cpdef output(self, list args):
-    #     for arg in args:
-    #         if type(arg) == str:
-    #             mx.outlet_anything(self.obj.left_outlet, 
-    #                 arg.encode('utf-8'))
-            #....
 
     #  mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
     #  t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
