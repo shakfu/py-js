@@ -159,6 +159,23 @@ cdef class PyExternal:
         mx.outlet_anything(<void*>self.obj.p_outlet_left, 
             mx.gensym(arg.encode('utf-8')), 0, NULL)
 
+    cdef out_sym(self, str arg):
+        mx.outlet_anything(<void*>self.obj.p_outlet_left, 
+            mx.gensym(arg.encode('utf-8')), 0, NULL)
+
+    cdef out_float(self, float arg):
+        mx.outlet_float(<void*>self.obj.p_outlet_left, <double>arg)
+
+    cdef out_int(self, int arg):
+        mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
+
+    cdef out2(self, object arg):
+        if isinstance(arg, float): self.out_float(arg)
+        elif isinstance(arg, int): self.out_int(arg)
+        elif isinstance(arg, str): self.out_sym(arg)
+        else:
+            return
+
     # cpdef output(self, list args):
     #     for arg in args:
     #         if type(arg) == str:
@@ -182,9 +199,17 @@ def fail():
     ext = PyExternal()
     ext.fail()
 
-def out():
+def out_sym():
     ext = PyExternal()
-    ext.out('hello outlet!')
+    ext.out2('hello outlet!')
+
+def out_int():
+    ext = PyExternal()
+    ext.out2(100)
+
+def out_float():
+    ext = PyExternal()
+    ext.out2(12.75)
 
 
 def sendtest(name, value=10.5):
