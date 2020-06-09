@@ -113,21 +113,19 @@ cdef class PyAtom:
     cdef PyAtom from_list(list elements):
         """Factory function to create PyAtom objects from a python list
         """
-        cdef char cstr[MAX_CHARS]
         cdef long argc = <long>len(elements)
         cdef mx.t_atom *argv
         argv = <mx.t_atom *>mx.sysmem_newptr(sizeof(mx.t_atom *) * argc)
         for i, elem in enumerate(elements):
             if type(elem) == float:
-                mx.atom_setfloat(&argv[i], <double>PyFloat_AsDouble(elem))
+                mx.atom_setfloat(&argv[i], <double>elem)
             elif type(elem) == int:
-                mx.atom_setlong((&argv[i]), <long>PyLong_AsLong)
+                mx.atom_setlong((&argv[i]), <long>elem)
             elif type(elem) == str:
-                cstr = PyUnicode_AsUTF8(elem)
-                mx.atom_setsym((&argv[i]), mx.gensym(cstr))
+                mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
             else:
                 continue
-        return PyAtom.from_atom(argc, argv, owner=False)
+        return PyAtom.from_atom(argc, argv, owner=True)
 
 
 

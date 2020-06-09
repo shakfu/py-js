@@ -25,9 +25,6 @@ cdef extern from "py.h":
         void* p_outlet_right
         void* p_outlet_middle
         void* p_outlet_left
-
-        # mx.t_symbol* p_name
-        # void* p_outlet_right
     
     void py_log(t_py* x, char* fmt, ...)
     void py_error(t_py* x, char* fmt, ...)
