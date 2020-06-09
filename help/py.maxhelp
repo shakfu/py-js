@@ -359,6 +359,7 @@
 									"outlettype" : [ "", "", "" ],
 									"patching_rect" : [ 325.25, 472.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
+										"autoload" : 0,
 										"debug" : 1,
 										"file" : "",
 										"pythonpath" : ""
@@ -672,6 +673,30 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-74",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 4.0, 129.0, 77.0, 22.0 ],
+									"text" : "eval api.fail()"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-73",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 2.0, 105.0, 105.0, 22.0 ],
+									"text" : "eval api.success()"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-70",
 									"maxclass" : "message",
@@ -1325,7 +1350,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 2.0, 129.0, 66.0, 22.0 ],
+									"patching_rect" : [ 87.0, 153.0, 66.0, 22.0 ],
 									"text" : "eval api.txt"
 								}
 
@@ -1337,7 +1362,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 2.0, 105.0, 61.0, 22.0 ],
+									"patching_rect" : [ 108.5, 129.0, 61.0, 22.0 ],
 									"text" : "import api"
 								}
 
@@ -1541,13 +1566,14 @@
 									"outlettype" : [ "", "", "" ],
 									"patching_rect" : [ 328.0, 258.0, 29.5, 22.0 ],
 									"saved_object_attributes" : 									{
+										"autoload" : 0,
 										"debug" : 1,
 										"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
 										"pythonpath" : ""
 									}
 ,
 									"text" : "py",
-									"varname" : "u213000818"
+									"varname" : "u569000573"
 								}
 
 							}
@@ -1958,6 +1984,20 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-72", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-73", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-74", 0 ]
 								}
 
 							}

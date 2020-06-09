@@ -123,6 +123,7 @@ cdef extern from "ext_mess.h":
     ctypedef void *(*one_meth)(void *x, void *z)
     ctypedef void *(*two_meth)(void *x, void *z, void *a)
     ctypedef long *(*gimmeback_meth)(void *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
+    # cdef <void*>int NIL
 
 
 cdef extern from "ext_backgroundtask.h":

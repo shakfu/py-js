@@ -162,8 +162,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] more of a development question: if attr has same name as method (the import saga), crash. fix by making them different. Investigate.
-
+- [ ] Sending from the `api` make max unstable. Keep it simple and investigate.
 
 ## TODO
 
@@ -296,3 +295,4 @@ Testing
        see: https://docs.python.org/3/c-api/intro.html exception handling example
        -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
+- [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
