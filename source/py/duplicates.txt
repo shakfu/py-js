@@ -6,16 +6,16 @@
     vsprintf(msg, fmt, va);
     va_end(va);
 
-./py.c(1020)
-./py.c(1009)
+./py.c(981)
+./py.c(970)
         if (msg_sym == NULL) { 
             goto error;
         argc = argc - 1;
         argv = argv + 1;
         break;
 
-./py.c(1182)
-./py.c(1171)
+./py.c(1143)
+./py.c(1132)
         if (msg_sym == NULL) { 
             goto error;
         argc = argc - 1;
@@ -46,57 +46,15 @@ error:
         goto error;
     sysmem_freeptr(text);
 
-./py.c(778)
-./py.c(658)
-        goto error;
-    for (int i = 1; i < argc; i++) {
-        switch ((argv + i)->a_type) {
-        case A_FLOAT: {
-            double c_float = atom_getfloat(argv + i);
-            PyObject* p_float = PyFloat_FromDouble(c_float);
-            if (p_float == NULL) {
-
-./py.c(793)
-./py.c(671)
-            Py_DECREF(p_float);
-            py_log(x, "%d: %f", i, atom_getfloat(argv + i));
-            break;
-        case A_LONG: {
-            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
-            if (p_long == NULL) {
-                py_error(x, "p_long == NULL");
-                goto error;
-
-./py.c(804)
-./py.c(682)
-            Py_DECREF(p_long);
-            py_log(x, "%d: %ld", i, atom_getlong(argv + i));
-            break;
-        case A_SYM: {
-            PyObject* p_str = PyUnicode_FromString(
-                atom_getsym(argv + i)->s_name);
-            if (p_str == NULL) {
-                py_error(x, "p_str == NULL");
-                goto error;
-
-./py.c(816)
-./py.c(694)
-            Py_DECREF(p_str);
-            py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
-            break;
-        default:
-            py_log(x, "cannot process unknown type");
-            break;
-
-./py.c(766)
-./py.c(640)
+./py.c(771)
+./py.c(693)
     if (argv->a_type != A_SYM) {
         py_error(x, "first atom must be a symbol!");
         goto error;
     } else {
 
-./py.c(1136)
-./py.c(974)
+./py.c(1097)
+./py.c(935)
     if (obj_name == NULL) {
         goto error;
     if (hashtab_getsize(py_global_registry) == 0) {
@@ -106,15 +64,15 @@ error:
         py_error(x, "no object found in the registry");
         goto error;
 
-./py.c(1156)
-./py.c(994)
+./py.c(1117)
+./py.c(955)
         if (msg_sym == NULL) { 
             goto error;
         if (argc - 2 == 0) { //
             argc = 0;
 
-./py.c(1167)
-./py.c(1005)
+./py.c(1128)
+./py.c(966)
         break;
     case A_FLOAT: {
         msg_sym = gensym("float");
@@ -122,8 +80,8 @@ error:
             goto error;
         argc = argc - 1;
 
-./py.c(1178)
-./py.c(1016)
+./py.c(1139)
+./py.c(977)
         break;
     case A_LONG: {
         msg_sym = gensym("int");
@@ -131,8 +89,8 @@ error:
             goto error;
         argc = argc - 1;
 
-./py.c(1189)
-./py.c(1027)
+./py.c(1150)
+./py.c(988)
         break;
     default:
         py_log(x, "cannot process unknown type");
@@ -142,15 +100,15 @@ error:
         post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
         post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
 
-./py.c(1123)
-./py.c(956)
+./py.c(1084)
+./py.c(917)
     t_object* obj = NULL;
     char* obj_name = NULL;
     t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
-./py.c(1220)
-./py.c(1048)
+./py.c(1181)
+./py.c(1009)
     return;
 error:
     py_error(x, "send failed");
@@ -164,13 +122,6 @@ error:
         vsprintf(msg, fmt, va);
         va_end(va);
 
-./py.c(1027)
-./py.c(818)
-        break;
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-
 ./py.c(313)
 ./py.c(29)
         char msg[50];
@@ -179,28 +130,21 @@ error:
         vsprintf(msg, fmt, va);
         va_end(va);
 
-./py.c(1027)
-./py.c(696)
+./py.c(988)
+./py.c(669)
         break;
     default:
         py_log(x, "cannot process unknown type");
         break;
 
-./py.c(1189)
-./py.c(818)
+./py.c(1150)
+./py.c(669)
         break;
     default:
         py_log(x, "cannot process unknown type");
         break;
 
-./py.c(1189)
-./py.c(696)
-        break;
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-
-./py.c(1095)
+./py.c(1056)
 ./py.c(397)
         goto error;
     while ((item = PyIter_Next(iter)) != NULL) {
@@ -221,7 +165,7 @@ error:
             i++;
         Py_DECREF(item);
 
-./py.c(1069)
+./py.c(1030)
 ./py.c(370)
     PyObject* iter = NULL;
     PyObject* item = NULL;
@@ -230,7 +174,7 @@ error:
     t_atom* atoms = NULL;
     int is_dynamic = 0;
 
-./py.c(1210)
+./py.c(1171)
 ./py.c(425)
     outlet_bang(x->p_outlet_right);
     py_log(x, "end iter op: %d", i);
@@ -246,7 +190,7 @@ Configuration:
   Ignore same filenames: 0
 
 Results: 
-  Lines of code: 830
-  Duplicate lines of code: 159
-  Total 27 duplicate block(s) found.
+  Lines of code: 801
+  Duplicate lines of code: 121
+  Total 21 duplicate block(s) found.
 
