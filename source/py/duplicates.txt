@@ -6,31 +6,31 @@
     vsprintf(msg, fmt, va);
     va_end(va);
 
-./py.c(981)
-./py.c(970)
+./py.c(1120)
+./py.c(1109)
         if (msg_sym == NULL) { 
             goto error;
         argc = argc - 1;
         argv = argv + 1;
         break;
 
-./py.c(1143)
-./py.c(1132)
+./py.c(1281)
+./py.c(1270)
         if (msg_sym == NULL) { 
             goto error;
         argc = argc - 1;
         atoms = atoms + 1;
         break;
 
-./py.c(618)
-./py.c(566)
+./py.c(809)
+./py.c(757)
     Py_DECREF(pval);
     outlet_bang(x->p_outlet_right);
     return;
 error:
 
-./py.c(545)
-./py.c(485)
+./py.c(736)
+./py.c(676)
     long textsize = 0;
     char* text = NULL;
     PyObject* pval = NULL;
@@ -39,22 +39,44 @@ error:
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
 
-./py.c(559)
-./py.c(502)
+./py.c(750)
+./py.c(693)
     if (pval == NULL) {
         sysmem_freeptr(text);
         goto error;
     sysmem_freeptr(text);
 
-./py.c(771)
-./py.c(693)
+./py.c(910)
+./py.c(832)
     if (argv->a_type != A_SYM) {
         py_error(x, "first atom must be a symbol!");
         goto error;
     } else {
 
-./py.c(1097)
-./py.c(935)
+./py.c(613)
+./py.c(478)
+                py_log(x, "%d float: %f\n", i, float_item);
+                i++;
+            if PyUnicode_Check (item) {
+                const char* unicode_item = PyUnicode_AsUTF8(item);
+
+./py.c(606)
+./py.c(467)
+                py_log(x, "%d long: %ld\n", i, long_item);
+                i++;
+            if PyFloat_Check (item) {
+                float float_item = PyFloat_AsDouble(item);
+
+./py.c(598)
+./py.c(455)
+        if ((iter = PyObject_GetIter(plist)) == NULL) {
+            goto error;
+        while ((item = PyIter_Next(iter)) != NULL) {
+            if (PyLong_Check(item)) {
+                long long_item = PyLong_AsLong(item);
+
+./py.c(1235)
+./py.c(1074)
     if (obj_name == NULL) {
         goto error;
     if (hashtab_getsize(py_global_registry) == 0) {
@@ -64,15 +86,15 @@ error:
         py_error(x, "no object found in the registry");
         goto error;
 
-./py.c(1117)
-./py.c(955)
+./py.c(1255)
+./py.c(1094)
         if (msg_sym == NULL) { 
             goto error;
         if (argc - 2 == 0) { //
             argc = 0;
 
-./py.c(1128)
-./py.c(966)
+./py.c(1266)
+./py.c(1105)
         break;
     case A_FLOAT: {
         msg_sym = gensym("float");
@@ -80,8 +102,8 @@ error:
             goto error;
         argc = argc - 1;
 
-./py.c(1139)
-./py.c(977)
+./py.c(1277)
+./py.c(1116)
         break;
     case A_LONG: {
         msg_sym = gensym("int");
@@ -89,8 +111,8 @@ error:
             goto error;
         argc = argc - 1;
 
-./py.c(1150)
-./py.c(988)
+./py.c(1288)
+./py.c(1127)
         break;
     default:
         py_log(x, "cannot process unknown type");
@@ -100,15 +122,23 @@ error:
         post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
         post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
 
-./py.c(1084)
-./py.c(917)
+./py.c(1222)
+./py.c(1056)
     t_object* obj = NULL;
     char* obj_name = NULL;
     t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
-./py.c(1181)
-./py.c(1009)
+./py.c(585)
+./py.c(428)
+    if (PySequence_Check(plist) && !PyUnicode_Check(plist)
+        && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
+        PyObject* iter = NULL;
+        PyObject* item = NULL;
+        int i = 0;
+
+./py.c(1319)
+./py.c(1148)
     return;
 error:
     py_error(x, "send failed");
@@ -130,43 +160,67 @@ error:
         vsprintf(msg, fmt, va);
         va_end(va);
 
-./py.c(988)
-./py.c(669)
+./py.c(1127)
+./py.c(569)
         break;
     default:
         py_log(x, "cannot process unknown type");
         break;
 
-./py.c(1150)
-./py.c(669)
-        break;
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-
-./py.c(1056)
-./py.c(397)
+./py.c(1194)
+./py.c(599)
         goto error;
     while ((item = PyIter_Next(iter)) != NULL) {
         if (PyLong_Check(item)) {
             long long_item = PyLong_AsLong(item);
-            atom_setlong(atoms + i, long_item);
+
+./py.c(1201)
+./py.c(606)
             py_log(x, "%d long: %ld\n", i, long_item);
             i++;
         if PyFloat_Check (item) {
             float float_item = PyFloat_AsDouble(item);
-            atom_setfloat(atoms + i, float_item);
+
+./py.c(1208)
+./py.c(613)
             py_log(x, "%d float: %f\n", i, float_item);
             i++;
         if PyUnicode_Check (item) {
             const char* unicode_item = PyUnicode_AsUTF8(item);
             py_log(x, "%d unicode: %s\n", i, unicode_item);
+
+./py.c(1288)
+./py.c(569)
+        break;
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
+
+./py.c(1214)
+./py.c(487)
+            py_log(x, "%d unicode: %s\n", i, unicode_item);
             atom_setsym(atoms + i, gensym(unicode_item));
             i++;
         Py_DECREF(item);
 
-./py.c(1030)
-./py.c(370)
+./py.c(1207)
+./py.c(477)
+            atom_setfloat(atoms + i, float_item);
+            py_log(x, "%d float: %f\n", i, float_item);
+            i++;
+        if PyUnicode_Check (item) {
+            const char* unicode_item = PyUnicode_AsUTF8(item);
+
+./py.c(1200)
+./py.c(466)
+            atom_setlong(atoms + i, long_item);
+            py_log(x, "%d long: %ld\n", i, long_item);
+            i++;
+        if PyFloat_Check (item) {
+            float float_item = PyFloat_AsDouble(item);
+
+./py.c(1168)
+./py.c(430)
     PyObject* iter = NULL;
     PyObject* item = NULL;
     int i = 0;
@@ -174,8 +228,15 @@ error:
     t_atom* atoms = NULL;
     int is_dynamic = 0;
 
-./py.c(1171)
-./py.c(425)
+./py.c(1194)
+./py.c(456)
+        goto error;
+    while ((item = PyIter_Next(iter)) != NULL) {
+        if (PyLong_Check(item)) {
+            long long_item = PyLong_AsLong(item);
+
+./py.c(1309)
+./py.c(495)
     outlet_bang(x->p_outlet_right);
     py_log(x, "end iter op: %d", i);
     if (is_dynamic) {
@@ -190,7 +251,7 @@ Configuration:
   Ignore same filenames: 0
 
 Results: 
-  Lines of code: 801
-  Duplicate lines of code: 121
-  Total 21 duplicate block(s) found.
+  Lines of code: 890
+  Duplicate lines of code: 152
+  Total 31 duplicate block(s) found.
 
