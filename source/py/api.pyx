@@ -31,6 +31,7 @@ import numpy as np
 
 
 DEF MAX_CHARS = 32767
+DEF PY_MAX_ATOMS = 128
 
 
 cdef extern from "Python.h":
@@ -152,6 +153,18 @@ cdef class PyExternal:
         _args = [name] + args
         px.py_send_from_seq(self.obj, <PyObject*>_args)
 
+    # cdef send3(self, str name, list args):
+    #     cdef mx.t_atom argv[PY_MAX_ATOMS]
+    #     cdef long argc = <long>len(args)
+    #     for i, elem in enumerate(args):
+    #         if type(elem) == float:
+    #             mx.atom_setfloat(&argv[i], <double>elem)
+    #         elif type(elem) == int:
+    #             mx.atom_setlong((&argv[i]), <long>elem)
+    #         elif type(elem) == str:
+    #             mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
+    #         else:
+    #             continue
 
     cdef success(self):
         mx.outlet_bang(<void*>self.obj.p_outlet_right)

@@ -85,6 +85,32 @@ cdef extern from "ext_atombuf.h":
     long atombuf_replacepoundargs(t_atombuf *x, long argc, t_atom *argv)
 
 
+cdef extern from "max_types.h":
+    ctypedef unsigned int t_uint            # an unsigned int as defined by the architecture / platform  @ingroup misc
+    ctypedef char t_int8                    # a 1-byte int  @ingroup misc
+    ctypedef unsigned char t_uint8          # an unsigned 1-byte int  @ingroup misc
+    ctypedef short t_int16                  # a 2-byte int  @ingroup misc
+    ctypedef unsigned short t_uint16        # an unsigned 2-byte int  @ingroup misc
+    ctypedef int t_int32                    # a 4-byte int  @ingroup misc
+    ctypedef unsigned int t_uint32          # an unsigned 4-byte int  @ingroup misc
+    ctypedef long long t_int64              # an 8-byte int  @ingroup misc
+    ctypedef unsigned long long t_uint64    # an unsigned 8-byte int  @ingroup misc
+    ctypedef t_uint32 t_fourcc              # an integer of suitable size to hold a four char code / identifier  @ingroup misc
+
+    ctypedef unsigned long long t_ptr_uint  # an unsigned pointer-sized int  @ingroup misc
+    ctypedef long long t_ptr_int            # a pointer-sized int  @ingroup misc
+    ctypedef double t_atom_float            # the type that is an A_FLOAT in a #t_atom  @ingroup misc
+    ctypedef t_ptr_uint t_getbytes_size     # like size_t but for getbytes()  @ingroup misc
+    ctypedef t_ptr_int t_int                # an integer  @ingroup misc
+    ctypedef t_ptr_uint t_ptr_size          # unsigned pointer-sized value for counting (like size_t)  @ingroup misc
+    ctypedef t_ptr_int t_atom_long          # the type that is an A_LONG in a #t_atom  @ingroup misc
+    ctypedef t_atom_long t_max_err          # an integer value suitable to be returned as an error code  @ingroup misc   
+    ctypedef char **t_handle                # a handle (address of a pointer)  @ingroup misc
+    ctypedef char *t_ptr                    # a pointer  @ingroup misc
+    ctypedef t_uint8 t_bool                 # a true/false variable  @ingroup misc
+    ctypedef t_int16 t_filepath             # i.e. path/vol in file APIs identifying a folder  @ingroup misc
+
+
 cdef extern from "ext_mess.h":
     ctypedef void *(*method)(void *, ...)
     ctypedef long (*t_intmethod)(void *, ...)
@@ -95,7 +121,17 @@ cdef extern from "ext_mess.h":
     cdef int NOGOOD(x)
     cdef int OB_INVALID(x)
     cdef int MSG_MAXARG
-    ctypedef struct t_atom
+
+    ctypedef union word:
+        t_atom_long w_long;
+        t_atom_float w_float
+        t_symbol *w_sym
+        #object *w_obj
+
+    ctypedef struct t_atom:
+        short a_type 
+        word a_w
+
     ctypedef struct t_class
     ctypedef struct t_messlist
     ctypedef enum e_max_atomtypes:
@@ -140,30 +176,6 @@ cdef extern from "ext_backgroundtask.h":
     cdef long backgroundtask_join(t_backgroundtask *task)
 
 
-cdef extern from "max_types.h":
-    ctypedef unsigned int t_uint            # an unsigned int as defined by the architecture / platform  @ingroup misc
-    ctypedef char t_int8                    # a 1-byte int  @ingroup misc
-    ctypedef unsigned char t_uint8          # an unsigned 1-byte int  @ingroup misc
-    ctypedef short t_int16                  # a 2-byte int  @ingroup misc
-    ctypedef unsigned short t_uint16        # an unsigned 2-byte int  @ingroup misc
-    ctypedef int t_int32                    # a 4-byte int  @ingroup misc
-    ctypedef unsigned int t_uint32          # an unsigned 4-byte int  @ingroup misc
-    ctypedef long long t_int64              # an 8-byte int  @ingroup misc
-    ctypedef unsigned long long t_uint64    # an unsigned 8-byte int  @ingroup misc
-    ctypedef t_uint32 t_fourcc              # an integer of suitable size to hold a four char code / identifier  @ingroup misc
-
-    ctypedef unsigned long long t_ptr_uint  # an unsigned pointer-sized int  @ingroup misc
-    ctypedef long long t_ptr_int            # a pointer-sized int  @ingroup misc
-    ctypedef double t_atom_float            # the type that is an A_FLOAT in a #t_atom  @ingroup misc
-    ctypedef t_ptr_uint t_getbytes_size     # like size_t but for getbytes()  @ingroup misc
-    ctypedef t_ptr_int t_int                # an integer  @ingroup misc
-    ctypedef t_ptr_uint t_ptr_size          # unsigned pointer-sized value for counting (like size_t)  @ingroup misc
-    ctypedef t_ptr_int t_atom_long          # the type that is an A_LONG in a #t_atom  @ingroup misc
-    ctypedef t_atom_long t_max_err          # an integer value suitable to be returned as an error code  @ingroup misc   
-    ctypedef char **t_handle                # a handle (address of a pointer)  @ingroup misc
-    ctypedef char *t_ptr                    # a pointer  @ingroup misc
-    ctypedef t_uint8 t_bool                 # a true/false variable  @ingroup misc
-    ctypedef t_int16 t_filepath             # i.e. path/vol in file APIs identifying a folder  @ingroup misc
 
 
 cdef extern from "ext_hashtab.h":
