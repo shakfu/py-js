@@ -19,7 +19,7 @@
 </v>
 <v t="sta.20200602110822.1"><vh>py</vh>
 <v t="sta.20200602164905.1"><vh>@auto-md README.md</vh></v>
-<v t="sta.20200602151837.1"><vh>notes</vh>
+<v t="sta.20200602151837.1"><vh>@chapter notes</vh>
 <v t="sta.20200602154708.1"><vh>@auto structure.txt</vh></v>
 <v t="sta.20200602151900.1"><vh>@auto-md max-c-api.md</vh></v>
 <v t="sta.20200602154130.1"><vh>@auto-md python-c-api.md</vh></v>
@@ -30,7 +30,7 @@
 <v t="sta.20200602154517.1"><vh>@auto-md scripting-tips.md</vh></v>
 <v t="sta.20200602154626.1"><vh>@auto-md testing.md</vh></v>
 </v>
-<v t="sta.20200602164507.1"><vh>tests</vh>
+<v t="sta.20200602164507.1"><vh>@chapter tests</vh>
 <v t="sta.20200602164529.1"><vh>@clean test_translate.c</vh>
 <v t="sta.20200602165143.1"><vh>declarations</vh></v>
 <v t="sta.20200602165143.2"><vh>int main</vh></v>
@@ -151,6 +151,7 @@
 <v t="sta.20200602120251.11"><vh>void py_scan</vh></v>
 <v t="sta.20200603072826.1"><vh>long py_scan_callback</vh></v>
 <v t="sta.20200602120251.12"><vh>void py_send</vh></v>
+<v t="sta.20200610070057.1"><vh>void py_send_from_seq</vh></v>
 <v t="sta.20200608043930.1"><vh>void py_lookup</vh></v>
 <v t="sta.20200602120251.26"><vh>void py_globex</vh></v>
 </v>
@@ -199,8 +200,9 @@
     }
 
     if (x-&gt;p_patcher) {
-        object_method(x-&gt;p_patcher, gensym("iterate"), (method)py_scan_callback, x,
-                      PI_DEEP | PI_WANTBOX, &amp;result);        
+        object_method(x-&gt;p_patcher, gensym("iterate"),
+                      (method)py_scan_callback, x, PI_DEEP | PI_WANTBOX,
+                      &amp;result);
     } else {
         py_error(x, "scan failed");
     }
@@ -216,14 +218,14 @@
     t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
-
     if (argc &lt; 2) {
         py_error(x, "need at least 2 args to send msg");
         goto error;
     }
 
-    if ((argv+0)-&gt;a_type != A_SYM) {
-        py_error(x, "1st arg of send needs to be a symbol name of receiver object");
+    if ((argv + 0)-&gt;a_type != A_SYM) {
+        py_error(
+            x, "1st arg of send needs to be a symbol name of receiver object");
         goto error;
     }
 
@@ -455,7 +457,6 @@ error:
         py_execfile(x, s);
     }
 }
-
 </t>
 <t tx="sta.20200602120251.20">void py_import(t_py* x, t_symbol* s)
 {
@@ -677,7 +678,6 @@ error:
     PyObject* py_argslist = NULL; // python list
     PyObject* py_args = NULL;     // python tuple
 
-
     // first atom in argv must be a symbol
     if (argv-&gt;a_type != A_SYM) {
         py_error(x, "first atom must be a symbol!");
@@ -872,39 +872,41 @@ error:
     // object attributes
     //------------------------------------------------------------------------
 
-    CLASS_ATTR_ORDER(c, "name", 0,  "0");
     CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
     CLASS_ATTR_SYM(c,   "name", 0,   t_py, p_name);
     CLASS_ATTR_BASIC(c, "name", 0);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
 
-    CLASS_ATTR_ORDER(c,  "file", 0,  "1");
+    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
+    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
+    CLASS_ATTR_BASIC(c,  "debug", 0);
+    CLASS_ATTR_SAVE(c,   "debug", 0);
+
     CLASS_ATTR_LABEL(c,  "file", 0,  "default python script");
     CLASS_ATTR_SYM(c,    "file", 0,   t_py,  p_code_filepath);
-    // CLASS_ATTR_STYLE(c,  "file", 0,   "file");
+    CLASS_ATTR_STYLE(c,  "file", 0,   "file");
     CLASS_ATTR_BASIC(c,  "file", 0);
     CLASS_ATTR_SAVE(c,   "file", 0);
 
-    CLASS_ATTR_ORDER(c,  "pythonpath", 0,  "2");
+    CLASS_ATTR_LABEL(c,  "autoload", 0,  "autoload default python script");
+    CLASS_ATTR_CHAR(c,   "autoload", 0,  t_py, p_autoload);
+    CLASS_ATTR_STYLE(c,  "autoload", 0, "onoff");
+    CLASS_ATTR_BASIC(c,  "autoload", 0);
+    CLASS_ATTR_SAVE(c,   "autoload", 0);
+
+
     CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
     CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_STYLE(c,  "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,  "pythonpath", 0);
     CLASS_ATTR_SAVE(c,   "pythonpath", 0);
 
-    CLASS_ATTR_ORDER(c,  "debug", 0,  "3");
-    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
-    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
-    CLASS_ATTR_BASIC(c,  "debug", 0);
-    CLASS_ATTR_SAVE(c,   "debug", 0);
-
-    CLASS_ATTR_ORDER(c,  "debug", 0,  "4");
-    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
-    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
-    CLASS_ATTR_BASIC(c,  "debug", 0);
-    CLASS_ATTR_SAVE(c,   "debug", 0);
+    CLASS_ATTR_ORDER(c,  "name",        0,  "1");
+    CLASS_ATTR_ORDER(c,  "file",        0,  "2");
+    CLASS_ATTR_ORDER(c,  "autoload",    0,  "3");
+    CLASS_ATTR_ORDER(c,  "pythonpath",  0,  "4");
+    CLASS_ATTR_ORDER(c,  "debug",       0,  "5");
 
     // clang-format on
     //------------------------------------------------------------------------
@@ -957,7 +959,8 @@ error:
 
         // core
         if (py_global_obj_count == 0) {
-            x-&gt;p_name = gensym("__main__"); // first is __main__
+            // first py obj is called '__main__'
+            x-&gt;p_name = gensym("__main__");
         } else {
             x-&gt;p_name = symbol_unique();
         }
@@ -1178,7 +1181,10 @@ typedef struct _py {
     char** p_code;
     long p_code_size;
     t_symbol* p_code_filepath; /* default python filepath to load into
-                                  the code editor and global namespace */
+                                  the code editor and object 'globals'
+                                  namespace */
+    t_bool p_autoload;         /* bool to autoload of p_code_filepath  */
+
     /* outlet creation */
     void* p_outlet_right;  // right outlet to bang success
     void* p_outlet_middle; // middle outleet to bang error
@@ -1190,8 +1196,8 @@ typedef struct _py {
 <t tx="sta.20200602145807.1">/*--------------------------------------------------------------------------*/
 // GLOBALS
 
-t_class* py_class; // global pointer to object class
-static int py_global_obj_count; // when 0 then free interpreter
+t_class* py_class;                    // global pointer to object class
+static int py_global_obj_count;       // when 0 then free interpreter
 static t_hashtab* py_global_registry; // global object lookups
 </t>
 <t tx="sta.20200602150052.1">/*--------------------------------------------------------------------------*/
@@ -1262,7 +1268,8 @@ void py_edsave(t_py* x, char** text, long size);
 void py_locatefile(t_py* x, char* filename);
 void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
 
-
+// helpers for api
+void py_send_from_seq(t_py* x, PyObject* seq);
 </t>
 <t tx="sta.20200602150733.1">/*--------------------------------------------------------------------------*/
 // INCLUDES
@@ -3356,7 +3363,7 @@ error:
 
     err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-                       // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUxOTE);
+                    // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE);
 
     if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
         py_log(x, "eval %s", text);
@@ -3368,7 +3375,7 @@ error:
 
     if (pval == NULL) {
         sysmem_freeptr(text);
-        goto error;   
+        goto error;
     }
 
     // success
@@ -3535,6 +3542,178 @@ LeoDirectory('.').render()</t>
     return;
 }
 
+</t>
+<t tx="sta.20200610070057.1">
+void py_send_from_seq(t_py* x, PyObject* seq)
+{
+
+    if (seq == NULL) {
+        goto error;
+    }
+
+    if (!PySequence_Check(seq) || PyUnicode_Check(seq) || PyBytes_Check(seq)
+        || PyByteArray_Check(seq)) {
+        goto error;
+    }
+
+    // list -&gt; t_atom vars
+    PyObject* iter = NULL;
+    PyObject* item = NULL;
+    int i = 0;
+
+    t_atom atoms_static[PY_MAX_ATOMS];
+    t_atom* atoms = NULL;
+    int is_dynamic = 0;
+
+    Py_ssize_t seq_size = PySequence_Length(seq);
+    long argc = (long)seq_size;
+
+    if (seq_size &lt; 2) {
+        py_error(x, "cannot convert py sequence length &lt; 2 to atoms");
+        goto error;
+    }
+
+    if (seq_size &gt; PY_MAX_ATOMS) {
+        py_log(x, "dynamically increasing size of atom array");
+        atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, seq_size + 1);
+        is_dynamic = 1;
+
+    } else {
+        atoms = atoms_static;
+    }
+
+    if ((iter = PyObject_GetIter(seq)) == NULL) {
+        goto error;
+    }
+
+    while ((item = PyIter_Next(iter)) != NULL) {
+        if (PyLong_Check(item)) {
+            long long_item = PyLong_AsLong(item);
+            atom_setlong(atoms + i, long_item);
+            py_log(x, "%d long: %ld\n", i, long_item);
+            i++;
+        }
+
+        if PyFloat_Check (item) {
+            float float_item = PyFloat_AsDouble(item);
+            atom_setfloat(atoms + i, float_item);
+            py_log(x, "%d float: %f\n", i, float_item);
+            i++;
+        }
+
+        if PyUnicode_Check (item) {
+            const char* unicode_item = PyUnicode_AsUTF8(item);
+            py_log(x, "%d unicode: %s\n", i, unicode_item);
+            atom_setsym(atoms + i, gensym(unicode_item));
+            i++;
+        }
+        Py_DECREF(item);
+    }
+
+    // send vars
+    t_object* obj = NULL;
+    char* obj_name = NULL;
+    t_symbol* msg_sym = NULL;
+    t_max_err err = NULL;
+
+    if ((atoms + 0)-&gt;a_type != A_SYM) {
+        py_error(
+            x, "1st arg of send needs to be a symbol name of receiver object");
+        goto error;
+    }
+
+    // argv+0 is the object name to send to
+    obj_name = atom_getsym(atoms)-&gt;s_name;
+    if (obj_name == NULL) {
+        goto error;
+    }
+
+    // if registry is empty, scan it
+    if (hashtab_getsize(py_global_registry) == 0) {
+        py_scan(x);
+    }
+
+    // // lookup name in registry
+    err = hashtab_lookup(py_global_registry, gensym(obj_name), &amp;obj);
+    if (err != MAX_ERR_NONE || obj == NULL) {
+        py_error(x, "no object found in the registry");
+        goto error;
+    }
+
+    // atom after the name of the receiver
+    switch ((atoms + 1)-&gt;a_type) {
+    case A_SYM: {
+        msg_sym = atom_getsym(atoms + 1);
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+        // address the minimum case: e.g a bang
+        if (argc - 2 == 0) { //
+            argc = 0;
+            atoms = NULL;
+        } else {
+            argc = argc - 2;
+            atoms = atoms + 2;
+        }
+        break;
+    }
+    case A_FLOAT: {
+        msg_sym = gensym("float");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        atoms = atoms + 1;
+
+        break;
+    }
+    case A_LONG: {
+        msg_sym = gensym("int");
+        if (msg_sym == NULL) { // should check type here
+            goto error;
+        }
+
+        argc = argc - 1;
+        atoms = atoms + 1;
+
+        break;
+    }
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
+    }
+
+    // methods to get method type
+    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
+    if (messlist) {
+        post("messlist-&gt;m_sym  (name of msg): %s", messlist-&gt;m_sym-&gt;s_name);
+        post("messlist-&gt;m_type (type of msg): %d", messlist-&gt;m_type[0]);
+    }
+
+    err = object_method_typed(obj, msg_sym, argc, atoms, NULL);
+    if (err) {
+        py_error(x, "failed to send a message to object %s", obj_name);
+        goto error;
+    }
+
+    // process here
+    outlet_bang(x-&gt;p_outlet_right);
+    py_log(x, "end iter op: %d", i);
+
+    if (is_dynamic) {
+        py_log(x, "restoring to static atom array");
+        atom_dynamic_end(atoms_static, atoms);
+    }
+
+    // final cleanup
+    Py_XDECREF(seq);
+    return;
+
+error:
+    py_error(x, "send failed");
+    return;
+}
 </t>
 </tnodes>
 </leo_file>
