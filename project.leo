@@ -132,7 +132,7 @@
 </v>
 <v t="sta.20200608042323.1"><vh>common handlers</vh>
 <v t="sta.20200602120251.13"><vh>void py_handle_error</vh></v>
-<v t="sta.20200610104556.1"><vh>void py_handle_float_output</vh></v>
+<v t="sta.20200610181828.1"><vh>void py_handle_float_output</vh></v>
 <v t="sta.20200610104609.1"><vh>void py_handle_long_output</vh></v>
 <v t="sta.20200610105537.1"><vh>void py_handle_string_output</vh></v>
 <v t="sta.20200610104706.1"><vh>void py_handle_list_output</vh></v>
@@ -140,6 +140,7 @@
 </v>
 <v t="sta.20200610100240.1"><vh>translators</vh>
 <v t="sta.20200610100158.1"><vh>PyObject* py_atom_to_list</vh></v>
+<v t="sta.20200610164212.1"><vh>void py_list_to_atom</vh></v>
 </v>
 <v t="sta.20200602120318.1"><vh>core</vh>
 <v t="sta.20200602120251.20"><vh>void py_import</vh></v>
@@ -318,7 +319,6 @@ error:
     py_error(x, "send failed");
     return;
 }
-
 </t>
 <t tx="sta.20200602120251.13">void py_handle_error(t_py* x, char* fmt, ...)
 {
@@ -639,8 +639,8 @@ error:
     PyObject* py_argslist = NULL;
     PyObject* pval = NULL;
     PyObject* py_callable = NULL;
-     // python list
-    PyObject* py_args = NULL;     // python tuple
+    // python list
+    PyObject* py_args = NULL; // python tuple
 
     // first atom in argv must be a symbol
     if (argv-&gt;a_type != A_SYM) {
@@ -1146,10 +1146,10 @@ void py_error(t_py* x, char* fmt, ...);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
-void py_handle_float_output(t_py* x, PyObject* pval, bool free_later);
-void py_handle_long_output(t_py* x, PyObject* pval, bool free_later);
-void py_handle_string_output(t_py* x, PyObject* pval, bool free_later);
-void py_handle_list_output(t_py* x, PyObject* pval, bool free_later);
+void py_handle_float_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_long_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_string_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_list_output(t_py* x, PyObject* pval, bool free_now);
 void py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
@@ -3172,10 +3172,12 @@ error:
 </t>
 <t tx="sta.20200606044751.1">void py_handle_output(t_py* x, PyObject* pval)
 {
-    py_handle_long_output(x, pval, 1);
-    py_handle_float_output(x, pval, 1);
-    py_handle_string_output(x, pval, 1);
-    py_handle_list_output(x, pval, 1);
+    // &lt;python type&gt; -&gt; left outlet output handlers
+    // error handling is already provided in each handler
+    py_handle_float_output(x, pval, 0);
+    py_handle_long_output(x, pval, 0);
+    py_handle_string_output(x, pval, 0);
+    py_handle_list_output(x, pval, 0);
 
     // final cleanup
     Py_XDECREF(pval);
@@ -3193,7 +3195,7 @@ error:
 
     err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-                    // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE);
+    // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE);
 
     if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
         py_log(x, "eval %s", text);
@@ -3545,8 +3547,9 @@ error:
     return;
 }
 </t>
-<t tx="sta.20200610100158.1">PyObject* py_atom_to_list(t_py* x, long argc, t_atom* argv, int start_from) {
-     
+<t tx="sta.20200610100158.1">PyObject* py_atom_to_list(t_py* x, long argc, t_atom* argv, int start_from)
+{
+
     PyObject* plist = NULL; // python list
 
     if ((plist = PyList_New(0)) == NULL) {
@@ -3595,56 +3598,47 @@ error:
 error:
     py_error(x, "atom to list conversion failed");
     return NULL;
-}</t>
+}
+</t>
 <t tx="sta.20200610100240.1">/*--------------------------------------------------------------------------*/
 // TRANSLATORS
 </t>
-<t tx="sta.20200610104556.1">void py_handle_float_output(t_py* x, PyObject* pval, bool free_later)
+<t tx="sta.20200610104609.1">void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
 {
-    // handle floats and doubles
-    if (PyFloat_Check(pval)) {
-        float float_result = (float)PyFloat_AsDouble(pval);
-        outlet_float(x-&gt;p_outlet_left, float_result);
+    if (plong == NULL) {
+        goto error;
+    }
+
+    if (PyLong_Check(plong)) {
+        long long_result = PyLong_AsLong(plong);
+        if (long_result == -1) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        outlet_int(x-&gt;p_outlet_left, long_result);
         outlet_bang(x-&gt;p_outlet_right);
     }
-    
-    if (!free_later) {
-        // final cleanup
-        Py_XDECREF(pval);
+
+    if (free_now) {
+        Py_XDECREF(plong);
     }
     return;
 
 error:
     py_handle_error(x, "python exception occurred");
-    Py_XDECREF(pval);
+    Py_XDECREF(plong);
     outlet_bang(x-&gt;p_outlet_middle);
 }
-</t>
-<t tx="sta.20200610104609.1">void py_handle_long_output(t_py* x, PyObject* pval, bool free_later)
-{
-    // handle ints and longs
-    if (PyLong_Check(pval)) {
-        long int_result = PyLong_AsLong(pval);
-        outlet_int(x-&gt;p_outlet_left, int_result);
-        outlet_bang(x-&gt;p_outlet_right);
-    }
-    
-    if (!free_later) {
-        // final cleanup
-        Py_XDECREF(pval);
-    }
-    return;
 
-error:
-    py_handle_error(x, "python exception occurred");
-    Py_XDECREF(pval);
-    outlet_bang(x-&gt;p_outlet_middle);
-}
 </t>
-<t tx="sta.20200610104706.1">void py_handle_list_output(t_py* x, PyObject* pval, bool free_later)
+<t tx="sta.20200610104706.1">void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
 {
-    if (PySequence_Check(pval) &amp;&amp; !PyUnicode_Check(pval)
-        &amp;&amp; !PyBytes_Check(pval) &amp;&amp; !PyByteArray_Check(pval)) {
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (PySequence_Check(plist) &amp;&amp; !PyUnicode_Check(plist)
+        &amp;&amp; !PyBytes_Check(plist) &amp;&amp; !PyByteArray_Check(plist)) {
         PyObject* iter = NULL;
         PyObject* item = NULL;
         int i = 0;
@@ -3653,11 +3647,10 @@ error:
         t_atom* atoms = NULL;
         int is_dynamic = 0;
 
-        Py_ssize_t seq_size = PySequence_Length(pval);
+        Py_ssize_t seq_size = PySequence_Length(plist);
 
-        if (seq_size &lt;= 0) {
-            py_error(
-                x, "cannot convert python sequence of length &lt;= 0 to atoms");
+        if (seq_size == 0) {
+            py_error(x, "cannot convert py list of length 0 to atoms");
             goto error;
         }
 
@@ -3671,27 +3664,38 @@ error:
             atoms = atoms_static;
         }
 
-        if ((iter = PyObject_GetIter(pval)) == NULL) {
+        if ((iter = PyObject_GetIter(plist)) == NULL) {
             goto error;
         }
 
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
+                if (long_item == -1) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 atom_setlong(atoms + i, long_item);
                 py_log(x, "%d long: %ld\n", i, long_item);
                 i++;
             }
 
-            if PyFloat_Check (item) {
+            if PyFloat_Check(item) {
                 float float_item = PyFloat_AsDouble(item);
+                if (float_item == -1.0) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 atom_setfloat(atoms + i, float_item);
                 py_log(x, "%d float: %f\n", i, float_item);
                 i++;
             }
 
-            if PyUnicode_Check (item) {
+            if PyUnicode_Check(item) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
+                if (unicode_item == NULL) {
+                    goto error;
+                }
                 py_log(x, "%d unicode: %s\n", i, unicode_item);
                 atom_setsym(atoms + i, gensym(unicode_item));
                 i++;
@@ -3708,38 +3712,129 @@ error:
             atom_dynamic_end(atoms_static, atoms);
         }
     }
-    if (!free_later) {
-        // final cleanup
-        Py_XDECREF(pval);
+    
+    if (free_now) {
+        Py_XDECREF(plist);
     }
     return;
 
 error:
     py_handle_error(x, "python exception occurred");
-    Py_XDECREF(pval);
+    Py_XDECREF(plist);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 </t>
-<t tx="sta.20200610105537.1">void py_handle_string_output(t_py* x, PyObject* pval, bool free_later)
+<t tx="sta.20200610105537.1">void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
 {
-    // handle strings
-    if (PyUnicode_Check(pval)) {
-        const char* unicode_result = PyUnicode_AsUTF8(pval);
+    if (pstring == NULL) {
+        goto error;
+    }
+
+    if (PyUnicode_Check(pstring)) {
+        const char* unicode_result = PyUnicode_AsUTF8(pstring);
+        if (unicode_result == NULL) {
+            goto error;
+        }
         outlet_anything(x-&gt;p_outlet_left, gensym(unicode_result), 0, NIL);
         outlet_bang(x-&gt;p_outlet_right);
     }
 
-    if (!free_later) {
-        // final cleanup
-        Py_XDECREF(pval);
+    if (free_now) {
+        Py_XDECREF(pstring);
     }
     return;
 
 error:
     py_handle_error(x, "python exception occurred");
-    Py_XDECREF(pval);
+    Py_XDECREF(pstring);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 </t>
+<t tx="sta.20200610164212.1">
+// void py_list_to_atom(t_py* x, PyObject* pval, long* argc, t_atom** argv)
+// {
+//     if (PySequence_Check(pval) &amp;&amp; !PyUnicode_Check(pval)
+//         &amp;&amp; !PyBytes_Check(pval) &amp;&amp; !PyByteArray_Check(pval)) {
+//         PyObject* iter = NULL;
+//         PyObject* item = NULL;
+//         int i = 0;
+
+//         Py_ssize_t seq_size = PySequence_Length(pval);
+
+//         if (seq_size &lt;= 0) {
+//             py_error(x,
+//                      "cannot convert python sequence of length &lt;= 0 to atoms");
+//             goto error;
+//         }
+
+//         if ((iter = PyObject_GetIter(pval)) == NULL) {
+//             goto error;
+//         }
+
+//         while ((item = PyIter_Next(iter)) != NULL) {
+//             if (PyLong_Check(item)) {
+//                 long long_item = PyLong_AsLong(item);
+//                 atom_setlong(argv + i, long_item);
+//                 py_log(x, "%d long: %ld\n", i, long_item);
+//                 i++;
+//             }
+
+//             if PyFloat_Check (item) {
+//                 float float_item = PyFloat_AsDouble(item);
+//                 atom_setfloat(argv + i, float_item);
+//                 py_log(x, "%d float: %f\n", i, float_item);
+//                 i++;
+//             }
+
+//             if PyUnicode_Check (item) {
+//                 const char* unicode_item = PyUnicode_AsUTF8(item);
+//                 py_log(x, "%d unicode: %s\n", i, unicode_item);
+//                 atom_setsym(argv + i, gensym(unicode_item));
+//                 i++;
+//             }
+//             Py_DECREF(item);
+//         }
+
+//     }
+//     if (!free_later) {
+//         // final cleanup
+//         Py_XDECREF(pval);
+//     }
+//     return;
+
+// error:
+//     py_handle_error(x, "atom to list conversion failed");
+//     Py_XDECREF(pval);
+// }
+</t>
+<t tx="sta.20200610181828.1">void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
+{
+    if (pfloat == NULL) {
+        goto error;
+    }
+    
+    if (PyFloat_Check(pfloat)) {
+        float float_result = (float)PyFloat_AsDouble(pfloat);
+        if (float_result == -1.0) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        
+        outlet_float(x-&gt;p_outlet_left, float_result);
+        outlet_bang(x-&gt;p_outlet_right);
+    }
+
+    if (free_now) {
+        Py_XDECREF(pfloat);
+    }
+    return;
+
+error:
+    py_handle_error(x, "python exception occurred");
+    Py_XDECREF(pfloat);
+    outlet_bang(x-&gt;p_outlet_middle);
+}</t>
 </tnodes>
 </leo_file>

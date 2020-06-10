@@ -339,25 +339,24 @@ void py_handle_error(t_py* x, char* fmt, ...)
     }
 }
 
-void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_later)
+void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
 {
     if (pfloat == NULL) {
         goto error;
     }
-
-    // handle floats and doubles
+    
     if (PyFloat_Check(pfloat)) {
         float float_result = (float)PyFloat_AsDouble(pfloat);
         if (float_result == -1.0) {
             if (PyErr_Occurred())
                 goto error;
         }
+        
         outlet_float(x->p_outlet_left, float_result);
         outlet_bang(x->p_outlet_right);
     }
 
-    if (!free_later) {
-        // final cleanup
+    if (free_now) {
         Py_XDECREF(pfloat);
     }
     return;
@@ -367,14 +366,12 @@ error:
     Py_XDECREF(pfloat);
     outlet_bang(x->p_outlet_middle);
 }
-
-void py_handle_long_output(t_py* x, PyObject* plong, bool free_later)
+void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
 {
     if (plong == NULL) {
         goto error;
     }
 
-    // handle ints and longs
     if (PyLong_Check(plong)) {
         long long_result = PyLong_AsLong(plong);
         if (long_result == -1) {
@@ -385,8 +382,7 @@ void py_handle_long_output(t_py* x, PyObject* plong, bool free_later)
         outlet_bang(x->p_outlet_right);
     }
 
-    if (!free_later) {
-        // final cleanup
+    if (free_now) {
         Py_XDECREF(plong);
     }
     return;
@@ -397,13 +393,12 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
-void py_handle_string_output(t_py* x, PyObject* pstring, bool free_later)
+void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
 {
     if (pstring == NULL) {
         goto error;
     }
 
-    // handle strings
     if (PyUnicode_Check(pstring)) {
         const char* unicode_result = PyUnicode_AsUTF8(pstring);
         if (unicode_result == NULL) {
@@ -413,8 +408,7 @@ void py_handle_string_output(t_py* x, PyObject* pstring, bool free_later)
         outlet_bang(x->p_outlet_right);
     }
 
-    if (!free_later) {
-        // final cleanup
+    if (free_now) {
         Py_XDECREF(pstring);
     }
     return;
@@ -425,9 +419,8 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
-void py_handle_list_output(t_py* x, PyObject* plist, bool free_later)
+void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
 {
-    // py list -> left_outlet
     if (plist == NULL) {
         goto error;
     }
@@ -507,8 +500,8 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_later)
             atom_dynamic_end(atoms_static, atoms);
         }
     }
-    if (!free_later) {
-        // final cleanup
+    
+    if (free_now) {
         Py_XDECREF(plist);
     }
     return;
@@ -523,10 +516,10 @@ void py_handle_output(t_py* x, PyObject* pval)
 {
     // <python type> -> left outlet output handlers
     // error handling is already provided in each handler
-    py_handle_long_output(x, pval, 1);
-    py_handle_float_output(x, pval, 1);
-    py_handle_string_output(x, pval, 1);
-    py_handle_list_output(x, pval, 1);
+    py_handle_float_output(x, pval, 0);
+    py_handle_long_output(x, pval, 0);
+    py_handle_string_output(x, pval, 0);
+    py_handle_list_output(x, pval, 0);
 
     // final cleanup
     Py_XDECREF(pval);
