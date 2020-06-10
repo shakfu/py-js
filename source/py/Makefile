@@ -72,11 +72,16 @@ clang-format:
 	@clang-format -i -style=file ${EXTERNAL}
 	@clang-format -i -style=file ${HEADER}
 
+lizard:
+	$(call section,"lizard complexity analysis")
+	@lizard -o report.html py.c
+
 duplo:
 	$(call section,"checking code duplication")
 	#@find . -type f \( -iname "*.c" -o -iname "*.h" \) > files.lst
+	@find . -type f \( -iname "py.c" \) > files.lst
 	@duplo files.lst duplicates.txt
-# 	@rm files.lst
+	@rm files.lst
 
 
 # CLEANING
