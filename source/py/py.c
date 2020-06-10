@@ -136,7 +136,7 @@ void ext_main(void* r)
     CLASS_ATTR_ORDER(c,  "autoload",    0,  "3");
     CLASS_ATTR_ORDER(c,  "pythonpath",  0,  "4");
     CLASS_ATTR_ORDER(c,  "debug",       0,  "5");
-    
+
     // clang-format on
     //------------------------------------------------------------------------
 
@@ -489,7 +489,7 @@ void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     err = atom_gettext(argc, argv, &textsize, &text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-                       // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUxOTE);
+    // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUxOTE);
 
     if (err == MAX_ERR_NONE && textsize && text) {
         py_log(x, "eval %s", text);
@@ -501,7 +501,7 @@ void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     if (pval == NULL) {
         sysmem_freeptr(text);
-        goto error;   
+        goto error;
     }
 
     // success
@@ -635,7 +635,6 @@ void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
     PyObject* py_callable = NULL;
     PyObject* py_argslist = NULL; // python list
     PyObject* py_args = NULL;     // python tuple
-
 
     // first atom in argv must be a symbol
     if (argv->a_type != A_SYM) {
@@ -911,8 +910,9 @@ void py_scan(t_py* x)
     }
 
     if (x->p_patcher) {
-        object_method(x->p_patcher, gensym("iterate"), (method)py_scan_callback, x,
-                      PI_DEEP | PI_WANTBOX, &result);        
+        object_method(x->p_patcher, gensym("iterate"),
+                      (method)py_scan_callback, x, PI_DEEP | PI_WANTBOX,
+                      &result);
     } else {
         py_error(x, "scan failed");
     }
@@ -958,14 +958,14 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
-
     if (argc < 2) {
         py_error(x, "need at least 2 args to send msg");
         goto error;
     }
 
-    if ((argv+0)->a_type != A_SYM) {
-        py_error(x, "1st arg of send needs to be a symbol name of receiver object");
+    if ((argv + 0)->a_type != A_SYM) {
+        py_error(
+            x, "1st arg of send needs to be a symbol name of receiver object");
         goto error;
     }
 
@@ -1052,8 +1052,6 @@ error:
     return;
 }
 
-
-
 void py_send_from_seq(t_py* x, PyObject* seq)
 {
 
@@ -1061,11 +1059,11 @@ void py_send_from_seq(t_py* x, PyObject* seq)
         goto error;
     }
 
-    if (!PySequence_Check(seq) || PyUnicode_Check(seq) ||
-        PyBytes_Check(seq) || PyByteArray_Check(seq)) {
+    if (!PySequence_Check(seq) || PyUnicode_Check(seq) || PyBytes_Check(seq)
+        || PyByteArray_Check(seq)) {
         goto error;
     }
-    
+
     // list -> t_atom vars
     PyObject* iter = NULL;
     PyObject* item = NULL;
@@ -1079,15 +1077,13 @@ void py_send_from_seq(t_py* x, PyObject* seq)
     long argc = (long)seq_size;
 
     if (seq_size < 2) {
-        py_error(
-            x, "cannot convert python sequence with length <= 0 to atoms");
+        py_error(x, "cannot convert py sequence length < 2 to atoms");
         goto error;
     }
 
     if (seq_size > PY_MAX_ATOMS) {
         py_log(x, "dynamically increasing size of atom array");
-        atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
-                                   seq_size + 1);
+        atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, seq_size + 1);
         is_dynamic = 1;
 
     } else {
@@ -1128,8 +1124,9 @@ void py_send_from_seq(t_py* x, PyObject* seq)
     t_symbol* msg_sym = NULL;
     t_max_err err = NULL;
 
-    if ((atoms+0)->a_type != A_SYM) {
-        py_error(x, "1st arg of send needs to be a symbol name of receiver object");
+    if ((atoms + 0)->a_type != A_SYM) {
+        py_error(
+            x, "1st arg of send needs to be a symbol name of receiver object");
         goto error;
     }
 
@@ -1208,7 +1205,6 @@ void py_send_from_seq(t_py* x, PyObject* seq)
         goto error;
     }
 
-
     // process here
     outlet_bang(x->p_outlet_right);
     py_log(x, "end iter op: %d", i);
@@ -1217,11 +1213,10 @@ void py_send_from_seq(t_py* x, PyObject* seq)
         py_log(x, "restoring to static atom array");
         atom_dynamic_end(atoms_static, atoms);
     }
-    
+
     // final cleanup
     Py_XDECREF(seq);
     return;
-
 
 error:
     py_error(x, "send failed");
@@ -1407,4 +1402,3 @@ void py_load(t_py* x, t_symbol* s)
         py_execfile(x, s);
     }
 }
-

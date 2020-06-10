@@ -21,8 +21,8 @@
 /*--------------------------------------------------------------------------*/
 // GLOBALS
 
-t_class* py_class; // global pointer to object class
-static int py_global_obj_count; // when 0 then free interpreter
+t_class* py_class;                    // global pointer to object class
+static int py_global_obj_count;       // when 0 then free interpreter
 static t_hashtab* py_global_registry; // global object lookups
 /*--------------------------------------------------------------------------*/
 // OBJECT TYPES
@@ -127,6 +127,5 @@ void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
 // helpers for api
 void py_send_from_seq(t_py* x, PyObject* seq);
-
 
 #endif // PY_H
