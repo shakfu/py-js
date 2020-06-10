@@ -159,7 +159,8 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // core
         if (py_global_obj_count == 0) {
-            x->p_name = gensym("__main__"); // first is __main__
+            // first py obj is called '__main__'
+            x->p_name = gensym("__main__");
         } else {
             x->p_name = symbol_unique();
         }
@@ -489,7 +490,7 @@ void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     err = atom_gettext(argc, argv, &textsize, &text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUxOTE);
+                    // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE);
 
     if (err == MAX_ERR_NONE && textsize && text) {
         py_log(x, "eval %s", text);
@@ -1052,6 +1053,7 @@ error:
     return;
 }
 
+
 void py_send_from_seq(t_py* x, PyObject* seq)
 {
 
@@ -1222,7 +1224,6 @@ error:
     py_error(x, "send failed");
     return;
 }
-
 void py_lookup(t_py* x, t_symbol* s)
 {
     t_object* obj = NULL;
