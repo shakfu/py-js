@@ -629,12 +629,65 @@ error:
 /*--------------------------------------------------------------------------*/
 // EXTRA
 
+PyObject* py_atom_to_list(t_py* x, long argc, t_atom* argv, int start_from) {
+     
+    PyObject* plist = NULL; // python list
+
+    if ((plist = PyList_New(0)) == NULL) {
+        py_error(x, "could not create an empty python list");
+        goto error;
+    }
+
+    for (int i = start_from; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            double c_float = atom_getfloat(argv + i);
+            PyObject* p_float = PyFloat_FromDouble(c_float);
+            if (p_float == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_float);
+            Py_DECREF(p_float);
+            break;
+        }
+        case A_LONG: {
+            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_DECREF(p_long);
+            break;
+        }
+        case A_SYM: {
+            PyObject* p_str = PyUnicode_FromString(
+                atom_getsym(argv + i)->s_name);
+            if (p_str == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_str);
+            Py_DECREF(p_str);
+            break;
+        }
+        default:
+            py_log(x, "cannot process unknown type");
+            break;
+        }
+    }
+    return plist;
+
+error:
+    py_error(x, "atom to list conversion failed");
+    return NULL;
+}
+
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* callable_name = NULL;
+    PyObject* py_argslist = NULL;
     PyObject* pval = NULL;
     PyObject* py_callable = NULL;
-    PyObject* py_argslist = NULL; // python list
+     // python list
     PyObject* py_args = NULL;     // python tuple
 
     // first atom in argv must be a symbol
@@ -654,61 +707,13 @@ void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    if ((py_argslist = PyList_New(0)) == NULL) {
-        py_error(x, "could not create an empty python list");
+    py_argslist = py_atom_to_list(x, argc, argv, 1);
+    if (py_argslist == NULL) {
+        py_error(x, "atom to py list conversion failed");
         goto error;
     }
 
-    for (int i = 1; i < argc; i++) {
-        switch ((argv + i)->a_type) {
-        case A_FLOAT: {
-            double c_float = atom_getfloat(argv + i);
-            PyObject* p_float = PyFloat_FromDouble(c_float);
-            if (p_float == NULL) {
-                py_error(x, "p_float == NULL");
-                goto error;
-            }
-            PyList_Append(py_argslist, p_float);
-            Py_DECREF(p_float);
-            py_log(x, "%d: %f", i, atom_getfloat(argv + i));
-            break;
-        }
-        case A_LONG: {
-            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
-            if (p_long == NULL) {
-                py_error(x, "p_long == NULL");
-                goto error;
-            }
-            PyList_Append(py_argslist, p_long);
-            Py_DECREF(p_long);
-            py_log(x, "%d: %ld", i, atom_getlong(argv + i));
-            break;
-        }
-        case A_SYM: {
-            PyObject* p_str = PyUnicode_FromString(
-                atom_getsym(argv + i)->s_name);
-            if (p_str == NULL) {
-                py_error(x, "p_str == NULL");
-                goto error;
-            }
-            PyList_Append(py_argslist, p_str);
-            Py_DECREF(p_str);
-            py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
-            break;
-        }
-        default:
-            py_log(x, "cannot process unknown type");
-            break;
-        }
-    }
-
     py_log(x, "length of argc:%ld list: %d", argc, PyList_Size(py_argslist));
-    // if (PyList_Size(py_argslist) != argc) {
-    //     py_error(x, "PyList_Size(list) != argc");
-    //     goto error;
-    // } else {
-    //     py_log(x, "length of list: %d", PyList_Size(py_argslist));
-    // }
 
     // convert py_args to tuple
     py_args = PyList_AsTuple(py_argslist);
@@ -774,54 +779,10 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_log(x, "varname: %s", varname);
     }
 
-    if ((list = PyList_New(0)) == NULL) {
-        py_error(x, "list == NULL");
+    list = py_atom_to_list(x, argc, argv, 1);
+    if (list == NULL) {
+        py_error(x, "atom to py list conversion failed");
         goto error;
-    }
-
-    // NOTE: n C it’s illegal to have a declaration as the first statement
-    // after a label enclosing the whole subblock in a {} seems to work
-    for (int i = 1; i < argc; i++) {
-        switch ((argv + i)->a_type) {
-        case A_FLOAT: {
-            double c_float = atom_getfloat(argv + i);
-            PyObject* p_float = PyFloat_FromDouble(c_float);
-            if (p_float == NULL) {
-                error("p_float == NULL");
-                goto error;
-            }
-            PyList_Append(list, p_float);
-            Py_DECREF(p_float);
-            py_log(x, "%d: %f", i, atom_getfloat(argv + i));
-            break;
-        }
-        case A_LONG: {
-            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
-            if (p_long == NULL) {
-                py_error(x, "p_long == NULL");
-                goto error;
-            }
-            PyList_Append(list, p_long);
-            Py_DECREF(p_long);
-            py_log(x, "%d: %ld", i, atom_getlong(argv + i));
-            break;
-        }
-        case A_SYM: {
-            PyObject* p_str = PyUnicode_FromString(
-                atom_getsym(argv + i)->s_name);
-            if (p_str == NULL) {
-                py_error(x, "p_str == NULL");
-                goto error;
-            }
-            PyList_Append(list, p_str);
-            Py_DECREF(p_str);
-            py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
-            break;
-        }
-        default:
-            py_log(x, "cannot process unknown type");
-            break;
-        }
     }
 
     if (PyList_Size(list) != argc - 1) {

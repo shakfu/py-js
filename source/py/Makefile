@@ -63,7 +63,7 @@ test:
 
 # STYLING
 # -----------------------------------------------------------------------
-.PHONY: style clang-format
+.PHONY: style clang-format duplo
 
 style: clang-format
 
@@ -71,6 +71,12 @@ clang-format:
 	$(call section,"clang-format")
 	@clang-format -i -style=file ${EXTERNAL}
 	@clang-format -i -style=file ${HEADER}
+
+duplo:
+	$(call section,"checking code duplication")
+	#@find . -type f \( -iname "*.c" -o -iname "*.h" \) > files.lst
+	@duplo files.lst duplicates.txt
+# 	@rm files.lst
 
 
 # CLEANING
