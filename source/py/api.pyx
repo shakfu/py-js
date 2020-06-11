@@ -129,10 +129,17 @@ cdef class PyAtom:
                 continue
         return PyAtom.from_atom(argc, argv, owner=True)
 
+# cdef log(px.t_py *obj, str s):
+#     mx.object_post(<mx.t_object *>self.obj, s.encode('utf-8'))
+#     # mx.post(s.encode('utf-8'))
+
+# cdef error(px.t_py *obj, str s):
+#     mx.object_error(<mx.t_object *>self.obj, s.encode('utf-8'))
 
 
 cdef class PyExternal:
     cdef px.t_py *obj
+
 
     def __cinit__(self, bytes name=b'__main__'):
         self.obj = <px.t_py *>mx.object_findregistered(
@@ -141,7 +148,18 @@ cdef class PyExternal:
     cpdef bang(self):
         px.py_bang(self.obj)
 
-    # CRITICAL: works but then crashes!!
+    cdef log(self, str s):
+        # mx.object_post(<mx.t_object *>self.obj, s.encode('utf-8'))
+        # mx.post(s.encode('utf-8'))
+        px.py_log(self.obj, s.encode('utf-8'))
+
+    cdef error(self, str s):
+        # mx.object_error(<mx.t_object *>self.obj, s.encode('utf-8'))
+        px.py_error(self.obj, s.encode('utf-8'))
+
+        # mx.error(s.encode('utf-8'))
+
+    # CRITICAL: STILL CRASHING, works but then crashes!!
     cdef send(self, str name, list args):
         _args = [name] + args
         cdef PyAtom atom = PyAtom.from_list(_args)
@@ -153,18 +171,96 @@ cdef class PyExternal:
         _args = [name] + args
         px.py_send_from_seq(self.obj, <PyObject*>_args)
 
+    # CRITICAL: STILL CRASHING, works but then crashes!!
     # cdef send3(self, str name, list args):
-    #     cdef mx.t_atom argv[PY_MAX_ATOMS]
-    #     cdef long argc = <long>len(args)
-    #     for i, elem in enumerate(args):
-    #         if type(elem) == float:
-    #             mx.atom_setfloat(&argv[i], <double>elem)
-    #         elif type(elem) == int:
-    #             mx.atom_setlong((&argv[i]), <long>elem)
-    #         elif type(elem) == str:
-    #             mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
-    #         else:
-    #             continue
+    #     _args = [name] + args
+    #     cdef long argc = <long>len(_args)
+    #     cdef mx.t_atom* argv = px.py_list_to_atom(self.obj, <PyObject*>_args)
+    #     px.py_send(self.obj, mx.gensym("list"), argc, argv)
+    #     # mx.sysmem_freeptr(argv)
+
+
+
+    cdef scan(self):
+        px.py_scan(self.obj)
+
+    cdef lookup(self, str name):
+        cdef mx.t_object* obj = NULL
+        cdef mx.t_max_err err
+
+        if (mx.hashtab_getsize(px.py_global_registry) == 0):
+            self.log("registry not populated")
+            return
+
+        err = mx.hashtab_lookup(px.py_global_registry, 
+            mx.gensym(name.encode('utf-8')), &obj)
+
+        if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
+            self.log("no object found with name")
+        else:
+            self.log("found object")
+
+
+    cdef send4(self, str name, str msg, list args):
+        cdef mx.t_object* obj = NULL
+        # cdef char* obj_name = NULL
+        cdef mx.t_symbol* msg_sym = NULL
+        cdef mx.t_max_err err
+
+        # obj_name = name.encode('utf-8')
+        msg_sym = mx.gensym(msg.encode('utf-8'))
+
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
+        cdef long argc = <long>len(args)
+
+        if argc < 1:
+            self.log("no arguments given")
+            return
+
+        if argc >= PY_MAX_ATOMS:
+            self.log("number of args exceeded app limit")
+            return
+
+        for i, elem in enumerate(args):
+            if type(elem) == float:
+                mx.atom_setfloat(&argv[i], <double>elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&argv[i]), <long>elem)
+            elif type(elem) == str:
+                mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
+            else:
+                continue
+
+        # if registry is empty, scan it
+        if (mx.hashtab_getsize(px.py_global_registry) == 0):
+            #px.py_scan(self.obj)
+            self.log("registry empty")
+            self.scan()
+
+        # lookup name in registry
+        err = mx.hashtab_lookup(px.py_global_registry, 
+            mx.gensym(name.encode('utf-8')), &obj)
+
+        if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
+            self.log("no object found with name")
+            return
+
+        err = mx.object_method_typed(obj, msg_sym, argc, argv, NULL)
+
+        if (err != mx.MAX_ERR_NONE):
+            # fail
+            self.log("send failed")
+            mx.outlet_bang(<void*>self.obj.p_outlet_middle)
+        else:
+            # success
+            self.log("send succeeded")
+            mx.outlet_bang(<void*>self.obj.p_outlet_right)
+        
+
+
+
+
+
 
     cdef success(self):
         mx.outlet_bang(<void*>self.obj.p_outlet_right)
@@ -227,15 +323,29 @@ def out_list():
     ext = PyExternal()
     ext.out([1,2,3,4,5])
 
-def sendtest(name, value=10.5):
+def sendtest(name, value=11.5):
     ext = PyExternal()
     ext.send(name, [value])
     # del ext
 
-def sendtest2(name, value=10.5):
+def sendtest2(name, value=12.5):
     ext = PyExternal()
     ext.send2(name, [value])
     # del ext
+
+def sendtest3(name, value=13.5):
+    ext = PyExternal()
+    ext.send3(name, [value])
+    # del ext
+
+def sendtest4(name, msg='float', value=14.5):
+    ext = PyExternal()
+    ext.send4(name, msg, [value])
+    # del ext
+
+def lookup(name):
+    ext = PyExternal()
+    ext.lookup(name)
 
 
 
