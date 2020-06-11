@@ -1,21 +1,4 @@
 # api.pyx
-"""
-From the cython docs:
-
-There are two kinds of function definition in Cython:
-
-1. Python functions are defined using the def statement, as in Python. 
-   They take Python objects as parameters and return Python objects.
-
-2. C functions are defined using the new cdef statement.
-   They take either Python objects or C values as parameters, and can
-   return either Python objects or C values.
-
-Because of this limitation, you can use extension types to wrap arbitrary
-C data structures and provide a Python-like interface to them.
-"""
-
-
 from cpython cimport PyFloat_AsDouble
 from cpython cimport PyLong_AsLong
 from cpython.ref cimport PyObject
@@ -37,7 +20,6 @@ DEF PY_MAX_ATOMS = 128
 cdef extern from "Python.h":
     const char* PyUnicode_AsUTF8(object unicode)
     unicode PyUnicode_FromString(const char *u)
-
 
 
 cdef class PyAtom:
@@ -129,17 +111,9 @@ cdef class PyAtom:
                 continue
         return PyAtom.from_atom(argc, argv, owner=True)
 
-# cdef log(px.t_py *obj, str s):
-#     mx.object_post(<mx.t_object *>self.obj, s.encode('utf-8'))
-#     # mx.post(s.encode('utf-8'))
-
-# cdef error(px.t_py *obj, str s):
-#     mx.object_error(<mx.t_object *>self.obj, s.encode('utf-8'))
-
 
 cdef class PyExternal:
     cdef px.t_py *obj
-
 
     def __cinit__(self, bytes name=b'__main__'):
         self.obj = <px.t_py *>mx.object_findregistered(

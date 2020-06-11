@@ -8,3 +8,20 @@
 2. If the pxd is not named as the pyx file then all references the c-name have to be qualified but then it is possible to redefine the c-name in python 'def'
 
 Note: with (2), you have to close Max to reload c api otherwise it will read as None. (1) needs to be tested for the same behaviour
+
+
+## Why Extension Types
+
+From the cython docs:
+
+There are two kinds of function definition in Cython:
+
+1. Python functions are defined using the def statement, as in Python. 
+   They take Python objects as parameters and return Python objects.
+
+2. C functions are defined using the new cdef statement.
+   They take either Python objects or C values as parameters, and can
+   return either Python objects or C values.
+
+Because of this limitation, you can use extension types to wrap arbitrary
+C data structures and provide a Python-like interface to them.
