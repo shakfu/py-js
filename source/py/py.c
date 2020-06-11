@@ -50,6 +50,10 @@ void py_error(t_py* x, char* fmt, ...)
     error("[py %s]: %s", x->p_name->s_name, msg);
 }
 
+t_hashtab* get_global_registry(void) {
+    return py_global_registry;
+}
+
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
 

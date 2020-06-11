@@ -148,7 +148,7 @@ cdef class PyExternal:
     cpdef bang(self):
         px.py_bang(self.obj)
 
-    def _log(self, str s):
+    def log(self, str s):
         px.py_log(self.obj, s.encode('utf-8'))
 
     def error(self, str s): # FIX: name collision with error in ext.h
@@ -180,18 +180,19 @@ cdef class PyExternal:
         px.py_scan(self.obj)
 
     cdef lookup(self, str name):
+        cdef mx.t_hashtab* registry = px.get_global_registry()
         cdef mx.t_object* obj = NULL
         cdef mx.t_max_err err
 
-        if (mx.hashtab_getsize(px.py_global_registry) == 0):
+        if (mx.hashtab_getsize(registry) == 0):
             self.error("registry not populated")
             return
 
-        err = mx.hashtab_lookup(px.py_global_registry, 
+        err = mx.hashtab_lookup(registry, 
             mx.gensym(name.encode('utf-8')), &obj)
 
         if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
-            self.log("no object found with name")
+            self.error("no object found with name")
         else:
             self.log("found object")
 
@@ -200,6 +201,7 @@ cdef class PyExternal:
         cdef mx.t_object* obj = NULL
         # cdef char* obj_name = NULL
         cdef mx.t_symbol* msg_sym = NULL
+        cdef mx.t_hashtab* registry = px.get_global_registry()
         cdef mx.t_max_err err
 
         # obj_name = name.encode('utf-8')
@@ -227,14 +229,12 @@ cdef class PyExternal:
                 continue
 
         # if registry is empty, scan it
-        if (mx.hashtab_getsize(px.py_global_registry) == 0):
-            #px.py_scan(self.obj)
-            self.log("registry empty")
+        if (mx.hashtab_getsize(registry) == 0):
+            self.log("registry empty, scanning...")
             self.scan()
 
         # lookup name in registry
-        err = mx.hashtab_lookup(px.py_global_registry, 
-            mx.gensym(name.encode('utf-8')), &obj)
+        err = mx.hashtab_lookup(registry, mx.gensym(name.encode('utf-8')), &obj)
 
         if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
             self.error("no object found with name")
@@ -283,6 +283,9 @@ cdef class PyExternal:
 
     #  mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
     #  t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
+
+
+
 
 
 def test():
