@@ -131,5 +131,8 @@ void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
 // helpers for api
 void py_send_from_seq(t_py* x, PyObject* seq);
+t_atom* py_list_to_atom(t_py* x, PyObject* plist);
+void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv);
+
 
 #endif // PY_H

@@ -26,16 +26,18 @@ cdef extern from "py.h":
         void* p_outlet_middle
         void* p_outlet_left
     
-    void py_log(t_py* x, char* fmt, ...)
-    void py_error(t_py* x, char* fmt, ...)
+    cdef void py_log(t_py* x, char* fmt, ...)
+    cdef void py_error(t_py* x, char* fmt, ...)
 
     cdef void py_bang(t_py *x)
 
-    void py_scan(t_py* x)
-    void py_send(t_py* x, mx.t_symbol* s, long argc, mx.t_atom* argv)
-    void py_lookup(t_py* x, mx.t_symbol* s)
+    cdef void py_scan(t_py* x)
+    cdef void py_send(t_py* x, mx.t_symbol* s, long argc, mx.t_atom* argv)
+    cdef void py_lookup(t_py* x, mx.t_symbol* s)
 
-    void py_read(t_py* x, mx.t_symbol* s)
+    cdef void py_read(t_py* x, mx.t_symbol* s)
 
-    void py_send_from_seq(t_py* x, PyObject* seq)
+    cdef void py_send_from_seq(t_py* x, PyObject* seq)
 
+    cdef mx.t_atom* py_list_to_atom(t_py* x, PyObject* plist);
+    cdef void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, mx.t_atom** argv);
