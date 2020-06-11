@@ -338,8 +338,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
         error("[py %s] <- (%s): %s", x->p_name->s_name, msg, pvalue_str);
     }
 }
-
-void py_handle_float_output(t_py* x, PyObject* pfloat)
+void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
 {
     if (pfloat == NULL) {
         goto error;
@@ -354,7 +353,9 @@ void py_handle_float_output(t_py* x, PyObject* pfloat)
         
         outlet_float(x->p_outlet_left, float_result);
         outlet_bang(x->p_outlet_right);
+    }
 
+    if (free_now) {
         Py_XDECREF(pfloat);
     }
     return;
@@ -365,7 +366,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
-void py_handle_long_output(t_py* x, PyObject* plong)
+void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
 {
     if (plong == NULL) {
         goto error;
@@ -379,7 +380,9 @@ void py_handle_long_output(t_py* x, PyObject* plong)
         }
         outlet_int(x->p_outlet_left, long_result);
         outlet_bang(x->p_outlet_right);
+    }
 
+    if (free_now) {
         Py_XDECREF(plong);
     }
     return;
@@ -390,7 +393,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
-void py_handle_string_output(t_py* x, PyObject* pstring)
+void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
 {
     if (pstring == NULL) {
         goto error;
@@ -403,7 +406,9 @@ void py_handle_string_output(t_py* x, PyObject* pstring)
         }
         outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
         outlet_bang(x->p_outlet_right);
+    }
 
+    if (free_now) {
         Py_XDECREF(pstring);
     }
     return;
@@ -414,7 +419,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
-void py_handle_list_output(t_py* x, PyObject* plist)
+void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
 {
     if (plist == NULL) {
         goto error;
@@ -494,7 +499,9 @@ void py_handle_list_output(t_py* x, PyObject* plist)
             py_log(x, "restoring to static atom array");
             atom_dynamic_end(atoms_static, atoms);
         }
-
+    }
+    
+    if (free_now) {
         Py_XDECREF(plist);
     }
     return;
@@ -509,11 +516,16 @@ void py_handle_output(t_py* x, PyObject* pval)
 {
     // <python type> -> left outlet output handlers
     // error handling is already provided in each handler
-    py_handle_float_output(x, pval);
-    py_handle_long_output(x, pval);
-    py_handle_string_output(x, pval);
-    py_handle_list_output(x, pval);
+    py_handle_float_output(x, pval, 0);
+    py_handle_long_output(x, pval, 0);
+    py_handle_string_output(x, pval, 0);
+    py_handle_list_output(x, pval, 0);
+
+    // final cleanup
+    Py_XDECREF(pval);
+    return;
 }
+
 /*--------------------------------------------------------------------------*/
 // TRANSLATORS
 PyObject* py_atom_to_list(t_py* x, long argc, t_atom* argv, int start_from)
