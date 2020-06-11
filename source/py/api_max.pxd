@@ -72,6 +72,7 @@
 """
 
 cdef extern from "ext.h":
+    cdef void error "max_error" (...)
     pass
 
 cdef extern from "ext_atombuf.h":
@@ -303,7 +304,7 @@ cdef extern from "ext_proto.h":
     cdef t_symbol *gensym(const char *s)
     cdef void post(const char *fmt, ...)
     cdef void cpost(const char *fmt, ...)
-    cdef void error(const char *fmt, ...)
+    # cdef void error(const char *fmt, ...)
     cdef void postatom(t_atom *ap)
     cdef void error_subscribe(t_object *x)
     cdef void error_unsubscribe(t_object *x)
