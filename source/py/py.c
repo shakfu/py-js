@@ -53,7 +53,6 @@ void py_error(t_py* x, char* fmt, ...)
 t_hashtab* get_global_registry(void) {
     return py_global_registry;
 }
-
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
 
@@ -710,24 +709,25 @@ error:
 
 // void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
 // {
-//     Py_ssize_t seq_size = PySequence_Length(plist);
+    // Py_ssize_t seq_size = PySequence_Length(plist);
 
-//     long argc = (long)seq_size;
-//     t_atom* argv = py_list_to_atom(x, plist);
+    // long argc = (long)seq_size;
+    // t_atom* argv = py_list_to_atom(x, plist);
 
-//     outlet_list(x->p_outlet_left, NULL, argc, argv);
-//     outlet_bang(x->p_outlet_right);
+    // outlet_list(x->p_outlet_left, NULL, argc, argv);
+    // outlet_bang(x->p_outlet_right);
     
-//     // free atoms
-//     sysmem_freeptr(argv);
+    // free atoms
+    // for (int i=0; i < argc; i++) {
+        // sysmem_freeptr((argv+i));
+    // }
+    // sysmem_freeptr(argv);
 
-    
-//     if (free_now) {
-//         Py_XDECREF(plist);
-//     }
-//     return;
+    // if (free_now) {
+        // Py_XDECREF(plist);
+    // }
+    // return;
 // }
-
 /*--------------------------------------------------------------------------*/
 // CORE
 

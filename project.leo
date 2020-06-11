@@ -116,6 +116,7 @@
 <v t="sta.20200602120540.1"><vh>helpers</vh>
 <v t="sta.20200602120251.4"><vh>void py_log</vh></v>
 <v t="sta.20200602120251.5"><vh>void py_error</vh></v>
+<v t="sta.20200611235620.1"><vh>t_hashtab* get_global_registry</vh></v>
 </v>
 <v t="sta.20200602120514.1"><vh>init &amp; free</vh>
 <v t="sta.20200602120251.3"><vh>void ext_main</vh></v>
@@ -135,14 +136,14 @@
 <v t="sta.20200610181828.1"><vh>void py_handle_float_output</vh></v>
 <v t="sta.20200610104609.1"><vh>void py_handle_long_output</vh></v>
 <v t="sta.20200610105537.1"><vh>void py_handle_string_output</vh></v>
-<v t="sta.20200610231913.1"><vh>void py_handle_list_output2</vh></v>
+<v t="sta.20200610231913.1"><vh>void py_handle_list_output</vh></v>
 <v t="sta.20200606044751.1"><vh>void py_handle_output</vh></v>
 </v>
 <v t="sta.20200610100240.1"><vh>translators</vh>
 <v t="sta.20200610100158.1"><vh>PyObject* py_atom_to_list</vh></v>
 <v t="sta.20200610222640.1"><vh>t_atom* py_list_to_atom</vh></v>
 <v t="sta.20200610164212.1"><vh>void py_list_to_atom2</vh></v>
-<v t="sta.20200610104706.1"><vh>void py_handle_list_output</vh></v>
+<v t="sta.20200610104706.1"><vh>void py_handle_list_output-BUG</vh></v>
 </v>
 <v t="sta.20200602120318.1"><vh>core</vh>
 <v t="sta.20200602120251.20"><vh>void py_import</vh></v>
@@ -354,7 +355,6 @@ error:
         error("[py %s] &lt;- (%s): %s", x-&gt;p_name-&gt;s_name, msg, pvalue_str);
     }
 }
-
 </t>
 <t tx="sta.20200602120251.14">void py_dblclick(t_py* x)
 {
@@ -1192,6 +1192,10 @@ void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
 
 // helpers for api
 void py_send_from_seq(t_py* x, PyObject* seq);
+t_atom* py_list_to_atom(t_py* x, PyObject* plist);
+void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv);
+
+t_hashtab* get_global_registry(void);
 </t>
 <t tx="sta.20200602150733.1">/*--------------------------------------------------------------------------*/
 // INCLUDES
@@ -3185,6 +3189,7 @@ error:
     Py_XDECREF(pval);
     return;
 }
+
 </t>
 <t tx="sta.20200606073716.1"></t>
 <t tx="sta.20200607084251.1">void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -3634,24 +3639,28 @@ error:
 }
 
 </t>
-<t tx="sta.20200610104706.1">void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
-{
-    t_atom* atom = py_list_to_atom(x, plist);
+<t tx="sta.20200610104706.1">
+// void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
+// {
+    // Py_ssize_t seq_size = PySequence_Length(plist);
 
-    outlet_list(x-&gt;p_outlet_left, NULL, i, atoms);
-    outlet_bang(x-&gt;p_outlet_right);
-    py_log(x, "end iter op: %d", i);
+    // long argc = (long)seq_size;
+    // t_atom* argv = py_list_to_atom(x, plist);
+
+    // outlet_list(x-&gt;p_outlet_left, NULL, argc, argv);
+    // outlet_bang(x-&gt;p_outlet_right);
     
     // free atoms
-    sysmem_freeptr(atoms);
+    // for (int i=0; i &lt; argc; i++) {
+        // sysmem_freeptr((argv+i));
+    // }
+    // sysmem_freeptr(argv);
 
-    
-    if (free_now) {
-        Py_XDECREF(plist);
-    }
-    return;
-}
-
+    // if (free_now) {
+        // Py_XDECREF(plist);
+    // }
+    // return;
+// }
 </t>
 <t tx="sta.20200610105537.1">void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
 {
@@ -3833,7 +3842,7 @@ error:
 }
 
 </t>
-<t tx="sta.20200610231913.1">void py_handle_list_output2(t_py* x, PyObject* plist, bool free_now)
+<t tx="sta.20200610231913.1">void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
 {
     if (plist == NULL) {
         goto error;
@@ -3926,6 +3935,10 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
+</t>
+<t tx="sta.20200611235620.1">t_hashtab* get_global_registry(void) {
+    return py_global_registry;
+}
 </t>
 </tnodes>
 </leo_file>
