@@ -148,16 +148,11 @@ cdef class PyExternal:
     cpdef bang(self):
         px.py_bang(self.obj)
 
-    cdef log(self, str s):
-        # mx.object_post(<mx.t_object *>self.obj, s.encode('utf-8'))
-        # mx.post(s.encode('utf-8'))
+    def _log(self, str s):
         px.py_log(self.obj, s.encode('utf-8'))
 
-    cdef error(self, str s):
-        # mx.object_error(<mx.t_object *>self.obj, s.encode('utf-8'))
+    def error(self, str s): # FIX: name collision with error in ext.h
         px.py_error(self.obj, s.encode('utf-8'))
-
-        # mx.error(s.encode('utf-8'))
 
     # CRITICAL: STILL CRASHING, works but then crashes!!
     cdef send(self, str name, list args):
@@ -189,7 +184,7 @@ cdef class PyExternal:
         cdef mx.t_max_err err
 
         if (mx.hashtab_getsize(px.py_global_registry) == 0):
-            self.log("registry not populated")
+            self.error("registry not populated")
             return
 
         err = mx.hashtab_lookup(px.py_global_registry, 
@@ -214,11 +209,11 @@ cdef class PyExternal:
         cdef long argc = <long>len(args)
 
         if argc < 1:
-            self.log("no arguments given")
+            self.error("no arguments given")
             return
 
         if argc >= PY_MAX_ATOMS:
-            self.log("number of args exceeded app limit")
+            self.error("number of args exceeded app limit")
             return
 
         for i, elem in enumerate(args):
@@ -242,24 +237,19 @@ cdef class PyExternal:
             mx.gensym(name.encode('utf-8')), &obj)
 
         if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
-            self.log("no object found with name")
+            self.error("no object found with name")
             return
 
         err = mx.object_method_typed(obj, msg_sym, argc, argv, NULL)
 
         if (err != mx.MAX_ERR_NONE):
             # fail
-            self.log("send failed")
+            self.error("send failed")
             mx.outlet_bang(<void*>self.obj.p_outlet_middle)
         else:
             # success
             self.log("send succeeded")
             mx.outlet_bang(<void*>self.obj.p_outlet_right)
-        
-
-
-
-
 
 
     cdef success(self):
@@ -372,12 +362,12 @@ def total(*args):
     return sum(args)
 
 
-def post(str s):
-    mx.post(s.encode('utf-8'))
+# def post(str s):
+#     mx.post(s.encode('utf-8'))
 
 
-def error(str s):
-    mx.error(s.encode('utf-8'))
+# def error(str s):
+#     mx.error(s.encode('utf-8'))
 
 
 
