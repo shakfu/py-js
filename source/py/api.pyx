@@ -1,4 +1,5 @@
 # api.pyx
+#cimport cython
 from cpython cimport PyFloat_AsDouble
 from cpython cimport PyLong_AsLong
 from cpython.ref cimport PyObject
@@ -38,6 +39,8 @@ cdef class PyAtom:
     def __dealloc__(self):
         """De-allocate if not null and flag is set"""
         if self.argv is not NULL and self.ptr_owner is True:
+            for i in range(self.argc):
+                mx.sysmem_freeptr(&self.argv[i])
             mx.sysmem_freeptr(self.argv)
             self.argc = 0
             self.argv = NULL
@@ -128,28 +131,6 @@ cdef class PyExternal:
     def error(self, str s): # FIX: name collision with error in ext.h
         px.py_error(self.obj, s.encode('utf-8'))
 
-    # CRITICAL: STILL CRASHING, works but then crashes!!
-    cdef send(self, str name, list args):
-        _args = [name] + args
-        cdef PyAtom atom = PyAtom.from_list(_args)
-        # msg = "send".encode('utf-8')
-        px.py_send(self.obj, mx.gensym("list"), atom.argc, atom.argv)
-        # mx.sysmem_freeptr(atom.argv)
-
-    cdef send2(self, str name, list args):
-        _args = [name] + args
-        px.py_send_from_seq(self.obj, <PyObject*>_args)
-
-    # CRITICAL: STILL CRASHING, works but then crashes!!
-    # cdef send3(self, str name, list args):
-    #     _args = [name] + args
-    #     cdef long argc = <long>len(_args)
-    #     cdef mx.t_atom* argv = px.py_list_to_atom(self.obj, <PyObject*>_args)
-    #     px.py_send(self.obj, mx.gensym("list"), argc, argv)
-    #     # mx.sysmem_freeptr(argv)
-
-
-
     cdef scan(self):
         px.py_scan(self.obj)
 
@@ -170,17 +151,56 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
+    # Wooo!!!
+    cdef send0(self, str name, list args):
+        _args = [name] + args
+        cdef PyAtom atom = PyAtom.from_list(_args)
+        px.py_send(self.obj, mx.gensym(""), atom.argc, atom.argv)
+
+    cdef send(self, str name, list args):
+        cdef long argc = <long>len(args) + 1
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
+        _args = [name] + args
+
+        if argc < 1:
+            self.error("no arguments given")
+            return
+
+        if argc >= PY_MAX_ATOMS - 1:
+            self.error("number of args exceeded app limit")
+            return
+
+        for i, elem in enumerate(_args):
+            if type(elem) == float:
+                mx.atom_setfloat(&argv[i], <double>elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&argv[i]), <long>elem)
+            elif type(elem) == str:
+                mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
+            else:
+                continue
+
+        px.py_send(self.obj, mx.gensym(""), argc, argv)
+
+    cdef send2(self, str name, list args):
+        _args = [name] + args
+        px.py_send_from_seq(self.obj, <PyObject*>_args)
+
+    # CRITICAL: STILL CRASHING, works but then crashes!!
+    cdef send3(self, str name, list args):
+        _args = [name] + args
+        cdef long argc = <long>len(_args)
+        cdef mx.t_atom* argv = px.py_list_to_atom(self.obj, <PyObject*>_args)
+        px.py_send(self.obj, mx.gensym(""), argc, argv)
+        for i in range(argc):
+            mx.sysmem_freeptr(&argv[i])
+        mx.sysmem_freeptr(argv)
 
     cdef send4(self, str name, str msg, list args):
         cdef mx.t_object* obj = NULL
-        # cdef char* obj_name = NULL
-        cdef mx.t_symbol* msg_sym = NULL
+        cdef mx.t_symbol* msg_sym = mx.gensym(msg.encode('utf-8'))
         cdef mx.t_hashtab* registry = px.get_global_registry()
         cdef mx.t_max_err err
-
-        # obj_name = name.encode('utf-8')
-        msg_sym = mx.gensym(msg.encode('utf-8'))
-
         cdef mx.t_atom argv[PY_MAX_ATOMS]
         cdef long argc = <long>len(args)
 
@@ -217,11 +237,9 @@ cdef class PyExternal:
         err = mx.object_method_typed(obj, msg_sym, argc, argv, NULL)
 
         if (err != mx.MAX_ERR_NONE):
-            # fail
             self.error("send failed")
             mx.outlet_bang(<void*>self.obj.p_outlet_middle)
         else:
-            # success
             self.log("send succeeded")
             mx.outlet_bang(<void*>self.obj.p_outlet_right)
 
@@ -289,6 +307,10 @@ def out_float():
 def out_list():
     ext = PyExternal()
     ext.out([1,2,3,4,5])
+
+def sendtest0(name, value=9.5):
+    ext = PyExternal()
+    ext.send(name, [value])
 
 def sendtest(name, value=11.5):
     ext = PyExternal()

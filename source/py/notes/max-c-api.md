@@ -1,6 +1,302 @@
 # Max C API Notes
 
 
+## Pattern of Use
+
+### chapter 5: Atoms and Messages
+
+```c
+
+void myobject_printargs(t_myobject *x, t_symbol *s, long argc, t_atom *argv)
+{
+    long i;
+    t_atom *ap;
+    post("message selector is %s",s->s_name);
+    post("there are %ld arguments",argc);
+    // increment ap each time to get to the next atom
+    for (i = 0, ap = argv; i < argc; i++, ap++) {
+            switch (atom_gettype(ap)) {
+        case A_LONG:
+            post("%ld: %ld",i+1,atom_getlong(ap));
+            break;
+        case A_FLOAT:
+            post("%ld: %.2f",i+1,atom_getfloat(ap));
+            break;
+        case A_SYM:
+            post("%ld: %s",i+1, atom_getsym(ap)->s_name);
+            break;
+        default:
+            post("%ld: unknown atom type (%ld)", i+1, atom_gettype(ap));
+            break;
+        }
+    }
+}
+```
+
+### chapter 10: Sending Messages, Calling Methods
+
+#### setter and getter example
+
+```c
+typedef struct _myobject {
+    t_object m_ob;
+    long *m_data;
+} t_myobject;
+
+CLASS_ATTR_LONG(c, "size", 0, t_myobject, m_data);
+CLASS_ATTR_ACCESSORS(c, "size", myobject_size_get, myobject_size_set);
+
+t_max_err myobject_size_set(t_myobject *x, t_object *attr, long argc, t_atom *argv)
+{
+    long size = atom_getlong(argv);
+    if (size < 0)       // bad size, don’t change anything
+        return 0;
+    if (x->m_data)
+        x->m_data = (long *)sysmem_resizeptr((char *)x->m_data, size * sizeof(long));
+    else    // first time alloc
+        x->m_data = (long *)sysmem_newptr(size * sizeof(long));
+return 0; }
+
+t_max_err myobject_size_get(t_myobject *x, t_object *attr, long *argc, t_atom **argv)
+{
+char alloc;
+long size = 0;
+    atom_alloc(argc, argv, &alloc);
+// allocate return atom
+    if (x->m_data)
+        size = sysmem_ptrsize((char *)x->m_data) / sizeof(long);  // calculate array size
+       based on ptr size
+    atom_setlong(*argv, size);
+return 0; }
+
+```
+
+#### receiving notifications
+
+The notify method can handle a variety of notifications (more documentation on this is coming soon!), but the one we're interested in is "attr_modified" – the notification type is passed to the notify method in the msg argument. Here is an example of a notify method that prints out the name of the attribute that has been modified. You could take any action instead. To obtain the name, we interpret the data argument to the notify method as an attribute object. As an attribute is a regular Max object, we can use object_method to send it a message. In the case we are sending the message getname to the attribute object to obtain its name.
+
+```c
+// Add the following to your class initialization so your notification method will be called:
+class_addmethod(c, (method)myobject_notify, "notify", A_CANT, 0);
+
+t_max_err myobject_notify(t_myobject *x, t_symbol *s, t_symbol *msg, void *sender, void *data)
+{
+    t_symbol *attrname;
+    if (msg == gensym("attr_modified")) {     // check notification type
+        // ask attribute object for name
+        attrname = (t_symbol *)object_method((t_object *)data, gensym("getname"));
+        object_post((t_object *)x, "changed attr name is %s", attrname->s_name); 
+    }
+    return 0; 
+}
+```
+
+### chapter 13: Scripting the Patcher
+
+#### the patcher
+
+To obtain the name of the patcher and its file path (if any), obtain attribute values as shown below.
+
+```c
+void myobject_getmypatcher(t_myobject *x) {
+    t_object *mypatcher;
+    object_obex_lookup(x, gensym("#P"), &mypatcher);
+    t_symbol *name = object_attr_getsym(patcher, gensym("name"));
+    t_symbol *path = object_attr_getsym(patcher, gensym("filepath"));
+}
+```
+
+#### Operating on the patcher
+
+Here is a function that prints the class of every object (in a box) in a patcher containing an object.
+
+```c
+void myobject_printpeers(t_myobject *x)
+{
+    t_object *patcher, *box, *obj;
+    object_obex_lookup(x, gensym("#P"), &patcher);
+    for (box = jpatcher_get_firstobject(patcher); box; box = jbox_get_nextobject(box)) {
+        obj = jbox_get_object(box);
+            if (obj)
+                post("%s",object_classname(obj)->s_name);
+            else
+                post("box with NULL object");
+    }
+}
+```
+#### creating objects
+
+Creating objects in a patcher generally requires the use of a `Dictionary`, but there is a convenience function `newobject_sprintf()` that can be used to avoid some of the complexity.
+
+```c
+t_object *patcher, *toggle, *metro;
+t_max_err err;
+err = object_obex_lookup(x, gensym("#P"), &patcher);
+toggle = newobject_sprintf(patcher, 
+    "@maxclass toggle @patching_position %.2f %.2f", x->togxpos, x->togypos);
+metro = newobject_sprintf(patcher, 
+    "@maxclass newobj @text \"metro 400\" @patching_position %.2f %.2f", x->metxpos, x->metypos);
+```
+
+#### connecting objects
+
+If you'd like to script the connections between two objects, you can do so via a message to the patcher. Assuming you have the patcher, toggle, and metro objects above, you'll create an array of atoms to send the message using `object_method_typed()`.
+
+```c
+t_atom msg[4], rv;
+atom_setobj(msg, toggle);
+atom_setlong(msg + 1, 0);
+atom_setobj(msg + 2, metro);    // destination
+atom_setlong(msg + 3, 0);       // inlet number (0 is leftmost)
+object_method_typed(patcher, gensym("connect"), 4, msg, &rv);
+```
+
+If you want to have a hidden connection, pass an optional fifth argument that is any negative number.
+
+To delete an object in a patcher you call `object_free()` on the box. As of Max 5.0.6 this will properly redraw the patcher and remove any connected patch cords.
+
+
+#### Obtaining and Changing Patcher and Object Attributes
+
+lots of options to change attrs of patcher and box objects.
+
+- Attributes whose type is object can be accessed via `object_attr_getobj()` / `object_attr_setobj()`.
+
+- Attributes whose type is char can be `accessed with object_attr_getchar()` / `object_attr_setchar()`.
+
+- Attributes whose type is long can be accessed with `object_attr_getlong()` / `object_attr_setlong()`.
+
+- Attributes whose type is symbol can be accessed via `object_attr_getsym()` / `object_attr_setsym()`.
+
+- For attributes that are arrays, such as colors and rectangles, use `object_attr_getvalueof()` / `object_attr_setvalueof()`.
+
+To access an attribute of a non-UI object, use `jbox_get_object()` on the box to obtain the non-UI object first.
+
+### chapter 14: Enhancements to Objects
+
+
+#### Assistance
+
+The function below has two inlets and one outlet. The io argument will be 1 for inlets, 2 for outlets. The index argument will be 0 for the leftmost inlet or outlet. You can copy a maximum of 512 characters to the output string s. You can use strncpy_zero() to copy the string, or if you want to format the assistance string based on a current value in the object, you could use `snprintf_zero()`.
+
+```c
+void myobject_assist(t_myobject *x, void *b, long io, long index, char *s)
+{
+    switch (io) {
+        case 1:
+            switch (index) {
+                case 0:
+                    strncpy_zero(s, "This is a description of the leftmost inlet", 512);
+                    break;
+                case 1:
+                    strncpy_zero(s, "This is a description of the rightmost inlet", 512);
+                    break;
+            }
+            break;
+        case 2:
+            strncpy_zero(s, "This is a description of the outlet", 512);
+            break;
+    }
+}
+```
+
+#### Text editor
+
+Objects such as coll and text display a text editor window when you double-click. Users can edit the contents of the objects and save the updated data (or not). Here's how to do the same thing in your object.
+
+First, if you want to support double-clicking on a non-UI object, you can respond to the dblclick message.
+
+
+```c
+class_addmethod(c, (method)myobject_dblclick, "dblclick",
+      A_CANT, 0);
+void myobject_dblclick(t_myobject *x)
+{
+    // open editor here
+}
+
+```
+
+
+You'll need to add a t_object pointer to your object's data structure to hold the editor.
+
+```c
+
+typedef struct _myobject
+{
+    t_object m_obj;
+    t_object *m_editor;
+} t_myobject;
+```
+
+Initialize the m_editor field to NULL in your new instance routine. Then implement the dblclick method as follows:
+
+```c
+if (!x->m_editor)
+    x->m_editor = object_new(CLASS_NOBOX, gensym("jed"), (t_object *)x, 0);
+else
+    object_attr_setchar(x->m_editor, gensym("visible"), 1);
+
+```
+
+The code above does the following: If the editor does not exist, we create one by making a "jed" object and passing our object as an argument. This permits the editor to tell our object when the window is closed.
+
+If the editor does exist, we set its visible attribute to 1, which brings the text editor window to the front.
+
+To set the text of the edit window, we can send our jed object the settext message with a zero-terminated buffer of text. We also provide a symbol specifying how the text is encoded. For best results, the text should be encoded as UTF-8. Here is an example where we set a string to contain "Some text to edit" then pass it to the editor.
+
+```c
+char text[512];
+strcpy(text,"Some text to edit");
+object_method(x->m_editor, gensym("settext"), text, gensym("utf-8"));
+```
+
+The title attribute sets the window title of the text editor.
+
+```c
+object_attr_setsym(x->m_editor, gensym("title"), gensym("crazytext"));
+```
+
+When the user closes the text window, your object (or the object you passed as an argument when creating the editor) will be sent the edclose message.
+```c
+class_addmethod(c, (method)myobject_edclose, "edclose", A_CANT, 0);
+```
+
+The edclose method is responsible for doing something with the text. It should also zero the reference to the editor stored in the object, because it will be freed. A pointer to the text pointer is passed, along with its size. The encoding of the text is always UTF-8.
+
+```c
+void myobject_edclose(t_myobject *x, char **ht, long size)
+{
+    // do something with the text
+    x->m_editor = NULL;
+}
+```
+If your object will be showing the contents of a text file, you are still responsible for setting the initial text, but you can assign a file so that the editor will save the text data when the user chooses Save from the File menu. To assign a file, use the filename message, assuming you have a filename and path ID.
+
+```c
+object_method(x->m_editor, gensym("filename"), x->m_myfilename, x->m_mypath);
+```
+
+The filename message will set the title of the text editor window, but you can use the title attribute to override the simple filename. For example, you might want the name of your object to precede the filename:
+
+```c
+char titlename[512];
+sprintf(titlename, "myobject: %s", x->m_myfilename);
+object_attr_setsym(x->m_editor, gensym("title"), gensym(titlename));
+```
+
+Each time the user chooses Save, your object will receive an edsave message. If you return zero from your edsave method, the editor will proceed with saving the text in a file. If you return non-zero, the editor assumes you have taken care of saving the text. The general idea is that when the user wants to save the text, it is either updated inside your object, updated in a file, or both. As an example, the js object uses its edsave message to trigger a recompile of the Javascript code. But it also returns 0 from its edsave method so that the text editor will update the script file. Except for the return value, the prototype of the edsave method is identical to the edclose method.
+
+```c
+class_addmethod(c, (method)myobject_edsave, "edsave",
+      A_CANT, 0);
+long myobject_edsave(t_myobject *x, char **ht, long size)
+{
+    // do something with the text
+    return 0;       // tell editor it can save the text
+}
+```
+
 ## Memory Management
 
 
@@ -126,9 +422,9 @@ It looks like the `t_messlist` struct in `t_object` is key!
 
 see: https://cycling74.com/forums/error-handling-with-object_method_typed
 
-```In the Min-Devkit there is an example object called min.remote whose source code is @ https://github.com/Cycling74/min-devkit/blob/master/source/projects/min.remote/min.remote.cpp 
+In the Min-Devkit there is an example object called min.remote whose source code is @ https://github.com/Cycling74/min-devkit/blob/master/source/projects/min.remote/min.remote.cpp 
 On line 35 a method is called on the "box".  What happens inside of this to get to the correct incantation of object_method() and friends is on line 101 of the file @ https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
-```
+
 
 ```cpp
 template<typename T1, typename T2>
