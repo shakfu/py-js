@@ -8,6 +8,8 @@ cdef extern from "py.h":
     
     int py_global_obj_count
     mx.t_hashtab* py_global_registry
+
+    mx.t_hashtab* get_global_registry()
     
     ctypedef struct t_py:
         # mx.t_object p_ob

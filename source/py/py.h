@@ -134,5 +134,6 @@ void py_send_from_seq(t_py* x, PyObject* seq);
 t_atom* py_list_to_atom(t_py* x, PyObject* plist);
 void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv);
 
+t_hashtab* get_global_registry(void);
 
 #endif // PY_H
