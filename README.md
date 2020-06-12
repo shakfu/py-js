@@ -53,7 +53,7 @@ interobj | send            | msg           | n/a    | no         | [x]
 
 ### Key Features
 
-1. **Per-object namespaces**. Responds to an `import <module>` message in the left inlet which loads a python module in its namespace. Each new import adds modules to the object's namespace (essentially a `globals dict`), which can be different in each instance.
+1. **Per-object namespaces**. Responds to an `import <module>` message in the left inlet which loads a python module in its namespace. Each new import adds modules to the object's namespace (essentially a `globals dict`), which can be different in each instance. There can be many objects each with their own namespace.
 
 2. **Eval Messages**. Responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace and outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
@@ -67,7 +67,149 @@ interobj | send            | msg           | n/a    | no         | [x]
 
 7. **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace. 
 
-8. **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and is embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects and also via `import` messages. What this effectively means is that python scripts in `py` objects can directly call max c-api functions.
+8. **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called by python scripts or via messages in a patcher.
+
+
+### Cython/Python Scripting Example
+
+For example, let's assume we want to enable sending arbitrary messages to other objects in a patcher (a la `thispatcher`).
+
+To simplify things, we want to send a list of floats to a `coll` object:
+
+I would first import the `api` builtin module
+```
+[ import api]
+```
+followed by sending this message to the `py` object
+```
+[ call api.send coll1 5.1 9.2 10.8 11.5 ]
+```
+or from python code:
+
+```python
+import api
+api.send('coll1', [5.1, 9.2, 10.8, 11.5])
+```
+
+Since I want to use the `call` method which is used for max friendly python function calls, I have to write a small wrapper module function in `api.pyx`:
+
+```python
+def send(args):
+    name = args[:1] # head
+    msg = args[1:]  # tail
+    ext = PyExternal()
+    ext.send(name, msg)
+```
+
+The `api` module has a class called `PyExternal` which encapsulates some common behaviours such as get the name of the caller and having a bunch of useful methods which call the max api directly or indirectly via the external c code.
+
+```cython
+cdef class PyExternal:
+    cdef px.t_py *obj
+
+    def __cinit__(self, bytes name=__name__.encode('utf-8')):
+        self.obj = <px.t_py *>mx.object_findregistered(
+            mx.CLASS_BOX, mx.gensym(name))
+```
+
+Now for the send method itself. There are at least two ways to implement this:
+
+- As a `send` method in your external. My implementation (for the py object) is 101 lines according to `wc -l` and has the following prototype
+
+```c
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
+```
+
+- As a send method in your cython `api.pyx` file so it can be called by python scripts and also via messages. I actually made 3 versions
+
+1. A version which wraps the previously implemented `py_send` and uses a cython Atom extension type : 4 lines
+
+```python
+cdef send1(self, str name, list args):
+    _args = [name] + args
+    cdef PyAtom atom = PyAtom.from_list(_args)
+    px.py_send(self.obj, mx.gensym(""), atom.argc, atom.argv)
+```
+
+2. A version which implements `py_send` using a cython Atom extension type: 19 lines
+
+```python
+cdef send2(self, str name, list args):
+    cdef long argc = <long>len(args) + 1
+    cdef mx.t_atom argv[PY_MAX_ATOMS]
+    _args = [name] + args
+
+    if argc < 1:
+        self.error("no arguments given")
+        return
+
+    if argc >= PY_MAX_ATOMS - 1:
+        self.error("number of args exceeded app limit")
+        return
+
+    for i, elem in enumerate(_args):
+        if type(elem) == float:
+            mx.atom_setfloat(&argv[i], <double>elem)
+        elif type(elem) == int:
+            mx.atom_setlong((&argv[i]), <long>elem)
+        elif type(elem) == str:
+            mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
+        else:
+            continue
+
+    px.py_send(self.obj, mx.gensym(""), argc, argv)
+```
+
+3. A version which re-implements `py_send` in cython: 38 lines 
+
+```python
+cdef send3(self, str name, str msg, list args):
+    cdef mx.t_object* obj = NULL
+    cdef mx.t_symbol* msg_sym = mx.gensym(msg.encode('utf-8'))
+    cdef mx.t_hashtab* registry = px.get_global_registry()
+    cdef mx.t_max_err err
+    cdef mx.t_atom argv[PY_MAX_ATOMS]
+    cdef long argc = <long>len(args)
+
+    if argc < 1:
+        self.error("no arguments given")
+        return
+
+    if argc >= PY_MAX_ATOMS:
+        self.error("number of args exceeded app limit")
+        return
+
+    for i, elem in enumerate(args):
+        if type(elem) == float:
+            mx.atom_setfloat(&argv[i], <double>elem)
+        elif type(elem) == int:
+            mx.atom_setlong((&argv[i]), <long>elem)
+        elif type(elem) == str:
+            mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
+        else:
+            continue
+
+    # if registry is empty, scan it
+    if (mx.hashtab_getsize(registry) == 0):
+        self.log("registry empty, scanning...")
+        self.scan()
+
+    # lookup name in registry
+    err = mx.hashtab_lookup(registry, mx.gensym(name.encode('utf-8')), &obj)
+
+    if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
+        self.error("no object found with name")
+        return
+
+    err = mx.object_method_typed(obj, msg_sym, argc, argv, NULL)
+
+    if (err != mx.MAX_ERR_NONE):
+        self.error("send failed")
+        mx.outlet_bang(<void*>self.obj.p_outlet_middle)
+    else:
+        self.log("send succeeded")
+        mx.outlet_bang(<void*>self.obj.p_outlet_right)
+```
 
 
 
