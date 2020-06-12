@@ -18,6 +18,29 @@
 </v>
 </v>
 <v t="sta.20200602110822.1"><vh>py</vh>
+<v t="sta.20200612044656.1"><vh>not-included</vh>
+<v t="sta.20200612045651.1"><vh>prototypes</vh></v>
+<v t="sta.20200612043307.1"><vh>not-working</vh>
+<v t="sta.20200612055834.1"><vh>api</vh>
+<v t="sta.20200612055834.2"><vh>send3 (list_to_atom)</vh></v>
+</v>
+<v t="sta.20200610222640.1"><vh>t_atom* py_list_to_atom</vh></v>
+<v t="sta.20200610164212.1"><vh>void py_list_to_atom2</vh></v>
+<v t="sta.20200610104706.1"><vh>void py_handle_list_output2</vh></v>
+</v>
+<v t="sta.20200612044825.1"><vh>working</vh>
+<v t="sta.20200612045044.1"><vh>api</vh>
+<v t="sta.20200612044941.1"><vh>send2</vh></v>
+</v>
+<v t="sta.20200607084300.1"><vh>void py_exec2</vh></v>
+<v t="sta.20200607084251.1"><vh>void py_eval2</vh></v>
+<v t="sta.20200602120251.26"><vh>void py_globex</vh></v>
+<v t="sta.20200608043930.1"><vh>void py_lookup</vh></v>
+<v t="sta.20200612051513.1"><vh>void py_handle_output</vh></v>
+<v t="sta.20200605120205.1"><vh>void py_locatefile</vh></v>
+<v t="sta.20200610070057.1"><vh>void py_send_from_seq</vh></v>
+</v>
+</v>
 <v t="sta.20200602164905.1"><vh>@auto-md README.md</vh></v>
 <v t="sta.20200602151837.1"><vh>@chapter notes</vh>
 <v t="sta.20200602154708.1"><vh>@auto structure.txt</vh></v>
@@ -141,16 +164,11 @@
 </v>
 <v t="sta.20200610100240.1"><vh>translators</vh>
 <v t="sta.20200610100158.1"><vh>PyObject* py_atom_to_list</vh></v>
-<v t="sta.20200610222640.1"><vh>t_atom* py_list_to_atom</vh></v>
-<v t="sta.20200610164212.1"><vh>void py_list_to_atom2</vh></v>
-<v t="sta.20200610104706.1"><vh>void py_handle_list_output-BUG</vh></v>
 </v>
 <v t="sta.20200602120318.1"><vh>core</vh>
 <v t="sta.20200602120251.20"><vh>void py_import</vh></v>
 <v t="sta.20200602120251.21"><vh>void py_eval</vh></v>
-<v t="sta.20200607084251.1"><vh>void py_eval2</vh></v>
 <v t="sta.20200602120251.22"><vh>void py_exec</vh></v>
-<v t="sta.20200607084300.1"><vh>void py_exec2</vh></v>
 <v t="sta.20200602120251.23"><vh>void py_execfile</vh></v>
 </v>
 <v t="sta.20200602120740.1"><vh>extra</vh>
@@ -162,13 +180,9 @@
 <v t="sta.20200602120251.11"><vh>void py_scan</vh></v>
 <v t="sta.20200603072826.1"><vh>long py_scan_callback</vh></v>
 <v t="sta.20200602120251.12"><vh>void py_send</vh></v>
-<v t="sta.20200610070057.1"><vh>void py_send_from_seq</vh></v>
-<v t="sta.20200608043930.1"><vh>void py_lookup</vh></v>
-<v t="sta.20200602120251.26"><vh>void py_globex</vh></v>
 </v>
 <v t="sta.20200602120447.1"><vh>editor</vh>
 <v t="sta.20200602120251.14"><vh>void py_dblclick</vh></v>
-<v t="sta.20200605120205.1"><vh>void py_locatefile</vh></v>
 <v t="sta.20200602120251.15"><vh>void py_read</vh></v>
 <v t="sta.20200602120251.16"><vh>void py_doread</vh></v>
 <v t="sta.20200602120251.17"><vh>void py_edclose</vh></v>
@@ -715,7 +729,17 @@ error:
 }
 
 </t>
-<t tx="sta.20200602120251.26">void py_globex(t_py* x, long n)
+<t tx="sta.20200602120251.26">/*
+needs the following above Py_Initialize;
+
+if (PyImport_AppendInittab("globex", PyInit_globex) == -1) {
+    py_error(x, "could not add globex to builtin modules table");
+}
+
+*/
+
+
+void py_globex(t_py* x, long n)
 {
     PyObject* globex_mod = NULL;
 
@@ -760,16 +784,13 @@ error:
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
-    class_addmethod(c, (method)py_eval2,      "eval2",      A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
-    class_addmethod(c, (method)py_exec2,      "exec2",      A_GIMME,  0);
     class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM, 0);
 
     // core extra
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
     class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
-    class_addmethod(c, (method)py_globex,     "globex",     A_LONG,   0);
     
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -778,7 +799,6 @@ error:
     // interobject
     class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
     class_addmethod(c, (method)py_send,       "send",       A_GIMME,   0);
-    class_addmethod(c, (method)py_lookup,     "lookup",     A_SYM,     0);
 
     // code editor
     class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
@@ -949,9 +969,6 @@ error:
         py_error(x, "could not add api to builtin modules table");
     }
 
-    if (PyImport_AppendInittab("globex", PyInit_globex) == -1) {
-        py_error(x, "could not add globex to builtin modules table");
-    }
 
     // Py_SetProgramName(program);
 
@@ -1082,17 +1099,16 @@ typedef struct _py {
     t_object p_ob;
 
     /* object attributes */
-    t_symbol* p_name; /* unique object name (not scripting name) */
+    t_symbol* p_name;       /* unique object name */
 
     /* python-related */
     t_symbol* p_pythonpath; /* path to python directory */
     t_bool p_debug;         /* bool to switch per-object debug state */
-    // int p_debug;
-    PyObject* p_globals; /* global python namespace (new ref) */
+    PyObject* p_globals;    /* per object 'globals' python namespace */
 
     /* infra objects */
-    t_patcher* p_patcher; /* to send msgs to objects */
-    t_box* p_box;         /* the ui box of the py instance? */
+    t_patcher* p_patcher;   /* to send msgs to objects */
+    t_box* p_box;           /* the ui box of the py instance? */
 
     /* text editor attrs */
     t_object* p_code_editor;
@@ -1123,16 +1139,9 @@ static t_hashtab* py_global_registry; // global object lookups
 </t>
 <t tx="sta.20200602150129.1">/*--------------------------------------------------------------------------*/
 // ENUMS
-
-/* python execution mode */
-typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 </t>
 <t tx="sta.20200602150250.1">/*--------------------------------------------------------------------------*/
 // MACROS
-
-#define foreach(i, n)                                                         \
-    int i;                                                                    \
-    for (i = 0; i &lt; n; i++)
 </t>
 <t tx="sta.20200602150324.1">/*--------------------------------------------------------------------------*/
 // METHODS
@@ -1157,16 +1166,13 @@ void py_handle_output(t_py* x, PyObject* pval);
 /* core python methods */
 void py_import(t_py* x, t_symbol* s);
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
 
 /* extra python methods */
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_globex(t_py* x, long n);
 
 /* informational */
 void py_count(t_py* x);
@@ -1179,7 +1185,6 @@ void py_bang(t_py* x);
 void py_scan(t_py* x);
 long py_scan_callback(t_py* x, t_object* obj);
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_lookup(t_py* x, t_symbol* s);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
@@ -1187,14 +1192,9 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
-void py_locatefile(t_py* x, char* filename);
 void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
 
 // helpers for api
-void py_send_from_seq(t_py* x, PyObject* seq);
-t_atom* py_list_to_atom(t_py* x, PyObject* plist);
-void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv);
-
 t_hashtab* get_global_registry(void);
 </t>
 <t tx="sta.20200602150733.1">/*--------------------------------------------------------------------------*/
@@ -3640,27 +3640,27 @@ error:
 
 </t>
 <t tx="sta.20200610104706.1">
-// void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
-// {
-    // Py_ssize_t seq_size = PySequence_Length(plist);
+void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
+{
+    Py_ssize_t seq_size = PySequence_Length(plist);
 
-    // long argc = (long)seq_size;
-    // t_atom* argv = py_list_to_atom(x, plist);
+    long argc = (long)seq_size;
+    t_atom* argv = py_list_to_atom(x, plist);
 
-    // outlet_list(x-&gt;p_outlet_left, NULL, argc, argv);
-    // outlet_bang(x-&gt;p_outlet_right);
+    outlet_list(x-&gt;p_outlet_left, NULL, argc, argv);
+    outlet_bang(x-&gt;p_outlet_right);
     
-    // free atoms
-    // for (int i=0; i &lt; argc; i++) {
-        // sysmem_freeptr((argv+i));
-    // }
-    // sysmem_freeptr(argv);
+    free atoms
+    for (int i=0; i &lt; argc; i++) {
+        sysmem_freeptr((argv+i));
+    }
+    sysmem_freeptr(argv);
 
-    // if (free_now) {
-        // Py_XDECREF(plist);
-    // }
-    // return;
-// }
+    if (free_now) {
+        Py_XDECREF(plist);
+    }
+    return;
+}
 </t>
 <t tx="sta.20200610105537.1">void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
 {
@@ -3940,5 +3940,192 @@ error:
     return py_global_registry;
 }
 </t>
+<t tx="sta.20200612043307.1"></t>
+<t tx="sta.20200612044656.1">@language c
+
+@doc
+
+This section includes code that is workging and not working that is redundant, or perhaps not required now, or that merely served, at some point, to test or illustrate something.
+
+There is no requirement to 'graduate' code from here. 
+
+@</t>
+<t tx="sta.20200612044825.1"></t>
+<t tx="sta.20200612044941.1">cdef send2(self, str name, list args):
+    _args = [name] + args
+    px.py_send_from_seq(self.obj, &lt;PyObject*&gt;_args)
+</t>
+<t tx="sta.20200612045044.1">@language cython
+
+
+</t>
+<t tx="sta.20200612045651.1">/*--------------------------------------------------------------------------*/
+// METHODS
+
+/* common handlers */
+void py_handle_float_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_long_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_string_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_list_output(t_py* x, PyObject* pval, bool free_now);
+
+/* core python methods */
+void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv);
+
+/* extra python methods */
+void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_globex(t_py* x, long n);
+
+/* informational */
+
+/* testing */
+
+/* interobject communications */
+void py_lookup(t_py* x, t_symbol* s);
+
+/* code editor */
+void py_locatefile(t_py* x, char* filename);
+
+// helpers for api
+void py_send_from_seq(t_py* x, PyObject* seq);
+t_atom* py_list_to_atom(t_py* x, PyObject* plist);
+void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv);
+</t>
+<t tx="sta.20200612051513.1">void py_handle_output(t_py* x, PyObject* pval)
+{
+
+    // handle ints and longs
+    if (PyLong_Check(plong)) {
+        long long_result = PyLong_AsLong(plong);
+        if (long_result == -1) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        outlet_int(x-&gt;p_outlet_left, long_result);
+        outlet_bang(x-&gt;p_outlet_right);
+    }
+
+    // handle floats and doubles
+    if (PyFloat_Check(pfloat)) {
+        float float_result = (float)PyFloat_AsDouble(pfloat);
+        if (float_result == -1.0) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        outlet_float(x-&gt;p_outlet_left, float_result);
+        outlet_bang(x-&gt;p_outlet_right);
+    }
+
+    // handle strings
+    if (PyUnicode_Check(pstring)) {
+        const char* unicode_result = PyUnicode_AsUTF8(pstring);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        outlet_anything(x-&gt;p_outlet_left, gensym(unicode_result), 0, NIL);
+        outlet_bang(x-&gt;p_outlet_right);
+    }
+
+    /* handle any sequence except strings, and presently
+       bytes and byte arrays (until there is a reason to)
+    */
+    if (PySequence_Check(pval) &amp;&amp; !PyUnicode_Check(pval)
+        &amp;&amp; !PyBytes_Check(pval) &amp;&amp; !PyByteArray_Check(pval)) {
+        PyObject* iter = NULL;
+        PyObject* item = NULL;
+        int i = 0;
+
+        t_atom atoms_static[PY_MAX_ATOMS];
+        t_atom* atoms = NULL;
+        int is_dynamic = 0;
+
+        Py_ssize_t seq_size = PySequence_Length(pval);
+
+        if (seq_size &lt;= 0) {
+            py_error(
+                x, "cannot convert python sequence with length &lt;= 0 to atoms");
+            goto error;
+        }
+
+        if (seq_size &gt; PY_MAX_ATOMS) {
+            py_log(x, "dynamically increasing size of atom array");
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+                                       seq_size + 1);
+            is_dynamic = 1;
+
+        } else {
+            atoms = atoms_static;
+        }
+
+        if ((iter = PyObject_GetIter(pval)) == NULL) {
+            goto error;
+        }
+
+        while ((item = PyIter_Next(iter)) != NULL) {
+            if (PyLong_Check(item)) {
+                long long_item = PyLong_AsLong(item);
+                if (long_item == -1) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
+                atom_setlong(atoms + i, long_item);
+                py_log(x, "%d long: %ld\n", i, long_item);
+                i++;
+            }
+
+            if PyFloat_Check(item) {
+                float float_item = PyFloat_AsDouble(item);
+                if (float_item == -1.0) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
+                atom_setfloat(atoms + i, float_item);
+                py_log(x, "%d float: %f\n", i, float_item);
+                i++;
+            }
+
+            if PyUnicode_Check(item) {
+                const char* unicode_item = PyUnicode_AsUTF8(item);
+                if (unicode_item == NULL) {
+                    goto error;
+                }
+                py_log(x, "%d unicode: %s\n", i, unicode_item);
+                atom_setsym(atoms + i, gensym(unicode_item));
+                i++;
+            }
+            Py_DECREF(item);
+        }
+
+        outlet_list(x-&gt;p_outlet_left, NULL, i, atoms);
+        outlet_bang(x-&gt;p_outlet_right);
+        py_log(x, "end iter op: %d", i);
+
+        if (is_dynamic) {
+            py_log(x, "restoring to static atom array");
+            atom_dynamic_end(atoms_static, atoms);
+        }
+    }
+    // final cleanup
+    Py_XDECREF(pval);
+    return;
+
+error:
+    py_handle_error(x, "python exception occurred");
+    Py_XDECREF(pval);
+    outlet_bang(x-&gt;p_outlet_middle);
+}</t>
+<t tx="sta.20200612055834.1">@language cython
+
+
+</t>
+<t tx="sta.20200612055834.2"># CRITICAL: STILL CRASHING, works but then crashes!!
+cdef send3(self, str name, list args):
+    _args = [name] + args
+    cdef long argc = &lt;long&gt;len(_args)
+    cdef mx.t_atom* argv = px.py_list_to_atom(self.obj, &lt;PyObject*&gt;_args)
+    px.py_send(self.obj, mx.gensym(""), argc, argv)
+    for i in range(argc):
+        mx.sysmem_freeptr(&amp;argv[i])
+    mx.sysmem_freeptr(argv)</t>
 </tnodes>
 </leo_file>

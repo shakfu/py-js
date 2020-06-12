@@ -74,16 +74,13 @@ void ext_main(void* r)
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
-    class_addmethod(c, (method)py_eval2,      "eval2",      A_GIMME,  0);
     class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
-    class_addmethod(c, (method)py_exec2,      "exec2",      A_GIMME,  0);
     class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM, 0);
 
     // core extra
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
     class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
-    class_addmethod(c, (method)py_globex,     "globex",     A_LONG,   0);
     
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -92,7 +89,6 @@ void ext_main(void* r)
     // interobject
     class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
     class_addmethod(c, (method)py_send,       "send",       A_GIMME,   0);
-    class_addmethod(c, (method)py_lookup,     "lookup",     A_SYM,     0);
 
     // code editor
     class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
@@ -233,9 +229,6 @@ void py_init(t_py* x)
         py_error(x, "could not add api to builtin modules table");
     }
 
-    if (PyImport_AppendInittab("globex", PyInit_globex) == -1) {
-        py_error(x, "could not add globex to builtin modules table");
-    }
 
     // Py_SetProgramName(program);
 
@@ -584,150 +577,6 @@ error:
     return NULL;
 }
 
-t_atom* py_list_to_atom(t_py* x, PyObject* plist)
-{
-    if (plist == NULL) {
-        goto error;
-    }
-
-    if (PySequence_Check(plist) && !PyUnicode_Check(plist)
-        && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
-        PyObject* iter = NULL;
-        PyObject* item = NULL;
-        int i = 0;
-        
-        Py_ssize_t seq_size = PySequence_Length(plist);
-
-        if (seq_size == 0) {
-            py_error(x, "cannot convert py list of length 0 to atoms");
-            goto error;
-        }
-        
-        long argc = (long)seq_size;
-        t_atom* atoms = (t_atom *)sysmem_newptr(sizeof(t_atom *) * argc);
-        // free with sysmem_freeptr(atoms)
-
-        if ((iter = PyObject_GetIter(plist)) == NULL) {
-            goto error;
-        }
-
-        while ((item = PyIter_Next(iter)) != NULL) {
-            if (PyLong_Check(item)) {
-                long long_item = PyLong_AsLong(item);
-                if (long_item == -1) {
-                    if (PyErr_Occurred())
-                        goto error;
-                }
-                atom_setlong(atoms + i, long_item);
-                py_log(x, "%d long: %ld\n", i, long_item);
-                i++;
-            }
-
-            if PyFloat_Check(item) {
-                float float_item = PyFloat_AsDouble(item);
-                if (float_item == -1.0) {
-                    if (PyErr_Occurred())
-                        goto error;
-                }
-                atom_setfloat(atoms + i, float_item);
-                py_log(x, "%d float: %f\n", i, float_item);
-                i++;
-            }
-
-            if PyUnicode_Check(item) {
-                const char* unicode_item = PyUnicode_AsUTF8(item);
-                if (unicode_item == NULL) {
-                    goto error;
-                }
-                py_log(x, "%d unicode: %s\n", i, unicode_item);
-                atom_setsym(atoms + i, gensym(unicode_item));
-                i++;
-            }
-            Py_DECREF(item);
-        }
-        Py_XDECREF(plist);
-        return atoms;
-    }
-
-error:
-    py_handle_error(x, "python exception occurred");
-    Py_XDECREF(plist);
-    return NULL;
-}
-
-
-void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv)
-{
-    if (PySequence_Check(plist) && !PyUnicode_Check(plist)
-        && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
-        PyObject* iter = NULL;
-        PyObject* item = NULL;
-        int i = 0;
-
-        Py_ssize_t seq_size = PySequence_Length(plist);
-
-        if (seq_size == 0) {
-            py_error(x, "cannot convert py sequence of length 0 to atoms");
-            goto error;
-        }
-
-        if ((iter = PyObject_GetIter(plist)) == NULL) {
-            goto error;
-        }
-
-        while ((item = PyIter_Next(iter)) != NULL) {
-            if (PyLong_Check(item)) {
-                long long_item = PyLong_AsLong(item);
-                atom_setlong(*argv + i, long_item);
-                py_log(x, "%d long: %ld\n", i, long_item);
-                i++;
-            }
-
-            if PyFloat_Check (item) {
-                float float_item = PyFloat_AsDouble(item);
-                atom_setfloat(*argv + i, float_item);
-                py_log(x, "%d float: %f\n", i, float_item);
-                i++;
-            }
-
-            if PyUnicode_Check (item) {
-                const char* unicode_item = PyUnicode_AsUTF8(item);
-                py_log(x, "%d unicode: %s\n", i, unicode_item);
-                atom_setsym(*argv + i, gensym(unicode_item));
-                i++;
-            }
-            Py_DECREF(item);
-        }
-        Py_XDECREF(plist);
-        return;
-    }
-
-error:
-    py_handle_error(x, "atom to list conversion failed");
-    Py_XDECREF(plist);
-}
-
-// void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
-// {
-    // Py_ssize_t seq_size = PySequence_Length(plist);
-
-    // long argc = (long)seq_size;
-    // t_atom* argv = py_list_to_atom(x, plist);
-
-    // outlet_list(x->p_outlet_left, NULL, argc, argv);
-    // outlet_bang(x->p_outlet_right);
-    
-    // free atoms
-    // for (int i=0; i < argc; i++) {
-        // sysmem_freeptr((argv+i));
-    // }
-    // sysmem_freeptr(argv);
-
-    // if (free_now) {
-        // Py_XDECREF(plist);
-    // }
-    // return;
-// }
 /*--------------------------------------------------------------------------*/
 // CORE
 
@@ -768,40 +617,6 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
-void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-
-    long textsize = 0;
-    char* text = NULL;
-    PyObject* pval = NULL;
-    t_max_err err;
-
-    err = atom_gettext(argc, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    // OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE);
-
-    if (err == MAX_ERR_NONE && textsize && text) {
-        py_log(x, "eval %s", text);
-    } else {
-        goto error;
-    }
-
-    pval = PyRun_String(text, Py_eval_input, x->p_globals, x->p_globals);
-
-    if (pval == NULL) {
-        sysmem_freeptr(text);
-        goto error;
-    }
-
-    // success
-    sysmem_freeptr(text);
-    py_handle_output(x, pval);
-    return;
-
-error:
-    py_handle_error(x, "eval failure");
-}
-
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = NULL;
@@ -826,41 +641,6 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 error:
     py_handle_error(x, "exec %s", py_argv);
     Py_XDECREF(pval);
-    outlet_bang(x->p_outlet_middle);
-}
-
-void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    long textsize = 0;
-    char* text = NULL;
-    PyObject* pval = NULL;
-    t_max_err err;
-
-    err = atom_gettext(argc, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err == MAX_ERR_NONE && textsize && text) {
-        py_log(x, "exec %s", text);
-    } else {
-        goto error;
-    }
-
-    pval = PyRun_String(text, Py_single_input, x->p_globals, x->p_globals);
-    if (pval == NULL) {
-        sysmem_freeptr(text);
-        goto error;
-    }
-
-    // success cleanup
-    sysmem_freeptr(text);
-    Py_DECREF(pval);
-    // success bang
-    outlet_bang(x->p_outlet_right);
-    return;
-
-error:
-    py_handle_error(x, "exec failed");
-    Py_XDECREF(pval);
-    // fail bang
     outlet_bang(x->p_outlet_middle);
 }
 
@@ -1249,222 +1029,6 @@ error:
     py_error(x, "send failed");
     return;
 }
-
-void py_send_from_seq(t_py* x, PyObject* seq)
-{
-
-    if (seq == NULL) {
-        goto error;
-    }
-
-    if (!PySequence_Check(seq) || PyUnicode_Check(seq) || PyBytes_Check(seq)
-        || PyByteArray_Check(seq)) {
-        goto error;
-    }
-
-    // list -> t_atom vars
-    PyObject* iter = NULL;
-    PyObject* item = NULL;
-    int i = 0;
-
-    t_atom atoms_static[PY_MAX_ATOMS];
-    t_atom* atoms = NULL;
-    int is_dynamic = 0;
-
-    Py_ssize_t seq_size = PySequence_Length(seq);
-    long argc = (long)seq_size;
-
-    if (seq_size < 2) {
-        py_error(x, "cannot convert py sequence length < 2 to atoms");
-        goto error;
-    }
-
-    if (seq_size > PY_MAX_ATOMS) {
-        py_log(x, "dynamically increasing size of atom array");
-        atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS, seq_size + 1);
-        is_dynamic = 1;
-
-    } else {
-        atoms = atoms_static;
-    }
-
-    if ((iter = PyObject_GetIter(seq)) == NULL) {
-        goto error;
-    }
-
-    while ((item = PyIter_Next(iter)) != NULL) {
-        if (PyLong_Check(item)) {
-            long long_item = PyLong_AsLong(item);
-            atom_setlong(atoms + i, long_item);
-            py_log(x, "%d long: %ld\n", i, long_item);
-            i++;
-        }
-
-        if PyFloat_Check (item) {
-            float float_item = PyFloat_AsDouble(item);
-            atom_setfloat(atoms + i, float_item);
-            py_log(x, "%d float: %f\n", i, float_item);
-            i++;
-        }
-
-        if PyUnicode_Check (item) {
-            const char* unicode_item = PyUnicode_AsUTF8(item);
-            py_log(x, "%d unicode: %s\n", i, unicode_item);
-            atom_setsym(atoms + i, gensym(unicode_item));
-            i++;
-        }
-        Py_DECREF(item);
-    }
-
-    // send vars
-    t_object* obj = NULL;
-    char* obj_name = NULL;
-    t_symbol* msg_sym = NULL;
-    t_max_err err = NULL;
-
-    if ((atoms + 0)->a_type != A_SYM) {
-        py_error(
-            x, "1st arg of send needs to be a symbol name of receiver object");
-        goto error;
-    }
-
-    // argv+0 is the object name to send to
-    obj_name = atom_getsym(atoms)->s_name;
-    if (obj_name == NULL) {
-        goto error;
-    }
-
-    // if registry is empty, scan it
-    if (hashtab_getsize(py_global_registry) == 0) {
-        py_scan(x);
-    }
-
-    // // lookup name in registry
-    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
-    if (err != MAX_ERR_NONE || obj == NULL) {
-        py_error(x, "no object found in the registry");
-        goto error;
-    }
-
-    // atom after the name of the receiver
-    switch ((atoms + 1)->a_type) {
-    case A_SYM: {
-        msg_sym = atom_getsym(atoms + 1);
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-        // address the minimum case: e.g a bang
-        if (argc - 2 == 0) { //
-            argc = 0;
-            atoms = NULL;
-        } else {
-            argc = argc - 2;
-            atoms = atoms + 2;
-        }
-        break;
-    }
-    case A_FLOAT: {
-        msg_sym = gensym("float");
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-
-        argc = argc - 1;
-        atoms = atoms + 1;
-
-        break;
-    }
-    case A_LONG: {
-        msg_sym = gensym("int");
-        if (msg_sym == NULL) { // should check type here
-            goto error;
-        }
-
-        argc = argc - 1;
-        atoms = atoms + 1;
-
-        break;
-    }
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-    }
-
-    // methods to get method type
-    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
-    if (messlist) {
-        post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-        post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
-    }
-
-    err = object_method_typed(obj, msg_sym, argc, atoms, NULL);
-    if (err) {
-        py_error(x, "failed to send a message to object %s", obj_name);
-        goto error;
-    }
-
-    // process here
-    outlet_bang(x->p_outlet_right);
-    py_log(x, "end iter op: %d", i);
-
-    if (is_dynamic) {
-        py_log(x, "restoring to static atom array");
-        atom_dynamic_end(atoms_static, atoms);
-    }
-
-    // final cleanup
-    Py_XDECREF(seq);
-    return;
-
-error:
-    py_error(x, "send failed");
-    return;
-}
-void py_lookup(t_py* x, t_symbol* s)
-{
-    t_object* obj = NULL;
-    t_max_err err = NULL;
-
-    if (hashtab_getsize(py_global_registry) == 0) {
-        py_error(x, "registry not populated");
-        return;
-    }
-
-    err = hashtab_lookup(py_global_registry, s, &obj);
-    if (err != MAX_ERR_NONE || obj == NULL) {
-        py_error(x, "no object found with name %s", s->s_name);
-    } else {
-        py_log(x, "found object: %s", s->s_name);
-    }
-    return;
-}
-
-void py_globex(t_py* x, long n)
-{
-    PyObject* globex_mod = NULL;
-
-    globex_mod = PyImport_ImportModule("globex"); // x_module borrrowed ref
-    if (globex_mod == NULL) {
-        goto error;
-    }
-
-    PyDict_SetItemString(x->p_globals, "globex", globex_mod);
-
-    PyObject* globex_dict = PyModule_GetDict(globex_mod);
-
-    if (PyDict_SetItemString(globex_dict, NAME_INT, PyLong_FromLong(n))
-        == -1) {
-        py_error(x, "cannot set long to NAME_INT");
-        goto error;
-    }
-
-    outlet_bang(x->p_outlet_right);
-    py_log(x, "globex import and globex.INT = %ld", n);
-    return;
-error:
-    py_handle_error(x, "globex %ld", n);
-    outlet_bang(x->p_outlet_middle);
-}
 /*--------------------------------------------------------------------------*/
 // EDITOR
 
@@ -1479,32 +1043,6 @@ void py_dblclick(t_py* x)
         object_attr_setchar(x->p_code_editor, gensym("scratch"), 1);
         object_attr_setsym(x->p_code_editor, gensym("title"),
                            gensym("py-editor"));
-    }
-}
-
-void py_locatefile(t_py* x, char* filename)
-{
-    // works for folders as well
-    char name[MAX_FILENAME_CHARS];
-    short path;
-    t_fourcc type;
-
-    char pathname[MAX_PATH_CHARS];
-    short err;
-
-    if (filename == NULL)
-        return;
-
-    strncpy_zero(name, filename, MAX_FILENAME_CHARS);
-
-    if (locatefile_extended(name, &path, &type, NULL, 0)) {
-        error("path %s not found", name);
-    } else {
-        post("path %s, path %d", name, path);
-        err = path_topathname(path, name, pathname);
-        if (err == 0) {
-            post("absolute path: %s", pathname);
-        }
     }
 }
 

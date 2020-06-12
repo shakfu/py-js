@@ -182,19 +182,6 @@ cdef class PyExternal:
 
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
-    cdef send2(self, str name, list args):
-        _args = [name] + args
-        px.py_send_from_seq(self.obj, <PyObject*>_args)
-
-    # CRITICAL: STILL CRASHING, works but then crashes!!
-    cdef send3(self, str name, list args):
-        _args = [name] + args
-        cdef long argc = <long>len(_args)
-        cdef mx.t_atom* argv = px.py_list_to_atom(self.obj, <PyObject*>_args)
-        px.py_send(self.obj, mx.gensym(""), argc, argv)
-        for i in range(argc):
-            mx.sysmem_freeptr(&argv[i])
-        mx.sysmem_freeptr(argv)
 
     cdef send4(self, str name, str msg, list args):
         cdef mx.t_object* obj = NULL
@@ -315,16 +302,6 @@ def sendtest0(name, value=9.5):
 def sendtest(name, value=11.5):
     ext = PyExternal()
     ext.send(name, [value])
-    # del ext
-
-def sendtest2(name, value=12.5):
-    ext = PyExternal()
-    ext.send2(name, [value])
-    # del ext
-
-def sendtest3(name, value=13.5):
-    ext = PyExternal()
-    ext.send3(name, [value])
     # del ext
 
 def sendtest4(name, msg='float', value=14.5):

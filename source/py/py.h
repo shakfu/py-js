@@ -32,17 +32,16 @@ typedef struct _py {
     t_object p_ob;
 
     /* object attributes */
-    t_symbol* p_name; /* unique object name (not scripting name) */
+    t_symbol* p_name;       /* unique object name */
 
     /* python-related */
     t_symbol* p_pythonpath; /* path to python directory */
     t_bool p_debug;         /* bool to switch per-object debug state */
-    // int p_debug;
-    PyObject* p_globals; /* global python namespace (new ref) */
+    PyObject* p_globals;    /* per object 'globals' python namespace */
 
     /* infra objects */
-    t_patcher* p_patcher; /* to send msgs to objects */
-    t_box* p_box;         /* the ui box of the py instance? */
+    t_patcher* p_patcher;   /* to send msgs to objects */
+    t_box* p_box;           /* the ui box of the py instance? */
 
     /* text editor attrs */
     t_object* p_code_editor;
@@ -64,15 +63,8 @@ typedef struct _py {
 // FUNCTION TYPES
 /*--------------------------------------------------------------------------*/
 // ENUMS
-
-/* python execution mode */
-typedef enum { PY_EVAL, PY_EXEC, PY_EXECFILE } py_mode;
 /*--------------------------------------------------------------------------*/
 // MACROS
-
-#define foreach(i, n)                                                         \
-    int i;                                                                    \
-    for (i = 0; i < n; i++)
 /*--------------------------------------------------------------------------*/
 // METHODS
 
@@ -96,16 +88,13 @@ void py_handle_output(t_py* x, PyObject* pval);
 /* core python methods */
 void py_import(t_py* x, t_symbol* s);
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_exec2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_execfile(t_py* x, t_symbol* s);
 
 /* extra python methods */
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_globex(t_py* x, long n);
 
 /* informational */
 void py_count(t_py* x);
@@ -118,7 +107,6 @@ void py_bang(t_py* x);
 void py_scan(t_py* x);
 long py_scan_callback(t_py* x, t_object* obj);
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
-void py_lookup(t_py* x, t_symbol* s);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
@@ -126,14 +114,9 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
-void py_locatefile(t_py* x, char* filename);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
 // helpers for api
-void py_send_from_seq(t_py* x, PyObject* seq);
-t_atom* py_list_to_atom(t_py* x, PyObject* plist);
-void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv);
-
 t_hashtab* get_global_registry(void);
 
 #endif // PY_H
