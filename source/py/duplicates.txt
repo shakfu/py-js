@@ -6,115 +6,22 @@
     vsprintf(msg, fmt, va);
     va_end(va);
 
-./py.c(981)
-./py.c(970)
+./py.c(997)
+./py.c(986)
         if (msg_sym == NULL) { 
             goto error;
         argc = argc - 1;
         argv = argv + 1;
         break;
 
-./py.c(1143)
-./py.c(1132)
-        if (msg_sym == NULL) { 
-            goto error;
-        argc = argc - 1;
-        atoms = atoms + 1;
-        break;
-
-./py.c(618)
-./py.c(566)
-    Py_DECREF(pval);
-    outlet_bang(x->p_outlet_right);
-    return;
-error:
-
-./py.c(545)
-./py.c(485)
-    long textsize = 0;
-    char* text = NULL;
-    PyObject* pval = NULL;
-    t_max_err err;
-    err = atom_gettext(argc, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err == MAX_ERR_NONE && textsize && text) {
-
-./py.c(559)
-./py.c(502)
-    if (pval == NULL) {
-        sysmem_freeptr(text);
-        goto error;
-    sysmem_freeptr(text);
-
-./py.c(771)
-./py.c(693)
+./py.c(787)
+./py.c(709)
     if (argv->a_type != A_SYM) {
         py_error(x, "first atom must be a symbol!");
         goto error;
     } else {
 
-./py.c(1097)
-./py.c(935)
-    if (obj_name == NULL) {
-        goto error;
-    if (hashtab_getsize(py_global_registry) == 0) {
-        py_scan(x);
-    err = hashtab_lookup(py_global_registry, gensym(obj_name), &obj);
-    if (err != MAX_ERR_NONE || obj == NULL) {
-        py_error(x, "no object found in the registry");
-        goto error;
-
-./py.c(1117)
-./py.c(955)
-        if (msg_sym == NULL) { 
-            goto error;
-        if (argc - 2 == 0) { //
-            argc = 0;
-
-./py.c(1128)
-./py.c(966)
-        break;
-    case A_FLOAT: {
-        msg_sym = gensym("float");
-        if (msg_sym == NULL) { 
-            goto error;
-        argc = argc - 1;
-
-./py.c(1139)
-./py.c(977)
-        break;
-    case A_LONG: {
-        msg_sym = gensym("int");
-        if (msg_sym == NULL) { 
-            goto error;
-        argc = argc - 1;
-
-./py.c(1150)
-./py.c(988)
-        break;
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
-    if (messlist) {
-        post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
-        post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
-
-./py.c(1084)
-./py.c(917)
-    t_object* obj = NULL;
-    char* obj_name = NULL;
-    t_symbol* msg_sym = NULL;
-    t_max_err err = NULL;
-
-./py.c(1181)
-./py.c(1009)
-    return;
-error:
-    py_error(x, "send failed");
-    return;
-
-./py.c(313)
+./py.c(309)
 ./py.c(42)
         char msg[50];
         va_list va;
@@ -122,7 +29,7 @@ error:
         vsprintf(msg, fmt, va);
         va_end(va);
 
-./py.c(313)
+./py.c(309)
 ./py.c(29)
         char msg[50];
         va_list va;
@@ -130,57 +37,12 @@ error:
         vsprintf(msg, fmt, va);
         va_end(va);
 
-./py.c(988)
-./py.c(669)
+./py.c(1004)
+./py.c(565)
         break;
     default:
         py_log(x, "cannot process unknown type");
         break;
-
-./py.c(1150)
-./py.c(669)
-        break;
-    default:
-        py_log(x, "cannot process unknown type");
-        break;
-
-./py.c(1056)
-./py.c(397)
-        goto error;
-    while ((item = PyIter_Next(iter)) != NULL) {
-        if (PyLong_Check(item)) {
-            long long_item = PyLong_AsLong(item);
-            atom_setlong(atoms + i, long_item);
-            py_log(x, "%d long: %ld\n", i, long_item);
-            i++;
-        if PyFloat_Check (item) {
-            float float_item = PyFloat_AsDouble(item);
-            atom_setfloat(atoms + i, float_item);
-            py_log(x, "%d float: %f\n", i, float_item);
-            i++;
-        if PyUnicode_Check (item) {
-            const char* unicode_item = PyUnicode_AsUTF8(item);
-            py_log(x, "%d unicode: %s\n", i, unicode_item);
-            atom_setsym(atoms + i, gensym(unicode_item));
-            i++;
-        Py_DECREF(item);
-
-./py.c(1030)
-./py.c(370)
-    PyObject* iter = NULL;
-    PyObject* item = NULL;
-    int i = 0;
-    t_atom atoms_static[PY_MAX_ATOMS];
-    t_atom* atoms = NULL;
-    int is_dynamic = 0;
-
-./py.c(1171)
-./py.c(425)
-    outlet_bang(x->p_outlet_right);
-    py_log(x, "end iter op: %d", i);
-    if (is_dynamic) {
-        py_log(x, "restoring to static atom array");
-        atom_dynamic_end(atoms_static, atoms);
 
 Configuration: 
   Number of files: 1
@@ -190,7 +52,7 @@ Configuration:
   Ignore same filenames: 0
 
 Results: 
-  Lines of code: 801
-  Duplicate lines of code: 121
-  Total 21 duplicate block(s) found.
+  Lines of code: 659
+  Duplicate lines of code: 28
+  Total 6 duplicate block(s) found.
 
