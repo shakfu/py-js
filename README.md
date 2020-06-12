@@ -69,7 +69,7 @@ interobj | send            | msg           | n/a    | no         | [x]
 
 8. **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and is embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects and also via `import` messages. What this effectively means is that python scripts in `py` objects can directly call max c-api functions.
 
-9. **Globals Exchange**. The `py` external has a special builtin python module called `globex` which exposes globals which can be read and written from the python script side and also from the c external side.
+
 
 ## Building
 

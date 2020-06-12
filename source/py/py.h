@@ -76,6 +76,8 @@ void py_init(t_py* x);
 /* helpers */
 void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
+void py_update_object_name(t_py* x);
+t_hashtab* get_global_registry(void);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
@@ -116,7 +118,5 @@ void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
 
-// helpers for api
-t_hashtab* get_global_registry(void);
 
 #endif // PY_H
