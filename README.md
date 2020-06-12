@@ -124,7 +124,7 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 - As a send method in your cython `api.pyx` file so it can be called by python scripts and also via messages. I actually made 3 versions
 
-1. A version which wraps the previously implemented `py_send` and uses a cython Atom extension type : 4 lines
+1. A version which wraps the previously implemented `py_send` and uses a cython Atom extension type which encapsulate `t_atom` arrays: 4 lines
 
 ```python
 cdef send1(self, str name, list args):
@@ -133,7 +133,7 @@ cdef send1(self, str name, list args):
     px.py_send(self.obj, mx.gensym(""), atom.argc, atom.argv)
 ```
 
-2. A version which implements `py_send` using a cython Atom extension type: 19 lines
+2. A version which implements `py_send` using a statically allocation t_atom array: 19 lines
 
 ```python
 cdef send2(self, str name, list args):
