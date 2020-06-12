@@ -91,7 +91,7 @@ import api
 api.send('coll1', [5.1, 9.2, 10.8, 11.5])
 ```
 
-Since I want to use the `call` method which is used for max friendly python function calls, I have to write a small wrapper module function in `api.pyx`:
+Since I want to use the `call` method which is used for max friendly python function calls, I have to write a small helper module function in `api.pyx`:
 
 ```python
 def send(args):
@@ -101,7 +101,7 @@ def send(args):
     ext.send(name, msg)
 ```
 
-The `api` module has a class called `PyExternal` which encapsulates some common behaviours such as get the name of the caller and having a bunch of useful methods which call the max api directly or indirectly via the external c code.
+This calls the `PyExternal` class which, in the `api` module, encapsulates some essential common functionality such getting a reference to the parent object and having a bunch of useful methods which call the max api directly or indirectly via external c code.
 
 ```cython
 cdef class PyExternal:
@@ -110,6 +110,8 @@ cdef class PyExternal:
     def __cinit__(self, bytes name=__name__.encode('utf-8')):
         self.obj = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(name))
+
+    # methods follow ...
 ```
 
 Now for the send method itself. There are at least two ways to implement this:
