@@ -479,8 +479,8 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
                 if (unicode_item == NULL) {
                     goto error;
                 }
-                py_log(x, "%d unicode: %s\n", i, unicode_item);
                 atom_setsym(atoms + i, gensym(unicode_item));
+                py_log(x, "%d unicode: %s\n", i, unicode_item);
                 i++;
             }
             Py_DECREF(item);
