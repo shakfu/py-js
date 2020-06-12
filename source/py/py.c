@@ -33,7 +33,7 @@ void py_log(t_py* x, char* fmt, ...)
         vsprintf(msg, fmt, va);
         va_end(va);
 
-        post("[py %s]: %s", x->p_name->s_name, msg);
+        object_post((t_object *)x, "[py %s]: %s", x->p_name->s_name, msg);
     }
 }
 
@@ -46,7 +46,7 @@ void py_error(t_py* x, char* fmt, ...)
     vsprintf(msg, fmt, va);
     va_end(va);
 
-    error("[py %s]: %s", x->p_name->s_name, msg);
+    object_error((t_object *)x, "[py %s]: %s", x->p_name->s_name, msg);
 }
 
 t_hashtab* get_global_registry(void) {
@@ -910,6 +910,7 @@ long py_scan_callback(t_py* x, t_object* box)
     obj = jbox_get_object(box);
 
     // STRANGE BUG: single quotes in py_log cause a crash but not with post!!
+    // perhaps because post is a macro for object_post?
     if (varname && varname != gensym("")) {
         // post("XXXX -> '%s'", varname->s_name);
         py_log(x, "storing object %s in the global registry", varname->s_name);
