@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1213C2002485ADF700BF792B /* globex.c in Sources */ = {isa = PBXBuildFile; fileRef = 1213C1FF2485ADF700BF792B /* globex.c */; };
 		121CFF58246E493B0034A0AB /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 121CFF56246E493B0034A0AB /* api.h */; };
 		121CFF59246E493B0034A0AB /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 121CFF57246E493B0034A0AB /* api.c */; };
 		1245A543246F7B2A00D856BC /* py.h in Headers */ = {isa = PBXBuildFile; fileRef = 1245A542246F7B2A00D856BC /* py.h */; };
@@ -17,7 +16,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1213C1FF2485ADF700BF792B /* globex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = globex.c; sourceTree = "<group>"; };
 		121CFF56246E493B0034A0AB /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = api.h; sourceTree = "<group>"; };
 		121CFF57246E493B0034A0AB /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = api.c; sourceTree = "<group>"; };
 		1245A542246F7B2A00D856BC /* py.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = py.h; sourceTree = "<group>"; };
@@ -48,7 +46,6 @@
 				22CF122A0EE9AAAD0054F513 /* py.c */,
 				121CFF56246E493B0034A0AB /* api.h */,
 				121CFF57246E493B0034A0AB /* api.c */,
-				1213C1FF2485ADF700BF792B /* globex.c */,
 				22CF10220EE984600054F513 /* maxmspsdk.xcconfig */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 				12D5454A2463B03000BE010E /* Frameworks */,
@@ -163,7 +160,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				121CFF59246E493B0034A0AB /* api.c in Sources */,
-				1213C2002485ADF700BF792B /* globex.c in Sources */,
 				22CF122B0EE9AAAD0054F513 /* py.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

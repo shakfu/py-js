@@ -24,6 +24,7 @@
 <v t="sta.20200612055834.1"><vh>api</vh>
 <v t="sta.20200612055834.2"><vh>send3 (list_to_atom)</vh></v>
 </v>
+<v t="sta.20200612115112.1"><vh>const char* pstring_to_cstring</vh></v>
 <v t="sta.20200610222640.1"><vh>t_atom* py_list_to_atom</vh></v>
 <v t="sta.20200610164212.1"><vh>void py_list_to_atom2</vh></v>
 <v t="sta.20200610104706.1"><vh>void py_handle_list_output2</vh></v>
@@ -39,6 +40,8 @@
 <v t="sta.20200612051513.1"><vh>void py_handle_output</vh></v>
 <v t="sta.20200605120205.1"><vh>void py_locatefile</vh></v>
 <v t="sta.20200610070057.1"><vh>void py_send_from_seq</vh></v>
+<v t="sta.20200612114958.1"><vh>float pfloat_to_cfloat</vh></v>
+<v t="sta.20200612115000.1"><vh>long plong_to_clong</vh></v>
 <v t="sta.20200612065729.1"><vh>files</vh>
 <v t="sta.20200612065752.1"><vh>@@auto globex.h</vh></v>
 <v t="sta.20200612065639.1"><vh>@@auto globex.c</vh>
@@ -4248,6 +4251,88 @@ except:
     m = NULL;
 finally:
     return m;
+}
+</t>
+<t tx="sta.20200612114958.1">float pfloat_to_cfloat(t_py* x, PyObject* pfloat)
+{
+    if (pfloat == NULL)
+        goto error;
+    
+    if PyFloat_Check(pfloat) {
+        float cfloat = PyFloat_AsDouble(pfloat);
+        if (cfloat == -1.0) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        Py_XDECREF(pfloat);
+        return cfloat;
+    }
+
+error:
+    py_handle_error(x, "float conversion error");
+    Py_XDECREF(pfloat);
+    return -1.0;
+}
+
+void py_handle_float_output(t_py* x, PyObject* pfloat)
+{
+    float cfloat = pfloat_to_cfloat(x, pfloat); 
+    outlet_float(x-&gt;p_outlet_left, cfloat);
+    outlet_bang(x-&gt;p_outlet_right);
+}</t>
+<t tx="sta.20200612115000.1">long plong_to_clong(t_py* x, PyObject* plong)
+{
+    if (plong == NULL)
+        goto error;
+
+    if (PyLong_Check(plong)) {
+        long clong = PyLong_AsLong(plong);
+        if (clong == -1) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        Py_XDECREF(plong);
+        return clong;
+    }
+
+error:
+    py_handle_error(x, "long conversion error");
+    Py_XDECREF(plong);
+    return -1;
+}
+
+void py_handle_long_output(t_py* x, PyObject* plong)
+{
+    long clong = plong_to_clong(x, plong); 
+    outlet_float(x-&gt;p_outlet_left, clong);
+    outlet_bang(x-&gt;p_outlet_right);
+}</t>
+<t tx="sta.20200612115112.1">const char* pstring_to_cstring(t_py* x, PyObject* pstring)
+{
+    if (pstring == NULL) {
+        goto error;
+    }
+
+    if (PyUnicode_Check(pstring)) {
+        const char* cstring = PyUnicode_AsUTF8(pstring);
+        if (cstring == NULL) {
+            goto error;
+        }
+        Py_XDECREF(pstring);
+        return cstring;
+    }
+
+error:
+    py_handle_error(x, "python exception occurred");
+    Py_XDECREF(pstring);
+    return NULL;
+}
+
+
+void py_handle_string_output(t_py* x, PyObject* pstring) {
+    const char* cstring = plong_to_clong(x, pstring);
+    outlet_anything(x-&gt;p_outlet_left, gensym(cstring), 0, NIL);
+    outlet_bang(x-&gt;p_outlet_right);
 }
 </t>
 </tnodes>
