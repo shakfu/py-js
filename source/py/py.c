@@ -49,6 +49,22 @@ void py_error(t_py* x, char* fmt, ...)
     object_error((t_object *)x, "[py %s]: %s", x->p_name->s_name, msg);
 }
 
+void py_update_object_name(t_py* x)
+{
+    PyObject* p_name = PyUnicode_FromString(x->p_name->s_name);
+    if (p_name == NULL)
+        goto error;
+    int err = PyDict_SetItemString(x->p_globals, "__name__", p_name);
+    if (err == -1)
+        goto error;
+    Py_XDECREF(p_name);
+    return;
+
+error:
+    py_handle_error(x, "could not update object namespace with object name");
+    Py_XDECREF(p_name);
+}
+
 t_hashtab* get_global_registry(void) {
     return py_global_registry;
 }
@@ -156,12 +172,13 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
     if (x) {
 
         // core
-        if (py_global_obj_count == 0) {
-            // first py obj is called '__main__'
-            x->p_name = gensym("__main__");
-        } else {
-            x->p_name = symbol_unique();
-        }
+        // if (py_global_obj_count == 0) {
+        //     // first py obj is called '__main__'
+        //     x->p_name = gensym("__main__");
+        // } else {
+        //     x->p_name = symbol_unique();
+        // }
+        x->p_name = symbol_unique();
 
         // communication
         x->p_patcher = NULL;
@@ -245,6 +262,9 @@ void py_init(t_py* x)
     object_register(CLASS_BOX, x->p_name, x);
     // py_log(x, "object registered");
 
+    // sets the object module __name__ to x->p_name->s_name
+    py_update_object_name(x);
+
     // increment global object counter
     py_global_obj_count++;
 
@@ -291,6 +311,8 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 /*--------------------------------------------------------------------------*/
 // TESTING
+
+
 
 void py_bang(t_py* x)
 {

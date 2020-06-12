@@ -118,7 +118,7 @@ cdef class PyAtom:
 cdef class PyExternal:
     cdef px.t_py *obj
 
-    def __cinit__(self, bytes name=b'__main__'):
+    def __cinit__(self, bytes name=__name__.encode('utf-8')):
         self.obj = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(name))
 
