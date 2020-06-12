@@ -18,7 +18,7 @@
 </v>
 </v>
 <v t="sta.20200602110822.1"><vh>py</vh>
-<v t="sta.20200612044656.1"><vh>not-included</vh>
+<v t="sta.20200612044656.1"><vh>@chapter not-included</vh>
 <v t="sta.20200612045651.1"><vh>prototypes</vh></v>
 <v t="sta.20200612043307.1"><vh>not-working</vh>
 <v t="sta.20200612055834.1"><vh>api</vh>
@@ -39,6 +39,14 @@
 <v t="sta.20200612051513.1"><vh>void py_handle_output</vh></v>
 <v t="sta.20200605120205.1"><vh>void py_locatefile</vh></v>
 <v t="sta.20200610070057.1"><vh>void py_send_from_seq</vh></v>
+<v t="sta.20200612065729.1"><vh>files</vh>
+<v t="sta.20200612065752.1"><vh>@@auto globex.h</vh></v>
+<v t="sta.20200612065639.1"><vh>@@auto globex.c</vh>
+<v t="sta.20200612065813.1"><vh>static PyMethodDef</vh></v>
+<v t="sta.20200612065813.2"><vh>static PyModuleDef</vh></v>
+<v t="sta.20200612065813.3"><vh>int _add_map_to_module</vh></v>
+</v>
+</v>
 </v>
 </v>
 <v t="sta.20200602164905.1"><vh>@auto-md README.md</vh></v>
@@ -4127,5 +4135,120 @@ cdef send3(self, str name, list args):
     for i in range(argc):
         mx.sysmem_freeptr(&amp;argv[i])
     mx.sysmem_freeptr(argv)</t>
+<t tx="sta.20200612065639.1">#define PY_SSIZE_T_CLEAN
+#include "Python.h"
+
+const char* NAME_INT = "INT";
+const char* NAME_STR = "STR";
+const char* NAME_LST = "LST";
+const char* NAME_TUP = "TUP";
+const char* NAME_MAP = "MAP";
+
+
+
+@others
+@language c
+@tabwidth -4
+</t>
+<t tx="sta.20200612065729.1">@path source/py</t>
+<t tx="sta.20200612065752.1">
+// global identifiers which can be read and written to from c
+const char* NAME_INT;
+const char* NAME_STR;
+const char* NAME_LST;
+const char* NAME_TUP;
+const char* NAME_MAP;
+
+// use as (PyImport_AppendInittab("globex", PyInit_globex)
+PyMODINIT_FUNC PyInit_globex(void);
+@language c
+@tabwidth -4
+</t>
+<t tx="sta.20200612065813.1">static PyMethodDef globex_methods[] = {
+    { NULL, NULL, 0, NULL } /* Sentinel */
+};
+
+</t>
+<t tx="sta.20200612065813.2">static PyModuleDef globex_module = {
+    PyModuleDef_HEAD_INIT,
+    "globex",
+    "Examples of global values in a module.",
+    -1,
+    globex_methods, /* globex_methods */
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+};
+
+/* Add a dict of {str : int, ...}.
+ * Returns 0 on success, 1 on failure.
+ */
+</t>
+<t tx="sta.20200612065813.3">int _add_map_to_module(PyObject* module)
+{
+    int ret = 0;
+    PyObject* pMap = NULL;
+
+    pMap = PyDict_New();
+    if (!pMap) {
+        goto except;
+    }
+    /* Load map. */
+    if (PyDict_SetItem(pMap, PyBytes_FromString("66"), PyLong_FromLong(66))) {
+        goto except;
+    }
+    if (PyDict_SetItem(pMap, PyBytes_FromString("123"),
+                       PyLong_FromLong(123))) {
+        goto except;
+    }
+    /* Add map to module. */
+    if (PyModule_AddObject(module, NAME_MAP, pMap)) {
+        goto except;
+    }
+    ret = 0;
+    goto finally;
+except:
+    Py_XDECREF(pMap);
+    ret = 1;
+finally:
+    return ret;
+}
+
+PyMODINIT_FUNC PyInit_globex(void)
+{
+    PyObject* m = NULL;
+
+    m = PyModule_Create(&amp;globex_module);
+
+    if (m == NULL) {
+        goto except;
+    }
+    /* Adding module globals */
+    if (PyModule_AddIntConstant(m, NAME_INT, 42)) {
+        goto except;
+    }
+    if (PyModule_AddStringConstant(m, NAME_STR, "String value")) {
+        goto except;
+    }
+    if (PyModule_AddObject(m, NAME_TUP, Py_BuildValue("iii", 66, 68, 73))) {
+        goto except;
+    }
+    if (PyModule_AddObject(m, NAME_LST, Py_BuildValue("[iii]", 66, 68, 73))) {
+        goto except;
+    }
+    /* An invented convenience function for this dict. */
+    if (_add_map_to_module(m)) {
+        goto except;
+    }
+
+    goto finally;
+except:
+    Py_XDECREF(m);
+    m = NULL;
+finally:
+    return m;
+}
+</t>
 </tnodes>
 </leo_file>
