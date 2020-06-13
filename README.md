@@ -133,7 +133,7 @@ cdef send1(self, str name, list args):
     px.py_send(self.obj, mx.gensym(""), atom.argc, atom.argv)
 ```
 
-2. A version which implements `py_send` using a statically allocation t_atom array: 19 lines
+2. A version which implements calls `py_send` using a statically allocated `t_atom` array: 19 lines
 
 ```python
 cdef send2(self, str name, list args):
