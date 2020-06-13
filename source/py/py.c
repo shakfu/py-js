@@ -33,7 +33,7 @@ void py_log(t_py* x, char* fmt, ...)
         vsprintf(msg, fmt, va);
         va_end(va);
 
-        object_post((t_object *)x, "[py %s]: %s", x->p_name->s_name, msg);
+        post("[py %s]: %s", x->p_name->s_name, msg);
     }
 }
 
@@ -46,7 +46,8 @@ void py_error(t_py* x, char* fmt, ...)
     vsprintf(msg, fmt, va);
     va_end(va);
 
-    object_error((t_object *)x, "[py %s]: %s", x->p_name->s_name, msg);
+    error("[py %s]: %s", x->p_name->s_name, msg);
+
 }
 
 void py_update_object_name(t_py* x)
@@ -171,14 +172,13 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
     if (x) {
 
-        // core
-        // if (py_global_obj_count == 0) {
-        //     // first py obj is called '__main__'
-        //     x->p_name = gensym("__main__");
-        // } else {
-        //     x->p_name = symbol_unique();
-        // }
-        x->p_name = symbol_unique();
+        if (py_global_obj_count == 0) {
+            // first py obj is called '__main__'
+            x->p_name = gensym("__main__");
+        } else {
+            x->p_name = symbol_unique();
+        }
+        // x->p_name = symbol_unique();
 
         // communication
         x->p_patcher = NULL;
@@ -263,7 +263,7 @@ void py_init(t_py* x)
     // py_log(x, "object registered");
 
     // sets the object module __name__ to x->p_name->s_name
-    py_update_object_name(x);
+    // py_update_object_name(x);
 
     // increment global object counter
     py_global_obj_count++;
