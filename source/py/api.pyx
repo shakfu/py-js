@@ -118,7 +118,7 @@ cdef class PyAtom:
 cdef class PyExternal:
     cdef px.t_py *obj
 
-    def __cinit__(self, bytes name=__name__.encode('utf-8')):
+    def __cinit__(self, bytes name=b'__main__'):
         self.obj = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(name))
 
@@ -128,7 +128,7 @@ cdef class PyExternal:
     def log(self, str s):
         px.py_log(self.obj, s.encode('utf-8'))
 
-    def error(self, str s): # FIX: name collision with error in ext.h
+    def error(self, str s):
         px.py_error(self.obj, s.encode('utf-8'))
 
     cdef scan(self):
@@ -338,12 +338,12 @@ def total(*args):
     return sum(args)
 
 
-# def post(str s):
-#     mx.post(s.encode('utf-8'))
+def post(str s):
+    mx.post(s.encode('utf-8'))
 
 
-# def error(str s):
-#     mx.error(s.encode('utf-8'))
+def error(str s):
+    mx.error(s.encode('utf-8'))
 
 
 
