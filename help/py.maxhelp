@@ -367,7 +367,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "__main__"
+									"varname" : "u578000537"
 								}
 
 							}
@@ -674,6 +674,18 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-76",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 575.5, 7.0, 91.0, 22.0 ],
+									"text" : "eval __name__"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-78",
 									"maxclass" : "message",
@@ -1647,8 +1659,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ],
-									"text" : "0"
+									"patching_rect" : [ 160.0, 367.0, 187.0, 22.0 ]
 								}
 
 							}
@@ -1692,7 +1703,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u035000506"
+									"varname" : "u052000545"
 								}
 
 							}
@@ -2124,6 +2135,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-75", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-76", 0 ]
 								}
 
 							}
