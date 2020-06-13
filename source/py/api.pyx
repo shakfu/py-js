@@ -117,10 +117,13 @@ cdef class PyAtom:
 
 cdef class PyExternal:
     cdef px.t_py *obj
+    cdef bytes name
 
-    def __cinit__(self, bytes name=b'__main__'):
+    def __cinit__(self):
+        self.name = b'__main__'
+        #name = get_name() # TODO: working hack! need better!
         self.obj = <px.t_py *>mx.object_findregistered(
-            mx.CLASS_BOX, mx.gensym(name))
+            mx.CLASS_BOX, mx.gensym(self.name))
 
     cpdef bang(self):
         px.py_bang(self.obj)
@@ -264,8 +267,11 @@ cdef class PyExternal:
     #  t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
 
 
+def get_globals():
+    return list(globals().keys())
 
-
+def get_name():
+    return globals()['name'].encode('utf-8')
 
 def test():
     ext = PyExternal()
