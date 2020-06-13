@@ -55,7 +55,8 @@ void py_update_object_name(t_py* x)
     PyObject* p_name = PyUnicode_FromString(x->p_name->s_name);
     if (p_name == NULL)
         goto error;
-    int err = PyDict_SetItemString(x->p_globals, "__name__", p_name);
+    // int err = PyDict_SetItemString(x->p_globals, "__name__", p_name);
+    int err = PyDict_SetItemString(x->p_globals, "shx_py_name", p_name);
     if (err == -1)
         goto error;
     Py_XDECREF(p_name);
@@ -263,7 +264,7 @@ void py_init(t_py* x)
     // py_log(x, "object registered");
 
     // sets the object module __name__ to x->p_name->s_name
-    // py_update_object_name(x);
+    py_update_object_name(x);
 
     // increment global object counter
     py_global_obj_count++;
