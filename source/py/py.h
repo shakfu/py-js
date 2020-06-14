@@ -76,7 +76,7 @@ void py_init(t_py* x);
 /* helpers */
 void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
-void py_update_object_name(t_py* x);
+void py_init_builtins(t_py* x);
 t_hashtab* get_global_registry(void);
 
 /* common handlers */
