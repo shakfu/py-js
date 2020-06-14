@@ -45,7 +45,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 179.0, 43.0, 68.0, 22.0 ],
+					"patching_rect" : [ 240.0, 43.0, 68.0, 22.0 ],
 					"text" : "send marty"
 				}
 
@@ -57,7 +57,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 299.0, 43.0, 35.0, 22.0 ],
+					"patching_rect" : [ 360.0, 43.0, 35.0, 22.0 ],
 					"text" : "send"
 				}
 
@@ -80,7 +80,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 387.0, 43.0, 34.0, 22.0 ],
+					"patching_rect" : [ 448.0, 43.0, 34.0, 22.0 ],
 					"text" : "scan"
 				}
 
@@ -92,8 +92,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 67.0, 43.0, 92.0, 22.0 ],
-					"text" : "send marty 1+1"
+					"patching_rect" : [ 67.0, 43.0, 117.0, 22.0 ],
+					"text" : "send marty eval 1+1"
 				}
 
 			}
@@ -104,15 +104,16 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "" ],
-					"patching_rect" : [ 179.0, 141.0, 40.0, 22.0 ],
+					"patching_rect" : [ 179.0, 141.0, 100.0, 22.0 ],
 					"saved_object_attributes" : 					{
+						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
 						"pythonpath" : ""
 					}
 ,
-					"text" : "py",
-					"varname" : "__main__"
+					"text" : "py @name marty",
+					"varname" : "marty"
 				}
 
 			}
