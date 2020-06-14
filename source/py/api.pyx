@@ -1,4 +1,15 @@
 # api.pyx
+"""
+
+The main place to create wrappers and utilities to access max's api
+
+See below for examples of this.
+
+- [x] mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
+- [ ] t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
+
+
+"""
 #cimport cython
 from cpython cimport PyFloat_AsDouble
 from cpython cimport PyLong_AsLong
@@ -120,8 +131,17 @@ cdef class PyExternal:
     cdef bytes name
 
     def __cinit__(self):
-        self.name = b'__main__'
-        #name = get_name() # TODO: working hack! need better!
+        """Retrieves the py object name and reference.
+
+        PY_OBJ_NAME is set to __builtins__ at object creation
+        making it available to all modules.
+
+        Since all py objects are registered, knowing the name
+        allows any module in the namespace to get a reference
+        (as below) to its parent object (-:
+        """
+        PY_OBJ_NAME = getattr(__builtins__, 'PY_OBJ_NAME')
+        self.name = PY_OBJ_NAME.encode('utf-8')
         self.obj = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(self.name))
 
@@ -263,15 +283,8 @@ cdef class PyExternal:
         else:
             return
 
-    #  mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
-    #  t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
-
-
 def get_globals():
     return list(globals().keys())
-
-def get_name():
-    return globals()['name'].encode('utf-8')
 
 def test():
     ext = PyExternal()

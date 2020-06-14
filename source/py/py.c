@@ -50,21 +50,36 @@ void py_error(t_py* x, char* fmt, ...)
 
 }
 
-void py_update_object_name(t_py* x)
+void py_init_builtins(t_py* x)
 {
-    PyObject* p_name = PyUnicode_FromString(x->p_name->s_name);
+    PyObject* p_name = NULL;
+    PyObject* builtins = NULL;
+    int err = -1;
+
+    p_name = PyUnicode_FromString(x->p_name->s_name);
     if (p_name == NULL)
         goto error;
-    // int err = PyDict_SetItemString(x->p_globals, "__name__", p_name);
-    int err = PyDict_SetItemString(x->p_globals, "shx_py_name", p_name);
+
+    builtins = PyEval_GetBuiltins();
+    if (builtins == NULL)
+        goto error;
+
+    err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);    
     if (err == -1)
         goto error;
+
+    err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
+    if (err == -1)
+        goto error;
+
     Py_XDECREF(p_name);
+    // Py_XDECREF(builtins);
     return;
 
 error:
     py_handle_error(x, "could not update object namespace with object name");
     Py_XDECREF(p_name);
+    // Py_XDECREF(builtins);
 }
 
 t_hashtab* get_global_registry(void) {
@@ -254,17 +269,10 @@ void py_init(t_py* x)
     // python init
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
     x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
-    PyDict_SetItemString(x->p_globals, "__builtins__", PyEval_GetBuiltins());
+    py_init_builtins(x); // does this have to be a separate function?
 
-    /* start: add additional python objects to the globals dict here */
-    /* end */
-
-    // py_log(x, "globals initialized");
+    // register the object 
     object_register(CLASS_BOX, x->p_name, x);
-    // py_log(x, "object registered");
-
-    // sets the object module __name__ to x->p_name->s_name
-    py_update_object_name(x);
 
     // increment global object counter
     py_global_obj_count++;

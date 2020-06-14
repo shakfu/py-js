@@ -313,6 +313,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 core
 
+
 - [ ] revisit `py_error` and `py_log` which is a source of many errors
 - [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
@@ -355,6 +356,7 @@ future experiments
 
 Core Features
 
+- [x] made it possible to get the py object's name from any module in its namespace!
 - [x] enhance `py_exec` method to create a single string from argv so it can import easily
 - [x] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
 - [x] Refactor 'py_eval' to make it more consistent with the others
