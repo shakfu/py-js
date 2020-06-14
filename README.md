@@ -15,25 +15,34 @@ py interpreter object
     attributes
         name:  unique name
         file:  file to load into editor
+        autoload: load file at start
+        pythonpath: add path to python sys.path
         debug: switch debug logging on and off
-        patcher: parent patcher object
-        box: parent box object
 
-    messages
+    methods
         import <module>     : python import to object namespace
         eval <expression>   : python 'eval' semantics
         exec <statement>    : python 'exec' semantics
         execfile <path>     : python 'execfile' semantics
         assign <var> [data] : max msg assignments to object namespace
-        call (anything)     : max friendly python function calling
+        call (py callable)  : max friendly python function calling
         read <path>         : read text file into editor
         load <path>         : combo of read <path> -> execfile <path>
         send <msg>          : send an arbitrary message to a named object
+
+    inlets
+        single inlet        : primary input (anything)
+
+    outlets
+        left outlet         : primary output (anything)
+        middle outlet       : bang on failure
+        right outlet        : bang on success 
 ```
 
 ## Overview
 
-The `py` object provides a very high level python code interface to max objects. It has 1 inlet and 3 outlets, with the left providing main object output, the right outlet sending a bang on success, and the middle sending a bang on failure.
+The `py` object provides a minimal, high level max interface to python modules and a high-level python interface to max objects.
+
 
 It provides the following methods:
 
@@ -53,7 +62,7 @@ interobj | send            | msg           | n/a    | no         | [x]
 
 ### Key Features
 
-1. **Per-object namespaces**. Responds to an `import <module>` message in the left inlet which loads a python module in its namespace. Each new import adds modules to the object's namespace (essentially a `globals dict`), which can be different in each instance. There can be many objects each with their own namespace.
+1. **Per-object namespaces**. Each `py` object has a unique name (which can be set by the user or provided automatically), and responds to an `import <module>` message which loads a python module in its namespace (essentially a `globals` dictionary), which can be different for each instance.
 
 2. **Eval Messages**. Responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace and outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
@@ -306,23 +315,13 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] Sending from the `api` make max unstable. Keep it simple and investigate.
+- [ ] Sending from the `api` can make max unstable. Keep it simple and investigate.
 
 ## TODO
 
-
-core
-
-
-- [ ] revisit `py_error` and `py_log` which is a source of many errors
-- [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
-
-
-extension
-
-- [ ] create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
-
-attributes & infrastructure
+### Core
+### Extension
+### Attributes & Infrastructure
 
 - [ ] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
 - [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
@@ -332,7 +331,8 @@ attributes & infrastructure
       ```
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes (NO REASON for using this found so far)
 
-testing
+
+### Testing
 
 - [ ] complete comprehensive test suite
   - [ ] complete c test suite
@@ -340,12 +340,18 @@ testing
   - [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl` 
 
 
-future experiments
+### Future Experiments
+
+- [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
 - [ ] Consider local python install in `misc`
+
 - [ ] Convert py into a js extension class
-      - proof of concept done, but requires a different 'nobox' typy of class and data passing via arrays and attributes instead of outlets. But can be done!
-- [ ] try to build a cython extension types as a max external class
+      - proof of concept done, but requires a different 'nobox' type of class and data passing via arrays and attributes instead of outlets. But can be done!
+
+- [ ] Try to launch an ipython shell somehow 
+
+- [ ] try to build a cython extension type as a max external class (-:
 
 
 ## CHANGELOG
@@ -395,8 +401,9 @@ Line REPL (Usability)
 
 Extensibility
 
+- [x] Create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
 - [x] Implement section on two-way globals setting and reading (from python and c)
-      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
+      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html (deferred for now)
 - [x] Add bpatcher line repl
 - [x] add python scripts to 'examples/scripts'
 - [x] Add cythonized access to max c-api..?

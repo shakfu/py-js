@@ -47,7 +47,6 @@ void py_error(t_py* x, char* fmt, ...)
     va_end(va);
 
     error("[py %s]: %s", x->p_name->s_name, msg);
-
 }
 
 void py_init_builtins(t_py* x)
@@ -64,7 +63,7 @@ void py_init_builtins(t_py* x)
     if (builtins == NULL)
         goto error;
 
-    err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);    
+    err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
     if (err == -1)
         goto error;
 
@@ -82,9 +81,7 @@ error:
     // Py_XDECREF(builtins);
 }
 
-t_hashtab* get_global_registry(void) {
-    return py_global_registry;
-}
+t_hashtab* get_global_registry(void) { return py_global_registry; }
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
 
@@ -261,7 +258,6 @@ void py_init(t_py* x)
         py_error(x, "could not add api to builtin modules table");
     }
 
-
     // Py_SetProgramName(program);
 
     Py_Initialize();
@@ -271,7 +267,7 @@ void py_init(t_py* x)
     x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
     py_init_builtins(x); // does this have to be a separate function?
 
-    // register the object 
+    // register the object
     object_register(CLASS_BOX, x->p_name, x);
 
     // increment global object counter
@@ -321,8 +317,6 @@ void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 /*--------------------------------------------------------------------------*/
 // TESTING
 
-
-
 void py_bang(t_py* x)
 {
     // just a basic bang out the left outlet method
@@ -369,14 +363,14 @@ void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
     if (pfloat == NULL) {
         goto error;
     }
-    
+
     if (PyFloat_Check(pfloat)) {
         float float_result = (float)PyFloat_AsDouble(pfloat);
         if (float_result == -1.0) {
             if (PyErr_Occurred())
                 goto error;
         }
-        
+
         outlet_float(x->p_outlet_left, float_result);
         outlet_bang(x->p_outlet_right);
     }
@@ -494,7 +488,7 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
                 i++;
             }
 
-            if PyFloat_Check(item) {
+            if PyFloat_Check (item) {
                 float float_item = PyFloat_AsDouble(item);
                 if (float_item == -1.0) {
                     if (PyErr_Occurred())
@@ -505,7 +499,7 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
                 i++;
             }
 
-            if PyUnicode_Check(item) {
+            if PyUnicode_Check (item) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
                 if (unicode_item == NULL) {
                     goto error;
@@ -526,7 +520,7 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
             atom_dynamic_end(atoms_static, atoms);
         }
     }
-    
+
     if (free_now) {
         Py_XDECREF(plist);
     }
@@ -784,7 +778,7 @@ void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_error(x, "could not retrieve result of callable(list)");
         goto error;
     }
-    goto handle_output; // this is redundant but safe
+    goto handle_output; // this is redundant but safe in case code is added
 
 handle_output:
 
@@ -820,7 +814,6 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
 
     } else {
-        // strncpy_zero(varname, atom_getsym(argv)->s_name, 50);
         varname = atom_getsym(argv)->s_name;
         py_log(x, "varname: %s", varname);
     }

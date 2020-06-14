@@ -32,7 +32,7 @@ typedef struct _py {
     t_object p_ob;
 
     /* object attributes */
-    t_symbol* p_name;       /* unique object name */
+    t_symbol* p_name; /* unique object name */
 
     /* python-related */
     t_symbol* p_pythonpath; /* path to python directory */
@@ -40,8 +40,8 @@ typedef struct _py {
     PyObject* p_globals;    /* per object 'globals' python namespace */
 
     /* infra objects */
-    t_patcher* p_patcher;   /* to send msgs to objects */
-    t_box* p_box;           /* the ui box of the py instance? */
+    t_patcher* p_patcher; /* to send msgs to objects */
+    t_box* p_box;         /* the ui box of the py instance? */
 
     /* text editor attrs */
     t_object* p_code_editor;
@@ -117,6 +117,5 @@ void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
 void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
-
 
 #endif // PY_H
