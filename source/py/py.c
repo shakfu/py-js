@@ -205,6 +205,11 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_code = sysmem_newhandle(0);
         x->p_code_size = 0;
         x->p_code_editor = NULL;
+        x->p_code_filetype = FOUR_CHAR_CODE('TEXT');
+        x->p_code_outtype = 0;
+        // x->p_code_filename[MAX_PATH_CHARS];
+        // x->p_code_pathname[MAX_PATH_CHARS];
+        short p_code_path = 0;
         x->p_code_filepath = gensym("");
 
         // create inlet(s)
@@ -677,30 +682,32 @@ void py_execfile(t_py* x, t_symbol* s)
     not handling (even quoted) paths with a space inside!
     */
 
-    t_symbol* pathname = gensym("");
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
 
-    if (s == gensym("")) {
-        if (x->p_code_filepath == gensym("")) {
-            py_error(x, "py execfile: missing filepath");
-            goto error;
-        } else {
-            pathname = x->p_code_filepath;
-        }
-    } else {
-        pathname = s;
+    if (s != gensym("")) {
+        // set x->p_code_filepath
+        py_path_from_symbol(x, s);
     }
 
-    fhandle = fopen(pathname->s_name, "r+");
+    if (s == gensym("") || x->p_code_filepath == gensym("")) {
+        py_error(x, "could not set filepath");
+        goto error;
+    } 
+
+    // assume x->p_code_filepath has be been set without errors
+
+    // STRANGE BUG: the seemingly innocuous py_log below will cause a crash
+    // py_log(x, "pathname: %s",  x->p_code_filepath->s_name);
+    fhandle = fopen(x->p_code_filepath->s_name, "r+");
 
     if (fhandle == NULL) {
         py_error(x, "could not open file");
         goto error;
     }
 
-    pval = PyRun_File(fhandle, pathname->s_name, Py_file_input, x->p_globals,
-                      x->p_globals);
+    pval = PyRun_File(fhandle,  x->p_code_filepath->s_name, Py_file_input, 
+                      x->p_globals, x->p_globals);
     if (pval == NULL) {
         fclose(fhandle);
         goto error;
@@ -1053,6 +1060,73 @@ error:
     py_error(x, "send failed");
     return;
 }
+
+/*--------------------------------------------------------------------------*/
+// FILE HANDLING
+
+void py_path_from_symbol(t_py* x, t_symbol* s)
+{
+    t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
+    char filename[MAX_PATH_CHARS];
+    char pathname[MAX_PATH_CHARS];
+    short path;
+    t_max_err err;
+
+    // must copy symbol before calling locatefile_extended
+    strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
+    if (locatefile_extended(filename, &path, &outtype, &filetype, 1)) {
+        // nozero: not found
+        py_error(x, "can't find file %s", s->s_name);
+        return;
+    } 
+
+    else {
+        err = path_toabsolutesystempath(path, filename, pathname);
+        // handle error
+    }
+
+    // success
+    x->p_code_filepath = gensym(pathname);
+}
+
+
+void py_locate_path_from_symbol(t_py* x, t_symbol* s)
+{
+    // t_fourcc p_code_filetype = FOUR_CHAR_CODE('TEXT'), p_code_outtype;
+    // char p_code_filename[MAX_PATH_CHARS];
+    // char p_code_pathname[MAX_PATH_CHARS];
+    // short p_code_path;
+    t_max_err err;
+
+    if (s == gensym("")) { // if no arg supplied ask for file
+        x->p_code_filename[0] = 0;
+
+        if (open_dialog(x->p_code_filename, &x->p_code_path,
+                        &x->p_code_outtype, &x->p_code_filetype, 1))
+            // non-zero: cancelled
+            return;
+
+    } else {
+        // must copy symbol before calling locatefile_extended
+        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
+        if (locatefile_extended(x->p_code_filename, &x->p_code_path, 
+                                &x->p_code_outtype, &x->p_code_filetype, 1)) {
+            // nozero: not found
+            py_error(x, "can't find file %s", s->s_name);
+            return;
+        } else {
+            err = path_toabsolutesystempath(x->p_code_path, 
+                                            x->p_code_filename, 
+                                            x->p_code_pathname);
+        }
+
+        // success
+        // set attribute from pathname symbol
+        x->p_code_filepath = gensym(x->p_code_pathname);
+    }
+}
+
+
 /*--------------------------------------------------------------------------*/
 // EDITOR
 
@@ -1103,7 +1177,7 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
         }
 
         // success
-        // set attribute to pathname symbol
+        // set attribute from pathname symbol
         x->p_code_filepath = gensym(pathname);
         err = path_opensysfile(filename, path, &fh, READ_PERM);
         if (!err) {
