@@ -87,7 +87,6 @@ void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
 t_hashtab* get_global_registry(void);
-void py_path_from_symbol(t_py* x, t_symbol* s);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 
 /* common handlers */

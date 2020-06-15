@@ -85,6 +85,44 @@ error:
 }
 
 t_hashtab* get_global_registry(void) { return py_global_registry; }
+
+
+void py_locate_path_from_symbol(t_py* x, t_symbol* s)
+{
+    t_max_err err;
+
+    if (s == gensym("")) { // if no arg supplied ask for file
+        x->p_code_filename[0] = 0;
+
+        if (open_dialog(x->p_code_filename, &x->p_code_path,
+                        &x->p_code_outtype, &x->p_code_filetype, 1))
+            // non-zero: cancelled
+            return;
+
+    } else {
+        // must copy symbol before calling locatefile_extended
+        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
+        if (locatefile_extended(x->p_code_filename, &x->p_code_path, 
+                                &x->p_code_outtype, &x->p_code_filetype, 1)) {
+            // nozero: not found
+            py_error(x, "can't find file %s", s->s_name);
+            return;
+        } else {
+            err = path_toabsolutesystempath(x->p_code_path, 
+                                            x->p_code_filename, 
+                                            x->p_code_pathname);
+            if (err != MAX_ERR_NONE) {
+                py_error(x, "can't convert %s to absolutepath", s->s_name);
+                return;
+            }
+        }
+
+        // success
+        // set attribute from pathname symbol
+        x->p_code_filepath = gensym(x->p_code_pathname);
+    }
+}
+
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
 
@@ -684,7 +722,7 @@ void py_execfile(t_py* x, t_symbol* s)
 
     if (s != gensym("")) {
         // set x->p_code_filepath
-        py_path_from_symbol(x, s);
+        py_locate_path_from_symbol(x, s);
     }
 
     if (s == gensym("") || x->p_code_filepath == gensym("")) {
@@ -1056,72 +1094,6 @@ error:
     py_error(x, "send failed");
     return;
 }
-
-/*--------------------------------------------------------------------------*/
-// FILE HANDLING
-
-void py_path_from_symbol(t_py* x, t_symbol* s)
-{
-    t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
-    char filename[MAX_PATH_CHARS];
-    char pathname[MAX_PATH_CHARS];
-    short path;
-    t_max_err err;
-
-    // must copy symbol before calling locatefile_extended
-    strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
-    if (locatefile_extended(filename, &path, &outtype, &filetype, 1)) {
-        // nozero: not found
-        py_error(x, "can't find file %s", s->s_name);
-        return;
-    } 
-
-    else {
-        err = path_toabsolutesystempath(path, filename, pathname);
-        // handle error
-    }
-
-    // success
-    x->p_code_filepath = gensym(pathname);
-}
-
-
-void py_locate_path_from_symbol(t_py* x, t_symbol* s)
-{
-    // t_fourcc p_code_filetype = FOUR_CHAR_CODE('TEXT'), p_code_outtype;
-    // char p_code_filename[MAX_PATH_CHARS];
-    // char p_code_pathname[MAX_PATH_CHARS];
-    // short p_code_path;
-    t_max_err err;
-
-    if (s == gensym("")) { // if no arg supplied ask for file
-        x->p_code_filename[0] = 0;
-
-        if (open_dialog(x->p_code_filename, &x->p_code_path,
-                        &x->p_code_outtype, &x->p_code_filetype, 1))
-            // non-zero: cancelled
-            return;
-
-    } else {
-        // must copy symbol before calling locatefile_extended
-        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
-        if (locatefile_extended(x->p_code_filename, &x->p_code_path, 
-                                &x->p_code_outtype, &x->p_code_filetype, 1)) {
-            // nozero: not found
-            py_error(x, "can't find file %s", s->s_name);
-            return;
-        } else {
-            err = path_toabsolutesystempath(x->p_code_path, 
-                                            x->p_code_filename, 
-                                            x->p_code_pathname);
-        }
-
-        // success
-        // set attribute from pathname symbol
-        x->p_code_filepath = gensym(x->p_code_pathname);
-    }
-}
-
 
 /*--------------------------------------------------------------------------*/
 // EDITOR
