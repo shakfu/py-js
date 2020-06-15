@@ -275,11 +275,26 @@ cdef class PyExternal:
         mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
             atom.argc, atom.argv)
 
+    cdef out_dict(self, dict arg):
+        "note: not recursive... still cannot deal with dict inside dict"
+        res = []
+        for k,v in arg.items():
+            res.append(k)
+            res.append(':')
+            if type(v) in [list, set, tuple]:
+                for i in v:
+                    res.append(i)
+            else:
+                res.append(v)
+        self.out_list(res)
+
     cdef out(self, object arg):
         if isinstance(arg, float): self.out_float(arg)
         elif isinstance(arg, int): self.out_int(arg)
         elif isinstance(arg, str): self.out_sym(arg)
         elif isinstance(arg, list): self.out_list(arg)
+        # BUG: below cause crash? not sure why
+        elif isinstance(arg, dict): self.out_dict(<dict>arg)
         else:
             return
 
@@ -298,35 +313,46 @@ def fail():
     ext = PyExternal()
     ext.fail()
 
-def out_sym():
+def out_sym(s='hello outlet!'):
     ext = PyExternal()
-    ext.out('hello outlet!')
+    ext.out(s)
 
-def out_int():
+def out_int(n=100):
     ext = PyExternal()
-    ext.out(100)
+    ext.out(n)
 
-def out_float():
+def out_float(n=12.75):
     ext = PyExternal()
-    ext.out(12.75)
+    ext.out(n)
 
-def out_list():
+def out_list(xs=[1,2,3,4,5]):
     ext = PyExternal()
-    ext.out([1,2,3,4,5])
+    ext.out(xs)
 
-def sendtest0(name, value=9.5):
+def out_dict(d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}):
+    ext = PyExternal()
+    ext.out_dict(d)
+
+def out_dict2():
+    d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
+    ext = PyExternal()
+    ext.out(d)
+
+def test_send0(name, value=9.5):
     ext = PyExternal()
     ext.send(name, [value])
 
-def sendtest(name, value=11.5):
+def test_send(name, value=11.5):
     ext = PyExternal()
     ext.send(name, [value])
     # del ext
 
-def sendtest4(name, msg='float', value=14.5):
+def test_send4(name, msg='float', value=14.5):
     ext = PyExternal()
     ext.send4(name, msg, [value])
     # del ext
+
+
 
 def lookup(name):
     ext = PyExternal()
