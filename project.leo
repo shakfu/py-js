@@ -150,7 +150,9 @@
 <v t="sta.20200602120540.1"><vh>helpers</vh>
 <v t="sta.20200602120251.4"><vh>void py_log</vh></v>
 <v t="sta.20200602120251.5"><vh>void py_error</vh></v>
+<v t="sta.20200615052024.1"><vh>void py_init_builtins</vh></v>
 <v t="sta.20200611235620.1"><vh>t_hashtab* get_global_registry</vh></v>
+<v t="sta.20200615052054.1"><vh>void py_locate_path_from_symbol</vh></v>
 </v>
 <v t="sta.20200602120514.1"><vh>init &amp; free</vh>
 <v t="sta.20200602120251.3"><vh>void ext_main</vh></v>
@@ -347,6 +349,7 @@ error:
     py_error(x, "send failed");
     return;
 }
+
 </t>
 <t tx="sta.20200602120251.13">void py_handle_error(t_py* x, char* fmt, ...)
 {
@@ -404,43 +407,58 @@ error:
 </t>
 <t tx="sta.20200602120251.16">void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
-    char filename[MAX_PATH_CHARS];
-    char pathname[MAX_PATH_CHARS];
-    short path;
     t_max_err err;
     t_filehandle fh;
 
-    if (s == gensym("")) { // if no arg supplied ask for file
-        filename[0] = 0;
-
-        if (open_dialog(filename, &amp;path, &amp;outtype, &amp;filetype, 1))
-            // non-zero: cancelled
-            return;
-
-    } else {
-        // must copy symbol before calling locatefile_extended
-        strcpy(filename, s-&gt;s_name);
-        if (locatefile_extended(filename, &amp;path, &amp;outtype, &amp;filetype, 1)) {
-            // nozero: not found
-            py_error(x, "can't find file %s", s-&gt;s_name);
-            return;
-        } else {
-            err = path_toabsolutesystempath(path, filename, pathname);
-        }
-
-        // success
-        // set attribute to pathname symbol
-        x-&gt;p_code_filepath = gensym(pathname);
-        err = path_opensysfile(filename, path, &amp;fh, READ_PERM);
-        if (!err) {
-            sysfile_readtextfile(fh, x-&gt;p_code, 0,
-                                 TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
-            sysfile_close(fh);
-            x-&gt;p_code_size = sysmem_handlesize(x-&gt;p_code);
-        }
+    py_locate_path_from_symbol(x, s);
+    err = path_opensysfile(x-&gt;p_code_filename, x-&gt;p_code_path, &amp;fh, READ_PERM);
+    if (!err) {
+        sysfile_readtextfile(fh, x-&gt;p_code, 0,
+                             TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
+        sysfile_close(fh);
+        x-&gt;p_code_size = sysmem_handlesize(x-&gt;p_code);
     }
 }
+
+// void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
+// {
+//     t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
+//     char filename[MAX_PATH_CHARS];
+//     char pathname[MAX_PATH_CHARS];
+//     short path;
+//     t_max_err err;
+//     t_filehandle fh;
+
+//     if (s == gensym("")) { // if no arg supplied ask for file
+//         filename[0] = 0;
+
+//         if (open_dialog(filename, &amp;path, &amp;outtype, &amp;filetype, 1))
+//             // non-zero: cancelled
+//             return;
+
+//     } else {
+//         // must copy symbol before calling locatefile_extended
+//         strcpy(filename, s-&gt;s_name);
+//         if (locatefile_extended(filename, &amp;path, &amp;outtype, &amp;filetype, 1)) {
+//             // nozero: not found
+//             py_error(x, "can't find file %s", s-&gt;s_name);
+//             return;
+//         } else {
+//             err = path_toabsolutesystempath(path, filename, pathname);
+//         }
+
+//         // success
+//         // set attribute from pathname symbol
+//         x-&gt;p_code_filepath = gensym(pathname);
+//         err = path_opensysfile(filename, path, &amp;fh, READ_PERM);
+//         if (!err) {
+//             sysfile_readtextfile(fh, x-&gt;p_code, 0,
+//                                  TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
+//             sysfile_close(fh);
+//             x-&gt;p_code_size = sysmem_handlesize(x-&gt;p_code);
+//         }
+//     }
+// }
 
 </t>
 <t tx="sta.20200602120251.17">void py_edclose(t_py* x, char** text, long size)
@@ -561,37 +579,32 @@ error:
 </t>
 <t tx="sta.20200602120251.23">void py_execfile(t_py* x, t_symbol* s)
 {
-    /*
-    IMPORTANT: do not use post, logging or error, error
-    handler to which uses name of file during debugging or error
-    report as it will crash due to underlying 'sprintf' mechanism
-    not handling (even quoted) paths with a space inside!
-    */
 
-    t_symbol* pathname = gensym("");
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
 
-    if (s == gensym("")) {
-        if (x-&gt;p_code_filepath == gensym("")) {
-            py_error(x, "py execfile: missing filepath");
-            goto error;
-        } else {
-            pathname = x-&gt;p_code_filepath;
-        }
-    } else {
-        pathname = s;
+    if (s != gensym("")) {
+        // set x-&gt;p_code_filepath
+        py_locate_path_from_symbol(x, s);
     }
 
-    fhandle = fopen(pathname-&gt;s_name, "r+");
+    if (s == gensym("") || x-&gt;p_code_filepath == gensym("")) {
+        py_error(x, "could not set filepath");
+        goto error;
+    } 
+
+    // assume x-&gt;p_code_filepath has be been set without errors
+
+    py_log(x, "pathname: %s",  x-&gt;p_code_filepath-&gt;s_name);
+    fhandle = fopen(x-&gt;p_code_filepath-&gt;s_name, "r+");
 
     if (fhandle == NULL) {
         py_error(x, "could not open file");
         goto error;
     }
 
-    pval = PyRun_File(fhandle, pathname-&gt;s_name, Py_file_input, x-&gt;p_globals,
-                      x-&gt;p_globals);
+    pval = PyRun_File(fhandle,  x-&gt;p_code_filepath-&gt;s_name, Py_file_input, 
+                      x-&gt;p_globals, x-&gt;p_globals);
     if (pval == NULL) {
         fclose(fhandle);
         goto error;
@@ -624,7 +637,6 @@ error:
         goto error;
 
     } else {
-        // strncpy_zero(varname, atom_getsym(argv)-&gt;s_name, 50);
         varname = atom_getsym(argv)-&gt;s_name;
         py_log(x, "varname: %s", varname);
     }
@@ -717,7 +729,7 @@ error:
         py_error(x, "could not retrieve result of callable(list)");
         goto error;
     }
-    goto handle_output; // this is redundant but safe
+    goto handle_output; // this is redundant but safe in case code is added
 
 handle_output:
 
@@ -873,7 +885,7 @@ error:
 <t tx="sta.20200602120251.4">void py_log(t_py* x, char* fmt, ...)
 {
     if (x-&gt;p_debug) {
-        char msg[50];
+        char msg[PY_MAX_LOG_CHAR];
 
         va_list va;
         va_start(va, fmt);
@@ -887,7 +899,7 @@ error:
 </t>
 <t tx="sta.20200602120251.5">void py_error(t_py* x, char* fmt, ...)
 {
-    char msg[50];
+    char msg[PY_MAX_ERR_CHAR];
 
     va_list va;
     va_start(va, fmt);
@@ -906,13 +918,13 @@ error:
 
     if (x) {
 
-        // core
         if (py_global_obj_count == 0) {
             // first py obj is called '__main__'
             x-&gt;p_name = gensym("__main__");
         } else {
             x-&gt;p_name = symbol_unique();
         }
+        // x-&gt;p_name = symbol_unique();
 
         // communication
         x-&gt;p_patcher = NULL;
@@ -926,6 +938,11 @@ error:
         x-&gt;p_code = sysmem_newhandle(0);
         x-&gt;p_code_size = 0;
         x-&gt;p_code_editor = NULL;
+        x-&gt;p_code_filetype = FOUR_CHAR_CODE('TEXT');
+        x-&gt;p_code_outtype = 0;
+        // x-&gt;p_code_filename[MAX_PATH_CHARS];
+        // x-&gt;p_code_pathname[MAX_PATH_CHARS];
+        // short p_code_path;
         x-&gt;p_code_filepath = gensym("");
 
         // create inlet(s)
@@ -980,7 +997,6 @@ error:
         py_error(x, "could not add api to builtin modules table");
     }
 
-
     // Py_SetProgramName(program);
 
     Py_Initialize();
@@ -988,14 +1004,10 @@ error:
     // python init
     PyObject* main_mod = PyImport_AddModule(x-&gt;p_name-&gt;s_name); // borrowed
     x-&gt;p_globals = PyModule_GetDict(main_mod); // borrowed reference
-    PyDict_SetItemString(x-&gt;p_globals, "__builtins__", PyEval_GetBuiltins());
+    py_init_builtins(x); // does this have to be a separate function?
 
-    /* start: add additional python objects to the globals dict here */
-    /* end */
-
-    // py_log(x, "globals initialized");
+    // register the object
     object_register(CLASS_BOX, x-&gt;p_name, x);
-    // py_log(x, "object registered");
 
     // increment global object counter
     py_global_obj_count++;
@@ -1045,6 +1057,9 @@ error:
 <t tx="sta.20200602120540.1">/*--------------------------------------------------------------------------*/
 // HELPERS
 
+// WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is too low
+// long log or err messages will crash 
+
 </t>
 <t tx="sta.20200602120740.1">/*--------------------------------------------------------------------------*/
 // EXTRA
@@ -1076,7 +1091,6 @@ void py_count(t_py* x) { outlet_int(x-&gt;p_outlet_left, py_global_obj_count); }
 
 /* max/msp api */
 #include "api.h"
-#include "globex.h"
 
 </t>
 <t tx="sta.20200602131131.1">/*--------------------------------------------------------------------------*/
@@ -1099,7 +1113,6 @@ static t_hashtab* py_global_registry = NULL; // global object lookups
 @others
 @language c
 @tabwidth -4
-
 #endif // PY_H
 </t>
 <t tx="sta.20200602145517.1">/*--------------------------------------------------------------------------*/
@@ -1110,7 +1123,7 @@ typedef struct _py {
     t_object p_ob;
 
     /* object attributes */
-    t_symbol* p_name;       /* unique object name */
+    t_symbol* p_name; /* unique object name */
 
     /* python-related */
     t_symbol* p_pythonpath; /* path to python directory */
@@ -1118,13 +1131,20 @@ typedef struct _py {
     PyObject* p_globals;    /* per object 'globals' python namespace */
 
     /* infra objects */
-    t_patcher* p_patcher;   /* to send msgs to objects */
-    t_box* p_box;           /* the ui box of the py instance? */
+    t_patcher* p_patcher; /* to send msgs to objects */
+    t_box* p_box;         /* the ui box of the py instance? */
 
     /* text editor attrs */
     t_object* p_code_editor;
     char** p_code;
     long p_code_size;
+
+    t_fourcc p_code_filetype; // = FOUR_CHAR_CODE('TEXT')
+    t_fourcc p_code_outtype;  // = FOUR_CHAR_CODE('TEXT')
+    char p_code_filename[MAX_PATH_CHARS];
+    char p_code_pathname[MAX_PATH_CHARS];
+    short p_code_path;
+
     t_symbol* p_code_filepath; /* default python filepath to load into
                                   the code editor and object 'globals'
                                   namespace */
@@ -1165,6 +1185,9 @@ void py_init(t_py* x);
 /* helpers */
 void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
+void py_init_builtins(t_py* x);
+t_hashtab* get_global_registry(void);
+void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
@@ -1205,8 +1228,6 @@ void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
 void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
 
-// helpers for api
-t_hashtab* get_global_registry(void);
 </t>
 <t tx="sta.20200602150733.1">/*--------------------------------------------------------------------------*/
 // INCLUDES
@@ -1223,6 +1244,8 @@ t_hashtab* get_global_registry(void);
 // CONSTANTS
 
 #define PY_MAX_ATOMS 128
+#define PY_MAX_LOG_CHAR 500 // high number during development
+#define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 </t>
 <t tx="sta.20200602151837.1">@path source/py/notes</t>
@@ -3092,6 +3115,7 @@ int add_history(char*);
     obj = jbox_get_object(box);
 
     // STRANGE BUG: single quotes in py_log cause a crash but not with post!!
+    // perhaps because post is a macro for object_post?
     if (varname &amp;&amp; varname != gensym("")) {
         // post("XXXX -&gt; '%s'", varname-&gt;s_name);
         py_log(x, "storing object %s in the global registry", varname-&gt;s_name);
@@ -3757,14 +3781,14 @@ error:
     if (pfloat == NULL) {
         goto error;
     }
-    
+
     if (PyFloat_Check(pfloat)) {
         float float_result = (float)PyFloat_AsDouble(pfloat);
         if (float_result == -1.0) {
             if (PyErr_Occurred())
                 goto error;
         }
-        
+
         outlet_float(x-&gt;p_outlet_left, float_result);
         outlet_bang(x-&gt;p_outlet_right);
     }
@@ -3902,7 +3926,7 @@ error:
                 i++;
             }
 
-            if PyFloat_Check(item) {
+            if PyFloat_Check (item) {
                 float float_item = PyFloat_AsDouble(item);
                 if (float_item == -1.0) {
                     if (PyErr_Occurred())
@@ -3913,13 +3937,13 @@ error:
                 i++;
             }
 
-            if PyUnicode_Check(item) {
+            if PyUnicode_Check (item) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
                 if (unicode_item == NULL) {
                     goto error;
                 }
-                py_log(x, "%d unicode: %s\n", i, unicode_item);
                 atom_setsym(atoms + i, gensym(unicode_item));
+                py_log(x, "%d unicode: %s\n", i, unicode_item);
                 i++;
             }
             Py_DECREF(item);
@@ -3934,7 +3958,7 @@ error:
             atom_dynamic_end(atoms_static, atoms);
         }
     }
-    
+
     if (free_now) {
         Py_XDECREF(plist);
     }
@@ -3947,9 +3971,9 @@ error:
 }
 
 </t>
-<t tx="sta.20200611235620.1">t_hashtab* get_global_registry(void) {
-    return py_global_registry;
-}
+<t tx="sta.20200611235620.1">t_hashtab* get_global_registry(void) { return py_global_registry; }
+
+
 </t>
 <t tx="sta.20200612043307.1"></t>
 <t tx="sta.20200612044656.1">@language c
@@ -4334,6 +4358,74 @@ void py_handle_string_output(t_py* x, PyObject* pstring) {
     outlet_anything(x-&gt;p_outlet_left, gensym(cstring), 0, NIL);
     outlet_bang(x-&gt;p_outlet_right);
 }
+</t>
+<t tx="sta.20200615052024.1">void py_init_builtins(t_py* x)
+{
+    PyObject* p_name = NULL;
+    PyObject* builtins = NULL;
+    int err = -1;
+
+    p_name = PyUnicode_FromString(x-&gt;p_name-&gt;s_name);
+    if (p_name == NULL)
+        goto error;
+
+    builtins = PyEval_GetBuiltins();
+    if (builtins == NULL)
+        goto error;
+
+    err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
+    if (err == -1)
+        goto error;
+
+    err = PyDict_SetItemString(x-&gt;p_globals, "__builtins__", builtins);
+    if (err == -1)
+        goto error;
+
+    Py_XDECREF(p_name);
+    // Py_XDECREF(builtins);
+    return;
+
+error:
+    py_handle_error(x, "could not update object namespace with object name");
+    Py_XDECREF(p_name);
+    // Py_XDECREF(builtins);
+}</t>
+<t tx="sta.20200615052054.1">void py_locate_path_from_symbol(t_py* x, t_symbol* s)
+{
+    t_max_err err;
+
+    if (s == gensym("")) { // if no arg supplied ask for file
+        x-&gt;p_code_filename[0] = 0;
+
+        if (open_dialog(x-&gt;p_code_filename, &amp;x-&gt;p_code_path,
+                        &amp;x-&gt;p_code_outtype, &amp;x-&gt;p_code_filetype, 1))
+            // non-zero: cancelled
+            return;
+
+    } else {
+        // must copy symbol before calling locatefile_extended
+        strncpy_zero(x-&gt;p_code_filename, s-&gt;s_name, MAX_PATH_CHARS);
+        if (locatefile_extended(x-&gt;p_code_filename, &amp;x-&gt;p_code_path, 
+                                &amp;x-&gt;p_code_outtype, &amp;x-&gt;p_code_filetype, 1)) {
+            // nozero: not found
+            py_error(x, "can't find file %s", s-&gt;s_name);
+            return;
+        } else {
+            err = path_toabsolutesystempath(x-&gt;p_code_path, 
+                                            x-&gt;p_code_filename, 
+                                            x-&gt;p_code_pathname);
+            if (err != MAX_ERR_NONE) {
+                py_error(x, "can't convert %s to absolutepath", s-&gt;s_name);
+                return;
+            }
+        }
+
+        // success
+        // set attribute from pathname symbol
+        x-&gt;p_code_filepath = gensym(x-&gt;p_code_pathname);
+    }
+}
+
 </t>
 </tnodes>
 </leo_file>
