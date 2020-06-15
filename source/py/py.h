@@ -17,6 +17,8 @@
 // CONSTANTS
 
 #define PY_MAX_ATOMS 128
+#define PY_MAX_LOG_CHAR 500 // high number during development
+#define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 /*--------------------------------------------------------------------------*/
 // GLOBALS
@@ -86,6 +88,7 @@ void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
 t_hashtab* get_global_registry(void);
 void py_path_from_symbol(t_py* x, t_symbol* s);
+void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
