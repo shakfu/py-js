@@ -40,6 +40,7 @@ void py_log(t_py* x, char* fmt, ...)
     }
 }
 
+
 void py_error(t_py* x, char* fmt, ...)
 {
     char msg[PY_MAX_ERR_CHAR];
@@ -51,6 +52,7 @@ void py_error(t_py* x, char* fmt, ...)
 
     error("[py %s]: %s", x->p_name->s_name, msg);
 }
+
 
 void py_init_builtins(t_py* x)
 {
@@ -84,7 +86,9 @@ error:
     // Py_XDECREF(builtins);
 }
 
+
 t_hashtab* get_global_registry(void) { return py_global_registry; }
+
 
 void py_locate_path_from_symbol(t_py* x, t_symbol* s)
 {
@@ -215,6 +219,7 @@ void ext_main(void* r)
     py_class = c;
 }
 
+
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_py* x = NULL;
@@ -323,6 +328,7 @@ void py_init(t_py* x)
     }
 }
 
+
 void py_free(t_py* x)
 {
     // code editor cleanup
@@ -356,7 +362,9 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
     }
 }
 
+
 void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
+
 /*--------------------------------------------------------------------------*/
 // TESTING
 
@@ -401,6 +409,8 @@ void py_handle_error(t_py* x, char* fmt, ...)
         error("[py %s] <- (%s): %s", x->p_name->s_name, msg, pvalue_str);
     }
 }
+
+
 void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
 {
     if (pfloat == NULL) {
@@ -429,6 +439,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+
 void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
 {
     if (plong == NULL) {
@@ -456,6 +467,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+
 void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
 {
     if (pstring == NULL) {
@@ -481,6 +493,7 @@ error:
     Py_XDECREF(pstring);
     outlet_bang(x->p_outlet_middle);
 }
+
 
 void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
 {
@@ -575,6 +588,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+
 void py_handle_output(t_py* x, PyObject* pval)
 {
     // <python type> -> left outlet output handlers
@@ -591,6 +605,7 @@ void py_handle_output(t_py* x, PyObject* pval)
 
 /*--------------------------------------------------------------------------*/
 // TRANSLATORS
+
 PyObject* py_atom_to_list(t_py* x, long argc, t_atom* argv, int start_from)
 {
 
@@ -668,6 +683,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* py_argv = atom_getsym(argv)->s_name;
@@ -683,6 +699,7 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_handle_error(x, "eval %s", py_argv);
     }
 }
+
 
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -710,6 +727,7 @@ error:
     Py_XDECREF(pval);
     outlet_bang(x->p_outlet_middle);
 }
+
 
 void py_execfile(t_py* x, t_symbol* s)
 {
@@ -838,6 +856,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* varname = NULL;
@@ -885,6 +904,7 @@ error:
     Py_XDECREF(list);
     outlet_bang(x->p_outlet_middle);
 }
+
 
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -936,6 +956,7 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+
 void py_scan(t_py* x)
 {
     long result = 0;
@@ -956,6 +977,7 @@ void py_scan(t_py* x)
         py_error(x, "scan failed");
     }
 }
+
 
 long py_scan_callback(t_py* x, t_object* box)
 {
@@ -988,6 +1010,7 @@ long py_scan_callback(t_py* x, t_object* box)
         (long)jr.width, (long)jr.height);
     return 0;
 }
+
 
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -1109,10 +1132,12 @@ void py_dblclick(t_py* x)
     }
 }
 
+
 void py_read(t_py* x, t_symbol* s)
 {
     defer((t_object*)x, (method)py_doread, s, 0, NULL);
 }
+
 
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -1129,6 +1154,7 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
+
 void py_edclose(t_py* x, char** text, long size)
 {
     if (x->p_code)
@@ -1139,6 +1165,7 @@ void py_edclose(t_py* x, char** text, long size)
     x->p_code_size = size + 1;
     x->p_code_editor = NULL;
 }
+
 
 void py_edsave(t_py* x, char** text, long size)
 {
@@ -1161,6 +1188,7 @@ error:
     py_handle_error(x, "edclose-exec %s", x->p_code_filepath->s_name);
     Py_XDECREF(pval);
 }
+
 
 void py_load(t_py* x, t_symbol* s)
 {
