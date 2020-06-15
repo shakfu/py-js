@@ -367,7 +367,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u578000537"
+									"varname" : "__main__"
 								}
 
 							}
@@ -674,6 +674,18 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-80",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 131.0, 197.0, 103.0, 22.0 ],
+									"text" : "eval api.out_dict()"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-76",
 									"maxclass" : "message",
@@ -1703,7 +1715,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u052000545"
+									"varname" : "u825000506"
 								}
 
 							}
@@ -2163,6 +2175,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"source" : [ "obj-8", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-80", 0 ]
 								}
 
 							}
