@@ -47,6 +47,13 @@ typedef struct _py {
     t_object* p_code_editor;
     char** p_code;
     long p_code_size;
+
+    t_fourcc p_code_filetype; // = FOUR_CHAR_CODE('TEXT')
+    t_fourcc p_code_outtype;  // = FOUR_CHAR_CODE('TEXT')
+    char p_code_filename[MAX_PATH_CHARS];
+    char p_code_pathname[MAX_PATH_CHARS];
+    short p_code_path;
+
     t_symbol* p_code_filepath; /* default python filepath to load into
                                   the code editor and object 'globals'
                                   namespace */
@@ -78,6 +85,7 @@ void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
 t_hashtab* get_global_registry(void);
+void py_path_from_symbol(t_py* x, t_symbol* s);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
