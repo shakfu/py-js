@@ -4,6 +4,7 @@ An attempt to make a simple (and extensible) max external for python3
 
 repo - https://github.com/shakfu/py
 
+
 ## Summary
 
 ```
@@ -38,6 +39,7 @@ py interpreter object
         middle outlet       : bang on failure
         right outlet        : bang on success 
 ```
+
 
 ## Overview
 
@@ -453,3 +455,16 @@ Testing
        -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
 - [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
+
+
+## Prior Art and Thanks
+
+Every now and then when I was developing a patch in Max, I yearned for some simple python function or the other, like the `any` and `all` builtins, for example, and I would then spend more time I wanted researching a Max workaround. 
+
+Somehow, I did't really get into Javascript, so I looked around for a python external and I found Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which looked promising but then I read that the 'available Max port is not actively maintained.' It's written in C++ and needs an additional c++ flext layer (http://grrrr.org/ext/flext) to compile. But I was further dissuaded as it was then not very active and only python 2 which seemed difficult to swallow. Ironically, this project has become more active recently, so the above may no longer apply.
+
+Around the time of the beginning of the covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts to embed a scheme as a Max external.
+
+So during the lockdown period, with less distractions than usual, I decided to try to make a minimal python3 external and learn the max sdk and how to write more than a few lines of c code that won't crash and also the python c-api.
+
+I also to thank Luigi Castelli for his invaluable help in the Max forums.

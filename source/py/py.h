@@ -116,16 +116,18 @@ void py_assist(t_py* x, void* b, long m, long a, char* s);
 void py_bang(t_py* x);
 
 /* interobject communications */
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_scan(t_py* x);
 long py_scan_callback(t_py* x, t_object* obj);
-void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
+void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
+
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
-void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
+
 
 #endif // PY_H
