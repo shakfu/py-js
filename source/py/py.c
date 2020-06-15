@@ -24,7 +24,7 @@ static t_hashtab* py_global_registry = NULL; // global object lookups
 // HELPERS
 
 // WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is too low
-// long log or err messages will crash 
+// long log or err messages will crash
 
 void py_log(t_py* x, char* fmt, ...)
 {
@@ -83,8 +83,8 @@ error:
     Py_XDECREF(p_name);
     // Py_XDECREF(builtins);
 }
-t_hashtab* get_global_registry(void) { return py_global_registry; }
 
+t_hashtab* get_global_registry(void) { return py_global_registry; }
 
 void py_locate_path_from_symbol(t_py* x, t_symbol* s)
 {
@@ -101,15 +101,14 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s)
     } else {
         // must copy symbol before calling locatefile_extended
         strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
-        if (locatefile_extended(x->p_code_filename, &x->p_code_path, 
+        if (locatefile_extended(x->p_code_filename, &x->p_code_path,
                                 &x->p_code_outtype, &x->p_code_filetype, 1)) {
             // nozero: not found
             py_error(x, "can't find file %s", s->s_name);
             return;
         } else {
             x->p_code_pathname[0] = 0;
-            err = path_toabsolutesystempath(x->p_code_path, 
-                                            x->p_code_filename, 
+            err = path_toabsolutesystempath(x->p_code_path, x->p_code_filename,
                                             x->p_code_pathname);
             if (err != MAX_ERR_NONE) {
                 py_error(x, "can't convert %s to absolutepath", s->s_name);
@@ -136,7 +135,6 @@ void ext_main(void* r)
     // object methods
     //------------------------------------------------------------------------
     // clang-format off
-     
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
@@ -193,7 +191,6 @@ void ext_main(void* r)
     CLASS_ATTR_BASIC(c,  "autoload", 0);
     CLASS_ATTR_SAVE(c,   "autoload", 0);
 
-
     CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
     CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_STYLE(c,  "pythonpath", 0,  "file");
@@ -248,8 +245,8 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_code_editor = NULL;
         x->p_code_filetype = FOUR_CHAR_CODE('TEXT');
         x->p_code_outtype = 0;
-        // x->p_code_filename[MAX_PATH_CHARS];
-        // x->p_code_pathname[MAX_PATH_CHARS];
+        x->p_code_filename[0] = 0;
+        x->p_code_pathname[0] = 0;
         // short p_code_path;
         x->p_code_filepath = gensym("");
 
@@ -728,11 +725,11 @@ void py_execfile(t_py* x, t_symbol* s)
     if (s == gensym("") || x->p_code_filepath == gensym("")) {
         py_error(x, "could not set filepath");
         goto error;
-    } 
+    }
 
     // assume x->p_code_filepath has be been set without errors
 
-    py_log(x, "pathname: %s",  x->p_code_filepath->s_name);
+    py_log(x, "pathname: %s", x->p_code_filepath->s_name);
     fhandle = fopen(x->p_code_filepath->s_name, "r+");
 
     if (fhandle == NULL) {
@@ -740,7 +737,7 @@ void py_execfile(t_py* x, t_symbol* s)
         goto error;
     }
 
-    pval = PyRun_File(fhandle,  x->p_code_filepath->s_name, Py_file_input, 
+    pval = PyRun_File(fhandle, x->p_code_filepath->s_name, Py_file_input,
                       x->p_globals, x->p_globals);
     if (pval == NULL) {
         fclose(fhandle);
@@ -1132,46 +1129,6 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
-// void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
-//     char filename[MAX_PATH_CHARS];
-//     char pathname[MAX_PATH_CHARS];
-//     short path;
-//     t_max_err err;
-//     t_filehandle fh;
-
-//     if (s == gensym("")) { // if no arg supplied ask for file
-//         filename[0] = 0;
-
-//         if (open_dialog(filename, &path, &outtype, &filetype, 1))
-//             // non-zero: cancelled
-//             return;
-
-//     } else {
-//         // must copy symbol before calling locatefile_extended
-//         strcpy(filename, s->s_name);
-//         if (locatefile_extended(filename, &path, &outtype, &filetype, 1)) {
-//             // nozero: not found
-//             py_error(x, "can't find file %s", s->s_name);
-//             return;
-//         } else {
-//             err = path_toabsolutesystempath(path, filename, pathname);
-//         }
-
-//         // success
-//         // set attribute from pathname symbol
-//         x->p_code_filepath = gensym(pathname);
-//         err = path_opensysfile(filename, path, &fh, READ_PERM);
-//         if (!err) {
-//             sysfile_readtextfile(fh, x->p_code, 0,
-//                                  TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
-//             sysfile_close(fh);
-//             x->p_code_size = sysmem_handlesize(x->p_code);
-//         }
-//     }
-// }
-
 void py_edclose(t_py* x, char** text, long size)
 {
     if (x->p_code)
@@ -1207,14 +1164,6 @@ error:
 
 void py_load(t_py* x, t_symbol* s)
 {
-    if (s == gensym("")) {
-        if (x->p_code_filepath != gensym("")) {
-            py_read(x, x->p_code_filepath);
-            py_execfile(x, x->p_code_filepath);
-            return;
-        }
-    } else {
-        py_read(x, s);
-        py_execfile(x, s);
-    }
+    py_read(x, s);
+    py_execfile(x, s);
 }
