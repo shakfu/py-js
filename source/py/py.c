@@ -83,7 +83,6 @@ error:
     Py_XDECREF(p_name);
     // Py_XDECREF(builtins);
 }
-
 t_hashtab* get_global_registry(void) { return py_global_registry; }
 
 
@@ -108,6 +107,7 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s)
             py_error(x, "can't find file %s", s->s_name);
             return;
         } else {
+            x->p_code_pathname[0] = 0;
             err = path_toabsolutesystempath(x->p_code_path, 
                                             x->p_code_filename, 
                                             x->p_code_pathname);
