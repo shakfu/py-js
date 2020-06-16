@@ -107,6 +107,7 @@ void py_execfile(t_py* x, t_symbol* s);
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* informational */
 void py_count(t_py* x);
