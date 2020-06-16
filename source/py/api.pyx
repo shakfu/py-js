@@ -39,13 +39,11 @@ cdef class PyAtom:
     cdef long argc
     cdef mx.t_atom *argv
     cdef bint ptr_owner
-    cdef char is_allocated
 
     def __cinit__(self):
         self.argc = 0
         self.argv = NULL
         self.ptr_owner = False
-        self.is_allocated = 0
 
     def __dealloc__(self):
         """De-allocate if not null and flag is set"""
@@ -99,7 +97,6 @@ cdef class PyAtom:
     cdef PyAtom new(long argc = 0):
         """Factory function to create PyAtom objects with
         newly allocated t_atom"""
-        # cdef long argc = 1
         cdef mx.t_atom *argv
         argv = <mx.t_atom *>mx.sysmem_newptr(sizeof(mx.t_atom *) * argc)
         if argv is NULL:
@@ -297,6 +294,16 @@ cdef class PyExternal:
         elif isinstance(arg, dict): self.out_dict(<dict>arg)
         else:
             return
+
+
+def test_atom_fromlist(length=10, n=10):
+    cdef PyAtom atoms
+
+    xs = list(range(length))
+    for i in range(n):
+        atoms = PyAtom.from_list(xs)
+    return 'ok'
+
 
 def get_globals():
     return list(globals().keys())

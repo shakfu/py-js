@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 260.0, 117.0, 836.0, 634.0 ],
+		"rect" : [ 437.0, 109.0, 836.0, 634.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -367,7 +367,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "__main__"
+									"varname" : "u030000499"
 								}
 
 							}
@@ -644,7 +644,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 260.0, 143.0, 836.0, 608.0 ],
+						"rect" : [ 437.0, 135.0, 836.0, 608.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1431,12 +1431,12 @@
 							}
 , 							{
 								"box" : 								{
-									"bgcolor" : [ 0.996078431372549, 0.0, 0.0, 1.0 ],
+									"bgcolor" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
 									"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
 									"bgfillcolor_angle" : 270.0,
 									"bgfillcolor_autogradient" : 0.0,
 									"bgfillcolor_color" : [ 0.2, 0.2, 0.2, 1.0 ],
-									"bgfillcolor_color1" : [ 0.996078431372549, 0.0, 0.0, 1.0 ],
+									"bgfillcolor_color1" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
 									"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
 									"bgfillcolor_proportion" : 0.5,
 									"bgfillcolor_type" : "gradient",
@@ -1501,12 +1501,12 @@
 							}
 , 							{
 								"box" : 								{
-									"bgcolor" : [ 0.996078431372549, 0.0, 0.0, 1.0 ],
+									"bgcolor" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
 									"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
 									"bgfillcolor_angle" : 270.0,
 									"bgfillcolor_autogradient" : 0.0,
 									"bgfillcolor_color" : [ 0.2, 0.2, 0.2, 1.0 ],
-									"bgfillcolor_color1" : [ 0.996078431372549, 0.0, 0.0, 1.0 ],
+									"bgfillcolor_color1" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
 									"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
 									"bgfillcolor_proportion" : 0.5,
 									"bgfillcolor_type" : "gradient",
@@ -1715,7 +1715,7 @@
 									}
 ,
 									"text" : "py",
-									"varname" : "u825000506"
+									"varname" : "u741000507"
 								}
 
 							}
