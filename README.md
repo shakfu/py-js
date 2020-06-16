@@ -321,6 +321,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
+- [ ] PyAtom extension is still buggy and can intermittently cause crashes
 - [ ] Sending from the `api` can make max unstable. Keep it simple and investigate.
 
 ## TODO
@@ -350,8 +351,6 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
-- [ ] Consider local python install in `misc`
-
 - [ ] Convert py into a js extension class
       - proof of concept done, but requires a different 'nobox' type of class and data passing via arrays and attributes instead of outlets. But can be done!
 
@@ -368,6 +367,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 Core Features
 
+- [x] branch `embed-pkg`, embeds a local python install with a zipped stdlib in `support`
+      already successfully tested embedding the python distro in the external itself.
 - [x] made it possible to get the py object's name from any module in its namespace!
 - [x] enhance `py_exec` method to create a single string from argv so it can import easily
 - [x] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
