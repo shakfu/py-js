@@ -331,12 +331,14 @@ The style used in this project is specified in the `.clang-format` file.
 ### Attributes & Infrastructure
 
 - [ ] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
-- [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
+- [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute
+      paths)
       ```c
       PyObject *sysPath = PySys_GetObject((char*)"path");
       PyList_Append(sysPath, PyString_FromString("."));
       ```
-- [ ] add set/get for attributes as appropriate to trigger actions or methods calls after changes (NO REASON for using this found so far)
+- [ ] add set/get for attributes as appropriate to trigger actions or methods calls
+      after changes (NO REASON for using this found so far)
 
 
 ### Testing
@@ -349,7 +351,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 ### Future Experiments
 
-- [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
+- [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` 
+      or `py_code`.
 
 - [ ] Convert py into a js extension class
       - proof of concept done, but requires a different 'nobox' type of class and data passing via arrays and attributes instead of outlets. But can be done!
@@ -374,10 +377,14 @@ Core Features
 - [x] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
 - [x] Refactor 'py_eval' to make it more consistent with the others
 
-- [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
-- [x] Each py object has its own python 'globals' namespace and responds to the following msgs
+- [x] Implementation of a few high level python api functions in max (eval, exec) to allow
+      the evaluation of python code in a python `globals` namespace associated with the 
+      py object.
+- [x] Each py object has its own python 'globals' namespace and responds to the following
+      msgs
     - [x] `import <module>`: adds module to the namespace
-    - [x] `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
+    - [x] `eval <expression>`: evaluate expression within the context of the namespace
+          (cannot modify ns)
     - [x] `exec <statement>`: executes statement into the namespace (can modify ns)
     - [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
     - [x] `run <file.py>`: executes python file into the namespace (can modify ns)
@@ -408,19 +415,24 @@ Line REPL (Usability)
 
 Extensibility
 
-- [x] Create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
+- [x] Create type conversion method in `api.pyx` which could serve python code
+      and also c-code calling python code
 - [x] Implement section on two-way globals setting and reading (from python and c)
-      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html (deferred for now)
+      in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
+      (deferred for now)
 - [x] Add bpatcher line repl
 - [x] add python scripts to 'examples/scripts'
 - [x] Add cythonized access to max c-api..?
-- [x] Extensible by embedded cython based python extensions which can call a library of wrapped max_api functions in python code. There is a proof of concept of the python code in the namsepace calling the max api `post` function successfully.
+- [x] Extensible by embedded cython based python extensions which can call a library
+      of wrapped max_api functions in python code. There is a proof of concept of the
+      python code in the namsepace calling the max api `post` function successfully.
 - [x] Exposing of good portion of the max api to cython scripting
 
 
 Architectural
 
-- [x] Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
+- [x] Global object/dict/ref mgmt (so two externals can exist without Py_Finalize()
+      causing a crash
 
 
 Documentation
@@ -431,7 +443,8 @@ Documentation
 Code Quality
 
 - [x] refactor error handling code (if possible)
-- [x] Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
+- [x] Refactor eval code from py_eval into a function to allow for exec and execfile
+      or PyRun_File scenarios
 - [x] Refactor into functions
 
 
@@ -443,19 +456,22 @@ Testing
 #### Bug Fixes
 
 - [x] fixed 'send' which did not have enough error checking and was crashing frequently
-- [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
+- [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`,
+      it's based on post but post alone with the same does not cause a crash. Should simplify logging!
 - [x] globex remains after all objects are freed.
       solution: `PyXDECREF x->p_globals` on `py_free`
 - [x] space in `eval` without quotes will cause a crash!
 - [x] space in path causes "sprintf" type debugging in execfile to crash max!
 - [x] codesigning errors are due to Package being developed in Documents/...
-  which causes issues. If it's a non icloud exposed folder it works ok.
-- [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
+      which causes issues. If it's a non icloud exposed folder it works ok.
+- [x] make exec work! (needs globals in both slots:
+     `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
 - [x] `import` statement in eval causes a segmentation fault.
        see: https://docs.python.org/3/c-api/intro.html exception handling example
        -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
-- [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
+- [x] do not give attr has same name as method (the import saga) as this will crash.
+      fix by making them different.
 
 
 ## Prior Art and Thanks
