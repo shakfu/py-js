@@ -281,7 +281,6 @@ Install cython as follows:
 
 ```
 pip install cython
-
 ```
 
 ### Build it
