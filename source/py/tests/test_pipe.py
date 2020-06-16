@@ -11,6 +11,45 @@ pipe 5 range reversed list
 
 """
 
+combo = ("def pipe(arg):\n"
+            "\targs = arg.split()\n"
+            "\tval = eval(args[1])\n"
+            "\tfuncs = [eval(f) for f in args[2:]]\n"
+            "\tres = val\n"
+            "\tfor f in funcs:\n"
+                "\t\tres = f(res)\n"
+            "\treturn res\n")
+
+
+def pipe2(arg):
+    args = arg.split()
+    val = eval(args[1])
+    funcs = [eval(f) for f in args[2:]]
+    res = val
+    for f in funcs:
+        res = f(res)
+    return res
+
+
+def pipe(arg):
+    args = arg.split()
+    val = eval(args[1])
+    funcs = [eval(f) for f in args[2:]]
+    for f in funcs:
+        val = f(val)
+    return val
+
+
+def combo(arg):
+    args = arg.split()
+    val = eval(args[0])
+    funcs = [eval(f) for f in args[1:]]
+    res = val
+    for f in funcs:
+        res = f(res)
+    return res
+
+
 def pipe(x, funcs):
     res = x
     for f in funcs:
@@ -29,7 +68,6 @@ def topipe(arg):
     funcs = [eval(f) for f in args[2:]]
 
     return pipe(val, funcs)
-
 
 def test_topipe():
     assert topipe("pipe 5 range reversed list") == pipe(5, [range, reversed, list])

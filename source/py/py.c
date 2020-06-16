@@ -152,7 +152,8 @@ void ext_main(void* r)
     // core extra
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
-    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
+    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);    
+    class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,  0);
     
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -603,6 +604,110 @@ void py_handle_output(t_py* x, PyObject* pval)
     return;
 }
 
+
+// void py_handle_output(t_py* x, PyObject* pval)
+// {
+
+//     // handle ints and longs
+//     if (PyLong_Check(pval)) {
+//         long int_result = PyLong_AsLong(pval);
+//         outlet_int(x->p_outlet_left, int_result);
+//         outlet_bang(x->p_outlet_right);
+//     }
+
+//     // handle floats and doubles
+//     if (PyFloat_Check(pval)) {
+//         float float_result = (float)PyFloat_AsDouble(pval);
+//         outlet_float(x->p_outlet_left, float_result);
+//         outlet_bang(x->p_outlet_right);
+//     }
+
+//     // handle strings
+//     if (PyUnicode_Check(pval)) {
+//         const char* unicode_result = PyUnicode_AsUTF8(pval);
+//         outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
+//         outlet_bang(x->p_outlet_right);
+//     }
+
+//     /* handle any sequence except strings, and presently
+//        bytes and byte arrays (until there is a reason to)
+//     */
+//     if (PySequence_Check(pval) && !PyUnicode_Check(pval)
+//         && !PyBytes_Check(pval) && !PyByteArray_Check(pval)) {
+//         PyObject* iter = NULL;
+//         PyObject* item = NULL;
+//         int i = 0;
+
+//         t_atom atoms_static[PY_MAX_ATOMS];
+//         t_atom* atoms = NULL;
+//         int is_dynamic = 0;
+
+//         Py_ssize_t seq_size = PySequence_Length(pval);
+
+//         if (seq_size <= 0) {
+//             py_error(
+//                 x, "cannot convert python sequence with length <= 0 to atoms");
+//             goto error;
+//         }
+
+//         if (seq_size > PY_MAX_ATOMS) {
+//             py_log(x, "dynamically increasing size of atom array");
+//             atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+//                                        seq_size + 1);
+//             is_dynamic = 1;
+
+//         } else {
+//             atoms = atoms_static;
+//         }
+
+//         if ((iter = PyObject_GetIter(pval)) == NULL) {
+//             goto error;
+//         }
+
+//         while ((item = PyIter_Next(iter)) != NULL) {
+//             if (PyLong_Check(item)) {
+//                 long long_item = PyLong_AsLong(item);
+//                 atom_setlong(atoms + i, long_item);
+//                 py_log(x, "%d long: %ld\n", i, long_item);
+//                 i++;
+//             }
+
+//             if PyFloat_Check (item) {
+//                 float float_item = PyFloat_AsDouble(item);
+//                 atom_setfloat(atoms + i, float_item);
+//                 py_log(x, "%d float: %f\n", i, float_item);
+//                 i++;
+//             }
+
+//             if PyUnicode_Check (item) {
+//                 const char* unicode_item = PyUnicode_AsUTF8(item);
+//                 py_log(x, "%d unicode: %s\n", i, unicode_item);
+//                 atom_setsym(atoms + i, gensym(unicode_item));
+//                 i++;
+//             }
+//             Py_DECREF(item);
+//         }
+
+//         outlet_list(x->p_outlet_left, NULL, i, atoms);
+//         outlet_bang(x->p_outlet_right);
+//         py_log(x, "end iter op: %d", i);
+
+//         if (is_dynamic) {
+//             py_log(x, "restoring to static atom array");
+//             atom_dynamic_end(atoms_static, atoms);
+//         }
+//     }
+//     // final cleanup
+//     Py_XDECREF(pval);
+//     return;
+
+// error:
+//     py_handle_error(x, "python exception occurred");
+//     Py_XDECREF(pval);
+//     outlet_bang(x->p_outlet_middle);
+// }
+
+
 /*--------------------------------------------------------------------------*/
 // TRANSLATORS
 
@@ -956,6 +1061,95 @@ error:
     outlet_bang(x->p_outlet_middle);
 }
 
+
+
+
+void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    t_max_err err;
+    PyObject* pipe_pre = NULL;
+    PyObject* pipe_fun = NULL;    
+    PyObject* pval = NULL;
+    PyObject* p_str = NULL;
+
+
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        py_log(x, "pipe %s", text);
+        py_log(x, "atom -> text conversion succeeded");
+    } else {
+        py_error(x, "atom -> text conversion failed");
+        goto error;
+    }
+
+    pipe_pre = PyRun_String(
+        "def pipe(arg):\n"
+            "\targs = arg.split()\n"
+            // "\tval = eval(args[0], globals())\n"
+            // "\tval = eval(args[0], globals(), locals())\n"
+            "\tval = eval(args[0])\n"
+            "\tfuncs = [eval(f) for f in args[1:]]\n"
+            // "\tfuncs = [eval(f, globals(), locals()) for f in args[1:]]\n"          
+            "\tfor f in funcs:\n"
+                "\t\tval = f(val)\n"
+            "\treturn val\n",
+            // "\treturn args",
+            Py_single_input, x->p_globals, x->p_globals);
+
+    if (pipe_pre == NULL) {
+        py_error(x, "pipe func is NULL");
+        goto error;
+    } else {
+        py_log(x, "pipe func created");
+    }
+
+    p_str = PyUnicode_FromString(text);
+    if (p_str == NULL) {
+        py_error(x, "cstr -> pyunicode conversion failed");
+        goto error;
+    }
+
+    py_log(x, "freeing text");
+    sysmem_freeptr(text);
+
+    pipe_fun = PyDict_GetItemString(x->p_globals, "pipe");
+    if (pipe_fun == NULL) {
+        py_error(x, "retrieving pipe func from globals failed");
+        goto error;
+    }
+    Py_INCREF(pipe_fun);
+
+    py_log(x, "running pipe(arg)");
+    pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str);
+    py_log(x, "completed pipe(arg)");
+
+    if (pval != NULL) {
+        py_handle_output(x, pval);
+        Py_XDECREF(pipe_pre);
+        Py_XDECREF(p_str);
+        Py_XDECREF(pipe_fun);
+        Py_XDECREF(pval);
+        outlet_bang(x->p_outlet_right);
+        return;
+    } else {
+        goto error;
+    }
+
+error:
+    py_handle_error(x, "pipe failed");
+    Py_XDECREF(pipe_pre);
+    Py_XDECREF(p_str);
+    Py_XDECREF(pipe_fun);
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x->p_outlet_middle);
+}
+
+/*--------------------------------------------------------------------------*/
+// INTEROBJECT
 
 void py_scan(t_py* x)
 {
