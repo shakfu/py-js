@@ -44,7 +44,7 @@ atom_alloc_array()
 that are designed exactly to make this kind of code clearer to read and more robust.
 For example, you could replace:
 
-```
+```c
 t_max_err macpod_getvalueof(t_macpod *x, long *ac, t_atom **av) 
 {     
     if (ac && av) {        
