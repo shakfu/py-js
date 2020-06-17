@@ -107,29 +107,6 @@ cdef class PyExternal:
         else:
             return 0
 
-    cdef send2(self, str name, list args):
-        _args = [name] + args
-        cdef mx.t_max_err err
-        cdef char ok # bool-like var to indicate allocation has happened or not
-        cdef long argc = 0
-        cdef mx.t_atom* argv = NULL
-
-        err = mx.atom_alloc_array(PY_MAX_ATOMS, &argc, &argv, &ok)
-
-        if (err == mx.MAX_ERR_NONE):
-            for i, elem in enumerate(_args):
-                if type(elem) == float:
-                    mx.atom_setfloat(&argv[i], <double>elem)
-                elif type(elem) == int:
-                    mx.atom_setlong(&argv[i], <long>elem)
-                elif type(elem) == str:
-                    mx.atom_setsym(&argv[i], mx.gensym(elem.encode('utf-8')))
-                else:
-                    continue
-            mx.postatom(argv)
-            px.py_send(self.obj, mx.gensym(""), argc, argv)
-            mx.sysmem_freeptr(argv)
-
     cdef send(self, str name, list args):
         cdef long argc = <long>len(args) + 1
         cdef mx.t_atom argv[PY_MAX_ATOMS]
@@ -170,14 +147,6 @@ cdef class PyExternal:
 
     cdef out_int(self, int arg):
         mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
-
-    # cdef out_list(self, list arg):
-    #     "note: not recursive...(yet) still cannot deal with list in list"
-    #     cdef long argc = 0;
-    #     cdef mx.t_atom* argv = NULL;
-    #     self.atoms_from_list(arg, &argc, &argv)
-    #     mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
-    #         argc, argv)
 
     cdef out_list(self, list arg):
         "note: not recursive...(yet) still cannot deal with list in list"
@@ -256,15 +225,7 @@ def out_list(xs=[1,'a','c',4,5]):
     ext = PyExternal()
     ext.out(xs)
 
-def out_list_new(xs=[1,'b',3,'z',5.1]):
-    ext = PyExternal()
-    ext.out(xs)
-
-def out_dict(d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}):
-    ext = PyExternal()
-    ext.out_dict(d)
-
-def out_dict2():
+def out_dict():
     d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
     ext = PyExternal()
     ext.out(d)
@@ -272,15 +233,6 @@ def out_dict2():
 def send(name='mrfloat', value=9.5):
     ext = PyExternal()
     ext.send(name, [value])
-
-def send2(name='mrfloat', value=11.5):
-    ext = PyExternal()
-    ext.send2(name, [value])
-
-def send3(name='mrfloat', msg='float', value=14.5):
-    ext = PyExternal()
-    ext.send3(name, msg, [value])
-    # del ext
 
 def lookup(name):
     ext = PyExternal()
