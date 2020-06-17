@@ -1,6 +1,91 @@
 # Max C API Notes
 
 
+## Memory management
+
+see: https://cycling74.com/forums/class_attr_float_array-question
+
+@Eric
+In your getter methods I strongly suggest you use two great little functions:
+atom_alloc() and atom_alloc_array()
+So, you'd write something like:
+
+```c
+t_max_err a_amplitudes_get(t_oscil *x, void *attr, long *ac, t_atom **av)
+{
+    if (ac && av)
+    {
+        char alloc;
+        if (atom_alloc_array(OSCIL_MAX_HARMS, ac, av, &alloc)) {
+            return MAX_ERR_OUT_OF_MEM;
+        }
+
+        for (int i = 0; i < OSCIL_MAX_HARMS; i++) {
+            atom_setfloat(*av + i, x->a_amplitudes[i]);
+        }
+    }
+    return MAX_ERR_NONE;
+}
+```
+It makes for more streamlined and easy to read code.
+It is also less error-prone than having to use sysmem_newptr()
+
+
+and see: https://cycling74.com/forums/adding-persistent-data-to-a-external
+
+
+For this specific issue, there are a couple of functions defined in ext_obex.h:
+
+```c
+atom_alloc()
+atom_alloc_array()
+```
+
+that are designed exactly to make this kind of code clearer to read and more robust.
+For example, you could replace:
+
+```
+t_max_err macpod_getvalueof(t_macpod *x, long *ac, t_atom **av) 
+{     
+    if (ac && av) {        
+        if (*ac && *av) {             
+            // memory has been passed in; use it.         
+        } else {             
+            *av = (t_atom *)getbytes(sizeof(t_atom) * 5);         
+        }         
+        *ac = 5;         
+        atom_setlong(*av,     x->offset_rnd);         
+        atom_setlong(*av + 1, x->dur);         
+        atom_setlong(*av + 2, x->dur_rnd);         
+        atom_setlong(*av + 3, x->del);         
+        atom_setlong(*av + 4, x->del_rnd);     
+    }     
+    return MAX_ERR_NONE; 
+}
+```
+
+with:
+
+```c
+t_max_err macpod_getvalueof(t_macpod *x, long *ac, t_atom **av) 
+{  
+    if (ac && av) {
+        char alloc;
+        t_max_err err = atom_alloc_array(5, ac, av, &alloc);
+        if (err == MAX_ERR_NONE) {
+            atom_setlong(*av, x->offset_rnd);
+            atom_setlong(*av + 1, x->dur);
+            atom_setlong(*av + 2, x->dur_rnd);
+            atom_setlong(*av + 3, x->del);
+            atom_setlong(*av + 4, x->del_rnd);
+        }
+        return err;
+    }
+    return MAX_ERR_NONE;
+}
+```
+
+
 ## Pattern of Use
 
 ### chapter 5: Atoms and Messages
