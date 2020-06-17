@@ -40,13 +40,26 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-28",
+					"id" : "obj-6",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 122.0, 94.0, 22.0 ],
-					"text" : "eval api.send3()"
+					"patching_rect" : [ 213.0, 51.0, 111.0, 22.0 ],
+					"text" : "eval api.error('bug')"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-2",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 17.0, 108.0, 88.0, 22.0 ],
+					"presentation_linecount" : 2,
+					"text" : "eval api.bang()"
 				}
 
 			}
@@ -67,7 +80,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 54.0, 87.0, 22.0 ],
+					"patching_rect" : [ 444.5, 320.0, 87.0, 22.0 ],
 					"text" : "eval api.send()"
 				}
 
@@ -79,20 +92,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 444.5, 366.0, 138.0, 22.0 ],
+					"patching_rect" : [ 451.0, 377.0, 138.0, 22.0 ],
 					"text" : "eval api.lookup('mrfloat')"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-12",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 86.0, 94.0, 22.0 ],
-					"text" : "eval api.send2()"
 				}
 
 			}
@@ -103,7 +104,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 444.5, 327.0, 34.0, 22.0 ],
+					"patching_rect" : [ 451.0, 349.0, 34.0, 22.0 ],
 					"text" : "scan"
 				}
 
@@ -147,36 +148,12 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-6",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 327.0, 128.0, 22.0 ],
-					"text" : "eval api.out_list_new()"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-2",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 392.0, 110.0, 22.0 ],
-					"text" : "eval api.out_dict2()"
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"id" : "obj-8",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 362.0, 103.0, 22.0 ],
+					"patching_rect" : [ 17.0, 358.0, 103.0, 22.0 ],
 					"text" : "eval api.out_dict()"
 				}
 
@@ -198,7 +175,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 293.0, 99.0, 22.0 ],
+					"patching_rect" : [ 17.0, 320.0, 99.0, 22.0 ],
 					"text" : "eval api.out_list()"
 				}
 
@@ -210,7 +187,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 257.0, 107.0, 22.0 ],
+					"patching_rect" : [ 17.0, 284.0, 107.0, 22.0 ],
 					"text" : "eval api.out_float()"
 				}
 
@@ -222,7 +199,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 220.0, 97.0, 22.0 ],
+					"patching_rect" : [ 17.0, 247.0, 97.0, 22.0 ],
 					"text" : "eval api.out_int()"
 				}
 
@@ -234,7 +211,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 147.0, 77.0, 22.0 ],
+					"patching_rect" : [ 17.0, 174.0, 77.0, 22.0 ],
 					"text" : "eval api.fail()"
 				}
 
@@ -246,7 +223,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 115.0, 105.0, 22.0 ],
+					"patching_rect" : [ 17.0, 142.0, 105.0, 22.0 ],
 					"text" : "eval api.success()"
 				}
 
@@ -258,7 +235,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 181.0, 107.0, 22.0 ],
+					"patching_rect" : [ 17.0, 208.0, 107.0, 22.0 ],
 					"text" : "eval api.out_sym()"
 				}
 
@@ -546,13 +523,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-12", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-13", 0 ]
 				}
 
@@ -617,13 +587,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-25", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-28", 0 ]
 				}
 
 			}
