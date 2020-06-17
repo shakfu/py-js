@@ -22,6 +22,7 @@
 <v t="sta.20200612045651.1"><vh>prototypes</vh></v>
 <v t="sta.20200612043307.1"><vh>not-working</vh>
 <v t="sta.20200612055834.1"><vh>api</vh>
+<v t="sta.20200616215024.1"><vh>api.pyx</vh></v>
 <v t="sta.20200612055834.2"><vh>send3 (list_to_atom)</vh></v>
 </v>
 <v t="sta.20200612115112.1"><vh>const char* pstring_to_cstring</vh></v>
@@ -246,6 +247,7 @@
     }
 }
 
+
 </t>
 <t tx="sta.20200602120251.12">void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -383,6 +385,8 @@ error:
         error("[py %s] &lt;- (%s): %s", x-&gt;p_name-&gt;s_name, msg, pvalue_str);
     }
 }
+
+
 </t>
 <t tx="sta.20200602120251.14">void py_dblclick(t_py* x)
 {
@@ -398,11 +402,13 @@ error:
     }
 }
 
+
 </t>
 <t tx="sta.20200602120251.15">void py_read(t_py* x, t_symbol* s)
 {
     defer((t_object*)x, (method)py_doread, s, 0, NULL);
 }
+
 
 </t>
 <t tx="sta.20200602120251.16">void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -420,45 +426,6 @@ error:
     }
 }
 
-// void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     t_fourcc filetype = FOUR_CHAR_CODE('TEXT'), outtype;
-//     char filename[MAX_PATH_CHARS];
-//     char pathname[MAX_PATH_CHARS];
-//     short path;
-//     t_max_err err;
-//     t_filehandle fh;
-
-//     if (s == gensym("")) { // if no arg supplied ask for file
-//         filename[0] = 0;
-
-//         if (open_dialog(filename, &amp;path, &amp;outtype, &amp;filetype, 1))
-//             // non-zero: cancelled
-//             return;
-
-//     } else {
-//         // must copy symbol before calling locatefile_extended
-//         strcpy(filename, s-&gt;s_name);
-//         if (locatefile_extended(filename, &amp;path, &amp;outtype, &amp;filetype, 1)) {
-//             // nozero: not found
-//             py_error(x, "can't find file %s", s-&gt;s_name);
-//             return;
-//         } else {
-//             err = path_toabsolutesystempath(path, filename, pathname);
-//         }
-
-//         // success
-//         // set attribute from pathname symbol
-//         x-&gt;p_code_filepath = gensym(pathname);
-//         err = path_opensysfile(filename, path, &amp;fh, READ_PERM);
-//         if (!err) {
-//             sysfile_readtextfile(fh, x-&gt;p_code, 0,
-//                                  TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
-//             sysfile_close(fh);
-//             x-&gt;p_code_size = sysmem_handlesize(x-&gt;p_code);
-//         }
-//     }
-// }
 
 </t>
 <t tx="sta.20200602120251.17">void py_edclose(t_py* x, char** text, long size)
@@ -471,6 +438,7 @@ error:
     x-&gt;p_code_size = size + 1;
     x-&gt;p_code_editor = NULL;
 }
+
 
 </t>
 <t tx="sta.20200602120251.18">void py_edsave(t_py* x, char** text, long size)
@@ -495,19 +463,12 @@ error:
     Py_XDECREF(pval);
 }
 
+
 </t>
 <t tx="sta.20200602120251.19">void py_load(t_py* x, t_symbol* s)
 {
-    if (s == gensym("")) {
-        if (x-&gt;p_code_filepath != gensym("")) {
-            py_read(x, x-&gt;p_code_filepath);
-            py_execfile(x, x-&gt;p_code_filepath);
-            return;
-        }
-    } else {
-        py_read(x, s);
-        py_execfile(x, s);
-    }
+    py_read(x, s);
+    py_execfile(x, s);
 }
 </t>
 <t tx="sta.20200602120251.20">void py_import(t_py* x, t_symbol* s)
@@ -531,6 +492,7 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
+
 </t>
 <t tx="sta.20200602120251.21">void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -547,6 +509,7 @@ error:
         py_handle_error(x, "eval %s", py_argv);
     }
 }
+
 
 </t>
 <t tx="sta.20200602120251.22">void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -576,6 +539,7 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
+
 </t>
 <t tx="sta.20200602120251.23">void py_execfile(t_py* x, t_symbol* s)
 {
@@ -591,11 +555,11 @@ error:
     if (s == gensym("") || x-&gt;p_code_filepath == gensym("")) {
         py_error(x, "could not set filepath");
         goto error;
-    } 
+    }
 
     // assume x-&gt;p_code_filepath has be been set without errors
 
-    py_log(x, "pathname: %s",  x-&gt;p_code_filepath-&gt;s_name);
+    py_log(x, "pathname: %s", x-&gt;p_code_filepath-&gt;s_name);
     fhandle = fopen(x-&gt;p_code_filepath-&gt;s_name, "r+");
 
     if (fhandle == NULL) {
@@ -603,7 +567,7 @@ error:
         goto error;
     }
 
-    pval = PyRun_File(fhandle,  x-&gt;p_code_filepath-&gt;s_name, Py_file_input, 
+    pval = PyRun_File(fhandle, x-&gt;p_code_filepath-&gt;s_name, Py_file_input,
                       x-&gt;p_globals, x-&gt;p_globals);
     if (pval == NULL) {
         fclose(fhandle);
@@ -670,6 +634,7 @@ error:
     Py_XDECREF(list);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 
 </t>
 <t tx="sta.20200602120251.25">void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -751,6 +716,7 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
+
 </t>
 <t tx="sta.20200602120251.26">/*
 needs the following above Py_Initialize;
@@ -799,7 +765,6 @@ error:
     // object methods
     //------------------------------------------------------------------------
     // clang-format off
-     
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",       0);
@@ -813,7 +778,8 @@ error:
     // core extra
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
-    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
+    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);    
+    class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,  0);
     
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -856,7 +822,6 @@ error:
     CLASS_ATTR_BASIC(c,  "autoload", 0);
     CLASS_ATTR_SAVE(c,   "autoload", 0);
 
-
     CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
     CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_STYLE(c,  "pythonpath", 0,  "file");
@@ -881,6 +846,7 @@ error:
     py_class = c;
 }
 
+
 </t>
 <t tx="sta.20200602120251.4">void py_log(t_py* x, char* fmt, ...)
 {
@@ -896,6 +862,7 @@ error:
     }
 }
 
+
 </t>
 <t tx="sta.20200602120251.5">void py_error(t_py* x, char* fmt, ...)
 {
@@ -908,6 +875,7 @@ error:
 
     error("[py %s]: %s", x-&gt;p_name-&gt;s_name, msg);
 }
+
 
 </t>
 <t tx="sta.20200602120251.7">void* py_new(t_symbol* s, long argc, t_atom* argv)
@@ -940,8 +908,8 @@ error:
         x-&gt;p_code_editor = NULL;
         x-&gt;p_code_filetype = FOUR_CHAR_CODE('TEXT');
         x-&gt;p_code_outtype = 0;
-        // x-&gt;p_code_filename[MAX_PATH_CHARS];
-        // x-&gt;p_code_pathname[MAX_PATH_CHARS];
+        x-&gt;p_code_filename[0] = 0;
+        x-&gt;p_code_pathname[0] = 0;
         // short p_code_path;
         x-&gt;p_code_filepath = gensym("");
 
@@ -1019,6 +987,7 @@ error:
     }
 }
 
+
 </t>
 <t tx="sta.20200602120251.9">void py_free(t_py* x)
 {
@@ -1058,7 +1027,7 @@ error:
 // HELPERS
 
 // WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is too low
-// long log or err messages will crash 
+// long log or err messages will crash
 
 </t>
 <t tx="sta.20200602120740.1">/*--------------------------------------------------------------------------*/
@@ -1081,7 +1050,9 @@ void py_bang(t_py* x)
 
 </t>
 <t tx="sta.20200602122617.1">
+
 void py_count(t_py* x) { outlet_int(x-&gt;p_outlet_left, py_global_obj_count); }
+
 </t>
 <t tx="sta.20200602131126.1">/*--------------------------------------------------------------------------*/
 // INCLUDES
@@ -1207,6 +1178,7 @@ void py_execfile(t_py* x, t_symbol* s);
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* informational */
 void py_count(t_py* x);
@@ -1216,17 +1188,19 @@ void py_assist(t_py* x, void* b, long m, long a, char* s);
 void py_bang(t_py* x);
 
 /* interobject communications */
+void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_scan(t_py* x);
 long py_scan_callback(t_py* x, t_object* obj);
-void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
+void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
+
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 void py_edsave(t_py* x, char** text, long size);
-void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
+
 
 </t>
 <t tx="sta.20200602150733.1">/*--------------------------------------------------------------------------*/
@@ -3132,6 +3106,7 @@ int add_history(char*);
     return 0;
 }
 
+
 </t>
 <t tx="sta.20200605120205.1">void py_locatefile(t_py* x, char* filename)
 {
@@ -3210,6 +3185,96 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
+
+
+
+void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    t_max_err err;
+    PyObject* pipe_pre = NULL;
+    PyObject* pipe_fun = NULL;    
+    PyObject* pval = NULL;
+    PyObject* p_str = NULL;
+
+
+    err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
+        py_log(x, "pipe %s", text);
+        py_log(x, "atom -&gt; text conversion succeeded");
+    } else {
+        py_error(x, "atom -&gt; text conversion failed");
+        goto error;
+    }
+
+    pipe_pre = PyRun_String(
+        "def pipe(arg):\n"
+            "\targs = arg.split()\n"
+            // "\tval = eval(args[0], globals())\n"
+            // "\tval = eval(args[0], globals(), locals())\n"
+            "\tval = eval(args[0])\n"
+            "\tfuncs = [eval(f) for f in args[1:]]\n"
+            // "\tfuncs = [eval(f, globals(), locals()) for f in args[1:]]\n"          
+            "\tfor f in funcs:\n"
+                "\t\tval = f(val)\n"
+            "\treturn val\n",
+            // "\treturn args",
+            Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+
+    if (pipe_pre == NULL) {
+        py_error(x, "pipe func is NULL");
+        goto error;
+    } else {
+        py_log(x, "pipe func created");
+    }
+
+    p_str = PyUnicode_FromString(text);
+    if (p_str == NULL) {
+        py_error(x, "cstr -&gt; pyunicode conversion failed");
+        goto error;
+    }
+
+    py_log(x, "freeing text");
+    sysmem_freeptr(text);
+
+    pipe_fun = PyDict_GetItemString(x-&gt;p_globals, "pipe");
+    if (pipe_fun == NULL) {
+        py_error(x, "retrieving pipe func from globals failed");
+        goto error;
+    }
+    Py_INCREF(pipe_fun);
+
+    py_log(x, "running pipe(arg)");
+    pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str);
+    py_log(x, "completed pipe(arg)");
+
+    if (pval != NULL) {
+        py_handle_output(x, pval);
+        Py_XDECREF(pipe_pre);
+        Py_XDECREF(p_str);
+        Py_XDECREF(pipe_fun);
+        Py_XDECREF(pval);
+        outlet_bang(x-&gt;p_outlet_right);
+        return;
+    } else {
+        goto error;
+    }
+
+error:
+    py_handle_error(x, "pipe failed");
+    Py_XDECREF(pipe_pre);
+    Py_XDECREF(p_str);
+    Py_XDECREF(pipe_fun);
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x-&gt;p_outlet_middle);
+}
+
+/*--------------------------------------------------------------------------*/
+// INTEROBJECT
+
 </t>
 <t tx="sta.20200606044751.1">void py_handle_output(t_py* x, PyObject* pval)
 {
@@ -3224,6 +3289,7 @@ error:
     Py_XDECREF(pval);
     return;
 }
+
 
 </t>
 <t tx="sta.20200606073716.1"></t>
@@ -3645,6 +3711,7 @@ error:
 </t>
 <t tx="sta.20200610100240.1">/*--------------------------------------------------------------------------*/
 // TRANSLATORS
+
 </t>
 <t tx="sta.20200610104609.1">void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
 {
@@ -3672,6 +3739,7 @@ error:
     Py_XDECREF(plong);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 
 </t>
 <t tx="sta.20200610104706.1">
@@ -3722,6 +3790,7 @@ error:
     Py_XDECREF(pstring);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 
 </t>
 <t tx="sta.20200610164212.1">
@@ -3803,6 +3872,7 @@ error:
     Py_XDECREF(pfloat);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 
 </t>
 <t tx="sta.20200610222640.1">t_atom* py_list_to_atom(t_py* x, PyObject* plist)
@@ -3969,6 +4039,7 @@ error:
     Py_XDECREF(plist);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 
 </t>
 <t tx="sta.20200611235620.1">t_hashtab* get_global_registry(void) { return py_global_registry; }
@@ -4389,7 +4460,10 @@ error:
     py_handle_error(x, "could not update object namespace with object name");
     Py_XDECREF(p_name);
     // Py_XDECREF(builtins);
-}</t>
+}
+
+
+</t>
 <t tx="sta.20200615052054.1">void py_locate_path_from_symbol(t_py* x, t_symbol* s)
 {
     t_max_err err;
@@ -4405,14 +4479,14 @@ error:
     } else {
         // must copy symbol before calling locatefile_extended
         strncpy_zero(x-&gt;p_code_filename, s-&gt;s_name, MAX_PATH_CHARS);
-        if (locatefile_extended(x-&gt;p_code_filename, &amp;x-&gt;p_code_path, 
+        if (locatefile_extended(x-&gt;p_code_filename, &amp;x-&gt;p_code_path,
                                 &amp;x-&gt;p_code_outtype, &amp;x-&gt;p_code_filetype, 1)) {
             // nozero: not found
             py_error(x, "can't find file %s", s-&gt;s_name);
             return;
         } else {
-            err = path_toabsolutesystempath(x-&gt;p_code_path, 
-                                            x-&gt;p_code_filename, 
+            x-&gt;p_code_pathname[0] = 0;
+            err = path_toabsolutesystempath(x-&gt;p_code_path, x-&gt;p_code_filename,
                                             x-&gt;p_code_pathname);
             if (err != MAX_ERR_NONE) {
                 py_error(x, "can't convert %s to absolutepath", s-&gt;s_name);
@@ -4425,6 +4499,442 @@ error:
         x-&gt;p_code_filepath = gensym(x-&gt;p_code_pathname);
     }
 }
+
+</t>
+<t tx="sta.20200616215024.1"># api.pyx
+"""
+
+The main place to create wrappers and utilities to access max's api
+
+See below for examples of this.
+
+- [x] mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
+- [ ] t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
+
+
+"""
+#cimport cython
+from cpython cimport PyFloat_AsDouble
+from cpython cimport PyLong_AsLong
+from cpython.ref cimport PyObject
+
+from libc.stdlib cimport malloc
+from libc.string cimport strcpy, strlen
+
+cimport api_max as mx # api is a cython keyword!
+cimport api_py as px
+
+import numpy
+import numpy as np
+
+
+DEF MAX_CHARS = 32767
+DEF PY_MAX_ATOMS = 128
+
+
+cdef extern from "Python.h":
+    const char* PyUnicode_AsUTF8(object unicode)
+    unicode PyUnicode_FromString(const char *u)
+
+
+cdef class PyAtom:
+    """A wrapper class for max t_atom arrays"""
+    cdef long argc
+    cdef mx.t_atom *argv
+    cdef bint ptr_owner
+
+    def __cinit__(self):
+        self.argc = 0
+        self.argv = NULL
+        self.ptr_owner = False
+
+    def __dealloc__(self):
+        """De-allocate if not null and flag is set"""
+        if self.argv is not NULL and self.ptr_owner is True:
+            for i in range(self.argc):
+                mx.sysmem_freeptr(&amp;self.argv[i])
+            mx.sysmem_freeptr(self.argv)
+            self.argc = 0
+            self.argv = NULL
+
+    cdef int from_cstr(self, char *parsestr) except -1:
+        cdef mx.t_max_err err = mx.atom_setparse(&amp;self.argc, &amp;self.argv, parsestr)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
+        else:
+            return 0
+
+    cpdef from_pstr(self, str parsestr):
+        cdef char cparsestring[MAX_CHARS]
+        cparsestring = PyUnicode_AsUTF8(parsestr)
+        cdef mx.t_max_err err = mx.atom_setparse(&amp;self.argc, &amp;self.argv, cparsestring)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
+
+    cpdef str to_pstr(self):
+        """atoms -&gt; python string"""
+        cdef long textsize = 0
+        cdef char* text = NULL
+        cdef mx.t_max_err err = mx.atom_gettext(self.argc, self.argv, &amp;textsize, &amp;text, 
+            mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
+        pstr = PyUnicode_FromString(text)
+        mx.sysmem_freeptr(text)
+        return pstr
+
+    @staticmethod
+    cdef PyAtom from_atom(long argc, mx.t_atom *argv, bint owner=False):
+        """Factory function to create PyAtom objects from t_atom pointer.
+
+        Setting `owner` flag to `True` causes the extension type to 
+        `free` the structure pointed to by `argv` when the wrapper 
+        object is deallocated.
+        """
+        # Call to __new__ bypasses __init__ constructor
+        cdef PyAtom instance = PyAtom.__new__(PyAtom)
+        instance.argc = argc
+        instance.argv = argv
+        instance.ptr_owner = owner
+        return instance
+
+    @staticmethod
+    cdef PyAtom new(long argc = 0):
+        """Factory function to create PyAtom objects with
+        newly allocated t_atom"""
+        cdef mx.t_atom *argv
+        argv = &lt;mx.t_atom *&gt;mx.sysmem_newptr(sizeof(mx.t_atom *) * argc)
+        if argv is NULL:
+            raise MemoryError
+        return PyAtom.from_atom(argc, argv, owner=True)
+
+
+    @staticmethod
+    cdef PyAtom from_list(list elements):
+        """Factory function to create PyAtom objects from a python list
+        """
+        cdef long argc = &lt;long&gt;len(elements)
+        cdef mx.t_atom *argv
+        # cdef char buff[MAX_CHARS]
+
+        argv = &lt;mx.t_atom *&gt;mx.sysmem_newptr(sizeof(mx.t_atom *) * argc)
+        for i, elem in enumerate(elements):
+            if type(elem) == float:
+                mx.atom_setfloat(&amp;argv[i], &lt;double&gt;elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&amp;argv[i]), &lt;long&gt;elem)
+            elif type(elem) == str:
+                # mx.strncpy_zero(buff, elem.encode('utf-8'), MAX_CHARS)
+                # mx.atom_setsym((&amp;argv[i]), mx.gensym(buff))
+                mx.atom_setsym((&amp;argv[i]), mx.gensym(elem.encode('utf-8')))
+            else:
+                continue
+        return PyAtom.from_atom(argc, argv, owner=True)
+
+
+cdef class PyExternal:
+    cdef px.t_py *obj
+    cdef bytes name
+
+    def __cinit__(self):
+        """Retrieves the py object name and reference.
+
+        PY_OBJ_NAME is set to __builtins__ at object creation
+        making it available to all modules.
+
+        Since all py objects are registered, knowing the name
+        allows any module in the namespace to get a reference
+        (as below) to its parent object (-:
+        """
+        PY_OBJ_NAME = getattr(__builtins__, 'PY_OBJ_NAME')
+        self.name = PY_OBJ_NAME.encode('utf-8')
+        self.obj = &lt;px.t_py *&gt;mx.object_findregistered(
+            mx.CLASS_BOX, mx.gensym(self.name))
+
+    cpdef bang(self):
+        px.py_bang(self.obj)
+
+    def log(self, str s):
+        px.py_log(self.obj, s.encode('utf-8'))
+
+    def error(self, str s):
+        px.py_error(self.obj, s.encode('utf-8'))
+
+    cdef scan(self):
+        px.py_scan(self.obj)
+
+    cdef lookup(self, str name):
+        cdef mx.t_hashtab* registry = px.get_global_registry()
+        cdef mx.t_object* obj = NULL
+        cdef mx.t_max_err err
+
+        if (mx.hashtab_getsize(registry) == 0):
+            self.error("registry not populated")
+            return
+
+        err = mx.hashtab_lookup(registry, 
+            mx.gensym(name.encode('utf-8')), &amp;obj)
+
+        if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
+            self.error("no object found with name")
+        else:
+            self.log("found object")
+
+    # Wooo!!!
+    cdef send0(self, str name, list args):
+        _args = [name] + args
+        cdef PyAtom atom = PyAtom.from_list(_args)
+        px.py_send(self.obj, mx.gensym(""), atom.argc, atom.argv)
+
+    cdef send(self, str name, list args):
+        cdef long argc = &lt;long&gt;len(args) + 1
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
+        _args = [name] + args
+
+        if argc &lt; 1:
+            self.error("no arguments given")
+            return
+
+        if argc &gt;= PY_MAX_ATOMS - 1:
+            self.error("number of args exceeded app limit")
+            return
+
+        for i, elem in enumerate(_args):
+            if type(elem) == float:
+                mx.atom_setfloat(&amp;argv[i], &lt;double&gt;elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&amp;argv[i]), &lt;long&gt;elem)
+            elif type(elem) == str:
+                mx.atom_setsym((&amp;argv[i]), mx.gensym(elem.encode('utf-8')))
+            else:
+                continue
+
+        px.py_send(self.obj, mx.gensym(""), argc, argv)
+
+
+    cdef send4(self, str name, str msg, list args):
+        cdef mx.t_object* obj = NULL
+        cdef mx.t_symbol* msg_sym = mx.gensym(msg.encode('utf-8'))
+        cdef mx.t_hashtab* registry = px.get_global_registry()
+        cdef mx.t_max_err err
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
+        cdef long argc = &lt;long&gt;len(args)
+
+        if argc &lt; 1:
+            self.error("no arguments given")
+            return
+
+        if argc &gt;= PY_MAX_ATOMS:
+            self.error("number of args exceeded app limit")
+            return
+
+        for i, elem in enumerate(args):
+            if type(elem) == float:
+                mx.atom_setfloat(&amp;argv[i], &lt;double&gt;elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&amp;argv[i]), &lt;long&gt;elem)
+            elif type(elem) == str:
+                mx.atom_setsym((&amp;argv[i]), mx.gensym(elem.encode('utf-8')))
+            else:
+                continue
+
+        # if registry is empty, scan it
+        if (mx.hashtab_getsize(registry) == 0):
+            self.log("registry empty, scanning...")
+            self.scan()
+
+        # lookup name in registry
+        err = mx.hashtab_lookup(registry, mx.gensym(name.encode('utf-8')), &amp;obj)
+
+        if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
+            self.error("no object found with name")
+            return
+
+        err = mx.object_method_typed(obj, msg_sym, argc, argv, NULL)
+
+        if (err != mx.MAX_ERR_NONE):
+            self.error("send failed")
+            mx.outlet_bang(&lt;void*&gt;self.obj.p_outlet_middle)
+        else:
+            self.log("send succeeded")
+            mx.outlet_bang(&lt;void*&gt;self.obj.p_outlet_right)
+
+
+    cdef success(self):
+        mx.outlet_bang(&lt;void*&gt;self.obj.p_outlet_right)
+
+    cdef fail(self):
+        mx.outlet_bang(&lt;void*&gt;self.obj.p_outlet_middle)
+
+    cdef out_sym(self, str arg):
+        mx.outlet_anything(&lt;void*&gt;self.obj.p_outlet_left, 
+            mx.gensym(arg.encode('utf-8')), 0, NULL)
+
+    cdef out_float(self, float arg):
+        mx.outlet_float(&lt;void*&gt;self.obj.p_outlet_left, &lt;double&gt;arg)
+
+    cdef out_int(self, int arg):
+        mx.outlet_int(&lt;void*&gt;self.obj.p_outlet_left, &lt;long&gt;arg)
+
+    cdef out_list_buggy(self, list arg):
+        cdef PyAtom atom = PyAtom.from_list(arg)
+        mx.outlet_list(&lt;void*&gt;self.obj.p_outlet_left, mx.gensym("list"),
+            atom.argc, atom.argv)
+
+    cdef out_list(self, list arg):
+        # cdef PyAtom atom = PyAtom.from_list(arg)
+
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
+        cdef long argc = &lt;long&gt;len(arg)
+
+        if argc &lt; 1:
+            self.error("no arguments given")
+            return
+
+        if argc &gt;= PY_MAX_ATOMS:
+            self.error("number of args exceeded app limit")
+            return
+
+        for i, elem in enumerate(arg):
+            if type(elem) == float:
+                mx.atom_setfloat(&amp;argv[i], &lt;double&gt;elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&amp;argv[i]), &lt;long&gt;elem)
+            elif type(elem) == str:
+                mx.atom_setsym((&amp;argv[i]), mx.gensym(elem.encode('utf-8')))
+            else:
+                continue
+
+        mx.outlet_list(&lt;void*&gt;self.obj.p_outlet_left, 
+            mx.gensym("list"), argc, argv)
+
+
+
+    cdef out_dict(self, dict arg):
+        "note: not recursive... still cannot deal with dict inside dict"
+        res = []
+        for k,v in arg.items():
+            res.append(k)
+            res.append(':')
+            if type(v) in [list, set, tuple]:
+                for i in v:
+                    res.append(i)
+            else:
+                res.append(v)
+        self.out_list(res)
+
+    cdef out(self, object arg):
+        if isinstance(arg, float): self.out_float(arg)
+        elif isinstance(arg, int): self.out_int(arg)
+        elif isinstance(arg, str): self.out_sym(arg)
+        elif isinstance(arg, list): self.out_list(arg)
+        # BUG: below cause crash? not sure why
+        elif isinstance(arg, dict): self.out_dict(&lt;dict&gt;arg)
+        else:
+            return
+
+
+def test_atom_fromlist(length=10, n=10):
+    cdef PyAtom atoms
+
+    xs = list(range(length))
+    for i in range(n):
+        atoms = PyAtom.from_list(xs)
+    return 'ok'
+
+
+def get_globals():
+    return list(globals().keys())
+
+def test():
+    ext = PyExternal()
+    ext.bang()
+
+def success():
+    ext = PyExternal()
+    ext.success()
+
+def fail():
+    ext = PyExternal()
+    ext.fail()
+
+def out_sym(s='hello outlet!'):
+    ext = PyExternal()
+    ext.out(s)
+
+def out_int(n=100):
+    ext = PyExternal()
+    ext.out(n)
+
+def out_float(n=12.75):
+    ext = PyExternal()
+    ext.out(n)
+
+def out_list(xs=[1,2,3,4,5]):
+    ext = PyExternal()
+    ext.out(xs)
+
+def out_dict(d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}):
+    ext = PyExternal()
+    ext.out_dict(d)
+
+def out_dict2():
+    d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
+    ext = PyExternal()
+    ext.out(d)
+
+def test_send0(name, value=9.5):
+    ext = PyExternal()
+    ext.send(name, [value])
+
+def test_send(name, value=11.5):
+    ext = PyExternal()
+    ext.send(name, [value])
+    # del ext
+
+def test_send4(name, msg='float', value=14.5):
+    ext = PyExternal()
+    ext.send4(name, msg, [value])
+    # del ext
+
+
+
+def lookup(name):
+    ext = PyExternal()
+    ext.lookup(name)
+
+
+
+# ext = PyExternal()
+
+txt = "Hey MAX!"
+
+greeting = 'Hello World'
+
+
+cpdef public str hello():
+    return greeting
+
+
+def random(int n):
+    return np.random.rand(n)
+
+
+def echo(*args):
+    return args
+
+
+def total(*args):
+    return sum(args)
+
+
+def post(str s):
+    mx.post(s.encode('utf-8'))
+
+
+def error(str s):
+    mx.error(s.encode('utf-8'))
+
+
+
 
 </t>
 </tnodes>
