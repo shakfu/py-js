@@ -83,25 +83,6 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
-    # cdef mx.t_max_err atoms_from_list(self, list elems, long *argc, mx.t_atom **argv):
-    #     cdef long size = <long>len(elems) + 1
-    #     cdef char ok # bool-like var to indicate allocation
-    #     # cdef char cstring[MAX_CHARS]
-    #     cdef mx.t_max_err err = mx.atom_alloc_array(size, argc, argv, &ok)
-
-    #     for i, elem in enumerate(elems):
-    #         if type(elem) == float:
-    #             mx.atom_setfloat(argv[i], <double>elem)
-    #         elif type(elem) == int:
-    #             mx.atom_setlong((argv[i]), <long>elem)
-    #         elif type(elem) == str:
-    #             # mx.strncpy_zero(cstring, elem.encode('utf-8'), MAX_CHARS)
-    #             # mx.atom_setsym((argv[i]), mx.gensym(cstring))
-    #             mx.atom_setsym((argv[i]), mx.gensym(elem.encode('utf-8')))
-    #         else:
-    #             continue
-    #     return err
-
     cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
         """atoms -> python string"""
         cdef long textsize = 0
@@ -126,15 +107,28 @@ cdef class PyExternal:
         else:
             return 0
 
-    # CRASHES
-    # cdef send(self, str name, list args):
-    #     cdef long argc = 0;
-    #     cdef mx.t_atom* argv = NULL;
-    #     _args = [name] + args
-    #     cdef mx.t_max_err err = self.atoms_from_list(_args, &argc, &argv)
-    #     if err != mx.MAX_ERR_NONE:
-    #         px.py_send(self.obj, mx.gensym(""), argc, argv)
+    cdef send2(self, str name, list args):
+        _args = [name] + args
+        cdef mx.t_max_err err
+        cdef char ok # bool-like var to indicate allocation has happened or not
+        cdef long argc = 0
+        cdef mx.t_atom* argv = NULL
 
+        err = mx.atom_alloc_array(PY_MAX_ATOMS, &argc, &argv, &ok)
+
+        if (err == mx.MAX_ERR_NONE):
+            for i, elem in enumerate(_args):
+                if type(elem) == float:
+                    mx.atom_setfloat(&argv[i], <double>elem)
+                elif type(elem) == int:
+                    mx.atom_setlong(&argv[i], <long>elem)
+                elif type(elem) == str:
+                    mx.atom_setsym(&argv[i], mx.gensym(elem.encode('utf-8')))
+                else:
+                    continue
+            mx.postatom(argv)
+            px.py_send(self.obj, mx.gensym(""), argc, argv)
+            mx.sysmem_freeptr(argv)
 
     cdef send(self, str name, list args):
         cdef long argc = <long>len(args) + 1
@@ -158,7 +152,7 @@ cdef class PyExternal:
                 mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
             else:
                 continue
-
+        # mx.postatom(argv)
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
     cdef success(self):
