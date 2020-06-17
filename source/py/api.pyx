@@ -83,20 +83,24 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
-    cdef atoms_from_list(self, list elems, long *argc, mx.t_atom **argv):
-        cdef long size = <long>len(elems)
-        cdef char ok # bool-like var to indicate allocation
-        cdef mx.t_max_err err = mx.atom_alloc_array(size, argc, argv, &ok)
+    # cdef mx.t_max_err atoms_from_list(self, list elems, long *argc, mx.t_atom **argv):
+    #     cdef long size = <long>len(elems) + 1
+    #     cdef char ok # bool-like var to indicate allocation
+    #     # cdef char cstring[MAX_CHARS]
+    #     cdef mx.t_max_err err = mx.atom_alloc_array(size, argc, argv, &ok)
 
-        for i, elem in enumerate(elems):
-            if type(elem) == float:
-                mx.atom_setfloat(argv[i], <double>elem)
-            elif type(elem) == int:
-                mx.atom_setlong((argv[i]), <long>elem)
-            elif type(elem) == str:
-                mx.atom_setsym((argv[i]), mx.gensym(elem.encode('utf-8')))
-            else:
-                continue
+    #     for i, elem in enumerate(elems):
+    #         if type(elem) == float:
+    #             mx.atom_setfloat(argv[i], <double>elem)
+    #         elif type(elem) == int:
+    #             mx.atom_setlong((argv[i]), <long>elem)
+    #         elif type(elem) == str:
+    #             # mx.strncpy_zero(cstring, elem.encode('utf-8'), MAX_CHARS)
+    #             # mx.atom_setsym((argv[i]), mx.gensym(cstring))
+    #             mx.atom_setsym((argv[i]), mx.gensym(elem.encode('utf-8')))
+    #         else:
+    #             continue
+    #     return err
 
     cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
         """atoms -> python string"""
@@ -122,12 +126,14 @@ cdef class PyExternal:
         else:
             return 0
 
-    cdef send1(self, str name, list args):
-        _args = [name] + args
-        cdef long argc = 0;
-        cdef mx.t_atom* argv = NULL;
-        self.atoms_from_list(args, &argc, &argv)
-        px.py_send(self.obj, mx.gensym(""), argc, argv)
+    # CRASHES
+    # cdef send(self, str name, list args):
+    #     cdef long argc = 0;
+    #     cdef mx.t_atom* argv = NULL;
+    #     _args = [name] + args
+    #     cdef mx.t_max_err err = self.atoms_from_list(_args, &argc, &argv)
+    #     if err != mx.MAX_ERR_NONE:
+    #         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
 
     cdef send(self, str name, list args):
@@ -155,55 +161,6 @@ cdef class PyExternal:
 
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
-
-    cdef send4(self, str name, str msg, list args):
-        cdef mx.t_object* obj = NULL
-        cdef mx.t_symbol* msg_sym = mx.gensym(msg.encode('utf-8'))
-        cdef mx.t_hashtab* registry = px.get_global_registry()
-        cdef mx.t_max_err err
-        cdef mx.t_atom argv[PY_MAX_ATOMS]
-        cdef long argc = <long>len(args)
-
-        if argc < 1:
-            self.error("no arguments given")
-            return
-
-        if argc >= PY_MAX_ATOMS:
-            self.error("number of args exceeded app limit")
-            return
-
-        for i, elem in enumerate(args):
-            if type(elem) == float:
-                mx.atom_setfloat(&argv[i], <double>elem)
-            elif type(elem) == int:
-                mx.atom_setlong((&argv[i]), <long>elem)
-            elif type(elem) == str:
-                mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
-            else:
-                continue
-
-        # if registry is empty, scan it
-        if (mx.hashtab_getsize(registry) == 0):
-            self.log("registry empty, scanning...")
-            self.scan()
-
-        # lookup name in registry
-        err = mx.hashtab_lookup(registry, mx.gensym(name.encode('utf-8')), &obj)
-
-        if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
-            self.error("no object found with name")
-            return
-
-        err = mx.object_method_typed(obj, msg_sym, argc, argv, NULL)
-
-        if (err != mx.MAX_ERR_NONE):
-            self.error("send failed")
-            mx.outlet_bang(<void*>self.obj.p_outlet_middle)
-        else:
-            self.log("send succeeded")
-            mx.outlet_bang(<void*>self.obj.p_outlet_right)
-
-
     cdef success(self):
         mx.outlet_bang(<void*>self.obj.p_outlet_right)
 
@@ -220,24 +177,20 @@ cdef class PyExternal:
     cdef out_int(self, int arg):
         mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
 
-    cdef out_list_new(self, list arg):
-        cdef long argc = 0;
-        cdef mx.t_atom* argv = NULL;
-        self.atoms_from_list(arg, &argc, &argv)
-        mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
-            argc, argv)
+    # cdef out_list(self, list arg):
+    #     "note: not recursive...(yet) still cannot deal with list in list"
+    #     cdef long argc = 0;
+    #     cdef mx.t_atom* argv = NULL;
+    #     self.atoms_from_list(arg, &argc, &argv)
+    #     mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
+    #         argc, argv)
 
     cdef out_list(self, list arg):
-        # cdef PyAtom atom = PyAtom.from_list(arg)
-
-        cdef mx.t_atom argv[PY_MAX_ATOMS]
+        "note: not recursive...(yet) still cannot deal with list in list"
         cdef long argc = <long>len(arg)
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
 
-        if argc < 1:
-            self.error("no arguments given")
-            return
-
-        if argc >= PY_MAX_ATOMS:
+        if argc >= PY_MAX_ATOMS :
             self.error("number of args exceeded app limit")
             return
 
@@ -251,13 +204,11 @@ cdef class PyExternal:
             else:
                 continue
 
-        mx.outlet_list(<void*>self.obj.p_outlet_left, 
-            mx.gensym("list"), argc, argv)
-
-
+        mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
+            argc, argv)
 
     cdef out_dict(self, dict arg):
-        "note: not recursive... still cannot deal with dict inside dict"
+        "note: not recursive...(yet) still cannot deal with dict in dict"
         res = []
         for k,v in arg.items():
             res.append(k)
@@ -283,7 +234,7 @@ cdef class PyExternal:
 def get_globals():
     return list(globals().keys())
 
-def test():
+def bang():
     ext = PyExternal()
     ext.bang()
 
@@ -307,14 +258,13 @@ def out_float(n=12.75):
     ext = PyExternal()
     ext.out(n)
 
-def out_list(xs=[1,2,3,4,5]):
+def out_list(xs=[1,'a','c',4,5]):
     ext = PyExternal()
     ext.out(xs)
 
-def out_list_new(xs=[1,2,3,4,5]):
+def out_list_new(xs=[1,'b',3,'z',5.1]):
     ext = PyExternal()
     ext.out(xs)
-
 
 def out_dict(d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}):
     ext = PyExternal()
@@ -325,25 +275,18 @@ def out_dict2():
     ext = PyExternal()
     ext.out(d)
 
-def test_send0(name, value=9.5):
+def send(name='mrfloat', value=9.5):
     ext = PyExternal()
     ext.send(name, [value])
 
-def test_send1(name, value=9.5):
+def send2(name='mrfloat', value=11.5):
     ext = PyExternal()
-    ext.send(name, [value])
+    ext.send2(name, [value])
 
-def test_send(name, value=11.5):
+def send3(name='mrfloat', msg='float', value=14.5):
     ext = PyExternal()
-    ext.send(name, [value])
+    ext.send3(name, msg, [value])
     # del ext
-
-def test_send4(name, msg='float', value=14.5):
-    ext = PyExternal()
-    ext.send4(name, msg, [value])
-    # del ext
-
-
 
 def lookup(name):
     ext = PyExternal()
