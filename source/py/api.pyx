@@ -35,8 +35,6 @@ cdef extern from "Python.h":
 
 
 
-
-
 cdef class PyExternal:
     cdef px.t_py *obj
     cdef bytes name
@@ -85,15 +83,12 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
-    cdef mx.t_max_err atoms_from_list(self, list elements,
-                                     long *argc, mx.t_atom **argv):
-        cdef long size = <long>len(elements)
+    cdef atoms_from_list(self, list elems, long *argc, mx.t_atom **argv):
+        cdef long size = <long>len(elems)
         cdef char ok # bool-like var to indicate allocation
-        # cdef mx.t_max_err err = mx.atom_alloc_array(PY_MAX_ATOMS,
-        #     argc, argv, &alloc)
         cdef mx.t_max_err err = mx.atom_alloc_array(size, argc, argv, &ok)
 
-        for i, elem in enumerate(elements):
+        for i, elem in enumerate(elems):
             if type(elem) == float:
                 mx.atom_setfloat(argv[i], <double>elem)
             elif type(elem) == int:
