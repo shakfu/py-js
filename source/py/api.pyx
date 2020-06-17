@@ -34,98 +34,6 @@ cdef extern from "Python.h":
     unicode PyUnicode_FromString(const char *u)
 
 
-cdef class PyAtom:
-    """A wrapper class for max t_atom arrays"""
-    cdef long argc
-    cdef mx.t_atom *argv
-    cdef bint ptr_owner
-
-    def __cinit__(self):
-        self.argc = 0
-        self.argv = NULL
-        self.ptr_owner = False
-
-    def __dealloc__(self):
-        """De-allocate if not null and flag is set"""
-        if self.argv is not NULL and self.ptr_owner is True:
-            for i in range(self.argc):
-                mx.sysmem_freeptr(&self.argv[i])
-            mx.sysmem_freeptr(self.argv)
-            self.argc = 0
-            self.argv = NULL
-
-    cdef int from_cstr(self, char *parsestr) except -1:
-        cdef mx.t_max_err err = mx.atom_setparse(&self.argc, &self.argv, parsestr)
-        if err != mx.MAX_ERR_NONE: # test this!!
-            raise Exception("cannot convert c parsestring to atom array")
-        else:
-            return 0
-
-    cpdef from_pstr(self, str parsestr):
-        cdef char cparsestring[MAX_CHARS]
-        cparsestring = PyUnicode_AsUTF8(parsestr)
-        cdef mx.t_max_err err = mx.atom_setparse(&self.argc, &self.argv, cparsestring)
-        if err != mx.MAX_ERR_NONE: # test this!!
-            raise Exception("cannot convert c parsestring to atom array")
-
-    cpdef str to_pstr(self):
-        """atoms -> python string"""
-        cdef long textsize = 0
-        cdef char* text = NULL
-        cdef mx.t_max_err err = mx.atom_gettext(self.argc, self.argv, &textsize, &text, 
-            mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
-        pstr = PyUnicode_FromString(text)
-        mx.sysmem_freeptr(text)
-        return pstr
-
-    @staticmethod
-    cdef PyAtom from_atom(long argc, mx.t_atom *argv, bint owner=False):
-        """Factory function to create PyAtom objects from t_atom pointer.
-
-        Setting `owner` flag to `True` causes the extension type to 
-        `free` the structure pointed to by `argv` when the wrapper 
-        object is deallocated.
-        """
-        # Call to __new__ bypasses __init__ constructor
-        cdef PyAtom instance = PyAtom.__new__(PyAtom)
-        instance.argc = argc
-        instance.argv = argv
-        instance.ptr_owner = owner
-        return instance
-
-    @staticmethod
-    cdef PyAtom new(long argc = 0):
-        """Factory function to create PyAtom objects with
-        newly allocated t_atom"""
-        cdef mx.t_atom *argv
-        argv = <mx.t_atom *>mx.sysmem_newptr(sizeof(mx.t_atom *) * argc)
-        if argv is NULL:
-            raise MemoryError
-        return PyAtom.from_atom(argc, argv, owner=True)
-
-
-    @staticmethod
-    cdef PyAtom from_list(list elements):
-        """Factory function to create PyAtom objects from a python list
-        """
-        cdef long argc = <long>len(elements)
-        cdef mx.t_atom *argv
-        # cdef char buff[MAX_CHARS]
-
-        argv = <mx.t_atom *>mx.sysmem_newptr(sizeof(mx.t_atom *) * argc)
-        for i, elem in enumerate(elements):
-            if type(elem) == float:
-                mx.atom_setfloat(&argv[i], <double>elem)
-            elif type(elem) == int:
-                mx.atom_setlong((&argv[i]), <long>elem)
-            elif type(elem) == str:
-                # mx.strncpy_zero(buff, elem.encode('utf-8'), MAX_CHARS)
-                # mx.atom_setsym((&argv[i]), mx.gensym(buff))
-                mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
-            else:
-                continue
-        return PyAtom.from_atom(argc, argv, owner=True)
-
 
 
 
@@ -177,7 +85,7 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
-    cdef mx.t_max_err atom_from_list(self, list elements,
+    cdef mx.t_max_err atoms_from_list(self, list elements,
                                      long *argc, mx.t_atom **argv):
         cdef long size = <long>len(elements)
         cdef char ok # bool-like var to indicate allocation
@@ -195,18 +103,35 @@ cdef class PyExternal:
             else:
                 continue
 
-    # Wooo!!!
-    cdef send0(self, str name, list args):
-        _args = [name] + args
-        cdef PyAtom atom = PyAtom.from_list(_args)
-        px.py_send(self.obj, mx.gensym(""), atom.argc, atom.argv)
+    cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
+        """atoms -> python string"""
+        cdef long textsize = 0
+        cdef char* text = NULL
+        cdef mx.t_max_err err = mx.atom_gettext(argc, argv, &textsize, &text, 
+            mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
+        pstr = PyUnicode_FromString(text)
+        mx.sysmem_freeptr(text)
+        return pstr
 
+    cdef int pstring_to_atoms(self, str parsestr, long argc, mx.t_atom *argv) except -1:
+        cdef char cparsestring[MAX_CHARS]
+        cparsestring = PyUnicode_AsUTF8(parsestr)
+        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, cparsestring)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
+
+    cdef int cstring_to_atoms(self, char *parsestr, long argc, mx.t_atom *argv) except -1:
+        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, parsestr)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
+        else:
+            return 0
 
     cdef send1(self, str name, list args):
         _args = [name] + args
         cdef long argc = 0;
         cdef mx.t_atom* argv = NULL;
-        self.atom_from_list(args, &argc, &argv)
+        self.atoms_from_list(args, &argc, &argv)
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
 
@@ -300,15 +225,10 @@ cdef class PyExternal:
     cdef out_int(self, int arg):
         mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
 
-    cdef out_list_buggy(self, list arg):
-        cdef PyAtom atom = PyAtom.from_list(arg)
-        mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
-            atom.argc, atom.argv)
-
     cdef out_list_new(self, list arg):
         cdef long argc = 0;
         cdef mx.t_atom* argv = NULL;
-        self.atom_from_list(arg, &argc, &argv)
+        self.atoms_from_list(arg, &argc, &argv)
         mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
             argc, argv)
 
@@ -363,15 +283,6 @@ cdef class PyExternal:
         elif isinstance(arg, dict): self.out_dict(<dict>arg)
         else:
             return
-
-
-def test_atom_fromlist(length=10, n=10):
-    cdef PyAtom atoms
-
-    xs = list(range(length))
-    for i in range(n):
-        atoms = PyAtom.from_list(xs)
-    return 'ok'
 
 
 def get_globals():
