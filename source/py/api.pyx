@@ -83,6 +83,7 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
+    # UNTESTED
     cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
         """atoms -> python string"""
         cdef long textsize = 0
@@ -93,6 +94,7 @@ cdef class PyExternal:
         mx.sysmem_freeptr(text)
         return pstr
 
+    # UNTESTED
     cdef int pstring_to_atoms(self, str parsestr, long argc, mx.t_atom *argv) except -1:
         cdef char cparsestring[MAX_CHARS]
         cparsestring = PyUnicode_AsUTF8(parsestr)
@@ -100,6 +102,7 @@ cdef class PyExternal:
         if err != mx.MAX_ERR_NONE: # test this!!
             raise Exception("cannot convert c parsestring to atom array")
 
+    # UNTESTED
     cdef int cstring_to_atoms(self, char *parsestr, long argc, mx.t_atom *argv) except -1:
         cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, parsestr)
         if err != mx.MAX_ERR_NONE: # test this!!
