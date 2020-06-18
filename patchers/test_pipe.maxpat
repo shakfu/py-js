@@ -40,6 +40,42 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-14",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 39.0, 129.0, 65.0, 22.0 ],
+					"text" : "pipe 10 str"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-13",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 127.5, 60.0, 72.0, 22.0 ],
+					"text" : "import math"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-10",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 26.0, 92.0, 149.0, 22.0 ],
+					"text" : "pipe 90 math.sin math.cos"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-2",
 					"maxclass" : "message",
 					"numinlets" : 2,
@@ -81,7 +117,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 99.0, 187.0, 74.0, 22.0 ],
+					"patching_rect" : [ 32.0, 200.0, 74.0, 22.0 ],
 					"text" : "pipe 10 float"
 				}
 
@@ -93,7 +129,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 99.0, 154.0, 58.0, 22.0 ],
+					"patching_rect" : [ 32.0, 167.0, 58.0, 22.0 ],
 					"text" : "pipe 1 str"
 				}
 
@@ -170,7 +206,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 84.0, 373.0, 187.0, 22.0 ],
-					"text" : "4 3 2 1 0"
+					"text" : "0.626301"
 				}
 
 			}
@@ -225,6 +261,27 @@
 				"patchline" : 				{
 					"destination" : [ "obj-4", 1 ],
 					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-13", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-14", 0 ]
 				}
 
 			}

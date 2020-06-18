@@ -1035,38 +1035,19 @@ void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
     long textsize = 0;
     char* text = NULL;
     t_max_err err;
-    // PyObject* pipe_pre = NULL;
     PyObject* pipe_fun = NULL;    
     PyObject* pval = NULL;
     PyObject* p_str = NULL;
 
-
     err = atom_gettext(argc, argv, &textsize, &text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
-        py_log(x, "pipe %s", text);
+        py_log(x, "pipe: %s", text);
         py_log(x, "atom -> text conversion succeeded");
     } else {
         py_error(x, "atom -> text conversion failed");
         goto error;
     }
-
-    // pipe_pre = PyRun_String(
-    //     "def pipe(arg):\n"
-    //         "\targs = arg.split()\n"
-    //         "\tval = eval(args[0])\n"
-    //         "\tfuncs = [eval(f) for f in args[1:]]\n"
-    //         "\tfor f in funcs:\n"
-    //             "\t\tval = f(val)\n"
-    //         "\treturn val\n",
-    //         Py_single_input, x->p_globals, x->p_globals);
-
-    // if (pipe_pre == NULL) {
-    //     py_error(x, "pipe func is NULL");
-    //     goto error;
-    // } else {
-    //     py_log(x, "pipe func created");
-    // }
 
     p_str = PyUnicode_FromString(text);
     if (p_str == NULL) {
@@ -1074,7 +1055,7 @@ void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    py_log(x, "freeing text");
+    py_log(x, "freeing text: %s", text);
     sysmem_freeptr(text);
 
     pipe_fun = PyDict_GetItemString(x->p_globals, "pipe");
@@ -1083,14 +1064,14 @@ void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
     Py_INCREF(pipe_fun);
-
+    
     py_log(x, "running pipe(arg)");
     pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str);
     py_log(x, "completed pipe(arg)");
 
+
     if (pval != NULL) {
         py_handle_output(x, pval);
-        // Py_XDECREF(pipe_pre);
         Py_XDECREF(p_str);
         Py_XDECREF(pipe_fun);
         Py_XDECREF(pval);
@@ -1102,7 +1083,6 @@ void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 error:
     py_handle_error(x, "pipe failed");
-    // Py_XDECREF(pipe_pre);
     Py_XDECREF(p_str);
     Py_XDECREF(pipe_fun);
     Py_XDECREF(pval);
