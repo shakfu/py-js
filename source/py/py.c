@@ -86,36 +86,6 @@ error:
     // Py_XDECREF(builtins);
 }
 
-void py_add_funcs(t_py* x) {
-
-    PyObject* pipe_pre = NULL;
-
-    pipe_pre = PyRun_String(
-        "def pipe(arg):\n"
-            "\targs = arg.split()\n"
-            "\tval = eval(args[0])\n"
-            "\tfuncs = [eval(f) for f in args[1:]]\n"
-            "\tfor f in funcs:\n"
-                "\t\tval = f(val)\n"
-            "\treturn val\n",
-            Py_single_input, x->p_globals, x->p_globals);
-
-    if (pipe_pre == NULL) {
-        py_error(x, "pipe func is NULL");
-        goto error;
-    } else {
-        py_log(x, "pipe func created");
-    }
-
-    Py_XDECREF(pipe_pre);
-    return;
-
-error:
-
-    py_handle_error(x, "pipe failed");
-    Py_XDECREF(pipe_pre);
-
-}
 
 t_hashtab* get_global_registry(void) { return py_global_registry; }
 
@@ -345,8 +315,6 @@ void py_init(t_py* x)
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
     x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
     py_init_builtins(x); // does this have to be a separate function?
-
-    py_add_funcs(x);
 
     // register the object
     object_register(CLASS_BOX, x->p_name, x);
@@ -991,63 +959,40 @@ error:
 }
 
 
-// void py_add_funcs(t_py* x) {
-
-//     PyObject* pipe_pre = NULL;
-
-//     pipe_pre = PyRun_String(
-//         "def pipe(arg):\n"
-//             "\targs = arg.split()\n"
-//             "\tval = eval(args[0])\n"
-//             "\tfuncs = [eval(f) for f in args[1:]]\n"
-//             "\tfor f in funcs:\n"
-//                 "\t\tval = f(val)\n"
-//             "\treturn val\n",
-//             Py_single_input, x->p_globals, x->p_globals);
-
-//     if (pipe_pre == NULL) {
-//         py_error(x, "pipe func is NULL");
-//         goto error;
-//     } else {
-//         py_log(x, "pipe func created");
-//     }
-
-//     Py_XDECREF(pipe_pre);
-//     return;
-
-// error:
-
-//     py_handle_error(x, "pipe failed");
-//     Py_XDECREF(pipe_pre);
-
-// }
-
-void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
-
 void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    defer((t_object*)x, (method)py_dopipe, s, argc, argv);
-}
-
-// void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
-void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     long textsize = 0;
     char* text = NULL;
     t_max_err err;
+    PyObject* pipe_pre = NULL;
     PyObject* pipe_fun = NULL;    
     PyObject* pval = NULL;
     PyObject* p_str = NULL;
 
+
     err = atom_gettext(argc, argv, &textsize, &text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err == MAX_ERR_NONE && textsize && text) {
-        py_log(x, "pipe: %s", text);
-        py_log(x, "atom -> text conversion succeeded");
-    } else {
+    if (err != MAX_ERR_NONE || !textsize || !text) {
         py_error(x, "atom -> text conversion failed");
         goto error;
     }
+    // py_log(x, "text: '%s'", text);
+
+    pipe_pre = PyRun_String(
+        "def pipe(arg):\n"
+            "\targs = arg.split()\n"
+            "\tval = eval(args[0])\n"
+            "\tfuncs = [eval(f) for f in args[1:]]\n"
+            "\tfor f in funcs:\n"
+                "\t\tval = f(val)\n"
+            "\treturn val\n",
+            Py_single_input, x->p_globals, x->p_globals);
+
+    if (pipe_pre == NULL) {
+        py_error(x, "pipe func is NULL");
+        goto error;
+    }
+    // py_log(x, "pipe func created");
 
     p_str = PyUnicode_FromString(text);
     if (p_str == NULL) {
@@ -1055,7 +1000,7 @@ void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    py_log(x, "freeing text: %s", text);
+    // py_log(x, "freeing text");
     sysmem_freeptr(text);
 
     pipe_fun = PyDict_GetItemString(x->p_globals, "pipe");
@@ -1063,17 +1008,19 @@ void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_error(x, "retrieving pipe func from globals failed");
         goto error;
     }
-    Py_INCREF(pipe_fun);
-    
-    py_log(x, "running pipe(arg)");
-    pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str);
-    py_log(x, "completed pipe(arg)");
+    // Py_INCREF(pipe_fun);
 
+    // STRANGE BUG: removing py_log line causes it it fail!!
+    py_log(x, "running pipe(arg)");
+    
+    pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str);
+    // py_log(x, "completed pipe(arg)");
 
     if (pval != NULL) {
         py_handle_output(x, pval);
+        Py_XDECREF(pipe_pre);
         Py_XDECREF(p_str);
-        Py_XDECREF(pipe_fun);
+        // Py_XDECREF(pipe_fun);
         Py_XDECREF(pval);
         outlet_bang(x->p_outlet_right);
         return;
@@ -1083,8 +1030,9 @@ void py_dopipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 error:
     py_handle_error(x, "pipe failed");
+    Py_XDECREF(pipe_pre);
     Py_XDECREF(p_str);
-    Py_XDECREF(pipe_fun);
+    // Py_XDECREF(pipe_fun);
     Py_XDECREF(pval);
     // fail bang
     outlet_bang(x->p_outlet_middle);

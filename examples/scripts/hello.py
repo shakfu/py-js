@@ -23,3 +23,11 @@ f = lambda: "hello func"
 
 g = lambda x: x+10
 
+
+def pipe(arg):
+    args = arg.split()
+    val = eval(args[0])
+    funcs = [eval(f) for f in args[1:]]
+    for f in funcs:
+        val = f(val)
+    return val
