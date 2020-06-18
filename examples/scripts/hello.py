@@ -6,7 +6,7 @@ This is an demo of a python script in the `py` package.
 
 """
 
-import api # cythonized max c api
+#import api # cythonized max c api
 
 # basic examples
 a = 10
@@ -23,6 +23,11 @@ f = lambda: "hello func"
 
 g = lambda x: x+10
 
+h = '"a"'
+
+e = '"double-quoted"'
+
+f = "'single-quoted'"
 
 def pipe(arg):
     args = arg.split()
@@ -31,3 +36,4 @@ def pipe(arg):
     for f in funcs:
         val = f(val)
     return val
+
