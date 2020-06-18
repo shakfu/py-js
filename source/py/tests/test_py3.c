@@ -37,6 +37,11 @@ int main(int argc, char* argv[])
     // python init
     PyObject* main_module = PyImport_AddModule("__main__"); // borrowed reference
     x->p_globals = PyModule_GetDict(main_module); // borrowed reference
+    int err = PyDict_SetItemString(x->p_globals, "__builtins__", PyEval_GetBuiltins());
+    if (err == -1)
+        return err;
+
+
 
     if (argc > 2) {
         if (strcmp(argv[1], "import") == 0)
@@ -66,6 +71,16 @@ void py_handle_error(void)
     }
 }
 
+static void print(PyObject *o)
+{
+    PyObject_Print(o, stdout, Py_PRINT_RAW);
+    printf("\n");
+}
+
+// static void print_repr(PyObject *o)
+// {
+//     PyObject_Print(o, stdout, 0);
+// }
 
 void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
 {
@@ -373,59 +388,188 @@ error:
 }
 
 
+// void py_pipe(t_py* x, char* args)
+// {
+//     PyObject* pipe_pre = NULL;
+//     PyObject* pipe_fun = NULL;    
+//     PyObject* pval = NULL;
+//     PyObject* p_str = NULL;
+
+//     pipe_pre = PyRun_String(
+//         "def pipe(arg):\n"
+//             "\targs = arg.split()\n"
+//             "\tval = eval(args[0])\n"
+//             "\tfuncs = [eval(f) for f in args[1:]]\n"
+//             "\tfor f in funcs:\n"
+//                 "\t\tval = f(val)\n"
+//             "\treturn val\n",
+//             Py_single_input, x->p_globals, x->p_globals);
+
+//     if (pipe_pre == NULL) {
+//         printf("pipe func is NULL");
+//         goto error;
+//     }
+
+//     p_str = PyUnicode_FromString(args);
+//     if (p_str == NULL) {
+//         printf("cstr -> pyunicode conversion failed");
+//         goto error;
+//     }
+
+//     pipe_fun = PyDict_GetItemString(x->p_globals, "pipe");
+//     if (pipe_fun == NULL) {
+//         printf("retrieving pipe func from globals failed");
+//         goto error;
+//     }
+
+//     pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str, NULL);
+
+//     if (pval != NULL) {
+//         py_handle_output(x, pval);
+//         Py_XDECREF(pipe_pre);
+//         Py_XDECREF(p_str);
+//         // Py_XDECREF(pipe_fun);
+//         Py_XDECREF(pval);
+
+//         return;
+//     } else {
+//         goto error;
+//     }
+
+// error:
+//     py_handle_error();
+//     Py_XDECREF(pipe_pre);
+//     Py_XDECREF(p_str);
+//     // Py_XDECREF(pipe_fun);
+//     Py_XDECREF(pval);
+// }
+
 void py_pipe(t_py* x, char* args)
 {
-    PyObject* pipe_pre = NULL;
-    PyObject* pipe_fun = NULL;    
+    PyObject* pargstr = NULL;
+    PyObject* pstr = NULL;
+    PyObject* list = NULL;
+    PyObject* item = NULL;
+    PyObject* funcs = NULL;
+    PyObject* funcs_iter = NULL;
+    PyObject* func = NULL;
     PyObject* pval = NULL;
-    PyObject* p_str = NULL;
 
-    pipe_pre = PyRun_String(
-        "def pipe(arg):\n"
-            "\targs = arg.split()\n"
-            "\tval = eval(args[0])\n"
-            "\tfuncs = [eval(f) for f in args[1:]]\n"
-            "\tfor f in funcs:\n"
-                "\t\tval = f(val)\n"
-            "\treturn val\n",
-            Py_single_input, x->p_globals, x->p_globals);
+    printf("args: %s\n", args);
 
-    if (pipe_pre == NULL) {
-        printf("pipe func is NULL");
+
+    pargstr = PyUnicode_FromString(args);
+    if (pargstr == NULL) {
+        printf("could not convert cstring to py unicode string\n");
         goto error;
     }
 
-    p_str = PyUnicode_FromString(args);
-    if (p_str == NULL) {
-        printf("cstr -> pyunicode conversion failed");
+    list = PyUnicode_Split(pargstr, NULL, -1);
+    if (list == NULL) {
+        printf("could not not split py unicode string into py list\n");
         goto error;
     }
 
-    pipe_fun = PyDict_GetItemString(x->p_globals, "pipe");
-    if (pipe_fun == NULL) {
-        printf("retrieving pipe func from globals failed");
+    Py_ssize_t argc = PyList_Size(list);
+    printf("argc: %ld\n", argc);
+
+    if (argc < 2) {
+        printf("pipe needs at least two arguments.\n");
         goto error;
     }
 
-    pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str, NULL);
+    pstr = PyList_GetItem(list, 0);
+    print(pstr);
+    // print_repr(pstr);
+    if (pstr == NULL) {
+        printf("could not retrieve input value\n");
+        goto error;
+    }
+
+    pval = PyNumber_Long(pstr);
+    if (pval == NULL) {
+        printf("input value is not a int\n");
+        pval = PyNumber_Float(pstr);
+        if (pval == NULL) {
+            printf("input value is a string\n");
+            pval = pstr;
+        } else {
+            printf("input value is a float\n");
+        }
+    } else {
+        printf("input value is an int\n");
+    }
+
+    funcs = PyList_GetSlice(list, 1, argc);
+    print(funcs);
+    if (funcs == NULL || !PyList_Check(funcs)) {
+        printf("could not retrieve function names\n");
+        goto error;
+    }
+    funcs_iter = PyObject_GetIter(funcs);
+    if (funcs_iter == NULL) {
+        goto error;
+    }
+
+    PyObject* builtins = PyDict_GetItemString(x->p_globals, "__builtins__");
+
+    while ((item = PyIter_Next(funcs_iter)) != NULL) {
+        print(item);
+
+        func = PyDict_GetItemWithError(x->p_globals, item);
+        if (func == NULL) {
+            printf("could not retrieve callable name from globals dicts\n");
+            printf("trying to get from builtins\n");
+            if (PyDict_Contains(builtins, item)) {
+                func = PyDict_GetItemWithError(builtins, item);
+            }
+            // if (PyObject_HasAttr(builtins, item)) {
+            //     func = PyObject_GetAttr(builtins, item);
+            else {
+                printf("not a builtin nor in globals\n");
+                goto error;
+            }
+        }
+        if (func == NULL) {
+            printf("unable to to retrieve func without error\n");
+            goto error;
+        }
+
+        print(func);
+
+        if (!PyCallable_Check(func)) {
+            printf("object retrieved is not a callable\n");
+            goto error;
+        }
+
+        // if (!PyFunction_Check(func)) {
+        //     printf("object retrieved is not a function\n");
+        //     goto error;
+        // }
+
+        pval = PyObject_CallFunctionObjArgs(func, pval, NULL);
+        if (pval == NULL) {
+            printf("error occurred returning output from func\n");
+            goto error;
+        }
+        Py_DECREF(func);
+        Py_DECREF(item);
+    }
+    Py_XDECREF(funcs_iter);
 
     if (pval != NULL) {
         py_handle_output(x, pval);
-        Py_XDECREF(pipe_pre);
-        Py_XDECREF(p_str);
-        // Py_XDECREF(pipe_fun);
+        Py_XDECREF(list);
+        Py_XDECREF(funcs);
+        Py_XDECREF(pstr);
         Py_XDECREF(pval);
-
         return;
-    } else {
-        goto error;
     }
 
 error:
     py_handle_error();
-    Py_XDECREF(pipe_pre);
-    Py_XDECREF(p_str);
-    // Py_XDECREF(pipe_fun);
+    Py_XDECREF(list);
+    Py_XDECREF(funcs);
+    Py_XDECREF(pstr);
     Py_XDECREF(pval);
 }
-
