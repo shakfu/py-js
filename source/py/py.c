@@ -608,7 +608,7 @@ void py_handle_output(t_py* x, PyObject* pval)
 /*--------------------------------------------------------------------------*/
 // TRANSLATORS
 
-PyObject* py_atom_to_list(t_py* x, long argc, t_atom* argv, int start_from)
+PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
 {
 
     PyObject* plist = NULL; // python list
@@ -805,7 +805,7 @@ void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    py_argslist = py_atom_to_list(x, argc, argv, 1);
+    py_argslist = py_atoms_to_list(x, argc, argv, 1);
     if (py_argslist == NULL) {
         py_error(x, "atom to py list conversion failed");
         goto error;
@@ -877,7 +877,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_log(x, "varname: %s", varname);
     }
 
-    list = py_atom_to_list(x, argc, argv, 1);
+    list = py_atoms_to_list(x, argc, argv, 1);
     if (list == NULL) {
         py_error(x, "atom to py list conversion failed");
         goto error;
@@ -1033,6 +1033,67 @@ error:
     // fail bang
     outlet_bang(x->p_outlet_middle);
 }
+
+// void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
+// {
+//     PyObject* list = NULL;
+//     PyObject* name = NULL;
+//     PyObject* funcs = NULL;
+//     PyObject* func = NULL;
+//     PyObject* pval = NULL;
+
+//     list = py_atoms_to_list(x, argc, argv, 0);
+//     if (list == NULL) {
+//         goto error;
+//     }
+
+//     pval = PyList_GetItem(list, 0);
+//     if (pval == NULL) {
+//         goto error;
+//     }
+
+//     funcs = PyList_GetSlice(list, 1, argc-1);
+//     if (funcs == NULL) {
+//         goto error;
+//     }
+
+//     while ((name = PyIter_Next(funcs)) != NULL) {
+
+//         func = PyDict_GetItem(x->p_globals, name);
+//         if (func == NULL) {
+//             goto error;
+//         }
+
+//         if (!PyCallable_Check(func)) {
+//             goto error;
+//         }
+
+//         // pval = PyObject_CallFunctionObjArgs(func, pval, NULL);
+//         // if (pval == NULL) {
+//         //     goto error;
+//         // }
+//         Py_DECREF(name);
+//     }
+
+//     if (pval != NULL) {
+//         py_handle_output(x, pval);
+//         Py_XDECREF(list);
+//         Py_XDECREF(funcs);
+//         Py_XDECREF(pval);
+//         outlet_bang(x->p_outlet_right);
+//         return;
+//     } else {
+//         goto error;
+//     }
+
+// error:
+//     py_handle_error(x, "pipe failed");
+//     Py_XDECREF(list);
+//     Py_XDECREF(funcs);
+//     Py_XDECREF(pval);
+//     outlet_bang(x->p_outlet_middle);
+// }
+
 
 /*--------------------------------------------------------------------------*/
 // INTEROBJECT
