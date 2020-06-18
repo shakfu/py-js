@@ -11,6 +11,12 @@ typedef struct _py {
     PyObject* p_globals;
 } t_py;
 
+
+typedef enum _bool {
+    false,
+    true
+} bool;
+
 /* --------------------------------------- */
 // forward func declarations
 
@@ -61,77 +67,167 @@ void py_handle_error(void)
 }
 
 
-void py_handle_output(t_py* x, PyObject* pval)
+void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
 {
-    // handle ints and longs
-    if (PyLong_Check(pval)) {
-        long int_result = PyLong_AsLong(pval);
-        printf("int: %ld\n", int_result);
+    if (pfloat == NULL) {
+        goto error;
     }
 
-    // handle floats and doubles
-    else if (PyFloat_Check(pval)) {
-        float float_result = (float)PyFloat_AsDouble(pval);
+    if (PyFloat_Check(pfloat)) {
+        float float_result = (float)PyFloat_AsDouble(pfloat);
+        if (float_result == -1.0) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+
         printf("float: %f\n", float_result);
     }
 
-    // handle strings
-    else if (PyUnicode_Check(pval)) {
-        const char* unicode_result = PyUnicode_AsUTF8(pval);
-        printf("unicode: %s\n", unicode_result);
+    if (free_now) {
+        Py_XDECREF(pfloat);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(pfloat);
+}
+
+
+void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
+{
+    if (plong == NULL) {
+        goto error;
     }
 
-    // handle lists, tuples and sets
-    else if (PySequence_Check(pval) && !PyUnicode_Check(pval) && 
-            !PyBytes_Check(pval) && !PyByteArray_Check(pval)) {
+    if (PyLong_Check(plong)) {
+        long long_result = PyLong_AsLong(plong);
+        if (long_result == -1) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        printf("long: %ld\n", long_result);
+    }
 
+    if (free_now) {
+        Py_XDECREF(plong);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(plong);
+}
+
+
+void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
+{
+    char buffer[100];
+
+    if (pstring == NULL) {
+        goto error;
+    }
+
+    if (PyUnicode_Check(pstring)) {
+        const char* unicode_result = PyUnicode_AsUTF8(pstring);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        strcpy(buffer, unicode_result);
+        printf("unicode: %s\n", buffer);
+    }
+
+    if (free_now) {
+        Py_XDECREF(pstring);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(pstring);
+}
+
+
+void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
+{
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (PySequence_Check(plist) && !PyUnicode_Check(plist)
+        && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
         PyObject* iter = NULL;
         PyObject* item = NULL;
         int i = 0;
 
-        Py_ssize_t seq_size = PySequence_Length(pval);
-        if (seq_size <= 0) {
-            printf("cannot convert python sequence with zero or less length");
+        Py_ssize_t seq_size = PySequence_Length(plist);
+
+        if (seq_size == 0) {
+            printf("cannot convert py list of length 0 to atoms");
             goto error;
         }
 
-        if ((iter = PyObject_GetIter(pval)) == NULL) {
+        if ((iter = PyObject_GetIter(plist)) == NULL) {
             goto error;
         }
 
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
+                if (long_item == -1) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 printf("%d long: %ld\n", i, long_item);
                 i++;
             }
 
             if PyFloat_Check (item) {
                 float float_item = PyFloat_AsDouble(item);
+                if (float_item == -1.0) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 printf("%d float: %f\n", i, float_item);
                 i++;
             }
 
             if PyUnicode_Check (item) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
+                if (unicode_item == NULL) {
+                    goto error;
+                }
                 printf("%d unicode: %s\n", i, unicode_item);
                 i++;
             }
             Py_DECREF(item);
         }
-        printf("end iter op: %d\n", i);
-    } else {
-        return;
+
     }
 
-    // success cleanup
-    Py_XDECREF(pval);
+    if (free_now) {
+        Py_XDECREF(plist);
+    }
+    return;
 
 error:
     py_handle_error();
-    Py_XDECREF(pval);
+    Py_XDECREF(plist);
+
 }
 
+
+void py_handle_output(t_py* x, PyObject* pval)
+{
+    py_handle_float_output(x, pval, 0);
+    py_handle_long_output(x, pval, 0);
+    py_handle_string_output(x, pval, 0);
+    py_handle_list_output(x, pval, 0);
+
+    // final cleanup
+    Py_XDECREF(pval);
+    return;
+}
 
 //--------------------------------------------------------------------------
 
