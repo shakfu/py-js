@@ -1012,7 +1012,6 @@ void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // STRANGE BUG: removing py_log line causes it it fail!!
     py_log(x, "running pipe(arg)");
-    
     pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str);
     // py_log(x, "completed pipe(arg)");
 
