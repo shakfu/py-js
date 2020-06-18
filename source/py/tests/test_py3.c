@@ -542,11 +542,6 @@ void py_pipe(t_py* x, char* args)
             goto error;
         }
 
-        // if (!PyFunction_Check(func)) {
-        //     printf("object retrieved is not a function\n");
-        //     goto error;
-        // }
-
         pval = PyObject_CallFunctionObjArgs(func, pval, NULL);
         if (pval == NULL) {
             printf("error occurred returning output from func\n");
