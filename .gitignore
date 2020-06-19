@@ -1,6 +1,8 @@
 # dirs to exclude
 .DS_Store
-
+__pycache__
+.pytest_cache
+*.pyc
 externals/*.mxo
 extensions/*.mxo
 leoenv

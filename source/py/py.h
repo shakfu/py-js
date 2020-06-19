@@ -91,10 +91,10 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
-void py_handle_float_output(t_py* x, PyObject* pval, bool free_now);
-void py_handle_long_output(t_py* x, PyObject* pval, bool free_now);
-void py_handle_string_output(t_py* x, PyObject* pval, bool free_now);
-void py_handle_list_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_float_output(t_py* x, PyObject* pval);
+void py_handle_long_output(t_py* x, PyObject* pval);
+void py_handle_string_output(t_py* x, PyObject* pval);
+void py_handle_list_output(t_py* x, PyObject* pval);
 void py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
