@@ -20,6 +20,9 @@
 <v t="sta.20200602110822.1"><vh>py</vh>
 <v t="sta.20200612044656.1"><vh>@chapter not-included</vh>
 <v t="sta.20200612045651.1"><vh>prototypes</vh></v>
+<v t="sta.20200619110720.1"><vh>docs</vh>
+<v t="sta.20200618151814.1"><vh>rom README</vh></v>
+</v>
 <v t="sta.20200612043307.1"><vh>not-working</vh>
 <v t="sta.20200612055834.1"><vh>api</vh>
 <v t="sta.20200616215024.1"><vh>api.pyx</vh></v>
@@ -29,7 +32,6 @@
 <v t="sta.20200610222640.1"><vh>t_atom* py_list_to_atom</vh></v>
 <v t="sta.20200610164212.1"><vh>void py_list_to_atom2</vh></v>
 <v t="sta.20200610104706.1"><vh>void py_handle_list_output2</vh></v>
-<v t="sta.20200618151814.1"><vh>excluded parts from README</vh></v>
 </v>
 <v t="sta.20200612044825.1"><vh>working</vh>
 <v t="sta.20200612045044.1"><vh>api</vh>
@@ -44,6 +46,7 @@
 <v t="sta.20200610070057.1"><vh>void py_send_from_seq</vh></v>
 <v t="sta.20200612114958.1"><vh>float pfloat_to_cfloat</vh></v>
 <v t="sta.20200612115000.1"><vh>long plong_to_clong</vh></v>
+<v t="sta.20200619105805.1"><vh>void py_pipe_c</vh></v>
 <v t="sta.20200612065729.1"><vh>files</vh>
 <v t="sta.20200612065752.1"><vh>@@auto globex.h</vh></v>
 <v t="sta.20200612065639.1"><vh>@@auto globex.c</vh>
@@ -190,6 +193,7 @@
 <v t="sta.20200602120251.25"><vh>void py_call</vh></v>
 <v t="sta.20200602120251.24"><vh>void py_assign</vh></v>
 <v t="sta.20200605120324.1"><vh>void py_code</vh></v>
+<v t="sta.20200619105724.1"><vh>void py_pipe</vh></v>
 </v>
 <v t="sta.20200606073716.1"><vh>interobject</vh>
 <v t="sta.20200602120251.11"><vh>void py_scan</vh></v>
@@ -606,7 +610,7 @@ error:
         py_log(x, "varname: %s", varname);
     }
 
-    list = py_atom_to_list(x, argc, argv, 1);
+    list = py_atoms_to_list(x, argc, argv, 1);
     if (list == NULL) {
         py_error(x, "atom to py list conversion failed");
         goto error;
@@ -664,7 +668,7 @@ error:
         goto error;
     }
 
-    py_argslist = py_atom_to_list(x, argc, argv, 1);
+    py_argslist = py_atoms_to_list(x, argc, argv, 1);
     if (py_argslist == NULL) {
         py_error(x, "atom to py list conversion failed");
         goto error;
@@ -779,9 +783,9 @@ error:
     // core extra
     class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
-    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);    
+    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
     class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,  0);
-    
+
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
     class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
@@ -1163,10 +1167,10 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
-void py_handle_float_output(t_py* x, PyObject* pval, bool free_now);
-void py_handle_long_output(t_py* x, PyObject* pval, bool free_now);
-void py_handle_string_output(t_py* x, PyObject* pval, bool free_now);
-void py_handle_list_output(t_py* x, PyObject* pval, bool free_now);
+void py_handle_float_output(t_py* x, PyObject* pval);
+void py_handle_long_output(t_py* x, PyObject* pval);
+void py_handle_string_output(t_py* x, PyObject* pval);
+void py_handle_list_output(t_py* x, PyObject* pval);
 void py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
@@ -1180,6 +1184,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
+// void py_pipe2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* informational */
 void py_count(t_py* x);
@@ -1631,7 +1636,13 @@ not obvious from context.
 
 If False, does not do the above, useful if you don't use clones
 and don't want the visual clutter of repeated class / file names.</t>
-<t tx="sta.20200602165810.1"></t>
+<t tx="sta.20200602165810.1">@doc
+
+This is a leo project file used capture notes and to restructure the project with relative ease.
+
+It is not necessary to use this to build or develop in the project.
+
+@</t>
 <t tx="sta.20200602170210.1">
 /* python */
 #define PY_SSIZE_T_CLEAN
@@ -1648,6 +1659,12 @@ and don't want the visual clutter of repeated class / file names.</t>
 typedef struct _py {
     PyObject* p_globals;
 } t_py;
+
+
+typedef enum _bool {
+    false,
+    true
+} bool;
 
 /* --------------------------------------- */
 // forward func declarations
@@ -1670,6 +1687,11 @@ void py_pipe(t_py* x, char* args);
     // python init
     PyObject* main_module = PyImport_AddModule("__main__"); // borrowed reference
     x-&gt;p_globals = PyModule_GetDict(main_module); // borrowed reference
+    int err = PyDict_SetItemString(x-&gt;p_globals, "__builtins__", PyEval_GetBuiltins());
+    if (err == -1)
+        return err;
+
+
 
     if (argc &gt; 2) {
         if (strcmp(argv[1], "import") == 0)
@@ -1699,78 +1721,178 @@ void py_handle_error(void)
     }
 }
 
-
-void py_handle_output(t_py* x, PyObject* pval)
+static void print(PyObject *o)
 {
-    // handle ints and longs
-    if (PyLong_Check(pval)) {
-        long int_result = PyLong_AsLong(pval);
-        printf("int: %ld\n", int_result);
+    PyObject_Print(o, stdout, Py_PRINT_RAW);
+    printf("\n");
+}
+
+// static void print_repr(PyObject *o)
+// {
+//     PyObject_Print(o, stdout, 0);
+// }
+
+void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
+{
+    if (pfloat == NULL) {
+        goto error;
     }
 
-    // handle floats and doubles
-    else if (PyFloat_Check(pval)) {
-        float float_result = (float)PyFloat_AsDouble(pval);
+    if (PyFloat_Check(pfloat)) {
+        float float_result = (float)PyFloat_AsDouble(pfloat);
+        if (float_result == -1.0) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+
         printf("float: %f\n", float_result);
     }
 
-    // handle strings
-    else if (PyUnicode_Check(pval)) {
-        const char* unicode_result = PyUnicode_AsUTF8(pval);
-        printf("unicode: %s\n", unicode_result);
+    if (free_now) {
+        Py_XDECREF(pfloat);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(pfloat);
+}
+
+
+void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
+{
+    if (plong == NULL) {
+        goto error;
     }
 
-    // handle lists, tuples and sets
-    else if (PySequence_Check(pval) &amp;&amp; !PyUnicode_Check(pval) &amp;&amp; 
-            !PyBytes_Check(pval) &amp;&amp; !PyByteArray_Check(pval)) {
+    if (PyLong_Check(plong)) {
+        long long_result = PyLong_AsLong(plong);
+        if (long_result == -1) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        printf("long: %ld\n", long_result);
+    }
 
+    if (free_now) {
+        Py_XDECREF(plong);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(plong);
+}
+
+
+void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
+{
+    char buffer[100];
+
+    if (pstring == NULL) {
+        goto error;
+    }
+
+    if (PyUnicode_Check(pstring)) {
+        const char* unicode_result = PyUnicode_AsUTF8(pstring);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        strcpy(buffer, unicode_result);
+        printf("unicode: %s\n", buffer);
+    }
+
+    if (free_now) {
+        Py_XDECREF(pstring);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(pstring);
+}
+
+
+void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
+{
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (PySequence_Check(plist) &amp;&amp; !PyUnicode_Check(plist)
+        &amp;&amp; !PyBytes_Check(plist) &amp;&amp; !PyByteArray_Check(plist)) {
         PyObject* iter = NULL;
         PyObject* item = NULL;
         int i = 0;
 
-        Py_ssize_t seq_size = PySequence_Length(pval);
-        if (seq_size &lt;= 0) {
-            printf("cannot convert python sequence with zero or less length");
+        Py_ssize_t seq_size = PySequence_Length(plist);
+
+        if (seq_size == 0) {
+            printf("cannot convert py list of length 0 to atoms");
             goto error;
         }
 
-        if ((iter = PyObject_GetIter(pval)) == NULL) {
+        if ((iter = PyObject_GetIter(plist)) == NULL) {
             goto error;
         }
 
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
+                if (long_item == -1) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 printf("%d long: %ld\n", i, long_item);
                 i++;
             }
 
             if PyFloat_Check (item) {
                 float float_item = PyFloat_AsDouble(item);
+                if (float_item == -1.0) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 printf("%d float: %f\n", i, float_item);
                 i++;
             }
 
             if PyUnicode_Check (item) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
+                if (unicode_item == NULL) {
+                    goto error;
+                }
                 printf("%d unicode: %s\n", i, unicode_item);
                 i++;
             }
             Py_DECREF(item);
         }
-        printf("end iter op: %d\n", i);
-    } else {
-        return;
+
     }
 
-    // success cleanup
-    Py_XDECREF(pval);
+    if (free_now) {
+        Py_XDECREF(plist);
+    }
+    return;
 
 error:
     py_handle_error();
-    Py_XDECREF(pval);
+    Py_XDECREF(plist);
+
 }
 
+
+void py_handle_output(t_py* x, PyObject* pval)
+{
+    py_handle_float_output(x, pval, 0);
+    py_handle_long_output(x, pval, 0);
+    py_handle_string_output(x, pval, 0);
+    py_handle_list_output(x, pval, 0);
+
+    // final cleanup
+    Py_XDECREF(pval);
+    return;
+}
 
 //--------------------------------------------------------------------------
 
@@ -1921,14 +2043,140 @@ error:
 }
 
 
+
+
 void py_pipe(t_py* x, char* args)
 {
-    PyObject* pipe_pre = NULL;
+    PyObject* pargstr = NULL;
+    PyObject* pstr = NULL;
+    PyObject* list = NULL;
+    PyObject* item = NULL;
+    PyObject* funcs = NULL;
+    PyObject* funcs_iter = NULL;
+    PyObject* func = NULL;
+    PyObject* pval = NULL;
+
+    printf("args: %s\n", args);
+
+
+    pargstr = PyUnicode_FromString(args);
+    if (pargstr == NULL) {
+        printf("could not convert cstring to py unicode string\n");
+        goto error;
+    }
+
+    list = PyUnicode_Split(pargstr, NULL, -1);
+    if (list == NULL) {
+        printf("could not not split py unicode string into py list\n");
+        goto error;
+    }
+
+    Py_ssize_t argc = PyList_Size(list);
+    printf("argc: %ld\n", argc);
+
+    if (argc &lt; 2) {
+        printf("pipe needs at least two arguments.\n");
+        goto error;
+    }
+
+    pstr = PyList_GetItem(list, 0);
+    print(pstr);
+    // print_repr(pstr);
+    if (pstr == NULL) {
+        printf("could not retrieve input value\n");
+        goto error;
+    }
+
+    pval = PyNumber_Long(pstr);
+    if (pval == NULL) {
+        printf("input value is not a int\n");
+        pval = PyNumber_Float(pstr);
+        if (pval == NULL) {
+            printf("input value is a string\n");
+            pval = pstr;
+        } else {
+            printf("input value is a float\n");
+        }
+    } else {
+        printf("input value is an int\n");
+    }
+
+    funcs = PyList_GetSlice(list, 1, argc);
+    print(funcs);
+    if (funcs == NULL || !PyList_Check(funcs)) {
+        printf("could not retrieve function names\n");
+        goto error;
+    }
+    funcs_iter = PyObject_GetIter(funcs);
+    if (funcs_iter == NULL) {
+        goto error;
+    }
+
+    PyObject* builtins = PyDict_GetItemString(x-&gt;p_globals, "__builtins__");
+
+    while ((item = PyIter_Next(funcs_iter)) != NULL) {
+        print(item);
+
+        func = PyDict_GetItemWithError(x-&gt;p_globals, item);
+        if (func == NULL) {
+            printf("could not retrieve callable name from globals dicts\n");
+            printf("trying to get from builtins\n");
+            if (PyDict_Contains(builtins, item)) {
+                func = PyDict_GetItemWithError(builtins, item);
+            }
+            else {
+                printf("not a builtin nor in globals\n");
+                goto error;
+            }
+        }
+        if (func == NULL) {
+            printf("unable to to retrieve func without error\n");
+            goto error;
+        }
+
+        print(func);
+
+        if (!PyCallable_Check(func)) {
+            printf("object retrieved is not a callable\n");
+            goto error;
+        }
+
+        pval = PyObject_CallFunctionObjArgs(func, pval, NULL);
+        if (pval == NULL) {
+            printf("error occurred returning output from func\n");
+            goto error;
+        }
+        Py_DECREF(func);
+        Py_DECREF(item);
+    }
+    Py_XDECREF(funcs_iter);
+
+    if (pval != NULL) {
+        py_handle_output(x, pval);
+        Py_XDECREF(list);
+        Py_XDECREF(funcs);
+        Py_XDECREF(pstr);
+        Py_XDECREF(pval);
+        return;
+    }
+
+error:
+    py_handle_error();
+    Py_XDECREF(list);
+    Py_XDECREF(funcs);
+    Py_XDECREF(pstr);
+    Py_XDECREF(pval);
+}
+
+
+void py_pipe2(t_py* x, char* args)
+{
+    PyObject* pipe_co = NULL;
     PyObject* pipe_fun = NULL;    
     PyObject* pval = NULL;
     PyObject* p_str = NULL;
 
-    pipe_pre = PyRun_String(
+    pipe_co = PyRun_String(
         "def pipe(arg):\n"
             "\targs = arg.split()\n"
             "\tval = eval(args[0])\n"
@@ -1938,7 +2186,7 @@ void py_pipe(t_py* x, char* args)
             "\treturn val\n",
             Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
 
-    if (pipe_pre == NULL) {
+    if (pipe_co == NULL) {
         printf("pipe func is NULL");
         goto error;
     }
@@ -1959,7 +2207,7 @@ void py_pipe(t_py* x, char* args)
 
     if (pval != NULL) {
         py_handle_output(x, pval);
-        Py_XDECREF(pipe_pre);
+        Py_XDECREF(pipe_co);
         Py_XDECREF(p_str);
         // Py_XDECREF(pipe_fun);
         Py_XDECREF(pval);
@@ -1971,12 +2219,11 @@ void py_pipe(t_py* x, char* args)
 
 error:
     py_handle_error();
-    Py_XDECREF(pipe_pre);
+    Py_XDECREF(pipe_co);
     Py_XDECREF(p_str);
     // Py_XDECREF(pipe_fun);
     Py_XDECREF(pval);
 }
-
 </t>
 <t tx="sta.20200602170255.1">
 /* python */
@@ -3138,103 +3385,46 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
-
-void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    long textsize = 0;
-    char* text = NULL;
-    t_max_err err;
-    PyObject* pipe_pre = NULL;
-    PyObject* pipe_fun = NULL;    
-    PyObject* pval = NULL;
-    PyObject* p_str = NULL;
-
-
-    err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err != MAX_ERR_NONE || !textsize || !text) {
-        py_error(x, "atom -&gt; text conversion failed");
-        goto error;
-    }
-    // py_log(x, "text: '%s'", text);
-
-    pipe_pre = PyRun_String(
-        "def pipe(arg):\n"
-            "\targs = arg.split()\n"
-            "\tval = eval(args[0])\n"
-            "\tfuncs = [eval(f) for f in args[1:]]\n"
-            "\tfor f in funcs:\n"
-                "\t\tval = f(val)\n"
-            "\treturn val\n",
-            Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
-
-    if (pipe_pre == NULL) {
-        py_error(x, "pipe func is NULL");
-        goto error;
-    }
-    // py_log(x, "pipe func created");
-
-    p_str = PyUnicode_FromString(text);
-    if (p_str == NULL) {
-        py_error(x, "cstr -&gt; pyunicode conversion failed");
-        goto error;
-    }
-
-    // py_log(x, "freeing text");
-    sysmem_freeptr(text);
-
-    pipe_fun = PyDict_GetItemString(x-&gt;p_globals, "pipe");
-    if (pipe_fun == NULL) {
-        py_error(x, "retrieving pipe func from globals failed");
-        goto error;
-    }
-    // Py_INCREF(pipe_fun);
-
-    pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str, NULL);
-
-    if (pval != NULL) {
-        py_handle_output(x, pval);
-        Py_XDECREF(pipe_pre);
-        Py_XDECREF(p_str);
-        // Py_XDECREF(pipe_fun);
-        Py_XDECREF(pval);
-        outlet_bang(x-&gt;p_outlet_right);
-        return;
-    } else {
-        goto error;
-    }
-
-error:
-    py_handle_error(x, "pipe failed");
-    Py_XDECREF(pipe_pre);
-    Py_XDECREF(p_str);
-    // Py_XDECREF(pipe_fun);
-    Py_XDECREF(pval);
-    // fail bang
-    outlet_bang(x-&gt;p_outlet_middle);
-}
-
-/*--------------------------------------------------------------------------*/
-// INTEROBJECT
-
 </t>
 <t tx="sta.20200606044751.1">void py_handle_output(t_py* x, PyObject* pval)
 {
-    // &lt;python type&gt; -&gt; left outlet output handlers
-    // error handling is already provided in each handler
-    py_handle_float_output(x, pval, 0);
-    py_handle_long_output(x, pval, 0);
-    py_handle_string_output(x, pval, 0);
-    py_handle_list_output(x, pval, 0);
 
-    // final cleanup
-    Py_XDECREF(pval);
-    return;
+    if (pval == NULL) {
+        py_error(x, "cannot handle NULL value");
+        return;
+    }
+
+    if (PyFloat_Check(pval)) {
+        py_handle_float_output(x, pval);
+        return;
+    }
+
+    else if (PyLong_Check(pval)) {
+        py_handle_long_output(x, pval);
+        return;
+    }
+
+    else if (PyUnicode_Check(pval)) {
+        py_handle_string_output(x, pval);
+        return;
+    }
+
+    else if (PySequence_Check(pval) &amp;&amp; !PyBytes_Check(pval) &amp;&amp; 
+            !PyByteArray_Check(pval)) {
+        py_handle_list_output(x, pval);
+        return;
+    }
+
+    else {
+        py_error(x, "cannot handle his type of value");
+        return;
+    }
 }
 
-
 </t>
-<t tx="sta.20200606073716.1"></t>
+<t tx="sta.20200606073716.1">/*--------------------------------------------------------------------------*/
+// INTEROBJECT
+</t>
 <t tx="sta.20200607084251.1">void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
 
@@ -3597,7 +3787,7 @@ error:
     return;
 }
 </t>
-<t tx="sta.20200610100158.1">PyObject* py_atom_to_list(t_py* x, long argc, t_atom* argv, int start_from)
+<t tx="sta.20200610100158.1">PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
 {
 
     PyObject* plist = NULL; // python list
@@ -3655,7 +3845,7 @@ error:
 // TRANSLATORS
 
 </t>
-<t tx="sta.20200610104609.1">void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
+<t tx="sta.20200610104609.1">void py_handle_long_output(t_py* x, PyObject* plong)
 {
     if (plong == NULL) {
         goto error;
@@ -3671,9 +3861,7 @@ error:
         outlet_bang(x-&gt;p_outlet_right);
     }
 
-    if (free_now) {
-        Py_XDECREF(plong);
-    }
+    Py_XDECREF(plong);
     return;
 
 error:
@@ -3707,7 +3895,7 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
     return;
 }
 </t>
-<t tx="sta.20200610105537.1">void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
+<t tx="sta.20200610105537.1">void py_handle_string_output(t_py* x, PyObject* pstring)
 {
     if (pstring == NULL) {
         goto error;
@@ -3722,9 +3910,7 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
         outlet_bang(x-&gt;p_outlet_right);
     }
 
-    if (free_now) {
-        Py_XDECREF(pstring);
-    }
+    Py_XDECREF(pstring);
     return;
 
 error:
@@ -3733,7 +3919,7 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
-
+void py_handle_list_output(t_py* x, PyObject* plist)
 </t>
 <t tx="sta.20200610164212.1">
 void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv)
@@ -3787,7 +3973,7 @@ error:
     Py_XDECREF(plist);
 }
 </t>
-<t tx="sta.20200610181828.1">void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
+<t tx="sta.20200610181828.1">void py_handle_float_output(t_py* x, PyObject* pfloat)
 {
     if (pfloat == NULL) {
         goto error;
@@ -3803,10 +3989,7 @@ error:
         outlet_float(x-&gt;p_outlet_left, float_result);
         outlet_bang(x-&gt;p_outlet_right);
     }
-
-    if (free_now) {
-        Py_XDECREF(pfloat);
-    }
+    Py_XDECREF(pfloat);
     return;
 
 error:
@@ -3889,8 +4072,7 @@ error:
 }
 
 </t>
-<t tx="sta.20200610231913.1">void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
-{
+<t tx="sta.20200610231913.1">{
     if (plist == NULL) {
         goto error;
     }
@@ -3971,9 +4153,7 @@ error:
         }
     }
 
-    if (free_now) {
-        Py_XDECREF(plist);
-    }
+    Py_XDECREF(plist);
     return;
 
 error:
@@ -3982,6 +4162,20 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
+
+// void py_handle_output(t_py* x, PyObject* pval)
+// {
+//     // &lt;python type&gt; -&gt; left outlet output handlers
+//     // error handling is already provided in each handler
+//     py_handle_float_output(x, pval, 0);
+//     py_handle_long_output(x, pval, 0);
+//     py_handle_string_output(x, pval, 0);
+//     py_handle_list_output(x, pval, 0);
+
+//     // final cleanup
+//     Py_XDECREF(pval);
+//     return;
+// }
 
 </t>
 <t tx="sta.20200611235620.1">t_hashtab* get_global_registry(void) { return py_global_registry; }
@@ -5023,5 +5217,187 @@ cdef send3(self, str name, str msg, list args):
 ```
 
 </t>
+<t tx="sta.20200619105724.1">void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    t_max_err err;
+    PyObject* pipe_pre = NULL;
+    PyObject* pipe_fun = NULL;    
+    PyObject* pval = NULL;
+    PyObject* pstr = NULL;
+
+    err = atom_gettext(argc, argv, &amp;textsize, &amp;text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err != MAX_ERR_NONE || !textsize || !text) {
+        py_error(x, "atom -&gt; text conversion failed");
+        goto error;
+    }
+
+    pipe_pre = PyRun_String(
+        "def __py_maxmsp_pipe(arg):\n"
+            "\targs = arg.split()\n"
+            "\tval = eval(args[0])\n"
+            "\tfuncs = [eval(f) for f in args[1:]]\n"
+            "\tfor f in funcs:\n"
+                "\t\tval = f(val)\n"
+            "\treturn val\n",
+            Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+
+    if (pipe_pre == NULL) {
+        py_error(x, "pipe func is NULL");
+        goto error;
+    }
+    // py_log(x, "pipe func created");
+
+    pstr = PyUnicode_FromString(text);
+    if (pstr == NULL) {
+        py_error(x, "cstr -&gt; pyunicode conversion failed");
+        goto error;
+    }
+
+    sysmem_freeptr(text);
+
+    pipe_fun = PyDict_GetItemString(x-&gt;p_globals, "__py_maxmsp_pipe");
+    if (pipe_fun == NULL) {
+        py_error(x, "retrieving pipe func from globals failed");
+        goto error;
+    }
+
+    pval = PyObject_CallFunctionObjArgs(pipe_fun, pstr, NULL);
+
+    if (pval != NULL) {
+
+        if (!PyUnicode_Check(pval)) {
+            py_handle_output(x, pval); // this decrefs pval
+        } else {
+            // special case strings, which will cause crash if handled
+            // out of this methods's scope. (huge PITA to debug!)
+            const char* unicode_result = PyUnicode_AsUTF8(pval);
+            if (unicode_result == NULL) {
+                goto error;
+            }
+            outlet_anything(x-&gt;p_outlet_left, gensym(unicode_result), 0, NIL);
+            outlet_bang(x-&gt;p_outlet_right);
+            Py_XDECREF(pval);
+        }
+
+        Py_XDECREF(pipe_pre);
+        Py_XDECREF(pstr);
+        outlet_bang(x-&gt;p_outlet_right);
+        return;
+    } else {
+        goto error;
+    }
+
+error:
+    py_handle_error(x, "pipe failed");
+    Py_XDECREF(pipe_pre);
+    Py_XDECREF(pstr);
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x-&gt;p_outlet_middle);
+}
+</t>
+<t tx="sta.20200619105805.1">void py_pipe_c(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    // working but incomplete implementation which
+    // can't handle dotted ids in globals
+    // abandoned for current py version
+    PyObject* list = NULL;
+    PyObject* item = NULL;
+    PyObject* funcs = NULL;
+    PyObject* funcs_iter = NULL;
+    PyObject* func = NULL;
+    PyObject* pval = NULL;
+
+    list = py_atoms_to_list(x, argc, argv, 0);
+    if (list == NULL) {
+        goto error;
+    }
+
+    if (argc &lt; 2) {
+        py_error(x, "pipe needs at least two arguments.\n");
+        goto error;
+    }
+
+    pval = PyList_GetItem(list, 0);
+    if (pval == NULL) {
+        py_error(x, "could not retrieve input value\n");
+        goto error;
+    }
+
+    funcs = PyList_GetSlice(list, 1, argc);
+    if (funcs == NULL || !PyList_Check(funcs)) {
+        py_error(x, "could not retrieve function names\n");
+        goto error;
+    }
+
+    funcs_iter = PyObject_GetIter(funcs);
+    if (funcs_iter == NULL) {
+        goto error;
+    }
+
+    PyObject* builtins = PyDict_GetItemString(x-&gt;p_globals, "__builtins__");
+
+    while ((item = PyIter_Next(funcs_iter)) != NULL) {
+
+        func = PyDict_GetItemWithError(x-&gt;p_globals, item);
+        if (func == NULL) {
+            if (!PyDict_Contains(builtins, item)) {
+                py_error(x, "not a builtin nor in globals\n");
+                goto error;
+            }
+            else {
+                func = PyDict_GetItemWithError(builtins, item);
+                if (func == NULL) {
+                    py_error(x, "unable to to retrieve func without error\n");
+                    goto error;
+                }
+            }
+        }
+
+        if (!PyCallable_Check(func)) {
+            py_error(x, "object retrieved is not a callable\n");
+            goto error;
+        }
+
+        pval = PyObject_CallFunctionObjArgs(func, pval, NULL);
+        if (pval == NULL) {
+            py_error(x, "error occurred returning output from func\n");
+            goto error;
+        }
+        Py_DECREF(func);
+        Py_DECREF(item);
+    }
+    Py_XDECREF(funcs_iter);
+
+    if (pval != NULL) {
+        if (!PyUnicode_Check(pval)) {
+            py_handle_output(x, pval); // this decrefs pval
+        } else {
+            // special case strings, which will cause crash if handle out
+            // of this methods's scope.
+            const char* unicode_result = PyUnicode_AsUTF8(pval);
+            if (unicode_result == NULL) {
+                goto error;
+            }
+            outlet_anything(x-&gt;p_outlet_left, gensym(unicode_result), 0, NIL);
+            outlet_bang(x-&gt;p_outlet_right);
+            Py_XDECREF(pval);
+        }
+        Py_XDECREF(list);
+        Py_XDECREF(funcs);
+        return;
+    }
+
+error:
+    py_handle_error(x, "pipe failed");
+    Py_XDECREF(list);
+    Py_XDECREF(funcs);
+    Py_XDECREF(pval);
+}
+</t>
+<t tx="sta.20200619110720.1"></t>
 </tnodes>
 </leo_file>

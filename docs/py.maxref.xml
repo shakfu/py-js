@@ -29,7 +29,7 @@
 			<digest>Right outlet for bang notification when an operation succeeds.</digest>
 		</outlet>
 		
-		<outlet id="1" type="anything">
+		<outlet id="1" type="bang">
 			<digest>Middle outlet for bang notification when an operation fails</digest>
 		</outlet>
 
@@ -79,6 +79,7 @@
 
 	<!--MESSAGES-->
 	<methodlist>
+
 		<method name="import">
 			<arglist>
 				<arg name="module" optional="0" type="symbol" />
@@ -88,6 +89,7 @@
 				Can import standard builtin modules, a custom builtin 'api' to access the max api from python or any modules available on python's sys.path.
 			</description>
 		</method>
+
 		<method name="eval">
 			<arglist>
 				<arg name="expression" optional="0" type="symbol" />
@@ -96,7 +98,8 @@
 			<description>
 				The <a>expression</a> is evaluated in the context of the <o>py</o> object namespace and outputs results to the left outlet and a bang from the right outlet to signal end of evaluation.
 			</description>
-		</method>	
+		</method>
+
 		<method name="exec">
 			<arglist>
 				<arg name="statement" optional="0" type="symbol" />
@@ -106,6 +109,7 @@
 				Can modify and inject new code and data into the namespace.
 			</description>
 		</method>
+
 		<method name="execfile">
 			<arglist>
 				<arg name="filepath" optional="0" type="symbol" />
@@ -115,6 +119,7 @@
 				Can modify and inject new code and data into the namespace.
 			</description>
 		</method>
+
 		<method name="assign">
 			<arglist>
 				<arg name="varname" optional="0" type="symbol" />
@@ -125,6 +130,7 @@
 				Used for sending max data into the <o>py</o> instance's namespace, so it can be used by python code. 
 			</description>
 		</method>
+
 		<method name="call">
 			<arglist>
 				<arg name="identifier" optional="0" type="symbol" />
@@ -135,6 +141,18 @@
 				Checks whether first argument is a symbol, if it exists in <o>py</o> object's namespace, if is a callable, and then using the following arguments as arguments to the callable and outputs the result.
 			</description>
 		</method>
+
+		<method name="pipe">
+			<arglist>
+				<arg name="value or variable" optional="0" type="atom" />
+				<arg name="funcs" optional="0" type="python callables" />
+			</arglist>
+			<digest>Pipes a value or python variable through a chain of python callables and outputs result</digest>
+			<description>
+				Like a <m>call</m> in reverse, pipes a max value or python variable through a chain of python callables and outputs results in left outlet.
+			</description>
+		</method>
+
 		<method name="code">
 			<arglist>
 				<arg name="identifier" optional="0" type="symbol" />
@@ -144,6 +162,7 @@
 				Attempts to compile the message body, if it succeeds tries to <m>eval</m> it and return the results, or <m>exec</m> it and return.
 			</description>
 		</method>
+
 		<method name="scan">
 			<arglist/>
 			<digest>Scan the parent patcher for scripting names</digest>
@@ -151,6 +170,7 @@
 				Scans the parent patcher for scripting names and stores them in an internal registry that is accessible by all <o>py</o> objects.
 			</description>
 		</method>
+
 		<method name="send">
 			<arglist>
 				<arg name="object name" optional="0" type="symbol" />
@@ -161,6 +181,7 @@
 				Similar to <o>thispatcher</o> message send, the <m>send</m>message following by the objct name and the body of the message allows the <o>py</o> object to call the method of any object in the parent patcher (including subpatchers).
 			</description>
 		</method>
+
 		<method name="read">
 			<arglist>
 				<arg name="filepath" optional="0" type="symbol" />
@@ -170,6 +191,7 @@
 				Loads a python file into the code-editor.
 			</description>
 		</method>
+
 		<method name="load">
 			<arglist>
 				<arg name="filepath" optional="0" type="symbol" />
@@ -178,7 +200,8 @@
 			<description>
 				Loads and executes a file (like a 'read' msg followed by 'execfile' on the same file.)
 			</description>
-		</method>	
+		</method>
+
 	</methodlist>
 
 	<!--SEEALSO-->
