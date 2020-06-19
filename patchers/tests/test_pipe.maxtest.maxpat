@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 142.0, 231.0, 640.0, 480.0 ],
+		"rect" : [ 154.0, 203.0, 640.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,18 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-12",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 272.0, 130.0, 101.0, 22.0 ],
+					"text" : "pipe 5 range sum"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-13",
 					"maxclass" : "button",
@@ -70,8 +82,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 272.0, 334.0, 210.0, 22.0 ],
-					"text" : "test.assert py_eval_works @tags eval"
+					"patching_rect" : [ 272.0, 334.0, 173.0, 22.0 ],
+					"text" : "test.assert py_pipe @tags pipe"
 				}
 
 			}
@@ -93,22 +105,22 @@
 					"id" : "obj-7",
 					"maxclass" : "newobj",
 					"numinlets" : 2,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 272.0, 229.0, 117.0, 22.0 ],
-					"text" : "zl.compare 4 3 2 1 0"
+					"numoutlets" : 1,
+					"outlettype" : [ "int" ],
+					"patching_rect" : [ 272.0, 229.0, 39.0, 22.0 ],
+					"text" : "== 10"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-6",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 272.0, 128.0, 157.0, 22.0 ],
-					"text" : "eval list(reversed(range(5)))"
+					"id" : "obj-5",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "bang", "bang" ],
+					"patching_rect" : [ 272.0, 77.0, 32.0, 22.0 ],
+					"text" : "t b b"
 				}
 
 			}
@@ -119,7 +131,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 272.0, 47.0, 58.0, 22.0 ],
+					"patching_rect" : [ 272.0, 43.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -140,7 +152,7 @@
 					}
 ,
 					"text" : "py",
-					"varname" : "__main__"
+					"varname" : "u596002066"
 				}
 
 			}
@@ -154,6 +166,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-12", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-11", 0 ],
 					"source" : [ "obj-13", 0 ]
 				}
@@ -161,15 +180,15 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-6", 0 ],
+					"destination" : [ "obj-5", 0 ],
 					"source" : [ "obj-2", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-6", 0 ]
+					"destination" : [ "obj-12", 0 ],
+					"source" : [ "obj-5", 0 ]
 				}
 
 			}

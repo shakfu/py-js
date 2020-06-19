@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 142.0, 231.0, 640.0, 480.0 ],
+		"rect" : [ 532.0, 142.0, 557.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,18 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-12",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 111.0, 135.0, 160.0, 22.0 ],
+					"text" : "pipe 'hellow' string.capwords"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-13",
 					"maxclass" : "button",
@@ -70,8 +82,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 272.0, 334.0, 210.0, 22.0 ],
-					"text" : "test.assert py_eval_works @tags eval"
+					"patching_rect" : [ 272.0, 334.0, 242.0, 22.0 ],
+					"text" : "test.assert py_pipe_string @tags pipe string"
 				}
 
 			}
@@ -93,22 +105,34 @@
 					"id" : "obj-7",
 					"maxclass" : "newobj",
 					"numinlets" : 2,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 272.0, 229.0, 117.0, 22.0 ],
-					"text" : "zl.compare 4 3 2 1 0"
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 272.0, 229.0, 139.0, 22.0 ],
+					"text" : "test.string.equals Hellow"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-6",
+					"id" : "obj-5",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "bang", "bang" ],
+					"patching_rect" : [ 291.0, 77.0, 32.0, 22.0 ],
+					"text" : "t b b"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-4",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 272.0, 128.0, 157.0, 22.0 ],
-					"text" : "eval list(reversed(range(5)))"
+					"patching_rect" : [ 342.0, 135.0, 75.0, 22.0 ],
+					"text" : "import string"
 				}
 
 			}
@@ -119,7 +143,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 272.0, 47.0, 58.0, 22.0 ],
+					"patching_rect" : [ 291.0, 43.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -140,7 +164,7 @@
 					}
 ,
 					"text" : "py",
-					"varname" : "__main__"
+					"varname" : "u135006697"
 				}
 
 			}
@@ -154,6 +178,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-12", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-11", 0 ],
 					"source" : [ "obj-13", 0 ]
 				}
@@ -161,7 +192,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-6", 0 ],
+					"destination" : [ "obj-5", 0 ],
 					"source" : [ "obj-2", 0 ]
 				}
 
@@ -169,7 +200,21 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-6", 0 ]
+					"source" : [ "obj-4", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-12", 0 ],
+					"source" : [ "obj-5", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-4", 0 ],
+					"source" : [ "obj-5", 1 ]
 				}
 
 			}
@@ -198,6 +243,20 @@
 			}
  ],
 		"dependency_cache" : [ 			{
+				"name" : "test.string.equals.maxpat",
+				"bootpath" : "~/Documents/Max 8/Packages/max-test/misc",
+				"patcherrelativepath" : "../../../max-test/misc",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "test.string.equals.js",
+				"bootpath" : "~/Documents/Max 8/Packages/max-test/misc",
+				"patcherrelativepath" : "../../../max-test/misc",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"
 			}
