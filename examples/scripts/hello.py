@@ -29,10 +29,3 @@ e = '"double-quoted"'
 
 f = "'single-quoted'"
 
-
-def attr(name):
-    def _f(x):
-        return getattr(x, name)
-    return _f
-
-

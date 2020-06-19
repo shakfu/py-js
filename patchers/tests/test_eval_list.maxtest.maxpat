@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 5,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -70,8 +70,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 272.0, 334.0, 210.0, 22.0 ],
-					"text" : "test.assert py_eval_works @tags eval"
+					"patching_rect" : [ 272.0, 334.0, 255.0, 22.0 ],
+					"text" : "test.assert py_something_works @tags import"
 				}
 
 			}
@@ -140,7 +140,7 @@
 					}
 ,
 					"text" : "py",
-					"varname" : "__main__"
+					"varname" : "u222009039"
 				}
 
 			}
