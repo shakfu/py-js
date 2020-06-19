@@ -11,6 +11,12 @@ typedef struct _py {
     PyObject* p_globals;
 } t_py;
 
+
+typedef enum _bool {
+    false,
+    true
+} bool;
+
 /* --------------------------------------- */
 // forward func declarations
 
@@ -31,6 +37,11 @@ int main(int argc, char* argv[])
     // python init
     PyObject* main_module = PyImport_AddModule("__main__"); // borrowed reference
     x->p_globals = PyModule_GetDict(main_module); // borrowed reference
+    int err = PyDict_SetItemString(x->p_globals, "__builtins__", PyEval_GetBuiltins());
+    if (err == -1)
+        return err;
+
+
 
     if (argc > 2) {
         if (strcmp(argv[1], "import") == 0)
@@ -60,78 +71,178 @@ void py_handle_error(void)
     }
 }
 
-
-void py_handle_output(t_py* x, PyObject* pval)
+static void print(PyObject *o)
 {
-    // handle ints and longs
-    if (PyLong_Check(pval)) {
-        long int_result = PyLong_AsLong(pval);
-        printf("int: %ld\n", int_result);
+    PyObject_Print(o, stdout, Py_PRINT_RAW);
+    printf("\n");
+}
+
+// static void print_repr(PyObject *o)
+// {
+//     PyObject_Print(o, stdout, 0);
+// }
+
+void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
+{
+    if (pfloat == NULL) {
+        goto error;
     }
 
-    // handle floats and doubles
-    else if (PyFloat_Check(pval)) {
-        float float_result = (float)PyFloat_AsDouble(pval);
+    if (PyFloat_Check(pfloat)) {
+        float float_result = (float)PyFloat_AsDouble(pfloat);
+        if (float_result == -1.0) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+
         printf("float: %f\n", float_result);
     }
 
-    // handle strings
-    else if (PyUnicode_Check(pval)) {
-        const char* unicode_result = PyUnicode_AsUTF8(pval);
-        printf("unicode: %s\n", unicode_result);
+    if (free_now) {
+        Py_XDECREF(pfloat);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(pfloat);
+}
+
+
+void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
+{
+    if (plong == NULL) {
+        goto error;
     }
 
-    // handle lists, tuples and sets
-    else if (PySequence_Check(pval) && !PyUnicode_Check(pval) && 
-            !PyBytes_Check(pval) && !PyByteArray_Check(pval)) {
+    if (PyLong_Check(plong)) {
+        long long_result = PyLong_AsLong(plong);
+        if (long_result == -1) {
+            if (PyErr_Occurred())
+                goto error;
+        }
+        printf("long: %ld\n", long_result);
+    }
 
+    if (free_now) {
+        Py_XDECREF(plong);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(plong);
+}
+
+
+void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
+{
+    char buffer[100];
+
+    if (pstring == NULL) {
+        goto error;
+    }
+
+    if (PyUnicode_Check(pstring)) {
+        const char* unicode_result = PyUnicode_AsUTF8(pstring);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        strcpy(buffer, unicode_result);
+        printf("unicode: %s\n", buffer);
+    }
+
+    if (free_now) {
+        Py_XDECREF(pstring);
+    }
+    return;
+
+error:
+    py_handle_error();
+    Py_XDECREF(pstring);
+}
+
+
+void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
+{
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (PySequence_Check(plist) && !PyUnicode_Check(plist)
+        && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
         PyObject* iter = NULL;
         PyObject* item = NULL;
         int i = 0;
 
-        Py_ssize_t seq_size = PySequence_Length(pval);
-        if (seq_size <= 0) {
-            printf("cannot convert python sequence with zero or less length");
+        Py_ssize_t seq_size = PySequence_Length(plist);
+
+        if (seq_size == 0) {
+            printf("cannot convert py list of length 0 to atoms");
             goto error;
         }
 
-        if ((iter = PyObject_GetIter(pval)) == NULL) {
+        if ((iter = PyObject_GetIter(plist)) == NULL) {
             goto error;
         }
 
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
+                if (long_item == -1) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 printf("%d long: %ld\n", i, long_item);
                 i++;
             }
 
             if PyFloat_Check (item) {
                 float float_item = PyFloat_AsDouble(item);
+                if (float_item == -1.0) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
                 printf("%d float: %f\n", i, float_item);
                 i++;
             }
 
             if PyUnicode_Check (item) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
+                if (unicode_item == NULL) {
+                    goto error;
+                }
                 printf("%d unicode: %s\n", i, unicode_item);
                 i++;
             }
             Py_DECREF(item);
         }
-        printf("end iter op: %d\n", i);
-    } else {
-        return;
+
     }
 
-    // success cleanup
-    Py_XDECREF(pval);
+    if (free_now) {
+        Py_XDECREF(plist);
+    }
+    return;
 
 error:
     py_handle_error();
-    Py_XDECREF(pval);
+    Py_XDECREF(plist);
+
 }
 
+
+void py_handle_output(t_py* x, PyObject* pval)
+{
+    py_handle_float_output(x, pval, 0);
+    py_handle_long_output(x, pval, 0);
+    py_handle_string_output(x, pval, 0);
+    py_handle_list_output(x, pval, 0);
+
+    // final cleanup
+    Py_XDECREF(pval);
+    return;
+}
 
 //--------------------------------------------------------------------------
 
@@ -277,14 +388,140 @@ error:
 }
 
 
+
+
 void py_pipe(t_py* x, char* args)
 {
-    PyObject* pipe_pre = NULL;
+    PyObject* pargstr = NULL;
+    PyObject* pstr = NULL;
+    PyObject* list = NULL;
+    PyObject* item = NULL;
+    PyObject* funcs = NULL;
+    PyObject* funcs_iter = NULL;
+    PyObject* func = NULL;
+    PyObject* pval = NULL;
+
+    printf("args: %s\n", args);
+
+
+    pargstr = PyUnicode_FromString(args);
+    if (pargstr == NULL) {
+        printf("could not convert cstring to py unicode string\n");
+        goto error;
+    }
+
+    list = PyUnicode_Split(pargstr, NULL, -1);
+    if (list == NULL) {
+        printf("could not not split py unicode string into py list\n");
+        goto error;
+    }
+
+    Py_ssize_t argc = PyList_Size(list);
+    printf("argc: %ld\n", argc);
+
+    if (argc < 2) {
+        printf("pipe needs at least two arguments.\n");
+        goto error;
+    }
+
+    pstr = PyList_GetItem(list, 0);
+    print(pstr);
+    // print_repr(pstr);
+    if (pstr == NULL) {
+        printf("could not retrieve input value\n");
+        goto error;
+    }
+
+    pval = PyNumber_Long(pstr);
+    if (pval == NULL) {
+        printf("input value is not a int\n");
+        pval = PyNumber_Float(pstr);
+        if (pval == NULL) {
+            printf("input value is a string\n");
+            pval = pstr;
+        } else {
+            printf("input value is a float\n");
+        }
+    } else {
+        printf("input value is an int\n");
+    }
+
+    funcs = PyList_GetSlice(list, 1, argc);
+    print(funcs);
+    if (funcs == NULL || !PyList_Check(funcs)) {
+        printf("could not retrieve function names\n");
+        goto error;
+    }
+    funcs_iter = PyObject_GetIter(funcs);
+    if (funcs_iter == NULL) {
+        goto error;
+    }
+
+    PyObject* builtins = PyDict_GetItemString(x->p_globals, "__builtins__");
+
+    while ((item = PyIter_Next(funcs_iter)) != NULL) {
+        print(item);
+
+        func = PyDict_GetItemWithError(x->p_globals, item);
+        if (func == NULL) {
+            printf("could not retrieve callable name from globals dicts\n");
+            printf("trying to get from builtins\n");
+            if (PyDict_Contains(builtins, item)) {
+                func = PyDict_GetItemWithError(builtins, item);
+            }
+            else {
+                printf("not a builtin nor in globals\n");
+                goto error;
+            }
+        }
+        if (func == NULL) {
+            printf("unable to to retrieve func without error\n");
+            goto error;
+        }
+
+        print(func);
+
+        if (!PyCallable_Check(func)) {
+            printf("object retrieved is not a callable\n");
+            goto error;
+        }
+
+        pval = PyObject_CallFunctionObjArgs(func, pval, NULL);
+        if (pval == NULL) {
+            printf("error occurred returning output from func\n");
+            goto error;
+        }
+        Py_DECREF(func);
+        Py_DECREF(item);
+    }
+    Py_XDECREF(funcs_iter);
+
+    if (pval != NULL) {
+        py_handle_output(x, pval);
+        Py_XDECREF(list);
+        Py_XDECREF(funcs);
+        Py_XDECREF(pstr);
+        Py_XDECREF(pval);
+        return;
+    }
+
+error:
+    py_handle_error();
+    Py_XDECREF(list);
+    Py_XDECREF(funcs);
+    Py_XDECREF(pstr);
+    Py_XDECREF(pval);
+}
+
+
+void py_pipe2(t_py* x, char* args)
+{
+    PyObject* pipe_co = NULL;
     PyObject* pipe_fun = NULL;    
     PyObject* pval = NULL;
     PyObject* p_str = NULL;
 
-    pipe_pre = PyRun_String(
+    pipe_co = PyRun_String(
         "def pipe(arg):\n"
             "\targs = arg.split()\n"
             "\tval = eval(args[0])\n"
@@ -294,7 +531,7 @@ void py_pipe(t_py* x, char* args)
             "\treturn val\n",
             Py_single_input, x->p_globals, x->p_globals);
 
-    if (pipe_pre == NULL) {
+    if (pipe_co == NULL) {
         printf("pipe func is NULL");
         goto error;
     }
@@ -315,7 +552,7 @@ void py_pipe(t_py* x, char* args)
 
     if (pval != NULL) {
         py_handle_output(x, pval);
-        Py_XDECREF(pipe_pre);
+        Py_XDECREF(pipe_co);
         Py_XDECREF(p_str);
         // Py_XDECREF(pipe_fun);
         Py_XDECREF(pval);
@@ -327,9 +564,8 @@ void py_pipe(t_py* x, char* args)
 
 error:
     py_handle_error();
-    Py_XDECREF(pipe_pre);
+    Py_XDECREF(pipe_co);
     Py_XDECREF(p_str);
     // Py_XDECREF(pipe_fun);
     Py_XDECREF(pval);
 }
-
