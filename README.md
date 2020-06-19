@@ -1,8 +1,8 @@
-# py3: minimal python 3 for max
+# minimal py for max
 
 An attempt to make a simple (and extensible) max external for python3
 
-repo - https://github.com/shakfu/py3
+repo - https://github.com/shakfu/py
 
 ## Summary
 
@@ -11,7 +11,7 @@ globals:
     object_count: number of active py3 objects
     registry: global lookup for script and object names
 
-py3 interpreter object
+py interpreter object
     attributes
         name:  unique name
         file:  file to load into editor
@@ -53,7 +53,7 @@ py3 interpreter object
 
 ## Overview
 
-The `py3` object provides a minimal, high level max interface to python modules and a high-level python interface to max objects.
+The `py` object provides a minimal, high level max interface to python modules and a high-level python interface to max objects.
 
 
 It provides the following methods:
@@ -79,19 +79,16 @@ meta     | count    |               | n/a    | no
 
 
 #### Core
+The `py` object's *core* features have a one-to-one correspondance to python's very high layer as specified [here](https://docs.python.org/3/c-api/veryhigh.html).
 
-The `py3` object's *core* features have a one-to-one correspondance to python's very high layer as specified [here](https://docs.python.org/3/c-api/veryhigh.html).
-
-- **Per-object namespaces**. Each `py3` object has a unique name (which can be set by the user or provided automatically), and responds to an `import <module>` message which loads a python module in its namespace (essentially a `globals` dictionary), which can be different for each instance.
+- **Per-object namespaces**. Each `py` object has a unique name (which can be set by the user or provided automatically), and responds to an `import <module>` message which loads a python module in its namespace (essentially a `globals` dictionary), which can be different for each instance.
 
 - **Eval Messages**. Responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace and outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
 - **Exec Messages**. Responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file's code in the object's namespace. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-
 #### Extra
-
-An *extra* feature makes the `py3` object play nice in the max/msp ecosystem:
+An *extra* feature makes the `py` object play nice in the max/msp ecosystem:
 
 - **Assign Messages**. Responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in the objects python namespace using max message syntax. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
@@ -102,29 +99,23 @@ An *extra* feature makes the `py3` object play nice in the max/msp ecosystem:
 - **Code Messages**. Responds to a `code <expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by max's parsing and excaping rules. (EXPERIMENTAL and evolving).
 
 #### Interobject Communication
-
 - **Scan Message**. Responds to a `scan` message with arguments. This scans the parent patcher of the object and stores scripting names in the global registry.
 
 - **Send Message**. Responds to a `send <object-name> <msg> <msg-body>` message. Used to send *typed* messages to any named object. Evokes a `scan` for the patcher's objects if a `registry` of names is empty.
 
 #### Code Editor
+- **Line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of all entries in a session. Of course, a coll can made to save all commands if required.
 
-- **Line REPL**. The `py3`has two bpatcher line `repls`, one of which embeds a `py3` object and another which has an outlet to connect to one. The repls include a convenient menu with all the `py3` object's methods and also feature coll-based history via arrow-up/arrow-down recall of all entries in a session. Of course, a coll can made to save all commands if required.
-
-- **Code Editor**. Double-clicking the `py3` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
-
+- **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
 
 #### Scripting
-
-- **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py3` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called by python scripts or via messages in a patcher.
-
+- **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called by python scripts or via messages in a patcher.
 
 ## Building
 
 Only tested on OS X at present. Should be relatively easy to port to windows.
 
 The following is required:
-
 
 ### xcode
 
@@ -136,8 +127,12 @@ $ xcode-select --install
 
 otherwise download xcode from the app store.
 
+<<<<<<< HEAD
 
 ### py3 external source and maxsdk
+=======
+### py external source and maxsdk
+>>>>>>> parent of 71d69ee... first step in rename to py3
 
 The py3 external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
 
@@ -153,7 +148,6 @@ $ git submodule update
 
 ```
 
-
 ### python3
 
 
@@ -164,7 +158,6 @@ $ brew install python
 ```
 
 see: https://installpython3.com/mac
-
 
 ### cython (optional)
 
@@ -195,7 +188,6 @@ After installation, you can open the `project.leo` file as follows:
 $ leo project.leo &
 ```
 
-
 ### Build it
 
 In the root of the package:
@@ -221,7 +213,6 @@ The solution is to move the external project folder to a non iCloud drive folder
 
 I've tried this several times and  and it works (for "sign to run locally" case and for the "Development" case).
 
-
 ### Style it
 
 The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
@@ -232,12 +223,10 @@ $ brew install clang-format
 
 The style used in this project is specified in the `.clang-format` file.
 
-
 ## BUGS
 
 - [ ] PyAtom extension is still buggy and can intermittently cause crashes
 - [ ] Sending from the `api` can make max unstable. Keep it simple and investigate.
-
 
 ## TODO
 
@@ -260,14 +249,12 @@ The style used in this project is specified in the `.clang-format` file.
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls
       after changes (NO REASON for using this found so far)
 
-
 ### Testing
 
 - [ ] complete comprehensive test suite
   - [ ] complete c test suite
   - [ ] complete max test suite
   - [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
-
 
 ### Future Experiments
 
@@ -316,7 +303,6 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] add third (middle) outlet which bangs on an error
 
-
 ##### Extra
 
 - [x] check whether setting a normal attr name, can also set scripting name
@@ -325,7 +311,6 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] Add `call (anything)` method to call python callables in a namespace
 
-
 ##### Code Editor (Usability)
 
 - [x] Edit default with text editor
@@ -333,12 +318,10 @@ The style used in this project is specified in the `.clang-format` file.
 - [x] Add text edit object
     - [x] enable code to be run from editor
 
-
 ##### Line REPL (Usability)
 
 - [x] Add line repl
     - [x] Add up-arrow last line recall (great for 'random.random()')
-
 
 ##### Extensibility
 
@@ -356,16 +339,13 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] Exposing of good portion of the max api to cython scripting
 
-
 ##### Architectural
 
 - [x] Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
 
-
 ##### Documentation
 
 - [x] Add .maxref.xml to docs
-
 
 ##### Code Quality
 
@@ -375,13 +355,11 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] Refactor into functions
 
-
 ##### Testing
 
 - [x] pytest testing harness
 
 - [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
-
 
 #### Bug Fixes
 
@@ -403,21 +381,24 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
 
-
 ## Prior Art and Thanks
 
 Every now and then when I am developing a patch in Max, I yearn for some simple python function or the other, like the `any` and `all` builtins for example, and I  then spend more time than I want researching a Max workaround. 
 
+<<<<<<< HEAD
 Thinking that there must be a max external out there, I looked around and found the following:
 
 - Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which looked promising but then I read that the 'available Max port is not actively maintained.' I also noted that its written in C++ and needs an additional c++ flext layer (http://grrrr.org/ext/flext) to compile. But I was further dissuaded from diving in as it supported only python 2 which seemed difficult to swallow. Ironically, this project has become more active recently, so the above may no longer apply.
 
 - [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 16 months as of this writing. Again c++ and using pybind11 which I'm not familiar with.
+=======
+Thinking that there must be a max external out there, I looked around and found Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which looked promising but then I read that the 'available Max port is not actively maintained.' I also noted that its written in C++ and needs an additional c++ flext layer (http://grrrr.org/ext/flext) to compile. But I was further dissuaded from diving in as it supported only python 2 which seemed difficult to swallow. Ironically, this project has become more active recently, so the above may no longer apply.
+>>>>>>> parent of 71d69ee... first step in rename to py3
 
 Around the time of the beginning of the covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts to embed a scheme implementation into a Max external.
 
 So I decided, during the lockdown period, with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c code that won't crash.
 
-A few months later... It's been an education: I have come to understand precisely a quote about the c language: that it's "like a scalpel", in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
+It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
-Thanks to the great Python and Max communities and for their culture of sharing. Thanks in particular to Luigi Castelli and Stefan Behnel who were very helpful on the Max and Cython forums respectively.
+Thanks to the great Python and Max communities and for their culture of sharing. Thanks to anyone who is helpful on the Python, Cython and Max forums.
