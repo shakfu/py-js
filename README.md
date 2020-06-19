@@ -8,7 +8,7 @@ repo - https://github.com/shakfu/py3
 
 ```
 globals:
-    object_count: number of active py objects
+    object_count: number of active py3 objects
     registry: global lookup for script and object names
 
 py3 interpreter object
@@ -28,8 +28,8 @@ py3 interpreter object
     methods (extra)
         assign <var> [arg]  : max msg assignments to object namespace
         call <pyfunc> [arg] : max friendly python function calling
-        code <py expr|stmt> : alternative way to eval or exec py code
-        pipe <arg> [pyfunc] : process a value though a pipe of py funcs
+        code <py3 expr|stmt> : alternative way to eval or exec py3 code
+        pipe <arg> [pyfunc] : process a value though a pipe of py3 funcs
     
     methods (code editor)
         read <path>         : read text file into editor
@@ -40,7 +40,7 @@ py3 interpreter object
         send <msg>          : send an arbitrary message to a named object
 
     methods (meta)
-        count               : give a int count of current live py objects
+        count               : give a int count of current live py3 objects
 
     inlets
         single inlet        : primary input (anything)
@@ -95,7 +95,7 @@ An *extra* feature makes the `py3` object play nice in the max/msp ecosystem:
 
 - **Assign Messages**. Responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in the objects python namespace using max message syntax. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-- **Call Messages**. Responds to a `call <func> arg1 arg2 ... argN` kind of message where `func` is a python callable in the py object's namespace. This corresponds to the python `callable(*args)` syntax. This makes it easier to call python functions in a max-friendly way. If the callable does not variable arguments, it will alternatively try to apply the arguments as a list i.e. `call func(args)`. Future work will try make `call` correspond to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`. This outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
+- **Call Messages**. Responds to a `call <func> arg1 arg2 ... argN` kind of message where `func` is a python callable in the py3 object's namespace. This corresponds to the python `callable(*args)` syntax. This makes it easier to call python functions in a max-friendly way. If the callable does not variable arguments, it will alternatively try to apply the arguments as a list i.e. `call func(args)`. Future work will try make `call` correspond to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`. This outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
 - **Pipe message**. Like a `call` in reverse, responds to a `pipe <arg> <f1> <f2> ... <fN>` message. In this sense, a value is *piped* through a chain of python functions in the objects namespace and returns the output to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
@@ -137,12 +137,12 @@ $ xcode-select --install
 otherwise download xcode from the app store.
 
 
-### py external source and maxsdk
+### py3 external source and maxsdk
 
-The py external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
+The py3 external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
 
 ```
-$ git clone https://github.com/shakfu/py.git
+$ git clone https://github.com/shakfu/py3.git
 ```
 
 Then cd into the newly cloned source directory and run the following to get the max-sdk
@@ -168,7 +168,7 @@ see: https://installpython3.com/mac
 
 ### cython (optional)
 
-[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside py objects.
+[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside py3 objects.
 
 Install cython as follows:
 
@@ -201,21 +201,21 @@ $ leo project.leo &
 In the root of the package:
 
 ```
-make -C source/py build
+make -C source/py3 build
 ```
 or
 
 ```
 ./build.sh
 ```
-or in the `py/sources/py` directory
+or in the `py3/sources/py3` directory
 
 ```
 make build
 ```
 
 ### Sidenote about building on a Mac
-If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can mostly ignored (unless your only focus is codesigning the external).
+If you are developing the package in `$HOME/Documents/Max 8/Packages/py3` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can mostly ignored (unless your only focus is codesigning the external).
 
 The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). 
 
@@ -273,7 +273,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
-- [ ] Convert py into a js extension class
+- [ ] Convert py3 into a js extension class
       - proof of concept done, but requires a different 'nobox' type of class and data passing via arrays and attributes instead of outlets. But can be done!
 
 - [ ] Try to launch an ipython shell somehow 
@@ -294,7 +294,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] branch `embed-pkg`, embeds a local python install with a zipped stdlib in `support` already successfully tested embedding the python distro in the external itself.
 
-- [x] made it possible to get the py object's name from any module in its namespace!
+- [x] made it possible to get the py3 object's name from any module in its namespace!
 
 - [x] enhance `py_exec` method to create a single string from argv so it can import easily
 
@@ -302,15 +302,15 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] Refactor 'py_eval' to make it more consistent with the others
 
-- [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
+- [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py3 object.
 
-- [x] Each py object has its own python 'globals' namespace and responds to the following
+- [x] Each py3 object has its own python 'globals' namespace and responds to the following
       msgs
     - [x] `import <module>`: adds module to the namespace
     - [x] `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
     - [x] `exec <statement>`: executes statement into the namespace (can modify ns)
-    - [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
-    - [x] `run <file.py>`: executes python file into the namespace (can modify ns)
+    - [x] `execfile <file.py3>`: executes python file into the namespace (can modify ns)
+    - [x] `run <file.py3>`: executes python file into the namespace (can modify ns)
 
 - [x] Add right inlet bang after eval op ends
 
@@ -412,7 +412,7 @@ Thinking that there must be a max external out there, I looked around and found 
 
 - Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which looked promising but then I read that the 'available Max port is not actively maintained.' I also noted that its written in C++ and needs an additional c++ flext layer (http://grrrr.org/ext/flext) to compile. But I was further dissuaded from diving in as it supported only python 2 which seemed difficult to swallow. Ironically, this project has become more active recently, so the above may no longer apply.
 
-- max-py -- https://github.com/njazz/max-py -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 16 months as of this writing. Again c++ and using pybind11 which I'm not familiar with.
+- [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 16 months as of this writing. Again c++ and using pybind11 which I'm not familiar with.
 
 Around the time of the beginning of the covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts to embed a scheme implementation into a Max external.
 
