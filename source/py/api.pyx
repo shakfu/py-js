@@ -250,6 +250,16 @@ txt = "Hey MAX!"
 greeting = 'Hello World'
 
 
+def post(str s):
+    mx.post(s.encode('utf-8'))
+
+
+def error(str s):
+    mx.error(s.encode('utf-8'))
+
+
+
+
 cpdef public str hello():
     return greeting
 
@@ -264,15 +274,5 @@ def echo(*args):
 
 def total(*args):
     return sum(args)
-
-
-def post(str s):
-    mx.post(s.encode('utf-8'))
-
-
-def error(str s):
-    mx.error(s.encode('utf-8'))
-
-
 
 
