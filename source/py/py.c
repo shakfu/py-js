@@ -307,18 +307,25 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         if (dict) {
             dictionary_getsym(dict, gensym("file"), &x->p_code_filepath);
             dictionary_getlong(dict, gensym("autoload"), (t_atom_long *)&x->p_autoload);
+            dictionary_getsym(dict, gensym("pythonpath"), &x->p_pythonpath);
         }
     }
 
     // process autoload
-    py_log(x, "checking autoload / code_filepath");
-    py_log(x, "autoload: %d / code_filepath: %s", x->p_autoload, 
-                                                  x->p_code_filepath->s_name);
+    py_log(x, "checking autoload / code_filepath / pythonpath");
+    py_log(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s", 
+        x->p_autoload, x->p_code_filepath->s_name, x->p_pythonpath->s_name);
     py_log(x, "via object_attr_getsym: %s", object_attr_getsym(x, gensym("file"))->s_name);
   
     if ((x->p_autoload == 1) && (x->p_code_filepath != gensym(""))) {
         py_log(x, "autoloading: %s", x->p_code_filepath->s_name);
         py_load(x, x->p_code_filepath);
+    }
+
+    if (x->p_pythonpath != gensym("")) {
+        PyObject *sys_path = PySys_GetObject((char*)"path");
+        PyObject *py_path = PyUnicode_FromString(x->p_pythonpath->s_name);
+        PyList_Append(sys_path, py_path);
     }
 
     return (x);
