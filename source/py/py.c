@@ -126,6 +126,15 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s)
     }
 }
 
+void py_appendtodict(t_py *x, t_dictionary *dict)
+{
+    if (dict) {
+        dictionary_appendsym(dict, gensym("file"), x->p_code_filepath);
+        dictionary_appendlong(dict, gensym("autoload"), x->p_autoload);
+    }
+}
+
+
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
 
@@ -169,6 +178,9 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,   0);
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
     class_addmethod(c, (method)py_load,       "load",       A_DEFSYM, 0);
+
+    // experimental
+    class_addmethod(c, (method)py_appendtodict,  "appendtodictionary",  A_CANT, 0);
 
     // object attributes
     //------------------------------------------------------------------------
@@ -221,6 +233,7 @@ void ext_main(void* r)
 }
 
 
+
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_py* x = NULL;
@@ -242,8 +255,10 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_box = NULL;
 
         // python-related
+        x->p_autoload = 0;
         x->p_pythonpath = gensym("");
         x->p_debug = 1;
+
 
         // text editor
         x->p_code = sysmem_newhandle(0);
@@ -287,7 +302,12 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
             py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
         }
-
+        
+        t_dictionary *dict = (t_dictionary *)gensym("#D")->s_thing;
+        if (dict) {
+            dictionary_getsym(dict, gensym("file"), &x->p_code_filepath);
+            dictionary_getlong(dict, gensym("autoload"), (t_atom_long *)&x->p_autoload);
+        }
     }
 
     // process autoload
