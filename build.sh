@@ -1,3 +1,3 @@
 xattr -cr .
-make -C source/py
+make -C source/py dev
 

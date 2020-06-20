@@ -1589,12 +1589,12 @@ static PyObject *__pyx_pf_3api_14out_list(CYTHON_UNUSED PyObject *__pyx_self, Py
 static PyObject *__pyx_pf_3api_16out_dict(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
 static PyObject *__pyx_pf_3api_18send(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_name, PyObject *__pyx_v_value); /* proto */
 static PyObject *__pyx_pf_3api_20lookup(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_name); /* proto */
-static PyObject *__pyx_pf_3api_22hello(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
-static PyObject *__pyx_pf_3api_24random(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_n); /* proto */
-static PyObject *__pyx_pf_3api_26echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
-static PyObject *__pyx_pf_3api_28total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
-static PyObject *__pyx_pf_3api_30post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
-static PyObject *__pyx_pf_3api_32error(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
+static PyObject *__pyx_pf_3api_22post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
+static PyObject *__pyx_pf_3api_24error(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s); /* proto */
+static PyObject *__pyx_pf_3api_26hello(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_3api_28random(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_n); /* proto */
+static PyObject *__pyx_pf_3api_30echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
+static PyObject *__pyx_pf_3api_32total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
 static PyObject *__pyx_tp_new_3api_PyExternal(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_float_1_3;
 static PyObject *__pyx_float_9_5;
@@ -5152,12 +5152,168 @@ static PyObject *__pyx_pf_3api_20lookup(CYTHON_UNUSED PyObject *__pyx_self, PyOb
 /* "api.pyx":253
  * 
  * 
+ * def post(str s):             # <<<<<<<<<<<<<<
+ *     mx.post(s.encode('utf-8'))
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_3api_23post(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
+static PyMethodDef __pyx_mdef_3api_23post = {"post", (PyCFunction)__pyx_pw_3api_23post, METH_O, 0};
+static PyObject *__pyx_pw_3api_23post(PyObject *__pyx_self, PyObject *__pyx_v_s) {
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("post (wrapper)", 0);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 253, __pyx_L1_error)
+  __pyx_r = __pyx_pf_3api_22post(__pyx_self, ((PyObject*)__pyx_v_s));
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_3api_22post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  char const *__pyx_t_2;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("post", 0);
+
+  /* "api.pyx":254
+ * 
+ * def post(str s):
+ *     mx.post(s.encode('utf-8'))             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  if (unlikely(__pyx_v_s == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
+    __PYX_ERR(0, 254, __pyx_L1_error)
+  }
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 254, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyBytes_AsString(__pyx_t_1); if (unlikely((!__pyx_t_2) && PyErr_Occurred())) __PYX_ERR(0, 254, __pyx_L1_error)
+  post(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "api.pyx":253
+ * 
+ * 
+ * def post(str s):             # <<<<<<<<<<<<<<
+ *     mx.post(s.encode('utf-8'))
+ * 
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("api.post", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "api.pyx":257
+ * 
+ * 
+ * def error(str s):             # <<<<<<<<<<<<<<
+ *     mx.error(s.encode('utf-8'))
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_3api_25error(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
+static PyMethodDef __pyx_mdef_3api_25error = {"error", (PyCFunction)__pyx_pw_3api_25error, METH_O, 0};
+static PyObject *__pyx_pw_3api_25error(PyObject *__pyx_self, PyObject *__pyx_v_s) {
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("error (wrapper)", 0);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 257, __pyx_L1_error)
+  __pyx_r = __pyx_pf_3api_24error(__pyx_self, ((PyObject*)__pyx_v_s));
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_3api_24error(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  char const *__pyx_t_2;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("error", 0);
+
+  /* "api.pyx":258
+ * 
+ * def error(str s):
+ *     mx.error(s.encode('utf-8'))             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  if (unlikely(__pyx_v_s == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
+    __PYX_ERR(0, 258, __pyx_L1_error)
+  }
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyBytes_AsString(__pyx_t_1); if (unlikely((!__pyx_t_2) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L1_error)
+  error(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "api.pyx":257
+ * 
+ * 
+ * def error(str s):             # <<<<<<<<<<<<<<
+ *     mx.error(s.encode('utf-8'))
+ * 
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("api.error", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "api.pyx":263
+ * 
+ * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
  *     return greeting
  * 
  */
 
-static PyObject *__pyx_pw_3api_23hello(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_3api_27hello(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
 PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -5167,7 +5323,7 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("hello", 0);
 
-  /* "api.pyx":254
+  /* "api.pyx":264
  * 
  * cpdef public str hello():
  *     return greeting             # <<<<<<<<<<<<<<
@@ -5175,14 +5331,14 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_greeting); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 254, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_greeting); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 264, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 254, __pyx_L1_error)
+  if (!(likely(PyUnicode_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "unicode", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 264, __pyx_L1_error)
   __pyx_r = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "api.pyx":253
+  /* "api.pyx":263
  * 
  * 
  * cpdef public str hello():             # <<<<<<<<<<<<<<
@@ -5202,19 +5358,19 @@ PyObject *hello(CYTHON_UNUSED int __pyx_skip_dispatch) {
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3api_23hello(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_3api_23hello(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_3api_27hello(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_3api_27hello(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("hello (wrapper)", 0);
-  __pyx_r = __pyx_pf_3api_22hello(__pyx_self);
+  __pyx_r = __pyx_pf_3api_26hello(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_22hello(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_3api_26hello(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5223,7 +5379,7 @@ static PyObject *__pyx_pf_3api_22hello(CYTHON_UNUSED PyObject *__pyx_self) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("hello", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 253, __pyx_L1_error)
+  __pyx_t_1 = hello(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -5240,7 +5396,7 @@ static PyObject *__pyx_pf_3api_22hello(CYTHON_UNUSED PyObject *__pyx_self) {
   return __pyx_r;
 }
 
-/* "api.pyx":257
+/* "api.pyx":267
  * 
  * 
  * def random(int n):             # <<<<<<<<<<<<<<
@@ -5249,9 +5405,9 @@ static PyObject *__pyx_pf_3api_22hello(CYTHON_UNUSED PyObject *__pyx_self) {
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3api_25random(PyObject *__pyx_self, PyObject *__pyx_arg_n); /*proto*/
-static PyMethodDef __pyx_mdef_3api_25random = {"random", (PyCFunction)__pyx_pw_3api_25random, METH_O, 0};
-static PyObject *__pyx_pw_3api_25random(PyObject *__pyx_self, PyObject *__pyx_arg_n) {
+static PyObject *__pyx_pw_3api_29random(PyObject *__pyx_self, PyObject *__pyx_arg_n); /*proto*/
+static PyMethodDef __pyx_mdef_3api_29random = {"random", (PyCFunction)__pyx_pw_3api_29random, METH_O, 0};
+static PyObject *__pyx_pw_3api_29random(PyObject *__pyx_self, PyObject *__pyx_arg_n) {
   int __pyx_v_n;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -5260,7 +5416,7 @@ static PyObject *__pyx_pw_3api_25random(PyObject *__pyx_self, PyObject *__pyx_ar
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("random (wrapper)", 0);
   assert(__pyx_arg_n); {
-    __pyx_v_n = __Pyx_PyInt_As_int(__pyx_arg_n); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 257, __pyx_L3_error)
+    __pyx_v_n = __Pyx_PyInt_As_int(__pyx_arg_n); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5268,14 +5424,14 @@ static PyObject *__pyx_pw_3api_25random(PyObject *__pyx_self, PyObject *__pyx_ar
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_3api_24random(__pyx_self, ((int)__pyx_v_n));
+  __pyx_r = __pyx_pf_3api_28random(__pyx_self, ((int)__pyx_v_n));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_24random(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_n) {
+static PyObject *__pyx_pf_3api_28random(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_n) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5287,7 +5443,7 @@ static PyObject *__pyx_pf_3api_24random(CYTHON_UNUSED PyObject *__pyx_self, int 
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("random", 0);
 
-  /* "api.pyx":258
+  /* "api.pyx":268
  * 
  * def random(int n):
  *     return np.random.rand(n)             # <<<<<<<<<<<<<<
@@ -5295,15 +5451,15 @@ static PyObject *__pyx_pf_3api_24random(CYTHON_UNUSED PyObject *__pyx_self, int 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_random); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_random); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_rand); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_rand); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -5318,14 +5474,14 @@ static PyObject *__pyx_pf_3api_24random(CYTHON_UNUSED PyObject *__pyx_self, int 
   __pyx_t_1 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_4, __pyx_t_3) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "api.pyx":257
+  /* "api.pyx":267
  * 
  * 
  * def random(int n):             # <<<<<<<<<<<<<<
@@ -5347,7 +5503,7 @@ static PyObject *__pyx_pf_3api_24random(CYTHON_UNUSED PyObject *__pyx_self, int 
   return __pyx_r;
 }
 
-/* "api.pyx":261
+/* "api.pyx":271
  * 
  * 
  * def echo(*args):             # <<<<<<<<<<<<<<
@@ -5356,9 +5512,9 @@ static PyObject *__pyx_pf_3api_24random(CYTHON_UNUSED PyObject *__pyx_self, int 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3api_27echo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_3api_27echo = {"echo", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_3api_27echo, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_3api_27echo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_3api_31echo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_3api_31echo = {"echo", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_3api_31echo, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3api_31echo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_args = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5366,7 +5522,7 @@ static PyObject *__pyx_pw_3api_27echo(PyObject *__pyx_self, PyObject *__pyx_args
   if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "echo", 0))) return NULL;
   __Pyx_INCREF(__pyx_args);
   __pyx_v_args = __pyx_args;
-  __pyx_r = __pyx_pf_3api_26echo(__pyx_self, __pyx_v_args);
+  __pyx_r = __pyx_pf_3api_30echo(__pyx_self, __pyx_v_args);
 
   /* function exit code */
   __Pyx_XDECREF(__pyx_v_args);
@@ -5374,12 +5530,12 @@ static PyObject *__pyx_pw_3api_27echo(PyObject *__pyx_self, PyObject *__pyx_args
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_26echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args) {
+static PyObject *__pyx_pf_3api_30echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("echo", 0);
 
-  /* "api.pyx":262
+  /* "api.pyx":272
  * 
  * def echo(*args):
  *     return args             # <<<<<<<<<<<<<<
@@ -5391,7 +5547,7 @@ static PyObject *__pyx_pf_3api_26echo(CYTHON_UNUSED PyObject *__pyx_self, PyObje
   __pyx_r = __pyx_v_args;
   goto __pyx_L0;
 
-  /* "api.pyx":261
+  /* "api.pyx":271
  * 
  * 
  * def echo(*args):             # <<<<<<<<<<<<<<
@@ -5406,7 +5562,7 @@ static PyObject *__pyx_pf_3api_26echo(CYTHON_UNUSED PyObject *__pyx_self, PyObje
   return __pyx_r;
 }
 
-/* "api.pyx":265
+/* "api.pyx":275
  * 
  * 
  * def total(*args):             # <<<<<<<<<<<<<<
@@ -5415,9 +5571,9 @@ static PyObject *__pyx_pf_3api_26echo(CYTHON_UNUSED PyObject *__pyx_self, PyObje
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3api_29total(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_3api_29total = {"total", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_3api_29total, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_3api_29total(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_3api_33total(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_3api_33total = {"total", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_3api_33total, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3api_33total(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_args = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5425,7 +5581,7 @@ static PyObject *__pyx_pw_3api_29total(PyObject *__pyx_self, PyObject *__pyx_arg
   if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "total", 0))) return NULL;
   __Pyx_INCREF(__pyx_args);
   __pyx_v_args = __pyx_args;
-  __pyx_r = __pyx_pf_3api_28total(__pyx_self, __pyx_v_args);
+  __pyx_r = __pyx_pf_3api_32total(__pyx_self, __pyx_v_args);
 
   /* function exit code */
   __Pyx_XDECREF(__pyx_v_args);
@@ -5433,7 +5589,7 @@ static PyObject *__pyx_pw_3api_29total(PyObject *__pyx_self, PyObject *__pyx_arg
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_28total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args) {
+static PyObject *__pyx_pf_3api_32total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5442,7 +5598,7 @@ static PyObject *__pyx_pf_3api_28total(CYTHON_UNUSED PyObject *__pyx_self, PyObj
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("total", 0);
 
-  /* "api.pyx":266
+  /* "api.pyx":276
  * 
  * def total(*args):
  *     return sum(args)             # <<<<<<<<<<<<<<
@@ -5450,13 +5606,13 @@ static PyObject *__pyx_pf_3api_28total(CYTHON_UNUSED PyObject *__pyx_self, PyObj
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_sum, __pyx_v_args); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_sum, __pyx_v_args); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 276, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "api.pyx":265
+  /* "api.pyx":275
  * 
  * 
  * def total(*args):             # <<<<<<<<<<<<<<
@@ -5468,162 +5624,6 @@ static PyObject *__pyx_pf_3api_28total(CYTHON_UNUSED PyObject *__pyx_self, PyObj
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_AddTraceback("api.total", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "api.pyx":269
- * 
- * 
- * def post(str s):             # <<<<<<<<<<<<<<
- *     mx.post(s.encode('utf-8'))
- * 
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_3api_31post(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
-static PyMethodDef __pyx_mdef_3api_31post = {"post", (PyCFunction)__pyx_pw_3api_31post, METH_O, 0};
-static PyObject *__pyx_pw_3api_31post(PyObject *__pyx_self, PyObject *__pyx_v_s) {
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("post (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 269, __pyx_L1_error)
-  __pyx_r = __pyx_pf_3api_30post(__pyx_self, ((PyObject*)__pyx_v_s));
-
-  /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_3api_30post(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s) {
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  char const *__pyx_t_2;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("post", 0);
-
-  /* "api.pyx":270
- * 
- * def post(str s):
- *     mx.post(s.encode('utf-8'))             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  if (unlikely(__pyx_v_s == Py_None)) {
-    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 270, __pyx_L1_error)
-  }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 270, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyBytes_AsString(__pyx_t_1); if (unlikely((!__pyx_t_2) && PyErr_Occurred())) __PYX_ERR(0, 270, __pyx_L1_error)
-  post(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "api.pyx":269
- * 
- * 
- * def post(str s):             # <<<<<<<<<<<<<<
- *     mx.post(s.encode('utf-8'))
- * 
- */
-
-  /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("api.post", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "api.pyx":273
- * 
- * 
- * def error(str s):             # <<<<<<<<<<<<<<
- *     mx.error(s.encode('utf-8'))
- * 
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_3api_33error(PyObject *__pyx_self, PyObject *__pyx_v_s); /*proto*/
-static PyMethodDef __pyx_mdef_3api_33error = {"error", (PyCFunction)__pyx_pw_3api_33error, METH_O, 0};
-static PyObject *__pyx_pw_3api_33error(PyObject *__pyx_self, PyObject *__pyx_v_s) {
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("error (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_s), (&PyUnicode_Type), 1, "s", 1))) __PYX_ERR(0, 273, __pyx_L1_error)
-  __pyx_r = __pyx_pf_3api_32error(__pyx_self, ((PyObject*)__pyx_v_s));
-
-  /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_3api_32error(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_s) {
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  char const *__pyx_t_2;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("error", 0);
-
-  /* "api.pyx":274
- * 
- * def error(str s):
- *     mx.error(s.encode('utf-8'))             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  if (unlikely(__pyx_v_s == Py_None)) {
-    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 274, __pyx_L1_error)
-  }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 274, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyBytes_AsString(__pyx_t_1); if (unlikely((!__pyx_t_2) && PyErr_Occurred())) __PYX_ERR(0, 274, __pyx_L1_error)
-  error(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "api.pyx":273
- * 
- * 
- * def error(str s):             # <<<<<<<<<<<<<<
- *     mx.error(s.encode('utf-8'))
- * 
- */
-
-  /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("api.error", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5741,7 +5741,7 @@ static PyTypeObject __pyx_type_3api_PyExternal = {
 };
 
 static PyMethodDef __pyx_methods[] = {
-  {"hello", (PyCFunction)__pyx_pw_3api_23hello, METH_NOARGS, 0},
+  {"hello", (PyCFunction)__pyx_pw_3api_27hello, METH_NOARGS, 0},
   {0, 0, 0, 0}
 };
 
@@ -5863,7 +5863,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(0, 126, __pyx_L1_error)
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(1, 2, __pyx_L1_error)
-  __pyx_builtin_sum = __Pyx_GetBuiltinName(__pyx_n_s_sum); if (!__pyx_builtin_sum) __PYX_ERR(0, 266, __pyx_L1_error)
+  __pyx_builtin_sum = __Pyx_GetBuiltinName(__pyx_n_s_sum); if (!__pyx_builtin_sum) __PYX_ERR(0, 276, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -6032,65 +6032,65 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__25);
   __pyx_codeobj__26 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__25, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_lookup, 240, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__26)) __PYX_ERR(0, 240, __pyx_L1_error)
 
-  /* "api.pyx":257
- * 
- * 
- * def random(int n):             # <<<<<<<<<<<<<<
- *     return np.random.rand(n)
- * 
- */
-  __pyx_tuple__27 = PyTuple_Pack(2, __pyx_n_s_n, __pyx_n_s_n); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 257, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__27);
-  __Pyx_GIVEREF(__pyx_tuple__27);
-  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_random, 257, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 257, __pyx_L1_error)
-
-  /* "api.pyx":261
- * 
- * 
- * def echo(*args):             # <<<<<<<<<<<<<<
- *     return args
- * 
- */
-  __pyx_tuple__29 = PyTuple_Pack(1, __pyx_n_s_args); if (unlikely(!__pyx_tuple__29)) __PYX_ERR(0, 261, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__29);
-  __Pyx_GIVEREF(__pyx_tuple__29);
-  __pyx_codeobj__30 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__29, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_echo, 261, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__30)) __PYX_ERR(0, 261, __pyx_L1_error)
-
-  /* "api.pyx":265
- * 
- * 
- * def total(*args):             # <<<<<<<<<<<<<<
- *     return sum(args)
- * 
- */
-  __pyx_tuple__31 = PyTuple_Pack(1, __pyx_n_s_args); if (unlikely(!__pyx_tuple__31)) __PYX_ERR(0, 265, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__31);
-  __Pyx_GIVEREF(__pyx_tuple__31);
-  __pyx_codeobj__32 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__31, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_total, 265, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__32)) __PYX_ERR(0, 265, __pyx_L1_error)
-
-  /* "api.pyx":269
+  /* "api.pyx":253
  * 
  * 
  * def post(str s):             # <<<<<<<<<<<<<<
  *     mx.post(s.encode('utf-8'))
  * 
  */
-  __pyx_tuple__33 = PyTuple_Pack(1, __pyx_n_s_s); if (unlikely(!__pyx_tuple__33)) __PYX_ERR(0, 269, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__33);
-  __Pyx_GIVEREF(__pyx_tuple__33);
-  __pyx_codeobj__34 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__33, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_post, 269, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__34)) __PYX_ERR(0, 269, __pyx_L1_error)
+  __pyx_tuple__27 = PyTuple_Pack(1, __pyx_n_s_s); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 253, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__27);
+  __Pyx_GIVEREF(__pyx_tuple__27);
+  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_post, 253, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 253, __pyx_L1_error)
 
-  /* "api.pyx":273
+  /* "api.pyx":257
  * 
  * 
  * def error(str s):             # <<<<<<<<<<<<<<
  *     mx.error(s.encode('utf-8'))
  * 
  */
-  __pyx_tuple__35 = PyTuple_Pack(1, __pyx_n_s_s); if (unlikely(!__pyx_tuple__35)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_tuple__29 = PyTuple_Pack(1, __pyx_n_s_s); if (unlikely(!__pyx_tuple__29)) __PYX_ERR(0, 257, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__29);
+  __Pyx_GIVEREF(__pyx_tuple__29);
+  __pyx_codeobj__30 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__29, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_error, 257, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__30)) __PYX_ERR(0, 257, __pyx_L1_error)
+
+  /* "api.pyx":267
+ * 
+ * 
+ * def random(int n):             # <<<<<<<<<<<<<<
+ *     return np.random.rand(n)
+ * 
+ */
+  __pyx_tuple__31 = PyTuple_Pack(2, __pyx_n_s_n, __pyx_n_s_n); if (unlikely(!__pyx_tuple__31)) __PYX_ERR(0, 267, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__31);
+  __Pyx_GIVEREF(__pyx_tuple__31);
+  __pyx_codeobj__32 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__31, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_random, 267, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__32)) __PYX_ERR(0, 267, __pyx_L1_error)
+
+  /* "api.pyx":271
+ * 
+ * 
+ * def echo(*args):             # <<<<<<<<<<<<<<
+ *     return args
+ * 
+ */
+  __pyx_tuple__33 = PyTuple_Pack(1, __pyx_n_s_args); if (unlikely(!__pyx_tuple__33)) __PYX_ERR(0, 271, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__33);
+  __Pyx_GIVEREF(__pyx_tuple__33);
+  __pyx_codeobj__34 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__33, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_echo, 271, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__34)) __PYX_ERR(0, 271, __pyx_L1_error)
+
+  /* "api.pyx":275
+ * 
+ * 
+ * def total(*args):             # <<<<<<<<<<<<<<
+ *     return sum(args)
+ * 
+ */
+  __pyx_tuple__35 = PyTuple_Pack(1, __pyx_n_s_args); if (unlikely(!__pyx_tuple__35)) __PYX_ERR(0, 275, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__35);
   __Pyx_GIVEREF(__pyx_tuple__35);
-  __pyx_codeobj__36 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__35, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_error, 273, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__36)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_codeobj__36 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__35, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_api_pyx, __pyx_n_s_total, 275, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__36)) __PYX_ERR(0, 275, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -6636,64 +6636,64 @@ if (!__Pyx_RefNanny) {
  */
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_greeting, __pyx_kp_u_Hello_World) < 0) __PYX_ERR(0, 250, __pyx_L1_error)
 
-  /* "api.pyx":257
- * 
- * 
- * def random(int n):             # <<<<<<<<<<<<<<
- *     return np.random.rand(n)
- * 
- */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_25random, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 257, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_random, __pyx_t_1) < 0) __PYX_ERR(0, 257, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "api.pyx":261
- * 
- * 
- * def echo(*args):             # <<<<<<<<<<<<<<
- *     return args
- * 
- */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_27echo, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 261, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_echo, __pyx_t_1) < 0) __PYX_ERR(0, 261, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "api.pyx":265
- * 
- * 
- * def total(*args):             # <<<<<<<<<<<<<<
- *     return sum(args)
- * 
- */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_29total, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 265, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_total, __pyx_t_1) < 0) __PYX_ERR(0, 265, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "api.pyx":269
+  /* "api.pyx":253
  * 
  * 
  * def post(str s):             # <<<<<<<<<<<<<<
  *     mx.post(s.encode('utf-8'))
  * 
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_31post, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 269, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_23post, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 253, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_post, __pyx_t_1) < 0) __PYX_ERR(0, 269, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_post, __pyx_t_1) < 0) __PYX_ERR(0, 253, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "api.pyx":273
+  /* "api.pyx":257
  * 
  * 
  * def error(str s):             # <<<<<<<<<<<<<<
  *     mx.error(s.encode('utf-8'))
  * 
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_33error, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_25error, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 257, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_error, __pyx_t_1) < 0) __PYX_ERR(0, 273, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_error, __pyx_t_1) < 0) __PYX_ERR(0, 257, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "api.pyx":267
+ * 
+ * 
+ * def random(int n):             # <<<<<<<<<<<<<<
+ *     return np.random.rand(n)
+ * 
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_29random, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 267, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_random, __pyx_t_1) < 0) __PYX_ERR(0, 267, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "api.pyx":271
+ * 
+ * 
+ * def echo(*args):             # <<<<<<<<<<<<<<
+ *     return args
+ * 
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_31echo, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 271, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_echo, __pyx_t_1) < 0) __PYX_ERR(0, 271, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "api.pyx":275
+ * 
+ * 
+ * def total(*args):             # <<<<<<<<<<<<<<
+ *     return sum(args)
+ * 
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_33total, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_total, __pyx_t_1) < 0) __PYX_ERR(0, 275, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "api.pyx":1
