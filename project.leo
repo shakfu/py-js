@@ -91,54 +91,57 @@
 <v t="sta.20200602170222.6"><vh>void py_exec</vh></v>
 <v t="sta.20200602170222.7"><vh>void py_eval</vh></v>
 </v>
-<v t="sta.20200602170255.1"><vh>@clean test_py2.c</vh>
-<v t="sta.20200602170336.1"><vh>typedef struct</vh></v>
-<v t="sta.20200602170336.2"><vh>int main</vh></v>
-<v t="sta.20200602170336.3"><vh>void handle_py_error</vh></v>
-<v t="sta.20200602170336.4"><vh>void py_import</vh></v>
-<v t="sta.20200602170336.5"><vh>void py_eval</vh></v>
-<v t="sta.20200602170336.6"><vh>void py_exec</vh></v>
-<v t="sta.20200602170336.7"><vh>void py_execfile</vh></v>
-<v t="sta.20200602170336.8"><vh>void py_assign</vh></v>
-<v t="sta.20200602170336.9"><vh>void py_anything</vh></v>
-</v>
-<v t="sta.20200602170358.1"><vh>@clean test_goto.c</vh>
-<v t="sta.20200602170611.1"><vh>int main</vh></v>
-</v>
-<v t="sta.20200602170405.1"><vh>@clean test_args.c</vh>
-<v t="sta.20200602170608.1"><vh>int main</vh></v>
-</v>
-<v t="sta.20200602170419.1"><vh>@clean test_arg2.c</vh>
-<v t="sta.20200602170604.1"><vh>int main</vh></v>
-</v>
-<v t="sta.20200602170439.1"><vh>@clean test_string.c</vh>
-<v t="sta.20200602170602.1"><vh>int main</vh></v>
-</v>
-<v t="sta.20200602170448.1"><vh>@clean test_print.c</vh>
-<v t="sta.20200602170558.1"><vh>void printf2</vh></v>
-<v t="sta.20200602170558.2"><vh>void sprintf2</vh></v>
-<v t="sta.20200602170558.3"><vh>void test_sprintf2</vh></v>
-<v t="sta.20200602170558.4"><vh>int main</vh></v>
-</v>
 <v t="sta.20200602170456.1"><vh>@clean test_minim.c</vh>
 <v t="sta.20200602170556.1"><vh>int main</vh></v>
 </v>
 <v t="sta.20200602170513.1"><vh>@clean test_call.c</vh>
 <v t="sta.20200602170550.1"><vh>int main</vh></v>
 </v>
-<v t="sta.20200602174033.1"><vh>@clean test_interactive.c</vh>
-<v t="sta.20200602174134.1"><vh>int main</vh></v>
-</v>
-<v t="sta.20200602170502.1"><vh>@clean test_demo.py</vh>
-<v t="sta.20200602170553.1"><vh>Declarations</vh></v>
-<v t="sta.20200602170553.2"><vh>module</vh></v>
-<v t="sta.20200602170553.3"><vh>expression</vh></v>
-<v t="sta.20200602170553.4"><vh>test_import</vh></v>
-<v t="sta.20200602170553.5"><vh>test_import_error</vh></v>
-<v t="sta.20200602170553.6"><vh>test_eval</vh></v>
-</v>
 </v>
 <v t="sta.20200602110836.1"><vh>@chapter src</vh>
+<v t="sta.20200620071935.1"><vh>@clean api.pyx</vh>
+<v t="sta.20200620071950.1"><vh>Declarations</vh></v>
+<v t="sta.20200620071950.2"><vh>extern</vh></v>
+<v t="sta.20200620071950.3"><vh>class</vh>
+<v t="sta.20200620071950.4"><vh>px</vh></v>
+<v t="sta.20200620071950.5"><vh>bytes</vh></v>
+<v t="sta.20200620071950.6"><vh>__cinit__</vh></v>
+<v t="sta.20200620071950.7"><vh>bang</vh></v>
+<v t="sta.20200620071950.8"><vh>log</vh></v>
+<v t="sta.20200620071950.9"><vh>error</vh></v>
+<v t="sta.20200620071950.10"><vh>scan</vh></v>
+<v t="sta.20200620071950.11"><vh>lookup</vh></v>
+<v t="sta.20200620071950.12"><vh>str</vh></v>
+<v t="sta.20200620071950.13"><vh>int</vh></v>
+<v t="sta.20200620071950.14"><vh>int</vh></v>
+<v t="sta.20200620071950.15"><vh>send</vh></v>
+<v t="sta.20200620071950.16"><vh>success</vh></v>
+<v t="sta.20200620071950.17"><vh>fail</vh></v>
+<v t="sta.20200620071950.18"><vh>out_sym</vh></v>
+<v t="sta.20200620071950.19"><vh>out_float</vh></v>
+<v t="sta.20200620071950.20"><vh>out_int</vh></v>
+<v t="sta.20200620071950.21"><vh>out_list</vh></v>
+<v t="sta.20200620071950.22"><vh>out_dict</vh></v>
+<v t="sta.20200620071950.23"><vh>out</vh></v>
+</v>
+<v t="sta.20200620071950.24"><vh>get_globals</vh></v>
+<v t="sta.20200620071950.25"><vh>bang</vh></v>
+<v t="sta.20200620071950.26"><vh>success</vh></v>
+<v t="sta.20200620071950.27"><vh>fail</vh></v>
+<v t="sta.20200620071950.28"><vh>out_sym</vh></v>
+<v t="sta.20200620071950.29"><vh>out_int</vh></v>
+<v t="sta.20200620071950.30"><vh>out_float</vh></v>
+<v t="sta.20200620071950.31"><vh>out_list</vh></v>
+<v t="sta.20200620071950.32"><vh>out_dict</vh></v>
+<v t="sta.20200620071950.33"><vh>send</vh></v>
+<v t="sta.20200620071950.34"><vh>lookup</vh></v>
+<v t="sta.20200620071950.35"><vh>public</vh></v>
+<v t="sta.20200620071950.36"><vh>random</vh></v>
+<v t="sta.20200620071950.37"><vh>echo</vh></v>
+<v t="sta.20200620071950.38"><vh>total</vh></v>
+<v t="sta.20200620071950.39"><vh>post</vh></v>
+<v t="sta.20200620071950.40"><vh>error</vh></v>
+</v>
 <v t="sta.20200602145459.1"><vh>@clean py.h</vh>
 <v t="sta.20200602150733.1"><vh>includes</vh></v>
 <v t="sta.20200602150814.1"><vh>constants</vh></v>
@@ -256,8 +259,6 @@
 </t>
 <t tx="sta.20200602120251.12">void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    // see:
-    // https://cycling74.com/forums/error-handling-with-object_method_typed
     t_object* obj = NULL;
     char* obj_name = NULL;
     t_symbol* msg_sym = NULL;
@@ -363,7 +364,7 @@ error:
     if (PyErr_Occurred()) {
 
         // build custom msg
-        char msg[50];
+        char msg[PY_MAX_ERR_CHAR];
 
         va_list va;
         va_start(va, fmt);
@@ -374,11 +375,7 @@ error:
         PyObject *ptype, *pvalue, *ptraceback;
         PyErr_Fetch(&amp;ptype, &amp;pvalue, &amp;ptraceback);
         PyErr_NormalizeException(&amp;ptype, &amp;pvalue, &amp;ptraceback);
-
-        // PyObject* ptype_pstr = PyObject_Repr(ptype);
-        // const char* ptype_str = PyUnicode_AsUTF8(ptype_pstr);
         Py_XDECREF(ptype);
-        // Py_XDECREF(ptype_pstr);
 
         PyObject* pvalue_pstr = PyObject_Repr(pvalue);
         const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
@@ -699,7 +696,7 @@ error:
         py_error(x, "could not retrieve result of callable(list)");
         goto error;
     }
-    goto handle_output; // this is redundant but safe in case code is added
+    goto handle_output; // this is redundant but safer in case code is added
 
 handle_output:
 
@@ -959,7 +956,6 @@ error:
 {
     // wchar_t *program;
 
-    // program = Py_DecodeLocale(argv[0], NULL);
     // program = Py_DecodeLocale("py", NULL);
     // if (program == NULL) {
     //     exit(1);
@@ -2225,563 +2221,11 @@ error:
     Py_XDECREF(pval);
 }
 </t>
-<t tx="sta.20200602170255.1">
-/* python */
-#define PY_SSIZE_T_CLEAN
-#include &lt;Python.h&gt;
-
-
-/* --------------------------------------- */
-// types
-
-@others
-@language c
-@tabwidth -4
-</t>
-<t tx="sta.20200602170336.1">typedef struct _py {
-    PyObject* p_globals;
-} t_py;
-
-
-typedef enum _bool {
-    false,
-    true
-} bool;
-
-/* --------------------------------------- */
-// forward func declarations
-
-void py_import(t_py* x, char* args);
-void py_eval(t_py* x, char* args);
-void py_exec(t_py* x, char* args);
-void py_execfile(t_py* x, char* args);
-void py_run(t_py* x, char* args);
-void py_pipe(t_py* x, char* args);
-
-</t>
-<t tx="sta.20200602170336.2">int main(int argc, char* argv[])
-{
-    t_py obj = { .p_globals = NULL };
-    t_py* x = &amp;obj;
-
-    Py_Initialize();
-
-    // python init
-    PyObject* main_module = PyImport_AddModule("__main__"); // borrowed reference
-    x-&gt;p_globals = PyModule_GetDict(main_module); // borrowed reference
-
-    if (argc &gt; 2) {
-        if (strcmp(argv[1], "import") == 0)
-            py_import(x, argv[2]);
-        if (strcmp(argv[1], "eval") == 0)
-            py_eval(x, argv[2]);
-        if (strcmp(argv[1], "exec") == 0)
-            py_exec(x, argv[2]);
-        if (strcmp(argv[1], "execfile") == 0)
-            py_execfile(x, argv[2]);
-        if (strcmp(argv[1], "run") == 0)
-            py_run(x, argv[2]);
-        if (strcmp(argv[1], "pipe") == 0)
-            py_pipe(x, argv[2]);
-    } else {
-        printf("usage: test [import, eval, exec, execfile, run, pipe] args\n");
-    }
-
-    Py_FinalizeEx();
-    return 0;
-}
-
-void py_handle_error(void)
-</t>
-<t tx="sta.20200602170336.3">{
-    if (PyErr_Occurred()) {
-        PyErr_Print();
-    }
-}
-
-
-void py_handle_float_output(t_py* x, PyObject* pfloat, bool free_now)
-{
-    if (pfloat == NULL) {
-</t>
-<t tx="sta.20200602170336.4">        goto error;
-    }
-
-    if (PyFloat_Check(pfloat)) {
-        float float_result = (float)PyFloat_AsDouble(pfloat);
-        if (float_result == -1.0) {
-            if (PyErr_Occurred())
-                goto error;
-        }
-
-        printf("float: %f\n", float_result);
-    }
-
-    if (free_now) {
-        Py_XDECREF(pfloat);
-    }
-    return;
-
-error:
-    py_handle_error();
-    Py_XDECREF(pfloat);
-}
-
-
-void py_handle_long_output(t_py* x, PyObject* plong, bool free_now)
-{
-    if (plong == NULL) {
-        goto error;
-    }
-
-    if (PyLong_Check(plong)) {
-        long long_result = PyLong_AsLong(plong);
-        if (long_result == -1) {
-            if (PyErr_Occurred())
-                goto error;
-        }
-        printf("long: %ld\n", long_result);
-    }
-
-    if (free_now) {
-        Py_XDECREF(plong);
-    }
-    return;
-
-error:
-    py_handle_error();
-    Py_XDECREF(plong);
-}
-
-
-void py_handle_string_output(t_py* x, PyObject* pstring, bool free_now)
-{
-    if (pstring == NULL) {
-        goto error;
-    }
-
-    if (PyUnicode_Check(pstring)) {
-        const char* unicode_result = PyUnicode_AsUTF8(pstring);
-        if (unicode_result == NULL) {
-            goto error;
-        }
-        printf("unicode: %s\n", unicode_result);
-    }
-
-    if (free_now) {
-        Py_XDECREF(pstring);
-    }
-    return;
-
-error:
-    py_handle_error();
-    Py_XDECREF(pstring);
-}
-
-
-</t>
-<t tx="sta.20200602170336.5">void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
-{
-    if (plist == NULL) {
-        goto error;
-    }
-
-    if (PySequence_Check(plist) &amp;&amp; !PyUnicode_Check(plist)
-        &amp;&amp; !PyBytes_Check(plist) &amp;&amp; !PyByteArray_Check(plist)) {
-        PyObject* iter = NULL;
-        PyObject* item = NULL;
-        int i = 0;
-
-        Py_ssize_t seq_size = PySequence_Length(plist);
-
-        if (seq_size == 0) {
-            printf("cannot convert py list of length 0 to atoms");
-            goto error;
-        }
-
-        if ((iter = PyObject_GetIter(plist)) == NULL) {
-            goto error;
-        }
-
-        while ((item = PyIter_Next(iter)) != NULL) {
-            if (PyLong_Check(item)) {
-                long long_item = PyLong_AsLong(item);
-                if (long_item == -1) {
-                    if (PyErr_Occurred())
-                        goto error;
-                }
-                printf("%d long: %ld\n", i, long_item);
-                i++;
-            }
-
-            if PyFloat_Check (item) {
-                float float_item = PyFloat_AsDouble(item);
-                if (float_item == -1.0) {
-                    if (PyErr_Occurred())
-                        goto error;
-                }
-                printf("%d float: %f\n", i, float_item);
-                i++;
-            }
-
-            if PyUnicode_Check (item) {
-                const char* unicode_item = PyUnicode_AsUTF8(item);
-                if (unicode_item == NULL) {
-</t>
-<t tx="sta.20200602170336.6">                    goto error;
-                }
-                printf("%d unicode: %s\n", i, unicode_item);
-                i++;
-            }
-            Py_DECREF(item);
-        }
-
-    }
-
-    if (free_now) {
-        Py_XDECREF(plist);
-    }
-    return;
-
-error:
-    py_handle_error();
-    Py_XDECREF(plist);
-
-}
-
-
-void py_handle_output(t_py* x, PyObject* pval)
-{
-    py_handle_float_output(x, pval, 0);
-    py_handle_long_output(x, pval, 0);
-</t>
-<t tx="sta.20200602170336.7">    py_handle_string_output(x, pval, 0);
-    py_handle_list_output(x, pval, 0);
-
-    // final cleanup
-    Py_XDECREF(pval);
-    return;
-}
-
-//--------------------------------------------------------------------------
-
-void py_import(t_py* x, char* args)
-{
-    PyObject* x_module = NULL;
-
-    if (args != NULL) {
-        x_module = PyImport_ImportModule(args); // x_module borrrowed ref
-        if (x_module == NULL) {
-            PyErr_SetString(PyExc_ImportError, "Ooops again.");
-            goto error;
-        }
-        PyDict_SetItemString(x-&gt;p_globals, args, x_module);
-        printf("imported: %s\n", args);
-    }
-    // else goto error;
-
-error:
-    py_handle_error();
-}
-
-
-void py_run(t_py* x, char* args)
-{
-    PyObject* pval = NULL;
-    FILE* fhandle = NULL;
-    int ret = 0;
-
-    if (args == NULL) {
-        printf("%s: could not retrieve args\n", args);
-        goto error;
-    }
-
-    pval = Py_BuildValue("s", args); // new reference
-    if (pval == NULL) {
-        goto error;
-    }
-
-    fhandle = _Py_fopen_obj(pval, "r+");
-    if (fhandle == NULL) {
-        printf("could not open file '%s'\n", args);
-        goto error;
-    }
-
-    ret = PyRun_SimpleFile(fhandle, args);
-    if (ret == -1) {
-        goto error;
-    }
-
-    // success
-    fclose(fhandle);
-    Py_DECREF(pval);
-
-error:
-    py_handle_error();
-    Py_XDECREF(pval);
-}
-
-
-void py_execfile(t_py* x, char* args)
-{
-    PyObject* pval = NULL;
-    FILE* fhandle = NULL;
-
-    if (args == NULL) {
-        printf("execfile: could not retrieve arg: %s\n", args);
-        goto error;
-    }
-
-    fhandle = fopen(args, "r");
-    if (fhandle == NULL) {
-        printf("could not open file '%s'\n", args);
-        goto error;
-    }
-
-    pval = PyRun_File(fhandle, args, Py_file_input, x-&gt;p_globals,
-                      x-&gt;p_globals);
-    if (pval == NULL) {
-        fclose(fhandle);
-        goto error;
-    }
-
-    // success cleanup
-    fclose(fhandle);
-    Py_DECREF(pval);
-
-error:
-    py_handle_error();
-    Py_XDECREF(pval);
-}
-
-
-void py_exec(t_py* x, char* args)
-{
-    PyObject* pval = NULL;
-
-</t>
-<t tx="sta.20200602170336.8">    if (args == NULL) {
-        printf("exec: could not retrieve args: %s\n", args);
-        goto error;
-    }
-
-    pval = PyRun_String(args, Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-
-    // success cleanup
-    Py_DECREF(pval);
-
-error:
-    py_handle_error();
-    Py_XDECREF(pval);
-}
-
-
-void py_eval(t_py* x, char* args)
-{
-    PyObject* pval = NULL;
-    PyObject* locals = NULL;
-
-    if (args == NULL) {
-        printf("eval: could not retrieve quoted args: %s\n", args);
-        goto error;
-    }
-
-    locals = PyDict_New();
-    if (locals == NULL) {
-        goto error;
-    }
-
-    pval = PyRun_String(args, Py_eval_input, x-&gt;p_globals, locals);
-    if (pval == NULL) {
-        goto error;
-    }
-
-    py_handle_output(x, pval);
-    return;
-
-error:
-    py_handle_error();
-    Py_XDECREF(pval);
-}
-
-
-void py_pipe(t_py* x, char* args)
-{
-    PyObject* pipe_pre = NULL;
-    PyObject* pipe_fun = NULL;    
-    PyObject* pval = NULL;
-    PyObject* p_str = NULL;
-
-    pipe_pre = PyRun_String(
-        "def pipe(arg):\n"
-            "\targs = arg.split()\n"
-            "\tval = eval(args[0])\n"
-            "\tfuncs = [eval(f) for f in args[1:]]\n"
-            "\tfor f in funcs:\n"
-                "\t\tval = f(val)\n"
-            "\treturn val\n",
-            Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
-
-    if (pipe_pre == NULL) {
-        printf("pipe func is NULL");
-        goto error;
-    }
-
-    p_str = PyUnicode_FromString(args);
-    if (p_str == NULL) {
-        printf("cstr -&gt; pyunicode conversion failed");
-        goto error;
-    }
-
-    pipe_fun = PyDict_GetItemString(x-&gt;p_globals, "pipe");
-    if (pipe_fun == NULL) {
-        printf("retrieving pipe func from globals failed");
-        goto error;
-    }
-
-    pval = PyObject_CallFunctionObjArgs(pipe_fun, p_str, NULL);
-
-    if (pval != NULL) {
-        py_handle_output(x, pval);
-        Py_XDECREF(pipe_pre);
-        Py_XDECREF(p_str);
-        // Py_XDECREF(pipe_fun);
-        Py_XDECREF(pval);
-
-        return;
-    } else {
-        goto error;
-    }
-
-error:
-    py_handle_error();
-    Py_XDECREF(pipe_pre);
-    Py_XDECREF(p_str);
-    // Py_XDECREF(pipe_fun);
-    Py_XDECREF(pval);
-}
-
-</t>
-<t tx="sta.20200602170336.9"></t>
-<t tx="sta.20200602170358.1">#include &lt;stdio.h&gt;
-
-@others
-@language c
-@tabwidth -4
-</t>
-<t tx="sta.20200602170405.1">/*
-
-Analysis finished in 314mss
-
-No issues found
-
-*/
-
-
-#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
-#include &lt;stdlib.h&gt;
-
-#define BUFFER_SIZE 20
-
-@others
-@language c
-@tabwidth -4
-</t>
-<t tx="sta.20200602170419.1">/*
-
-Analysis finished in 268mss
-
-Found 3 issues
-
-test_args.c:55: error: MEMORY_LEAK
-  memory dynamically allocated by call to `malloc()` at line 52, column 25 is not reachable after line 55, column 9.
-  53.
-  54.       for(i = 1; i &lt;= size; i++) {
-  55. &gt;         str = (char *)realloc(str, (v + strlen(argv[i])));
-  56.           strcat(str, argv[i]);
-  57.           strcat(str, " ");
-
-test_args.c:60: error: MEMORY_LEAK
-  memory dynamically allocated by call to `malloc()` at line 52, column 25 is not reachable after line 60, column 5.
-  58.       }
-  59.
-  60. &gt;     printf("%s\n", str);
-  61.       return 0;
-  62.   }
-
-test_args.c:56: error: NULL_DEREFERENCE
-  pointer `str` last assigned on line 55 could be null and is dereferenced by call to `strcat()` at line 56, column 9.
-  54.       for(i = 1; i &lt;= size; i++) {
-  55.           str = (char *)realloc(str, (v + strlen(argv[i])));
-  56. &gt;         strcat(str, argv[i]);
-  57.           strcat(str, " ");
-  58.       }
-
-
-Summary of the reports
-
-       MEMORY_LEAK: 2
-  NULL_DEREFERENCE: 1
-
-*/
-
-
-#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
-#include &lt;stdlib.h&gt;
-
-@others
-@language c
-@tabwidth -4
-</t>
-<t tx="sta.20200602170439.1">#include &lt;stdio.h&gt;
-#include &lt;stdlib.h&gt;
-#include &lt;string.h&gt;
-
-
-char *foo(int count) {
-    char *ret = malloc(count);
-    if(!ret)
-        return NULL;
-
-    for(int i = 0; i &lt; count; ++i) 
-        ret[i] = i;
-
-    return ret;
-}
-
-
-
-void doit(char *buf, int count) {
-    for(int i = 0; i &lt; count; ++i)
-        buf[i] = i;
-}
-
-
-@others
-@language c
-@tabwidth -4
-</t>
-<t tx="sta.20200602170448.1">#include &lt;stdarg.h&gt;
-#include &lt;stdio.h&gt;
-
-@others
-@language c
-@tabwidth -4
-</t>
 <t tx="sta.20200602170456.1">#define PY_SSIZE_T_CLEAN
 #include &lt;Python.h&gt;
 
 @others
 @language c
-@tabwidth -4
-</t>
-<t tx="sta.20200602170502.1">@others
-@language python
 @tabwidth -4
 </t>
 <t tx="sta.20200602170513.1">#define PY_SSIZE_T_CLEAN
@@ -2856,169 +2300,6 @@ void doit(char *buf, int count) {
     return 0;
 }
 </t>
-<t tx="sta.20200602170553.1">import os
-
-import pytest
-from conftest import cwd, join
-
-MODULES = ["os", "sys", "math"]
-
-EXPRESSIONS = {
-    "1+1": "int: 2",
-    "2*10": "int: 20"
-}
-
-EVAL_FAIL = [
-    # syntax errors
-    "000000000000007",
-    "000777", 
-    "0777",
-    "077787", 
-    "090000000000000",
-    "0b100e1", 
-    "0b101j2", 
-    "0e",
-    "0o153j2", 
-    "0o777e1", 
-    "0x.", 
-    "0xj", 
-    "lambda a,a:0",
-    "lambda a,a=1:0",
-    "lambda a=1,a=1:0",
-]
-
-EVAL_EQUALS = [
-    ("0xff", 255)
-    ("0777.", 777)
-    ("0777.0", 777)
-    ("000000000000000000000000000000000000000000000000000777e0", 777)
-    ("0777e1", 7770)
-    ("0e0", 0)
-    ("0000e-012", 0)
-    ("09.5", 9.5)
-    ("000", 0)
-    ("00.0", 0)
-    ("0e3", 0)
-    ("090000000000000.", 90000000000000.)
-    ("090000000000000.0000000000000000000000", 90000000000000.)
-    ("090000000000000e0", 90000000000000.)
-    ("090000000000000e-0", 90000000000000.)
-    ("000000000000008.", 8.)
-    ("000000000000009.", 9.)
-    ("0b101010", 42)
-    ("-0b000000000010", -2)
-    ("0o777", 511)
-    ("-0o0000010", -8)
-]
-
-EXEC_FAIL = [
-    # syntax errors
-    'def f(a, a): pass',
-    'def f(a = 0, a = 1): pass',
-    'def f(a): global a; a = 1',
-    'def f(a=1, b): pass',
-    'None = 0',
-    'None += 0',
-    '__builtins__.None = 0',
-    'def None(): pass',
-    'class None: pass',
-    '(a, None) = 0, 0',
-    'for None in range(10): pass',
-    'def f(None): pass',
-    'import None',
-    'import x as None',
-    'from x import None',
-    'from x import y as None',
-]
-
-IMPORT_FAIL = [
-    'import (os, sys)',
-    'import (os), (sys)',
-    'import ((os), (sys))',
-    'import (sys',
-    'import sys)',
-    'import (os,)',
-    'import os As bar',
-    'import os.path a bar',
-    'from sys import stdin As stdout',
-    'from sys import stdin a stdout',
-    'from (sys) import stdin',
-    'from __future__ import (nested_scopes',
-    'from __future__ import nested_scopes)',
-    'from __future__ import nested_scopes,\ngenerators',
-    'from sys import (stdin',
-    'from sys import stdin)',
-    'from sys import stdin, stdout,\nstderr',
-    'from sys import stdin si',
-    'from sys import stdin,',
-    'from sys import (*)',
-    'from sys import (stdin,, stdout, stderr)',
-    'from sys import (stdin, stdout),',
-    ]
-
-
-
-
-IMPORT_SUCCEED = [
-    'import sys',
-    'import os, sys',
-    'import os as bar',
-    'import os.path as bar',
-    'from __future__ import nested_scopes, generators',
-    'from __future__ import (nested_scopes,\ngenerators)',
-    'from __future__ import (nested_scopes,\ngenerators,)',
-    'from sys import stdin, stderr, stdout',
-    'from sys import (stdin, stderr,\nstdout)',
-    'from sys import (stdin, stderr,\nstdout,)',
-    'from sys import (stdin\n, stderr, stdout)',
-    'from sys import (stdin\n, stderr, stdout,)',
-    'from sys import stdin as si, stdout as so, stderr as se',
-    'from sys import (stdin as si, stdout as so, stderr as se)',
-    'from sys import (stdin as si, stdout as so, stderr as se,)',
-    ]
-
-
-
-
-
-</t>
-<t tx="sta.20200602170553.2">@pytest.fixture(scope="module", params=MODULES)
-def module(request):
-    expr = request.param
-    yield expr
-
-</t>
-<t tx="sta.20200602170553.3">@pytest.fixture(scope="module", params=EXPRESSIONS.keys())
-def expression(request):
-    mod = request.param
-    yield mod
-
-
-
-</t>
-<t tx="sta.20200602170553.4">def test_import(capfd, module):
-    arg = f'import {module}'
-    os.system(f'./tests/test_py {arg}')
-    captured = capfd.readouterr()
-    assert captured.out == f"imported: {module}\n"
-
-
-</t>
-<t tx="sta.20200602170553.5">def test_import_error(capfd):
-    arg = f'import hello'
-    os.system(f'./tests/test_py {arg}')
-    captured = capfd.readouterr()
-    assert captured.out == f"PyException('{arg}'): Ooops again.\n"
-
-</t>
-<t tx="sta.20200602170553.6">def test_eval(capfd, expression):
-    arg = f'eval {expression}'
-    os.system(f'./tests/test_py {arg}')
-    captured = capfd.readouterr()
-    result = EXPRESSIONS[expression]
-    assert captured.out == f"{result}\n"
-
-</t>
 <t tx="sta.20200602170556.1">int main(int argc, char *argv[]) {
     (void)argc;
     wchar_t *program = Py_DecodeLocale(argv[0], NULL);
@@ -3034,244 +2315,6 @@ def expression(request):
     }
     PyMem_RawFree(program);
     return 0;
-}
-</t>
-<t tx="sta.20200602170558.1">void printf2(char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-}
-
-</t>
-<t tx="sta.20200602170558.2">void sprintf2(char* buf, char* fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    vsprintf(buf, fmt, va);
-    va_end(va);
-}
-
-</t>
-<t tx="sta.20200602170558.3">void test_sprintf2(void)
-{
-    char buff[100];
-    sprintf2(buff, "Hello, %s, aged %d", "Jo", 27);
-    printf("%s\n", buff);
-}
-
-</t>
-<t tx="sta.20200602170558.4">int main()
-{
-    printf("printf: hello %d\n", 1);
-    printf2("printf2: hello %d\n", 1);
-    test_sprintf2();
-}
-</t>
-<t tx="sta.20200602170602.1">int main()
-{
-	char txt[10] = {0};
-    char txt1[50] = "Hello World";
-    char* txt2 = "World Hello";
-    char** p_txt = &amp;txt2;
-    doit(txt, 10);
-
-    char *p = foo(10);
-    if(p) {
-        printf("p: %s length: %ld\n", p, strlen(p));
-        free(p);
-    }
-
-    printf("txt1: %s length: %ld\n", txt1, strlen(txt1));
-    printf("txt2: %s length: %ld\n", txt2, strlen(txt2));
-    printf("p_txt: %s length: %ld\n", *p_txt, strlen(*p_txt));
-    printf("txt: %s length: %ld\n", txt, strlen(txt));
-}
-</t>
-<t tx="sta.20200602170604.1">int main(int argc, char *argv[]) {
-    if(argc == 1) {
-        printf("ERROR: Expected at least 1 argument\n");
-        return 0;
-    }
-
-    int i, v = 0, size = argc - 1;
-
-    char *str = (char *)malloc(v);
-
-    for(i = 1; i &lt;= size; i++) {
-        str = (char *)realloc(str, (v + strlen(argv[i])));
-        strcat(str, argv[i]);
-        strcat(str, " ");
-    }
-
-    printf("%s\n", str);
-    return 0;
-}
-</t>
-<t tx="sta.20200602170608.1">int main(int argc, char *argv[]) {
-
-    char buffer[BUFFER_SIZE];
-    int total_input_length = 0;
-
-    if(argc == 1) {
-        printf("ERROR: Expected at least 1 argument\n");
-        return 0;
-    }
-
-    for (int i=1; i &lt;= argc-1; i++) {
-        total_input_length += strlen(argv[i]);
-    }
-
-    if (total_input_length &gt; BUFFER_SIZE-1) {
-        printf("input length of %d &gt; available buffer length of %d by %d characters.\n",
-        total_input_length, BUFFER_SIZE-1, total_input_length - (BUFFER_SIZE-1));
-        exit(1);
-    }
-
-    // copy first
-    strncpy(buffer, argv[1], BUFFER_SIZE-1);
-    buffer[BUFFER_SIZE-1] = '\0';
-
-    for(int i = 2; i &lt;= argc-1; i++) {
-        printf("%d.1 strlen(buffer): %ld\n", i, strlen(buffer));
-        strncat(buffer, " ", BUFFER_SIZE - strlen(buffer) - 1);
-        printf("%d.2 strlen(buffer): %ld\n", i, strlen(buffer));
-        strncat(buffer, argv[i], BUFFER_SIZE - strlen(buffer) - 1);
-    }
-
-    printf("final strlen(buffer): %ld\n", strlen(buffer));
-    printf("%s\n", buffer);
-    return 0;
-}
-</t>
-<t tx="sta.20200602170611.1">int main()
-{
-    int x = 10;
-    // fall through with no return!
-
-hello:
-    x++;
-    printf("hello: %d\n", x);
-
-bye:
-    x++;
-    printf("bye: %d\n", x);
-
-    return 0;
-}
-</t>
-<t tx="sta.20200602174033.1">#include &lt;stdio.h&gt;
-
-#define PY_SSIZE_T_CLEAN
-#include &lt;Python.h&gt;
-#include &lt;compile.h&gt;
-#include &lt;eval.h&gt;
-#include &lt;object.h&gt;
-
-#include "readline.h"
-
-int add_history(char*);
-
-@others
-@language c
-@tabwidth -4
-</t>
-<t tx="sta.20200602174134.1">int main(int argc, char* argv[])
-{
-    int i, j, done = 0; /* lengths of line, code */
-    char ps1[] = "&gt;&gt;&gt; ";
-    char ps2[] = "... ";
-    char* prompt = ps1;
-    char *msg, *line, *code = NULL;
-    PyObject *src, *glb, *loc;
-    PyObject *exc, *val, *trb, *obj, *dum;
-
-    Py_Initialize();
-    loc = PyDict_New();
-    glb = PyDict_New();
-    PyDict_SetItemString(glb, "__builtins__", PyEval_GetBuiltins());
-
-    while (!done) {
-        line = readline(prompt);
-
-        if (NULL == line) /* Ctrl-D pressed */
-        {
-            done = 1;
-        } else {
-            i = strlen(line);
-
-            if (i &gt; 0)
-                add_history(line); /* save non-empty lines */
-
-            if (NULL == code) /* nothing in code yet */
-                j = 0;
-            else
-                j = strlen(code);
-
-            code = realloc(code, i + j + 2);
-            if (NULL == code) /* out of memory */
-                exit(1);
-
-            if (0 == j)         /* code was empty, so */
-                code[0] = '\0'; /* keep strncat happy */
-
-            strncat(code, line, i); /* append line to code */
-            code[i + j] = '\n';     /* append '\n' to code */
-            code[i + j + 1] = '\0';
-
-            src = Py_CompileString(code, "&lt;stdin&gt;", Py_single_input);
-
-            if (NULL != src) /* compiled just fine - */
-            {
-                if (ps1 == prompt ||         /* "&gt;&gt;&gt; " or */
-                    '\n' == code[i + j - 1]) /* "... " and double '\n' */
-                {                            /* so execute it */
-                    dum = PyEval_EvalCode(src, glb, loc);
-                    Py_XDECREF(dum);
-                    Py_XDECREF(src);
-                    free(code);
-                    code = NULL;
-                    if (PyErr_Occurred())
-                        PyErr_Print();
-                    prompt = ps1;
-                }
-            } /* syntax error or E_EOF? */
-            else if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-                PyErr_Fetch(&amp;exc, &amp;val, &amp;trb); /* clears exception! */
-
-                if (PyArg_ParseTuple(val, "sO", &amp;msg, &amp;obj)
-                    &amp;&amp; !strcmp(msg,
-                               "unexpected EOF while parsing")) /* E_EOF */
-                {
-                    Py_XDECREF(exc);
-                    Py_XDECREF(val);
-                    Py_XDECREF(trb);
-                    prompt = ps2;
-                } else /* some other syntax error */
-                {
-                    PyErr_Restore(exc, val, trb);
-                    PyErr_Print();
-                    free(code);
-                    code = NULL;
-                    prompt = ps1;
-                }
-            } else /* some non-syntax error */
-            {
-                PyErr_Print();
-                free(code);
-                code = NULL;
-                prompt = ps1;
-            }
-
-            free(line);
-        }
-    }
-
-    Py_XDECREF(glb);
-    Py_XDECREF(loc);
-    Py_Finalize();
-    exit(0);
 }
 </t>
 <t tx="sta.20200603072826.1">long py_scan_callback(t_py* x, t_object* box)
@@ -3409,8 +2452,8 @@ error:
         return;
     }
 
-    else if (PySequence_Check(pval) &amp;&amp; !PyBytes_Check(pval) &amp;&amp; 
-            !PyByteArray_Check(pval)) {
+    else if (PySequence_Check(pval) &amp;&amp; !PyBytes_Check(pval)
+             &amp;&amp; !PyByteArray_Check(pval)) {
         py_handle_list_output(x, pval);
         return;
     }
@@ -3424,6 +2467,7 @@ error:
 </t>
 <t tx="sta.20200606073716.1">/*--------------------------------------------------------------------------*/
 // INTEROBJECT
+
 </t>
 <t tx="sta.20200607084251.1">void py_eval2(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -4162,20 +3206,6 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
-
-// void py_handle_output(t_py* x, PyObject* pval)
-// {
-//     // &lt;python type&gt; -&gt; left outlet output handlers
-//     // error handling is already provided in each handler
-//     py_handle_float_output(x, pval, 0);
-//     py_handle_long_output(x, pval, 0);
-//     py_handle_string_output(x, pval, 0);
-//     py_handle_list_output(x, pval, 0);
-
-//     // final cleanup
-//     Py_XDECREF(pval);
-//     return;
-// }
 
 </t>
 <t tx="sta.20200611235620.1">t_hashtab* get_global_registry(void) { return py_global_registry; }
@@ -5223,7 +4253,7 @@ cdef send3(self, str name, str msg, list args):
     char* text = NULL;
     t_max_err err;
     PyObject* pipe_pre = NULL;
-    PyObject* pipe_fun = NULL;    
+    PyObject* pipe_fun = NULL;
     PyObject* pval = NULL;
     PyObject* pstr = NULL;
 
@@ -5234,21 +4264,19 @@ cdef send3(self, str name, str msg, list args):
         goto error;
     }
 
-    pipe_pre = PyRun_String(
-        "def __py_maxmsp_pipe(arg):\n"
-            "\targs = arg.split()\n"
-            "\tval = eval(args[0])\n"
-            "\tfuncs = [eval(f) for f in args[1:]]\n"
-            "\tfor f in funcs:\n"
-                "\t\tval = f(val)\n"
-            "\treturn val\n",
-            Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+    pipe_pre = PyRun_String("def __py_maxmsp_pipe(arg):\n"
+                            "\targs = arg.split()\n"
+                            "\tval = eval(args[0])\n"
+                            "\tfuncs = [eval(f) for f in args[1:]]\n"
+                            "\tfor f in funcs:\n"
+                            "\t\tval = f(val)\n"
+                            "\treturn val\n",
+                            Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
 
     if (pipe_pre == NULL) {
         py_error(x, "pipe func is NULL");
         goto error;
     }
-    // py_log(x, "pipe func created");
 
     pstr = PyUnicode_FromString(text);
     if (pstr == NULL) {
@@ -5298,6 +4326,7 @@ error:
     // fail bang
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
 </t>
 <t tx="sta.20200619105805.1">void py_pipe_c(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -5399,5 +4428,328 @@ error:
 }
 </t>
 <t tx="sta.20200619110720.1"></t>
+<t tx="sta.20200620071935.1"># api.pyx
+@others
+@language cython
+@tabwidth -4
+</t>
+<t tx="sta.20200620071950.1">"""
+
+The main place to create wrappers and utilities to access max's api
+
+See below for examples of this.
+
+- [x] mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
+- [ ] t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
+
+
+"""
+#cimport cython
+from cpython cimport PyFloat_AsDouble
+from cpython cimport PyLong_AsLong
+from cpython.ref cimport PyObject
+
+from libc.stdlib cimport malloc
+from libc.string cimport strcpy, strlen
+
+cimport api_max as mx # api is a cython keyword!
+cimport api_py as px
+
+import numpy
+import numpy as np
+
+
+DEF MAX_CHARS = 32767
+DEF PY_MAX_ATOMS = 128
+
+
+</t>
+<t tx="sta.20200620071950.10">cdef scan(self):
+    px.py_scan(self.obj)
+
+</t>
+<t tx="sta.20200620071950.11">cdef lookup(self, str name):
+    cdef mx.t_hashtab* registry = px.get_global_registry()
+    cdef mx.t_object* obj = NULL
+    cdef mx.t_max_err err
+
+    if (mx.hashtab_getsize(registry) == 0):
+        self.error("registry not populated")
+        return
+
+    err = mx.hashtab_lookup(registry, 
+        mx.gensym(name.encode('utf-8')), &amp;obj)
+
+    if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
+        self.error("no object found with name")
+    else:
+        self.log("found object")
+
+# UNTESTED
+</t>
+<t tx="sta.20200620071950.12">cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
+    """atoms -&gt; python string"""
+    cdef long textsize = 0
+    cdef char* text = NULL
+    cdef mx.t_max_err err = mx.atom_gettext(argc, argv, &amp;textsize, &amp;text, 
+        mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
+    pstr = PyUnicode_FromString(text)
+    mx.sysmem_freeptr(text)
+    return pstr
+
+# UNTESTED
+</t>
+<t tx="sta.20200620071950.13">cdef int pstring_to_atoms(self, str parsestr, long argc, mx.t_atom *argv) except -1:
+    cdef char cparsestring[MAX_CHARS]
+    cparsestring = PyUnicode_AsUTF8(parsestr)
+    cdef mx.t_max_err err = mx.atom_setparse(&amp;argc, &amp;argv, cparsestring)
+    if err != mx.MAX_ERR_NONE: # test this!!
+        raise Exception("cannot convert c parsestring to atom array")
+
+# UNTESTED
+</t>
+<t tx="sta.20200620071950.14">cdef int cstring_to_atoms(self, char *parsestr, long argc, mx.t_atom *argv) except -1:
+    cdef mx.t_max_err err = mx.atom_setparse(&amp;argc, &amp;argv, parsestr)
+    if err != mx.MAX_ERR_NONE: # test this!!
+        raise Exception("cannot convert c parsestring to atom array")
+    else:
+        return 0
+
+</t>
+<t tx="sta.20200620071950.15">cdef send(self, str name, list args):
+    cdef long argc = &lt;long&gt;len(args) + 1
+    cdef mx.t_atom argv[PY_MAX_ATOMS]
+    _args = [name] + args
+
+    if argc &lt; 1:
+        self.error("no arguments given")
+        return
+
+    if argc &gt;= PY_MAX_ATOMS - 1:
+        self.error("number of args exceeded app limit")
+        return
+
+    for i, elem in enumerate(_args):
+        if type(elem) == float:
+            mx.atom_setfloat(&amp;argv[i], &lt;double&gt;elem)
+        elif type(elem) == int:
+            mx.atom_setlong((&amp;argv[i]), &lt;long&gt;elem)
+        elif type(elem) == str:
+            mx.atom_setsym((&amp;argv[i]), mx.gensym(elem.encode('utf-8')))
+        else:
+            continue
+    # mx.postatom(argv)
+    px.py_send(self.obj, mx.gensym(""), argc, argv)
+
+</t>
+<t tx="sta.20200620071950.16">cdef success(self):
+    mx.outlet_bang(&lt;void*&gt;self.obj.p_outlet_right)
+
+</t>
+<t tx="sta.20200620071950.17">cdef fail(self):
+    mx.outlet_bang(&lt;void*&gt;self.obj.p_outlet_middle)
+
+</t>
+<t tx="sta.20200620071950.18">cdef out_sym(self, str arg):
+    mx.outlet_anything(&lt;void*&gt;self.obj.p_outlet_left, 
+        mx.gensym(arg.encode('utf-8')), 0, NULL)
+
+</t>
+<t tx="sta.20200620071950.19">cdef out_float(self, float arg):
+    mx.outlet_float(&lt;void*&gt;self.obj.p_outlet_left, &lt;double&gt;arg)
+
+</t>
+<t tx="sta.20200620071950.2">cdef extern from "Python.h":
+    const char* PyUnicode_AsUTF8(object unicode)
+    unicode PyUnicode_FromString(const char *u)
+
+
+
+</t>
+<t tx="sta.20200620071950.20">cdef out_int(self, int arg):
+    mx.outlet_int(&lt;void*&gt;self.obj.p_outlet_left, &lt;long&gt;arg)
+
+</t>
+<t tx="sta.20200620071950.21">cdef out_list(self, list arg):
+    "note: not recursive...(yet) still cannot deal with list in list"
+    cdef long argc = &lt;long&gt;len(arg)
+    cdef mx.t_atom argv[PY_MAX_ATOMS]
+
+    if argc &gt;= PY_MAX_ATOMS :
+        self.error("number of args exceeded app limit")
+        return
+
+    for i, elem in enumerate(arg):
+        if type(elem) == float:
+            mx.atom_setfloat(&amp;argv[i], &lt;double&gt;elem)
+        elif type(elem) == int:
+            mx.atom_setlong((&amp;argv[i]), &lt;long&gt;elem)
+        elif type(elem) == str:
+            mx.atom_setsym((&amp;argv[i]), mx.gensym(elem.encode('utf-8')))
+        else:
+            continue
+
+    mx.outlet_list(&lt;void*&gt;self.obj.p_outlet_left, mx.gensym("list"),
+        argc, argv)
+
+</t>
+<t tx="sta.20200620071950.22">cdef out_dict(self, dict arg):
+    "note: not recursive...(yet) still cannot deal with dict in dict"
+    res = []
+    for k,v in arg.items():
+        res.append(k)
+        res.append(':')
+        if type(v) in [list, set, tuple]:
+            for i in v:
+                res.append(i)
+        else:
+            res.append(v)
+    self.out_list(res)
+
+</t>
+<t tx="sta.20200620071950.23">cdef out(self, object arg):
+    if isinstance(arg, float): self.out_float(arg)
+    elif isinstance(arg, int): self.out_int(arg)
+    elif isinstance(arg, str): self.out_sym(arg)
+    elif isinstance(arg, list): self.out_list(arg)
+    # BUG: below cause crash? not sure why
+    elif isinstance(arg, dict): self.out_dict(&lt;dict&gt;arg)
+    else:
+        return
+
+
+</t>
+<t tx="sta.20200620071950.24">def get_globals():
+    return list(globals().keys())
+
+</t>
+<t tx="sta.20200620071950.25">def bang():
+    ext = PyExternal()
+    ext.bang()
+
+</t>
+<t tx="sta.20200620071950.26">def success():
+    ext = PyExternal()
+    ext.success()
+
+</t>
+<t tx="sta.20200620071950.27">def fail():
+    ext = PyExternal()
+    ext.fail()
+
+</t>
+<t tx="sta.20200620071950.28">def out_sym(s='hello outlet!'):
+    ext = PyExternal()
+    ext.out(s)
+
+</t>
+<t tx="sta.20200620071950.29">def out_int(n=100):
+    ext = PyExternal()
+    ext.out(n)
+
+</t>
+<t tx="sta.20200620071950.3">cdef class PyExternal:
+    @others
+</t>
+<t tx="sta.20200620071950.30">def out_float(n=12.75):
+    ext = PyExternal()
+    ext.out(n)
+
+</t>
+<t tx="sta.20200620071950.31">def out_list(xs=[1,'a','c',4,5]):
+    ext = PyExternal()
+    ext.out(xs)
+
+</t>
+<t tx="sta.20200620071950.32">def out_dict():
+    d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
+    ext = PyExternal()
+    ext.out(d)
+
+</t>
+<t tx="sta.20200620071950.33">def send(name='mrfloat', value=9.5):
+    ext = PyExternal()
+    ext.send(name, [value])
+
+</t>
+<t tx="sta.20200620071950.34">def lookup(name):
+    ext = PyExternal()
+    ext.lookup(name)
+
+
+
+# ext = PyExternal()
+
+txt = "Hey MAX!"
+
+greeting = 'Hello World'
+
+
+</t>
+<t tx="sta.20200620071950.35">cpdef public str hello():
+    return greeting
+
+
+</t>
+<t tx="sta.20200620071950.36">def random(int n):
+    return np.random.rand(n)
+
+
+</t>
+<t tx="sta.20200620071950.37">def echo(*args):
+    return args
+
+
+</t>
+<t tx="sta.20200620071950.38">def total(*args):
+    return sum(args)
+
+
+</t>
+<t tx="sta.20200620071950.39">def post(str s):
+    mx.post(s.encode('utf-8'))
+
+
+</t>
+<t tx="sta.20200620071950.4">cdef px.t_py *obj
+</t>
+<t tx="sta.20200620071950.40">def error(str s):
+    mx.error(s.encode('utf-8'))
+
+
+
+
+</t>
+<t tx="sta.20200620071950.5">cdef bytes name
+
+</t>
+<t tx="sta.20200620071950.6">def __cinit__(self):
+    """Retrieves the py object name and reference.
+
+    PY_OBJ_NAME is set to __builtins__ at object creation
+    making it available to all modules.
+
+    Since all py objects are registered, knowing the name
+    allows any module in the namespace to get a reference
+    (as below) to its parent object.
+    """
+    PY_OBJ_NAME = getattr(__builtins__, 'PY_OBJ_NAME')
+    self.name = PY_OBJ_NAME.encode('utf-8')
+    self.obj = &lt;px.t_py *&gt;mx.object_findregistered(
+        mx.CLASS_BOX, mx.gensym(self.name))
+
+</t>
+<t tx="sta.20200620071950.7">cpdef bang(self):
+    px.py_bang(self.obj)
+
+</t>
+<t tx="sta.20200620071950.8">def log(self, str s):
+    px.py_log(self.obj, s.encode('utf-8'))
+
+</t>
+<t tx="sta.20200620071950.9">def error(self, str s):
+    px.py_error(self.obj, s.encode('utf-8'))
+
+</t>
 </tnodes>
 </leo_file>

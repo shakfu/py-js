@@ -8,7 +8,7 @@ repo - https://github.com/shakfu/py
 
 ```
 globals:
-    object_count: number of active py3 objects
+    object_count: number of active py objects
     registry: global lookup for script and object names
 
 py interpreter object
@@ -28,8 +28,8 @@ py interpreter object
     methods (extra)
         assign <var> [arg]  : max msg assignments to object namespace
         call <pyfunc> [arg] : max friendly python function calling
-        code <py3 expr|stmt> : alternative way to eval or exec py3 code
-        pipe <arg> [pyfunc] : process a value though a pipe of py3 funcs
+        code <expr|stmt>    : alternative way to eval or exec py code
+        pipe <arg> [pyfunc] : process a value though a pipe of py funcs
     
     methods (code editor)
         read <path>         : read text file into editor
@@ -40,7 +40,7 @@ py interpreter object
         send <msg>          : send an arbitrary message to a named object
 
     methods (meta)
-        count               : give a int count of current live py3 objects
+        count               : give a int count of current live py objects
 
     inlets
         single inlet        : primary input (anything)
@@ -79,6 +79,7 @@ meta     | count    |               | n/a    | no
 
 
 #### Core
+
 The `py` object's *core* features have a one-to-one correspondance to python's very high layer as specified [here](https://docs.python.org/3/c-api/veryhigh.html).
 
 - **Per-object namespaces**. Each `py` object has a unique name (which can be set by the user or provided automatically), and responds to an `import <module>` message which loads a python module in its namespace (essentially a `globals` dictionary), which can be different for each instance.
@@ -87,29 +88,38 @@ The `py` object's *core* features have a one-to-one correspondance to python's v
 
 - **Exec Messages**. Responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file's code in the object's namespace. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
+
 #### Extra
+
 An *extra* feature makes the `py` object play nice in the max/msp ecosystem:
 
 - **Assign Messages**. Responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in the objects python namespace using max message syntax. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-- **Call Messages**. Responds to a `call <func> arg1 arg2 ... argN` kind of message where `func` is a python callable in the py3 object's namespace. This corresponds to the python `callable(*args)` syntax. This makes it easier to call python functions in a max-friendly way. If the callable does not variable arguments, it will alternatively try to apply the arguments as a list i.e. `call func(args)`. Future work will try make `call` correspond to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`. This outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
+- **Call Messages**. Responds to a `call <func> arg1 arg2 ... argN` kind of message where `func` is a python callable in the py object's namespace. This corresponds to the python `callable(*args)` syntax. This makes it easier to call python functions in a max-friendly way. If the callable does not variable arguments, it will alternatively try to apply the arguments as a list i.e. `call func(args)`. Future work will try make `call` correspond to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`. This outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
 - **Pipe message**. Like a `call` in reverse, responds to a `pipe <arg> <f1> <f2> ... <fN>` message. In this sense, a value is *piped* through a chain of python functions in the objects namespace and returns the output to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
 - **Code Messages**. Responds to a `code <expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by max's parsing and excaping rules. (EXPERIMENTAL and evolving).
 
+
 #### Interobject Communication
+
 - **Scan Message**. Responds to a `scan` message with arguments. This scans the parent patcher of the object and stores scripting names in the global registry.
 
 - **Send Message**. Responds to a `send <object-name> <msg> <msg-body>` message. Used to send *typed* messages to any named object. Evokes a `scan` for the patcher's objects if a `registry` of names is empty.
 
+
 #### Code Editor
+
 - **Line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of all entries in a session. Of course, a coll can made to save all commands if required.
 
 - **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
 
+
 #### Scripting
+
 - **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called by python scripts or via messages in a patcher.
+
 
 ## Building
 
@@ -117,7 +127,8 @@ Only tested on OS X at present. Should be relatively easy to port to windows.
 
 The following is required:
 
-### xcode
+
+### Xcode
 
 Not sure if full xcode is required, perhaps only the command line tools are sufficient
 
@@ -133,7 +144,7 @@ otherwise download xcode from the app store.
 The py external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
 
 ```
-$ git clone https://github.com/shakfu/py3.git
+$ git clone https://github.com/shakfu/py.git
 ```
 
 Then cd into the newly cloned source directory and run the following to get the max-sdk
@@ -158,7 +169,7 @@ see: https://installpython3.com/mac
 
 ### cython (optional)
 
-[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside py3 objects.
+[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside py objects.
 
 Install cython as follows:
 
@@ -167,6 +178,7 @@ pip install cython
 ```
 
 ### leo (optional)
+
 [leo-editor](https://leoeditor.com) is used to factilitate documentation and restructuring.
 
 It is entirely optional, however, if one is interested it could be helpful to understand the project code in outline form:
@@ -190,14 +202,14 @@ $ leo project.leo &
 In the root of the package:
 
 ```
-make -C source/py3 build
+make -C source/py build
 ```
 or
 
 ```
 ./build.sh
 ```
-or in the `py3/sources/py3` directory
+or in the `py/sources/py` directory
 
 ```
 make build
@@ -205,11 +217,12 @@ make build
 
 ### Sidenote about building on a Mac
 
-If you are developing the package in `$HOME/Documents/Max 8/Packages/py3` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can mostly ignored (unless your only focus is codesigning the external).
+If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can mostly ignored (unless your only focus is codesigning the external).
 
 The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). 
 
 I've tried this several times and  and it works (for "sign to run locally" case and for the "Development" case).
+
 
 ### Style it
 
@@ -221,10 +234,12 @@ $ brew install clang-format
 
 The style used in this project is specified in the `.clang-format` file.
 
+
 ## BUGS
 
 - [ ] PyAtom extension is still buggy and can intermittently cause crashes
 - [ ] Sending from the `api` can make max unstable. Keep it simple and investigate.
+
 
 ## TODO
 
@@ -257,7 +272,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
-- [ ] Convert py3 into a js extension class
+- [ ] Convert `py` into a `js` extension class
       - proof of concept done, but requires a different 'nobox' type of class and data passing via arrays and attributes instead of outlets. But can be done!
 
 - [ ] Try to launch an ipython shell somehow 
@@ -278,7 +293,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] branch `embed-pkg`, embeds a local python install with a zipped stdlib in `support` already successfully tested embedding the python distro in the external itself.
 
-- [x] made it possible to get the py3 object's name from any module in its namespace!
+- [x] made it possible to get the py object's name from any module in its namespace!
 
 - [x] enhance `py_exec` method to create a single string from argv so it can import easily
 
@@ -286,15 +301,15 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] Refactor 'py_eval' to make it more consistent with the others
 
-- [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py3 object.
+- [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
 
-- [x] Each py3 object has its own python 'globals' namespace and responds to the following
+- [x] Each py object has its own python 'globals' namespace and responds to the following
       msgs
     - [x] `import <module>`: adds module to the namespace
     - [x] `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
     - [x] `exec <statement>`: executes statement into the namespace (can modify ns)
-    - [x] `execfile <file.py3>`: executes python file into the namespace (can modify ns)
-    - [x] `run <file.py3>`: executes python file into the namespace (can modify ns)
+    - [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
+    - [x] `run <file.py>`: executes python file into the namespace (can modify ns)
 
 - [x] Add right inlet bang after eval op ends
 
