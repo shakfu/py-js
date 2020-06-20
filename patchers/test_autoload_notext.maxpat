@@ -45,15 +45,15 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "" ],
-					"patching_rect" : [ 268.0, 176.0, 168.0, 22.0 ],
+					"patching_rect" : [ 268.0, 176.0, 40.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 1,
 						"debug" : 1,
-						"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
+						"file" : "hello.py",
 						"pythonpath" : ""
 					}
 ,
-					"text" : "py @file hello.py @autoload 1",
+					"text" : "py",
 					"varname" : "__main__"
 				}
 

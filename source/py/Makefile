@@ -31,7 +31,7 @@ all: clean test build
 
 
 dev: build pkg
-	$(call section,"build the deploy to local package")
+	$(call section,"build -> deploy to local package")
 
 
 dist:
