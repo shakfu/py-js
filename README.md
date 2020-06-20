@@ -7,53 +7,79 @@ repo - https://github.com/shakfu/py
 ## Summary
 
 ```
-globals:
-    object_count: number of active py objects
-    registry: global lookup for script and object names
+globals
+    obj_count: number of active py objects
+    registry: global registry to lookup object names
+
+patchers
+    subpatchers
+        py_repl                 : a basic single line repl for py
+        py_repl_plus            : embeds a py object in a py_repl
 
 py interpreter object
     attributes
-        name:  unique name
-        file:  file to load into editor
+        name: unique name
+        file: file to load into editor
         autoload: load file at start
         pythonpath: add path to python sys.path
         debug: switch debug logging on and off
 
-    methods (core)
-        import <module>     : python import to object namespace
-        eval <expression>   : python 'eval' semantics
-        exec <statement>    : python 'exec' semantics
-        execfile <path>     : python 'execfile' semantics
-    
-    methods (extra)
-        assign <var> [arg]  : max msg assignments to object namespace
-        call <pyfunc> [arg] : max friendly python function calling
-        code <expr|stmt>    : alternative way to eval or exec py code
-        pipe <arg> [pyfunc] : process a value though a pipe of py funcs
-    
-    methods (code editor)
-        read <path>         : read text file into editor
-        load <path>         : combo of read <path> -> execfile <path>
- 
-    methods (interobject)
-        scan                : scan patcher and store names of child objects
-        send <msg>          : send an arbitrary message to a named object
+    methods 
+        core
+            import <module>     : python import to object namespace
+            eval <expression>   : python 'eval' semantics
+            exec <statement>    : python 'exec' semantics
+            execfile <path>     : python 'execfile' semantics
+        
+        extra
+            assign <var> [arg]  : max msg assignments to object namespace
+            call <pyfunc> [arg] : max friendly python function calling
+            code <expr|stmt>    : alternative way to eval or exec py code
+            pipe <arg> [pyfunc] : process a value though a pipe of py funcs
+        
+        code editor
+            read <path>         : read text file into editor
+            load <path>         : combo of read <path> -> execfile <path>
+     
+        interobject
+            scan                : scan patcher and store names of child objects
+            send <msg>          : send an arbitrary message to a named object
 
-    methods (meta)
-        count               : give a int count of current live py objects
+        meta
+            count               : give a int count of current live py objects
 
     inlets
-        single inlet        : primary input (anything)
+        single inlet            : primary input (anything)
 
     outlets
-        left outlet         : primary output (anything)
-        middle outlet       : bang on failure
-        right outlet        : bang on success 
+        left outlet             : primary output (anything)
+        middle outlet           : bang on failure
+        right outlet            : bang on success 
 ```
 
 ## Overview
 
-The `py` object provides a minimal, high level max interface to python modules and a high-level python interface to max objects.
+The `py` object provides a minimal, high level two-way interface between max and python in a way that feels natural to both languages.
+
+It really is conceived as a flexible framework which can be customized depending on the requirement. 
+
+To this end there are essentially 3 deployment flavours:
+
+1. `py` external which links to a system installed python (homebrew, builtin python, custom system installed)
+
+The `master` branch is an example of this. Linking to the current homebrew python3
+
+2. `py` external in a Max package: in this variation, a python distribution (zipped or otherwise is placed in a the `support` folder for the `py` package and can be customized for max usage). Note: I don't if this will be stored correctly in a standalone, but it's worth trying. 
+
+The `embed-pkg` branch is an example of this.
+
+
+3. `py` external as a container for a python distribution. In this variation, a whole python distribution (zipped or otherwise) is stored inside the external object, which can make it very portable and usable in standalones.
+
+The `embed-ext` branch is an example of this.
+
+
+In addition, and in any of the variations above, once can choose to use the cython-generted c-api or not.
 
 
 It provides the following methods:
@@ -121,12 +147,24 @@ An *extra* feature makes the `py` object play nice in the max/msp ecosystem:
 - **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called by python scripts or via messages in a patcher.
 
 
+## Caveats
+
+- The `py` object is currently marked as experimental pre-alpha and still needs further unit/functional/integration testing and field testing of course. Do not use it expecting it is battle-tested!
+
+- As of this writing, the `api` module which is a minimal cython-based wrapper of the max-api is does not unload fully between patches. It requires a restart of Max to work after you close the first patch which uses it.
+
+- `core` features are supposed to be the most stable, and should not crash under any circumstances (but they may..), `extra` features are less stable since they are more experimental, etc..
+
+- The `api` module is the most experimental part of this project, and is completely optional. If you don't want to use it, don't import it.
+
+- Some of the `py` variations package pre-built binaries. If you are not comfortable with using , feel free to build your own custom python distro. (I may include as a submodule, the python source in the future.)
+
+
 ## Building
 
-Only tested on OS X at present. Should be relatively easy to port to windows.
+Only tested on OS X at present. Should be relatively easy to port to windows. I'm personally not in a position to do so since I don't have another Max license left for Windows and I'm on Macs and Linux.
 
 The following is required:
-
 
 ### Xcode
 
@@ -237,36 +275,31 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] PyAtom extension is still buggy and can intermittently cause crashes
 - [ ] Sending from the `api` can make max unstable. Keep it simple and investigate.
-
 
 ## TODO
 
 
 ### Core
 
+- [ ] enhance `call` to allow kwargs [call fn x1 x2 y1=z1 y2=z2]
 
 ### Extension
+
+- [ ] add more api wrappers.
 
 
 ### Attributes & Infrastructure
 
-- [ ] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
-- [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
-      ```c
-      PyObject *sysPath = PySys_GetObject((char*)"path");
-      PyList_Append(sysPath, PyString_FromString("."));
-      ```
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls
       after changes (NO REASON for using this found so far)
 
 ### Testing
 
 - [ ] complete comprehensive test suite
-  - [ ] complete c test suite
-  - [ ] complete max test suite
-  - [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
+- [ ] complete c test suite
+- [ ] complete max test suite
+- [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
 
 ### Future Experiments
 
@@ -290,6 +323,10 @@ The style used in this project is specified in the `.clang-format` file.
 
 ##### Core
 
+
+- [x] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
+
+- [x] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
 
 - [x] branch `embed-pkg`, embeds a local python install with a zipped stdlib in `support` already successfully tested embedding the python distro in the external itself.
 
