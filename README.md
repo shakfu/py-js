@@ -1,4 +1,4 @@
-# minimal py for max
+# py: minimal python3 object for max
 
 An attempt to make a simple (and extensible) max external for python3
 
@@ -127,14 +127,10 @@ $ xcode-select --install
 
 otherwise download xcode from the app store.
 
-<<<<<<< HEAD
 
-### py3 external source and maxsdk
-=======
 ### py external source and maxsdk
->>>>>>> parent of 71d69ee... first step in rename to py3
 
-The py3 external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
+The py external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
 
 ```
 $ git clone https://github.com/shakfu/py3.git
@@ -158,6 +154,7 @@ $ brew install python
 ```
 
 see: https://installpython3.com/mac
+
 
 ### cython (optional)
 
@@ -207,6 +204,7 @@ make build
 ```
 
 ### Sidenote about building on a Mac
+
 If you are developing the package in `$HOME/Documents/Max 8/Packages/py3` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can mostly ignored (unless your only focus is codesigning the external).
 
 The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). 
@@ -240,8 +238,7 @@ The style used in this project is specified in the `.clang-format` file.
 ### Attributes & Infrastructure
 
 - [ ] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
-- [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute
-      paths)
+- [ ] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
       ```c
       PyObject *sysPath = PySys_GetObject((char*)"path");
       PyList_Append(sysPath, PyString_FromString("."));
@@ -305,11 +302,13 @@ The style used in this project is specified in the `.clang-format` file.
 
 ##### Extra
 
+
 - [x] check whether setting a normal attr name, can also set scripting name
 
 - [x] Implement 'send' msg, which sends typed messages to (script) named objects (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
 
 - [x] Add `call (anything)` method to call python callables in a namespace
+
 
 ##### Code Editor (Usability)
 
@@ -318,10 +317,12 @@ The style used in this project is specified in the `.clang-format` file.
 - [x] Add text edit object
     - [x] enable code to be run from editor
 
+
 ##### Line REPL (Usability)
 
 - [x] Add line repl
     - [x] Add up-arrow last line recall (great for 'random.random()')
+
 
 ##### Extensibility
 
@@ -339,13 +340,16 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] Exposing of good portion of the max api to cython scripting
 
+
 ##### Architectural
 
 - [x] Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
 
+
 ##### Documentation
 
 - [x] Add .maxref.xml to docs
+
 
 ##### Code Quality
 
@@ -355,11 +359,13 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [x] Refactor into functions
 
+
 ##### Testing
 
 - [x] pytest testing harness
 
 - [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
+
 
 #### Bug Fixes
 
@@ -380,6 +386,7 @@ The style used in this project is specified in the `.clang-format` file.
 - [x] `import` statement in eval causes a segmentation fault. see: https://docs.python.org/3/c-api/intro.html exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
 - [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
+
 
 ## Prior Art and Thanks
 
