@@ -150,6 +150,7 @@
 <v t="sta.20200620071950.37"><vh>echo</vh></v>
 <v t="sta.20200620071950.38"><vh>total</vh></v>
 </v>
+<v t="sta.20200620164702.1"><vh>demo constants</vh></v>
 </v>
 <v t="sta.20200602145459.1"><vh>@clean py.h</vh>
 <v t="sta.20200602150733.1"><vh>includes</vh></v>
@@ -955,6 +956,18 @@ error:
             py_log(x, "%d: %s", i, atom_getsym(argv + i)-&gt;s_name);
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)-&gt;s_name);
         }
+
+    }
+
+    // process autoload
+    py_log(x, "checking autoload / code_filepath");
+    py_log(x, "autoload: %d / code_filepath: %s", x-&gt;p_autoload, 
+                                                  x-&gt;p_code_filepath-&gt;s_name);
+    py_log(x, "via object_attr_getsym: %s", object_attr_getsym(x, gensym("file"))-&gt;s_name);
+  
+    if ((x-&gt;p_autoload == 1) &amp;&amp; (x-&gt;p_code_filepath != gensym(""))) {
+        py_log(x, "autoloading: %s", x-&gt;p_code_filepath-&gt;s_name);
+        py_load(x, x-&gt;p_code_filepath);
     }
 
     return (x);
@@ -4647,17 +4660,14 @@ DEF PY_MAX_ATOMS = 128
 <t tx="sta.20200620071950.25">def bang():
     ext = PyExternal()
     ext.bang()
-
 </t>
 <t tx="sta.20200620071950.26">def success():
     ext = PyExternal()
     ext.success()
-
 </t>
 <t tx="sta.20200620071950.27">def fail():
     ext = PyExternal()
     ext.fail()
-
 </t>
 <t tx="sta.20200620071950.28">def out_sym(s='hello outlet!'):
     ext = PyExternal()
@@ -4697,13 +4707,6 @@ DEF PY_MAX_ATOMS = 128
     ext = PyExternal()
     ext.lookup(name)
 
-
-
-# ext = PyExternal()
-
-txt = "Hey MAX!"
-
-greeting = 'Hello World'
 
 
 </t>
@@ -4776,5 +4779,13 @@ cdef bytes name
 <t tx="sta.20200620113747.1"></t>
 <t tx="sta.20200620113814.1"></t>
 <t tx="sta.20200620113843.1"></t>
+<t tx="sta.20200620164702.1"># ext = PyExternal()
+
+txt = "Hey MAX!"
+
+greeting = 'Hello World'
+
+
+</t>
 </tnodes>
 </leo_file>

@@ -203,15 +203,12 @@ def get_globals():
 def bang():
     ext = PyExternal()
     ext.bang()
-
 def success():
     ext = PyExternal()
     ext.success()
-
 def fail():
     ext = PyExternal()
     ext.fail()
-
 def out_sym(s='hello outlet!'):
     ext = PyExternal()
     ext.out(s)
@@ -243,13 +240,6 @@ def lookup(name):
 
 
 
-# ext = PyExternal()
-
-txt = "Hey MAX!"
-
-greeting = 'Hello World'
-
-
 def post(str s):
     mx.post(s.encode('utf-8'))
 
@@ -274,5 +264,12 @@ def echo(*args):
 
 def total(*args):
     return sum(args)
+
+
+# ext = PyExternal()
+
+txt = "Hey MAX!"
+
+greeting = 'Hello World'
 
 
