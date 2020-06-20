@@ -287,6 +287,17 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
             py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
         }
+
+    }
+
+    // process autoload
+    py_log(x, "checking autoload / code_filepath");
+    py_log(x, "autoload: %d / code_filepath: %s", 
+        x->p_autoload, x->p_code_filepath->s_name);  
+  
+    if ((x->p_autoload == 1) && (x->p_code_filepath != gensym(""))) {
+        py_log(x, "autoloading: %s", x->p_code_filepath->s_name);
+        py_load(x, x->p_code_filepath);
     }
 
     return (x);
