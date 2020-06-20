@@ -5,7 +5,6 @@ COLOR_RESET="\033[m"
 # helper functions
 section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
-
 # project variables
 NAME=py
 EXTERNAL=${NAME}.c
@@ -16,7 +15,6 @@ MAXHELP=${NAME}.maxhelp
 PACKAGE=${HOME}"/Documents/Max 8/Packages/"${NAME}
 PKG_DIRS=docs examples externals help init \
          javascript jsextensions media patchers
-
 
 PYDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 SRCDIR:=$(shell dirname $(abspath ${PYDIR}))
@@ -47,14 +45,16 @@ dist:
 
 pkg:
 	$(call section,"deploying to local package")
-# 	@echo "PYDIR: ${PYDIR}"
-# 	@echo "SRCDIR: ${SRCDIR}"
-# 	@echo "ROOTDIR: ${ROOTDIR}"
-# 	@echo "syncing $(ROOTDIR) with $(PACKAGE)..." 
 	@mkdir -p ${PACKAGE}
 	@for target in ${PKG_DIRS}; do \
     	rsync -a --delete $(ROOTDIR)/$${target} ${PACKAGE}; \
 	done
+
+show:
+	@echo "PYDIR: ${PYDIR}"
+	@echo "SRCDIR: ${SRCDIR}"
+	@echo "ROOTDIR: ${ROOTDIR}"
+	@echo "syncing $(ROOTDIR) with $(PACKAGE)..." 
 
 
 # BUILDING
