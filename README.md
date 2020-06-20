@@ -418,3 +418,6 @@ Around the time of the beginning of the covid-19 lockdown, I stumbled upon Iain 
 So I decided, during the lockdown period, with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c code that won't crash.
 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
+
+Thanks to Luigi Castelli for his patience and fantastic help on my Max/Msp questions; and Stefan Behnel and for his help  with Cython matters; and, finally, Edward K. Ream, for his awesome [leo-editor](https://leoeditor.com) and responsiveness which helped me to keep things in perspective.
+
