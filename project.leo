@@ -102,9 +102,8 @@
 <v t="sta.20200620071935.1"><vh>@clean api.pyx</vh>
 <v t="sta.20200620071950.1"><vh>Declarations</vh></v>
 <v t="sta.20200620071950.2"><vh>extern</vh></v>
-<v t="sta.20200620071950.3"><vh>class</vh>
-<v t="sta.20200620071950.4"><vh>px</vh></v>
-<v t="sta.20200620071950.5"><vh>bytes</vh></v>
+<v t="sta.20200620071950.3"><vh>class PyExternal</vh>
+<v t="sta.20200620113654.1"><vh>declarations</vh></v>
 <v t="sta.20200620071950.6"><vh>__cinit__</vh></v>
 <v t="sta.20200620071950.7"><vh>bang</vh></v>
 <v t="sta.20200620071950.8"><vh>log</vh></v>
@@ -125,22 +124,32 @@
 <v t="sta.20200620071950.23"><vh>out</vh></v>
 </v>
 <v t="sta.20200620071950.24"><vh>get_globals</vh></v>
+<v t="sta.20200620112906.1"><vh>bang functions</vh>
 <v t="sta.20200620071950.25"><vh>bang</vh></v>
 <v t="sta.20200620071950.26"><vh>success</vh></v>
 <v t="sta.20200620071950.27"><vh>fail</vh></v>
+</v>
+<v t="sta.20200620112807.1"><vh>typed output funcs</vh>
 <v t="sta.20200620071950.28"><vh>out_sym</vh></v>
 <v t="sta.20200620071950.29"><vh>out_int</vh></v>
 <v t="sta.20200620071950.30"><vh>out_float</vh></v>
 <v t="sta.20200620071950.31"><vh>out_list</vh></v>
 <v t="sta.20200620071950.32"><vh>out_dict</vh></v>
+</v>
+<v t="sta.20200620113747.1"><vh>interobject funcs</vh>
 <v t="sta.20200620071950.33"><vh>send</vh></v>
 <v t="sta.20200620071950.34"><vh>lookup</vh></v>
-<v t="sta.20200620071950.35"><vh>public</vh></v>
+</v>
+<v t="sta.20200620113814.1"><vh>log functions</vh>
+<v t="sta.20200620071950.39"><vh>post</vh></v>
+<v t="sta.20200620071950.40"><vh>error</vh></v>
+</v>
+<v t="sta.20200620113843.1"><vh>demo funcs</vh>
+<v t="sta.20200620071950.35"><vh>hello</vh></v>
 <v t="sta.20200620071950.36"><vh>random</vh></v>
 <v t="sta.20200620071950.37"><vh>echo</vh></v>
 <v t="sta.20200620071950.38"><vh>total</vh></v>
-<v t="sta.20200620071950.39"><vh>post</vh></v>
-<v t="sta.20200620071950.40"><vh>error</vh></v>
+</v>
 </v>
 <v t="sta.20200602145459.1"><vh>@clean py.h</vh>
 <v t="sta.20200602150733.1"><vh>includes</vh></v>
@@ -996,6 +1005,18 @@ error:
     object_free(x-&gt;p_code_editor);
     if (x-&gt;p_code)
         sysmem_freehandle(x-&gt;p_code);
+
+    // delete api object
+    // PyObject* api = PyDict_GetItemString(x-&gt;p_globals, "api");
+    // if (api != NULL) {
+    //     PyModuleDef* api_def = PyModule_GetDef(api);
+    //     if (PyState_RemoveModule(api_def) == 0) {
+    //         py_log(x, "removed api module");
+    //     }
+    //     if (PyDict_DelItemString(x-&gt;p_globals, "api") == 0) {
+    //         py_log(x, "removed ref to api module in globals");
+    //     }
+    // }
 
     Py_XDECREF(x-&gt;p_globals);
     // python objects cleanup
@@ -4711,16 +4732,11 @@ greeting = 'Hello World'
 
 
 </t>
-<t tx="sta.20200620071950.4">cdef px.t_py *obj
-</t>
 <t tx="sta.20200620071950.40">def error(str s):
     mx.error(s.encode('utf-8'))
 
 
 
-
-</t>
-<t tx="sta.20200620071950.5">cdef bytes name
 
 </t>
 <t tx="sta.20200620071950.6">def __cinit__(self):
@@ -4751,5 +4767,14 @@ greeting = 'Hello World'
     px.py_error(self.obj, s.encode('utf-8'))
 
 </t>
+<t tx="sta.20200620112807.1"></t>
+<t tx="sta.20200620112906.1"></t>
+<t tx="sta.20200620113654.1">cdef px.t_py *obj
+cdef bytes name
+
+</t>
+<t tx="sta.20200620113747.1"></t>
+<t tx="sta.20200620113814.1"></t>
+<t tx="sta.20200620113843.1"></t>
 </tnodes>
 </leo_file>
