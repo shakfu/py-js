@@ -336,6 +336,18 @@ void py_free(t_py* x)
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
+    // delete api object
+    // PyObject* api = PyDict_GetItemString(x->p_globals, "api");
+    // if (api != NULL) {
+    //     PyModuleDef* api_def = PyModule_GetDef(api);
+    //     if (PyState_RemoveModule(api_def) == 0) {
+    //         py_log(x, "removed api module");
+    //     }
+    //     if (PyDict_DelItemString(x->p_globals, "api") == 0) {
+    //         py_log(x, "removed ref to api module in globals");
+    //     }
+    // }
+
     Py_XDECREF(x->p_globals);
     // python objects cleanup
     py_log(x, "will be deleted");

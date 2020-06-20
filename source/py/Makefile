@@ -13,18 +13,28 @@ HEADER=${NAME}.h
 PROJECT=${NAME}.xcodeproj
 EXTENSION=api.pyx
 MAXHELP=${NAME}.maxhelp
+PACKAGE=${HOME}"/Documents/Max 8/Packages/"${NAME}
+PKG_DIRS=docs examples externals help init \
+         javascript jsextensions media patchers
 
+
+PYDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+SRCDIR:=$(shell dirname $(abspath ${PYDIR}))
+ROOTDIR:=$(shell dirname $(abspath ${SRCDIR}))
 
 .PHONY: all
 
 all: clean test build
 	@echo "All DONE!"
 
-
-
 # DEPLOYING
 # -----------------------------------------------------------------------
-.PHONY: dist
+.PHONY: dev pkg
+
+
+dev: build pkg
+	$(call section,"build the deploy to local package")
+
 
 dist:
 	$(call section,"preparing for distribution")
@@ -34,6 +44,17 @@ dist:
 # 	$(call section,"bumping patch version and pushing")
 # 	@bumpversion patch
 # 	@git push
+
+pkg:
+	$(call section,"deploying to local package")
+# 	@echo "PYDIR: ${PYDIR}"
+# 	@echo "SRCDIR: ${SRCDIR}"
+# 	@echo "ROOTDIR: ${ROOTDIR}"
+# 	@echo "syncing $(ROOTDIR) with $(PACKAGE)..." 
+	@mkdir -p ${PACKAGE}
+	@for target in ${PKG_DIRS}; do \
+    	rsync -a --delete $(ROOTDIR)/$${target} ${PACKAGE}; \
+	done
 
 
 # BUILDING
@@ -95,6 +116,6 @@ clean: clean-build
 clean-build:
 	$(call section,"cleaning build artifacts")
 	@rm -rf build
-	@rm -rf ../../externals/py.mxo
+	@rm -rf ${ROOTDIR}/externals/${NAME}.mxo
 
 
