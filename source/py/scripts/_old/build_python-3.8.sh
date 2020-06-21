@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # build_python.sh
 
+# This should be run in the root of the Python source directory
 
 # NOTE: need os.py to remain in site-packages or it will fail
 
@@ -54,7 +55,6 @@ rm_bin() {
 ./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
   --prefix=$PREFIX \
   --enable-shared \
-  --with-universal-archs=64-bit \
   --with-lto \
   --enable-optimizations
 
@@ -99,5 +99,11 @@ mkdir -p $LIB
 mv $PREFIX/lib-dynload $LIB
 mv $PREFIX/os.py $LIB
 mkdir $LIB/site-packages
+
+# otool -L $PREFIX/lib/libpython${VERSION}.dylib
+# cp /usr/local/opt/gettext/lib/libintl.8.dylib ${PREFIX}/LIB/
+# chmod 777 ${PREFIX}/LIB/libintl.8.dylib
+# install_name_tool -id @executable_path/libintl.8.dylib ${PREFIX}/LIB/libintl.8.dylib
+# install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${VERSION}.dylib
 
 
