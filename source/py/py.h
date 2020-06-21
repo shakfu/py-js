@@ -86,8 +86,8 @@ void py_init(t_py* x);
 void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
-t_hashtab* get_global_registry(void);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
+t_hashtab* get_global_registry(void);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
@@ -95,6 +95,7 @@ void py_handle_float_output(t_py* x, PyObject* pval);
 void py_handle_long_output(t_py* x, PyObject* pval);
 void py_handle_string_output(t_py* x, PyObject* pval);
 void py_handle_list_output(t_py* x, PyObject* pval);
+void py_handle_dict_output(t_py* x, PyObject* pval);
 void py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
@@ -108,7 +109,6 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
-// void py_pipe2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* informational */
 void py_count(t_py* x);
@@ -125,8 +125,7 @@ long py_scan_callback(t_py* x, t_object* obj);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
-void py_load(t_py* x, t_symbol* s); // combo of read -> execfile
-
+void py_load(t_py* x, t_symbol* s); // read(f) -> execfile(f)
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
