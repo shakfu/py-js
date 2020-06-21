@@ -32,10 +32,10 @@ py interpreter object
             execfile <path>     : python 'execfile' semantics
         
         extra
-            assign <var> [arg]  : max msg assignments to object namespace
+            assign <var> [arg]  : max msg assignments to py object namespace
             call <pyfunc> [arg] : max friendly python function calling
+            pipe <arg> [pyfunc] : process a py or max value though a pipe of py funcs
             code <expr|stmt>    : alternative way to eval or exec py code
-            pipe <arg> [pyfunc] : process a value though a pipe of py funcs
         
         code editor
             read <path>         : read text file into editor
