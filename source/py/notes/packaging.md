@@ -5,21 +5,22 @@
 
 ## Python Distribution
 
+for python 3.8
+
 ```
+NAME=mxpython
+PWD=$(pwd)
+PREFIX=$PWD/$NAME
 
-
-./configure \
-  --prefix=PREFIX \
-  --exec-prefix=EPREFIX \
-  --enable-framework[=INSTALLDIR] \
+./configure MACOSX_DEPLOYMENT_TARGET=10.13 \
+  --prefix=$PREFIX \
   --enable-shared \
-  --with-universal-archs=ARCH \
+  --with-universal-archs=64-bit \
+  --with-lto \
+  --enable-optimizations
+
 
 ```
-
-see: https://bugs.python.org/issue16537
-
-
 
 
 ## `sys.prefix`
