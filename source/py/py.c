@@ -453,7 +453,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
 
         Py_XDECREF(ptraceback);
 
-        error("[py %s] <- (%s): %s", x->p_name->s_name, msg, pvalue_str);
+        error("[py %s] %s: %s", x->p_name->s_name, msg, pvalue_str);
     }
 }
 
@@ -478,7 +478,7 @@ void py_handle_float_output(t_py* x, PyObject* pfloat)
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_float_output failed");
     Py_XDECREF(pfloat);
     outlet_bang(x->p_outlet_middle);
 }
@@ -504,7 +504,7 @@ void py_handle_long_output(t_py* x, PyObject* plong)
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_long_output failed");
     Py_XDECREF(plong);
     outlet_bang(x->p_outlet_middle);
 }
@@ -529,10 +529,11 @@ void py_handle_string_output(t_py* x, PyObject* pstring)
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_string_output failed");
     Py_XDECREF(pstring);
     outlet_bang(x->p_outlet_middle);
 }
+
 
 void py_handle_list_output(t_py* x, PyObject* plist)
 {
@@ -620,15 +621,78 @@ void py_handle_list_output(t_py* x, PyObject* plist)
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_list_output failed");
     Py_XDECREF(plist);
     outlet_bang(x->p_outlet_middle);
 }
 
 
+
+
+
+void py_handle_dict_output(t_py* x, PyObject* pdict)
+{
+    PyObject* pfun_co = NULL;
+    PyObject* pfun = NULL;
+    PyObject* pval = NULL;
+
+    if (pdict == NULL) {
+        goto error;
+    }
+
+    if (PyDict_Check(pdict)) {
+
+        pfun_co = PyRun_String( \
+            "def __py_maxmsp_out_dict(arg):\n"
+                "\tres = []\n"
+                "\tfor k,v in arg.items():\n"
+                    "\t\tres.append(k)\n"
+                    "\t\tres.append(':')\n"
+                    "\t\tif type(v) in [list, set, tuple]:\n"
+                        "\t\t\tfor i in v:\n"
+                            "\t\t\t\tres.append(i)\n"
+                    "\t\telse:\n"
+                        "\t\t\tres.append(v)\n"
+                "\treturn res\n", 
+                Py_single_input, x->p_globals, x->p_globals);
+
+        if (pfun_co == NULL) {
+            py_error(x, "out_dict function code object is NULL");
+            goto error;
+        }
+
+        pfun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_out_dict");
+        if (pfun == NULL) {
+            py_error(x, "retrieving out_dict func from globals failed");
+            goto error;
+        }
+
+        pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL);
+        if (pval == NULL) {
+            py_error(x, "out_dict call failed to retrieve result");
+            goto error;
+        }
+
+        if (PyList_Check(pval)) { // expecting a python list
+            py_handle_list_output(x, pval); // this decrefs pval
+            Py_XDECREF(pfun_co);
+            outlet_bang(x->p_outlet_right);
+            return;
+        } else {
+            py_error(x, "expected list output got something else");
+            goto error;
+        }
+    }
+
+error:
+    py_handle_error(x, "py_handle_dict_output failed");
+    Py_XDECREF(pfun_co);
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x->p_outlet_middle);
+}
 void py_handle_output(t_py* x, PyObject* pval)
 {
-
     if (pval == NULL) {
         py_error(x, "cannot handle NULL value");
         return;
@@ -655,10 +719,20 @@ void py_handle_output(t_py* x, PyObject* pval)
         return;
     }
 
+    else if (PyDict_Check(pval)) {
+        py_handle_dict_output(x, pval);
+        return;
+    }
+
+    else if (pval == Py_None) {
+        return;
+    }
+
     else {
         py_error(x, "cannot handle his type of value");
         return;
     }
+
 }
 
 /*--------------------------------------------------------------------------*/

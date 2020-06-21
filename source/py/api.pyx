@@ -152,7 +152,7 @@ cdef class PyExternal:
         mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
 
     cdef out_list(self, list arg):
-        "note: not recursive...(yet) still cannot deal with list in list"
+        """note: not recursive...(yet) still cannot deal with list in list"""
         cdef long argc = <long>len(arg)
         cdef mx.t_atom argv[PY_MAX_ATOMS]
 
@@ -174,7 +174,7 @@ cdef class PyExternal:
             argc, argv)
 
     cdef out_dict(self, dict arg):
-        "note: not recursive...(yet) still cannot deal with dict in dict"
+        """note: not recursive...(yet) still cannot deal with dict in dict"""
         res = []
         for k,v in arg.items():
             res.append(k)
@@ -225,10 +225,11 @@ def out_list(xs=[1,'a','c',4,5]):
     ext = PyExternal()
     ext.out(xs)
 
-def out_dict():
-    d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
+def out_dict(**kwargs):
+    if not kwargs:
+        kwargs = {'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
     ext = PyExternal()
-    ext.out(d)
+    ext.out(kwargs)
 
 def send(name='mrfloat', value=9.5):
     ext = PyExternal()

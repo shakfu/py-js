@@ -456,5 +456,5 @@ So I decided, during the lockdown period, with less distractions than usual, to 
 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
-Thanks to Luigi Castelli for his patience and fantastic help on my Max/Msp questions; and Stefan Behnel and for his help  with Cython matters; and, finally, Edward K. Ream, for his awesome [leo-editor](https://leoeditor.com) and responsiveness which helped me to keep things in perspective.
+Thanks to Luigi Castelli for his awesome help on my Max/Msp questions; Stefan Behnel for his help  with Cython questions; and, finally, Edward K. Ream, for his awesome [leo-editor](https://leoeditor.com) and responsiveness which helped me to keep things in perspective.
 

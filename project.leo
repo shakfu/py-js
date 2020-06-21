@@ -191,6 +191,7 @@
 <v t="sta.20200610104609.1"><vh>void py_handle_long_output</vh></v>
 <v t="sta.20200610105537.1"><vh>void py_handle_string_output</vh></v>
 <v t="sta.20200610231913.1"><vh>void py_handle_list_output</vh></v>
+<v t="sta.20200621080125.1"><vh>void py_handle_dict_output</vh></v>
 <v t="sta.20200606044751.1"><vh>void py_handle_output</vh></v>
 </v>
 <v t="sta.20200610100240.1"><vh>translators</vh>
@@ -394,7 +395,7 @@ error:
 
         Py_XDECREF(ptraceback);
 
-        error("[py %s] &lt;- (%s): %s", x-&gt;p_name-&gt;s_name, msg, pvalue_str);
+        error("[py %s] %s: %s", x-&gt;p_name-&gt;s_name, msg, pvalue_str);
     }
 }
 
@@ -808,6 +809,9 @@ error:
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
     class_addmethod(c, (method)py_load,       "load",       A_DEFSYM, 0);
 
+    // experimental
+    class_addmethod(c, (method)py_appendtodict,  "appendtodictionary",  A_CANT, 0);
+
     // object attributes
     //------------------------------------------------------------------------
 
@@ -857,6 +861,7 @@ error:
 
     py_class = c;
 }
+
 
 
 </t>
@@ -911,8 +916,10 @@ error:
         x-&gt;p_box = NULL;
 
         // python-related
+        x-&gt;p_autoload = 0;
         x-&gt;p_pythonpath = gensym("");
         x-&gt;p_debug = 1;
+
 
         // text editor
         x-&gt;p_code = sysmem_newhandle(0);
@@ -956,18 +963,30 @@ error:
             py_log(x, "%d: %s", i, atom_getsym(argv + i)-&gt;s_name);
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)-&gt;s_name);
         }
-
+        
+        t_dictionary *dict = (t_dictionary *)gensym("#D")-&gt;s_thing;
+        if (dict) {
+            dictionary_getsym(dict, gensym("file"), &amp;x-&gt;p_code_filepath);
+            dictionary_getlong(dict, gensym("autoload"), (t_atom_long *)&amp;x-&gt;p_autoload);
+            dictionary_getsym(dict, gensym("pythonpath"), &amp;x-&gt;p_pythonpath);
+        }
     }
 
     // process autoload
-    py_log(x, "checking autoload / code_filepath");
-    py_log(x, "autoload: %d / code_filepath: %s", x-&gt;p_autoload, 
-                                                  x-&gt;p_code_filepath-&gt;s_name);
+    py_log(x, "checking autoload / code_filepath / pythonpath");
+    py_log(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s", 
+        x-&gt;p_autoload, x-&gt;p_code_filepath-&gt;s_name, x-&gt;p_pythonpath-&gt;s_name);
     py_log(x, "via object_attr_getsym: %s", object_attr_getsym(x, gensym("file"))-&gt;s_name);
   
     if ((x-&gt;p_autoload == 1) &amp;&amp; (x-&gt;p_code_filepath != gensym(""))) {
         py_log(x, "autoloading: %s", x-&gt;p_code_filepath-&gt;s_name);
         py_load(x, x-&gt;p_code_filepath);
+    }
+
+    if (x-&gt;p_pythonpath != gensym("")) {
+        PyObject *sys_path = PySys_GetObject((char*)"path");
+        PyObject *py_path = PyUnicode_FromString(x-&gt;p_pythonpath-&gt;s_name);
+        PyList_Append(sys_path, py_path);
     }
 
     return (x);
@@ -1192,8 +1211,8 @@ void py_init(t_py* x);
 void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
-t_hashtab* get_global_registry(void);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
+t_hashtab* get_global_registry(void);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
@@ -1201,6 +1220,7 @@ void py_handle_float_output(t_py* x, PyObject* pval);
 void py_handle_long_output(t_py* x, PyObject* pval);
 void py_handle_string_output(t_py* x, PyObject* pval);
 void py_handle_list_output(t_py* x, PyObject* pval);
+void py_handle_dict_output(t_py* x, PyObject* pval);
 void py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
@@ -1214,11 +1234,11 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
-// void py_pipe2(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* informational */
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
+void py_appendtodict(t_py *x, t_dictionary *dict);
 
 /* testing */
 void py_bang(t_py* x);
@@ -1230,8 +1250,7 @@ long py_scan_callback(t_py* x, t_object* obj);
 
 /* code editor */
 void py_read(t_py* x, t_symbol* s);
-void py_load(t_py* x, t_symbol* s); // combo of read -&gt; execfile
-
+void py_load(t_py* x, t_symbol* s); // read(f) -&gt; execfile(f)
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
@@ -2465,7 +2484,6 @@ error:
 </t>
 <t tx="sta.20200606044751.1">void py_handle_output(t_py* x, PyObject* pval)
 {
-
     if (pval == NULL) {
         py_error(x, "cannot handle NULL value");
         return;
@@ -2492,10 +2510,20 @@ error:
         return;
     }
 
+    else if (PyDict_Check(pval)) {
+        py_handle_dict_output(x, pval);
+        return;
+    }
+
+    else if (pval == Py_None) {
+        return;
+    }
+
     else {
         py_error(x, "cannot handle his type of value");
         return;
     }
+
 }
 
 </t>
@@ -2943,7 +2971,7 @@ error:
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_long_output failed");
     Py_XDECREF(plong);
     outlet_bang(x-&gt;p_outlet_middle);
 }
@@ -2992,12 +3020,12 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_string_output failed");
     Py_XDECREF(pstring);
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
-void py_handle_list_output(t_py* x, PyObject* plist)
+
 </t>
 <t tx="sta.20200610164212.1">
 void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, t_atom** argv)
@@ -3071,7 +3099,7 @@ error:
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_float_output failed");
     Py_XDECREF(pfloat);
     outlet_bang(x-&gt;p_outlet_middle);
 }
@@ -3150,7 +3178,8 @@ error:
 }
 
 </t>
-<t tx="sta.20200610231913.1">{
+<t tx="sta.20200610231913.1">void py_handle_list_output(t_py* x, PyObject* plist)
+{
     if (plist == NULL) {
         goto error;
     }
@@ -3235,10 +3264,13 @@ error:
     return;
 
 error:
-    py_handle_error(x, "python exception occurred");
+    py_handle_error(x, "py_handle_list_output failed");
     Py_XDECREF(plist);
     outlet_bang(x-&gt;p_outlet_middle);
 }
+
+
+
 
 
 </t>
@@ -3699,6 +3731,15 @@ error:
         x-&gt;p_code_filepath = gensym(x-&gt;p_code_pathname);
     }
 }
+
+void py_appendtodict(t_py *x, t_dictionary *dict)
+{
+    if (dict) {
+        dictionary_appendsym(dict, gensym("file"), x-&gt;p_code_filepath);
+        dictionary_appendlong(dict, gensym("autoload"), x-&gt;p_autoload);
+    }
+}
+
 
 </t>
 <t tx="sta.20200616215024.1"># api.pyx
@@ -4605,7 +4646,7 @@ DEF PY_MAX_ATOMS = 128
 
 </t>
 <t tx="sta.20200620071950.21">cdef out_list(self, list arg):
-    "note: not recursive...(yet) still cannot deal with list in list"
+    """note: not recursive...(yet) still cannot deal with list in list"""
     cdef long argc = &lt;long&gt;len(arg)
     cdef mx.t_atom argv[PY_MAX_ATOMS]
 
@@ -4628,7 +4669,7 @@ DEF PY_MAX_ATOMS = 128
 
 </t>
 <t tx="sta.20200620071950.22">cdef out_dict(self, dict arg):
-    "note: not recursive...(yet) still cannot deal with dict in dict"
+    """note: not recursive...(yet) still cannot deal with dict in dict"""
     res = []
     for k,v in arg.items():
         res.append(k)
@@ -4692,10 +4733,11 @@ DEF PY_MAX_ATOMS = 128
     ext.out(xs)
 
 </t>
-<t tx="sta.20200620071950.32">def out_dict():
-    d={'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
+<t tx="sta.20200620071950.32">def out_dict(**kwargs):
+    if not kwargs:
+        kwargs = {'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
     ext = PyExternal()
-    ext.out(d)
+    ext.out(kwargs)
 
 </t>
 <t tx="sta.20200620071950.33">def send(name='mrfloat', value=9.5):
@@ -4787,5 +4829,66 @@ greeting = 'Hello World'
 
 
 </t>
+<t tx="sta.20200621080125.1">void py_handle_dict_output(t_py* x, PyObject* pdict)
+{
+    PyObject* pfun_co = NULL;
+    PyObject* pfun = NULL;
+    PyObject* pval = NULL;
+
+    if (pdict == NULL) {
+        goto error;
+    }
+
+    if (PyDict_Check(pdict)) {
+
+        pfun_co = PyRun_String( \
+            "def __py_maxmsp_out_dict(arg):\n"
+                "\tres = []\n"
+                "\tfor k,v in arg.items():\n"
+                    "\t\tres.append(k)\n"
+                    "\t\tres.append(':')\n"
+                    "\t\tif type(v) in [list, set, tuple]:\n"
+                        "\t\t\tfor i in v:\n"
+                            "\t\t\t\tres.append(i)\n"
+                    "\t\telse:\n"
+                        "\t\t\tres.append(v)\n"
+                "\treturn res\n", 
+                Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+
+        if (pfun_co == NULL) {
+            py_error(x, "out_dict function code object is NULL");
+            goto error;
+        }
+
+        pfun = PyDict_GetItemString(x-&gt;p_globals, "__py_maxmsp_out_dict");
+        if (pfun == NULL) {
+            py_error(x, "retrieving out_dict func from globals failed");
+            goto error;
+        }
+
+        pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL);
+        if (pval == NULL) {
+            py_error(x, "out_dict call failed to retrieve result");
+            goto error;
+        }
+
+        if (PyList_Check(pval)) { // expecting a python list
+            py_handle_list_output(x, pval); // this decrefs pval
+            Py_XDECREF(pfun_co);
+            outlet_bang(x-&gt;p_outlet_right);
+            return;
+        } else {
+            py_error(x, "expected list output got something else");
+            goto error;
+        }
+    }
+
+error:
+    py_handle_error(x, "py_handle_dict_output failed");
+    Py_XDECREF(pfun_co);
+    Py_XDECREF(pval);
+    // fail bang
+    outlet_bang(x-&gt;p_outlet_middle);
+}</t>
 </tnodes>
 </leo_file>
