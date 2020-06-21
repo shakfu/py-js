@@ -4,6 +4,7 @@ An attempt to make a simple (and extensible) max external for python3
 
 repo - https://github.com/shakfu/py
 
+
 ## Summary
 
 ```
@@ -442,7 +443,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## Prior Art and Thanks
 
-Every now and then when I am developing a patch in Max, I yearn for some simple python function or the other, like the `any` and `all` builtins for example, and I  then spend more time than I want researching a Max workaround. 
+Every now and then when I am developing a patch in Max, I yearn for some simple python function or the other, like the `any` and `all` builtins for example, and I then spend more time than I want researching a Max workaround. 
 
 Thinking that there must be a max external out there, I looked around and found the following:
 
