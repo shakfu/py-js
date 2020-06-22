@@ -114,14 +114,16 @@ fix_python_exec() {
 fix_python_dylib_for_pkg() {
 	cd $PREFIX
 	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../${DYLIB} ${DYLIB}
+	# assumes python in installed in $PREFIX
+	install_name_tool -id @@loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
 	cd $ROOT
 }
 
 fix_python_dylib_for_ext() {
 	cd $PREFIX
 	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../${DYLIB} ${DYLIB}
+	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
+	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
 	cd $ROOT
 }
 
