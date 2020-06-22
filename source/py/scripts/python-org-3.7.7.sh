@@ -15,7 +15,9 @@ SEMVER=${VERSION_MAJOR}.${VERSION_MINOR}
 VERSION=${VERSION_MAJOR}
 VER="${VERSION//./}"
 NAME=${SHORTNAME}-${VERSION}
-URL=https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz
+
+URL_PYTHON=https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz
+URL_OPENSSL=https://www.openssl.org/source/openssl-1.1.1g.tar.gz
 
 ROOT=$(pwd)
 SUPPORT=${ROOT}/support
@@ -25,13 +27,19 @@ BUILD=${PY}/build
 PYTHON=${BUILD}/Python-${SEMVER}
 PREFIX=${SUPPORT}/${NAME}
 LIB=${PREFIX}/lib/python${VERSION}
+SSL=${BUILD}/ssl
 
 TMP=${BUILD}/_tmp
-ARCHIVE=$(basename ${URL})
+ARCHIVE=$(basename ${URL_PYTHON})
+
+# SSL=${ROOT}/source/py/build/openssl-1.1.1g
+# OPENSSL_LDFLAGS=-DUSE_SSL
+# OPENSSL_LIBS="-L${SSL} -lssl -lcrypto"
+# OPENSSL_INCLUDES="-I${SSL}/include -I${SSL}/include/openssl"
 
 get_python() {
 	mkdir $TMP
-	wget -P $TMP $URL
+	wget -P $TMP $URL_PYTHON
 	tar -C $BUILD -xvf $TMP/$ARCHIVE
 	rm -rf $TMP
 }
@@ -80,12 +88,22 @@ rm_bin() {
 	rm -rf $PREFIX/bin/$1
 }
 
-testcd() {
+build_normal() {
 	cd $PYTHON
-	touch demo.txt
+
+
+	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
+	 	--prefix=$PREFIX \
+	 	--enable-shared \
+	 	--with-openssl=$SSL \
+	 	--with-lto \
+	 	--enable-optimizations
+
+	make altinstall
+
 	cd $ROOT
-	touch demo.txt
 }
+
 
 build() {
 	cd $PYTHON
@@ -93,6 +111,7 @@ build() {
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
 	 	--prefix=$PREFIX \
 	 	--enable-shared \
+	 	--with-openssl=$SSL \
 	 	--with-lto \
 	 	--enable-optimizations
 
