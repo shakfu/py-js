@@ -32,11 +32,6 @@ SSL=${BUILD}/ssl
 TMP=${BUILD}/_tmp
 ARCHIVE=$(basename ${URL_PYTHON})
 
-# SSL=${ROOT}/source/py/build/openssl-1.1.1g
-# OPENSSL_LDFLAGS=-DUSE_SSL
-# OPENSSL_LIBS="-L${SSL} -lssl -lcrypto"
-# OPENSSL_INCLUDES="-I${SSL}/include -I${SSL}/include/openssl"
-
 get_python() {
 	mkdir $TMP
 	wget -P $TMP $URL_PYTHON
@@ -170,10 +165,10 @@ fix() {
 	install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${VERSION}.dylib
 }
 
-
 install_python() {
 	get_python
 	build
+	#fix
 }
 
 
