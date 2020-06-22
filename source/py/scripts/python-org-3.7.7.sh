@@ -10,7 +10,7 @@ VERSION_MINOR=7
 MAC_DEP_TARGET=10.13
 SSL_VERSION=openssl-1.1.1g
 
-# --- do not modify below
+# --- need not modify below except to change excluded modules
 
 SEMVER=${VERSION_MAJOR}.${VERSION_MINOR}
 VERSION=${VERSION_MAJOR}
@@ -79,6 +79,18 @@ rm_lib() {
 	echo "removing $1"
 	rm -rf ${LIB}/$1
 }
+
+
+rm_ext() {
+	echo "removing $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so"
+	rm -rf $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so
+}
+
+rm_bin() {
+	echo "removing $PREFIX/bin/$1"
+	rm -rf $PREFIX/bin/$1
+}
+
 
 clean_python_pyc() {
 	echo "removing __pycache__ .pyc/o from $1"
@@ -151,16 +163,6 @@ zip_python_library() {
 	mkdir $LIB/site-packages
 }
 
-
-rm_ext() {
-	echo "removing $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so"
-	rm -rf $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so
-}
-
-rm_bin() {
-	echo "removing $PREFIX/bin/$1"
-	rm -rf $PREFIX/bin/$1
-}
 
 build_ssl() {
 	cd $SSL_SRC
