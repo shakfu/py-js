@@ -1,7 +1,7 @@
-#include "../maxmspsdk.xcconfig"
+#include "../../../maxmspsdk.xcconfig"
 
 // PATHS
-PYROOT = $(SRCROOT)/../py
+PYROOT = $(SRCROOT)/../../../py
 
 
 MAJ_VER = 3.7

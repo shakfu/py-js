@@ -66,7 +66,7 @@ build: build-extension build-external
 
 build-external:
 	$(call section,"build with xcode")
-	@xcodebuild -project py.xcodeproj
+	@xcodebuild -project targets/default/py.xcodeproj
 
 build-extension:
 	$(call section,"generate c code from cython extension")
