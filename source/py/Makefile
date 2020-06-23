@@ -64,9 +64,19 @@ show:
 build: build-extension build-external
 	$(call section,"build project")
 
-build-external:
-	$(call section,"build with xcode")
+build-external: build-default
+	$(call section,"build external")
+
+build-default:
+	$(call section,"build default xcode project")
 	@xcodebuild -project targets/default/py.xcodeproj
+
+build-homebrew-pkg: build-extension build-homebrew-pkg-external
+	$(call section,"built homebrew-pkg variation external with xcode")
+
+build-homebrew-pkg-external:
+	$(call section,"build with xcode")
+	@xcodebuild -project targets/homebrew-pkg/py.xcodeproj
 
 build-extension:
 	$(call section,"generate c code from cython extension")
