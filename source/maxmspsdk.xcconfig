@@ -87,23 +87,5 @@ OTHER_LDFLAGS = -framework MaxAudioAPI -framework JitterAPI $(C74_SYM_LINKER_FLA
 // -------------------------------------------------------------------------------
 
 
-// PATHS
-PYROOT = $(SRCROOT)/../py
-
-
-MAJ_VER = 3.7
-MIN_VER = 7
-VERSION = $(MAJ_VER)m
-SEMVER = $(MAJ_VER).$(MIN_VER)
-
-
-HOMEBREW = /usr/local/Cellar/python/$(SEMVER)/Frameworks/Python.framework/Versions/$(MAJ_VER)
-
-PY_HEADERS = $(HOMEBREW)/include/python$(VERSION)
-
-PY_LIBS = $(HOMEBREW)/lib
-
-PY_LDFLAGS = -lpython$(VERSION) -ldl
-
 
 
