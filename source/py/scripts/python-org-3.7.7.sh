@@ -139,8 +139,8 @@ clean_python() {
 	rm_bin idle${VERSION}
 	rm_bin easy_install-${VERSION}
 	rm_bin pip${VERSION}
-	rm_bin python{VERSION}m
-	rm_bin pyvenv-{VERSION}
+	rm_bin python${VERSION}m
+	rm_bin pyvenv-${VERSION}
 }
 
 clean_python_site_packages() {
