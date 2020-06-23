@@ -192,13 +192,12 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					/usr/local/Cellar/python/3.7.7/Frameworks/Python.framework/Versions/3.7/include/python3.7m,
+					"$(PY_HEADERS)",
 				);
-				LIBRARY_SEARCH_PATHS = "/usr/local/opt/python/Frameworks/Python.framework/Versions/3.7/lib/python3.7/config-3.7m-darwin";
+				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
-					"-lpython3.7m",
-					"-ldl",
+					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ibtakr.py;
 			};
@@ -216,13 +215,12 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					/usr/local/Cellar/python/3.7.7/Frameworks/Python.framework/Versions/3.7/include/python3.7m,
+					"$(PY_HEADERS)",
 				);
-				LIBRARY_SEARCH_PATHS = "/usr/local/opt/python/Frameworks/Python.framework/Versions/3.7/lib/python3.7/config-3.7m-darwin";
+				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
-					"-lpython3.7m",
-					"-ldl",
+					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ibtakr.py;
 			};
