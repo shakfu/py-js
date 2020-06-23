@@ -25,7 +25,9 @@ ROOT=$(pwd)
 SUPPORT=${ROOT}/support
 SRC=${ROOT}/source
 PY=${SRC}/py
-BUILD=${PY}/build
+TARGETS=${PY}/targets
+TARGET=${TARGETS}/python-org
+BUILD=${TARGET}/build
 PYTHON=${BUILD}/Python-${SEMVER}
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
@@ -253,7 +255,7 @@ fix_python_dylib_for_pkg() {
 	cd $PREFIX
 	chmod 777 ${DYLIB}
 	# assumes python in installed in $PREFIX
-	install_name_tool -id @@loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
+	install_name_tool -id @loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
 	cd $ROOT
 }
 
@@ -266,11 +268,12 @@ fix_python_dylib_for_ext() {
 }
 
 
-fix() {
-	otool -L $PREFIX/lib/libpython${VERSION}.dylib
-	cp /usr/local/opt/gettext/lib/libintl.8.dylib ${PREFIX}/LIB/
-	chmod 777 ${PREFIX}/LIB/libintl.8.dylib
-	install_name_tool -id @executable_path/libintl.8.dylib ${PREFIX}/LIB/libintl.8.dylib
+# FIXME: not complete!
+fix_python_libintl() {
+	#otool -L $PREFIX/lib/libpython${VERSION}.dylib
+	cp /usr/local/opt/gettext/lib/libintl.8.dylib ${PREFIX}/lib
+	chmod 777 ${PREFIX}/lib/libintl.8.dylib
+	install_name_tool -id @executable_path/libintl.8.dylib ${PREFIX}/lib/libintl.8.dylib
 	install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${VERSION}.dylib
 }
 
@@ -278,8 +281,18 @@ install_python() {
 	get_python
 	get_ssl
 	build_ssl
-	build_python_zipped
-	#fix
+	build_python_zipped	
+}
+
+
+install_python_pkg() {
+	install_python
+	fix_python_dylib_for_pkg
+}
+
+install_python_ext() {
+	install_python
+	fix_python_dylib_for_ext
 }
 
 
