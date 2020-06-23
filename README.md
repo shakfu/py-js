@@ -19,11 +19,11 @@ patchers
 
 py interpreter object
     attributes
-        name: unique name
-        file: file to load into editor
-        autoload: load file at start
-        pythonpath: add path to python sys.path
-        debug: switch debug logging on and off
+        name                    : unique name
+        file                    : file to load into editor
+        autoload                : load file at start
+        pythonpath              : add path to python sys.path
+        debug                   : switch debug logging on/off
 
     methods 
         core
