@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		121A8C6024A1DEB600EC5F99 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 121A8C5F24A1DEB600EC5F99 /* Info.plist */; };
 		1239836124A1DC4600ADF7CA /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835C24A1DC4600ADF7CA /* api.h */; };
 		1239836224A1DC4600ADF7CA /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835D24A1DC4600ADF7CA /* api.c */; };
 		1239836324A1DC4600ADF7CA /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835E24A1DC4600ADF7CA /* py.c */; };
@@ -18,7 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		121A8C5F24A1DEB600EC5F99 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		121A8C6124A1E58000EC5F99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../Info.plist; sourceTree = "<group>"; };
 		1239835C24A1DC4600ADF7CA /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = api.h; path = ../../api.h; sourceTree = "<group>"; };
 		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
 		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
@@ -45,7 +44,7 @@
 		089C166AFE841209C02AAC07 /* iterator */ = {
 			isa = PBXGroup;
 			children = (
-				121A8C5F24A1DEB600EC5F99 /* Info.plist */,
+				121A8C6124A1E58000EC5F99 /* Info.plist */,
 				1239835D24A1DC4600ADF7CA /* api.c */,
 				1239835C24A1DC4600ADF7CA /* api.h */,
 				1239835E24A1DC4600ADF7CA /* py.c */,
@@ -143,7 +142,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				121A8C6024A1DEB600EC5F99 /* Info.plist in Resources */,
 				12763A8A24A1D96D00687777 /* py.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -201,7 +199,7 @@
 					"\"$(C74SUPPORT)/jit-includes\"",
 					"$(PY_HEADERS)",
 				);
-				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
@@ -224,7 +222,7 @@
 					"\"$(C74SUPPORT)/jit-includes\"",
 					"$(PY_HEADERS)",
 				);
-				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
