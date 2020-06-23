@@ -4,7 +4,7 @@
 # WITHOUT SSL (STILL TBD)
 
 
-SHORTNAME=xpython
+SHORTNAME=python
 VERSION_MAJOR=3.7
 VERSION_MINOR=7
 MAC_DEP_TARGET=10.13
@@ -247,6 +247,24 @@ build_python_zipped() {
 
 	zip_python_library
 }
+
+
+fix_python_dylib_for_pkg() {
+	cd $PREFIX
+	chmod 777 ${DYLIB}
+	# assumes python in installed in $PREFIX
+	install_name_tool -id @@loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
+	cd $ROOT
+}
+
+fix_python_dylib_for_ext() {
+	cd $PREFIX
+	chmod 777 ${DYLIB}
+	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
+	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
+	cd $ROOT
+}
+
 
 fix() {
 	otool -L $PREFIX/lib/libpython${VERSION}.dylib
