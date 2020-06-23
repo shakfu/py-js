@@ -27,13 +27,20 @@ all: clean test build
 
 # DEPLOYING
 # -----------------------------------------------------------------------
-.PHONY: dev pkg
+.PHONY: default homebrew-pkg homebrew-ext python-org-pkg python-org-ex pkg pkg-support dist
 
 
 default: build pkg
 	$(call section,"build -> deploy to local package")
 
-homebrew-pkg: build-homebrew-pkg pkg pkg-support
+homebrew-pkg: build-homebrew pkg pkg-support
+
+homebrew-ext: build-homebrew pkg
+
+python-org-pkg: build-python-org pkg pkg-support
+
+python-org-ext: build-python-org pkg 
+
 
 dist:
 	$(call section,"preparing for distribution")
@@ -65,24 +72,22 @@ show:
 
 # BUILDING
 # -----------------------------------------------------------------------
-.PHONY: build
+.PHONY: build build-default build-homebrew build-python-org build-extension
 
-build: build-extension build-external
+build: build-default
 	$(call section,"build project")
 
-build-external: build-default
-	$(call section,"build external")
-
-build-default:
-	$(call section,"build default xcode project")
+build-default: build-extension 
+	$(call section,"build default external with xcode")
 	@xcodebuild -project targets/default/py.xcodeproj
 
-build-homebrew-pkg: build-extension build-homebrew-pkg-external
-	$(call section,"built homebrew-pkg variation external with xcode")
+build-homebrew: build-extension 
+	$(call section,"built homebrew external with xcode")
+	@xcodebuild -project targets/homebrew/py.xcodeproj
 
-build-homebrew-pkg-external:
-	$(call section,"build with xcode")
-	@xcodebuild -project targets/homebrew-pkg/py.xcodeproj
+build-python-org: build-extension 
+	$(call section,"built homebrew external with xcode")
+	@xcodebuild -project targets/python-org/py.xcodeproj
 
 build-extension:
 	$(call section,"generate c code from cython extension")
@@ -123,15 +128,32 @@ duplo:
 
 # CLEANING
 # -----------------------------------------------------------------------
-.PHONY: clean
+.PHONY: clean clean-build clean-support clean-externals
 
-clean: clean-build
+clean: clean-externals clean-build clean-support 
 	$(call section,"cleaning DONE")
 
+clean-build: clean-build-default \
+			 clean-build-homebrew \
+			 clean-build-python-org
 
-clean-build:
-	$(call section,"cleaning build artifacts")
-	@rm -rf build
+clean-externals:
+	$(call section,"cleaning externals")
 	@rm -rf ${ROOTDIR}/externals/${NAME}.mxo
 
+clean-build-default:
+	$(call section,"cleaning build artifacts from default target")
+	find **/default | grep -E "(build)" | xargs rm -rf
+	
+clean-build-homebrew:
+	$(call section,"cleaning build artifacts from homebrew target")
+	find **/homebrew | grep -E "(build)" | xargs rm -rf
+
+clean-build-python-org:
+	$(call section,"cleaning build artifacts from python-org target")
+	find **/python-org | grep -E "(build)" | xargs rm -rf
+
+clean-support:
+	$(call section,"cleaning support directory")
+	@rm -rf ${ROOTDIR}/support/*
 
