@@ -7,25 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		121CFF58246E493B0034A0AB /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 121CFF56246E493B0034A0AB /* api.h */; };
-		121CFF59246E493B0034A0AB /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 121CFF57246E493B0034A0AB /* api.c */; };
-		1245A543246F7B2A00D856BC /* py.h in Headers */ = {isa = PBXBuildFile; fileRef = 1245A542246F7B2A00D856BC /* py.h */; };
+		121A8C6024A1DEB600EC5F99 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 121A8C5F24A1DEB600EC5F99 /* Info.plist */; };
+		1239836124A1DC4600ADF7CA /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835C24A1DC4600ADF7CA /* api.h */; };
+		1239836224A1DC4600ADF7CA /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835D24A1DC4600ADF7CA /* api.c */; };
+		1239836324A1DC4600ADF7CA /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835E24A1DC4600ADF7CA /* py.c */; };
+		1239836424A1DC4600ADF7CA /* py.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835F24A1DC4600ADF7CA /* py.h */; };
 		12763A8A24A1D96D00687777 /* py.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 12763A8924A1D96D00687777 /* py.xcconfig */; };
-		12763A8C24A1D99100687777 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 12763A8B24A1D99100687777 /* Info.plist */; };
 		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
 		12D5454E2463B03E00BE010E /* Tk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454D2463B03E00BE010E /* Tk.framework */; };
-		22CF122B0EE9AAAD0054F513 /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 22CF122A0EE9AAAD0054F513 /* py.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		121CFF56246E493B0034A0AB /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = api.h; sourceTree = "<group>"; };
-		121CFF57246E493B0034A0AB /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = api.c; sourceTree = "<group>"; };
-		1245A542246F7B2A00D856BC /* py.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = py.h; sourceTree = "<group>"; };
+		121A8C5F24A1DEB600EC5F99 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1239835C24A1DC4600ADF7CA /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = api.h; path = ../../api.h; sourceTree = "<group>"; };
+		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
+		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
+		1239835F24A1DC4600ADF7CA /* py.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = py.h; path = ../../py.h; sourceTree = "<group>"; };
 		12763A8924A1D96D00687777 /* py.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = py.xcconfig; sourceTree = "<group>"; };
-		12763A8B24A1D99100687777 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		12D5454D2463B03E00BE010E /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = System/Library/Frameworks/Tk.framework; sourceTree = SDKROOT; };
-		22CF122A0EE9AAAD0054F513 /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = py.c; sourceTree = "<group>"; };
 		2FBBEAE508F335360078DB84 /* py.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = py.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -45,12 +45,12 @@
 		089C166AFE841209C02AAC07 /* iterator */ = {
 			isa = PBXGroup;
 			children = (
+				121A8C5F24A1DEB600EC5F99 /* Info.plist */,
+				1239835D24A1DC4600ADF7CA /* api.c */,
+				1239835C24A1DC4600ADF7CA /* api.h */,
+				1239835E24A1DC4600ADF7CA /* py.c */,
+				1239835F24A1DC4600ADF7CA /* py.h */,
 				12763A8924A1D96D00687777 /* py.xcconfig */,
-				1245A542246F7B2A00D856BC /* py.h */,
-				22CF122A0EE9AAAD0054F513 /* py.c */,
-				121CFF56246E493B0034A0AB /* api.h */,
-				121CFF57246E493B0034A0AB /* api.c */,
-				12763A8B24A1D99100687777 /* Info.plist */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 				12D5454A2463B03000BE010E /* Frameworks */,
 			);
@@ -81,8 +81,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				121CFF58246E493B0034A0AB /* api.h in Headers */,
-				1245A543246F7B2A00D856BC /* py.h in Headers */,
+				1239836124A1DC4600ADF7CA /* api.h in Headers */,
+				1239836424A1DC4600ADF7CA /* py.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,7 +143,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				12763A8C24A1D99100687777 /* Info.plist in Resources */,
+				121A8C6024A1DEB600EC5F99 /* Info.plist in Resources */,
 				12763A8A24A1D96D00687777 /* py.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -165,8 +165,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				121CFF59246E493B0034A0AB /* api.c in Sources */,
-				22CF122B0EE9AAAD0054F513 /* py.c in Sources */,
+				1239836324A1DC4600ADF7CA /* py.c in Sources */,
+				1239836224A1DC4600ADF7CA /* api.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
