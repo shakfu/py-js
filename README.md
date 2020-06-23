@@ -9,8 +9,8 @@ repo - https://github.com/shakfu/py
 
 ```
 globals
-    obj_count: number of active py objects
-    registry: global registry to lookup object names
+    obj_count                   : number of active py objects
+    registry                    : global registry to lookup object names
 
 patchers
     subpatchers
@@ -35,7 +35,7 @@ py interpreter object
         extra
             assign <var> [arg]  : max msg assignments to py object namespace
             call <pyfunc> [arg] : max friendly python function calling
-            pipe <arg> [pyfunc] : process a py or max value though a pipe of py funcs
+            pipe <arg> [pyfunc] : process a py/max value via a pipe of py funcs
             code <expr|stmt>    : alternative way to eval or exec py code
         
         code editor
@@ -66,24 +66,16 @@ It really is conceived as a flexible framework which can be customized depending
 
 To this end there are essentially 3 deployment flavours:
 
-1. `py` external which links to a system installed python (homebrew, builtin python, custom system installed)
+1. `py` external which links to a system installed python (homebrew, builtin python, or custom system installed.) This has the benefit of re-using your existing libraries. This is the default option.
 
-The `master` branch is an example of this. Linking to the current homebrew python3
-
-2. `py` external in a Max package: in this variation, a python distribution (zipped or otherwise is placed in a the `support` folder for the `py` package and can be customized for max usage). Note: I don't if this will be stored correctly in a standalone, but it's worth trying. 
-
-The `embed-pkg` branch is an example of this.
-
+2. `py` external in a Max package: in this variation, a dedicated python distribution (zipped or otherwise is placed in the `support` folder of the `py` package (or any other package) is linked to the `py` external. This can possibly make it usable in standalones (untested).
 
 3. `py` external as a container for a python distribution. In this variation, a whole python distribution (zipped or otherwise) is stored inside the external object, which can make it very portable and usable in standalones.
 
-The `embed-ext` branch is an example of this.
 
+In addition, to the variations above, onc can choose to use the cython-generated max c-api wrapper or not, which allows regular python to script Max objects.
 
-In addition, and in any of the variations above, once can choose to use the cython-generted c-api or not.
-
-
-It provides the following methods:
+Otherwise using plain-vanilla python in Max is also quite usable due to the availability of the following methods:
 
 
 category | method   | param(s)      | in/out | changes ns 
@@ -101,6 +93,7 @@ editor   | load     | file          | n/a    | no
 interobj | scan     |               | n/a    | no
 interobj | send     | name, msg, .. | n/a    | no
 meta     | count    |               | n/a    | no
+
 
 ### Key Features
 
@@ -180,7 +173,9 @@ otherwise download xcode from the app store.
 
 ### py external source and maxsdk
 
-The py external is developed as a max package with the max-sdk as a subfolder. This is incorporated as a git-module:
+The py external is developed as a max package with a `source` folder which contains the max-sdk as a subfolder, which is conveniently available as a git submodule.
+
+First git clone the `py` repo:
 
 ```
 $ git clone https://github.com/shakfu/py.git
@@ -196,19 +191,20 @@ $ git submodule update
 
 ### python3
 
+Python is used to develop `py`, and should be installed on a mac. However, `py` is tested again [Homebrew](https://brew.sh) python on a MacOS Mojave 10.14.6.
 
-I'm using MacOS Mojave 10.14.6, and the latest python3 version which can be installed as follows:
+The latest python3 can be easily installed can be installed as follows if you already have brew other click on the link above and install it before this step.
 
 ```
 $ brew install python
 ```
 
-see: https://installpython3.com/mac
+see: https://installpython3.com/mac for further info if you are interested.
 
 
 ### cython (optional)
 
-[Cython](https://cython.org) is using for wrapping the max api. You could de-couple the cython generated c code from the external and it would work fine since it is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside py objects.
+[Cython](https://cython.org) is used for wrapping the max api. One could de-couple the cython generated c code from the external and it would work fine since the latter is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside `py` objects.
 
 Install cython as follows:
 
@@ -216,25 +212,6 @@ Install cython as follows:
 pip install cython
 ```
 
-### leo (optional)
-
-[leo-editor](https://leoeditor.com) is used to factilitate documentation and restructuring.
-
-It is entirely optional, however, if one is interested it could be helpful to understand the project code in outline form:
-
-To install it you can create a python `virtual environment` in the project root (which is ignored by `.gitignore` if named as `leoenv`:
-
-```
-$ virtualenv leoenv
-$ source leoenv/bin/activate
-$ pip install leo
-```
-
-After installation, you can open the `project.leo` file as follows:
-
-```
-$ leo project.leo &
-```
 
 ### Build it
 
@@ -253,6 +230,53 @@ or in the `py/sources/py` directory
 ```
 make build
 ```
+
+This builds the default 'linked-to-system|homebrew python' version of `py`. Read further for alternative ways to build and install `py`.
+
+
+### Alternative Builds
+
+
+#### Embed Python in the Package
+
+In the root,
+
+```
+make source/py -C homebrew-pkg
+```
+
+or in root/source/py
+
+```
+make homebrew-pkg
+```
+
+The same pattern applies to the rest of the options. We will assume that you have cd'ed into `root/source/py` so you can omit `-C source/py` which only applies if you call from the root directory.
+
+If you want to copy and zip your system homebrew python and make it a dedicated python interpreter for the `py` object. Note, this does not install any modules. It's up to you to populate what you require.
+
+If you want to build and install cpython from source (will be done automatically):
+
+```
+make python-org-pkg
+```
+
+#### Embed Python in the External itself
+
+This places a whole minimized python distribution in the external `py.mxo` itself.
+
+To use your system homebrew python to do this:
+
+```
+make homebrew-ext
+```
+
+If you want to download and build python from source (will be done automatically)
+
+```
+make python-org-ext
+```
+
 
 ### Sidenote about building on a Mac
 
@@ -439,6 +463,27 @@ The style used in this project is specified in the `.clang-format` file.
 - [x] `import` statement in eval causes a segmentation fault. see: https://docs.python.org/3/c-api/intro.html exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
 - [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
+
+
+### leo (optional)
+
+[leo-editor](https://leoeditor.com) is used to factilitate documentation and restructuring.
+
+It is entirely optional, however, if one is interested it could be helpful to understand the project code in outline form:
+
+To install it you can create a python `virtual environment` in the project root (which is ignored by `.gitignore` if named as `leoenv`:
+
+```
+$ virtualenv leoenv
+$ source leoenv/bin/activate
+$ pip install leo
+```
+
+After installation, you can open the `project.leo` file as follows:
+
+```
+$ leo project.leo &
+```
 
 
 ## Prior Art and Thanks

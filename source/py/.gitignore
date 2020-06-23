@@ -7,6 +7,7 @@ infer-out
 # py related
 __pycache__
 .pytest_cache
+deploy
 
 project.xcworkspace
 xcuserdata
