@@ -115,7 +115,7 @@ fix_python_dylib_for_pkg() {
 	cd $PREFIX
 	chmod 777 ${DYLIB}
 	# assumes python in installed in $PREFIX
-	install_name_tool -id @@loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
+	install_name_tool -id @loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
 	cd $ROOT
 }
 
@@ -126,7 +126,6 @@ fix_python_dylib_for_ext() {
 	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
 	cd $ROOT
 }
-
 
 
 install_python() {
@@ -165,3 +164,9 @@ install_python() {
 	clean_python
 	zip_python_library
 }
+
+install_python_pkg() {
+	install_python
+	fix_python_dylib_for_pkg
+}
+

@@ -30,9 +30,10 @@ all: clean test build
 .PHONY: dev pkg
 
 
-dev: build pkg
+default: build pkg
 	$(call section,"build -> deploy to local package")
 
+homebrew-pkg: build-homebrew-pkg pkg pkg-support
 
 dist:
 	$(call section,"preparing for distribution")
@@ -49,6 +50,11 @@ pkg:
 	@for target in ${PKG_DIRS}; do \
     	rsync -a --delete $(ROOTDIR)/$${target} ${PACKAGE}; \
 	done
+
+pkg-support:
+	$(call section,"deploying support/ to local package")
+	rsync -a --delete $(ROOTDIR)/support ${PACKAGE}
+
 
 show:
 	@echo "PYDIR: ${PYDIR}"
