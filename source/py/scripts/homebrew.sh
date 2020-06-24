@@ -194,6 +194,3 @@ else
     echo "for package or external installation respectively"
 fi
 
-
-
-
