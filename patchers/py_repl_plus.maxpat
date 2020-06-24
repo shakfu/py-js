@@ -4,13 +4,13 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 4,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 75.0, 97.0, 492.0, 332.0 ],
+		"rect" : [ 75.0, 97.0, 628.0, 745.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -430,7 +430,7 @@
 					"bgfillcolor_proportion" : 0.0,
 					"bgfillcolor_type" : "color",
 					"id" : "obj-33",
-					"items" : [ ">>>", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "read" ],
+					"items" : [ ">>>", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "assign", ",", "call", ",", "pipe", ",", "code", ",", "load", ",", "read", ",", "send" ],
 					"maxclass" : "umenu",
 					"numinlets" : 1,
 					"numoutlets" : 3,
@@ -503,6 +503,8 @@
 			}
 , 			{
 				"box" : 				{
+					"autoload" : 0,
+					"file" : "",
 					"id" : "obj-25",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -510,12 +512,14 @@
 					"outlettype" : [ "", "", "" ],
 					"patching_rect" : [ 444.0, 611.0, 29.5, 22.0 ],
 					"saved_object_attributes" : 					{
+						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
 						"pythonpath" : ""
 					}
 ,
-					"text" : "py"
+					"text" : "py",
+					"varname" : "__main__"
 				}
 
 			}

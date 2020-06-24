@@ -45,7 +45,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 51.0, 111.0, 22.0 ],
+					"patching_rect" : [ 213.0, 47.0, 111.0, 22.0 ],
 					"text" : "eval api.error('bug')"
 				}
 
@@ -58,7 +58,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 17.0, 108.0, 88.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "eval api.bang()"
 				}
 
@@ -92,7 +91,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 451.0, 377.0, 138.0, 22.0 ],
+					"patching_rect" : [ 444.5, 380.0, 138.0, 22.0 ],
 					"text" : "eval api.lookup('mrfloat')"
 				}
 
@@ -104,7 +103,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 451.0, 349.0, 34.0, 22.0 ],
+					"patching_rect" : [ 444.5, 350.0, 34.0, 22.0 ],
 					"text" : "scan"
 				}
 
@@ -116,7 +115,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 444.5, 293.0, 95.0, 22.0 ],
+					"patching_rect" : [ 444.5, 288.0, 95.0, 22.0 ],
 					"text" : "send mrfloat 2.5"
 				}
 
@@ -153,7 +152,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 358.0, 103.0, 22.0 ],
+					"patching_rect" : [ 17.0, 362.0, 103.0, 22.0 ],
 					"text" : "eval api.out_dict()"
 				}
 
@@ -319,7 +318,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 45.0, 129.0, 22.0 ],
+					"patching_rect" : [ 17.0, 47.0, 129.0, 22.0 ],
 					"text" : "eval \"api.echo(1, 2, 3)\""
 				}
 
@@ -379,7 +378,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 444.5, 257.0, 66.0, 22.0 ],
+					"patching_rect" : [ 444.5, 255.0, 66.0, 22.0 ],
 					"text" : "eval api.txt"
 				}
 
@@ -473,6 +472,8 @@
 			}
 , 			{
 				"box" : 				{
+					"autoload" : 0,
+					"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,

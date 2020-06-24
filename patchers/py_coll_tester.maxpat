@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 4,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -106,7 +106,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 123.0, 403.0, 168.0, 22.0 ],
-					"text" : "0123456789abcdefABCDEF"
+					"text" : "0"
 				}
 
 			}
@@ -148,6 +148,8 @@
 			}
 , 			{
 				"box" : 				{
+					"autoload" : 0,
+					"file" : "",
 					"id" : "obj-4",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -155,12 +157,14 @@
 					"outlettype" : [ "", "", "" ],
 					"patching_rect" : [ 88.500000000000057, 176.0, 271.5, 22.0 ],
 					"saved_object_attributes" : 					{
+						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
 						"pythonpath" : ""
 					}
 ,
-					"text" : "py"
+					"text" : "py",
+					"varname" : "__main__"
 				}
 
 			}
@@ -184,7 +188,7 @@
 , 			{
 				"box" : 				{
 					"coll_data" : 					{
-						"count" : 4,
+						"count" : 6,
 						"data" : [ 							{
 								"key" : 1,
 								"value" : [ "import", "string" ]
@@ -200,6 +204,14 @@
 , 							{
 								"key" : 4,
 								"value" : [ "import", "wrong_module" ]
+							}
+, 							{
+								"key" : 5,
+								"value" : [ "eval", "1+1" ]
+							}
+, 							{
+								"key" : 6,
+								"value" : [ "eval", "2*20" ]
 							}
  ]
 					}
