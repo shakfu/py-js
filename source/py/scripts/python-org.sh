@@ -1,30 +1,28 @@
 #!/usr/bin/env bash
-# build_python.sh
 
-# WITHOUT SSL (STILL TBD)
+source "scripts/common.sh"
 
-
-SHORTNAME=python
-VERSION_MAJOR=3.7
-VERSION_MINOR=7
-MAC_DEP_TARGET=10.13
-SSL_VERSION=openssl-1.1.1g
+VERSION_MAJOR=${PY_MAJ_VER:=3.7}
+VERSION_MINOR=${PY_MIN_VER:=7}
+SSL_VERSION=${SSL_VER:=1.1.1g}
+MAC_DEP_TARGET=${MAC_DEP:=10.13}
 
 # --- need not modify below except to change excluded modules
 
 SEMVER=${VERSION_MAJOR}.${VERSION_MINOR}
 VERSION=${VERSION_MAJOR}
 VER="${VERSION//./}"
-NAME=${SHORTNAME}-${VERSION}
+NAME=python${VERSION}
+
 
 URL_PYTHON=https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz
-URL_OPENSSL=https://www.openssl.org/source/${SSL_VERSION}.tar.gz
+URL_OPENSSL=https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz
 URL_GETPIP=https://bootstrap.pypa.io/get-pip.py
 
 ROOT=$(pwd)
-SUPPORT=${ROOT}/support
-SRC=${ROOT}/source
-PY=${SRC}/py
+SUPPORT=${ROOT}/../../support
+SOURCE=${ROOT}/../source
+PY=${ROOT}
 TARGETS=${PY}/targets
 TARGET=${TARGETS}/python-org
 BUILD=${TARGET}/build
@@ -35,6 +33,41 @@ LIB=${PREFIX}/lib/python${VERSION}
 SSL_SRC=${BUILD}/${SSL_VERSION}
 SSL=${BUILD}/ssl
 TMP=${BUILD}/_tmp
+DYLIB_NAME=libpython${VERSION}m
+DYLIB=${DYLIB_NAME}.dylib
+
+debug() {
+
+	echo "NAME: $NAME"
+
+	echo "VERSION_MAJOR: $VERSION_MAJOR"
+	echo "VERSION_MINOR: $VERSION_MINOR"
+	echo "SEMVER: $SEMVER"
+	echo "VERSION: $VERSION"
+	echo "VER: $VER"
+
+	echo "SSL_VERSION: $SSL_VERSION"
+	echo "MAC_DEP_TARGET: $MAC_DEP_TARGET"
+	
+	echo "URL_PYTHON: $URL_PYTHON"
+	echo "URL_OPENSSL: $URL_OPENSSL"
+	echo "URL_GETPIP: $URL_GETPIP"
+	
+	echo "ROOT: $ROOT"
+	echo "SUPPORT: $SUPPORT"
+	echo "SOURCE: $SOURCE"
+	echo "PY: $PY"
+	echo "TARGETS: $TARGETS"
+	echo "TARGET: $TARGET"
+	echo "BUILD: $BUILD"
+	echo "PYTHON: $PYTHON"
+	echo "PREFIX: $PREFIX"
+	echo "BIN: $BIN"
+	echo "LIB: $LIB"
+	echo "SSL_SRC: $SSL_SRC"
+	echo "SSL: $SSL"
+	echo "TMP: $TMP"
+}
 
 
 get_url() {
@@ -252,18 +285,21 @@ build_python_zipped() {
 
 
 fix_python_dylib_for_pkg() {
-	cd $PREFIX
+	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes python in installed in $PREFIX
 	install_name_tool -id @loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
+	echo "fix_python_dylib_for_pkg done"
+	otool -L ${DYLIB}
 	cd $ROOT
 }
 
 fix_python_dylib_for_ext() {
-	cd $PREFIX
+	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
 	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
+	echo "fix_python_dylib_for_ext done"
 	cd $ROOT
 }
 
@@ -293,6 +329,21 @@ install_python_pkg() {
 install_python_ext() {
 	install_python
 	fix_python_dylib_for_ext
+	# FIXME: not complete!
+	# cp python to py.mxo
 }
+
+if [ "$1" == "pkg" ]; then
+    echo "Installing minimal python from source into 'support' folder of package"
+    reset
+    install_python_pkg
+
+elif [ "$1" == "ext" ]; then
+	echo "Installing minimal python from source into 'py.mxo' external"
+	intall_python_ext
+else
+    echo "No argument given. Can be 'pkg' or 'ext'"
+    echo "for package or external installation respectively"
+fi
 
 

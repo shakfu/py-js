@@ -1,5 +1,9 @@
-VERSION_MAJOR=3.7
-VERSION_MINOR=7
+#!/usr/bin/env bash
+
+source "scripts/common.sh"
+
+VERSION_MAJOR=${PY_MAJ_VER:=3.7}
+VERSION_MINOR=${PY_MIN_VER:=7}
 
 SEMVER=${VERSION_MAJOR}.${VERSION_MINOR}
 VERSION=${VERSION_MAJOR}
@@ -7,7 +11,7 @@ VER="${VERSION//./}"
 NAME=python${VERSION}
 
 ROOT=$(pwd)
-SUPPORT=${ROOT}/support
+SUPPORT=${ROOT}/../../support
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
 LIB=${PREFIX}/lib/${NAME}
@@ -169,4 +173,27 @@ install_python_pkg() {
 	install_python
 	fix_python_dylib_for_pkg
 }
+
+
+install_python_ext() {
+	install_python
+	fix_python_dylib_for_ext
+}
+
+
+if [ "$1" == "pkg" ]; then
+    echo "Installing minimal homebrew python into 'support' folder of package"
+    reset
+    install_python_pkg
+
+elif [ "$1" == "ext" ]; then
+	echo "Installing minimal homebrew python into 'py.mxo' external"
+	install_python_ext
+else
+    echo "No argument given. Can be 'pkg' or 'ext'"
+    echo "for package or external installation respectively"
+fi
+
+
+
 

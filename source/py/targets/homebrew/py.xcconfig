@@ -6,8 +6,6 @@ MIN_VER = 7
 VERSION = $(MAJ_VER)
 SEMVER = $(MAJ_VER).$(MIN_VER)
 
-PYROOT = $(SRCROOT)/../../../py
-
 SUPPORT = $(SRCROOT)/../../../../support
 
 PREFIX = $(SUPPORT)/python$(VERSION)

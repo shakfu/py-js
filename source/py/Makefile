@@ -33,13 +33,13 @@ all: clean test build
 default: build pkg
 	$(call section,"build -> deploy to local package")
 
-homebrew-pkg: build-homebrew pkg pkg-support
+homebrew-pkg: build-homebrew-pkg pkg pkg-support
 
-homebrew-ext: build-homebrew pkg
+homebrew-ext: build-homebrew-ext pkg
 
-python-org-pkg: build-python-org pkg pkg-support
+python-org-pkg: build-python-org-pkg pkg pkg-support
 
-python-org-ext: build-python-org pkg 
+python-org-ext: build-python-org-ext pkg 
 
 
 dist:
@@ -60,7 +60,7 @@ pkg:
 
 pkg-support:
 	$(call section,"deploying support/ to local package")
-	rsync -a --delete $(ROOTDIR)/support ${PACKAGE}
+	@rsync -a --delete $(ROOTDIR)/support ${PACKAGE}
 
 
 show:
@@ -72,7 +72,7 @@ show:
 
 # BUILDING
 # -----------------------------------------------------------------------
-.PHONY: build build-default build-homebrew build-python-org build-extension
+.PHONY: build build-default build-homebrew-pkg build-python-org-pkg build-extension
 
 build: build-default
 	$(call section,"build project")
@@ -81,13 +81,40 @@ build-default: build-extension
 	$(call section,"build default external with xcode")
 	@xcodebuild -project targets/default/py.xcodeproj
 
-build-homebrew: build-extension 
-	$(call section,"built homebrew external with xcode")
+
+build-homebrew-pkg: build-extension prepare-homebrew-pkg compile-homebrew  
+
+build-homebrew-ext: build-extension prepare-homebrew-ext compile-homebrew
+
+compile-homebrew:
+	$(call section,"compile homebrew")
 	@xcodebuild -project targets/homebrew/py.xcodeproj
 
-build-python-org: build-extension 
-	$(call section,"built homebrew external with xcode")
+prepare-homebrew-pkg:
+	$(call section,"build homebrew python for package")
+	@bash scripts/homebrew.sh pkg
+	
+prepare-homebrew-ext:
+	$(call section,"build homebrew python for external")
+	@bash scripts/homebrew.sh ext
+
+
+build-python-org-pkg: build-extension prepare-python-org-pkg compile-python-org
+
+build-python-org-ext: build-extension prepare-python-org-ext compile-python-org
+
+compile-python-org:
+	$(call section,"compile python source with xcode")
 	@xcodebuild -project targets/python-org/py.xcodeproj
+
+prepare-python-org-pkg:
+	$(call section,"prepare python from source for package")
+	@bash scripts/python-org.sh pkg
+
+prepare-python-org-ext:
+	$(call section,"prepare python from source for external")
+	@bash scripts/python-org.sh ext
+
 
 build-extension:
 	$(call section,"generate c code from cython extension")
@@ -143,15 +170,15 @@ clean-externals:
 
 clean-build-default:
 	$(call section,"cleaning build artifacts from default target")
-	find **/default | grep -E "(build)" | xargs rm -rf
+	@find **/default | grep -E "(build)" | xargs rm -rf
 	
 clean-build-homebrew:
 	$(call section,"cleaning build artifacts from homebrew target")
-	find **/homebrew | grep -E "(build)" | xargs rm -rf
+	@find **/homebrew | grep -E "(build)" | xargs rm -rf
 
 clean-build-python-org:
 	$(call section,"cleaning build artifacts from python-org target")
-	find **/python-org | grep -E "(build)" | xargs rm -rf
+	@find **/python-org | grep -E "(build)" | xargs rm -rf
 
 clean-support:
 	$(call section,"cleaning support directory")
