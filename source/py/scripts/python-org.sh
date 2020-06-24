@@ -288,9 +288,10 @@ fix_python_dylib_for_pkg() {
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes python in installed in $PREFIX
-	install_name_tool -id @loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
+	../../../../support/python3.7/lib/libpython3.7m.dylib
+	install_name_tool -id @loader_path/../../../../support/${NAME}/lib/${DYLIB} ${DYLIB}
 	echo "fix_python_dylib_for_pkg done"
-	otool -L ${DYLIB}
+	# otool -L ${DYLIB}
 	cd $ROOT
 }
 
@@ -341,6 +342,16 @@ if [ "$1" == "pkg" ]; then
 elif [ "$1" == "ext" ]; then
 	echo "Installing minimal python from source into 'py.mxo' external"
 	intall_python_ext
+
+elif [ "$1" == "build_python" ]; then
+	echo "Building from python source"
+	build_python_zipped
+
+elif [ "$1" == "fix_pkg" ]; then
+	echo "fixing dynamic lookup refs for package"
+	fix_python_dylib_for_pkg
+	#otool -L $PREFIX/lib/$DYLIB
+
 else
     echo "No argument given. Can be 'pkg' or 'ext'"
     echo "for package or external installation respectively"

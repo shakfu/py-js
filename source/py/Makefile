@@ -98,6 +98,7 @@ prepare-homebrew-ext:
 	$(call section,"build homebrew python for external")
 	@bash scripts/homebrew.sh ext
 
+compile-python-org-pkg: build-extension compile-python-org pkg pkg-support
 
 build-python-org-pkg: build-extension prepare-python-org-pkg compile-python-org
 
