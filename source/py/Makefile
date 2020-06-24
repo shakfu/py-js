@@ -30,10 +30,10 @@ all: clean test build
 .PHONY: default homebrew-pkg homebrew-ext python-org-pkg python-org-ex pkg pkg-support dist
 
 
-default: build pkg
+default: clean build pkg
 	$(call section,"build -> deploy to local package")
 
-homebrew-pkg: build-homebrew-pkg pkg pkg-support
+homebrew-pkg: clean build-homebrew-pkg pkg pkg-support
 
 homebrew-ext: build-homebrew-ext pkg
 
