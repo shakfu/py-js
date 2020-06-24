@@ -25,7 +25,7 @@ py interpreter object
         pythonpath              : add path to python sys.path
         debug                   : switch debug logging on/off
 
-    methods 
+    methods (messages) 
         core
             import <module>     : python import to object namespace
             eval <expression>   : python 'eval' semantics
