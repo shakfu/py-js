@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 4,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -77,7 +77,7 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 44.0, 13.0, 30.0, 30.0 ]
+					"patching_rect" : [ 14.0, 18.0, 30.0, 30.0 ]
 				}
 
 			}
@@ -372,7 +372,7 @@
 					"bgfillcolor_proportion" : 0.0,
 					"bgfillcolor_type" : "color",
 					"id" : "obj-33",
-					"items" : [ ">>>", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "read" ],
+					"items" : [ ">>>", ",", "import", ",", "eval", ",", "exec", ",", "execfile", ",", "assign", ",", "call", ",", "pipe", ",", "code", ",", "load", ",", "read", ",", "send" ],
 					"maxclass" : "umenu",
 					"numinlets" : 1,
 					"numoutlets" : 3,
@@ -483,7 +483,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-31", 0 ],
-					"midpoints" : [ 53.5, 450.0, 120.000000000000114, 450.0 ],
+					"midpoints" : [ 23.5, 450.0, 120.000000000000114, 450.0 ],
 					"source" : [ "obj-22", 0 ]
 				}
 
