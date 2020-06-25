@@ -163,7 +163,8 @@ clean: clean-externals clean-build clean-support
 
 clean-build: clean-build-default \
 			 clean-build-homebrew \
-			 clean-build-python-org
+			 clean-build-python-org \
+			 clean-build-python-fwk
 
 clean-externals:
 	$(call section,"cleaning externals")
@@ -180,6 +181,10 @@ clean-build-homebrew:
 clean-build-python-org:
 	$(call section,"cleaning build artifacts from python-org target")
 	@find **/python-org | grep -E "(build)" | xargs rm -rf
+
+clean-build-python-fwk:
+	$(call section,"cleaning build artifacts from python-fwk target")
+	@find **/python-fwk | grep -E "(build)" | xargs rm -rf
 
 clean-support:
 	$(call section,"cleaning support directory")
