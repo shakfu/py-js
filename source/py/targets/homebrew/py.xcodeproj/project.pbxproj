@@ -110,11 +110,6 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0610;
-				TargetAttributes = {
-					2FBBEAD608F335360078DB84 = {
-						DevelopmentTeam = GXY97B2JBX;
-					};
-				};
 			};
 			buildConfigurationList = 2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "py" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -187,7 +182,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = GXY97B2JBX;
+				DEVELOPMENT_TEAM = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
@@ -201,7 +196,7 @@
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ibtakr.py;
+				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
 			};
 			name = Development;
 		};
@@ -211,7 +206,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = YES;
-				DEVELOPMENT_TEAM = GXY97B2JBX;
+				DEVELOPMENT_TEAM = "";
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
@@ -224,7 +219,7 @@
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ibtakr.py;
+				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
 			};
 			name = Deployment;
 		};
