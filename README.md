@@ -9,53 +9,54 @@ repo - https://github.com/shakfu/py
 
 ```
 globals
-    obj_count                   : number of active py objects
-    registry                    : global registry to lookup object names
+    obj_count                    : number of active py objects
+    registry                     : global registry to lookup object names
 
 patchers
     subpatchers
-        py_repl                 : a basic single line repl for py
-        py_repl_plus            : embeds a py object in a py_repl
+        py_repl                  : a basic single line repl for py
+        py_repl_plus             : embeds a py object in a py_repl
 
 py interpreter object
     attributes
-        name                    : unique name
-        file                    : file to load into editor
-        autoload                : load file at start
-        pythonpath              : add path to python sys.path
-        debug                   : switch debug logging on/off
+        name                     : unique name
+        file                     : file to load into editor
+        autoload                 : load file at start
+        pythonpath               : add path to python sys.path
+        debug                    : switch debug logging on/off
 
     methods (messages) 
         core
-            import <module>     : python import to object namespace
-            eval <expression>   : python 'eval' semantics
-            exec <statement>    : python 'exec' semantics
-            execfile <path>     : python 'execfile' semantics
+            import <module>      : python import to object namespace
+            eval <expression>    : python 'eval' semantics
+            exec <statement>     : python 'exec' semantics
+            execfile <path>      : python 'execfile' semantics
         
         extra
-            assign <var> [arg]  : max msg assignments to py object namespace
-            call <pyfunc> [arg] : max friendly python function calling
-            pipe <arg> [pyfunc] : process a py/max value via a pipe of py funcs
-            code <expr|stmt>    : alternative way to eval or exec py code
+            assign <var> [arg]   : max msg assignments to py object namespace
+            call <pyfunc> [arg]  : max friendly python function calling
+            pipe <arg> [pyfunc]  : process a py/max value via a pipe of py funcs
+            code <expr|stmt>     : alternative way to eval or exec py code
+            anything <expr|stmt> : anything version of the code method 
         
         code editor
-            read <path>         : read text file into editor
-            load <path>         : combo of read <path> -> execfile <path>
+            read <path>          : read text file into editor
+            load <path>          : combo of read <path> -> execfile <path>
      
         interobject
-            scan                : scan patcher and store names of child objects
-            send <msg>          : send an arbitrary message to a named object
+            scan                 : scan patcher and store names of child objects
+            send <msg>           : send an arbitrary message to a named object
 
         meta
-            count               : give a int count of current live py objects
+            count                : give a int count of current live py objects
 
     inlets
-        single inlet            : primary input (anything)
+        single inlet             : primary input (anything)
 
     outlets
-        left outlet             : primary output (anything)
-        middle outlet           : bang on failure
-        right outlet            : bang on success 
+        left outlet              : primary output (anything)
+        middle outlet            : bang on failure
+        right outlet             : bang on success 
 ```
 
 ## Overview
@@ -78,15 +79,16 @@ In addition, to the variations above, onc can choose to use the cython-generated
 Otherwise using plain-vanilla python in Max is also quite usable due to the availability of the following methods:
 
 
-category | method   | param(s)      | in/out | changes ns 
-:------- | :--------| :------------ | :----: | :--------: 
-core     | import   | module        | in     | yes        
-core     | eval     | expression    | out    | no         
-core     | exec     | statement     | in     | yes        
-core     | execfile | file          | in     | yes        
-extra    | assign   | var, data     | in     | yes        
-extra    | call     | var(s), data  | out    | no         
-extra    | code     | expr or stmt  | out?   | yes        
+category | method   | param(s)      | in/out | can change ns 
+:------- | :--------| :------------ | :----: | :------------: 
+core     | import   | module        | in     | yes
+core     | eval     | expression    | out    | no
+core     | exec     | statement     | in     | yes
+core     | execfile | file          | in     | yes
+extra    | assign   | var, data     | in     | yes
+extra    | call     | var(s), data  | out    | no
+extra    | code     | expr or stmt  | out?   | yes
+extra    | anything | expr or stmt  | out?   | yes
 extra    | pipe     | var, funcs    | out    | no
 editor   | read     | file          | n/a    | no
 editor   | load     | file          | n/a    | no
@@ -119,7 +121,7 @@ An *extra* feature makes the `py` object play nice in the max/msp ecosystem:
 
 - **Pipe message**. Like a `call` in reverse, responds to a `pipe <arg> <f1> <f2> ... <fN>` message. In this sense, a value is *piped* through a chain of python functions in the objects namespace and returns the output to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-- **Code Messages**. Responds to a `code <expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by max's parsing and excaping rules. (EXPERIMENTAL and evolving).
+- **Code or Anything Messages**. Responds to a `code <expression || statement>` or (anything) `<expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by max's parsing and excaping rules. (EXPERIMENTAL and evolving).
 
 
 #### Interobject Communication
@@ -145,13 +147,11 @@ An *extra* feature makes the `py` object play nice in the max/msp ecosystem:
 
 - The `py` object is currently marked as experimental pre-alpha and still needs further unit/functional/integration testing and field testing of course. Do not use it expecting it is battle-tested!
 
-- As of this writing, the `api` module which is a minimal cython-based wrapper of the max-api is does not unload fully between patches. It requires a restart of Max to work after you close the first patch which uses it.
+- As of this writing, the `api` module which is a minimal cython-based wrapper of the max-api is does not unload fully between patches. It requires a restart of Max to work after you close the first patch which uses it. This is a [bug](https://bugs.python.org/issue34309)in python which is being worked on and my be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
 
-- `core` features are supposed to be the most stable, and should not crash under any circumstances (but they may..), `extra` features are less stable since they are more experimental, etc..
+- `core` features are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
 
-- The `api` module is the most experimental part of this project, and is completely optional. If you don't want to use it, don't import it.
-
-- Some of the `py` variations package pre-built binaries. If you are not comfortable with using , feel free to build your own custom python distro. (I may include as a submodule, the python source in the future.)
+- The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
 
 
 ## Building
@@ -321,14 +321,13 @@ The style used in this project is specified in the `.clang-format` file.
 
 ### Testing
 
+- [50] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
+
 - [ ] complete comprehensive test suite
-- [ ] complete c test suite
-- [ ] complete max test suite
-- [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
+    - [ ] complete c test suite
+    - [ ] complete max test suite
 
 ### Future Experiments
-
-- [ ] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
 - [ ] Convert `py` into a `js` extension class
       - proof of concept done, but requires a different 'nobox' type of class and data passing via arrays and attributes instead of outlets. But can be done!
@@ -348,6 +347,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ##### Core
 
+- [x] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
 - [x] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
 
