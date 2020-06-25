@@ -628,9 +628,6 @@ error:
 }
 
 
-
-
-
 void py_handle_dict_output(t_py* x, PyObject* pdict)
 {
     PyObject* pfun_co = NULL;
@@ -692,6 +689,8 @@ error:
     // fail bang
     outlet_bang(x->p_outlet_middle);
 }
+
+
 void py_handle_output(t_py* x, PyObject* pval)
 {
     if (pval == NULL) {
@@ -830,6 +829,7 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
         return;
     } else {
         py_handle_error(x, "eval %s", py_argv);
+        outlet_bang(x->p_outlet_middle);
     }
 }
 
