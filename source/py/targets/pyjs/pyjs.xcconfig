@@ -1,0 +1,18 @@
+#include "../../../maxmspsdk.xcconfig"
+
+
+MAJ_VER = 3.7
+MIN_VER = 7
+VERSION = $(MAJ_VER)m
+SEMVER = $(MAJ_VER).$(MIN_VER)
+
+PYROOT = $(SRCROOT)/../../../py
+
+HOMEBREW = /usr/local/Cellar/python/$(SEMVER)/Frameworks/Python.framework/Versions/$(MAJ_VER)
+
+PY_HEADERS = $(HOMEBREW)/include/python$(VERSION)
+
+PY_LIBS = $(HOMEBREW)/lib
+
+PY_LDFLAGS = -lpython$(VERSION) -ldl
+
