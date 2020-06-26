@@ -20,6 +20,11 @@ PYDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 SRCDIR:=$(shell dirname $(abspath ${PYDIR}))
 ROOTDIR:=$(shell dirname $(abspath ${SRCDIR}))
 
+
+# ifdef MYFLAG
+# CFLAGS += -DMYFLAG
+# endif
+
 .PHONY: all
 
 all: clean test build
@@ -79,8 +84,7 @@ build: build-default
 
 build-default: build-extension 
 	$(call section,"build default external with xcode")
-	@xcodebuild -project targets/default/py.xcodeproj
-
+	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/default/py.xcodeproj
 
 build-homebrew-pkg: build-extension prepare-homebrew-pkg compile-homebrew  
 
@@ -88,7 +92,7 @@ build-homebrew-ext: build-extension prepare-homebrew-ext compile-homebrew
 
 compile-homebrew:
 	$(call section,"compile homebrew")
-	@xcodebuild -project targets/homebrew/py.xcodeproj
+	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/homebrew/py.xcodeproj
 
 prepare-homebrew-pkg:
 	$(call section,"build homebrew python for package")
@@ -106,7 +110,7 @@ build-python-org-ext: build-extension prepare-python-org-ext compile-python-org
 
 compile-python-org:
 	$(call section,"compile python source with xcode")
-	@xcodebuild -project targets/python-org/py.xcodeproj
+	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/python-org/py.xcodeproj
 
 prepare-python-org-pkg:
 	$(call section,"prepare python from source for package")
