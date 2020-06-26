@@ -20,7 +20,7 @@ function get()
 
 function py(val)
 {
-	outlet(o, pyjs.code(val));
+	outlet(0, pyjs.code(val));
 }
 
 // sends a value to simplejs and gets the result back
