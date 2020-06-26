@@ -17,10 +17,12 @@ function get()
 	outlet(0, pyjs.myattr);
 }
 
-
-function py(val)
+function py()
 {
-	outlet(0, pyjs.code(val));
+	//var arr = arrayfromargs(messagename, arguments);
+	var arr = arrayfromargs(arguments);
+	post(arr+"\n");
+	outlet(0, pyjs.code(arguments));
 }
 
 // sends a value to simplejs and gets the result back
