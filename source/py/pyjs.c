@@ -242,6 +242,7 @@ t_max_err pyjs_doabs(t_pyjs *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
 
 t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
 {
+    t_atom atoms[PY_MAX_ATOMS];
     long textsize = 0;
     char* text = NULL;
     PyObject* co = NULL;
@@ -277,18 +278,86 @@ t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
     Py_DECREF(co);
 
     if (!is_eval) {
-        // bang for exec-type op
         return -1;
+
     } else {
-        pyjs_handle_output(x, pval, &rv);
+
+	    if (pval == NULL) {
+	        pyjs_error(x, "cannot handle NULL value");
+	        return;
+	    }
+
+	    if (PyFloat_Check(pval)) {
+
+	        float float_result = (float)PyFloat_AsDouble(pval);
+	        if (float_result == -1.0) {
+	            if (PyErr_Occurred())
+	                goto error;
+	        }
+			atom_setfloat(atoms, float_result);
+			atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));        
+		    
+		    Py_XDECREF(pval);
+	    }
     }
     return MAX_ERR_NONE;
 
 error:
-    pyjs_handle_error(x, "call failed");
-    // fail bang
+    pyjs_handle_error(x, "code failed");
+    Py_XDECREF(pval);
     return -1;
 }
+
+
+// t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
+// {
+//     long textsize = 0;
+//     char* text = NULL;
+//     PyObject* co = NULL;
+//     PyObject* pval = NULL;
+//     t_max_err err;
+//     int is_eval = 1;
+
+//     err = atom_gettext(argc, argv, &textsize, &text,
+//                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+//     if (err == MAX_ERR_NONE && textsize && text) {
+//         pyjs_log(x, "call %s", text);
+//     } else {
+//         goto error;
+//     }
+
+//     co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+
+//     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+//         PyErr_Clear();
+//         co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+//         is_eval = 0;
+//     }
+
+//     if (co == NULL) { // can be eval-co or exec-co or NULL here
+//         goto error;
+//     }
+//     sysmem_freeptr(text);
+
+//     pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+//     if (pval == NULL) {
+//         goto error;
+//     }
+//     Py_DECREF(co);
+
+//     if (!is_eval) {
+//         // bang for exec-type op
+//         return -1;
+//     } else {
+//         pyjs_handle_output(x, pval, &rv);
+//     }
+//     return MAX_ERR_NONE;
+
+// error:
+//     pyjs_handle_error(x, "call failed");
+//     // fail bang
+//     return -1;
+// }
 
 
 
