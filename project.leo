@@ -223,6 +223,13 @@
 <v t="sta.20200602120251.19"><vh>void py_load</vh></v>
 </v>
 </v>
+<v t="sta.20200626082232.1"><vh>@clean pyj.c</vh>
+<v t="sta.20200626082243.1"><vh>typedef struct</vh></v>
+<v t="sta.20200626082243.2"><vh>void ext_main</vh></v>
+<v t="sta.20200626082243.3"><vh>void simplejs_free</vh></v>
+<v t="sta.20200626082243.4"><vh>void *simplejs_new(t_symbol *s, long argc, t_atom *argv)</vh></v>
+<v t="sta.20200626082243.5"><vh>void simplejs_print</vh></v>
+</v>
 </v>
 </v>
 </v>
@@ -520,6 +527,7 @@ error:
         return;
     } else {
         py_handle_error(x, "eval %s", py_argv);
+        outlet_bang(x-&gt;p_outlet_middle);
     }
 }
 
@@ -793,6 +801,7 @@ error:
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
     class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
     class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,  0);
+    class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,  0);
 
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
@@ -1234,6 +1243,7 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
+void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* informational */
 void py_count(t_py* x);
@@ -2481,6 +2491,91 @@ error:
     outlet_bang(x-&gt;p_outlet_middle);
 }
 
+
+void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    t_atom atoms[PY_MAX_ATOMS];
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+    int is_eval = 1;
+
+    if (s == gensym("")) {
+        return;
+    }
+
+    // set '=' as shorthand for assign method
+    if (s == gensym("=")) {
+        py_assign(x, gensym(""), argc, argv);
+        return;
+    }
+
+    // set symbol as first atom in new atoms array
+    atom_setsym(atoms, s);
+
+    for (int i = 0; i &lt; argc; i++) {
+        switch ((argv + i)-&gt;a_type) {
+        case A_FLOAT: {
+            atom_setfloat((atoms+(i+1)), atom_getfloat(argv + i));
+            break;
+        }
+        case A_LONG: {
+            atom_setlong((atoms+(i+1)), atom_getlong(argv + i));
+            break;
+        }
+        case A_SYM: {
+            atom_setsym((atoms+(i+1)), atom_getsym(argv + i));
+            break;
+        }
+        default:
+            py_log(x, "cannot process unknown type");
+            break;
+        }
+    }
+
+    err = atom_gettext(argc+1, atoms, &amp;textsize, &amp;text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
+        py_log(x, "&gt;&gt;&gt; %s", text);
+    } else {
+        goto error;
+    }
+
+    co = Py_CompileString(text, x-&gt;p_name-&gt;s_name, Py_eval_input);
+
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, x-&gt;p_name-&gt;s_name, Py_single_input);
+        is_eval = 0;
+    }
+
+    if (co == NULL) { // can be eval-co or exec-co or NULL here
+        goto error;
+    }
+    sysmem_freeptr(text);
+
+    pval = PyEval_EvalCode(co, x-&gt;p_globals, x-&gt;p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(co);
+
+    if (!is_eval) {
+        // bang for exec-type op
+        outlet_bang(x-&gt;p_outlet_right);
+    } else {
+        py_handle_output(x, pval);
+    }
+    return;
+
+error:
+    py_handle_error(x, "anything failed");
+    // fail bang
+    outlet_bang(x-&gt;p_outlet_middle);
+}
+
 </t>
 <t tx="sta.20200606044751.1">void py_handle_output(t_py* x, PyObject* pval)
 {
@@ -3268,9 +3363,6 @@ error:
     Py_XDECREF(plist);
     outlet_bang(x-&gt;p_outlet_middle);
 }
-
-
-
 
 
 </t>
@@ -4889,6 +4981,103 @@ error:
     Py_XDECREF(pval);
     // fail bang
     outlet_bang(x-&gt;p_outlet_middle);
-}</t>
+}
+
+
+</t>
+<t tx="sta.20200626082232.1">#include "ext.h"
+#include "ext_obex.h"
+
+
+@others
+@language c
+@tabwidth -4
+</t>
+<t tx="sta.20200626082243.1">typedef struct _simplejs
+{
+    t_object ob;
+    double myattr;
+} t_simplejs;
+
+void *simplejs_new(t_symbol *s, long argc, t_atom *argv);
+void simplejs_free(t_simplejs *x);
+void simplejs_print(t_simplejs *x, t_symbol *s, long ac, t_atom *av);
+t_max_err simplejs_doabs(t_simplejs *x, t_symbol *s, long ac, t_atom *av, t_atom *rv);
+
+
+static t_class *simplejs_class;
+
+
+</t>
+<t tx="sta.20200626082243.2">void ext_main(void *r)
+{
+    t_class *c;
+
+    c = class_new("simplejs", 
+        (method)simplejs_new, 
+        (method)simplejs_free, 
+        (long)sizeof(t_simplejs),
+        0L /* leave NULL!! */, A_GIMME, 0);
+
+    class_addmethod(c, (method)simplejs_print, "print",	0);
+    class_addmethod(c, (method)simplejs_doabs, "doAbs",	A_GIMMEBACK, 0);
+
+    CLASS_ATTR_DOUBLE(c, "myattr", 0, t_simplejs, myattr);
+
+    c-&gt;c_flags = CLASS_FLAG_POLYGLOT;
+    class_register(CLASS_NOBOX, c);
+    simplejs_class = c;
+}
+
+</t>
+<t tx="sta.20200626082243.3">void simplejs_free(t_simplejs *x)
+{
+    ;
+}
+
+</t>
+<t tx="sta.20200626082243.4">void *simplejs_new(t_symbol *s, long argc, t_atom *argv)
+{
+    t_simplejs *x = NULL;
+
+    // object instantiation, NEW STYLE
+    if ((x = (t_simplejs *)object_alloc(simplejs_class))) {
+        // Initialize values
+        x-&gt;myattr = 74.;
+    }
+    return (x);
+}
+
+</t>
+<t tx="sta.20200626082243.5">void simplejs_print(t_simplejs *x, t_symbol *s, long ac, t_atom *av)
+{
+    post("The value of myattr is: %f", x-&gt;myattr);
+}
+
+t_max_err simplejs_doabs(t_simplejs *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
+{
+    t_atom a[1];
+    double f = 0;
+
+    if (ac) {
+        if (atom_gettype(av) == A_LONG)
+            f = (double)abs(atom_getlong(av));
+        else if( atom_gettype(av) == A_FLOAT)
+            f = fabs(atom_getfloat(av));
+    } else
+        error("missing argument for method doAbs()");
+
+    // store the result in the a array.
+    atom_setfloat(a, f);
+
+    // return the result to js
+    atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, a));
+
+    return MAX_ERR_NONE;
+}
+
+
+
+</t>
 </tnodes>
 </leo_file>

@@ -10,5 +10,5 @@ TBD later (maybe)
 
 */
 
-maxclasswrap("py", "PyExternal");
+maxclasswrap("pyjs","PyJS");
 
