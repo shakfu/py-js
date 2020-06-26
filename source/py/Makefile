@@ -32,11 +32,13 @@ all: clean test build
 
 # DEPLOYING
 # -----------------------------------------------------------------------
-.PHONY: default homebrew-pkg homebrew-ext python-org-pkg python-org-ex pkg pkg-support dist
+.PHONY: default pyjs homebrew-pkg homebrew-ext python-org-pkg python-org-ex pkg pkg-support dist
 
 
 default: clean build pkg
 	$(call section,"build -> deploy to local package")
+
+pyjs: build-pyjs pkg
 
 homebrew-pkg: clean build-homebrew-pkg pkg pkg-support
 
@@ -77,7 +79,7 @@ show:
 
 # BUILDING
 # -----------------------------------------------------------------------
-.PHONY: build build-default build-homebrew-pkg build-python-org-pkg build-extension
+.PHONY: build build-default build-pyjs build-homebrew-pkg build-python-org-pkg build-extension
 
 build: build-default
 	$(call section,"build project")
@@ -85,6 +87,10 @@ build: build-default
 build-default: build-extension 
 	$(call section,"build default external with xcode")
 	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/default/py.xcodeproj
+
+build-pyjs:
+	$(call section,"build pyjs external with xcode")
+	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/pyjs/pyjs.xcodeproj
 
 build-homebrew-pkg: build-extension prepare-homebrew-pkg compile-homebrew  
 
