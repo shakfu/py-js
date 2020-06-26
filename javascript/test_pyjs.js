@@ -1,32 +1,60 @@
-var pyjs = new PyJS();	// instantiate a simplejs object
+var pyjs = new PyJS();
 
-// trigger the print method of simplejs
-function bang()
+// ---------------------------------------------------------------------------
+// Properties
+
+function set_name(val)
 {
-	pyjs.print();
+	pyjs.name = val;
 }
 
-function set(val)
+function get_name()
 {
-	pyjs.myattr = val;	// set the value of myattr
+	outlet(0, pyjs.name);
 }
 
-// output the contents of myattr
-function get()
+function set_file(val)
 {
-	outlet(0, pyjs.myattr);
+	pyjs.file = val;
+}
+
+function get_file()
+{
+	outlet(0, pyjs.file);
+}
+
+function set_pythonpath(val)
+{
+	pyjs.pythonpath = val;
+}
+
+function get_pythonpath()
+{
+	outlet(0, pyjs.pythonpath);
+}
+
+function set_debug(val)
+{
+	pyjs.debug = val;
+}
+
+function get_debug()
+{
+	outlet(0, pyjs.debug);
+}
+
+// ---------------------------------------------------------------------------
+// Methods
+
+function pyload(file)
+{
+	pyjs.execfile(file);
 }
 
 function py()
 {
 	//var arr = arrayfromargs(messagename, arguments);
 	var arr = arrayfromargs(arguments);
-	post(arr+"\n");
+	// post(arr + "\n");
 	outlet(0, pyjs.code(arr));
-}
-
-// sends a value to simplejs and gets the result back
-function abs(val)
-{
-	outlet(0, pyjs.doAbs(val));
 }
