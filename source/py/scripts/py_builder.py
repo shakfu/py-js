@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 import shutil
+import glob
 
 env = os.get_env
 cmd = os.system
@@ -25,6 +26,10 @@ class PyBuilder:
 
         # directories
         self.root = Path.cwd()
+
+    # ------------------------------------------------------------------------
+    # propertiess
+
 
     @property
     def ver(self):
@@ -91,19 +96,22 @@ class PyBuilder:
         return self.build / self.tmp
 
     @property
-    def dylib_name(self):
-        return f'libpython{self.version}{self.suffix}'
-
-    @property
     def dylib(self):
-        return f'{self.dylib_name}.dylib'
+        return f'libpython{self.version}{self.suffix}.dylib'
 
-    @property
+
+    # ------------------------------------------------------------------------
+    # operations
+
     def cmd(self, shellcmd, *args, **kwargs):
         os.system(shellcmd.format(*args, **kwargs))
 
     def remove(self, path):
-        shutil.rmtree(path)
+        if hasttr(path, '__iter__'):
+            for f in path:
+                shutil.rmtree(f)
+        else:
+            shutil.rmtree(path)
 
     def rm_libs(self, names):
         for name in names:
@@ -120,7 +128,7 @@ class PyBuilder:
     def get_url(url):
         self.tmp.mkdir()
         fname = Path(url).name
-        srv_dir = self.tmp / fname
+        src_dir = self.tmp / fname
         self.cmd(f'curl {url} -o {src_dir}')
         self.cmd(f'tar -C {self.build} -xvf {src_dir}')
         self.remove(self.tmp)
@@ -132,10 +140,10 @@ class PyBuilder:
         self.get_url(self.url_ssl)
 
     def reset_python(self):
-        self.python.rmdir()
+        self.remove(self.python)
 
     def reset_support(self):
-        self.prefix.rmdir()
+        self.remove(self.prefix)
 
     def reset_ssl(self):
         self.remove(self.ssl_src)
@@ -150,13 +158,13 @@ class PyBuilder:
         cmd(f'find {name} | grep -E "({pattern})" | xargs rm -rf')
 
     def clean_python_pyc(self, name):
-        self.recursive_clean(name, "__pycache__|\.pyc|\.pyo$")
+        self.recursive_clean(name, r"__pycache__|\.pyc|\.pyo$")
 
     def clean_python_tests(self, name):
         self.recursive_clean(name, "tests|test")
 
     def clean_python_site_packages(self):
-        self.remove(f'{self.lib}/site-packages/*')
+        self.remove((self.lib / 'site-packages').glob('*'))
 
     def remove_packages(self):
         self.rm_libs([
@@ -202,8 +210,7 @@ class PyBuilder:
         clean_python_tests(self.lib)
         clean_python_site_packages()
 
-        for exe in (self.lib / 'distutils' / 'command').glob('*.exe'):
-            self.remove(exe)
+        self.remove((self.lib / 'distutils' / 'command').glob('*.exe'))
 
         self.remove(self.prefix / 'lib' / 'pkgconfig')
         self.remove(self.prefix / 'share')
