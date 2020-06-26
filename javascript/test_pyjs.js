@@ -22,7 +22,7 @@ function py()
 	//var arr = arrayfromargs(messagename, arguments);
 	var arr = arrayfromargs(arguments);
 	post(arr+"\n");
-	outlet(0, pyjs.code(arguments));
+	outlet(0, pyjs.code(arr));
 }
 
 // sends a value to simplejs and gets the result back

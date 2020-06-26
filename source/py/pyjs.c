@@ -37,7 +37,7 @@ void pyjs_init_builtins(t_pyjs* x);
 void pyjs_init(t_pyjs* x);
 void pyjs_log(t_pyjs* x, char* fmt, ...);
 void pyjs_error(t_pyjs* x, char* fmt, ...);
-void pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
+t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
@@ -346,16 +346,17 @@ t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
     }
     Py_DECREF(co);
 
-    if (!is_eval) {
-        return -1;
-    } else {
+    if (is_eval) {
         pyjs_handle_output(x, pval, rv);
+    } else {
+        Py_XDECREF(pval);
     }
     return MAX_ERR_NONE;
 
 error:
     pyjs_handle_error(x, "pyjs code failed");
-    return -1;
+    Py_XDECREF(pval);
+    return MAX_ERR_GENERIC;
 }
 
 
@@ -387,7 +388,7 @@ t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv)
 error:
     pyjs_handle_error(x, "pyjs_handle_float_output failed");
     Py_XDECREF(pfloat);
-    return -1;
+    return MAX_ERR_GENERIC;
 }
 
 
@@ -414,7 +415,7 @@ t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv)
 error:
     pyjs_handle_error(x, "pyjs_handle_long_output failed");
     Py_XDECREF(plong);
-    return -1;
+    return MAX_ERR_GENERIC;
 }
 
 
@@ -440,100 +441,99 @@ t_max_err pyjs_handle_string_output(t_pyjs* x, PyObject* pstring, t_atom* rv)
 error:
     pyjs_handle_error(x, "pyjs_handle_string_output failed");
     Py_XDECREF(pstring);
-    return -1;
+    return MAX_ERR_GENERIC;
 }
 
 
-// void pyjs_handle_list_output(t_py* x, PyObject* plist, t_atom* rv)
-// {
-//     if (plist == NULL) {
-//         goto error;
-//     }
+t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
+{    
+    if (plist == NULL) {
+        goto error;
+    }
 
-//     if (PySequence_Check(plist) && !PyUnicode_Check(plist)
-//         && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
-//         PyObject* iter = NULL;
-//         PyObject* item = NULL;
-//         int i = 0;
+    if (PySequence_Check(plist) && !PyUnicode_Check(plist)
+        && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
+        PyObject* iter = NULL;
+        PyObject* item = NULL;
+        int i = 0;
 
-//         t_atom atoms_static[PY_MAX_ATOMS];
-//         t_atom* atoms = NULL;
-//         int is_dynamic = 0;
+        t_atom atoms_static[PY_MAX_ATOMS];
+        t_atom* atoms = NULL;
+        int is_dynamic = 0;
 
-//         Py_ssize_t seq_size = PySequence_Length(plist);
+        Py_ssize_t seq_size = PySequence_Length(plist);
 
-//         if (seq_size == 0) {
-//             pyjs_error(x, "cannot convert py list of length 0 to atoms");
-//             goto error;
-//         }
+        if (seq_size == 0) {
+            pyjs_error(x, "cannot convert py list of length 0 to atoms");
+            goto error;
+        }
 
-//         if (seq_size > PY_MAX_ATOMS) {
-//             pyjs_log(x, "dynamically increasing size of atom array");
-//             atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
-//                                        seq_size + 1);
-//             is_dynamic = 1;
+        if (seq_size > PY_MAX_ATOMS) {
+            pyjs_log(x, "dynamically increasing size of atom array");
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+                                       seq_size + 1);
+            is_dynamic = 1;
 
-//         } else {
-//             atoms = atoms_static;
-//         }
+        } else {
+            atoms = atoms_static;
+        }
 
-//         if ((iter = PyObject_GetIter(plist)) == NULL) {
-//             goto error;
-//         }
+        if ((iter = PyObject_GetIter(plist)) == NULL) {
+            goto error;
+        }
 
-//         while ((item = PyIter_Next(iter)) != NULL) {
-//             if (PyLong_Check(item)) {
-//                 long long_item = PyLong_AsLong(item);
-//                 if (long_item == -1) {
-//                     if (PyErr_Occurred())
-//                         goto error;
-//                 }
-//                 atom_setlong(atoms + i, long_item);
-//                 pyjs_log(x, "%d long: %ld\n", i, long_item);
-//                 i++;
-//             }
+        while ((item = PyIter_Next(iter)) != NULL) {
+            if (PyLong_Check(item)) {
+                long long_item = PyLong_AsLong(item);
+                if (long_item == -1) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
+                atom_setlong(atoms + i, long_item);
+                pyjs_log(x, "%d long: %ld\n", i, long_item);
+                i++;
+            }
 
-//             if PyFloat_Check (item) {
-//                 float float_item = PyFloat_AsDouble(item);
-//                 if (float_item == -1.0) {
-//                     if (PyErr_Occurred())
-//                         goto error;
-//                 }
-//                 atom_setfloat(atoms + i, float_item);
-//                 pyjs_log(x, "%d float: %f\n", i, float_item);
-//                 i++;
-//             }
+            if PyFloat_Check (item) {
+                float float_item = PyFloat_AsDouble(item);
+                if (float_item == -1.0) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
+                atom_setfloat(atoms + i, float_item);
+                pyjs_log(x, "%d float: %f\n", i, float_item);
+                i++;
+            }
 
-//             if PyUnicode_Check (item) {
-//                 const char* unicode_item = PyUnicode_AsUTF8(item);
-//                 if (unicode_item == NULL) {
-//                     goto error;
-//                 }
-//                 atom_setsym(atoms + i, gensym(unicode_item));
-//                 pyjs_log(x, "%d unicode: %s\n", i, unicode_item);
-//                 i++;
-//             }
-//             Py_DECREF(item);
-//         }
+            if PyUnicode_Check (item) {
+                const char* unicode_item = PyUnicode_AsUTF8(item);
+                if (unicode_item == NULL) {
+                    goto error;
+                }
+                atom_setsym(atoms + i, gensym(unicode_item));
+                pyjs_log(x, "%d unicode: %s\n", i, unicode_item);
+                i++;
+            }
+            Py_DECREF(item);
+        }
 
-//         outlet_list(x->p_outlet_left, NULL, i, atoms);
-//         outlet_bang(x->p_outlet_right);
-//         pyjs_log(x, "end iter op: %d", i);
+        atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), (long)i, atoms));
+        // atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+        pyjs_log(x, "end iter op: %d", i);
+        if (is_dynamic) {
+            pyjs_log(x, "restoring to static atom array");
+            atom_dynamic_end(atoms_static, atoms);
+        }
+    }
 
-//         if (is_dynamic) {
-//             pyjs_log(x, "restoring to static atom array");
-//             atom_dynamic_end(atoms_static, atoms);
-//         }
-//     }
+    Py_XDECREF(plist);
+    return MAX_ERR_NONE;
 
-//     Py_XDECREF(plist);
-//     return;
-
-// error:
-//     pyjs_handle_error(x, "pyjs_handle_list_output failed");
-//     Py_XDECREF(plist);
-//     outlet_bang(x->p_outlet_middle);
-// }
+error:
+    pyjs_handle_error(x, "pyjs_handle_list_output failed");
+    Py_XDECREF(plist);
+    return MAX_ERR_GENERIC;
+}
 
 
 // void pyjs_handle_dict_output(t_py* x, PyObject* pdict)
@@ -599,33 +599,29 @@ error:
 // }
 
 
-void pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
+t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
 {
     if (pval == NULL) {
         pyjs_error(x, "cannot handle NULL value");
-        return;
+        return MAX_ERR_GENERIC;
     }
 
     if (PyFloat_Check(pval)) {
-        pyjs_handle_float_output(x, pval, rv);
-        return;
+        return pyjs_handle_float_output(x, pval, rv);
     }
 
     else if (PyLong_Check(pval)) {
-        pyjs_handle_long_output(x, pval, rv);
-        return;
+        return pyjs_handle_long_output(x, pval, rv);
     }
 
     else if (PyUnicode_Check(pval)) {
-        pyjs_handle_string_output(x, pval, rv);
-        return;
+        return pyjs_handle_string_output(x, pval, rv);
     }
 
-    // else if (PySequence_Check(pval) && !PyBytes_Check(pval)
-    //          && !PyByteArray_Check(pval)) {
-    //     pyjs_handle_list_output(x, pval);
-    //     return;
-    // }
+    else if (PySequence_Check(pval) && !PyBytes_Check(pval)
+             && !PyByteArray_Check(pval)) {
+        return pyjs_handle_list_output(x, pval, rv);
+    }
 
     // else if (PyDict_Check(pval)) {
     //     pyjs_handle_dict_output(x, pval);
@@ -638,7 +634,7 @@ void pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
 
     else {
         pyjs_error(x, "cannot handle his type of value");
-        return;
+        return MAX_ERR_GENERIC;
     }
 
 }
