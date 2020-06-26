@@ -150,23 +150,23 @@ void ext_main(void* r)
     // clang-format off
 
     // testing
-    class_addmethod(c, (method)py_bang,       "bang",       0);
+    class_addmethod(c, (method)py_bang,       "bang",                  0);
 
     // core
-    class_addmethod(c, (method)py_import,     "import",     A_SYM,    0);
-    class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,  0);
-    class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,  0);
-    class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM, 0);
+    class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
+    class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,   0);
+    class_addmethod(c, (method)py_exec,       "exec",       A_GIMME,   0);
+    class_addmethod(c, (method)py_execfile,   "execfile",   A_DEFSYM,  0);
 
     // core extra
-    class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,  0);
-    class_addmethod(c, (method)py_call,       "call",       A_GIMME,  0);
-    class_addmethod(c, (method)py_code,       "code",       A_GIMME,  0);
-    class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,  0);
-    class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,  0);
+    class_addmethod(c, (method)py_assign,     "assign",     A_GIMME,   0);
+    class_addmethod(c, (method)py_call,       "call",       A_GIMME,   0);
+    class_addmethod(c, (method)py_code,       "code",       A_GIMME,   0);
+    class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,   0);
+    class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,   0);
 
     // meta
-    class_addmethod(c, (method)py_assist,     "assist",     A_CANT, 0);
+    class_addmethod(c, (method)py_assist,     "assist",     A_CANT,    0);
     class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
 
     // interobject
@@ -174,11 +174,11 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_send,       "send",       A_GIMME,   0);
 
     // code editor
-    class_addmethod(c, (method)py_read,       "read",       A_DEFSYM, 0);
-    class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT,   0);
-    class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,   0);
-    class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,   0);
-    class_addmethod(c, (method)py_load,       "load",       A_DEFSYM, 0);
+    class_addmethod(c, (method)py_read,       "read",       A_DEFSYM,  0);
+    class_addmethod(c, (method)py_dblclick,   "dblclick",   A_CANT,    0);
+    class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,    0);
+    class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,    0);
+    class_addmethod(c, (method)py_load,       "load",       A_DEFSYM,  0);
 
     // experimental
     class_addmethod(c, (method)py_appendtodict,  "appendtodictionary",  A_CANT, 0);

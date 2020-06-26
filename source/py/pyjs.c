@@ -14,34 +14,32 @@ typedef struct _pyjs {
     /* object header */
     t_object p_ob;
 
-    /* object attributes */
-    double myattr;
-
     /* python-related */
-    PyObject* p_globals;    /* per object 'globals' python namespace */
-    t_symbol* p_name; /* unique object name */
-    t_symbol* p_pythonpath; /* path to python directory */
-    t_symbol* p_code_filepath; /* python filepath */
-	t_bool p_debug;         /* bool to switch per-object debug state */
+    PyObject* p_globals;        /* per object 'globals' python namespace */
+    t_symbol* p_name;           /* unique object name */
+    t_symbol* p_pythonpath;     /* path to python directory */
+    t_symbol* p_code_filepath;  /* python filepath */
+	t_bool    p_debug;          /* bool to switch per-object debug state */
 
 } t_pyjs;
 
 
 void *pyjs_new(t_symbol *s, long argc, t_atom *argv);
-void pyjs_free(t_pyjs *x);
-void pyjs_print(t_pyjs *x, t_symbol *s, long ac, t_atom *av);
-t_max_err pyjs_doabs(t_pyjs *x, t_symbol *s, long ac, t_atom *av, t_atom *rv);
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
-void pyjs_init_builtins(t_pyjs* x);
+void pyjs_free(t_pyjs* x);
 void pyjs_init(t_pyjs* x);
+void pyjs_init_builtins(t_pyjs* x);
 void pyjs_log(t_pyjs* x, char* fmt, ...);
 void pyjs_error(t_pyjs* x, char* fmt, ...);
+void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
+void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
+t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
-t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
+t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv);
 t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
-void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
+
 
 static t_class *pyjs_class;
 
@@ -58,12 +56,17 @@ void ext_main(void *r)
 		(long)sizeof(t_pyjs),
 		0L /* leave NULL!! */, A_GIMME, 0);
 
-	class_addmethod(c, (method)pyjs_print, "print",	0);
-	class_addmethod(c, (method)pyjs_doabs, "doAbs",	A_GIMMEBACK, 0);
-	class_addmethod(c, (method)pyjs_code,  "code",	A_GIMMEBACK, 0);
+    // methods
+	class_addmethod(c, (method)pyjs_code,       "code",	    A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_execfile,   "execfile", A_DEFSYM,    0);
 
-	CLASS_ATTR_DOUBLE(c, "myattr", 0, t_pyjs, myattr);
+    // attributes
+    CLASS_ATTR_SYM(c,  "name",       0, t_pyjs,  p_name);
+    CLASS_ATTR_CHAR(c, "debug",      0, t_pyjs,  p_debug);
+    CLASS_ATTR_SYM(c,  "file",       0, t_pyjs,  p_code_filepath);
+    CLASS_ATTR_SYM(c,  "pythonpath", 0, t_pyjs,  p_pythonpath);
 
+    // activate for javascript wrapping
 	c->c_flags = CLASS_FLAG_POLYGLOT;
 	class_register(CLASS_NOBOX, c);
 	pyjs_class = c;
@@ -87,7 +90,6 @@ void *pyjs_new(t_symbol *s, long argc, t_atom *argv)
 	// object instantiation, NEW STYLE
 	if ((x = (t_pyjs *)object_alloc(pyjs_class))) {
 		// Initialize values
-		x->myattr = 74.;
 
         if (pyjs_global_obj_count == 0) {
             // first py obj is called '__main__'
@@ -212,35 +214,6 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
         error("[pyjs %s] %s: %s", x->p_name->s_name, msg, pvalue_str);
     }
 }
-
-void pyjs_print(t_pyjs *x, t_symbol *s, long ac, t_atom *av)
-{
-	post("The value of myattr is: %f", x->myattr);
-}
-
-
-t_max_err pyjs_doabs(t_pyjs *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
-{
-	t_atom a[1];
-	double f = 0;
-
-	if (ac) {
-		if (atom_gettype(av) == A_LONG)
-            f = (double)llabs(atom_getlong(av));
-		else if( atom_gettype(av) == A_FLOAT)
-			f = fabs(atom_getfloat(av));
-	} else
-		error("missing argument for method doAbs()");
-
-	// store the result in the a array.
-	atom_setfloat(a, f);
-
-	// return the result to js
-	atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, a));
-
-	return MAX_ERR_NONE;
-}
-
 
 t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
 {
@@ -566,4 +539,90 @@ t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
     }
 
 }
+
+void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
+{
+    t_fourcc p_code_filetype = FOUR_CHAR_CODE('TEXT');
+    t_fourcc p_code_outtype = 0;
+    char p_code_filename[MAX_PATH_CHARS];
+    char p_code_pathname[MAX_PATH_CHARS];
+    short p_code_path;
+    t_max_err err;
+
+    if (s == gensym("")) { // if no arg supplied ask for file
+        p_code_filename[0] = 0;
+
+        if (open_dialog(p_code_filename, &p_code_path,
+                        &p_code_outtype, &p_code_filetype, 1))
+            // non-zero: cancelled
+            return;
+
+    } else {
+        // must copy symbol before calling locatefile_extended
+        strncpy_zero(p_code_filename, s->s_name, MAX_PATH_CHARS);
+        if (locatefile_extended(p_code_filename, &p_code_path,
+                                &p_code_outtype, &p_code_filetype, 1)) {
+            // nozero: not found
+            pyjs_error(x, "can't find file %s", s->s_name);
+            return;
+        } else {
+            p_code_pathname[0] = 0;
+            err = path_toabsolutesystempath(p_code_path, p_code_filename,
+                                            p_code_pathname);
+            if (err != MAX_ERR_NONE) {
+                pyjs_error(x, "can't convert %s to absolutepath", s->s_name);
+                return;
+            }
+        }
+
+        // success
+        // set attribute from pathname symbol
+        x->p_code_filepath = gensym(p_code_pathname);
+    }
+}
+
+
+t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s)
+{
+    PyObject* pval = NULL;
+    FILE* fhandle = NULL;
+
+    if (s != gensym("")) {
+        // set x->p_code_filepath
+        pyjs_locate_path_from_symbol(x, s);
+    }
+
+    if (s == gensym("") || x->p_code_filepath == gensym("")) {
+        pyjs_error(x, "could not set filepath");
+        goto error;
+    }
+
+    // assume x->p_code_filepath has be been set without errors
+
+    pyjs_log(x, "pathname: %s", x->p_code_filepath->s_name);
+    fhandle = fopen(x->p_code_filepath->s_name, "r+");
+
+    if (fhandle == NULL) {
+        pyjs_error(x, "could not open file");
+        goto error;
+    }
+
+    pval = PyRun_File(fhandle, x->p_code_filepath->s_name, Py_file_input,
+                      x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        fclose(fhandle);
+        goto error;
+    }
+
+    // success cleanup
+    fclose(fhandle);
+    Py_DECREF(pval);
+    return MAX_ERR_NONE;
+
+error:
+    pyjs_handle_error(x, "execfile failed");
+    Py_XDECREF(pval);
+    return MAX_ERR_GENERIC;
+}
+
 
