@@ -10,7 +10,6 @@
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 
-
 typedef struct _pyjs {
     /* object header */
     t_object p_ob;
@@ -40,11 +39,13 @@ void pyjs_error(t_pyjs* x, char* fmt, ...);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
+t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
+t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
 
 static t_class *pyjs_class;
 
-static int pyjs_global_obj_count;       // when 0 then free interpreter
+static int pyjs_global_obj_count;  // when 0 then free interpreter
 
 
 void ext_main(void *r)
@@ -239,75 +240,6 @@ t_max_err pyjs_doabs(t_pyjs *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
 
 	return MAX_ERR_NONE;
 }
-
-
-// t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
-// {
-//     t_atom atoms[PY_MAX_ATOMS];
-//     long textsize = 0;
-//     char* text = NULL;
-//     PyObject* co = NULL;
-//     PyObject* pval = NULL;
-//     t_max_err err;
-//     int is_eval = 1;
-
-//     err = atom_gettext(argc, argv, &textsize, &text,
-//                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-//     if (err == MAX_ERR_NONE && textsize && text) {
-//         pyjs_log(x, "call %s", text);
-//     } else {
-//         goto error;
-//     }
-
-//     co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
-
-//     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-//         PyErr_Clear();
-//         co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
-//         is_eval = 0;
-//     }
-
-//     if (co == NULL) { // can be eval-co or exec-co or NULL here
-//         goto error;
-//     }
-//     sysmem_freeptr(text);
-
-//     pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
-//     if (pval == NULL) {
-//         goto error;
-//     }
-//     Py_DECREF(co);
-
-//     if (!is_eval) {
-//         return -1;
-
-//     } else {
-
-// 	    if (pval == NULL) {
-// 	        pyjs_error(x, "cannot handle NULL value");
-// 	        return;
-// 	    }
-
-// 	    if (PyFloat_Check(pval)) {
-
-// 	        float float_result = (float)PyFloat_AsDouble(pval);
-// 	        if (float_result == -1.0) {
-// 	            if (PyErr_Occurred())
-// 	                goto error;
-// 	        }
-// 			atom_setfloat(atoms, float_result);
-// 			atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));        
-		    
-// 		    Py_XDECREF(pval);
-// 	    }
-//     }
-//     return MAX_ERR_NONE;
-
-// error:
-//     pyjs_handle_error(x, "code failed");
-//     Py_XDECREF(pval);
-//     return -1;
-// }
 
 
 t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
@@ -536,67 +468,64 @@ error:
 }
 
 
-// void pyjs_handle_dict_output(t_py* x, PyObject* pdict)
-// {
-//     PyObject* pfun_co = NULL;
-//     PyObject* pfun = NULL;
-//     PyObject* pval = NULL;
+t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv)
+{
+    PyObject* pfun_co = NULL;
+    PyObject* pfun = NULL;
+    PyObject* pval = NULL;
 
-//     if (pdict == NULL) {
-//         goto error;
-//     }
+    if (pdict == NULL) {
+        goto error;
+    }
 
-//     if (PyDict_Check(pdict)) {
+    if (PyDict_Check(pdict)) {
 
-//         pfun_co = PyRun_String( \
-//             "def __py_maxmsp_out_dict(arg):\n"
-//                 "\tres = []\n"
-//                 "\tfor k,v in arg.items():\n"
-//                     "\t\tres.append(k)\n"
-//                     "\t\tres.append(':')\n"
-//                     "\t\tif type(v) in [list, set, tuple]:\n"
-//                         "\t\t\tfor i in v:\n"
-//                             "\t\t\t\tres.append(i)\n"
-//                     "\t\telse:\n"
-//                         "\t\t\tres.append(v)\n"
-//                 "\treturn res\n", 
-//                 Py_single_input, x->p_globals, x->p_globals);
+        pfun_co = PyRun_String( \
+            "def __py_maxmsp_out_dict(arg):\n"
+                "\tres = []\n"
+                "\tfor k,v in arg.items():\n"
+                    "\t\tres.append(k)\n"
+                    "\t\tres.append(':')\n"
+                    "\t\tif type(v) in [list, set, tuple]:\n"
+                        "\t\t\tfor i in v:\n"
+                            "\t\t\t\tres.append(i)\n"
+                    "\t\telse:\n"
+                        "\t\t\tres.append(v)\n"
+                "\treturn res\n", 
+                Py_single_input, x->p_globals, x->p_globals);
 
-//         if (pfun_co == NULL) {
-//             pyjs_error(x, "out_dict function code object is NULL");
-//             goto error;
-//         }
+        if (pfun_co == NULL) {
+            pyjs_error(x, "out_dict function code object is NULL");
+            goto error;
+        }
 
-//         pfun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_out_dict");
-//         if (pfun == NULL) {
-//             pyjs_error(x, "retrieving out_dict func from globals failed");
-//             goto error;
-//         }
+        pfun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_out_dict");
+        if (pfun == NULL) {
+            pyjs_error(x, "retrieving out_dict func from globals failed");
+            goto error;
+        }
 
-//         pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL);
-//         if (pval == NULL) {
-//             pyjs_error(x, "out_dict call failed to retrieve result");
-//             goto error;
-//         }
+        pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL);
+        if (pval == NULL) {
+            pyjs_error(x, "out_dict call failed to retrieve result");
+            goto error;
+        }
 
-//         if (PyList_Check(pval)) { // expecting a python list
-//             pyjs_handle_list_output(x, pval); // this decrefs pval
-//             Py_XDECREF(pfun_co);
-//             outlet_bang(x->p_outlet_right);
-//             return;
-//         } else {
-//             pyjs_error(x, "expected list output got something else");
-//             goto error;
-//         }
-//     }
+        if (PyList_Check(pval)) { // expecting a python list
+            Py_XDECREF(pfun_co);
+            return pyjs_handle_list_output(x, pval, rv); // this decrefs pval
+        } else {
+            pyjs_error(x, "expected list output got something else");
+            goto error;
+        }
+    }
 
-// error:
-//     pyjs_handle_error(x, "pyjs_handle_dict_output failed");
-//     Py_XDECREF(pfun_co);
-//     Py_XDECREF(pval);
-//     // fail bang
-//     outlet_bang(x->p_outlet_middle);
-// }
+error:
+    pyjs_handle_error(x, "pyjs_handle_dict_output failed");
+    Py_XDECREF(pfun_co);
+    Py_XDECREF(pval);
+    return MAX_ERR_GENERIC;
+}
 
 
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
@@ -623,14 +552,13 @@ t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
         return pyjs_handle_list_output(x, pval, rv);
     }
 
-    // else if (PyDict_Check(pval)) {
-    //     pyjs_handle_dict_output(x, pval);
-    //     return;
-    // }
+    else if (PyDict_Check(pval)) {
+        return pyjs_handle_dict_output(x, pval, rv);
+    }
 
-    // else if (pval == Py_None) {
-    //     return;
-    // }
+    else if (pval == Py_None) {
+        return MAX_ERR_NONE;
+    }
 
     else {
         pyjs_error(x, "cannot handle his type of value");
