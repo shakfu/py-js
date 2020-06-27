@@ -1,8 +1,8 @@
-# py: minimal python3 object for max
+# py/js: python3 objects for max
 
-An attempt to make a simple (and extensible) max external for python3
+Simple (and extensible) python3 externals for max accessible via patch or js objects
 
-repo - https://github.com/shakfu/py
+repo - https://github.com/shakfu/py-js
 
 
 ## Summary
@@ -17,9 +17,9 @@ patchers
         py_repl                  : a basic single line repl for py
         py_repl_plus             : embeds a py object in a py_repl
 
-py interpreter object
+py max external
     attributes
-        name                     : unique name
+        name                     : unique object name
         file                     : file to load into editor
         autoload                 : load file at start
         pythonpath               : add path to python sys.path
@@ -57,27 +57,56 @@ py interpreter object
         left outlet              : primary output (anything)
         middle outlet            : bang on failure
         right outlet             : bang on success 
+
+
+pyjs max external (jsextension)
+    attributes
+        name                     : unique object name
+        file                     : file to load in object namespace
+        pythonpath               : add path to python sys.path
+        debug                    : switch debug logging on/off
+    
+    methods
+        core
+            code <expr|stmt>       : eval/exec/import python code (see above)
+            execfile <path>        : python 'execfile' semantics
+        
+
 ```
 
 ## Overview
 
-The `py` object provides a minimal, high level two-way interface between max and python in a way that feels natural to both languages.
+`py/js`, started out as an attempt (during a covid-19 lockdown), to get a basic python3 external for max, and then evolved into a flexible framework for using python3 in max.
 
-It really is conceived as a flexible framework which can be customized depending on the requirement. 
+There are two implementation 'flavours':
 
-To this end there are essentially 3 deployment flavours:
+1. The `py` external provides a minimal, high level two-way interface between max and python in a way that feels natural to both languages.
 
-1. `py` external which links to a system installed python (homebrew, builtin python, or custom system installed.) This has the benefit of re-using your existing libraries. This is the default option.
+2. The `pyjs` max jsextension  provides a `PyJS` class for the `js` object, which makes available a python intepreter which works nicely with javascript code. This 'flavour' is new, and still under development, so documentation will be minimal. The 
 
-2. `py` external in a Max package: in this variation, a dedicated python distribution (zipped or otherwise is placed in the `support` folder of the `py` package (or any other package) is linked to the `py` external. This can possibly make it usable in standalones (untested).
+In addition there are essentially 3 deployment variations:
 
-3. `py` external as a container for a python distribution. In this variation, a whole python distribution (zipped or otherwise) is stored inside the external object, which can make it very portable and usable in standalones.
+1. `py` external or `pyjs` jsextension which links to a system installed python (homebrew, builtin python, or custom system installed.) This has the benefit of re-using your existing libraries. This is the default option.
+
+2. `py` external or `pyjs` jsextension in a Max package: in this variation, a dedicated python distribution (zipped or otherwise is placed in the `support` folder of the `py/js` package (or any other package) is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (untested).
+
+3. `py` external or `pyjs` jsextension as a container for a python distribution. In this variation, a whole python distribution (zipped or otherwise) is stored inside the external/jsextension object, which can makes it very portable and usable in standalones.
 
 
-In addition, to the variations above, onc can choose to use the cython-generated max c-api wrapper or not, which allows regular python to script Max objects.
+Deployment Scenario  | `py` | `pyjs`
+:------------------- | :--: | :--------:
+Link to sys python   | x    | x 
+Embed in package     | x    | untested
+Embed in external    | x    | untested
 
-Otherwise using plain-vanilla python in Max is also quite usable due to the availability of the following methods:
+In addition, to the deployment variations above, onc can choose to use the cython-generated max c-api wrapper or not, which allows regular python code to directly access the max-c-api and script Max objects.
 
+
+
+### Key Features
+
+
+The more mature `py` external has the following c-level methods:
 
 category | method   | param(s)      | in/out | can change ns 
 :------- | :--------| :------------ | :----: | :------------: 
@@ -97,7 +126,14 @@ interobj | send     | name, msg, .. | n/a    | no
 meta     | count    |               | n/a    | no
 
 
-### Key Features
+The more recently developed `pyjs` external implements the following c-level methods:
+
+category | method   | param(s)      | in/out | can change ns 
+:------- | :--------| :------------ | :----: | :------------: 
+core     | code     | expr or stmt  | out?   | yes
+core     | execfile | file          | in     | yes
+
+The `code` method (also available the `py` object in a more experimental category) which can import/exec/eval python code is 'core' in this implementation.
 
 
 #### Core
@@ -300,7 +336,10 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] Sending from the `api` can make max unstable. Keep it simple and investigate.
+- [ ] no-return ops in`pyjs` such as `exec` and `import` somehow make java assume an error has occured.
+
+- [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
+
 
 ## TODO
 
@@ -308,6 +347,7 @@ The style used in this project is specified in the `.clang-format` file.
 ### Core
 
 - [ ] enhance `call` to allow kwargs [call fn x1 x2 y1=z1 y2=z2]
+
 
 ### Extension
 
@@ -329,12 +369,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 ### Future Experiments
 
-- [ ] Convert `py` into a `js` extension class
-      - proof of concept done, but requires a different 'nobox' type of class and data passing via arrays and attributes instead of outlets. But can be done!
+- [ ] Try to integrate an ipython shell somehow 
 
-- [ ] Try to launch an ipython shell somehow 
-
-- [ ] try to build a cython extension type as a max external class (-:
 
 ## CHANGELOG
 
@@ -346,6 +382,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 
 ##### Core
+
+- [x] Convert `py` into a `jsextension` class
 
 - [x] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
