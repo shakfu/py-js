@@ -47,16 +47,17 @@ function get_debug()
 // Methods
 
 
+// not working!
 function pj(str) {
 	var arr = arrayfromargs(arguments);
 	return pyjs.code(arr);
 }
 
+// not working
 function bang()
 {
-	pj("from numpy import array");
-	pj("x=array(range(10))");
-	var res = pj("x");
+	pyjs.exec("from sys import version");
+	var res = pj("version");
 	outlet(0, res);
 }
 

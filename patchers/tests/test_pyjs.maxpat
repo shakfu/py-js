@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 241.0, 334.0, 635.0, 466.0 ],
+		"rect" : [ 395.0, 208.0, 635.0, 466.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -40,25 +40,25 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-37",
+					"id" : "obj-29",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 448.0, 382.0, 29.5, 22.0 ],
-					"text" : "x"
+					"patching_rect" : [ 461.0, 280.0, 29.5, 22.0 ],
+					"text" : "test"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-36",
+					"id" : "obj-37",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 448.0, 350.0, 109.0, 22.0 ],
-					"text" : "x=array(range(10))"
+					"patching_rect" : [ 452.0, 243.0, 63.0, 22.0 ],
+					"text" : "py version"
 				}
 
 			}
@@ -69,77 +69,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 448.0, 318.0, 139.0, 22.0 ],
-					"text" : "from numpy import array"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-32",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 207.0, 437.0, 173.0, 22.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"autoload" : 0,
-					"file" : "",
-					"id" : "obj-3",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 3,
-					"outlettype" : [ "", "", "" ],
-					"patching_rect" : [ 361.0, 395.0, 40.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"autoload" : 0,
-						"debug" : 1,
-						"file" : "",
-						"pythonpath" : ""
-					}
-,
-					"text" : "py",
-					"varname" : "__main__"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-34",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 455.0, 225.0, 112.0, 22.0 ],
-					"text" : "py x=list(range(10))"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-33",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 451.5, 257.0, 53.0, 22.0 ],
-					"text" : "py list(x)"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-31",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 455.0, 194.0, 125.0, 22.0 ],
-					"text" : "py x=array(range(10))"
+					"patching_rect" : [ 452.0, 211.0, 157.0, 22.0 ],
+					"text" : "py from sys import version"
 				}
 
 			}
@@ -150,8 +81,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 448.0, 163.0, 155.0, 22.0 ],
-					"text" : "py from numpy import array"
+					"patching_rect" : [ 473.0, 175.0, 38.0, 22.0 ],
+					"text" : "setup"
 				}
 
 			}
@@ -523,17 +454,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-32", 0 ],
-					"midpoints" : [ 164.5, 285.0, 141.0, 285.0, 141.0, 342.0, 216.5, 342.0 ],
-					"order" : 0,
-					"source" : [ "obj-16", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-7", 0 ],
-					"order" : 1,
 					"source" : [ "obj-16", 0 ]
 				}
 
@@ -631,49 +552,21 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-32", 1 ],
-					"source" : [ "obj-3", 0 ]
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-29", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-31", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-33", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-34", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-3", 0 ],
 					"source" : [ "obj-35", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-3", 0 ],
-					"source" : [ "obj-36", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-3", 0 ],
+					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-37", 0 ]
 				}
 
@@ -720,10 +613,6 @@
 				"patcherrelativepath" : "../../../../../Documents/Max 8/Packages/py/javascript",
 				"type" : "TEXT",
 				"implicit" : 1
-			}
-, 			{
-				"name" : "py.mxo",
-				"type" : "iLaX"
 			}
  ],
 		"autosave" : 0

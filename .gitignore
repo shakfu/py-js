@@ -3,8 +3,9 @@
 __pycache__
 .pytest_cache
 *.pyc
-externals/*.mxo
-extensions/*.mxo
+*.mxo
+*.mxe
+*.mxe64
 support/*
 leoenv
 
