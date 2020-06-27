@@ -9,7 +9,6 @@ Intuitively, it would involve some persistent flag (existence of a file for exam
 
 ```python
 
-
 if application restarted:
 	allow_extension_imports()
 else:
@@ -34,7 +33,7 @@ Note: with (2), you have to close Max to reload c api otherwise it will read as 
 
 From the cython docs:
 
-There are two kinds of function definition in Cython:
+There are two kinds of function definitions in Cython:
 
 1. Python functions are defined using the def statement, as in Python. 
    They take Python objects as parameters and return Python objects.
