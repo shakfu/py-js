@@ -7,7 +7,7 @@ repo - https://github.com/shakfu/py
 
 ## Summary
 
-This project provides two max externals:
+This is an pre-alpha level project which provides two max externals:
 
 
 ### `py` external
@@ -64,7 +64,7 @@ py max external
         right outlet             : bang on success 
 ```
 
-### `pyjs` external
+### `pyjs` external (experimental)
 
 ```
 pyjs max external (jsextension)
