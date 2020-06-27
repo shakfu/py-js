@@ -553,6 +553,7 @@ void py_handle_list_output(t_py* x, PyObject* plist)
         int is_dynamic = 0;
 
         Py_ssize_t seq_size = PySequence_Length(plist);
+        py_log(x, "seq_size: %d", seq_size);
 
         if (seq_size == 0) {
             py_error(x, "cannot convert py list of length 0 to atoms");
@@ -572,6 +573,7 @@ void py_handle_list_output(t_py* x, PyObject* plist)
         if ((iter = PyObject_GetIter(plist)) == NULL) {
             goto error;
         }
+        py_log(x, "seq_size2: %d", seq_size);
 
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
@@ -585,7 +587,7 @@ void py_handle_list_output(t_py* x, PyObject* plist)
                 i++;
             }
 
-            if PyFloat_Check (item) {
+            if (PyFloat_Check(item)) {
                 float float_item = PyFloat_AsDouble(item);
                 if (float_item == -1.0) {
                     if (PyErr_Occurred())
@@ -596,7 +598,18 @@ void py_handle_list_output(t_py* x, PyObject* plist)
                 i++;
             }
 
-            if PyUnicode_Check (item) {
+            // if (PyNumber_Check(item)) {
+            //     float float_item = PyFloat_AsDouble(item);
+            //     if (float_item == -1.0) {
+            //         if (PyErr_Occurred())
+            //             goto error;
+            //     }
+            //     atom_setfloat(atoms + i, float_item);
+            //     py_log(x, "%d float: %f\n", i, float_item);
+            //     i++;
+            // }
+
+            if (PyUnicode_Check(item)) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
                 if (unicode_item == NULL) {
                     goto error;

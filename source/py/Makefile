@@ -38,6 +38,8 @@ all: clean test build
 default: clean build pkg
 	$(call section,"build -> deploy to local package")
 
+combo: clean build build-pyjs pkg
+
 pyjs: build-pyjs pkg
 
 homebrew-pkg: clean build-homebrew-pkg pkg pkg-support

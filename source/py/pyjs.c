@@ -399,7 +399,7 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
                 i++;
             }
 
-            if PyFloat_Check (item) {
+            if (PyFloat_Check(item)) {
                 float float_item = PyFloat_AsDouble(item);
                 if (float_item == -1.0) {
                     if (PyErr_Occurred())
@@ -410,7 +410,19 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
                 i++;
             }
 
-            if PyUnicode_Check (item) {
+            // only for numpy
+            // if (PyNumber_Check(item)) {
+            //     float float_item = PyFloat_AsDouble(item);
+            //     if (float_item == -1.0) {
+            //         if (PyErr_Occurred())
+            //             goto error;
+            //     }
+            //     atom_setfloat(atoms + i, float_item);
+            //     py_log(x, "%d float: %f\n", i, float_item);
+            //     i++;
+            // }
+
+            if (PyUnicode_Check(item)) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
                 if (unicode_item == NULL) {
                     goto error;

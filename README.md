@@ -1,8 +1,8 @@
-# py/js: python3 objects for max
+# py: python3 objects for max
 
-Simple (and extensible) python3 externals for max accessible via patch or js objects
+Simple (and extensible) python3 externals for max
 
-repo - https://github.com/shakfu/py-js
+repo - https://github.com/shakfu/py
 
 
 ## Summary
@@ -76,7 +76,7 @@ pyjs max external (jsextension)
 
 ## Overview
 
-`py/js`, started out as an attempt (during a covid-19 lockdown), to get a basic python3 external for max, and then evolved into a flexible framework for using python3 in max.
+`py`, started out as an attempt (during a covid-19 lockdown), to get a basic python3 external for max, and then evolved into a flexible framework for using python3 in max.
 
 There are two implementation 'flavours':
 
@@ -336,9 +336,15 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] no-return ops in`pyjs` such as `exec` and `import` somehow make java assume an error has occured.
+- [ ] CRITICAL: attempting to reload numpy after the patcher is closed crashes Max
+
+- [ ] `PyFloat_Check` and `PyLong_Check` can't pick up `numpy` numbers 
+
+- [ ] Using the code-editor is not intuitive. Test all scenarios
 
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
+
+- [x] no-return ops in`pyjs` such as `exec` and `import` somehow make java assume an error has occured.
 
 
 ## TODO
