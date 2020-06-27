@@ -1,6 +1,26 @@
 # Cython Notes
 
 
+## Extension-reload problem
+
+How to prevent reloads of extensions before application is restarted?
+
+Intuitively, it would involve some persistent flag (existence of a file for example) that is is set after a successful import of an extension occurs. If the file 
+
+```python
+
+
+if application restarted:
+	allow_extension_imports()
+else:
+	block_extension_imports()
+
+
+Maybe a tempfile!?
+```
+
+
+
 ## Relationship between .pyx and .pxd files
 
 1. If the .pxd file is the same name as the pyx file, cython implicitly includes all names into the pyx file from the pxd. This means you cannot redefine the c-names

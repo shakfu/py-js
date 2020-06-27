@@ -1,5 +1,27 @@
 # Python C API
 
+
+## Numpy Blues
+
+```python
+In [18]: import numpy as np
+
+In [19]: isinstance(np.float64(.5), float)
+Out[19]: True
+
+In [20]: isinstance(np.float32(.5), float)
+Out[20]: False
+
+In [21]: isinstance(np.int64(5), int)
+Out[21]: False
+
+In [22]: isinstance(np.int32(5), int)
+Out[22]: False
+```
+
+try PyNumber_Check and always convert to float???!!
+
+
 ## Good Example of Embedding
 
 https://gist.github.com/nad2000/9f69c5096e10c34acddb

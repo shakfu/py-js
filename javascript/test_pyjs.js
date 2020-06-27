@@ -46,6 +46,20 @@ function get_debug()
 // ---------------------------------------------------------------------------
 // Methods
 
+
+function pj(str) {
+	var arr = arrayfromargs(arguments);
+	return pyjs.code(arr);
+}
+
+function bang()
+{
+	pj("from numpy import array");
+	pj("x=array(range(10))");
+	var res = pj("x");
+	outlet(0, res);
+}
+
 function pyload(file)
 {
 	pyjs.execfile(file);
@@ -53,8 +67,9 @@ function pyload(file)
 
 function py()
 {
-	//var arr = arrayfromargs(messagename, arguments);
 	var arr = arrayfromargs(arguments);
 	// post(arr + "\n");
-	outlet(0, pyjs.code(arr));
+	var res = pyjs.code(arr)
+	if (res)
+		outlet(0, res);
 }
