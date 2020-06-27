@@ -342,15 +342,15 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] CRITICAL: attempting to reload numpy after the patcher is closed crashes Max
+- [ ] CRITICAL: attempting to reload numpy after the patcher is closed crashes Max (except when you load it through `api` module!)
 
-- [ ] `PyFloat_Check` and `PyLong_Check` can't pick up `numpy` numbers 
+- [ ] `PyLong_Check` can't pick up `numpy` numbers 
 
 - [ ] Using the code-editor is not intuitive. Test all scenarios
 
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
-- [x] no-return ops in`pyjs` such as `exec` and `import` somehow make java assume an error has occured.
+- [x] no-return ops in`pyjs` such as `exec` and `import` somehow make javascript assume an error has occured.
 
 
 ## TODO

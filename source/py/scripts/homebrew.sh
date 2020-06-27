@@ -11,6 +11,9 @@ VER="${VERSION//./}"
 NAME=python${VERSION}
 
 ROOT=$(pwd)
+EXTERNALS=${ROOT}/../../externals
+PY_MACOS=${EXTERNALS}/py.mxo/Contents/MacOS
+PYJS_MACOS=${EXTERNALS}/pyjs.mxo/Contents/MacOS
 SUPPORT=${ROOT}/../../support
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
@@ -128,6 +131,7 @@ fix_python_dylib_for_ext() {
 	chmod 777 ${DYLIB}
 	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
 	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
+	cp -rf $PREFIX/* $PY_MACOS
 	cd $ROOT
 }
 
