@@ -32,6 +32,7 @@ void pyjs_log(t_pyjs* x, char* fmt, ...);
 void pyjs_error(t_pyjs* x, char* fmt, ...);
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
 void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
+t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
@@ -58,6 +59,7 @@ void ext_main(void *r)
 
     // methods
 	class_addmethod(c, (method)pyjs_code,       "code",	    A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_exec    ,   "exec",     A_DEFSYM,    0);
     class_addmethod(c, (method)pyjs_execfile,   "execfile", A_DEFSYM,    0);
 
     // attributes
@@ -227,7 +229,7 @@ t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
     err = atom_gettext(argc, argv, &textsize, &text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
-        pyjs_log(x, "code %s", text);
+        pyjs_log(x, ">>> %s", text);
     } else {
         goto error;
     }
@@ -239,6 +241,7 @@ t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
         co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
         is_eval = 0;
     }
+    pyjs_log(x, "code is_eval: %d", is_eval);
 
     if (co == NULL) { // can be eval-co or exec-co or NULL here
         goto error;
@@ -637,4 +640,29 @@ error:
     return MAX_ERR_GENERIC;
 }
 
+
+t_max_err pyjs_exec(t_pyjs* x, t_symbol* s)
+{
+    PyObject* pval = NULL;
+
+    if (s == gensym("")) {
+        pyjs_log(x, "no input given");
+        goto error;
+    }
+
+    pval = PyRun_String(s->s_name, Py_single_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+
+    // success cleanup
+    Py_DECREF(pval);
+    pyjs_log(x, "exec %s", s->s_name);
+    return MAX_ERR_NONE;
+
+error:
+    pyjs_handle_error(x, "exec %s", s->s_name);
+    Py_XDECREF(pval);
+    return MAX_ERR_GENERIC;
+}
 

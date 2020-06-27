@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>${PRODUCT_VERSION}</string>
 	<key>CFBundleLongVersionString</key>
-	<string>${PRODUCT_NAME} ${PRODUCT_VERSION}, Copyright 2020 me.org</string>
+	<string>${PRODUCT_NAME} ${PRODUCT_VERSION}, Copyright ${YEAR} ${DEVELOPER}</string>
 	<key>CFBundlePackageType</key>
 	<string>iLaX</string>
 	<key>CFBundleShortVersionString</key>
