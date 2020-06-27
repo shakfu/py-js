@@ -7,6 +7,11 @@ repo - https://github.com/shakfu/py
 
 ## Summary
 
+This project provides two max externals:
+
+
+### `py` external
+
 ```
 globals
     obj_count                    : number of active py objects
@@ -57,8 +62,11 @@ py max external
         left outlet              : primary output (anything)
         middle outlet            : bang on failure
         right outlet             : bang on success 
+```
 
+### `pyjs` external
 
+```
 pyjs max external (jsextension)
     attributes
         name                     : unique object name
@@ -68,10 +76,8 @@ pyjs max external (jsextension)
     
     methods
         core
-            code <expr|stmt>       : eval/exec/import python code (see above)
-            execfile <path>        : python 'execfile' semantics
-        
-
+            code <expr|stmt>     : eval/exec/import python code (see above)
+            execfile <path>      : python 'execfile' semantics
 ```
 
 ## Overview
@@ -546,5 +552,5 @@ So I decided, during the lockdown period, with less distractions than usual, to 
 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
-Thanks to Luigi Castelli for his awesome help on my Max/Msp questions; Stefan Behnel for his help  with Cython questions; and, finally, Edward K. Ream, for his awesome [leo-editor](https://leoeditor.com) and responsiveness which helped me to keep things in perspective.
+Thanks to Luigi Castelli for his help on my Max/Msp questions and Stefan Behnel for his help with Cython questions.
 
