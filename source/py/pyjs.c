@@ -1,36 +1,30 @@
 #include "ext.h"
 #include "ext_obex.h"
 
-/* python */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+
 
 #define PY_MAX_ATOMS 128
 #define PY_MAX_LOG_CHAR 500 // high number during development
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 
-#define PY_CHECK(obj, err_msg) \
-    if (!obj) { \
-        pyjs_error(x, "" #err_msg "\n"); \
-        goto error; \
-    }
-
 typedef struct _pyjs {
     /* object header */
     t_object p_ob;
 
     /* python-related */
-    PyObject* p_globals;        /* per object 'globals' python namespace */
-    t_symbol* p_name;           /* unique object name */
-    t_symbol* p_pythonpath;     /* path to python directory */
-    t_symbol* p_code_filepath;  /* python filepath */
-	t_bool    p_debug;          /* bool to switch per-object debug state */
+    PyObject* p_globals;       /* per object 'globals' python namespace */
+    t_symbol* p_name;          /* unique object name */
+    t_symbol* p_pythonpath;    /* path to python directory */
+    t_symbol* p_code_filepath; /* python filepath */
+    t_bool p_debug;            /* bool to switch per-object debug state */
 
 } t_pyjs;
 
 
-void *pyjs_new(t_symbol *s, long argc, t_atom *argv);
+void* pyjs_new(t_symbol* s, long argc, t_atom* argv);
 void pyjs_free(t_pyjs* x);
 void pyjs_init(t_pyjs* x);
 void pyjs_init_builtins(t_pyjs* x);
@@ -40,68 +34,67 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
 void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
-t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                    t_atom* rv);
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                            t_atom* rv);
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                    t_atom* rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
 t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv);
 t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
+/* globals */
 
+static t_class* pyjs_class;
+static int pyjs_global_obj_count; // when 0 then free interpreter
 
-static t_class *pyjs_class;
-
-static int pyjs_global_obj_count;  // when 0 then free interpreter
-
-
-void ext_main(void *r)
+void ext_main(void* r)
 {
-	t_class *c;
+    t_class* c;
 
-	c = class_new("pyjs", 
-		(method)pyjs_new, 
-		(method)pyjs_free, 
-		(long)sizeof(t_pyjs),
-		0L /* leave NULL!! */, A_GIMME, 0);
+    c = class_new("pyjs", (method)pyjs_new, (method)pyjs_free,
+                  (long)sizeof(t_pyjs), 0L /* leave NULL!! */, A_GIMME, 0);
 
     // methods
-	class_addmethod(c, (method)pyjs_code,         "code",	      A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_eval,         "eval",         A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_exec,         "exec",         A_SYM,       0);
-    class_addmethod(c, (method)pyjs_execfile,     "execfile",     A_SYM,       0);
+    class_addmethod(c, (method)pyjs_code, "code", A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK,
+                    0);
+    class_addmethod(c, (method)pyjs_eval, "eval", A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_exec, "exec", A_SYM, 0);
+    class_addmethod(c, (method)pyjs_execfile, "execfile", A_SYM, 0);
 
     // attributes
-    CLASS_ATTR_SYM(c,  "name",       0, t_pyjs,  p_name);
-    CLASS_ATTR_CHAR(c, "debug",      0, t_pyjs,  p_debug);
-    CLASS_ATTR_SYM(c,  "file",       0, t_pyjs,  p_code_filepath);
-    CLASS_ATTR_SYM(c,  "pythonpath", 0, t_pyjs,  p_pythonpath);
+    CLASS_ATTR_SYM(c, "name", 0, t_pyjs, p_name);
+    CLASS_ATTR_CHAR(c, "debug", 0, t_pyjs, p_debug);
+    CLASS_ATTR_SYM(c, "file", 0, t_pyjs, p_code_filepath);
+    CLASS_ATTR_SYM(c, "pythonpath", 0, t_pyjs, p_pythonpath);
 
     // activate for javascript wrapping
-	c->c_flags = CLASS_FLAG_POLYGLOT;
-	class_register(CLASS_NOBOX, c);
-	pyjs_class = c;
+    c->c_flags = CLASS_FLAG_POLYGLOT;
+    class_register(CLASS_NOBOX, c);
+    pyjs_class = c;
 }
 
-void pyjs_free(t_pyjs *x)
+void pyjs_free(t_pyjs* x)
 {
     Py_XDECREF(x->p_globals);
     pyjs_log(x, "will be deleted");
     pyjs_global_obj_count--;
     if (pyjs_global_obj_count == 0) {
-         Py_FinalizeEx();
+        Py_FinalizeEx();
     }
 }
 
 
-void *pyjs_new(t_symbol *s, long argc, t_atom *argv)
+void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
 {
-	t_pyjs *x = NULL;
+    t_pyjs* x = NULL;
 
-	// object instantiation, NEW STYLE
-	if ((x = (t_pyjs *)object_alloc(pyjs_class))) {
-		// Initialize values
+    // object instantiation, NEW STYLE
+    if ((x = (t_pyjs*)object_alloc(pyjs_class))) {
+        // Initialize values
 
         if (pyjs_global_obj_count == 0) {
             // first py obj is called '__main__'
@@ -120,8 +113,8 @@ void *pyjs_new(t_symbol *s, long argc, t_atom *argv)
 
         // python init
         pyjs_init(x);
-	}
-	return (x);
+    }
+    return (x);
 }
 
 
@@ -198,6 +191,51 @@ void pyjs_error(t_pyjs* x, char* fmt, ...)
     error("[pyjs %s]: %s", x->p_name->s_name, msg);
 }
 
+void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
+{
+    t_fourcc p_code_filetype = FOUR_CHAR_CODE('TEXT');
+    t_fourcc p_code_outtype = 0;
+    char p_code_filename[MAX_PATH_CHARS];
+    char p_code_pathname[MAX_PATH_CHARS];
+    short p_code_path;
+    t_max_err err;
+
+    if (s == gensym("")) { // if no arg supplied ask for file
+        p_code_filename[0] = 0;
+
+        if (open_dialog(p_code_filename, &p_code_path, &p_code_outtype,
+                        &p_code_filetype, 1))
+            // non-zero: cancelled
+            return;
+
+    } else {
+        // must copy symbol before calling locatefile_extended
+        strncpy_zero(p_code_filename, s->s_name, MAX_PATH_CHARS);
+        if (locatefile_extended(p_code_filename, &p_code_path, &p_code_outtype,
+                                &p_code_filetype, 1)) {
+            // nozero: not found
+            pyjs_error(x, "can't find file %s", s->s_name);
+            return;
+        } else {
+            p_code_pathname[0] = 0;
+            err = path_toabsolutesystempath(p_code_path, p_code_filename,
+                                            p_code_pathname);
+            if (err != MAX_ERR_NONE) {
+                pyjs_error(x, "can't convert %s to absolutepath", s->s_name);
+                return;
+            }
+        }
+
+        // success
+        // set attribute from pathname symbol
+        x->p_code_filepath = gensym(p_code_pathname);
+    }
+}
+
+
+// ---------------------------------------------------------------------------
+// Handlers
+
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
 {
     if (PyErr_Occurred()) {
@@ -226,83 +264,9 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
         error("[pyjs %s] %s: %s", x->p_name->s_name, msg, pvalue_str);
     }
 }
-
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
-{
-    long textsize = 0;
-    char* text = NULL;
-    PyObject* co = NULL;
-    PyObject* pval = NULL;
-    t_max_err err;
-    int is_eval = 1;
-
-    err = atom_gettext(argc, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-    if (err == MAX_ERR_NONE && textsize && text) {
-        pyjs_log(x, ">>> %s", text);
-    } else {
-        goto error;
-    }
-
-    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
-
-    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-        PyErr_Clear();
-        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
-        is_eval = 0;
-    }
-    pyjs_log(x, "code is_eval: %d", is_eval);
-
-    if (co == NULL) { // can be eval-co or exec-co or NULL here
-        goto error;
-    }
-    sysmem_freeptr(text);
-
-    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-    Py_DECREF(co);
-
-    if (is_eval) {
-        pyjs_handle_output(x, pval, rv);
-    } else {
-        Py_XDECREF(pval);
-    }
-    return MAX_ERR_NONE;
-
-error:
-    pyjs_handle_error(x, "pyjs code failed");
-    Py_XDECREF(pval);
-    return MAX_ERR_GENERIC;
-}
-
-
-t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
-{
-    char* py_argv = atom_getsym(argv)->s_name;
-    pyjs_log(x, "%s %s", s->s_name, py_argv);
-
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
-                                  x->p_globals);
-
-    if (pval != NULL) {
-        pyjs_handle_output(x, pval, rv);
-        return MAX_ERR_NONE;
-    } else {
-        pyjs_handle_error(x, "eval %s", py_argv);
-        return MAX_ERR_GENERIC;
-    }
-}
-
-
-// ---------------------------------------------------------------------------
-// Handlers
-
-
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv)
 {
-	t_atom atom_result[1];
+    t_atom atom_result[1];
 
     if (pfloat == NULL) {
         goto error;
@@ -314,8 +278,10 @@ t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv)
             if (PyErr_Occurred())
                 goto error;
         }
-		atom_setfloat(atom_result, float_result);
-		atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));        
+        atom_setfloat(atom_result, float_result);
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
     }
     Py_XDECREF(pfloat);
     return MAX_ERR_NONE;
@@ -325,11 +291,9 @@ error:
     Py_XDECREF(pfloat);
     return MAX_ERR_GENERIC;
 }
-
-
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv)
 {
-	t_atom atom_result[1];
+    t_atom atom_result[1];
 
     if (plong == NULL) {
         goto error;
@@ -341,8 +305,10 @@ t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv)
             if (PyErr_Occurred())
                 goto error;
         }
-		atom_setlong(atom_result, long_result);
-		atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result)); 
+        atom_setlong(atom_result, long_result);
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
     }
     Py_XDECREF(plong);
     return MAX_ERR_NONE;
@@ -352,11 +318,9 @@ error:
     Py_XDECREF(plong);
     return MAX_ERR_GENERIC;
 }
-
-
 t_max_err pyjs_handle_string_output(t_pyjs* x, PyObject* pstring, t_atom* rv)
 {
-	t_atom atom_result[PY_MAX_ATOMS];
+    t_atom atom_result[PY_MAX_ATOMS];
 
     if (pstring == NULL) {
         goto error;
@@ -367,8 +331,10 @@ t_max_err pyjs_handle_string_output(t_pyjs* x, PyObject* pstring, t_atom* rv)
         if (unicode_result == NULL) {
             goto error;
         }
-		atom_setsym(atom_result, gensym(unicode_result));
-		atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
+        atom_setsym(atom_result, gensym(unicode_result));
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
     }
     Py_XDECREF(pstring);
     return MAX_ERR_NONE;
@@ -378,10 +344,8 @@ error:
     Py_XDECREF(pstring);
     return MAX_ERR_GENERIC;
 }
-
-
 t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
-{    
+{
     if (plist == NULL) {
         goto error;
     }
@@ -465,8 +429,11 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
             Py_DECREF(item);
         }
 
-        atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), (long)i, atoms));
-        // atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), (long)i, atoms));
+        // atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1,
+        // atoms));
         pyjs_log(x, "end iter op: %d", i);
         if (is_dynamic) {
             pyjs_log(x, "restoring to static atom array");
@@ -482,8 +449,6 @@ error:
     Py_XDECREF(plist);
     return MAX_ERR_GENERIC;
 }
-
-
 t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv)
 {
     PyObject* pfun_co = NULL;
@@ -496,19 +461,18 @@ t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv)
 
     if (PyDict_Check(pdict)) {
 
-        pfun_co = PyRun_String( \
-            "def __py_maxmsp_out_dict(arg):\n"
-                "\tres = []\n"
-                "\tfor k,v in arg.items():\n"
-                    "\t\tres.append(k)\n"
-                    "\t\tres.append(':')\n"
-                    "\t\tif type(v) in [list, set, tuple]:\n"
-                        "\t\t\tfor i in v:\n"
-                            "\t\t\t\tres.append(i)\n"
-                    "\t\telse:\n"
-                        "\t\t\tres.append(v)\n"
-                "\treturn res\n", 
-                Py_single_input, x->p_globals, x->p_globals);
+        pfun_co = PyRun_String("def __py_maxmsp_out_dict(arg):\n"
+                               "\tres = []\n"
+                               "\tfor k,v in arg.items():\n"
+                               "\t\tres.append(k)\n"
+                               "\t\tres.append(':')\n"
+                               "\t\tif type(v) in [list, set, tuple]:\n"
+                               "\t\t\tfor i in v:\n"
+                               "\t\t\t\tres.append(i)\n"
+                               "\t\telse:\n"
+                               "\t\t\tres.append(v)\n"
+                               "\treturn res\n",
+                               Py_single_input, x->p_globals, x->p_globals);
 
         if (pfun_co == NULL) {
             pyjs_error(x, "out_dict function code object is NULL");
@@ -542,8 +506,6 @@ error:
     Py_XDECREF(pval);
     return MAX_ERR_GENERIC;
 }
-
-
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
 {
     if (pval == NULL) {
@@ -580,47 +542,74 @@ t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
         pyjs_error(x, "cannot handle his type of value");
         return MAX_ERR_GENERIC;
     }
+}
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                    t_atom* rv)
+{
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+    int is_eval = 1;
 
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        pyjs_log(x, ">>> %s", text);
+    } else {
+        goto error;
+    }
+
+    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+        is_eval = 0;
+    }
+    pyjs_log(x, "code is_eval: %d", is_eval);
+
+    if (co == NULL) { // can be eval-co or exec-co or NULL here
+        goto error;
+    }
+    sysmem_freeptr(text);
+
+    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(co);
+
+    if (is_eval) {
+        pyjs_handle_output(x, pval, rv);
+    } else {
+        Py_XDECREF(pval);
+    }
+    return MAX_ERR_NONE;
+
+error:
+    pyjs_handle_error(x, "pyjs code failed");
+    Py_XDECREF(pval);
+    return MAX_ERR_GENERIC;
 }
 
-void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
+
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                    t_atom* rv)
 {
-    t_fourcc p_code_filetype = FOUR_CHAR_CODE('TEXT');
-    t_fourcc p_code_outtype = 0;
-    char p_code_filename[MAX_PATH_CHARS];
-    char p_code_pathname[MAX_PATH_CHARS];
-    short p_code_path;
-    t_max_err err;
+    char* py_argv = atom_getsym(argv)->s_name;
+    pyjs_log(x, "%s %s", s->s_name, py_argv);
 
-    if (s == gensym("")) { // if no arg supplied ask for file
-        p_code_filename[0] = 0;
+    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
+                                  x->p_globals);
 
-        if (open_dialog(p_code_filename, &p_code_path,
-                        &p_code_outtype, &p_code_filetype, 1))
-            // non-zero: cancelled
-            return;
-
+    if (pval != NULL) {
+        pyjs_handle_output(x, pval, rv);
+        return MAX_ERR_NONE;
     } else {
-        // must copy symbol before calling locatefile_extended
-        strncpy_zero(p_code_filename, s->s_name, MAX_PATH_CHARS);
-        if (locatefile_extended(p_code_filename, &p_code_path,
-                                &p_code_outtype, &p_code_filetype, 1)) {
-            // nozero: not found
-            pyjs_error(x, "can't find file %s", s->s_name);
-            return;
-        } else {
-            p_code_pathname[0] = 0;
-            err = path_toabsolutesystempath(p_code_path, p_code_filename,
-                                            p_code_pathname);
-            if (err != MAX_ERR_NONE) {
-                pyjs_error(x, "can't convert %s to absolutepath", s->s_name);
-                return;
-            }
-        }
-
-        // success
-        // set attribute from pathname symbol
-        x->p_code_filepath = gensym(p_code_pathname);
+        pyjs_handle_error(x, "eval %s", py_argv);
+        return MAX_ERR_GENERIC;
     }
 }
 
@@ -678,7 +667,8 @@ t_max_err pyjs_exec(t_pyjs* x, t_symbol* s)
         goto error;
     }
 
-    pval = PyRun_String(s->s_name, Py_single_input, x->p_globals, x->p_globals);
+    pval = PyRun_String(s->s_name, Py_single_input, x->p_globals,
+                        x->p_globals);
     if (pval == NULL) {
         goto error;
     }
@@ -695,22 +685,19 @@ error:
 }
 
 
-
-t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv)
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                            t_atom* rv)
 {
     t_atom atoms[PY_MAX_ATOMS];
     PyObject* pval = NULL;
-    PyObject *json_module = NULL;
-    PyObject *json_dict = NULL;
-    PyObject *json_dumps = NULL;
+    PyObject* json_module = NULL;
+    PyObject* json_dict = NULL;
+    PyObject* json_dumps = NULL;
     PyObject* json_pstr = NULL;
 
     char* cstring = atom_getsym(argv)->s_name;
 
-    pyjs_log(x, "%s %s", s->s_name, cstring);
-
-    pval = PyRun_String(cstring, Py_eval_input, x->p_globals,
-                                  x->p_globals);
+    pval = PyRun_String(cstring, Py_eval_input, x->p_globals, x->p_globals);
     if (pval == NULL)
         goto error;
 
@@ -718,11 +705,11 @@ t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_a
     if (json_module == NULL)
         goto error;
 
-    json_dict = PyModule_GetDict(json_module);
+    json_dict = PyModule_GetDict(json_module); // borrowed ref
     if (json_dict == NULL)
         goto error;
 
-    json_dumps = PyDict_GetItemString(json_dict, "dumps");
+    json_dumps = PyDict_GetItemString(json_dict, "dumps"); // borrowed ref
     if (json_dumps == NULL)
         goto error;
 
@@ -731,31 +718,23 @@ t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_a
         goto error;
 
     const char* unicode_result = PyUnicode_AsUTF8(json_pstr);
-    if (unicode_result == NULL) {
+    if (unicode_result == NULL)
         goto error;
-    }
 
     atom_setsym(atoms, gensym(unicode_result));
-    atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+    atom_setobj(rv,
+                object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
 
     Py_XDECREF(pval);
     Py_XDECREF(json_module);
-    Py_XDECREF(json_dict);
-    Py_XDECREF(json_dumps);
     Py_XDECREF(json_pstr);
 
     return MAX_ERR_NONE;
 
 error:
-    pyjs_handle_error(x, "pyjs_jeval failed");
+    pyjs_handle_error(x, "pyjs_eval_to_json failed");
     Py_XDECREF(pval);
     Py_XDECREF(json_module);
-    Py_XDECREF(json_dict);
-    Py_XDECREF(json_dumps);
     Py_XDECREF(json_pstr);
     return MAX_ERR_GENERIC;
 }
-
-
-
-

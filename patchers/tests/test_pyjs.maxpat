@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 60.0, 104.0, 658.0, 595.0 ],
+		"rect" : [ 61.0, 104.0, 658.0, 595.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -52,12 +52,12 @@
 			}
 , 			{
 				"box" : 				{
-					"bgcolor" : [ 0.996078431372549, 0.0, 0.0, 1.0 ],
+					"bgcolor" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
 					"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
 					"bgfillcolor_angle" : 270.0,
 					"bgfillcolor_autogradient" : 0.0,
 					"bgfillcolor_color" : [ 0.2, 0.2, 0.2, 1.0 ],
-					"bgfillcolor_color1" : [ 0.996078431372549, 0.0, 0.0, 1.0 ],
+					"bgfillcolor_color1" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
 					"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
 					"bgfillcolor_proportion" : 0.5,
 					"bgfillcolor_type" : "gradient",
@@ -110,6 +110,16 @@
 			}
 , 			{
 				"box" : 				{
+					"bgcolor" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
+					"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
+					"bgfillcolor_angle" : 270.0,
+					"bgfillcolor_autogradient" : 0.0,
+					"bgfillcolor_color" : [ 0.2, 0.2, 0.2, 1.0 ],
+					"bgfillcolor_color1" : [ 0.301960784313725, 0.301960784313725, 0.301960784313725, 1.0 ],
+					"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
+					"bgfillcolor_proportion" : 0.5,
+					"bgfillcolor_type" : "gradient",
+					"gradient" : 1,
 					"id" : "obj-34",
 					"maxclass" : "message",
 					"numinlets" : 2,
@@ -246,8 +256,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 11.0, 10.0, 89.0, 22.0 ],
-					"text" : "pyload hello.py"
+					"patching_rect" : [ 11.0, 10.0, 94.0, 22.0 ],
+					"text" : "execfile hello.py"
 				}
 
 			}
@@ -512,7 +522,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 240.5, 380.0, 109.0, 35.0 ],
-					"text" : "0123456789abcdefABCDEF"
+					"text" : "\"HELLO WORLD!!!\""
 				}
 
 			}

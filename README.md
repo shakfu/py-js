@@ -79,23 +79,29 @@ pyjs max external (jsextension)
             code <expr|stmt>     : eval/exec/import python code (see above)
             execfile <path>      : python 'execfile' semantics
             exec <stmnt>         : python 'exec' semantics
+            eval <expression>    : python 'eval' semantics
+
+        in-code
+            eval_to_json <expr>  : python 'eval' returns json
+
+
 ```
 
 ## Overview
 
-`py/js`, started out as an attempt (during a covid-19 lockdown), to get a basic python3 external for max, and then evolved into a flexible framework for using python3 in max.
+`py/js`, started out as an attempt (during a covid-19 lockdown), to get a develop a basic python3 external for max, and then evolved into a more ambitious framework for using python3 in max.
 
 There are two implementation 'flavours':
 
 1. The `py` external provides a minimal, high level two-way interface between max and python in a way that feels natural to both languages.
 
-2. The `pyjs` max jsextension  provides a `PyJS` class for the `js` object, which makes available a python intepreter which works nicely with javascript code. This 'flavour' is new, and still under development, so documentation will be minimal. The 
+2. The `pyjs` max jsextension  provides a `PyJS` class for the `js` object, which makes available a python intepreter which works nicely with javascript code. This 'flavour' is newer, and less documented.
 
 In addition there are essentially 3 deployment variations:
 
-1. `py` external or `pyjs` jsextension which links to a system installed python (homebrew, builtin python, or custom system installed.) This has the benefit of re-using your existing libraries. This is the default option.
+1. `py` external or `pyjs` jsextension which links to a system installed python (homebrew and built from source). This has the benefit of re-using your existing python modules. This is the default option.
 
-2. `py` external or `pyjs` jsextension in a Max package: in this variation, a dedicated python distribution (zipped or otherwise is placed in the `support` folder of the `py/js` package (or any other package) is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (untested).
+2. `py` external or `pyjs` jsextension in a Max package: in this variation, a dedicated python distribution (zipped or otherwise is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (untested).
 
 3. `py` external or `pyjs` jsextension as a container for a python distribution. In this variation, a whole python distribution (zipped or otherwise) is stored inside the external/jsextension object, which can makes it very portable and usable in standalones.
 
@@ -138,9 +144,12 @@ The more recently developed `pyjs` external implements the following c-level met
 category | method   | param(s)      | in/out | can change ns 
 :------- | :--------| :------------ | :----: | :------------: 
 core     | code     | expr or stmt  | out?   | yes
+core     | eval     | expression    | out    | no
+core     | exec     | statement     | in     | yes
 core     | execfile | file          | in     | yes
+in-code  | eval_to_json| expression | out    | no
 
-The `code` method (also available the `py` object in a more experimental category) which can import/exec/eval python code is 'core' in this implementation.
+The `code` method here (also available in the `py` object in a more experimental category) which can import/exec/eval python code is 'core' in this implementation.
 
 
 #### Core

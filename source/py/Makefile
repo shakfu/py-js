@@ -7,8 +7,8 @@ section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # project variables
 NAME=py
-EXTERNAL=${NAME}.c
-HEADER=${NAME}.h
+# EXTERNAL=${NAME}.c
+# HEADER=${NAME}.h
 PROJECT=${NAME}.xcodeproj
 EXTENSION=api.pyx
 MAXHELP=${NAME}.maxhelp
@@ -151,8 +151,9 @@ style: clang-format
 
 clang-format:
 	$(call section,"clang-format")
-	@clang-format -i -style=file ${EXTERNAL}
-	@clang-format -i -style=file ${HEADER}
+	@clang-format -i -style=file py.c
+	@clang-format -i -style=file py.h
+	@clang-format -i -style=file pyjs.c
 
 lizard:
 	$(call section,"lizard complexity analysis")
