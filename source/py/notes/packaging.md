@@ -1,8 +1,6 @@
 # Packaging notes
 
 
-
-
 ## Python Distribution
 
 for python 3.8

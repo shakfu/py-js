@@ -10,6 +10,12 @@
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 
+#define PY_CHECK(obj, err_msg) \
+    if (!obj) { \
+        pyjs_error(x, "" #err_msg "\n"); \
+        goto error; \
+    }
+
 typedef struct _pyjs {
     /* object header */
     t_object p_ob;
@@ -34,6 +40,8 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
 void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
 t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
@@ -58,9 +66,11 @@ void ext_main(void *r)
 		0L /* leave NULL!! */, A_GIMME, 0);
 
     // methods
-	class_addmethod(c, (method)pyjs_code,       "code",	    A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_exec    ,   "exec",     A_DEFSYM,    0);
-    class_addmethod(c, (method)pyjs_execfile,   "execfile", A_DEFSYM,    0);
+	class_addmethod(c, (method)pyjs_code,         "code",	      A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_eval,         "eval",         A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_exec,         "exec",         A_SYM,       0);
+    class_addmethod(c, (method)pyjs_execfile,     "execfile",     A_SYM,       0);
 
     // attributes
     CLASS_ATTR_SYM(c,  "name",       0, t_pyjs,  p_name);
@@ -268,6 +278,23 @@ error:
 }
 
 
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
+{
+    char* py_argv = atom_getsym(argv)->s_name;
+    pyjs_log(x, "%s %s", s->s_name, py_argv);
+
+    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
+                                  x->p_globals);
+
+    if (pval != NULL) {
+        pyjs_handle_output(x, pval, rv);
+        return MAX_ERR_NONE;
+    } else {
+        pyjs_handle_error(x, "eval %s", py_argv);
+        return MAX_ERR_GENERIC;
+    }
+}
+
 
 // ---------------------------------------------------------------------------
 // Handlers
@@ -391,16 +418,6 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
         }
 
         while ((item = PyIter_Next(iter)) != NULL) {
-            if (PyLong_Check(item)) {
-                long long_item = PyLong_AsLong(item);
-                if (long_item == -1) {
-                    if (PyErr_Occurred())
-                        goto error;
-                }
-                atom_setlong(atoms + i, long_item);
-                pyjs_log(x, "%d long: %ld\n", i, long_item);
-                i++;
-            }
 
             if (PyFloat_Check(item)) {
                 float float_item = PyFloat_AsDouble(item);
@@ -413,15 +430,26 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
                 i++;
             }
 
-            // only for numpy
+            if (PyLong_Check(item)) {
+                long long_item = PyLong_AsLong(item);
+                if (long_item == -1) {
+                    if (PyErr_Occurred())
+                        goto error;
+                }
+                atom_setlong(atoms + i, long_item);
+                pyjs_log(x, "%d long: %ld\n", i, long_item);
+                i++;
+            }
+
+            // only for numpy int64 (not recognized by PyLong_Check)
             // if (PyNumber_Check(item)) {
-            //     float float_item = PyFloat_AsDouble(item);
-            //     if (float_item == -1.0) {
+            //     long long_item = PyLong_AsLong(item);
+            //     if (long_item == -1) {
             //         if (PyErr_Occurred())
             //             goto error;
             //     }
-            //     atom_setfloat(atoms + i, float_item);
-            //     py_log(x, "%d float: %f\n", i, float_item);
+            //     atom_setlong(atoms + i, long_item);
+            //     pyjs_log(x, "%d long: %ld\n", i, long_item);
             //     i++;
             // }
 
@@ -665,4 +693,69 @@ error:
     Py_XDECREF(pval);
     return MAX_ERR_GENERIC;
 }
+
+
+
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv)
+{
+    t_atom atoms[PY_MAX_ATOMS];
+    PyObject* pval = NULL;
+    PyObject *json_module = NULL;
+    PyObject *json_dict = NULL;
+    PyObject *json_dumps = NULL;
+    PyObject* json_pstr = NULL;
+
+    char* cstring = atom_getsym(argv)->s_name;
+
+    pyjs_log(x, "%s %s", s->s_name, cstring);
+
+    pval = PyRun_String(cstring, Py_eval_input, x->p_globals,
+                                  x->p_globals);
+    if (pval == NULL)
+        goto error;
+
+    json_module = PyImport_ImportModule("json");
+    if (json_module == NULL)
+        goto error;
+
+    json_dict = PyModule_GetDict(json_module);
+    if (json_dict == NULL)
+        goto error;
+
+    json_dumps = PyDict_GetItemString(json_dict, "dumps");
+    if (json_dumps == NULL)
+        goto error;
+
+    json_pstr = PyObject_CallFunctionObjArgs(json_dumps, pval, NULL);
+    if (json_pstr == NULL)
+        goto error;
+
+    const char* unicode_result = PyUnicode_AsUTF8(json_pstr);
+    if (unicode_result == NULL) {
+        goto error;
+    }
+
+    atom_setsym(atoms, gensym(unicode_result));
+    atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+
+    Py_XDECREF(pval);
+    Py_XDECREF(json_module);
+    Py_XDECREF(json_dict);
+    Py_XDECREF(json_dumps);
+    Py_XDECREF(json_pstr);
+
+    return MAX_ERR_NONE;
+
+error:
+    pyjs_handle_error(x, "pyjs_jeval failed");
+    Py_XDECREF(pval);
+    Py_XDECREF(json_module);
+    Py_XDECREF(json_dict);
+    Py_XDECREF(json_dumps);
+    Py_XDECREF(json_pstr);
+    return MAX_ERR_GENERIC;
+}
+
+
+
 
