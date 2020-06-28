@@ -114,7 +114,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /* informational */
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
-void py_appendtodict(t_py *x, t_dictionary *dict);
+void py_appendtodict(t_py* x, t_dictionary* dict);
 
 /* testing */
 void py_bang(t_py* x);

@@ -126,7 +126,7 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s)
     }
 }
 
-void py_appendtodict(t_py *x, t_dictionary *dict)
+void py_appendtodict(t_py* x, t_dictionary* dict)
 {
     if (dict) {
         dictionary_appendsym(dict, gensym("file"), x->p_code_filepath);
@@ -234,7 +234,6 @@ void ext_main(void* r)
 }
 
 
-
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_py* x = NULL;
@@ -303,29 +302,31 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
             py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
         }
-        
-        t_dictionary *dict = (t_dictionary *)gensym("#D")->s_thing;
+
+        t_dictionary* dict = (t_dictionary*)gensym("#D")->s_thing;
         if (dict) {
             dictionary_getsym(dict, gensym("file"), &x->p_code_filepath);
-            dictionary_getlong(dict, gensym("autoload"), (t_atom_long *)&x->p_autoload);
+            dictionary_getlong(dict, gensym("autoload"),
+                               (t_atom_long*)&x->p_autoload);
             dictionary_getsym(dict, gensym("pythonpath"), &x->p_pythonpath);
         }
     }
 
     // process autoload
     py_log(x, "checking autoload / code_filepath / pythonpath");
-    py_log(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s", 
-        x->p_autoload, x->p_code_filepath->s_name, x->p_pythonpath->s_name);
-    py_log(x, "via object_attr_getsym: %s", object_attr_getsym(x, gensym("file"))->s_name);
-  
+    py_log(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s", x->p_autoload,
+           x->p_code_filepath->s_name, x->p_pythonpath->s_name);
+    py_log(x, "via object_attr_getsym: %s",
+           object_attr_getsym(x, gensym("file"))->s_name);
+
     if ((x->p_autoload == 1) && (x->p_code_filepath != gensym(""))) {
         py_log(x, "autoloading: %s", x->p_code_filepath->s_name);
         py_load(x, x->p_code_filepath);
     }
 
     if (x->p_pythonpath != gensym("")) {
-        PyObject *sys_path = PySys_GetObject((char*)"path");
-        PyObject *py_path = PyUnicode_FromString(x->p_pythonpath->s_name);
+        PyObject* sys_path = PySys_GetObject((char*)"path");
+        PyObject* py_path = PyUnicode_FromString(x->p_pythonpath->s_name);
         PyList_Append(sys_path, py_path);
     }
 
@@ -653,19 +654,18 @@ void py_handle_dict_output(t_py* x, PyObject* pdict)
 
     if (PyDict_Check(pdict)) {
 
-        pfun_co = PyRun_String( \
-            "def __py_maxmsp_out_dict(arg):\n"
-                "\tres = []\n"
-                "\tfor k,v in arg.items():\n"
-                    "\t\tres.append(k)\n"
-                    "\t\tres.append(':')\n"
-                    "\t\tif type(v) in [list, set, tuple]:\n"
-                        "\t\t\tfor i in v:\n"
-                            "\t\t\t\tres.append(i)\n"
-                    "\t\telse:\n"
-                        "\t\t\tres.append(v)\n"
-                "\treturn res\n", 
-                Py_single_input, x->p_globals, x->p_globals);
+        pfun_co = PyRun_String("def __py_maxmsp_out_dict(arg):\n"
+                               "\tres = []\n"
+                               "\tfor k,v in arg.items():\n"
+                               "\t\tres.append(k)\n"
+                               "\t\tres.append(':')\n"
+                               "\t\tif type(v) in [list, set, tuple]:\n"
+                               "\t\t\tfor i in v:\n"
+                               "\t\t\t\tres.append(i)\n"
+                               "\t\telse:\n"
+                               "\t\t\tres.append(v)\n"
+                               "\treturn res\n",
+                               Py_single_input, x->p_globals, x->p_globals);
 
         if (pfun_co == NULL) {
             py_error(x, "out_dict function code object is NULL");
@@ -684,7 +684,7 @@ void py_handle_dict_output(t_py* x, PyObject* pdict)
             goto error;
         }
 
-        if (PyList_Check(pval)) { // expecting a python list
+        if (PyList_Check(pval)) {           // expecting a python list
             py_handle_list_output(x, pval); // this decrefs pval
             Py_XDECREF(pfun_co);
             outlet_bang(x->p_outlet_right);
@@ -745,7 +745,6 @@ void py_handle_output(t_py* x, PyObject* pval)
         py_error(x, "cannot handle his type of value");
         return;
     }
-
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1129,15 +1128,15 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     for (int i = 0; i < argc; i++) {
         switch ((argv + i)->a_type) {
         case A_FLOAT: {
-            atom_setfloat((atoms+(i+1)), atom_getfloat(argv + i));
+            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
             break;
         }
         case A_LONG: {
-            atom_setlong((atoms+(i+1)), atom_getlong(argv + i));
+            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
             break;
         }
         case A_SYM: {
-            atom_setsym((atoms+(i+1)), atom_getsym(argv + i));
+            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
             break;
         }
         default:
@@ -1146,7 +1145,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         }
     }
 
-    err = atom_gettext(argc+1, atoms, &textsize, &text,
+    err = atom_gettext(argc + 1, atoms, &textsize, &text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         py_log(x, ">>> %s", text);
