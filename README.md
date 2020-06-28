@@ -2,7 +2,7 @@
 
 Simple (and extensible) python3 externals for max
 
-repo - https://github.com/shakfu/py
+repo - https://github.com/shakfu/py-js
 
 
 ## Summary
@@ -10,7 +10,7 @@ repo - https://github.com/shakfu/py
 This is an pre-alpha level project which provides two max externals:
 
 
-### `py` external
+###1. `py` external
 
 ```
 globals
@@ -64,7 +64,7 @@ py max external
         right outlet             : bang on success 
 ```
 
-### `pyjs` external (experimental)
+###2. `pyjs` external (experimental)
 
 ```
 pyjs max external (jsextension)
