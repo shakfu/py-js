@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import os
 from pathlib import Path
 import shutil
@@ -7,9 +8,11 @@ import glob
 
 env = os.get_env
 cmd = os.system
+ver = tuple(sys.version_info) # e.g. (3, 7, 7, 'final', 0)
+# major, minor, micro
 
-VERSION_MAJOR=env('PY_MAJ_VER', '3.7')
-VERSION_MINOR=env('PY_MIN_VER', '7')
+VERSION_MAJOR=env('PY_MAJ_VER', '{0}.{1}'.format(*ver))
+VERSION_MINOR=env('PY_MIN_VER', '{2}'.format(*ver))
 SSL_VERSION=env('SSL_VER', '1.1.1g')
 MAC_DEP_TARGET=env('MAC_DEP', '10.13')
 
@@ -17,9 +20,9 @@ MAC_DEP_TARGET=env('MAC_DEP', '10.13')
 
 class PyBuilder:
 
-    def __init__(self, minor, patch, ssl_version, suffix=""):
+    def __init__(self, minor, micro, ssl_version, suffix=""):
         self.version = f'3.{minor}'
-        self.semver = f'3.{minor}.{patch}'
+        self.semver = f'3.{minor}.{micro}'
         self.ssl_version = ssl_version
         self.packages = packages if packages else []
         self.suffix = suffix

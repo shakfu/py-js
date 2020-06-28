@@ -58,7 +58,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 455.75, 389.5, 151.75, 33.0 ],
-					"presentation_linecount" : 2,
 					"text" : "count gives number of active  py objects"
 				}
 
@@ -70,7 +69,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 622.0, 247.0, 146.0, 20.0 ],
-					"presentation_linecount" : 2,
 					"text" : "= is shorthand for assign"
 				}
 
@@ -755,8 +753,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 76.0, 353.0, 132.0, 22.0 ],
-					"text" : "0 1 2 3 4"
+					"presentation_rect" : [ 76.0, 353.0, 132.0, 22.0 ]
 				}
 
 			}
@@ -772,7 +769,7 @@
 					"patching_rect" : [ 176.0, 268.0, 90.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_linecount" : 3,
-					"presentation_rect" : [ 195.0, 268.0, 53.5, 49.0 ],
+					"presentation_rect" : [ 195.0, 268.0, 54.0, 49.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
@@ -1178,7 +1175,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 416.0, 108.0, 90.0, 22.0 ],
+					"patching_rect" : [ 412.0, 108.0, 90.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 387.0, 111.0, 115.0, 22.0 ],
 					"text" : "list(range(150))"
@@ -1220,7 +1217,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 414.5, 44.0, 91.0, 22.0 ],
+					"patching_rect" : [ 412.0, 44.0, 91.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 387.0, 41.0, 91.0, 22.0 ],
 					"text" : "import datetime"
@@ -1262,7 +1259,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 414.5, 75.0, 77.0, 22.0 ],
+					"patching_rect" : [ 412.0, 76.0, 77.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 387.0, 78.0, 113.0, 22.0 ],
 					"text" : "list(range(2))"
@@ -1318,7 +1315,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 414.5, 13.0, 75.0, 22.0 ],
+					"patching_rect" : [ 412.0, 13.0, 75.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 387.0, 13.0, 75.0, 22.0 ],
 					"text" : "import string"

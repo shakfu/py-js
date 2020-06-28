@@ -130,7 +130,7 @@ void py_load(t_py* x, t_symbol* s); // read(f) -> execfile(f)
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
-void py_edsave(t_py* x, char** text, long size);
+long py_edsave(t_py* x, char** text, long size);
 
 
 #endif // PY_H

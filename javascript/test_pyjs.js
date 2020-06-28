@@ -86,6 +86,18 @@ function bang()
 	outlet(0, res);
 }
 
+function test_json()
+{
+	pc("import json");
+	var res = pc("json.dumps(list(range(5)))")
+	var json = JSON.parse(res);
+	post(json+'\n');
+	var res = pc("json.dumps(dict(a=12131))")
+	var obj = JSON.parse(res);
+	post(obj.a+'\n');
+	
+}
+
 function pyload(file)
 {
 	pyjs.execfile(file);

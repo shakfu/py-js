@@ -1478,7 +1478,7 @@ void py_edclose(t_py* x, char** text, long size)
 }
 
 
-void py_edsave(t_py* x, char** text, long size)
+long py_edsave(t_py* x, char** text, long size)
 {
     PyObject* pval = NULL;
 
@@ -1493,11 +1493,12 @@ void py_edsave(t_py* x, char** text, long size)
 
     // success cleanup
     Py_DECREF(pval);
-    return;
+    return 0;
 
 error:
     py_handle_error(x, "edclose-exec %s", x->p_code_filepath->s_name);
     Py_XDECREF(pval);
+    return 1;
 }
 
 
