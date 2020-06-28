@@ -10,7 +10,7 @@ repo - https://github.com/shakfu/py-js
 This is an pre-alpha level project which provides two max externals:
 
 
-###1. `py` external
+### `py` external
 
 ```
 globals
@@ -64,7 +64,7 @@ py max external
         right outlet             : bang on success 
 ```
 
-###2. `pyjs` external (experimental)
+### `pyjs` external (experimental)
 
 ```
 pyjs max external (jsextension)
