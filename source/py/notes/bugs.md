@@ -12,8 +12,7 @@ Exclusively in the case for c-based 3-rd party python modules (such as the matri
 It turns out that this is actually a bug in python for embedded applications (which I wasn't aware of, and which is being worked on and may be fixed in future versions.
 
 Therefore, the only thing that I can do right now is to stop users from 'reloading' c-based python extensions after a patch is closed which first uses them successfully, and ask them kindly to restart Max.
-Therefore, is there any API method or function, which provides some meta information about whether Max has been freshly started or restarted or a 
-count of patches which have been opened and closed, etc..
+Therefore, is there any API method or function, which provides some meta information about whether Max has been freshly started or restarted or a count of patches which have been opened and closed, etc..
 
 My basic idea is have some kind of flag_file which is available
 
