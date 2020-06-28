@@ -47,12 +47,20 @@ function get_debug()
 // Methods
 
 
+// not working!
+function pj() {
+	var arr = arrayfromargs(arguments);
+	return pyjs.code(arr);
+}
+
 function demo() {
 	var p = this.patcher;
 	var me = p.getnamed("bob"); // bob is a scripting name
 	//me.message("py", "from sys import version"); // nope
 	//me.message("py", Array("from", "sys", "import", "version")); // works
 	pyjs.code("from sys import version".split(" ")); // works
+
+	//pyjs.exec("from sys import version"); // works
 	var res = pj("version");
 	outlet(0, res);		
 }
@@ -64,23 +72,12 @@ function broadcast()
 	messnamed("mrbang", "bang");
 }
 
-// general
 function pc(str) {
 	return pyjs.code(str.split(" "));
 }
 
-// doesn't work
-function pg(str) {
-	var arr = pyjs.code(str.split(" "));
-	var res = pyjs.code(arr)
-	if (res)
-		outlet(0, res);
-}
-
-
 function bang()
 {
-	//pyjs.exec("from sys import version"); // works
 	pc("from sys import version");
 	var res = pc("version");
 	outlet(0, res);
@@ -91,7 +88,6 @@ function pyload(file)
 	pyjs.execfile(file);
 }
 
-// for messages and evals only
 function py()
 {
 	var arr = arrayfromargs(arguments);
