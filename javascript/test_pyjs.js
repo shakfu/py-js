@@ -46,64 +46,76 @@ function get_debug()
 // ---------------------------------------------------------------------------
 // Methods
 
-
-function demo() {
+function test_patcher_message()
+{
 	var p = this.patcher;
+
+	// message to named button
+	var mr = p.getnamed("mrbang");
+	mr.message("bang");
+
+	// message to self
 	var me = p.getnamed("bob"); // bob is a scripting name
-	//me.message("py", "from sys import version"); // nope
-	//me.message("py", Array("from", "sys", "import", "version")); // works
-	pyjs.code("from sys import version".split(" ")); // works
-	var res = pj("version");
-	outlet(0, res);		
+	me.message("py", Array("from", "sys", "import", "version")); // works
+	var res = pyjs.eval("version");
+	if (res)
+		outlet(0, res);
 }
 
-
-function broadcast()
+function test_messnamed()
 {
 	// only to receive objects
 	messnamed("mrbang", "bang");
 }
 
-// general
-function pc(str) {
-	return pyjs.code(str.split(" "));
+function test_code_array_req()
+{
+	//pyjs.code("from sys import version");  // nope
+	pyjs.code("from sys import version".split(" ")); // works
+	var res = pyjs.code("version");
+	outlet(0, res);		
 }
 
-// doesn't work
-function pg(str) {
-	var arr = pyjs.code(str.split(" "));
-	var res = pyjs.code(arr)
+function test_exec_eval()
+{
+	pyjs.exec("from random import random");
+	var res = pyjs.eval("random()");
 	if (res)
 		outlet(0, res);
 }
 
 
-function bang()
-{
-	//pyjs.exec("from sys import version"); // works
-	pc("from sys import version");
-	var res = pc("version");
-	outlet(0, res);
-}
-
-function test_json()
-{
-	pc("import json");
-	var res = pc("json.dumps(list(range(5)))")
-	var json = JSON.parse(res);
-	post(json+'\n');
-	var res = pc("json.dumps(dict(a=12131))")
-	var obj = JSON.parse(res);
-	post(obj.a+'\n');
-	
-}
-
-function pyload(file)
+function execfile(file)
 {
 	pyjs.execfile(file);
 }
 
-// for messages and evals only
+
+function test_execfile()
+{
+	pyjs.execfile("hello.py");
+	var res = pyjs.eval("c");
+	if (res)
+		outlet(0, res); // should output "Hello World"
+}
+
+// in-js wrapper for pyjs_code
+// (allows both eval and exec in js code)
+function pyc(str)
+{
+	return pyjs.code(str.split(" "));
+}
+
+
+function test_pyc()
+{
+	pyc("from sys import version");
+	var res = pyc("version");
+	outlet(0, res);
+}
+
+// external use wrapper for pyjs_code
+// for messages (and evals) only
 function py()
 {
 	var arr = arrayfromargs(arguments);
@@ -112,3 +124,27 @@ function py()
 	if (res)
 		outlet(0, res);
 }
+
+
+function test_json()
+{
+	pyc("import json");
+	var res = pyc("json.dumps(list(range(5)))")
+	var json = JSON.parse(res);
+	post(json+'\n');
+	var res = pyc("json.dumps(dict(a=12131))")
+	var obj = JSON.parse(res);
+	post(obj.a+'\n');
+	
+}
+
+// TOFIX!
+// WARNING! Reliably causes crash!!
+function test_eval_to_json()
+{
+	var res = pyjs.eval_to_json("list(range(5))");
+	var json = JSON.parse(res);
+	post(json+'\n');
+}
+
+
