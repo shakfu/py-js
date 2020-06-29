@@ -1,0 +1,10 @@
+#include "common.xcconfig"
+
+PREFIX = $(SUPPORT)/python$(VERSION)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)m
+PY_LIBS = $(PREFIX)
+PY_LDFLAGS = -lpython$(VERSION) -ldl
+
+HEADER_SEARCH_PATHS = $(inherited) $(PY_HEADERS)
+LIBRARY_SEARCH_PATHS = $(inherited) $(PY_LIBS)
+OTHER_LDFLAGS = $(inherited) $(PY_LDFLAGS)

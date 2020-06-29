@@ -1,6 +1,83 @@
 # Packaging notes
 
 
+## xcconfig -- Targets
+
+see: https://pewpewthespells.com/blog/xcconfig_guide.html
+
+1 xcconfig per target
+
+What's different?
+
+
+current:
+
+the following
+{
+- combo
+- default
+- pyjs
+}
+
+HOMEBREW = /usr/local/Cellar/python/$(SEMVER)/Frameworks/Python.framework/Versions/$(MAJ_VER)
+PY_HEADERS = $(HOMEBREW)/include/python$(VERSION)
+PY_LIBS = $(HOMEBREW)/lib
+PY_LDFLAGS = -lpython$(VERSION) -ldl
+
+- homebrew
+
+SUPPORT = $(SRCROOT)/../../../../support
+PREFIX = $(SUPPORT)/python$(VERSION)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)m
+PY_LIBS = $(PREFIX)
+PY_LDFLAGS = -lpython$(VERSION) -ldl
+
+- python-fwk
+
+SUPPORT = $(SRCROOT)/../../../../support
+FRAMEWORKS_FOLDER_PATH = $(SUPPORT)/Frameworks
+PYTHON = $(FRAMEWORKS_FOLDER_PATH)/Python.framework/Versions/${VERSION}
+PY_HEADERS = $(PYTHON)/include/python$(VERSION)m
+PY_LIBS = $(PYTHON)/lib
+PY_LDFLAGS = -lpython$(VERSION) -ldl
+
+- python-org
+
+SUPPORT = $(SRCROOT)/../../../../support
+PREFIX = $(SUPPORT)/python$(VERSION)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)m
+PY_LIBS = $(PREFIX)/lib
+PY_LDFLAGS = -lpython$(VERSION)m -ldl
+
+
+
+
+future:
+
+should handle both py and pyjs (like combo)
+
+- homebrew-sys
+- homebrew-pkg
+- homebrew-ext
+- python-sys
+- python-pkg
+- python-fwk
+
+better:
+
+- homebrew
+- python
+
+with multiple xcconfigs:
+
+- homebrew-sys.xcconfig
+- homebrew-pkg.xcconfig
+- homebrew-ext.xcconfig
+
+corresponding with appropriate schemes
+
+
+
 ## Packaging Options Test
 
 ### homebrew-pkg
