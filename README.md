@@ -183,12 +183,14 @@ Implemented for both `py` and `pyjs` objects:
 
 - **Code or Anything Messages**. Responds to a `code <expression || statement>` or (anything) `<expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by max's parsing and excaping rules. (EXPERIMENTAL and evolving).
 
-Implemented for only `pyjs` objects:
+Implemented for `pyjs` objects only:
 
-- **Evaluate to JSON**. 
+- **Evaluate to JSON**. Can be used in javascript code only to automatically serialize the results of a python expression as a json string as follows: `evaluate_to_json <expression> -> JSON`.
 
 
 #### Interobject Communication
+
+Implemented for `py` objects only:
 
 - **Scan Message**. Responds to a `scan` message with arguments. This scans the parent patcher of the object and stores scripting names in the global registry.
 
@@ -197,6 +199,8 @@ Implemented for only `pyjs` objects:
 
 #### Code Editor
 
+Implemented for `pyjs` objects only:
+
 - **Line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of all entries in a session. Of course, a coll can made to save all commands if required.
 
 - **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
@@ -204,16 +208,20 @@ Implemented for only `pyjs` objects:
 
 #### Scripting
 
+Implemented for both `py` and `pyjs` objects:
+
 - **Exposing Max API to Python** A significant part of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called by python scripts or via messages in a patcher.
 
 
 ## Caveats
 
-- The `py` object is currently marked as experimental pre-alpha and still needs further unit/functional/integration testing and field testing of course. Do not use it expecting it is battle-tested!
+- The `py` and `pyjs` objects are currently marked as experimental pre-alpha and still need further unit/functional/integration testing and field testing of course. Do not use it expecting they are battle-tested!
 
-- As of this writing, the `api` module which is a minimal cython-based wrapper of the max-api is does not unload fully between patches. It requires a restart of Max to work after you close the first patch which uses it. This is a [bug](https://bugs.python.org/issue34309)in python which is being worked on and my be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
+- As of this writing, the `api` module, indeed most likely all 3rd party python c-extensions, do not unload properly between patches and require a restart of Max to work after you close the first patch which uses them. Unfortunately, this is a [bug](https://bugs.python.org/issue34309)in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
 
-- `core` features are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
+    - `Numpy`, the popular python numerical analysis package falls in the above category, but actually **crashes** Max if imported in a new patch after first use in a prior patch. To address this special case, the module is provided as an object in the `api` module (and this prevents a crash if used again). As above, just restart Max and use it in one patch normally. After closing the first patch, restart Max to use it again in a new patch. (New patch is taken to mean new document.)
+
+- `core` features are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc.. 
 
 - The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
 
@@ -364,7 +372,7 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## BUGS
 
-- [ ] Using the code-editor is not intuitive. Test all scenarios
+- [ ] Workflow using the code-editor is not intuitive. Test all scenarios
 
 - [ ] CRITICAL: attempting to reload numpy after the patcher is closed crashes Max (except when you load it through `api` module!)
 
