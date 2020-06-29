@@ -1,13 +1,13 @@
 # py/js: python3 objects for max
 
-Simple (and extensible) python3 externals for max
+Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com)
 
 repo - https://github.com/shakfu/py-js
 
 
 ## Summary
 
-This is an pre-alpha level project which provides two max externals:
+This is a pre-alpha level project which provides two max externals:
 
 
 ### `py` external
@@ -74,14 +74,14 @@ pyjs max external (jsextension)
         pythonpath               : add path to python sys.path
         debug                    : switch debug logging on/off
     
-    methods
-        core
+    methods 
+        core (messages)
             code <expr|stmt>     : eval/exec/import python code (see above)
             execfile <path>      : python 'execfile' semantics
             exec <stmnt>         : python 'exec' semantics
             eval <expression>    : python 'eval' semantics
 
-        in-code
+        in-code (non-message)
             eval_to_json <expr>  : python 'eval' returns json
 
 
@@ -89,21 +89,25 @@ pyjs max external (jsextension)
 
 ## Overview
 
-`py/js`, started out as an attempt (during a covid-19 lockdown), to get a develop a basic python3 external for max, and then evolved into a more ambitious framework for using python3 in max.
+`py/js` started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into a more ambitious framework for using python3 in max.
 
-There are two implementation 'flavours':
 
-1. The `py` external provides a minimal, high level two-way interface between max and python in a way that feels natural to both languages.
+There are two implementation variations:
 
-2. The `pyjs` max jsextension  provides a `PyJS` class for the `js` object, which makes available a python intepreter which works nicely with javascript code. This 'flavour' is newer, and less documented.
+1. A `py` external which provides a more featureful two-way interface between max and python in a way that feels natural to both languages.
+
+2. A `pyjs` max external/jsextension providing a `PyJS` class and a minimal subset of `py's` features which work well with the max `js` object and javascript code (like returning json directly from evaluations of python expressions).
+
+Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap the portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
+
 
 In addition there are essentially 3 deployment variations:
 
-1. `py` external or `pyjs` jsextension which links to a system installed python (homebrew and built from source). This has the benefit of re-using your existing python modules. This is the default option.
+1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
 
-2. `py` external or `pyjs` jsextension in a Max package: in this variation, a dedicated python distribution (zipped or otherwise is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (untested).
+2. Embedding python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (untested).
 
-3. `py` external or `pyjs` jsextension as a container for a python distribution. In this variation, a whole python distribution (zipped or otherwise) is stored inside the external/jsextension object, which can makes it very portable and usable in standalones.
+3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external/jsextension object, which can makes it very portable and usable in standalones.
 
 
 Deployment Scenario  | `py` | `pyjs`
@@ -111,8 +115,6 @@ Deployment Scenario  | `py` | `pyjs`
 Link to sys python   | x    | x 
 Embed in package     | x    | untested
 Embed in external    | x    | untested
-
-In addition, to the deployment variations above, onc can choose to use the cython-generated max c-api wrapper or not, which allows regular python code to directly access the max-c-api and script Max objects.
 
 
 
@@ -141,39 +143,49 @@ meta     | count    |               | n/a    | no
 
 The more recently developed `pyjs` external implements the following c-level methods:
 
-category | method   | param(s)      | in/out | can change ns 
-:------- | :--------| :------------ | :----: | :------------: 
-core     | code     | expr or stmt  | out?   | yes
-core     | eval     | expression    | out    | no
-core     | exec     | statement     | in     | yes
-core     | execfile | file          | in     | yes
-in-code  | eval_to_json| expression | out    | no
+category | method       | param(s)      | in/out | can change ns 
+:------- | :----------- | :------------ | :----: | :------------:
+core     | import       | module        | in     | yes
+core     | eval         | expression    | out    | no
+core     | exec         | statement     | in     | yes
+core     | execfile     | file          | in     | yes
+extra    | code         | expr or stmt  | out?   | yes
+in-code  | eval_to_json | expression    | out    | no
 
-The `code` method here (also available in the `py` object in a more experimental category) which can import/exec/eval python code is 'core' in this implementation.
 
+In both cases, the `code` method allows for import/exec/eval of python code, which can be said to make those 'fit-for-purpose' methods redundant. However, I have retained them since they are stricter in what they allow and further provide a helpful prefix in messages which indicates message intent.
 
 #### Core
 
-The `py` object's *core* features have a one-to-one correspondance to python's very high layer as specified [here](https://docs.python.org/3/c-api/veryhigh.html).
+py/js's *core* features have a one-to-one correspondance to python's very high layer as specified [here](https://docs.python.org/3/c-api/veryhigh.html). In the following when we refer to 'object', we refer to instances of either the `py` or `pyjs` externals. A note of differences between the variations will be provided when appropriate.
 
-- **Per-object namespaces**. Each `py` object has a unique name (which can be set by the user or provided automatically), and responds to an `import <module>` message which loads a python module in its namespace (essentially a `globals` dictionary), which can be different for each instance.
+- **Per-object namespaces**. Each object has a unique name (which is provided automatically or can be set by the user), and responds to an `import <module>` message which loads the specified python module in its namespace (essentially a `globals` dictionary). Notably, namespaces can be different for each instance.
 
-- **Eval Messages**. Responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace and outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
+- **Eval Messages**. Responds to an `eval <expression>` message in the left inlet which is evaluated in the context of the namespace. `py` objects output results to the left outlet, send a bang from the right outlet upon success or a bang from the middle outlet upon failure. `pyjs` objects just return an `atomarray` of the results.
 
-- **Exec Messages**. Responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file's code in the object's namespace. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
+- **Exec Messages**. Responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file's code in the object's namespace. For `py` objects, this produces no output from the left outlet, sends a bang from the right outlet upon success or a bang from the middle outlet upon failure. For `pyjs` objects no output is given.
 
 
 #### Extra
 
-An *extra* feature makes the `py` object play nice in the max/msp ecosystem:
+The *extra* category of methods  makes the `py` or `pyjs` object play nice with the max/msp ecosystem:
 
-- **Assign Messages**. Responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in the objects python namespace using max message syntax. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
+Implemented for `py` objects at present:
+
+- **Assign Messages**. Responds to an `assign <varname> [x1, x2, ..., xN]` which is equivalent to `<varname> = [x1, x2, ..., xN]` in the python namespace. This is a way of creating variables in the objects python namespace using max message syntax. This produces no output from the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure. (Only `py` objects for now)
 
 - **Call Messages**. Responds to a `call <func> arg1 arg2 ... argN` kind of message where `func` is a python callable in the py object's namespace. This corresponds to the python `callable(*args)` syntax. This makes it easier to call python functions in a max-friendly way. If the callable does not variable arguments, it will alternatively try to apply the arguments as a list i.e. `call func(args)`. Future work will try make `call` correspond to a python generic function call: `<callable> [arg1 arg2 ... arg_n] [key1=val1 key2=val2 ... keyN=valN]`. This outputs results to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
 - **Pipe message**. Like a `call` in reverse, responds to a `pipe <arg> <f1> <f2> ... <fN>` message. In this sense, a value is *piped* through a chain of python functions in the objects namespace and returns the output to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
+
+Implemented for both `py` and `pyjs` objects:
+
 - **Code or Anything Messages**. Responds to a `code <expression || statement>` or (anything) `<expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by max's parsing and excaping rules. (EXPERIMENTAL and evolving).
+
+Implemented for only `pyjs` objects:
+
+- **Evaluate to JSON**. 
 
 
 #### Interobject Communication
@@ -360,10 +372,6 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
-- [x] pyjs in-function calls to code did not work well as strings (conversion to array fixed it)
-
-- [x] no-return ops in`pyjs` such as `exec` and `import` somehow make javascript assume an error has occured.
-
 
 ## TODO
 
@@ -404,8 +412,12 @@ The style used in this project is specified in the `.clang-format` file.
 
 #### Features
 
-
 ##### Core
+
+- [x] pyjs in-function calls to code did not work well as strings (conversion to array fixed it)
+
+- [x] no-return ops in`pyjs` such as `exec` and `import` somehow make javascript assume an error has occured.
+
 
 - [x] Convert `py` into a `jsextension` class
 
@@ -554,15 +566,15 @@ Every now and then when I am developing a patch in Max, I yearn for some simple 
 
 Thinking that there must be a max external out there, I looked around and found the following:
 
-- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which looked promising but then I read that the 'available Max port is not actively maintained.' I also noted that its written in C++ and needs an additional c++ flext layer (http://grrrr.org/ext/flext) to compile. But I was further dissuaded from diving in as it supported only python 2 which seemed difficult to swallow. Ironically, this project has become more active recently, so the above may no longer apply.
+- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which looked very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it's written in C++ and needs an additional [c++ flext](http://grrrr.org/ext/flext) layer  to compile. But I was further dissuaded from diving in as it supported only python 2 which seemed difficult to swallow considering it is no longer supported. Ironically, this project has become more active recently, so the above may no longer apply.
 
 - [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 16 months as of this writing. Again c++ and using pybind11 which I'm not familiar with.
 
 Around the time of the beginning of the covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts to embed a scheme implementation into a Max external.
 
-So I decided, during the lockdown period, with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c code that won't crash.
+So I decided, during a period with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c that won't crash.
 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
-Thanks to Luigi Castelli for his help on my Max/Msp questions and Stefan Behnel for his help with Cython questions.
+Thanks to Luigi Castelli for his help on Max/Msp questions and to Stefan Behnel for his help with Cython questions.
 

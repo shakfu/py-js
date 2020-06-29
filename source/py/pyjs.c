@@ -13,14 +13,12 @@
 typedef struct _pyjs {
     /* object header */
     t_object p_ob;
-
     /* python-related */
     PyObject* p_globals;       /* per object 'globals' python namespace */
     t_symbol* p_name;          /* unique object name */
     t_symbol* p_pythonpath;    /* path to python directory */
     t_symbol* p_code_filepath; /* python filepath */
     t_bool p_debug;            /* bool to switch per-object debug state */
-
 } t_pyjs;
 
 
@@ -32,21 +30,20 @@ void pyjs_log(t_pyjs* x, char* fmt, ...);
 void pyjs_error(t_pyjs* x, char* fmt, ...);
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
 void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
+t_max_err pyjs_import(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                    t_atom* rv);
-t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                            t_atom* rv);
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                    t_atom* rv);
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
 t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv);
 t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
-/* globals */
 
+
+/* globals */
 static t_class* pyjs_class;
 static int pyjs_global_obj_count; // when 0 then free interpreter
 
@@ -58,12 +55,12 @@ void ext_main(void* r)
                   (long)sizeof(t_pyjs), 0L /* leave NULL!! */, A_GIMME, 0);
 
     // methods
-    class_addmethod(c, (method)pyjs_code, "code", A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK,
-                    0);
-    class_addmethod(c, (method)pyjs_eval, "eval", A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_exec, "exec", A_SYM, 0);
+    class_addmethod(c, (method)pyjs_import,   "import",   A_SYM, 0);
+    class_addmethod(c, (method)pyjs_eval,     "eval",     A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_exec,     "exec",     A_SYM, 0);
     class_addmethod(c, (method)pyjs_execfile, "execfile", A_SYM, 0);
+    class_addmethod(c, (method)pyjs_code,     "code",     A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK, 0);
 
     // attributes
     CLASS_ATTR_SYM(c, "name", 0, t_pyjs, p_name);
@@ -591,6 +588,28 @@ t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
 error:
     pyjs_handle_error(x, "pyjs code failed");
     Py_XDECREF(pval);
+    return MAX_ERR_GENERIC;
+}
+
+
+t_max_err pyjs_import(t_pyjs* x, t_symbol* s)
+{
+    PyObject* x_module = NULL;
+
+    if (s != gensym("")) {
+        x_module = PyImport_ImportModule(s->s_name);
+        
+        if (x_module == NULL) {
+            goto error;
+        }
+
+        PyDict_SetItemString(x->p_globals, s->s_name, x_module);
+        pyjs_log(x, "imported: %s", s->s_name);
+        return MAX_ERR_NONE;
+    }    
+
+error:
+    pyjs_handle_error(x, "import %s", s->s_name);
     return MAX_ERR_GENERIC;
 }
 
