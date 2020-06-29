@@ -1,6 +1,33 @@
 # Packaging notes
 
 
+## Packaging Options Test
+
+### homebrew-pkg
+
+```
+make clean-pkg
+make homebrew-pkg
+```
+Issues:
+
+- copies `pyjs.mxo` that is part of another build (system)
+
+Should be:
+
+
+```
+make clean clean-pkg homebrew-pkg
+```
+
+
+
+
+## Preparing a standalone for Apple App Store
+
+https://cycling74.com/forums/max-standalone-in-the-mac-app-store-2018
+
+
 ## Python Distribution
 
 for python 3.8

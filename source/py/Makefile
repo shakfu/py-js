@@ -38,7 +38,7 @@ all: clean test build
 default: clean build pkg
 	$(call section,"build -> deploy to local package")
 
-combo: clean build build-pyjs pkg
+combo: clean clean-pkg build-combo pkg
 
 pyjs: build-pyjs pkg
 
@@ -89,6 +89,12 @@ build: build-default
 build-default: build-extension 
 	$(call section,"build default external with xcode")
 	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/default/py.xcodeproj
+
+
+build-combo: build-extension
+	$(call section,"build boths externals with xcode")
+	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/combo/py-js.xcodeproj -target py
+	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/combo/py-js.xcodeproj -target pyjs	
 
 build-pyjs:
 	$(call section,"build pyjs external with xcode")
@@ -202,4 +208,8 @@ clean-build-python-fwk:
 clean-support:
 	$(call section,"cleaning support directory")
 	@rm -rf ${ROOTDIR}/support/*
+
+clean-pkg:
+	$(call section,"cleaning py pkg")
+	@rm -rf ${PACKAGE}
 

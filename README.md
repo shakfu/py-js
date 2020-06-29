@@ -1,4 +1,4 @@
-# py/js: python3 objects for max
+# py-js: python3 objects for max
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com)
 
