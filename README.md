@@ -76,10 +76,14 @@ pyjs max external (jsextension)
     
     methods 
         core (messages)
-            code <expr|stmt>     : eval/exec/import python code (see above)
-            execfile <path>      : python 'execfile' semantics
-            exec <stmnt>         : python 'exec' semantics
+            import <module>      : python import to object namespace
             eval <expression>    : python 'eval' semantics
+            exec <stmnt>         : python 'exec' semantics
+            execfile <path>      : python 'execfile' semantics
+        
+        extra
+            code <expr|stmt>     : eval/exec/import python code (see above)
+            
 
         in-code (non-message)
             eval_to_json <expr>  : python 'eval' returns json
