@@ -90,11 +90,19 @@ build-default: build-extension
 	$(call section,"build default external with xcode")
 	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/default/py.xcodeproj
 
+build-osx-default: build-extension
+	xcodebuild -project targets/osx/py-js.xcodeproj -target py
+	xcodebuild -project targets/osx/py-js.xcodeproj -target pyjs
+
+build-osx-homebrew: build-extension
+	xcodebuild -project targets/osx/py-js.xcodeproj -xcconfig targets/osx/homebrew.xcconfig -target py
+	xcodebuild -project targets/osx/py-js.xcodeproj -xcconfig targets/osx/homebrew.xcconfig -target pyjs
+
 
 build-combo: build-extension
 	$(call section,"build boths externals with xcode")
-	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/combo/py-js.xcodeproj -target py
-	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/combo/py-js.xcodeproj -target pyjs	
+	@xcodebuild -project targets/combo/py-js.xcodeproj -target py
+	@xcodebuild -project targets/combo/py-js.xcodeproj -target pyjs	
 
 build-pyjs:
 	$(call section,"build pyjs external with xcode")
