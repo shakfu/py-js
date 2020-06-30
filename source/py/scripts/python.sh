@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+source "scripts/common.sh"
 
 VERSION_MAJOR=${PY_MAJ_VER:=3.7}
 VERSION_MINOR=${PY_MIN_VER:=7}
@@ -13,7 +14,6 @@ VERSION=${VERSION_MAJOR}
 VER="${VERSION//./}"
 NAME=python${VERSION}
 
-
 URL_PYTHON=https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz
 URL_OPENSSL=https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz
 URL_GETPIP=https://bootstrap.pypa.io/get-pip.py
@@ -21,13 +21,13 @@ URL_GETPIP=https://bootstrap.pypa.io/get-pip.py
 ROOT=$(pwd)
 SUPPORT=${ROOT}/../../support
 SOURCE=${ROOT}/../source
+FRAMEWORKS=${SUPPORT}/Frameworks
 PY=${ROOT}
 TARGETS=${PY}/targets
 TARGET=${TARGETS}/python-org
 BUILD=${TARGET}/build
 PYTHON=${BUILD}/Python-${SEMVER}
 PREFIX=${SUPPORT}/${NAME}
-FRAMEWORKS=${SUPPORT}/Frameworks
 BIN=${SUPPORT}/${NAME}/bin
 LIB=${PREFIX}/lib/python${VERSION}
 SSL_SRC=${BUILD}/${SSL_VERSION}
@@ -71,7 +71,7 @@ debug() {
 
 
 get_url() {
-	mkdir -p $TMP
+	mkdir $TMP
 	fname=$(basename $1)
 	curl $1 -o $TMP/$fname
 	tar -C $BUILD -xvf $TMP/$fname
@@ -253,8 +253,18 @@ compile_python_from_source() {
 
 	cd $PYTHON
 
+	write_python_minim_setup_local
+
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	 	--enable-framework=$FRAMEWORKS
+	 	--prefix=$PREFIX 	\
+	 	--enable-shared 	\
+	 	--with-openssl=$SSL \
+	 	--with-lto 			\
+	 	--enable-optimizations
+
+	# ./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
+	#  	--enable-framework=$FRAMEWORKS
+
 	make altinstall
 
 	cd $ROOT
@@ -282,7 +292,7 @@ fix_python_dylib_for_pkg() {
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes python in installed in $PREFIX
-	#../../../../support/python3.7/lib/libpython3.7m.dylib
+	# ../../../../support/python3.7/lib/libpython3.7m.dylib
 	install_name_tool -id @loader_path/../../../../support/${NAME}/lib/${DYLIB} ${DYLIB}
 	echo "fix_python_dylib_for_pkg done"
 	# otool -L ${DYLIB}
@@ -309,6 +319,7 @@ fix_python_libintl() {
 }
 
 install_python() {
+	mkdir -p $BUILD
 	get_python
 	get_ssl
 	build_ssl
@@ -327,5 +338,33 @@ install_python_ext() {
 	# FIXME: not complete!
 	# cp python to py.mxo
 }
+
+if [ "$1" == "pkg" ]; then
+    echo "Installing minimal python from source into 'support' folder of package"
+    reset
+    install_python_pkg
+
+elif [ "$1" == "ext" ]; then
+	echo "Installing minimal python from source into 'py.mxo' external"
+	intall_python_ext
+
+elif [ "$1" == "build_python" ]; then
+	echo "Building from python source"
+	build_python_zipped
+
+elif [ "$1" == "fix_pkg" ]; then
+	echo "fixing dynamic lookup refs for package"
+	fix_python_dylib_for_pkg
+	otool -L $PREFIX/lib/$DYLIB
+
+elif [ "$1" == "fix_ext" ]; then
+	echo "fixing dynamic lookup refs for package"
+	fix_python_dylib_for_ext
+	otool -L $PREFIX/lib/$DYLIB
+
+else
+    echo "No argument given. Can be 'pkg' or 'ext'"
+    echo "for package or external installation respectively"
+fi
 
 
