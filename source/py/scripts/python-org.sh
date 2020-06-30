@@ -288,7 +288,7 @@ fix_python_dylib_for_pkg() {
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes python in installed in $PREFIX
-	../../../../support/python3.7/lib/libpython3.7m.dylib
+	# ../../../../support/python3.7/lib/libpython3.7m.dylib
 	install_name_tool -id @loader_path/../../../../support/${NAME}/lib/${DYLIB} ${DYLIB}
 	echo "fix_python_dylib_for_pkg done"
 	# otool -L ${DYLIB}
@@ -315,6 +315,7 @@ fix_python_libintl() {
 }
 
 install_python() {
+	mkdir -p $BUILD
 	get_python
 	get_ssl
 	build_ssl
@@ -350,7 +351,12 @@ elif [ "$1" == "build_python" ]; then
 elif [ "$1" == "fix_pkg" ]; then
 	echo "fixing dynamic lookup refs for package"
 	fix_python_dylib_for_pkg
-	#otool -L $PREFIX/lib/$DYLIB
+	otool -L $PREFIX/lib/$DYLIB
+
+elif [ "$1" == "fix_ext" ]; then
+	echo "fixing dynamic lookup refs for package"
+	fix_python_dylib_for_ext
+	otool -L $PREFIX/lib/$DYLIB
 
 else
     echo "No argument given. Can be 'pkg' or 'ext'"

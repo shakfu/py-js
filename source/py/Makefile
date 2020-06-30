@@ -7,11 +7,10 @@ section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # project variables
 NAME=py
-# EXTERNAL=${NAME}.c
-# HEADER=${NAME}.h
 PROJECT=${NAME}.xcodeproj
+TARGETS=py pyjs
 EXTENSION=api.pyx
-MAXHELP=${NAME}.maxhelp
+
 PACKAGE=${HOME}"/Documents/Max 8/Packages/"${NAME}
 PKG_DIRS=docs examples externals help init \
          javascript jsextensions media patchers
@@ -46,9 +45,9 @@ homebrew-pkg: clean build-homebrew-pkg pkg pkg-support
 
 homebrew-ext: build-homebrew-ext pkg
 
-python-org-pkg: build-python-org-pkg pkg pkg-support
+python-org-pkg: build-python-pkg pkg pkg-support
 
-python-org-ext: build-python-org-ext pkg 
+python-org-ext: build-python-ext pkg 
 
 
 dist:
@@ -72,81 +71,66 @@ pkg-support:
 	@rsync -a --delete $(ROOTDIR)/support ${PACKAGE}
 
 
-show:
-	@echo "PYDIR: ${PYDIR}"
-	@echo "SRCDIR: ${SRCDIR}"
-	@echo "ROOTDIR: ${ROOTDIR}"
-	@echo "syncing $(ROOTDIR) with $(PACKAGE)..." 
-
-
 # BUILDING
 # -----------------------------------------------------------------------
-.PHONY: build build-default build-pyjs build-homebrew-pkg build-python-org-pkg build-extension
+.PHONY: build build-homebrew-pkg build-python-pkg build-extension
 
-build: build-default
+build: build-osx-default
 	$(call section,"build project")
 
-build-default: build-extension 
-	$(call section,"build default external with xcode")
-	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/default/py.xcodeproj
-
 build-osx-default: build-extension
-	xcodebuild -project targets/osx/py-js.xcodeproj -target py
-	xcodebuild -project targets/osx/py-js.xcodeproj -target pyjs
+	$(call section,"build osx default")
+	@for target in ${TARGETS}; do \
+		xcodebuild -project targets/osx/py-js.xcodeproj -target $$target ; \
+	done
+
+build-homebrew-pkg: prep-homebrew-pkg build-homebrew  
+
+build-homebrew-ext: prep-homebrew-ext build-homebrew
+
+build-homebrew: build-osx-homebrew
 
 build-osx-homebrew: build-extension
-	xcodebuild -project targets/osx/py-js.xcodeproj -xcconfig targets/osx/homebrew.xcconfig -target py
-	xcodebuild -project targets/osx/py-js.xcodeproj -xcconfig targets/osx/homebrew.xcconfig -target pyjs
+	$(call section,"build osx homebrew")
+	@for target in ${TARGETS}; do \
+		xcodebuild -project targets/osx/py-js.xcodeproj -xcconfig targets/osx/homebrew.xcconfig -target $$target ; \
+	done
 
 
-build-combo: build-extension
-	$(call section,"build boths externals with xcode")
-	@xcodebuild -project targets/combo/py-js.xcodeproj -target py
-	@xcodebuild -project targets/combo/py-js.xcodeproj -target pyjs	
+build-python-pkg: prep-python-pkg build-python
 
-build-pyjs:
-	$(call section,"build pyjs external with xcode")
-	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/pyjs/pyjs.xcodeproj
+build-python-ext: prep-python-ext build-python
 
-build-homebrew-pkg: build-extension prepare-homebrew-pkg compile-homebrew  
-
-build-homebrew-ext: build-extension prepare-homebrew-ext compile-homebrew
-
-compile-homebrew:
-	$(call section,"compile homebrew")
-	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/homebrew/py.xcodeproj
-
-prepare-homebrew-pkg:
-	$(call section,"build homebrew python for package")
-	@bash scripts/homebrew.sh pkg
-	
-prepare-homebrew-ext:
-	$(call section,"build homebrew python for external")
-	@bash scripts/homebrew.sh ext
-
-compile-python-org-pkg: build-extension compile-python-org pkg pkg-support
-
-build-python-org-pkg: build-extension prepare-python-org-pkg compile-python-org
-
-build-python-org-ext: build-extension prepare-python-org-ext compile-python-org
-
-compile-python-org:
+build-python: build-extension
 	$(call section,"compile python source with xcode")
 	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/python-org/py.xcodeproj
-
-prepare-python-org-pkg:
-	$(call section,"prepare python from source for package")
-	@bash scripts/python-org.sh pkg
-
-prepare-python-org-ext:
-	$(call section,"prepare python from source for external")
-	@bash scripts/python-org.sh ext
 
 
 build-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
 
+
+
+# PRE-BUILD PREP
+# -----------------------------------------------------------------------
+.PHONY: prep-python-pkg prep-python-ext prep-homebrew-pkg prep-homebrew-ext
+
+prep-python-pkg:
+	$(call section,"prepare python from source for package")
+	@bash scripts/python-org.sh pkg
+
+prep-python-ext:
+	$(call section,"prepare python from source for external")
+	@bash scripts/python-org.sh ext
+
+prep-homebrew-pkg:
+	$(call section,"build homebrew python for package")
+	@bash scripts/homebrew.sh pkg
+	
+prep-homebrew-ext:
+	$(call section,"build homebrew python for external")
+	@bash scripts/homebrew.sh ext
 
 # TESTING
 # -----------------------------------------------------------------------
@@ -188,22 +172,19 @@ duplo:
 clean: clean-externals clean-build clean-support 
 	$(call section,"cleaning DONE")
 
-clean-build: clean-build-default \
-			 clean-build-homebrew \
+clean-build: clean-build-osx \
 			 clean-build-python-org \
 			 clean-build-python-fwk
 
 clean-externals:
 	$(call section,"cleaning externals")
-	@rm -rf ${ROOTDIR}/externals/${NAME}.mxo
+	@for target in ${TARGETS}; do \
+		rm -rf ${ROOTDIR}/externals/$$target.mxo  ; \
+	done
 
-clean-build-default:
-	$(call section,"cleaning build artifacts from default target")
-	@find **/default | grep -E "(build)" | xargs rm -rf
-	
-clean-build-homebrew:
-	$(call section,"cleaning build artifacts from homebrew target")
-	@find **/homebrew | grep -E "(build)" | xargs rm -rf
+clean-build-osx:
+	$(call section,"cleaning build artifacts from osx target")
+	@find **/osx | grep -E "(build)" | xargs rm -rf
 
 clean-build-python-org:
 	$(call section,"cleaning build artifacts from python-org target")
