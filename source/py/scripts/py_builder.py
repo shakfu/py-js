@@ -4,35 +4,35 @@ import sys
 import os
 from pathlib import Path
 import shutil
-import glob
+# import glob
 
-env = os.get_env
+env = os.getenv
 cmd = os.system
-ver = tuple(sys.version_info) # e.g. (3, 7, 7, 'final', 0)
+ver = tuple(sys.version_info)  # e.g. (3, 7, 7, 'final', 0)
 # major, minor, micro
 
-VERSION_MAJOR=env('PY_MAJ_VER', '{0}.{1}'.format(*ver))
-VERSION_MINOR=env('PY_MIN_VER', '{2}'.format(*ver))
-SSL_VERSION=env('SSL_VER', '1.1.1g')
-MAC_DEP_TARGET=env('MAC_DEP', '10.13')
+VERSION_MAJOR = env('PY_MAJ_VER', '{0}.{1}'.format(*ver))
+VERSION_MINOR = env('PY_MIN_VER', '{2}'.format(*ver))
+SSL_VERSION = env('SSL_VER', '1.1.1g')
+MAC_DEP_TARGET = env('MAC_DEP', '10.13')
 
 # --- need not modify below except to change excluded modules
 
-class PyBuilder:
 
-    def __init__(self, minor, micro, ssl_version, suffix=""):
-        self.version = f'3.{minor}'
-        self.semver = f'3.{minor}.{micro}'
+class PyBuilder:
+    def __init__(self, py_version, ssl_version, mac_dep_target=None, packages=None, suffix=None):
+        self.semver = py_version
+        self.version = ".".join(py_version.split('.')[:2])
         self.ssl_version = ssl_version
+        self.mac_dep_target = mac_dep_target if mac_dep_target else '1.13'
         self.packages = packages if packages else []
-        self.suffix = suffix
+        self.suffix = suffix if suffix else ""
 
         # directories
         self.root = Path.cwd()
 
     # ------------------------------------------------------------------------
     # propertiess
-
 
     @property
     def ver(self):
@@ -45,10 +45,14 @@ class PyBuilder:
     @property
     def url_python(self):
         return f'https://www.python.org/ftp/python/{self.version}/Python-{self.version}.tgz'
-    
+
     @property
     def url_ssl(self):
-        return f'https://www.openssl.org/source/openssl-{self.ssl_ver}.tar.gz'
+        return f'https://www.openssl.org/source/openssl-{self.ssl_version}.tar.gz'
+
+    @property
+    def url_getpip(self):
+        return 'https://bootstrap.pypa.io/get-pip.py'
 
     @property
     def source(self):
@@ -61,11 +65,11 @@ class PyBuilder:
     @property
     def targets(self):
         return self.root / 'targets'
-    
+
     @property
     def target(self):
         return self.targets / 'python-org'
-    
+
     @property
     def build(self):
         return self.target / 'build'
@@ -102,15 +106,26 @@ class PyBuilder:
     def dylib(self):
         return f'libpython{self.version}{self.suffix}.dylib'
 
-
     # ------------------------------------------------------------------------
     # operations
 
     def cmd(self, shellcmd, *args, **kwargs):
         os.system(shellcmd.format(*args, **kwargs))
 
+    def chdir(self, path):
+        os.chdir(path)
+
+    def move(self, src, dst):
+        shutil.move(src, dst)
+
+    def copy(self, src, dst):
+        shutil.copytree(src, dst)
+
+    def zipsrc(self, zip_path, files_to_include):
+        "this is a placeholder"
+
     def remove(self, path):
-        if hasttr(path, '__iter__'):
+        if hasattr(path, '__iter__'):
             for f in path:
                 shutil.rmtree(f)
         else:
@@ -122,13 +137,14 @@ class PyBuilder:
 
     def rm_exts(self, names):
         for name in names:
-            self.remove(self.lib / 'lib-dynload' / f'{name}.cpython-{self.ver}m-darwin.so')
+            self.remove(self.lib / 'lib-dynload' /
+                        f'{name}.cpython-{self.ver}m-darwin.so')
 
     def rm_bins(self, names):
         for name in names:
             self.remove(self.prefix / 'bin' / name)
 
-    def get_url(url):
+    def get_url(self, url):
         self.tmp.mkdir()
         fname = Path(url).name
         src_dir = self.tmp / fname
@@ -209,9 +225,9 @@ class PyBuilder:
         ])
 
     def clean_python(self):
-        clean_python_pyc(self.prefix)
-        clean_python_tests(self.lib)
-        clean_python_site_packages()
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.lib)
+        self.clean_python_site_packages()
 
         self.remove((self.lib / 'distutils' / 'command').glob('*.exe'))
 
@@ -226,33 +242,33 @@ class PyBuilder:
         self.remove(self.lib / 'site-packages')
         self.move(self.lib / 'lib-dynload', self.prefix)
         self.copy(self.lib / 'os.py', self.prefix)
-        self.zipsrc(self.prefix / 'lib' / f'python{self.ver}.zip', self.lib.glob('*'))
+        self.zipsrc(self.prefix / 'lib' / f'python{self.ver}.zip',
+                    self.lib.glob('*'))
         self.remove(self.lib)
         self.lib.mkdir()
         self.move(self.prefix / 'lib-dynload', self.lib)
         self.move(self.lib / 'os.py', self.lib)
         (self.lib / 'site-packages').mkdir()
 
-    def build_ssl(self):   
+    def build_ssl(self):
         self.chdir(self.ssl_src)
         self.cmd(f'./config no-shared --prefix={self.ssl}')
         self.cmd('make install_sw')
         self.chdir(self.root)
 
-
     def write_python_setup_local(self):
         lines = ['*disabled*'] + [
             '_ctypes'
             #'_sqlite3'
-            '_tkinter' 
+            '_tkinter'
             '_curses'
             '_curses_panel'
             'xxlimited'
             'xxsubtype'
             '_multibytecodec'
-            '_codecs_jp' 
-            '_codecs_kr' 
-            '_codecs_tw' 
+            '_codecs_jp'
+            '_codecs_kr'
+            '_codecs_tw'
             '_codecs_cn'
             '_codecs_hk'
             '_codecs_iso2022'
@@ -266,9 +282,8 @@ class PyBuilder:
             ./bin/python{self.version} get-pip.py
         """
         self.cmd("chmod +x get_pip.sh")
-        with open(self.python / 'bin'/ 'get_pip.sh', 'w') as f:
+        with open(self.python / 'bin' / 'get_pip.sh', 'w') as f:
             f.write(script)
-
 
     def compile_python_from_source(self):
 
@@ -296,7 +311,7 @@ class PyBuilder:
         self.zip_python_library()
 
     def fix_python_dylib_for_pkg(self):
-        self.chdir(self.prefix / lib)
+        self.chdir(self.prefix / self.lib)
         self.cmd(f'chmod 777 {self.dylib}')
         self.cmd(
             'install_name_tool -id '
@@ -304,11 +319,12 @@ class PyBuilder:
             '${self.dylib}')
         self.chdir(self.root)
 
-def fix_python_dylib_for_ext(self):
-    self.chdir(self.prefix / lib)
-    self.cmd(f'chmod 777 {self.dylib}')
-    self.cmd('install_name_tool -id @loader_path/{self.dylib} {self.dylib}')
-    self.chdir(self.root)
+
+    def fix_python_dylib_for_ext(self):
+        self.chdir(self.prefix / self.lib)
+        self.cmd(f'chmod 777 {self.dylib}')
+        self.cmd('install_name_tool -id @loader_path/{self.dylib} {self.dylib}')
+        self.chdir(self.root)
 
 
 # FIXME: not complete!
@@ -320,23 +336,20 @@ def fix_python_dylib_for_ext(self):
 #     install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${VERSION}.dylib
 
 
-def install_python(self):
-    self.get_python()
-    self.get_ssl()
-    self.build_ssl()
-    self.build_python_zipped()
+    def install_python(self):
+        self.get_python()
+        self.get_ssl()
+        self.build_ssl()
+        self.build_python_zipped()
 
 
-def install_python_pkg(self):
-    self.install_python()
-    self.fix_python_dylib_for_pkg()
+    def install_python_pkg(self):
+        self.install_python()
+        self.fix_python_dylib_for_pkg()
 
 
-def install_python_ext(self):
-    self.install_python()
-    self.fix_python_dylib_for_ext()
-    # FIXME: not complete!
-    # cp python to py.mxo
-
-
-
+    def install_python_ext(self):
+        self.install_python()
+        self.fix_python_dylib_for_ext()
+        # FIXME: not complete!
+        # cp python to py.mxo

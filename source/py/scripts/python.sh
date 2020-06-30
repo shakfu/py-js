@@ -249,21 +249,35 @@ EOM
 chmod +x get_pip.sh
 }
 
-compile_python_from_source() {
 
-	cd $PYTHON
 
-	write_python_minim_setup_local
-
+configure_python_shared() {
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
 	 	--prefix=$PREFIX 	\
 	 	--enable-shared 	\
 	 	--with-openssl=$SSL \
 	 	--with-lto 			\
 	 	--enable-optimizations
+}
 
-	# ./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	#  	--enable-framework=$FRAMEWORKS
+configure_python_framework() {
+	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
+	 	--enable-framework=$FRAMEWORKS
+}
+
+compile_python() {
+
+	cd $PYTHON
+
+	write_python_minim_setup_local
+
+	if [ "$1" == "framework" ]; then
+    	echo "configure python as framework"
+    	configure_python_framework
+	else # is shared
+		echo "configure python as shared"
+		configure_python_shared
+	fi
 
 	make altinstall
 
@@ -271,18 +285,19 @@ compile_python_from_source() {
 
 }
 
+
 build_python() {
 	
-	compile_python_from_source
+	compile_python $1
 
-	clean_python
+	clean_pythom
 
 	write_python_getpip
 }
 
 build_python_zipped() {
 
-	build_python
+	build_python $1
 
 	zip_python_library
 }
@@ -323,48 +338,59 @@ install_python() {
 	get_python
 	get_ssl
 	build_ssl
-	build_python_zipped	
+	build_python_zipped	$1
 }
 
 
 install_python_pkg() {
-	install_python
+	install_python $1
 	fix_python_dylib_for_pkg
 }
 
 install_python_ext() {
-	install_python
+	install_python $1
 	fix_python_dylib_for_ext
 	# FIXME: not complete!
 	# cp python to py.mxo
 }
 
-if [ "$1" == "pkg" ]; then
-    echo "Installing minimal python from source into 'support' folder of package"
+if [ "$1" == "pkg-shared" ]; then
+    echo "Installing python from source as shared lib into 'support' folder of package"
     reset
-    install_python_pkg
+    install_python_pkg "shared"
 
-elif [ "$1" == "ext" ]; then
-	echo "Installing minimal python from source into 'py.mxo' external"
-	intall_python_ext
+elif [ "$1" == "pkg-framework" ]; then
+	echo "Installing python from source as framework into 'support' folder of package"
+	intall_python_pkg "framework"
 
-elif [ "$1" == "build_python" ]; then
-	echo "Building from python source"
-	build_python_zipped
+elif [ "$1" == "ext-shared" ]; then
+    echo "Installing python from source as shared lib into 'py.mxo' external"
+    reset
+    install_python_ext "shared"
 
-elif [ "$1" == "fix_pkg" ]; then
-	echo "fixing dynamic lookup refs for package"
+elif [ "$1" == "ext-framework" ]; then
+	echo "Installing python from source as framework into 'py.mxo' external"
+	intall_python_ext "framework"
+
+elif [ "$1" == "build-python-shared" ]; then
+	echo "Building from python source as shared lib"
+	build_python_zipped "shared"
+
+elif [ "$1" == "build-python-framework" ]; then
+	echo "Building from python source as framework"
+	build_python_zipped "framework"
+
+elif [ "$1" == "fix-pkg" ]; then
+	echo "fixing dynamic lookup refs for package installation"
 	fix_python_dylib_for_pkg
 	otool -L $PREFIX/lib/$DYLIB
 
-elif [ "$1" == "fix_ext" ]; then
-	echo "fixing dynamic lookup refs for package"
+elif [ "$1" == "fix-ext" ]; then
+	echo "fixing dynamic lookup refs for external installation"
 	fix_python_dylib_for_ext
 	otool -L $PREFIX/lib/$DYLIB
-
-else
-    echo "No argument given. Can be 'pkg' or 'ext'"
-    echo "for package or external installation respectively"
 fi
+
+
 
 
