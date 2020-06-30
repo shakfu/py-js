@@ -254,7 +254,9 @@ compile_python_from_source() {
 	cd $PYTHON
 
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	 	--enable-framework=$FRAMEWORKS
+	 	--enable-framework=$FRAMEWORKS \
+	 	--with-openssl=$SSL
+
 	make altinstall
 
 	cd $ROOT
