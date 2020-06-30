@@ -400,6 +400,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 ### Attributes & Infrastructure
 
+- [ ] add script to install python packages and then remove the cache and `_vendor` libraries of the installer which are large.
+
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls
       after changes (NO REASON for using this found so far)
 
