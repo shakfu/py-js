@@ -55,6 +55,7 @@ typedef struct _py {
     char p_code_filename[MAX_PATH_CHARS];
     char p_code_pathname[MAX_PATH_CHARS];
     short p_code_path;
+    t_bool p_run_on_save;
 
     t_symbol* p_code_filepath; /* default python filepath to load into
                                   the code editor and object 'globals'
@@ -129,8 +130,9 @@ void py_read(t_py* x, t_symbol* s);
 void py_load(t_py* x, t_symbol* s); // read(f) -> execfile(f)
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
+void py_run(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 long py_edsave(t_py* x, char** text, long size);
-
+// void py_okclose(t_py* x, char *s, short *result);
 
 #endif // PY_H

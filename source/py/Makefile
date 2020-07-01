@@ -37,10 +37,6 @@ all: clean test build
 default: clean build pkg
 	$(call section,"build -> deploy to local package")
 
-combo: clean clean-pkg build-combo pkg
-
-pyjs: build-pyjs pkg
-
 homebrew-pkg: clean build-homebrew-pkg pkg pkg-support
 
 homebrew-ext: build-homebrew-ext pkg
@@ -75,13 +71,13 @@ pkg-support:
 # -----------------------------------------------------------------------
 .PHONY: build build-homebrew-pkg build-python-pkg build-extension
 
-build: build-osx-default
+build: build-homebrew-sys
 	$(call section,"build project")
 
-build-osx-default: build-extension
-	$(call section,"build osx default")
+build-homebrew-sys: build-extension
+	$(call section,"build homebrew sys default")
 	@for target in ${TARGETS}; do \
-		xcodebuild -project targets/osx/py-js.xcodeproj -target $$target ; \
+		xcodebuild -project targets/homebrew-sys/py-js.xcodeproj -target $$target ; \
 	done
 
 build-homebrew-pkg: prep-homebrew-pkg build-homebrew  

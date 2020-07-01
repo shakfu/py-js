@@ -179,6 +179,8 @@ void ext_main(void* r)
     class_addmethod(c, (method)py_edclose,    "edclose",    A_CANT,    0);
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,    0);
     class_addmethod(c, (method)py_load,       "load",       A_DEFSYM,  0);
+    class_addmethod(c, (method)py_run,        "run",        A_NOTHING, 0);
+    // class_addmethod(c, (method)py_okclose,    "okclose",    A_CANT,    0);
 
     // experimental
     class_addmethod(c, (method)py_appendtodict,  "appendtodictionary",  A_CANT, 0);
@@ -190,12 +192,6 @@ void ext_main(void* r)
     CLASS_ATTR_SYM(c,   "name", 0,   t_py, p_name);
     CLASS_ATTR_BASIC(c, "name", 0);
     // CLASS_ATTR_INVISIBLE(c, "name", 0);
-
-    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
-    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
-    CLASS_ATTR_BASIC(c,  "debug", 0);
-    CLASS_ATTR_SAVE(c,   "debug", 0);
 
     CLASS_ATTR_LABEL(c,  "file", 0,  "default python script");
     CLASS_ATTR_SYM(c,    "file", 0,   t_py,  p_code_filepath);
@@ -209,17 +205,30 @@ void ext_main(void* r)
     CLASS_ATTR_BASIC(c,  "autoload", 0);
     CLASS_ATTR_SAVE(c,   "autoload", 0);
 
+    CLASS_ATTR_LABEL(c,  "run_on_save", 0,  "run content of editor on save");
+    CLASS_ATTR_CHAR(c,   "run_on_save", 0,  t_py, p_run_on_save);
+    CLASS_ATTR_STYLE(c,  "run_on_save", 0, "onoff");
+    CLASS_ATTR_BASIC(c,  "run_on_save", 0);
+    CLASS_ATTR_SAVE(c,   "run_on_save", 0);
+
     CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
     CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_STYLE(c,  "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,  "pythonpath", 0);
     CLASS_ATTR_SAVE(c,   "pythonpath", 0);
 
+    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
+    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
+    CLASS_ATTR_BASIC(c,  "debug", 0);
+    CLASS_ATTR_SAVE(c,   "debug", 0);
+
     CLASS_ATTR_ORDER(c,  "name",        0,  "1");
     CLASS_ATTR_ORDER(c,  "file",        0,  "2");
     CLASS_ATTR_ORDER(c,  "autoload",    0,  "3");
-    CLASS_ATTR_ORDER(c,  "pythonpath",  0,  "4");
-    CLASS_ATTR_ORDER(c,  "debug",       0,  "5");
+    CLASS_ATTR_ORDER(c,  "run_on_save", 0,  "4");
+    CLASS_ATTR_ORDER(c,  "pythonpath",  0,  "5");
+    CLASS_ATTR_ORDER(c,  "debug",       0,  "6");
 
     // clang-format on
     //------------------------------------------------------------------------
@@ -255,10 +264,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_box = NULL;
 
         // python-related
-        x->p_autoload = 0;
         x->p_pythonpath = gensym("");
-        x->p_debug = 1;
-
 
         // text editor
         x->p_code = sysmem_newhandle(0);
@@ -270,6 +276,11 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_code_pathname[0] = 0;
         // short p_code_path;
         x->p_code_filepath = gensym("");
+        x->p_autoload = 0;
+        x->p_run_on_save = 0;
+
+        // set default debug level
+        x->p_debug = 1;
 
         // create inlet(s)
         // create outlet(s)
@@ -1477,28 +1488,66 @@ void py_edclose(t_py* x, char** text, long size)
 }
 
 
-long py_edsave(t_py* x, char** text, long size)
+void py_run(t_py* x)
 {
     PyObject* pval = NULL;
 
-    if (text == NULL) {
+    if ((*(x->p_code) != NULL) && (*(x->p_code)[0] == '\0'))
+        // is empty string
         goto error;
-    }
 
-    pval = PyRun_String(*text, Py_file_input, x->p_globals, x->p_globals);
+    pval = PyRun_String(*(x->p_code), Py_file_input, x->p_globals, x->p_globals);
     if (pval == NULL) {
         goto error;
     }
 
     // success cleanup
     Py_DECREF(pval);
+    outlet_bang(x->p_outlet_right);
+    return;
+
+error:
+    py_handle_error(x, "run x->p_code failed");
+    Py_XDECREF(pval);
+    outlet_bang(x->p_outlet_middle);
+}
+
+
+// void py_okclose(t_py* x, char *s, short *result)
+// {
+//     // see: https://cycling74.com/forums/text-editor-without-dirty-bit
+//     py_log(x, "okclose: called");
+//     *result = 3; // don't put up a dialog
+// } 
+
+
+long py_edsave(t_py* x, char** text, long size)
+{
+    PyObject* pval = NULL;
+
+    if (x->p_run_on_save) {
+
+        py_log(x, "run-on-save activated");
+        
+        pval = PyRun_String(*text, Py_file_input, x->p_globals, x->p_globals);
+        if (pval == NULL) {
+            py_error(x, "py_edsave: pval == NULL");
+            goto error;
+        }
+
+        // success cleanup
+        Py_DECREF(pval);
+    }
+    py_log(x, "py_edsave: returning 0");
     return 0;
 
 error:
-    py_handle_error(x, "edclose-exec %s", x->p_code_filepath->s_name);
+    py_handle_error(x, "py_edsave with (possible) execution failed");
     Py_XDECREF(pval);
+    py_log(x, "py_edsave: returning 1");
     return 1;
 }
+
 
 
 void py_load(t_py* x, t_symbol* s)
