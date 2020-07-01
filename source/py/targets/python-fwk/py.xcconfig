@@ -8,9 +8,11 @@ SEMVER = $(MAJ_VER).$(MIN_VER)
 
 SUPPORT = $(SRCROOT)/../../../../support
 
-FRAMEWORKS_FOLDER_PATH = $(SUPPORT)/Frameworks
 
-PYTHON = $(FRAMEWORKS_FOLDER_PATH)/Python.framework/Versions/${VERSION}
+//INSTALL_PATH = @loader_path/../../../../support/Frameworks
+//LD_RUNPATH_SEARCH_PATHS = $(inherited) @loader_path/../Frameworks
+
+PYTHON = $(SUPPORT)/Frameworks/Python.framework/Versions/${VERSION}
 
 PY_HEADERS = $(PYTHON)/include/python$(VERSION)m
 

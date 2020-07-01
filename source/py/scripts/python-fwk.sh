@@ -292,6 +292,14 @@ fix_python_dylib_for_pkg() {
 }
 
 fix_python_dylib_for_ext() {
+	"""
+	change
+		py.mxo/Contents/Frameworks/Python.framework/Python -> @loader_path/../Frameworks
+		using install_name_tool -id
+	change
+		py.mxo/Contents/MacOS/py -> @loader_path/../Frameworks/Python.framework/Python
+		using install_name_tool -change
+	"""
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
