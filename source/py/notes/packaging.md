@@ -1,81 +1,58 @@
 # Packaging notes
 
 
+## max best practices
+
+see: https://cycling74.com/forums/frameworks-in-external-vs-framework-loading-in-standalone-app
+
+
+
+
+## dylib search and linking
+
+see:
+
+- https://stackoverflow.com/questions/24598047/why-does-ld-need-rpath-link-when-linking-an-executable-against-a-so-that-needs
+
+- https://stackoverflow.com/questions/9798623/how-to-properly-set-run-paths-search-paths-and-install-names
+
+- https://matthew-brett.github.io/docosx/mac_runtime_link.html
+
+- https://github.com/trojanfoe/xcodedevtools
+
+- http://lessons.livecode.com/m/4071/l/15029-linking-an-osx-external-bundle-with-a-dylib-library
+
+- https://wincent.com/wiki/@executable_path,_@load_path_and_@rpath
+
+- https://medium.com/@donblas/fun-with-rpath-otool-and-install-name-tool-e3e41ae86172
+
+- https://www.mulle-kybernetik.com/weblog/2015/how_to_embed_a_framework_in_a.html
+
+- https://stackoverflow.com/questions/12521802/print-rpath-of-an-executable-on-macos
+
+- https://stackoverflow.com/questions/10021428/macos-how-to-link-a-dynamic-library-with-a-relative-path-using-gcc-ld
+
+
+- https://stackoverflow.com/questions/9798623/how-to-properly-set-run-paths-search-paths-and-install-names
+
+
+- https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/000-Introduction/Introduction.html
+
 ## xcconfig -- Targets
+
+
+see:
+
+- https://xcodebuildsettings.com
+
+- https://nshipster.com/xcconfig/
+
+- https://developer.apple.com/library/archive/technotes/tn2339/_index.html
+
 
 see: https://pewpewthespells.com/blog/xcconfig_guide.html
 
 1 xcconfig per target
-
-What's different?
-
-
-current:
-
-the following
-{
-- combo
-- default
-- pyjs
-}
-
-HOMEBREW = /usr/local/Cellar/python/$(SEMVER)/Frameworks/Python.framework/Versions/$(MAJ_VER)
-PY_HEADERS = $(HOMEBREW)/include/python$(VERSION)
-PY_LIBS = $(HOMEBREW)/lib
-PY_LDFLAGS = -lpython$(VERSION) -ldl
-
-- homebrew
-
-SUPPORT = $(SRCROOT)/../../../../support
-PREFIX = $(SUPPORT)/python$(VERSION)
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)m
-PY_LIBS = $(PREFIX)
-PY_LDFLAGS = -lpython$(VERSION) -ldl
-
-- python-fwk
-
-SUPPORT = $(SRCROOT)/../../../../support
-FRAMEWORKS_FOLDER_PATH = $(SUPPORT)/Frameworks
-PYTHON = $(FRAMEWORKS_FOLDER_PATH)/Python.framework/Versions/${VERSION}
-PY_HEADERS = $(PYTHON)/include/python$(VERSION)m
-PY_LIBS = $(PYTHON)/lib
-PY_LDFLAGS = -lpython$(VERSION) -ldl
-
-- python-org
-
-SUPPORT = $(SRCROOT)/../../../../support
-PREFIX = $(SUPPORT)/python$(VERSION)
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)m
-PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = -lpython$(VERSION)m -ldl
-
-
-
-
-future:
-
-should handle both py and pyjs (like combo)
-
-- homebrew-sys
-- homebrew-pkg
-- homebrew-ext
-- python-sys
-- python-pkg
-- python-fwk
-
-better:
-
-- homebrew
-- python
-
-with multiple xcconfigs:
-
-- homebrew-sys.xcconfig
-- homebrew-pkg.xcconfig
-- homebrew-ext.xcconfig
-
-corresponding with appropriate schemes
-
 
 
 ## Packaging Options Test
