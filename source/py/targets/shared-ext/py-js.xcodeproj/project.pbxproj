@@ -20,17 +20,13 @@
 /* Begin PBXFileReference section */
 		120266C324AA15EF007DF876 /* pyjs.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pyjs.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 		120266C524AA17B5007DF876 /* pyjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pyjs.c; path = ../../pyjs.c; sourceTree = "<group>"; };
-		120F0A0424AA6EE7001ADAEA /* homebrew.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = homebrew.xcconfig; path = ../homebrew.xcconfig; sourceTree = "<group>"; };
-		120F0A0524AA6EE7001ADAEA /* python.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = python.xcconfig; path = ../python.xcconfig; sourceTree = "<group>"; };
-		120F0A0624AA6EE8001ADAEA /* default.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = default.xcconfig; path = ../default.xcconfig; sourceTree = "<group>"; };
-		120F0A0824AA7574001ADAEA /* common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common.xcconfig; sourceTree = SOURCE_ROOT; };
 		121A8C6124A1E58000EC5F99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../Info.plist; sourceTree = "<group>"; };
 		1239835C24A1DC4600ADF7CA /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = api.h; path = ../../api.h; sourceTree = "<group>"; };
 		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
 		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
 		1239835F24A1DC4600ADF7CA /* py.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = py.h; path = ../../py.h; sourceTree = "<group>"; };
+		12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "py-js.xcconfig"; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		12D5454D2463B03E00BE010E /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = System/Library/Frameworks/Tk.framework; sourceTree = SDKROOT; };
 		2FBBEAE508F335360078DB84 /* py.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = py.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -62,29 +58,17 @@
 				120266C524AA17B5007DF876 /* pyjs.c */,
 				1239835D24A1DC4600ADF7CA /* api.c */,
 				1239835C24A1DC4600ADF7CA /* api.h */,
+				12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */,
 				121A8C6124A1E58000EC5F99 /* Info.plist */,
-				120F0A0724AA6EF1001ADAEA /* config */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 				12D5454A2463B03000BE010E /* Frameworks */,
 			);
 			name = iterator;
 			sourceTree = "<group>";
 		};
-		120F0A0724AA6EF1001ADAEA /* config */ = {
-			isa = PBXGroup;
-			children = (
-				120F0A0824AA7574001ADAEA /* common.xcconfig */,
-				120F0A0624AA6EE8001ADAEA /* default.xcconfig */,
-				120F0A0424AA6EE7001ADAEA /* homebrew.xcconfig */,
-				120F0A0524AA6EE7001ADAEA /* python.xcconfig */,
-			);
-			path = config;
-			sourceTree = "<group>";
-		};
 		12D5454A2463B03000BE010E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				12D5454D2463B03E00BE010E /* Tk.framework */,
 				12D5454B2463B03000BE010E /* CoreFoundation.framework */,
 			);
 			name = Frameworks;
@@ -294,14 +278,14 @@
 		};
 		2FBBEAD008F335010078DB84 /* Development */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 120F0A0624AA6EE8001ADAEA /* default.xcconfig */;
+			baseConfigurationReference = 12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
 			};
 			name = Development;
 		};
 		2FBBEAD108F335010078DB84 /* Deployment */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 120F0A0624AA6EE8001ADAEA /* default.xcconfig */;
+			baseConfigurationReference = 12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
 			};
 			name = Deployment;

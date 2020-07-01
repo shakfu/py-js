@@ -28,10 +28,10 @@ import numpy as np
 DEF MAX_CHARS = 32767
 DEF PY_MAX_ATOMS = 128
 
-
 cdef extern from "Python.h":
     const char* PyUnicode_AsUTF8(object unicode)
     unicode PyUnicode_FromString(const char *u)
+
 
 
 
