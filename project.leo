@@ -100,8 +100,7 @@
 </v>
 <v t="sta.20200602110836.1"><vh>@chapter src</vh>
 <v t="sta.20200620071935.1"><vh>@clean api.pyx</vh>
-<v t="sta.20200620071950.1"><vh>Declarations</vh></v>
-<v t="sta.20200620071950.2"><vh>extern</vh></v>
+<v t="sta.20200620071950.1"><vh>declarations</vh></v>
 <v t="sta.20200620071950.3"><vh>class PyExternal</vh>
 <v t="sta.20200620113654.1"><vh>declarations</vh></v>
 <v t="sta.20200620071950.6"><vh>__cinit__</vh></v>
@@ -123,6 +122,7 @@
 <v t="sta.20200620071950.22"><vh>out_dict</vh></v>
 <v t="sta.20200620071950.23"><vh>out</vh></v>
 </v>
+<v t="sta.20200701100646.1"><vh>module functions</vh>
 <v t="sta.20200620071950.24"><vh>get_globals</vh></v>
 <v t="sta.20200620112906.1"><vh>bang functions</vh>
 <v t="sta.20200620071950.25"><vh>bang</vh></v>
@@ -151,6 +151,7 @@
 <v t="sta.20200620071950.38"><vh>total</vh></v>
 </v>
 <v t="sta.20200620164702.1"><vh>demo constants</vh></v>
+</v>
 </v>
 <v t="sta.20200602145459.1"><vh>@clean py.h</vh>
 <v t="sta.20200602150733.1"><vh>includes</vh></v>
@@ -257,6 +258,70 @@
 </v>
 <v t="sta.20200628232335.1"><vh>in-code only methods</vh>
 <v t="sta.20200628231202.1"><vh>t_max_err pyjs_eval_to_json</vh></v>
+</v>
+</v>
+</v>
+<v t="sta.20200701100837.1"><vh>@chapter build</vh>
+<v t="sta.20200701100907.1"><vh>scripts</vh>
+<v t="sta.20200701101041.1"><vh>@clean py_builder.py</vh>
+<v t="sta.20200701101102.1"><vh>Declarations</vh></v>
+<v t="sta.20200701101102.2"><vh>class PyBuilder</vh>
+<v t="sta.20200701101102.3"><vh>__init__</vh></v>
+<v t="sta.20200701101102.4"><vh>ver</vh></v>
+<v t="sta.20200701101102.5"><vh>name</vh></v>
+<v t="sta.20200701101102.6"><vh>url_python</vh></v>
+<v t="sta.20200701101102.7"><vh>url_ssl</vh></v>
+<v t="sta.20200701101102.8"><vh>url_getpip</vh></v>
+<v t="sta.20200701101102.9"><vh>source</vh></v>
+<v t="sta.20200701101102.10"><vh>support</vh></v>
+<v t="sta.20200701101102.11"><vh>targets</vh></v>
+<v t="sta.20200701101102.12"><vh>target</vh></v>
+<v t="sta.20200701101102.13"><vh>build</vh></v>
+<v t="sta.20200701101102.14"><vh>python</vh></v>
+<v t="sta.20200701101102.15"><vh>prefix</vh></v>
+<v t="sta.20200701101102.16"><vh>bin</vh></v>
+<v t="sta.20200701101102.17"><vh>lib</vh></v>
+<v t="sta.20200701101102.18"><vh>ssl_src</vh></v>
+<v t="sta.20200701101102.19"><vh>ssl</vh></v>
+<v t="sta.20200701101102.20"><vh>tmp</vh></v>
+<v t="sta.20200701101102.21"><vh>dylib</vh></v>
+<v t="sta.20200701101102.22"><vh>cmd</vh></v>
+<v t="sta.20200701101102.23"><vh>chdir</vh></v>
+<v t="sta.20200701101102.24"><vh>move</vh></v>
+<v t="sta.20200701101102.25"><vh>copy</vh></v>
+<v t="sta.20200701101102.26"><vh>zipsrc</vh></v>
+<v t="sta.20200701101102.27"><vh>remove</vh></v>
+<v t="sta.20200701101102.28"><vh>rm_libs</vh></v>
+<v t="sta.20200701101102.29"><vh>rm_exts</vh></v>
+<v t="sta.20200701101102.30"><vh>rm_bins</vh></v>
+<v t="sta.20200701101102.31"><vh>get_url</vh></v>
+<v t="sta.20200701101102.32"><vh>get_python</vh></v>
+<v t="sta.20200701101102.33"><vh>get_ssl</vh></v>
+<v t="sta.20200701101102.34"><vh>reset_python</vh></v>
+<v t="sta.20200701101102.35"><vh>reset_support</vh></v>
+<v t="sta.20200701101102.36"><vh>reset_ssl</vh></v>
+<v t="sta.20200701101102.37"><vh>reset</vh></v>
+<v t="sta.20200701101102.38"><vh>recursive_clean</vh></v>
+<v t="sta.20200701101102.39"><vh>clean_python_pyc</vh></v>
+<v t="sta.20200701101102.40"><vh>clean_python_tests</vh></v>
+<v t="sta.20200701101102.41"><vh>clean_python_site_packages</vh></v>
+<v t="sta.20200701101102.42"><vh>remove_packages</vh></v>
+<v t="sta.20200701101102.43"><vh>remove_extensions</vh></v>
+<v t="sta.20200701101102.44"><vh>remove_binaries</vh></v>
+<v t="sta.20200701101102.45"><vh>clean_python</vh></v>
+<v t="sta.20200701101102.46"><vh>zip_python_library</vh></v>
+<v t="sta.20200701101102.47"><vh>build_ssl</vh></v>
+<v t="sta.20200701101102.48"><vh>write_python_setup_local</vh></v>
+<v t="sta.20200701101102.49"><vh>write_python_getpip</vh></v>
+<v t="sta.20200701101102.50"><vh>compile_python_from_source</vh></v>
+<v t="sta.20200701101102.51"><vh>build_python</vh></v>
+<v t="sta.20200701101102.52"><vh>build_python_zipped</vh></v>
+<v t="sta.20200701101102.53"><vh>fix_python_dylib_for_pkg</vh></v>
+<v t="sta.20200701101102.54"><vh>fix_python_dylib_for_ext</vh></v>
+<v t="sta.20200701101102.55"><vh>install_python</vh></v>
+<v t="sta.20200701101102.56"><vh>install_python_pkg</vh></v>
+<v t="sta.20200701101102.57"><vh>install_python_ext</vh></v>
+</v>
 </v>
 </v>
 </v>
@@ -902,7 +967,6 @@ error:
 }
 
 
-
 </t>
 <t tx="sta.20200602120251.4">void py_log(t_py* x, char* fmt, ...)
 {
@@ -1002,29 +1066,31 @@ error:
             py_log(x, "%d: %s", i, atom_getsym(argv + i)-&gt;s_name);
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)-&gt;s_name);
         }
-        
-        t_dictionary *dict = (t_dictionary *)gensym("#D")-&gt;s_thing;
+
+        t_dictionary* dict = (t_dictionary*)gensym("#D")-&gt;s_thing;
         if (dict) {
             dictionary_getsym(dict, gensym("file"), &amp;x-&gt;p_code_filepath);
-            dictionary_getlong(dict, gensym("autoload"), (t_atom_long *)&amp;x-&gt;p_autoload);
+            dictionary_getlong(dict, gensym("autoload"),
+                               (t_atom_long*)&amp;x-&gt;p_autoload);
             dictionary_getsym(dict, gensym("pythonpath"), &amp;x-&gt;p_pythonpath);
         }
     }
 
     // process autoload
     py_log(x, "checking autoload / code_filepath / pythonpath");
-    py_log(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s", 
-        x-&gt;p_autoload, x-&gt;p_code_filepath-&gt;s_name, x-&gt;p_pythonpath-&gt;s_name);
-    py_log(x, "via object_attr_getsym: %s", object_attr_getsym(x, gensym("file"))-&gt;s_name);
-  
+    py_log(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s", x-&gt;p_autoload,
+           x-&gt;p_code_filepath-&gt;s_name, x-&gt;p_pythonpath-&gt;s_name);
+    py_log(x, "via object_attr_getsym: %s",
+           object_attr_getsym(x, gensym("file"))-&gt;s_name);
+
     if ((x-&gt;p_autoload == 1) &amp;&amp; (x-&gt;p_code_filepath != gensym(""))) {
         py_log(x, "autoloading: %s", x-&gt;p_code_filepath-&gt;s_name);
         py_load(x, x-&gt;p_code_filepath);
     }
 
     if (x-&gt;p_pythonpath != gensym("")) {
-        PyObject *sys_path = PySys_GetObject((char*)"path");
-        PyObject *py_path = PyUnicode_FromString(x-&gt;p_pythonpath-&gt;s_name);
+        PyObject* sys_path = PySys_GetObject((char*)"path");
+        PyObject* py_path = PyUnicode_FromString(x-&gt;p_pythonpath-&gt;s_name);
         PyList_Append(sys_path, py_path);
     }
 
@@ -1278,7 +1344,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /* informational */
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
-void py_appendtodict(t_py *x, t_dictionary *dict);
+void py_appendtodict(t_py* x, t_dictionary* dict);
 
 /* testing */
 void py_bang(t_py* x);
@@ -2548,15 +2614,15 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     for (int i = 0; i &lt; argc; i++) {
         switch ((argv + i)-&gt;a_type) {
         case A_FLOAT: {
-            atom_setfloat((atoms+(i+1)), atom_getfloat(argv + i));
+            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
             break;
         }
         case A_LONG: {
-            atom_setlong((atoms+(i+1)), atom_getlong(argv + i));
+            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
             break;
         }
         case A_SYM: {
-            atom_setsym((atoms+(i+1)), atom_getsym(argv + i));
+            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
             break;
         }
         default:
@@ -2565,7 +2631,7 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         }
     }
 
-    err = atom_gettext(argc+1, atoms, &amp;textsize, &amp;text,
+    err = atom_gettext(argc + 1, atoms, &amp;textsize, &amp;text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE &amp;&amp; textsize &amp;&amp; text) {
         py_log(x, "&gt;&gt;&gt; %s", text);
@@ -2648,7 +2714,6 @@ error:
         py_error(x, "cannot handle his type of value");
         return;
     }
-
 }
 
 </t>
@@ -3867,7 +3932,7 @@ error:
     }
 }
 
-void py_appendtodict(t_py *x, t_dictionary *dict)
+void py_appendtodict(t_py* x, t_dictionary* dict)
 {
     if (dict) {
         dictionary_appendsym(dict, gensym("file"), x-&gt;p_code_filepath);
@@ -4672,6 +4737,12 @@ import numpy as np
 DEF MAX_CHARS = 32767
 DEF PY_MAX_ATOMS = 128
 
+cdef extern from "Python.h":
+    const char* PyUnicode_AsUTF8(object unicode)
+    unicode PyUnicode_FromString(const char *u)
+
+
+
 
 </t>
 <t tx="sta.20200620071950.10">cdef scan(self):
@@ -4767,13 +4838,6 @@ DEF PY_MAX_ATOMS = 128
 </t>
 <t tx="sta.20200620071950.19">cdef out_float(self, float arg):
     mx.outlet_float(&lt;void*&gt;self.obj.p_outlet_left, &lt;double&gt;arg)
-
-</t>
-<t tx="sta.20200620071950.2">cdef extern from "Python.h":
-    const char* PyUnicode_AsUTF8(object unicode)
-    unicode PyUnicode_FromString(const char *u)
-
-
 
 </t>
 <t tx="sta.20200620071950.20">cdef out_int(self, int arg):
@@ -4976,19 +5040,18 @@ greeting = 'Hello World'
 
     if (PyDict_Check(pdict)) {
 
-        pfun_co = PyRun_String( \
-            "def __py_maxmsp_out_dict(arg):\n"
-                "\tres = []\n"
-                "\tfor k,v in arg.items():\n"
-                    "\t\tres.append(k)\n"
-                    "\t\tres.append(':')\n"
-                    "\t\tif type(v) in [list, set, tuple]:\n"
-                        "\t\t\tfor i in v:\n"
-                            "\t\t\t\tres.append(i)\n"
-                    "\t\telse:\n"
-                        "\t\t\tres.append(v)\n"
-                "\treturn res\n", 
-                Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+        pfun_co = PyRun_String("def __py_maxmsp_out_dict(arg):\n"
+                               "\tres = []\n"
+                               "\tfor k,v in arg.items():\n"
+                               "\t\tres.append(k)\n"
+                               "\t\tres.append(':')\n"
+                               "\t\tif type(v) in [list, set, tuple]:\n"
+                               "\t\t\tfor i in v:\n"
+                               "\t\t\t\tres.append(i)\n"
+                               "\t\telse:\n"
+                               "\t\t\tres.append(v)\n"
+                               "\treturn res\n",
+                               Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
 
         if (pfun_co == NULL) {
             py_error(x, "out_dict function code object is NULL");
@@ -5007,7 +5070,7 @@ greeting = 'Hello World'
             goto error;
         }
 
-        if (PyList_Check(pval)) { // expecting a python list
+        if (PyList_Check(pval)) {           // expecting a python list
             py_handle_list_output(x, pval); // this decrefs pval
             Py_XDECREF(pfun_co);
             outlet_bang(x-&gt;p_outlet_right);
@@ -5041,18 +5104,16 @@ error:
 <t tx="sta.20200628230354.1">typedef struct _pyjs {
     /* object header */
     t_object p_ob;
-
     /* python-related */
-    PyObject* p_globals;        /* per object 'globals' python namespace */
-    t_symbol* p_name;           /* unique object name */
-    t_symbol* p_pythonpath;     /* path to python directory */
-    t_symbol* p_code_filepath;  /* python filepath */
-    t_bool    p_debug;          /* bool to switch per-object debug state */
-
+    PyObject* p_globals;       /* per object 'globals' python namespace */
+    t_symbol* p_name;          /* unique object name */
+    t_symbol* p_pythonpath;    /* path to python directory */
+    t_symbol* p_code_filepath; /* python filepath */
+    t_bool p_debug;            /* bool to switch per-object debug state */
 } t_pyjs;
 
 
-
+void* pyjs_new(t_symbol* s, long argc, t_atom* argv);
 </t>
 <t tx="sta.20200628230354.10">void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
 {
@@ -5066,16 +5127,16 @@ error:
     if (s == gensym("")) { // if no arg supplied ask for file
         p_code_filename[0] = 0;
 
-        if (open_dialog(p_code_filename, &amp;p_code_path,
-                        &amp;p_code_outtype, &amp;p_code_filetype, 1))
+        if (open_dialog(p_code_filename, &amp;p_code_path, &amp;p_code_outtype,
+                        &amp;p_code_filetype, 1))
             // non-zero: cancelled
             return;
 
     } else {
         // must copy symbol before calling locatefile_extended
         strncpy_zero(p_code_filename, s-&gt;s_name, MAX_PATH_CHARS);
-        if (locatefile_extended(p_code_filename, &amp;p_code_path,
-                                &amp;p_code_outtype, &amp;p_code_filetype, 1)) {
+        if (locatefile_extended(p_code_filename, &amp;p_code_path, &amp;p_code_outtype,
+                                &amp;p_code_filetype, 1)) {
             // nozero: not found
             pyjs_error(x, "can't find file %s", s-&gt;s_name);
             return;
@@ -5096,39 +5157,26 @@ error:
 }
 
 
-
-
-
-
-
-
-
-
-
-
 </t>
-<t tx="sta.20200628230354.2">void ext_main(void *r)
-{
-    t_class *c;
+<t tx="sta.20200628230354.2">{
+    t_class* c;
 
-    c = class_new("pyjs", 
-        (method)pyjs_new, 
-        (method)pyjs_free, 
-        (long)sizeof(t_pyjs),
-        0L /* leave NULL!! */, A_GIMME, 0);
+    c = class_new("pyjs", (method)pyjs_new, (method)pyjs_free,
+                  (long)sizeof(t_pyjs), 0L /* leave NULL!! */, A_GIMME, 0);
 
     // methods
-    class_addmethod(c, (method)pyjs_code,         "code",	      A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_import,   "import",   A_SYM, 0);
+    class_addmethod(c, (method)pyjs_eval,     "eval",     A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_exec,     "exec",     A_SYM, 0);
+    class_addmethod(c, (method)pyjs_execfile, "execfile", A_SYM, 0);
+    class_addmethod(c, (method)pyjs_code,     "code",     A_GIMMEBACK, 0);
     class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_eval,         "eval",         A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_exec,         "exec",         A_SYM,       0);
-    class_addmethod(c, (method)pyjs_execfile,     "execfile",     A_SYM,       0);
 
     // attributes
-    CLASS_ATTR_SYM(c,  "name",       0, t_pyjs,  p_name);
-    CLASS_ATTR_CHAR(c, "debug",      0, t_pyjs,  p_debug);
-    CLASS_ATTR_SYM(c,  "file",       0, t_pyjs,  p_code_filepath);
-    CLASS_ATTR_SYM(c,  "pythonpath", 0, t_pyjs,  p_pythonpath);
+    CLASS_ATTR_SYM(c, "name", 0, t_pyjs, p_name);
+    CLASS_ATTR_CHAR(c, "debug", 0, t_pyjs, p_debug);
+    CLASS_ATTR_SYM(c, "file", 0, t_pyjs, p_code_filepath);
+    CLASS_ATTR_SYM(c, "pythonpath", 0, t_pyjs, p_pythonpath);
 
     // activate for javascript wrapping
     c-&gt;c_flags = CLASS_FLAG_POLYGLOT;
@@ -5137,24 +5185,24 @@ error:
 }
 
 </t>
-<t tx="sta.20200628230354.3">void pyjs_free(t_pyjs *x)
+<t tx="sta.20200628230354.3">void pyjs_free(t_pyjs* x)
 {
     Py_XDECREF(x-&gt;p_globals);
     pyjs_log(x, "will be deleted");
     pyjs_global_obj_count--;
     if (pyjs_global_obj_count == 0) {
-         Py_FinalizeEx();
+        Py_FinalizeEx();
     }
 }
 
 
 </t>
-<t tx="sta.20200628230354.4">void *pyjs_new(t_symbol *s, long argc, t_atom *argv)
+<t tx="sta.20200628230354.4">void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
 {
-    t_pyjs *x = NULL;
+    t_pyjs* x = NULL;
 
     // object instantiation, NEW STYLE
-    if ((x = (t_pyjs *)object_alloc(pyjs_class))) {
+    if ((x = (t_pyjs*)object_alloc(pyjs_class))) {
         // Initialize values
 
         if (pyjs_global_obj_count == 0) {
@@ -5286,31 +5334,32 @@ error:
     }
 }
 </t>
-<t tx="sta.20200628230504.1">
-void *pyjs_new(t_symbol *s, long argc, t_atom *argv);
-void pyjs_free(t_pyjs* x);
+<t tx="sta.20200628230504.1">void pyjs_free(t_pyjs* x);
 void pyjs_init(t_pyjs* x);
 void pyjs_init_builtins(t_pyjs* x);
 void pyjs_log(t_pyjs* x, char* fmt, ...);
 void pyjs_error(t_pyjs* x, char* fmt, ...);
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
 void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
+t_max_err pyjs_import(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
-t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv);
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
 t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv);
 t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
+
+
 </t>
 <t tx="sta.20200628230621.1">/* globals */
+static t_class* pyjs_class;
+static int pyjs_global_obj_count; // when 0 then free interpreter
 
-static t_class *pyjs_class;
-static int pyjs_global_obj_count;  // when 0 then free interpreter
-
+void ext_main(void* r)
 </t>
 <t tx="sta.20200628230717.1">
 #define PY_MAX_ATOMS 128
@@ -5318,11 +5367,6 @@ static int pyjs_global_obj_count;  // when 0 then free interpreter
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 
-#define PY_CHECK(obj, err_msg) \
-    if (!obj) { \
-        pyjs_error(x, "" #err_msg "\n"); \
-        goto error; \
-    }
 </t>
 <t tx="sta.20200628231022.1">t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s)
 {
@@ -5366,6 +5410,8 @@ error:
     Py_XDECREF(pval);
     return MAX_ERR_GENERIC;
 }
+
+
 </t>
 <t tx="sta.20200628231024.1">t_max_err pyjs_exec(t_pyjs* x, t_symbol* s)
 {
@@ -5376,7 +5422,8 @@ error:
         goto error;
     }
 
-    pval = PyRun_String(s-&gt;s_name, Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+    pval = PyRun_String(s-&gt;s_name, Py_single_input, x-&gt;p_globals,
+                        x-&gt;p_globals);
     if (pval == NULL) {
         goto error;
     }
@@ -5390,20 +5437,23 @@ error:
     pyjs_handle_error(x, "exec %s", s-&gt;s_name);
     Py_XDECREF(pval);
     return MAX_ERR_GENERIC;
-}</t>
-<t tx="sta.20200628231202.1">t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom *rv)
+}
+</t>
+<t tx="sta.20200628231202.1">
+
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                            t_atom* rv)
 {
     t_atom atoms[PY_MAX_ATOMS];
     PyObject* pval = NULL;
-    PyObject *json_module = NULL;
-    PyObject *json_dict = NULL;
-    PyObject *json_dumps = NULL;
+    PyObject* json_module = NULL;
+    PyObject* json_dict = NULL;
+    PyObject* json_dumps = NULL;
     PyObject* json_pstr = NULL;
 
     char* cstring = atom_getsym(argv)-&gt;s_name;
 
-    pval = PyRun_String(cstring, Py_eval_input, x-&gt;p_globals,
-                                  x-&gt;p_globals);
+    pval = PyRun_String(cstring, Py_eval_input, x-&gt;p_globals, x-&gt;p_globals);
     if (pval == NULL)
         goto error;
 
@@ -5428,7 +5478,8 @@ error:
         goto error;
 
     atom_setsym(atoms, gensym(unicode_result));
-    atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+    atom_setobj(rv,
+                object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
 
     Py_XDECREF(pval);
     Py_XDECREF(json_module);
@@ -5444,7 +5495,7 @@ error:
     return MAX_ERR_GENERIC;
 }
 </t>
-<t tx="sta.20200628231411.1">t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
+<t tx="sta.20200628231411.1">                    t_atom* rv)
 {
     long textsize = 0;
     char* text = NULL;
@@ -5492,8 +5543,34 @@ error:
     pyjs_handle_error(x, "pyjs code failed");
     Py_XDECREF(pval);
     return MAX_ERR_GENERIC;
-}</t>
-<t tx="sta.20200628231428.1">t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv)
+}
+</t>
+<t tx="sta.20200628231428.1">
+
+t_max_err pyjs_import(t_pyjs* x, t_symbol* s)
+{
+    PyObject* x_module = NULL;
+
+    if (s != gensym("")) {
+        x_module = PyImport_ImportModule(s-&gt;s_name);
+        
+        if (x_module == NULL) {
+            goto error;
+        }
+
+        PyDict_SetItemString(x-&gt;p_globals, s-&gt;s_name, x_module);
+        pyjs_log(x, "imported: %s", s-&gt;s_name);
+        return MAX_ERR_NONE;
+    }    
+
+error:
+    pyjs_handle_error(x, "import %s", s-&gt;s_name);
+    return MAX_ERR_GENERIC;
+}
+
+
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                    t_atom* rv)
 {
     char* py_argv = atom_getsym(argv)-&gt;s_name;
     pyjs_log(x, "%s %s", s-&gt;s_name, py_argv);
@@ -5509,6 +5586,8 @@ error:
         return MAX_ERR_GENERIC;
     }
 }
+
+
 </t>
 <t tx="sta.20200628231456.1">t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv)
 {
@@ -5525,7 +5604,9 @@ error:
                 goto error;
         }
         atom_setfloat(atom_result, float_result);
-        atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));        
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
     }
     Py_XDECREF(pfloat);
     return MAX_ERR_NONE;
@@ -5534,7 +5615,8 @@ error:
     pyjs_handle_error(x, "pyjs_handle_float_output failed");
     Py_XDECREF(pfloat);
     return MAX_ERR_GENERIC;
-}</t>
+}
+</t>
 <t tx="sta.20200628231538.1">t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv)
 {
     t_atom atom_result[1];
@@ -5550,7 +5632,9 @@ error:
                 goto error;
         }
         atom_setlong(atom_result, long_result);
-        atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result)); 
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
     }
     Py_XDECREF(plong);
     return MAX_ERR_NONE;
@@ -5559,7 +5643,8 @@ error:
     pyjs_handle_error(x, "pyjs_handle_long_output failed");
     Py_XDECREF(plong);
     return MAX_ERR_GENERIC;
-}</t>
+}
+</t>
 <t tx="sta.20200628231613.1">t_max_err pyjs_handle_string_output(t_pyjs* x, PyObject* pstring, t_atom* rv)
 {
     t_atom atom_result[PY_MAX_ATOMS];
@@ -5574,7 +5659,9 @@ error:
             goto error;
         }
         atom_setsym(atom_result, gensym(unicode_result));
-        atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), 1, atom_result));
     }
     Py_XDECREF(pstring);
     return MAX_ERR_NONE;
@@ -5583,9 +5670,10 @@ error:
     pyjs_handle_error(x, "pyjs_handle_string_output failed");
     Py_XDECREF(pstring);
     return MAX_ERR_GENERIC;
-}</t>
+}
+</t>
 <t tx="sta.20200628231643.1">t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
-{    
+{
     if (plist == NULL) {
         goto error;
     }
@@ -5669,8 +5757,11 @@ error:
             Py_DECREF(item);
         }
 
-        atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), (long)i, atoms));
-        // atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+        atom_setobj(
+            rv,
+            object_new(gensym("nobox"), gensym("atomarray"), (long)i, atoms));
+        // atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1,
+        // atoms));
         pyjs_log(x, "end iter op: %d", i);
         if (is_dynamic) {
             pyjs_log(x, "restoring to static atom array");
@@ -5685,7 +5776,8 @@ error:
     pyjs_handle_error(x, "pyjs_handle_list_output failed");
     Py_XDECREF(plist);
     return MAX_ERR_GENERIC;
-}</t>
+}
+</t>
 <t tx="sta.20200628231714.1">t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv)
 {
     PyObject* pfun_co = NULL;
@@ -5698,19 +5790,18 @@ error:
 
     if (PyDict_Check(pdict)) {
 
-        pfun_co = PyRun_String( \
-            "def __py_maxmsp_out_dict(arg):\n"
-                "\tres = []\n"
-                "\tfor k,v in arg.items():\n"
-                    "\t\tres.append(k)\n"
-                    "\t\tres.append(':')\n"
-                    "\t\tif type(v) in [list, set, tuple]:\n"
-                        "\t\t\tfor i in v:\n"
-                            "\t\t\t\tres.append(i)\n"
-                    "\t\telse:\n"
-                        "\t\t\tres.append(v)\n"
-                "\treturn res\n", 
-                Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
+        pfun_co = PyRun_String("def __py_maxmsp_out_dict(arg):\n"
+                               "\tres = []\n"
+                               "\tfor k,v in arg.items():\n"
+                               "\t\tres.append(k)\n"
+                               "\t\tres.append(':')\n"
+                               "\t\tif type(v) in [list, set, tuple]:\n"
+                               "\t\t\tfor i in v:\n"
+                               "\t\t\t\tres.append(i)\n"
+                               "\t\telse:\n"
+                               "\t\t\tres.append(v)\n"
+                               "\treturn res\n",
+                               Py_single_input, x-&gt;p_globals, x-&gt;p_globals);
 
         if (pfun_co == NULL) {
             pyjs_error(x, "out_dict function code object is NULL");
@@ -5781,8 +5872,8 @@ error:
         pyjs_error(x, "cannot handle his type of value");
         return MAX_ERR_GENERIC;
     }
-
 }
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
 </t>
 <t tx="sta.20200628232027.1">// ---------------------------------------------------------------------------
 // Handlers
@@ -5792,5 +5883,427 @@ error:
 <t tx="sta.20200628232219.1"></t>
 <t tx="sta.20200628232327.1"></t>
 <t tx="sta.20200628232335.1"></t>
+<t tx="sta.20200701100646.1"></t>
+<t tx="sta.20200701100837.1"></t>
+<t tx="sta.20200701100907.1">@path source/py/scripts
+
+</t>
+<t tx="sta.20200701101041.1">#!/usr/bin/env python3
+
+@others
+@language python
+@tabwidth -4
+</t>
+<t tx="sta.20200701101102.1">import sys
+import os
+from pathlib import Path
+import shutil
+# import glob
+
+env = os.getenv
+cmd = os.system
+ver = tuple(sys.version_info)  # e.g. (3, 7, 7, 'final', 0)
+# major, minor, micro
+
+VERSION_MAJOR = env('PY_MAJ_VER', '{0}.{1}'.format(*ver))
+VERSION_MINOR = env('PY_MIN_VER', '{2}'.format(*ver))
+SSL_VERSION = env('SSL_VER', '1.1.1g')
+MAC_DEP_TARGET = env('MAC_DEP', '10.13')
+
+# --- need not modify below except to change excluded modules
+
+
+</t>
+<t tx="sta.20200701101102.10">@property
+def support(self):
+    return self.root.parent.parent / 'source'
+
+</t>
+<t tx="sta.20200701101102.11">@property
+def targets(self):
+    return self.root / 'targets'
+
+</t>
+<t tx="sta.20200701101102.12">@property
+def target(self):
+    return self.targets / 'python-org'
+
+</t>
+<t tx="sta.20200701101102.13">@property
+def build(self):
+    return self.target / 'build'
+
+</t>
+<t tx="sta.20200701101102.14">@property
+def python(self):
+    return self.build / f'Python-{self.semver}'
+
+</t>
+<t tx="sta.20200701101102.15">@property
+def prefix(self):
+    return self.support / self.name
+
+</t>
+<t tx="sta.20200701101102.16">@property
+def bin(self):
+    return self.prefix / 'bin'
+
+</t>
+<t tx="sta.20200701101102.17">@property
+def lib(self):
+    return self.prefix / 'lib' / self.name
+
+</t>
+<t tx="sta.20200701101102.18">@property
+def ssl_src(self):
+    return self.build / self.ssl_version
+
+</t>
+<t tx="sta.20200701101102.19">@property
+def ssl(self):
+    return self.build / self.ssl
+
+</t>
+<t tx="sta.20200701101102.2">class PyBuilder:
+    @others
+</t>
+<t tx="sta.20200701101102.20">@property
+def tmp(self):
+    return self.build / self.tmp
+
+</t>
+<t tx="sta.20200701101102.21">@property
+def dylib(self):
+    return f'libpython{self.version}{self.suffix}.dylib'
+
+# ------------------------------------------------------------------------
+# operations
+
+</t>
+<t tx="sta.20200701101102.22">def cmd(self, shellcmd, *args, **kwargs):
+    os.system(shellcmd.format(*args, **kwargs))
+
+</t>
+<t tx="sta.20200701101102.23">def chdir(self, path):
+    os.chdir(path)
+
+</t>
+<t tx="sta.20200701101102.24">def move(self, src, dst):
+    shutil.move(src, dst)
+
+</t>
+<t tx="sta.20200701101102.25">def copy(self, src, dst):
+    shutil.copytree(src, dst)
+
+</t>
+<t tx="sta.20200701101102.26">def zipsrc(self, zip_path, files_to_include):
+    "this is a placeholder"
+
+</t>
+<t tx="sta.20200701101102.27">def remove(self, path):
+    if hasattr(path, '__iter__'):
+        for f in path:
+            shutil.rmtree(f)
+    else:
+        shutil.rmtree(path)
+
+</t>
+<t tx="sta.20200701101102.28">def rm_libs(self, names):
+    for name in names:
+        self.remove(self.lib / name)
+
+</t>
+<t tx="sta.20200701101102.29">def rm_exts(self, names):
+    for name in names:
+        self.remove(self.lib / 'lib-dynload' /
+                    f'{name}.cpython-{self.ver}m-darwin.so')
+
+</t>
+<t tx="sta.20200701101102.3">def __init__(self, py_version, ssl_version, mac_dep_target=None, packages=None, suffix=None):
+    self.semver = py_version
+    self.version = ".".join(py_version.split('.')[:2])
+    self.ssl_version = ssl_version
+    self.mac_dep_target = mac_dep_target if mac_dep_target else '1.13'
+    self.packages = packages if packages else []
+    self.suffix = suffix if suffix else ""
+
+    # directories
+    self.root = Path.cwd()
+
+# ------------------------------------------------------------------------
+# propertiess
+
+</t>
+<t tx="sta.20200701101102.30">def rm_bins(self, names):
+    for name in names:
+        self.remove(self.prefix / 'bin' / name)
+
+</t>
+<t tx="sta.20200701101102.31">def get_url(self, url):
+    self.tmp.mkdir()
+    fname = Path(url).name
+    src_dir = self.tmp / fname
+    self.cmd(f'curl {url} -o {src_dir}')
+    self.cmd(f'tar -C {self.build} -xvf {src_dir}')
+    self.remove(self.tmp)
+
+</t>
+<t tx="sta.20200701101102.32">def get_python(self):
+    self.get_url(self.url_python)
+
+</t>
+<t tx="sta.20200701101102.33">def get_ssl(self):
+    self.get_url(self.url_ssl)
+
+</t>
+<t tx="sta.20200701101102.34">def reset_python(self):
+    self.remove(self.python)
+
+</t>
+<t tx="sta.20200701101102.35">def reset_support(self):
+    self.remove(self.prefix)
+
+</t>
+<t tx="sta.20200701101102.36">def reset_ssl(self):
+    self.remove(self.ssl_src)
+    self.remove(self.ssl)
+
+</t>
+<t tx="sta.20200701101102.37">def reset(self):
+    self.reset_python()
+    self.reset_support()
+    self.reset_ssl()
+
+</t>
+<t tx="sta.20200701101102.38">def recursive_clean(self, name, pattern):
+    cmd(f'find {name} | grep -E "({pattern})" | xargs rm -rf')
+
+</t>
+<t tx="sta.20200701101102.39">def clean_python_pyc(self, name):
+    self.recursive_clean(name, r"__pycache__|\.pyc|\.pyo$")
+
+</t>
+<t tx="sta.20200701101102.4">@property
+def ver(self):
+    return self.version.replace('.', '')
+
+</t>
+<t tx="sta.20200701101102.40">def clean_python_tests(self, name):
+    self.recursive_clean(name, "tests|test")
+
+</t>
+<t tx="sta.20200701101102.41">def clean_python_site_packages(self):
+    self.remove((self.lib / 'site-packages').glob('*'))
+
+</t>
+<t tx="sta.20200701101102.42">def remove_packages(self):
+    self.rm_libs([
+        f'config-{self.version}{self.suffix}-darwin',
+        'idlelib',
+        'lib2to3',
+        'tkinter',
+        'turtledemo',
+        'turtle.py',
+        'ctypes',
+        'curses',
+        'ensurepip',
+        'venv',
+    ])
+
+</t>
+<t tx="sta.20200701101102.43">def remove_extensions(self):
+    self.rm_exts([
+        '_tkinter',
+        '_ctypes',
+        '_multibytecodec',
+        '_codecs_jp',
+        '_codecs_hk',
+        '_codecs_cn',
+        '_codecs_kr',
+        '_codecs_tw',
+        '_codecs_iso2022',
+        '_curses',
+        '_curses_panel',
+    ])
+
+</t>
+<t tx="sta.20200701101102.44">def remove_binaries(self):
+    self.rm_bins([
+        f'2to3-${self.version}',
+        f'idle${self.version}',
+        f'easy_install-${self.version}',
+        f'pip${self.version}',
+        f'python${self.version}m',
+        f'pyvenv-${self.version}',
+    ])
+
+</t>
+<t tx="sta.20200701101102.45">def clean_python(self):
+    self.clean_python_pyc(self.prefix)
+    self.clean_python_tests(self.lib)
+    self.clean_python_site_packages()
+
+    self.remove((self.lib / 'distutils' / 'command').glob('*.exe'))
+
+    self.remove(self.prefix / 'lib' / 'pkgconfig')
+    self.remove(self.prefix / 'share')
+
+    self.remove_packages()
+    self.remove_extensions()
+    self.remove_binaries()
+
+</t>
+<t tx="sta.20200701101102.46">def zip_python_library(self):
+    self.remove(self.lib / 'site-packages')
+    self.move(self.lib / 'lib-dynload', self.prefix)
+    self.copy(self.lib / 'os.py', self.prefix)
+    self.zipsrc(self.prefix / 'lib' / f'python{self.ver}.zip',
+                self.lib.glob('*'))
+    self.remove(self.lib)
+    self.lib.mkdir()
+    self.move(self.prefix / 'lib-dynload', self.lib)
+    self.move(self.lib / 'os.py', self.lib)
+    (self.lib / 'site-packages').mkdir()
+
+</t>
+<t tx="sta.20200701101102.47">def build_ssl(self):
+    self.chdir(self.ssl_src)
+    self.cmd(f'./config no-shared --prefix={self.ssl}')
+    self.cmd('make install_sw')
+    self.chdir(self.root)
+
+</t>
+<t tx="sta.20200701101102.48">def write_python_setup_local(self):
+    lines = ['*disabled*'] + [
+        '_ctypes'
+        #'_sqlite3'
+        '_tkinter'
+        '_curses'
+        '_curses_panel'
+        'xxlimited'
+        'xxsubtype'
+        '_multibytecodec'
+        '_codecs_jp'
+        '_codecs_kr'
+        '_codecs_tw'
+        '_codecs_cn'
+        '_codecs_hk'
+        '_codecs_iso2022'
+    ]
+    with open(self.python / 'Modules' / 'Setup.local', 'w') as f:
+        f.writelines(lines)
+
+</t>
+<t tx="sta.20200701101102.49">def write_python_getpip(self):
+    script = f"""
+        curl ${self.url_getpip} -s -o get-pip.py 
+        ./bin/python{self.version} get-pip.py
+    """
+    self.cmd("chmod +x get_pip.sh")
+    with open(self.python / 'bin' / 'get_pip.sh', 'w') as f:
+        f.write(script)
+
+</t>
+<t tx="sta.20200701101102.5">@property
+def name(self):
+    return f'python{self.version}'
+
+</t>
+<t tx="sta.20200701101102.50">def compile_python_from_source(self):
+
+    self.chdir(self.python)
+
+    self.write_python_setup_local()
+    self.cmd(f"""
+    ./configure MACOSX_DEPLOYMENT_TARGET={self.mac_dep_target} \
+        --prefix={self.prefix} \
+        --enable-shared \
+        --with-openssl={self.ssl} \
+        --with-lto \
+        --enable-optimizations
+    """)
+    self.cmd('make altinstall')
+    self.chdir(self.root)
+
+</t>
+<t tx="sta.20200701101102.51">def build_python(self):
+    self.compile_python_from_source()
+    self.clean_python()
+    self.write_python_getpip()
+
+</t>
+<t tx="sta.20200701101102.52">def build_python_zipped(self):
+    self.build_python()
+    self.zip_python_library()
+
+</t>
+<t tx="sta.20200701101102.53">def fix_python_dylib_for_pkg(self):
+    self.chdir(self.prefix / self.lib)
+    self.cmd(f'chmod 777 {self.dylib}')
+    self.cmd(
+        'install_name_tool -id '
+        '@loader_path/../../../../support/{self.name}/lib/{self.dylib} '
+        '${self.dylib}')
+    self.chdir(self.root)
+
+
+</t>
+<t tx="sta.20200701101102.54">def fix_python_dylib_for_ext(self):
+    self.chdir(self.prefix / self.lib)
+    self.cmd(f'chmod 777 {self.dylib}')
+    self.cmd('install_name_tool -id @loader_path/{self.dylib} {self.dylib}')
+    self.chdir(self.root)
+
+
+\\-4.# FIXME: not complete!
+\\-4.# def fix_python_libintl(self):
+\\-4.#     #otool -L $PREFIX/lib/libpython${VERSION}.dylib
+\\-4.#     cp /usr/local/opt/gettext/lib/libintl.8.dylib ${PREFIX}/lib
+\\-4.#     chmod 777 ${PREFIX}/lib/libintl.8.dylib
+\\-4.#     install_name_tool -id @executable_path/libintl.8.dylib ${PREFIX}/lib/libintl.8.dylib
+\\-4.#     install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${VERSION}.dylib
+
+
+</t>
+<t tx="sta.20200701101102.55">def install_python(self):
+    self.get_python()
+    self.get_ssl()
+    self.build_ssl()
+    self.build_python_zipped()
+
+
+</t>
+<t tx="sta.20200701101102.56">def install_python_pkg(self):
+    self.install_python()
+    self.fix_python_dylib_for_pkg()
+
+
+</t>
+<t tx="sta.20200701101102.57">def install_python_ext(self):
+    self.install_python()
+    self.fix_python_dylib_for_ext()
+    # FIXME: not complete!
+    # cp python to py.mxo
+</t>
+<t tx="sta.20200701101102.6">@property
+def url_python(self):
+    return f'https://www.python.org/ftp/python/{self.version}/Python-{self.version}.tgz'
+
+</t>
+<t tx="sta.20200701101102.7">@property
+def url_ssl(self):
+    return f'https://www.openssl.org/source/openssl-{self.ssl_version}.tar.gz'
+
+</t>
+<t tx="sta.20200701101102.8">@property
+def url_getpip(self):
+    return 'https://bootstrap.pypa.io/get-pip.py'
+
+</t>
+<t tx="sta.20200701101102.9">@property
+def source(self):
+    return self.root.parent / 'source'
+
+</t>
 </tnodes>
 </leo_file>
