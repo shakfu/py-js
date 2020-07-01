@@ -1,5 +1,4 @@
-#include "common.xcconfig"
-
+#include "../common.xcconfig"
 
 PREFIX = $(SUPPORT)/python$(VERSION)
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)m

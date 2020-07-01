@@ -14,18 +14,15 @@ VERSION=${VERSION_MAJOR}
 VER="${VERSION//./}"
 NAME=python${VERSION}
 
-
 URL_PYTHON=https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz
 URL_OPENSSL=https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz
 URL_GETPIP=https://bootstrap.pypa.io/get-pip.py
 
 ROOT=$(pwd)
+PY=${ROOT}
 SUPPORT=${ROOT}/../../support
 SOURCE=${ROOT}/../source
-PY=${ROOT}
-TARGETS=${PY}/targets
-TARGET=${TARGETS}/python-org
-BUILD=${TARGET}/build
+BUILD=${ROOT}/targets/build
 PYTHON=${BUILD}/Python-${SEMVER}
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
@@ -71,7 +68,7 @@ debug() {
 
 
 get_url() {
-	mkdir $TMP
+	mkdir -p $TMP
 	fname=$(basename $1)
 	curl $1 -o $TMP/$fname
 	tar -C $BUILD -xvf $TMP/$fname
@@ -249,37 +246,37 @@ EOM
 chmod +x get_pip.sh
 }
 
-compile_python_from_source() {
 
-	cd $PYTHON
 
-	write_python_minim_setup_local
-
+configure_python() {
+	make clean
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	 	--prefix=$PREFIX \
-	 	--enable-shared \
+	 	--prefix=$PREFIX 	\
+	 	--enable-shared 	\
 	 	--with-openssl=$SSL \
-	 	--with-lto \
+	 	--with-lto 			\
 	 	--enable-optimizations
-	make altinstall
-
-	cd $ROOT
-
 }
 
+
+
+compile_python() {
+	cd $PYTHON
+	write_python_minim_setup_local
+	configure_python
+	make altinstall
+	cd $ROOT
+}
+
+
 build_python() {
-	
-	compile_python_from_source
-
+	compile_python
 	clean_python
-
 	write_python_getpip
 }
 
 build_python_zipped() {
-
 	build_python
-
 	zip_python_library
 }
 
@@ -314,12 +311,13 @@ fix_python_libintl() {
 	install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${VERSION}.dylib
 }
 
+
 install_python() {
 	mkdir -p $BUILD
 	get_python
 	get_ssl
 	build_ssl
-	build_python_zipped	
+	build_python_zipped
 }
 
 
@@ -335,32 +333,31 @@ install_python_ext() {
 	# cp python to py.mxo
 }
 
-if [ "$1" == "pkg" ]; then
-    echo "Installing minimal python from source into 'support' folder of package"
-    reset
-    install_python_pkg
+# if [ "$1" == "pkg" ]; then
+#     echo "Installing python from source as shared lib into 'support' folder of package"
+#     reset
+#     install_python_pkg
 
-elif [ "$1" == "ext" ]; then
-	echo "Installing minimal python from source into 'py.mxo' external"
-	intall_python_ext
+# elif [ "$1" == "ext" ]; then
+#     echo "Installing python from source as shared lib into 'py.mxo' external"
+#     reset
+#     install_python_ext
 
-elif [ "$1" == "build_python" ]; then
-	echo "Building from python source"
-	build_python_zipped
+# elif [ "$1" == "build-python" ]; then
+# 	echo "Building from python source as shared lib"
+# 	build_python_zipped
 
-elif [ "$1" == "fix_pkg" ]; then
-	echo "fixing dynamic lookup refs for package"
-	fix_python_dylib_for_pkg
-	otool -L $PREFIX/lib/$DYLIB
+# elif [ "$1" == "fix-pkg" ]; then
+# 	echo "fixing dynamic lookup refs for package installation"
+# 	fix_python_dylib_for_pkg
+# 	otool -L $PREFIX/lib/$DYLIB
 
-elif [ "$1" == "fix_ext" ]; then
-	echo "fixing dynamic lookup refs for package"
-	fix_python_dylib_for_ext
-	otool -L $PREFIX/lib/$DYLIB
+# elif [ "$1" == "fix-ext" ]; then
+# 	echo "fixing dynamic lookup refs for external installation"
+# 	fix_python_dylib_for_ext
+# 	otool -L $PREFIX/lib/$DYLIB
+# fi
 
-else
-    echo "No argument given. Can be 'pkg' or 'ext'"
-    echo "for package or external installation respectively"
-fi
+
 
 

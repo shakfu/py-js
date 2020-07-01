@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+source "scripts/common.sh"
 
 VERSION_MAJOR=${PY_MAJ_VER:=3.7}
 VERSION_MINOR=${PY_MIN_VER:=7}
@@ -13,22 +14,19 @@ VERSION=${VERSION_MAJOR}
 VER="${VERSION//./}"
 NAME=python${VERSION}
 
-
 URL_PYTHON=https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz
 URL_OPENSSL=https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz
 URL_GETPIP=https://bootstrap.pypa.io/get-pip.py
 
 ROOT=$(pwd)
+PY=${ROOT}
 SUPPORT=${ROOT}/../../support
 SOURCE=${ROOT}/../source
-PY=${ROOT}
-TARGETS=${PY}/targets
-TARGET=${TARGETS}/python-org
-BUILD=${TARGET}/build
-PYTHON=${BUILD}/Python-${SEMVER}
-PREFIX=${SUPPORT}/${NAME}
 FRAMEWORKS=${SUPPORT}/Frameworks
-BIN=${SUPPORT}/${NAME}/bin
+BUILD=${ROOT}/targets/build
+PYTHON=${BUILD}/Python-${SEMVER}
+PREFIX=${FRAMEWORKS}/Python.framework/Versions/${VERSION}
+BIN=${PREFIX}/bin
 LIB=${PREFIX}/lib/python${VERSION}
 SSL_SRC=${BUILD}/${SSL_VERSION}
 SSL=${BUILD}/ssl
@@ -201,11 +199,8 @@ zip_python_library() {
 
 build_ssl() {
 	cd $SSL_SRC
-
 	./config no-shared --prefix=$SSL
-	# ./config shared --prefix=$SSL
 	make install_sw
-
 	cd $ROOT
 }
 
@@ -249,33 +244,30 @@ EOM
 chmod +x get_pip.sh
 }
 
-compile_python_from_source() {
 
-	cd $PYTHON
-
+configure_python() {
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	 	--enable-framework=$FRAMEWORKS \
-	 	--with-openssl=$SSL
-
-	make altinstall
-
-	cd $ROOT
-
+	 	--with-openssl=$SSL \
+	 	--enable-framework=$FRAMEWORKS
 }
 
+compile_python() {
+	cd $PYTHON
+	write_python_minim_setup_local
+	configure_python
+	make altinstall
+	cd $ROOT
+}
+
+
 build_python() {
-	
-	compile_python_from_source
-
+	compile_python
 	clean_python
-
 	write_python_getpip
 }
 
 build_python_zipped() {
-
 	build_python
-
 	zip_python_library
 }
 
@@ -284,7 +276,7 @@ fix_python_dylib_for_pkg() {
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes python in installed in $PREFIX
-	#../../../../support/python3.7/lib/libpython3.7m.dylib
+	# ../../../../support/python3.7/lib/libpython3.7m.dylib
 	install_name_tool -id @loader_path/../../../../support/${NAME}/lib/${DYLIB} ${DYLIB}
 	echo "fix_python_dylib_for_pkg done"
 	# otool -L ${DYLIB}
@@ -292,14 +284,6 @@ fix_python_dylib_for_pkg() {
 }
 
 fix_python_dylib_for_ext() {
-	"""
-	change
-		py.mxo/Contents/Frameworks/Python.framework/Python -> @loader_path/../Frameworks
-		using install_name_tool -id
-	change
-		py.mxo/Contents/MacOS/py -> @loader_path/../Frameworks/Python.framework/Python
-		using install_name_tool -change
-	"""
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
 	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
@@ -319,10 +303,11 @@ fix_python_libintl() {
 }
 
 install_python() {
+	mkdir -p $BUILD
 	get_python
 	get_ssl
 	build_ssl
-	build_python_zipped	
+	build_python_zipped	$1
 }
 
 
@@ -337,5 +322,31 @@ install_python_ext() {
 	# FIXME: not complete!
 	# cp python to py.mxo
 }
+
+
+if [ "$1" == "pkg" ]; then
+	echo "Installing python from source as framework into 'support' folder of package"
+	intall_python_pkg
+
+elif [ "$1" == "ext" ]; then
+	echo "Installing python from source as framework into 'py.mxo' external"
+	intall_python_ext
+
+elif [ "$1" == "build-python" ]; then
+	echo "Building from python source as framework"
+	build_python_zipped
+
+elif [ "$1" == "fix-pkg" ]; then
+	echo "fixing dynamic lookup refs for package installation"
+	fix_python_dylib_for_pkg
+	otool -L $PREFIX/lib/$DYLIB
+
+elif [ "$1" == "fix-ext" ]; then
+	echo "fixing dynamic lookup refs for external installation"
+	fix_python_dylib_for_ext
+	otool -L $PREFIX/lib/$DYLIB
+fi
+
+
 
 
