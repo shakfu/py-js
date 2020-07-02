@@ -20,6 +20,21 @@ SRCDIR:=$(shell dirname $(abspath ${PYDIR}))
 ROOTDIR:=$(shell dirname $(abspath ${SRCDIR}))
 
 
+
+# $(call xbuild,name)
+define xbuild-targets
+$(call section,"build $1")
+@for target in ${TARGETS}; do \
+		xcodebuild -project targets/$1/py-js.xcodeproj -target $$target ; \
+	done
+endef
+
+# $call xclean-build,name)
+define xclean-build
+$(call section,"cleaning build artifacts from $1 target")
+@find **/$1 | grep -E "(build)" | xargs rm -rf
+endef
+
 # ifdef MYFLAG
 # CFLAGS += -DMYFLAG
 # endif
@@ -29,31 +44,33 @@ ROOTDIR:=$(shell dirname $(abspath ${SRCDIR}))
 all: clean test build
 	@echo "All DONE!"
 
-# DEPLOYING
+# HIGH-LEVEL
 # -----------------------------------------------------------------------
-.PHONY: default pyjs homebrew-pkg homebrew-ext python-org-pkg python-org-ex pkg pkg-support dist
+.PHONY: default homebrew-sys homebrew-pkg homebrew-ext shared-pkg shared-ext
 
+default: homebrew-sys
 
-default: clean build pkg
+homebrew-sys: clean build pkg
 	$(call section,"build -> deploy to local package")
 
 homebrew-pkg: clean build-homebrew-pkg pkg pkg-support
 
 homebrew-ext: build-homebrew-ext pkg
 
-python-org-pkg: build-python-pkg pkg pkg-support
+shared-pkg: build-shared-pkg pkg pkg-support
 
-python-org-ext: build-python-ext pkg 
+shared-ext: build-shared-ext pkg 
+
+
+
+# DEPLOYING
+# -----------------------------------------------------------------------
+.PHONY: pkg pkg-support dist
 
 
 dist:
 	$(call section,"preparing for distribution")
 	@echo "do it here with git"
-
-# bump:
-# 	$(call section,"bumping patch version and pushing")
-# 	@bumpversion patch
-# 	@git push
 
 pkg:
 	$(call section,"deploying to local package")
@@ -75,32 +92,25 @@ build: build-homebrew-sys
 	$(call section,"build project")
 
 build-homebrew-sys: build-extension
-	$(call section,"build homebrew sys default")
-	@for target in ${TARGETS}; do \
-		xcodebuild -project targets/homebrew-sys/py-js.xcodeproj -target $$target ; \
-	done
+	$(call xbuild-targets,"homebrew-sys")
 
-build-homebrew-pkg: prep-homebrew-pkg build-homebrew  
+build-homebrew-pkg: prep-homebrew-pkg
+	$(call xbuild-targets,"homebrew-pkg")
 
-build-homebrew-ext: prep-homebrew-ext build-homebrew
+build-homebrew-ext: prep-homebrew-ext
+	$(call xbuild-targets,"homebrew-ext")
 
-build-homebrew: build-osx-homebrew
+build-shared-pkg: prep-shared-pkg
+	$(call xbuild-targets,"shared-pkg")
 
-build-osx-homebrew: build-extension
-	$(call section,"build osx homebrew")
-	@for target in ${TARGETS}; do \
-		xcodebuild -project targets/osx/py-js.xcodeproj -xcconfig targets/osx/homebrew.xcconfig -target $$target ; \
-	done
+build-shared-ext: prep-shared-ext
+	$(call xbuild-targets,"shared-ext")
 
+build-framework-pkg: prep-framework-pkg
+	$(call xbuild-targets,"framework-pkg")
 
-build-python-pkg: prep-python-pkg build-python
-
-build-python-ext: prep-python-ext build-python
-
-build-python: build-extension
-	$(call section,"compile python source with xcode")
-	@xcodebuild OTHER_CFLAGS=${CFLAGS} -project targets/python-org/py.xcodeproj
-
+build-framework-ext: prep-framework-ext
+	$(call xbuild-targets,"framework-ext")
 
 build-extension:
 	$(call section,"generate c code from cython extension")
@@ -110,15 +120,8 @@ build-extension:
 
 # PRE-BUILD PREP
 # -----------------------------------------------------------------------
-.PHONY: prep-python-pkg prep-python-ext prep-homebrew-pkg prep-homebrew-ext
-
-prep-python-pkg:
-	$(call section,"prepare python from source for package")
-	@bash scripts/python-org.sh pkg
-
-prep-python-ext:
-	$(call section,"prepare python from source for external")
-	@bash scripts/python-org.sh ext
+.PHONY: prep-shared-pkg prep-shared-ext prep-homebrew-pkg prep-homebrew-ext \
+		prep-framework-pkg prep-framework-ext
 
 prep-homebrew-pkg:
 	$(call section,"build homebrew python for package")
@@ -127,6 +130,22 @@ prep-homebrew-pkg:
 prep-homebrew-ext:
 	$(call section,"build homebrew python for external")
 	@bash scripts/homebrew.sh ext
+
+prep-shared-pkg:
+	$(call section,"prepare shared python from source for package")
+	@bash scripts/shared.sh pkg
+
+prep-shared-ext:
+	$(call section,"prepare shared python from source for external")
+	@bash scripts/shared.sh ext
+
+prep-framework-pkg:
+	$(call section,"build framework python for package")
+	@bash scripts/framework.sh pkg
+	
+prep-framework-ext:
+	$(call section,"build framework python for external")
+	@bash scripts/framework.sh ext
 
 # TESTING
 # -----------------------------------------------------------------------
@@ -168,9 +187,17 @@ duplo:
 clean: clean-externals clean-build clean-support 
 	$(call section,"cleaning DONE")
 
-clean-build: clean-build-osx \
-			 clean-build-python-org \
-			 clean-build-python-fwk
+clean-build: clean-build-homebrew-sys \
+			 clean-build-homebrew-pkg \
+			 clean-build-homebrew-ext \
+			 clean-build-shared-pkg \
+			 clean-build-shared-ext \
+			 clean-build-framework-pkg \
+			 clean-build-framework-ext
+
+clean-build-all:
+	$call xclean-build,"targets")
+
 
 clean-externals:
 	$(call section,"cleaning externals")
@@ -178,17 +205,26 @@ clean-externals:
 		rm -rf ${ROOTDIR}/externals/$$target.mxo  ; \
 	done
 
-clean-build-osx:
-	$(call section,"cleaning build artifacts from osx target")
-	@find **/osx | grep -E "(build)" | xargs rm -rf
+clean-build-homebrew-sys:
+	$call xclean-build,"homebrew-sys")
 
-clean-build-python-org:
-	$(call section,"cleaning build artifacts from python-org target")
-	@find **/python-org | grep -E "(build)" | xargs rm -rf
+clean-build-homebrew-pkg:
+	$call xclean-build,"homebrew-pkg")
 
-clean-build-python-fwk:
-	$(call section,"cleaning build artifacts from python-fwk target")
-	@find **/python-fwk | grep -E "(build)" | xargs rm -rf
+clean-build-homebrew-ext:
+	$call xclean-build,"homebrew-ext")
+
+clean-build-shared-pkg:
+	$call xclean-build,"shared-pkg")
+
+clean-build-shared-pkg:
+	$call xclean-build,"shared-ext")
+
+clean-build-framework-pkg:
+	$call xclean-build,"framework-pkg")
+
+clean-build-framework-ext:
+	$call xclean-build,"framework-ext")
 
 clean-support:
 	$(call section,"cleaning support directory")
