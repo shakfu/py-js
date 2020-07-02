@@ -1,20 +1,6 @@
 #!/usr/bin/env bash
 
-COLOR_BOLD_YELLOW="\033[1;33m"
-COLOR_BOLD_BLUE="\033[1;34m"
-COLOR_BOLD_MAGENTA="\033[1;35m"
-COLOR_BOLD_CYAN="\033[1;36m"
-COLOR_RESET="\033[m"
-
-function section {
-    echo
-    echo -e $COLOR_BOLD_CYAN$1 $COLOR_RESET
-    echo "----------------------------------------------------------"
-}
-
-function warn {
-    echo -e $COLOR_BOLD_YELLOW"WARNING: "$COLOR_RESET$1
-}
+source "scripts/common.sh"
 
 VERSION_MAJOR=${PY_MAJ_VER:=3.7}
 VERSION_MINOR=${PY_MIN_VER:=7}
@@ -35,13 +21,12 @@ URL_GETPIP=https://bootstrap.pypa.io/get-pip.py
 ROOT=$(pwd)
 PY=${ROOT}
 SUPPORT=${ROOT}/../../support
-EXTERNALS=${ROOT}/../../externals
 SOURCE=${ROOT}/../source
 FRAMEWORKS=${SUPPORT}/Frameworks
 BUILD=${ROOT}/targets/build
 PYTHON=${BUILD}/Python-${SEMVER}
-PREFIX=${SUPPORT}/${NAME}
-BIN=${SUPPORT}/${NAME}/bin
+PREFIX=${FRAMEWORKS}/Python.framework/Versions/${VERSION}
+BIN=${PREFIX}/bin
 LIB=${PREFIX}/lib/python${VERSION}
 SSL_SRC=${BUILD}/${SSL_VERSION}
 SSL=${BUILD}/ssl
@@ -214,11 +199,8 @@ zip_python_library() {
 
 build_ssl() {
 	cd $SSL_SRC
-
 	./config no-shared --prefix=$SSL
-	# ./config shared --prefix=$SSL
 	make install_sw
-
 	cd $ROOT
 }
 
@@ -262,20 +244,12 @@ EOM
 chmod +x get_pip.sh
 }
 
-reset_prefix() {
-	remove $PREFIX
-}
 
 configure_python() {
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	 	--prefix=$PREFIX 	\
-	 	--enable-shared 	\
 	 	--with-openssl=$SSL \
-	 	--with-lto 			\
-	 	--enable-optimizations
+	 	--enable-framework=$FRAMEWORKS
 }
-
-
 
 compile_python() {
 	cd $PYTHON
@@ -329,13 +303,12 @@ fix_python_libintl() {
 	install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${VERSION}.dylib
 }
 
-
 install_python() {
 	mkdir -p $BUILD
 	get_python
 	get_ssl
 	build_ssl
-	build_python_zipped
+	build_python_zipped	$1
 }
 
 
@@ -350,3 +323,31 @@ install_python_ext() {
 	# FIXME: not complete!
 	# cp python to py.mxo
 }
+
+
+if [ "$1" == "pkg" ]; then
+	echo "Installing python from source as framework into 'support' folder of package"
+	intall_python_pkg
+
+elif [ "$1" == "ext" ]; then
+	echo "Installing python from source as framework into 'py.mxo' external"
+	intall_python_ext
+
+elif [ "$1" == "build-python" ]; then
+	echo "Building from python source as framework"
+	build_python_zipped
+
+elif [ "$1" == "fix-pkg" ]; then
+	echo "fixing dynamic lookup refs for package installation"
+	fix_python_dylib_for_pkg
+	otool -L $PREFIX/lib/$DYLIB
+
+elif [ "$1" == "fix-ext" ]; then
+	echo "fixing dynamic lookup refs for external installation"
+	fix_python_dylib_for_ext
+	otool -L $PREFIX/lib/$DYLIB
+fi
+
+
+
+

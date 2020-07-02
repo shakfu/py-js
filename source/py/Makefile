@@ -182,22 +182,22 @@ duplo:
 
 # CLEANING
 # -----------------------------------------------------------------------
-.PHONY: clean clean-build clean-support clean-externals
+.PHONY: clean clean-build clean-support clean-externals clean-build-all
 
 clean: clean-externals clean-build clean-support 
 	$(call section,"cleaning DONE")
 
-clean-build: clean-build-homebrew-sys \
-			 clean-build-homebrew-pkg \
-			 clean-build-homebrew-ext \
-			 clean-build-shared-pkg \
-			 clean-build-shared-ext \
+clean-build: clean-build-homebrew-sys  \
+			 clean-build-homebrew-pkg  \
+			 clean-build-homebrew-ext  \
+			 clean-build-shared-pkg    \
+			 clean-build-shared-ext    \
 			 clean-build-framework-pkg \
 			 clean-build-framework-ext
 
-clean-build-all:
-	$call xclean-build,"targets")
-
+clean-targets-build:
+	$(call section,"cleaning targets/build directory")
+	@rm -rf ${PYDIR}/targets/build
 
 clean-externals:
 	$(call section,"cleaning externals")
@@ -206,25 +206,25 @@ clean-externals:
 	done
 
 clean-build-homebrew-sys:
-	$call xclean-build,"homebrew-sys")
+	$(call xclean-build,"homebrew-sys")
 
 clean-build-homebrew-pkg:
-	$call xclean-build,"homebrew-pkg")
+	$(call xclean-build,"homebrew-pkg")
 
 clean-build-homebrew-ext:
-	$call xclean-build,"homebrew-ext")
+	$(call xclean-build,"homebrew-ext")
 
 clean-build-shared-pkg:
-	$call xclean-build,"shared-pkg")
+	$(call xclean-build,"shared-pkg")
 
-clean-build-shared-pkg:
-	$call xclean-build,"shared-ext")
+clean-build-shared-ext:
+	$(call xclean-build,"shared-ext")
 
 clean-build-framework-pkg:
-	$call xclean-build,"framework-pkg")
+	$(call xclean-build,"framework-pkg")
 
 clean-build-framework-ext:
-	$call xclean-build,"framework-ext")
+	$(call xclean-build,"framework-ext")
 
 clean-support:
 	$(call section,"cleaning support directory")
