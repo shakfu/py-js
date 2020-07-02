@@ -140,6 +140,11 @@ rm_bin() {
 }
 
 
+clean_python_cruft() {
+	find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+	find . | grep -E "(tests|test)" | xargs rm -rf
+}
+
 clean_python_pyc() {
 	echo "removing __pycache__ .pyc/o from $1"
 	find $1 | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
@@ -148,6 +153,11 @@ clean_python_pyc() {
 clean_python_tests() {
 	echo "removing 'test' dirs from $1"
 	find $1 | grep -E "(tests|test)" | xargs rm -rf
+}
+
+clean_python_site_packages() {
+	echo "removing everything in $LIB/site-packages"
+	rm -rf $LIB/site-packages/*
 }
 
 clean_python() {
@@ -191,10 +201,7 @@ clean_python() {
 	rm_bin pyvenv-${VERSION}
 }
 
-clean_python_site_packages() {
-	echo "removing everything in $LIB/site-packages"
-	rm -rf $LIB/site-packages/*
-}
+
 
 
 zip_python_library() {
@@ -265,17 +272,6 @@ chmod +x get_pip.sh
 reset_prefix() {
 	remove $PREFIX
 }
-
-configure_python() {
-	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	 	--prefix=$PREFIX 	\
-	 	--enable-shared 	\
-	 	--with-openssl=$SSL \
-	 	--with-lto 			\
-	 	--enable-optimizations
-}
-
-
 
 compile_python() {
 	cd $PYTHON

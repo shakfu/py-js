@@ -3,6 +3,15 @@
 source "scripts/common.sh"
 
 
+configure_python() {
+	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
+	 	--prefix=$PREFIX 	\
+	 	--enable-shared 	\
+	 	--with-openssl=$SSL \
+	 	--with-lto 			\
+	 	--enable-optimizations
+}
+
 
 if [ "$1" == "pkg" ]; then
     echo "Installing python from source as shared lib into 'support' folder of package"
