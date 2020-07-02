@@ -3,4 +3,4 @@
 PREFIX = $(SUPPORT)/python$(VERSION)
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)m
 PY_LIBS = $(PREFIX)
-PY_LDFLAGS = -lpython$(VERSION) -ldl
+PY_LDFLAGS = -lpython$(VERSION)m -ldl

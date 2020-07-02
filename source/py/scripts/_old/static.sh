@@ -1,20 +1,6 @@
 #!/usr/bin/env bash
 
-COLOR_BOLD_YELLOW="\033[1;33m"
-COLOR_BOLD_BLUE="\033[1;34m"
-COLOR_BOLD_MAGENTA="\033[1;35m"
-COLOR_BOLD_CYAN="\033[1;36m"
-COLOR_RESET="\033[m"
-
-function section {
-    echo
-    echo -e $COLOR_BOLD_CYAN$1 $COLOR_RESET
-    echo "----------------------------------------------------------"
-}
-
-function warn {
-    echo -e $COLOR_BOLD_YELLOW"WARNING: "$COLOR_RESET$1
-}
+source "scripts/common.sh"
 
 VERSION_MAJOR=${PY_MAJ_VER:=3.7}
 VERSION_MINOR=${PY_MIN_VER:=7}
@@ -35,9 +21,7 @@ URL_GETPIP=https://bootstrap.pypa.io/get-pip.py
 ROOT=$(pwd)
 PY=${ROOT}
 SUPPORT=${ROOT}/../../support
-EXTERNALS=${ROOT}/../../externals
 SOURCE=${ROOT}/../source
-FRAMEWORKS=${SUPPORT}/Frameworks
 BUILD=${ROOT}/targets/build
 PYTHON=${BUILD}/Python-${SEMVER}
 PREFIX=${SUPPORT}/${NAME}
@@ -262,9 +246,7 @@ EOM
 chmod +x get_pip.sh
 }
 
-reset_prefix() {
-	remove $PREFIX
-}
+
 
 configure_python() {
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
@@ -350,3 +332,32 @@ install_python_ext() {
 	# FIXME: not complete!
 	# cp python to py.mxo
 }
+
+# if [ "$1" == "pkg" ]; then
+#     echo "Installing python from source as shared lib into 'support' folder of package"
+#     reset
+#     install_python_pkg
+
+# elif [ "$1" == "ext" ]; then
+#     echo "Installing python from source as shared lib into 'py.mxo' external"
+#     reset
+#     install_python_ext
+
+# elif [ "$1" == "build-python" ]; then
+# 	echo "Building from python source as shared lib"
+# 	build_python_zipped
+
+# elif [ "$1" == "fix-pkg" ]; then
+# 	echo "fixing dynamic lookup refs for package installation"
+# 	fix_python_dylib_for_pkg
+# 	otool -L $PREFIX/lib/$DYLIB
+
+# elif [ "$1" == "fix-ext" ]; then
+# 	echo "fixing dynamic lookup refs for external installation"
+# 	fix_python_dylib_for_ext
+# 	otool -L $PREFIX/lib/$DYLIB
+# fi
+
+
+
+

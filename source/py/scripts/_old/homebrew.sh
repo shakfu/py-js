@@ -2,20 +2,81 @@
 
 source "scripts/common.sh"
 
+VERSION_MAJOR=${PY_MAJ_VER:=3.7}
+VERSION_MINOR=${PY_MIN_VER:=7}
+
+SEMVER=${VERSION_MAJOR}.${VERSION_MINOR}
+VERSION=${VERSION_MAJOR}
+VER="${VERSION//./}"
+NAME=python${VERSION}
+
+ROOT=$(pwd)
+EXTERNALS=${ROOT}/../../externals
 PY_MACOS=${EXTERNALS}/py.mxo/Contents/MacOS
 PYJS_MACOS=${EXTERNALS}/pyjs.mxo/Contents/MacOS
-
+SUPPORT=${ROOT}/../../support
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
 LIB=${PREFIX}/lib/${NAME}
 
 HOMEBREW=/usr/local/Cellar/python/${SEMVER}/Frameworks/Python.framework/Versions/${VERSION}
 DYLIB_NAME=libpython${VERSION}
+DYLIB=${DYLIB_NAME}.dylib
 
+
+clean_python_pyc() {
+	echo "removing __pycache__ .pyc/o from $1"
+	find $1 | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+}
+
+clean_python_tests() {
+	echo "removing 'test' dirs from $1"
+	find $1 | grep -E "(tests|test)" | xargs rm -rf
+}
+
+
+remove() {
+	echo "removing $1"
+	rm -rf $1
+}
+
+rm_lib() {
+	echo "removing $1"
+	rm -rf ${LIB}/$1
+}
+
+
+rm_ext() {
+	echo "removing $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so"
+	rm -rf $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so
+}
+
+rm_bin() {
+	echo "removing $PREFIX/bin/$1"
+	rm -rf $PREFIX/bin/$1
+}
 
 cp_pkg() {
 	echo "copying $1"
 	cp -rf ${HOMEBREW}/lib/${NAME}/$1 ${LIB}/$1
+}
+
+reset() {
+	remove $PREFIX
+}
+
+zip_python_library() {
+	remove ${LIB}/site-packages
+	mv $LIB/lib-dynload $PREFIX
+	cp $LIB/os.py $PREFIX
+	python -m zipfile -c $PREFIX/lib/python${VER}.zip $LIB/*
+	remove $LIB
+	mkdir -p $LIB
+	mv $PREFIX/lib-dynload $LIB
+	 # Need to have a copy of os.py to remain in site-packages
+	 # or it will fail to pick up library.zip
+	mv $PREFIX/os.py $LIB
+	mkdir $LIB/site-packages
 }
 
 
@@ -48,8 +109,8 @@ clean_python() {
 	rm_ext _codecs_iso2022
 	rm_ext _curses
 	rm_ext _curses_panel
-}
 
+}
 
 fix_python_exec() {
 	cd $BIN
@@ -126,7 +187,7 @@ install_python_ext() {
 
 if [ "$1" == "pkg" ]; then
     echo "Installing minimal homebrew python into 'support' folder of package"
-    reset_prefix
+    reset
     install_python_pkg
 
 elif [ "$1" == "ext" ]; then
