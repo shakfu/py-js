@@ -2,15 +2,21 @@
 
 source "scripts/common.sh"
 
+PY_EXTERNAL=${EXTERNALS}/py.mxo
 PY_MACOS=${EXTERNALS}/py.mxo/Contents/MacOS
+PY_CONTENTS=${EXTERNALS}/py.mxo/Contents
+
+PYJS_EXTERNAL=${EXTERNALS}/pyjs.mxo
 PYJS_MACOS=${EXTERNALS}/pyjs.mxo/Contents/MacOS
+PYJS_CONTENTS=${EXTERNALS}/pyjs.mxo/Contents
+
 
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
 LIB=${PREFIX}/lib/${NAME}
 
 HOMEBREW=/usr/local/Cellar/python/${SEMVER}/Frameworks/Python.framework/Versions/${VERSION}
-DYLIB_NAME=libpython${VERSION}
+
 
 
 cp_pkg() {
@@ -65,12 +71,39 @@ fix_python_dylib_for_pkg() {
 	cd $ROOT
 }
 
-fix_python_dylib_for_ext() {
+fix_python_dylib_for_ext_executable() {
 	cd $PREFIX
 	chmod 777 ${DYLIB}
 	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
 	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
-	cp -rf $PREFIX/* $PY_MACOS
+	cp -rf $PREFIX/* $PY_EXTERNAL/Contents/MacOS
+	cd $ROOT
+}
+
+fix_python_dylib_for_ext_executable_name() {
+	cd $PREFIX
+	chmod 777 ${DYLIB}
+	install_name_tool -id @loader_path/${NAME}/${DYLIB} ${DYLIB}
+	mkdir -p $PY_EXTERNAL/Contents/MacOS/${NAME}
+	cp -rf $PREFIX/* $PY_EXTERNAL/Contents/MacOS/${NAME}
+	cd $ROOT
+}
+
+fix_python_dylib_for_ext_plugins() {
+	cd $PREFIX
+	chmod 777 ${DYLIB}
+	install_name_tool -id @loader_path/../PlugIns/${NAME}/${DYLIB} ${DYLIB}
+	mkdir -p $PY_EXTERNAL/Contents/PlugIns/${NAME}
+	cp -rf $PREFIX/* $PY_EXTERNAL/Contents/PlugIns/${NAME}
+	cd $ROOT
+}
+
+fix_python_dylib_for_ext_frameworks() {
+	cd $PREFIX
+	chmod 777 ${DYLIB}
+	install_name_tool -id @loader_path/../Frameworks/${NAME}/${DYLIB} ${DYLIB}
+	mkdir -p $PY_EXTERNAL/Contents/Frameworks/${NAME}
+	cp -rf $PREFIX/* $PY_EXTERNAL/Contents/Frameworks/${NAME}
 	cd $ROOT
 }
 
@@ -120,7 +153,10 @@ install_python_pkg() {
 
 install_python_ext() {
 	install_python
-	fix_python_dylib_for_ext
+	# fix_python_dylib_for_ext
+	# fix_python_dylib_for_ext_plugins
+	# fix_python_dylib_for_ext_executable_name
+	fix_python_dylib_for_ext_frameworks
 }
 
 
