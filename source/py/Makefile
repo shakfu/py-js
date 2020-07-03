@@ -59,8 +59,11 @@ homebrew-ext: build-homebrew-ext pkg
 
 shared-pkg: build-shared-pkg pkg pkg-support
 
-shared-ext: build-shared-ext pkg 
+shared-ext: build-shared-ext pkg
 
+static-pkg: build-static-pkg pkg pkg-support
+
+static-ext: build-static-ext pkg
 
 
 # DEPLOYING
@@ -112,6 +115,12 @@ build-framework-pkg: prep-framework-pkg
 build-framework-ext: prep-framework-ext
 	$(call xbuild-targets,"framework-ext")
 
+build-static-pkg: prep-static-pkg
+	$(call xbuild-targets,"static-pkg")
+
+build-static-ext: prep-static-ext
+	$(call xbuild-targets,"static-ext")
+
 build-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
@@ -146,6 +155,14 @@ prep-framework-pkg:
 prep-framework-ext:
 	$(call section,"build framework python for external")
 	@bash scripts/framework.sh ext
+
+prep-static-pkg:
+	$(call section,"build static python for package")
+	@bash scripts/static.sh pkg
+
+prep-static-ext:
+	$(call section,"build static python for external")
+	@bash scripts/static.sh ext
 
 # TESTING
 # -----------------------------------------------------------------------
@@ -193,7 +210,9 @@ clean-build: clean-build-homebrew-sys  \
 			 clean-build-shared-pkg    \
 			 clean-build-shared-ext    \
 			 clean-build-framework-pkg \
-			 clean-build-framework-ext
+			 clean-build-framework-ext \
+			 clean-build-static-pkg    \
+			 clean-build-static-ext 
 
 clean-targets-build:
 	$(call section,"cleaning targets/build directory")
@@ -225,6 +244,12 @@ clean-build-framework-pkg:
 
 clean-build-framework-ext:
 	$(call xclean-build,"framework-ext")
+
+clean-build-static-pkg:
+	$(call xclean-build,"static-pkg")
+
+clean-build-static-ext:
+	$(call xclean-build,"static-ext")
 
 clean-support:
 	$(call section,"cleaning support directory")

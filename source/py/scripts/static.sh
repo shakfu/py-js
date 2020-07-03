@@ -18,7 +18,14 @@ install_python() {
 }
 
 
-if [ "$1" == "ext" ]; then
+if [ "$1" == "pkg" ]; then
     echo "Installing python from source as static lib into 'support' folder of package"
     install_python
+
+elif [ "$1" == "ext" ]; then
+    echo "Installing python from source as static lib into external"
+    install_python
+else
+    echo "No argument given. Can be 'pkg' or 'ext'"
+    echo "for package or external installation respectively"
 fi
