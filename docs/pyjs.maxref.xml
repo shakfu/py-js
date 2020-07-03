@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="pyjs" module="max" category="Python">
+
+	<digest>Evaluate python code</digest>
+	<description>
+		<o>pyjs</o> provides the 'PyJS' javascript class and set of methods to execute and evaluate python code and return the results in <o>js</o> objects.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">shakfu</metadata>
+		<metadata name="tag">Python</metadata>
+	</metadatalist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="name" optional="0" type="symbol">
+			<digest>Name of object</digest>
+			<description>
+				Every <o>py</o> object in a patcher must be named. A unique automatically generated name is assigned if the user doesn't pick a name for the object.
+			</description>
+		</objarg>
+		
+		<objarg name="file" optional="0" type="symbol">
+			<digest>Path to a default python file</digest>
+			<description>
+				A python file to <m>load</m> into the code editor. This path is saved.
+			</description>
+		</objarg>
+		
+		<objarg name="autoload" optional="0" type="bool">
+			<digest>Autoload default python file at start</digest>
+			<description>
+				Enabling this will <m>load</m> the default python file at start. This option is saved.
+			</description>
+		</objarg>
+
+		<objarg name="pythonpath" optional="1" type="symbol">
+			<digest>Additional <m>import</m> path for python interpreter</digest>
+			<description>
+				Provide an optional additional path which will be automatically added to the python interpreter's sys.path to enable <m>import</m> messages from that directory.
+			</description>
+		</objarg>
+
+		<objarg name="debug" optional="1" type="bool">
+			<digest>Debug mode</digest>
+			<description>
+				Switch on/off debug logging of the py object to the console.
+			</description>
+		</objarg>
+	</objarglist>
+	
+
+	<!--MESSAGES-->
+	<methodlist>
+
+		<method name="import">
+			<arglist>
+				<arg name="module" optional="0" type="symbol" />
+			</arglist>
+			<digest>import a python module</digest>
+			<description>
+				Can import standard builtin modules, a custom builtin 'api' to access the max api from python or any modules available on python's sys.path.
+			</description>
+		</method>
+
+		<method name="eval">
+			<arglist>
+				<arg name="expression" optional="0" type="symbol" />
+			</arglist>
+			<digest>Evaluate a python expression</digest>
+			<description>
+				The <a>expression</a> is evaluated in the context of the <o>py</o> object namespace and outputs results to the left outlet and a bang from the right outlet to signal end of evaluation.
+			</description>
+		</method>
+
+		<method name="exec">
+			<arglist>
+				<arg name="statement" optional="0" type="symbol" />
+			</arglist>
+			<digest>Execute a python statement into the object namespace</digest>
+			<description>
+				Can modify and inject new code and data into the namespace.
+			</description>
+		</method>
+
+		<method name="execfile">
+			<arglist>
+				<arg name="filepath" optional="0" type="symbol" />
+			</arglist>
+			<digest>Execute a python file into the object namespace</digest>
+			<description>
+				Can modify and inject new code and data into the namespace.
+			</description>
+		</method>
+
+		<method name="code">
+			<arglist>
+				<arg name="identifier" optional="0" type="symbol" />
+			</arglist>
+			<digest>Tries to <m>eval</m> or <m>exec</m> the message as python code based on simple rules</digest>
+			<description>
+				Attempts to compile the message body, if it succeeds tries to <m>eval</m> it and return the results, or <m>exec</m> it and return.
+			</description>
+		</method>
+
+	</methodlist>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="py" />
+		<seealso name="js" />
+	</seealsolist>
+
+</c74object>

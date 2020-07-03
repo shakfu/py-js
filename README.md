@@ -43,10 +43,11 @@ py max external
             pipe <arg> [pyfunc]  : process a py/max value via a pipe of py funcs
             code <expr|stmt>     : alternative way to eval or exec py code
             anything <expr|stmt> : anything version of the code method 
-        
+            
         code editor
             read <path>          : read text file into editor
             load <path>          : combo of read <path> -> execfile <path>
+            run                  : run the current code in the editor
      
         interobject
             scan                 : scan patcher and store names of child objects
