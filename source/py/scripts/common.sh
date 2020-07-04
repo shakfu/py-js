@@ -43,11 +43,13 @@ PYTHON=${BUILD}/Python-${SEMVER}
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
 LIB=${PREFIX}/lib/python${VERSION}
-SSL_SRC=${BUILD}/${SSL_VERSION}
+SSL_SRC=${BUILD}/openssl-${SSL_VERSION}
 SSL=${BUILD}/ssl
 TMP=${BUILD}/_tmp
 DYLIB_NAME=libpython${VERSION}m
 DYLIB=${DYLIB_NAME}.dylib
+PY_EXTERNAL=${EXTERNALS}/py.mxo
+PYJS_EXTERNAL=${EXTERNALS}/pyjs.mxo
 
 debug() {
 
@@ -199,6 +201,7 @@ clean_python() {
 	rm_bin pip${VERSION}
 	rm_bin python${VERSION}m
 	rm_bin pyvenv-${VERSION}
+	rm_bin pydoc${VERSION}
 }
 
 
@@ -221,11 +224,10 @@ zip_python_library() {
 
 build_ssl() {
 	cd $SSL_SRC
-
-	./config no-shared --prefix=$SSL
-	# ./config shared --prefix=$SSL
+	make clean
+	# ./config no-shared --prefix=$SSL
+	./config shared --prefix=$SSL
 	make install_sw
-
 	cd $ROOT
 }
 
@@ -259,14 +261,13 @@ EOM
 }
 
 write_python_getpip() {
-
 FILE="${PREFIX}/bin/get_pip.sh"
 /bin/cat <<EOM >$FILE
 curl ${URL_GETPIP} -s -o get-pip.py 
 ./bin/python3.7 get-pip.py
 rm get-pip.py
 EOM
-chmod +x get_pip.sh
+chmod +x ${PREFIX}/bin/get_pip.sh
 }
 
 reset_prefix() {
@@ -327,10 +328,15 @@ fix_python_libintl() {
 
 
 install_python() {
-	mkdir -p $BUILD
-	get_python
-	get_ssl
-	build_ssl
+	echo "checking if previous build exists"
+	if [ ! -d $BUILD ] ; then
+		echo "using cleaned prior build"
+		mkdir -p $BUILD
+		get_python
+		get_ssl
+		# don't need to rebuild ssl everytime
+		build_ssl
+	fi
 	build_python_zipped
 }
 
@@ -343,6 +349,9 @@ install_python_pkg() {
 install_python_ext() {
 	install_python
 	fix_python_dylib_for_ext
-	# FIXME: not complete!
-	# cp python to py.mxo
+}
+
+usage() {
+    echo "No argument given. Can be 'pkg' or 'ext'"
+    echo "for package or external installation respectively"
 }

@@ -1,9 +1,9 @@
+# ============================================================================
+# VARIABLES & CONSTANTS
+
 # constants
 COLOR_BOLD_CYAN="\033[1;36m"
 COLOR_RESET="\033[m"
-
-# helper functions
-section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # project variables
 NAME=py
@@ -20,6 +20,15 @@ SRCDIR:=$(shell dirname $(abspath ${PYDIR}))
 ROOTDIR:=$(shell dirname $(abspath ${SRCDIR}))
 
 
+# ifdef MYFLAG
+# CFLAGS += -DMYFLAG
+# endif
+
+# ============================================================================
+# FUNCTIONS
+
+# $(call section,string)
+section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # $(call xbuild,name)
 define xbuild-targets
@@ -35,16 +44,15 @@ $(call section,"cleaning build artifacts from $1 target")
 @find **/$1 | grep -E "(build)" | xargs rm -rf
 endef
 
-# ifdef MYFLAG
-# CFLAGS += -DMYFLAG
-# endif
+# ============================================================================
+# TARGETS
 
 .PHONY: all
 
 all: clean test build
 	@echo "All DONE!"
 
-# HIGH-LEVEL
+# High-Level
 # -----------------------------------------------------------------------
 .PHONY: default homebrew-sys homebrew-pkg homebrew-ext shared-pkg shared-ext
 
@@ -57,6 +65,10 @@ homebrew-pkg: clean build-homebrew-pkg pkg pkg-support
 
 homebrew-ext: build-homebrew-ext pkg
 
+framework-pkg: build-framework-pkg pkg pkg-support
+
+framework-ext: build-framework-ext pkg
+
 shared-pkg: build-shared-pkg pkg pkg-support
 
 shared-ext: build-shared-ext pkg
@@ -64,7 +76,6 @@ shared-ext: build-shared-ext pkg
 static-pkg: build-static-pkg pkg pkg-support
 
 static-ext: build-static-ext pkg
-
 
 # DEPLOYING
 # -----------------------------------------------------------------------
@@ -87,7 +98,7 @@ pkg-support:
 	@rsync -a --delete $(ROOTDIR)/support ${PACKAGE}
 
 
-# BUILDING
+# Building
 # -----------------------------------------------------------------------
 .PHONY: build build-homebrew-pkg build-python-pkg build-extension
 
@@ -125,9 +136,7 @@ build-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
 
-
-
-# PRE-BUILD PREP
+# Pre-build prep
 # -----------------------------------------------------------------------
 .PHONY: prep-shared-pkg prep-shared-ext prep-homebrew-pkg prep-homebrew-ext \
 		prep-framework-pkg prep-framework-ext
@@ -164,7 +173,7 @@ prep-static-ext:
 	$(call section,"build static python for external")
 	@bash scripts/static.sh ext
 
-# TESTING
+# Testing
 # -----------------------------------------------------------------------
 .PHONY: test
 
@@ -172,8 +181,7 @@ test:
 	$(call section,"testing planned")
 	echo "remember to test!"
 
-
-# STYLING
+# Styling
 # -----------------------------------------------------------------------
 .PHONY: style clang-format duplo
 
@@ -197,11 +205,11 @@ duplo:
 	@rm files.lst
 
 
-# CLEANING
+# Cleaning
 # -----------------------------------------------------------------------
-.PHONY: clean clean-build clean-support clean-externals clean-build-all
+.PHONY: clean clean-build clean-support clean-externals
 
-clean: clean-externals clean-build clean-support 
+clean: clean-externals clean-build clean-support
 	$(call section,"cleaning DONE")
 
 clean-build: clean-build-homebrew-sys  \

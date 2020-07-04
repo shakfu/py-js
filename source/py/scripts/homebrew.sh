@@ -2,15 +2,6 @@
 
 source "scripts/common.sh"
 
-PY_EXTERNAL=${EXTERNALS}/py.mxo
-PY_MACOS=${EXTERNALS}/py.mxo/Contents/MacOS
-PY_CONTENTS=${EXTERNALS}/py.mxo/Contents
-
-PYJS_EXTERNAL=${EXTERNALS}/pyjs.mxo
-PYJS_MACOS=${EXTERNALS}/pyjs.mxo/Contents/MacOS
-PYJS_CONTENTS=${EXTERNALS}/pyjs.mxo/Contents
-
-
 PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
 LIB=${PREFIX}/lib/${NAME}

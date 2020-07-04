@@ -26,6 +26,5 @@ elif [ "$1" == "ext" ]; then
     echo "Installing python from source as static lib into external"
     install_python
 else
-    echo "No argument given. Can be 'pkg' or 'ext'"
-    echo "for package or external installation respectively"
+    usage
 fi
