@@ -1,9 +1,13 @@
 # Packaging notes
 
 
-## Design
+## relocatable python
 
+see: 
 
+- https://github.com/gregneagle/relocatable-python
+
+- https://github.com/beeware/Python-Apple-support
 
 
 ## max best practices
