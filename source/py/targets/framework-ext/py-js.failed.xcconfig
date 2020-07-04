@@ -1,0 +1,14 @@
+#include "../common.xcconfig"
+
+
+XCODE_FRAMEWORKS = /Applications/Xcode.app/Contents/Developer/Library/Frameworks
+PYTHON3 = $(XCODE_FRAMEWORKS)/Python3.Framework
+FRAMEWORK_SEARCH_PATHS=$(inherited) $(XCODE_FRAMEWORKS)
+
+PREFIX = $(PYTHON3)/Versions/${VERSION}
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)m
+PY_LIBS = $(PREFIX)/lib
+PY_LDFLAGS = -lpython$(VERSION) -ldl
+
+// This fails inexplicably because XCODE adds $(PYTHON3)/Versions/A and then calls an error on because of it.
+// This is consistent behaviour, even with the python source build
