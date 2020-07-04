@@ -2,10 +2,11 @@
 
 source "scripts/common.sh"
 
-
 PREFIX=${FRAMEWORKS}/Python.framework/Versions/${VERSION}
 BIN=${PREFIX}/bin
+LIB=${PREFIX}/lib/python${VERSION}
 
+FWK_TARGET=Frameworks/Python.Framework/Versions/${VERSION}/lib/${DYLIB}
 
 configure_python() {
 	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
@@ -13,26 +14,38 @@ configure_python() {
 	 	--enable-framework=$FRAMEWORKS
 }
 
+fix_python_dylib_for_pkg() {
+	cd $PREFIX/lib
+	chmod 777 ${DYLIB}
+	install_name_tool -id @loader_path/../../../../support/${FWK_TARGET} ${DYLIB}
+	cd $ROOT
+}
+
+fix_python_dylib_for_ext() {
+	cd $PREFIX/lib
+	chmod 777 ${DYLIB}
+	install_name_tool -id @loader_path/../FWK_TARGET ${DYLIB}
+	cp -rf ${FRAMEWORKS} $PY_EXTERNAL/Contents/Frameworks
+	cd $ROOT
+}
+
+install_python_ext() {
+	install_python
+	# fix_python_dylib_for_ext
+}
 
 if [ "$1" == "pkg" ]; then
 	echo "Installing python from source as framework into 'support' folder of package"
-	intall_python_pkg
+	install_python_pkg
 
 elif [ "$1" == "ext" ]; then
 	echo "Installing python from source as framework into 'py.mxo' external"
-	intall_python_ext
+	install_python_ext
 
 elif [ "$1" == "build-python" ]; then
 	echo "Building from python source as framework"
 	build_python_zipped
 
-elif [ "$1" == "fix-pkg" ]; then
-	echo "fixing dynamic lookup refs for package installation"
-	fix_python_dylib_for_pkg
-	otool -L $PREFIX/lib/$DYLIB
-
-elif [ "$1" == "fix-ext" ]; then
-	echo "fixing dynamic lookup refs for external installation"
-	fix_python_dylib_for_ext
-	otool -L $PREFIX/lib/$DYLIB
+else
+	usage
 fi

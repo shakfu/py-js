@@ -3,13 +3,6 @@
 
 ## Design
 
-build -> homebrew-sys
-
-build-homebrew -> support/python -> homebrew(ext/pkg)
-
-build-python -> support/python -> python(ext/pkg)
-
-build-framework -> support/frameworks -> framework(ext/pkg)
 
 
 

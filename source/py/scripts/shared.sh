@@ -37,8 +37,7 @@ elif [ "$1" == "fix-ext" ]; then
 	fix_python_dylib_for_ext
 	otool -L $PREFIX/lib/$DYLIB
 else
-    echo "No argument given. Can be 'pkg' or 'ext'"
-    echo "for package or external installation respectively"
+    usage
 fi
 
 

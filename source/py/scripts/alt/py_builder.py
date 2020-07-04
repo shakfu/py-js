@@ -4,6 +4,7 @@ import sys
 import os
 from pathlib import Path
 import shutil
+import zipfile
 # import glob
 
 env = os.getenv
@@ -121,8 +122,10 @@ class PyBuilder:
     def copy(self, src, dst):
         shutil.copytree(src, dst)
 
-    def zipsrc(self, zip_path, files_to_include):
+    def zipsrc(self, zip_path, targetdir, optlevel=-1):
         "this is a placeholder"
+        with zipfile.PyZipFile(zip_path, "w", optimize=optlevel) as zipfp:
+            zipfp.writepy(targetdir)
 
     def remove(self, path):
         if hasattr(path, '__iter__'):
