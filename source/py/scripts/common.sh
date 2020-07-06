@@ -7,9 +7,7 @@ COLOR_BOLD_CYAN="\033[1;36m"
 COLOR_RESET="\033[m"
 
 function section {
-    echo
-    echo -e $COLOR_BOLD_CYAN$1 $COLOR_RESET
-    echo "----------------------------------------------------------"
+	echo -e "${COLOR_BOLD_CYAN}>>> ${1} ${COLOR_RESET}"
 }
 
 function warn {
@@ -64,7 +62,7 @@ debug() {
 	echo "SSL_VERSION: $SSL_VERSION"
 	echo "MAC_DEP_TARGET: $MAC_DEP_TARGET"
 	
-	echo "URL_PYTHON: $URL_PYTHON"
+	echo "URL_SRCPYTHON: $URL_SRCPYTHON"
 	echo "URL_OPENSSL: $URL_OPENSSL"
 	echo "URL_GETPIP: $URL_GETPIP"
 	
@@ -93,9 +91,10 @@ get_url() {
 	rm -rf $TMP
 }
 
-get_python() {
+get__python() {
 	get_url $URL_PYTHON
 }
+
 
 get_ssl() {
 	get_url $URL_OPENSSL
@@ -203,9 +202,6 @@ clean_python() {
 	rm_bin pyvenv-${VERSION}
 	rm_bin pydoc${VERSION}
 }
-
-
-
 
 zip_python_library() {
 	remove ${LIB}/site-packages
@@ -339,7 +335,6 @@ install_python() {
 	fi
 	build_python_zipped
 }
-
 
 install_python_pkg() {
 	install_python
