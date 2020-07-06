@@ -38,7 +38,7 @@ $(call section,"build $1")
 	done
 endef
 
-# $call xclean-build,name)
+# $call xclean,name)
 define xclean-build
 $(call section,"cleaning build artifacts from $1 target")
 @find **/$1 | grep -E "(build)" | xargs rm -rf
@@ -49,33 +49,40 @@ endef
 
 .PHONY: all
 
-all: clean test build
-	@echo "All DONE!"
+all: default
 
 # High-Level
 # -----------------------------------------------------------------------
-.PHONY: default homebrew-sys homebrew-pkg homebrew-ext shared-pkg shared-ext
+.PHONY: default bin-homebrew-sys \
+		bin-homebrew-pkg bin-homebrew-ext \
+		bin-framework-pkg bin-framework-ext \
+		src-framework-pkg src-framework-ext \
+		src-shared-pkg src-shared-ext \
+		src-static-pkg src-static-ext
 
-default: homebrew-sys
+default: bin-homebrew-sys
 
-homebrew-sys: clean build pkg
-	$(call section,"build -> deploy to local package")
+bin-homebrew-sys: clean-bin-homebrew-sys build-bin-homebrew-sys pkg
 
-homebrew-pkg: clean build-homebrew-pkg pkg pkg-support
+bin-homebrew-pkg: clean-bin-homebrew-pkg build-bin-homebrew-pkg pkg pkg-support
 
-homebrew-ext: build-homebrew-ext pkg
+bin-homebrew-ext: clean-bin-homebrew-ext build-bin-homebrew-ext pkg
 
-framework-pkg: build-framework-pkg pkg pkg-support
+bin-framework-pkg: clean-bin-framework-pkg build-bin-framework-pkg pkg pkg-support
 
-framework-ext: build-framework-ext pkg
+bin-framework-ext: clean-bin-framework-ext build-bin-framework-ext pkg
 
-shared-pkg: build-shared-pkg pkg pkg-support
+src-framework-pkg: clean-src-framework-pkg build-src-framework-pkg pkg pkg-support
 
-shared-ext: build-shared-ext pkg
+src-framework-ext: clean-src-framework-ext build-src-framework-ext pkg
 
-static-pkg: build-static-pkg pkg pkg-support
+src-shared-pkg: clean-src-shared-pkg build-src-shared-pkg pkg pkg-support
 
-static-ext: build-static-ext pkg
+src-shared-ext: clean-src-shared-ext build-src-shared-ext pkg
+
+src-static-pkg: clean-src-static-pkg build-src-static-pkg pkg pkg-support
+
+src-static-ext: clean-src-static-ext build-src-static-ext pkg
 
 # DEPLOYING
 # -----------------------------------------------------------------------
@@ -100,37 +107,49 @@ pkg-support:
 
 # Building
 # -----------------------------------------------------------------------
-.PHONY: build build-homebrew-pkg build-python-pkg build-extension
+.PHONY: build build-extension \
+		build-bin-homebrew-sys \
+		build-bin-homebrew-pkg build-bin-homebrew-ext \
+		build-bin-framework-pkg build-bin-framework-ext \
+		build-src-framework-pkg build-src-framework-ext \
+		build-src-shared-pkg build-src-shared-ext \
+		build-src-static-pkg build-src-static-ext
 
-build: build-homebrew-sys
+build: build-bin-homebrew-sys
 	$(call section,"build project")
 
-build-homebrew-sys: build-extension
-	$(call xbuild-targets,"homebrew-sys")
+build-bin-homebrew-sys: build-extension
+	$(call xbuild-targets,"bin-homebrew-sys")
 
-build-homebrew-pkg: prep-homebrew-pkg
-	$(call xbuild-targets,"homebrew-pkg")
+build-bin-homebrew-pkg: prep-bin-homebrew-pkg
+	$(call xbuild-targets,"bin-homebrew-pkg")
 
-build-homebrew-ext: prep-homebrew-ext
-	$(call xbuild-targets,"homebrew-ext")
+build-bin-homebrew-ext: prep-bin-homebrew-ext
+	$(call xbuild-targets,"bin-homebrew-ext")
 
-build-shared-pkg: prep-shared-pkg
-	$(call xbuild-targets,"shared-pkg")
+build-bin-framework-pkg: prep-bin-framework-pkg
+	$(call xbuild-targets,"bin-framework-pkg")
 
-build-shared-ext: prep-shared-ext
-	$(call xbuild-targets,"shared-ext")
+build-bin-framework-ext: prep-bin-framework-ext
+	$(call xbuild-targets,"bin-framework-ext")
 
-build-framework-pkg: prep-framework-pkg
-	$(call xbuild-targets,"framework-pkg")
+build-src-framework-pkg: prep-src-framework-pkg
+	$(call xbuild-targets,"src-framework-pkg")
 
-build-framework-ext: prep-framework-ext
-	$(call xbuild-targets,"framework-ext")
+build-src-framework-ext: prep-src-framework-ext
+	$(call xbuild-targets,"src-framework-ext")
 
-build-static-pkg: prep-static-pkg
-	$(call xbuild-targets,"static-pkg")
+build-src-shared-pkg: prep-src-shared-pkg
+	$(call xbuild-targets,"src-shared-pkg")
 
-build-static-ext: prep-static-ext
-	$(call xbuild-targets,"static-ext")
+build-src-shared-ext: prep-src-shared-ext
+	$(call xbuild-targets,"src-shared-ext")
+
+build-src-static-pkg: prep-src-static-pkg
+	$(call xbuild-targets,"src-static-pkg")
+
+build-src-static-ext: prep-src-static-ext
+	$(call xbuild-targets,"src-static-ext")
 
 build-extension:
 	$(call section,"generate c code from cython extension")
@@ -138,40 +157,52 @@ build-extension:
 
 # Pre-build prep
 # -----------------------------------------------------------------------
-.PHONY: prep-shared-pkg prep-shared-ext prep-homebrew-pkg prep-homebrew-ext \
-		prep-framework-pkg prep-framework-ext
+.PHONY: prep-bin-homebrew-pkg prep-bin-homebrew-ext \
+		prep-bin-framework-pkg prep-bin-framework-ext \
+		prep-src-framework-pkg prep-src-framework-ext \
+		prep-src-shared-pkg prep-src-shared-ext \
+		prep-src-static-pkg prep-src-static-ext
+		
 
-prep-homebrew-pkg:
-	$(call section,"build homebrew python for package")
-	@bash scripts/homebrew.sh pkg
+prep-bin-homebrew-pkg:
+	$(call section,"build homebrew python from binary for package")
+	@bash scripts/bin-homebrew.sh pkg
 	
-prep-homebrew-ext:
-	$(call section,"build homebrew python for external")
-	@bash scripts/homebrew.sh ext
+prep-bin-homebrew-ext:
+	$(call section,"build homebrew python from binary for external")
+	@bash scripts/bin-homebrew.sh ext
 
-prep-shared-pkg:
+prep-bin-framework-pkg:
+	$(call section,"build framework python from binary for package")
+	@bash scripts/bin-framework.sh pkg
+	
+prep-bin-framework-ext:
+	$(call section,"build framework python from binary for external")
+	@bash scripts/bin-framework.sh ext
+
+prep-src-framework-pkg:
+	$(call section,"build framework python from source for package")
+	@bash scripts/src-framework.sh pkg
+	
+prep-src-framework-ext:
+	$(call section,"build framework python from source for external")
+	@bash scripts/src-framework.sh ext
+
+prep-src-shared-pkg:
 	$(call section,"prepare shared python from source for package")
-	@bash scripts/shared.sh pkg
+	@bash scripts/src-shared.sh pkg
 
-prep-shared-ext:
+prep-src-shared-ext:
 	$(call section,"prepare shared python from source for external")
-	@bash scripts/shared.sh ext
+	@bash scripts/src-shared.sh ext
 
-prep-framework-pkg:
-	$(call section,"build framework python for package")
-	@bash scripts/framework.sh pkg
-	
-prep-framework-ext:
-	$(call section,"build framework python for external")
-	@bash scripts/framework.sh ext
+prep-src-static-pkg:
+	$(call section,"build static python from source for package")
+	@bash scripts/src-static.sh pkg
 
-prep-static-pkg:
-	$(call section,"build static python for package")
-	@bash scripts/static.sh pkg
-
-prep-static-ext:
-	$(call section,"build static python for external")
-	@bash scripts/static.sh ext
+prep-src-static-ext:
+	$(call section,"build static python from source for external")
+	@bash scripts/src-static.sh ext
 
 # Testing
 # -----------------------------------------------------------------------
@@ -207,20 +238,24 @@ duplo:
 
 # Cleaning
 # -----------------------------------------------------------------------
-.PHONY: clean clean-build clean-support clean-externals
+.PHONY: reset clean clean-build clean-pkg clean-support clean-externals \
+		clean-targets-build clean-bin-homebrew-sys \
+		clean-bin-homebrew-pkg clean-bin-homebrew-ext \
+		clean-bin-framework-pkg clean-bin-framework-ext \
+		clean-src-framework-pkg clean-src-framework-ext \
+		clean-src-shared-pkg clean-src-shared-ext \
+		clean-src-static-pkg clean-src-static-ext 
 
-clean: clean-externals clean-build clean-support
-	$(call section,"cleaning DONE")
+reset: clean clean-targets-build
 
-clean-build: clean-build-homebrew-sys  \
-			 clean-build-homebrew-pkg  \
-			 clean-build-homebrew-ext  \
-			 clean-build-shared-pkg    \
-			 clean-build-shared-ext    \
-			 clean-build-framework-pkg \
-			 clean-build-framework-ext \
-			 clean-build-static-pkg    \
-			 clean-build-static-ext 
+clean: clean-externals clean-build clean-support clean-pkg
+
+clean-build: clean-bin-homebrew-sys  \
+			 clean-bin-homebrew-pkg clean-bin-homebrew-ext  \
+			 clean-bin-framework-pkg clean-bin-framework-ext \
+			 clean-src-framework-pkg clean-src-framework-ext \
+			 clean-src-shared-pkg clean-src-shared-ext \
+			 clean-src-static-pkg clean-src-static-ext 
 
 clean-targets-build:
 	$(call section,"cleaning targets/build directory")
@@ -232,32 +267,38 @@ clean-externals:
 		rm -rf ${ROOTDIR}/externals/$$target.mxo  ; \
 	done
 
-clean-build-homebrew-sys:
-	$(call xclean-build,"homebrew-sys")
+clean-bin-homebrew-sys:
+	$(call xclean-build,"bin-homebrew-sys")
 
-clean-build-homebrew-pkg:
-	$(call xclean-build,"homebrew-pkg")
+clean-bin-homebrew-pkg:
+	$(call xclean-build,"bin-homebrew-pkg")
 
-clean-build-homebrew-ext:
-	$(call xclean-build,"homebrew-ext")
+clean-bin-homebrew-ext:
+	$(call xclean-build,"bin-homebrew-ext")
 
-clean-build-shared-pkg:
-	$(call xclean-build,"shared-pkg")
+clean-bin-framework-pkg:
+	$(call xclean-build,"bin-framework-pkg")
 
-clean-build-shared-ext:
-	$(call xclean-build,"shared-ext")
+clean-bin-framework-ext:
+	$(call xclean-build,"bin-framework-ext")
 
-clean-build-framework-pkg:
-	$(call xclean-build,"framework-pkg")
+clean-src-framework-pkg:
+	$(call xclean-build,"src-framework-pkg")
 
-clean-build-framework-ext:
-	$(call xclean-build,"framework-ext")
+clean-src-framework-ext:
+	$(call xclean-build,"src-framework-ext")
 
-clean-build-static-pkg:
-	$(call xclean-build,"static-pkg")
+clean-src-shared-pkg:
+	$(call xclean-build,"src-shared-pkg")
 
-clean-build-static-ext:
-	$(call xclean-build,"static-ext")
+clean-src-shared-ext:
+	$(call xclean-build,"src-shared-ext")
+
+clean-src-static-pkg:
+	$(call xclean-build,"src-static-pkg")
+
+clean-src-static-ext:
+	$(call xclean-build,"src-static-ext")
 
 clean-support:
 	$(call section,"cleaning support directory")
@@ -266,4 +307,8 @@ clean-support:
 clean-pkg:
 	$(call section,"cleaning py pkg")
 	@rm -rf ${PACKAGE}
+
+clean-xcode: clean-build
+	$(call section,"cleaning xcode detritus")
+	@find . | grep -E "(project.xcworkspace|xcuserdata)" | xargs rm -rf
 

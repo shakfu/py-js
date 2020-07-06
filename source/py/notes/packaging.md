@@ -1,5 +1,23 @@
 # Packaging notes
 
+## packaging results
+
+method        | size  | works  | codesign  | standalone 
+:------------ | :---- | :----: | :-------: | :--------: 
+framework-ext |       |  0c    |           |      
+framework-pkg | 7.5   |  1c    | 1         |  0 
+homebrew-ext  | 8.5   |  1     | 0  c      |  1 (py)
+homebrew-pkg  | 8.5   |  1     | 1c        |  0
+homebrew-sys  | 0.0   |  1     | 1 c       |  1 (py)
+static-ext    | 7.4   |  1     | 1         |  1 (py)
+static-pkg    |       |        |           | 
+shared-ext    |       |        |           | 
+shared-pkg    |       |        |           | 
+
+
+framework-ext has a build error (fix then retry)
+static-ext 
+
 
 ## relocatable python
 

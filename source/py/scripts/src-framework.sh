@@ -43,18 +43,23 @@ install_python_ext() {
 	# fix_python_dylib_for_ext
 }
 
-# if [ "$1" == "pkg" ]; then
-# 	echo "Installing python from source as framework into 'support' folder of package"
-# 	install_python_pkg
 
-# elif [ "$1" == "ext" ]; then
-# 	echo "Installing python from source as framework into 'py.mxo' external"
-# 	install_python_ext
+if [ "$1" == "pkg" ]; then
+	echo "Installing python from source as framework into 'support' folder of package"
+	install_python_pkg
 
-# elif [ "$1" == "build-python" ]; then
-# 	echo "Building from python source as framework"
-# 	build_python_zipped
+elif [ "$1" == "ext" ]; then
+	echo "Installing python from source as framework into 'py.mxo' external"
+	install_python_ext
 
-# else
-# 	usage
-# fi
+elif [ "$1" == "bin" ]; then
+	echo "Installing python framework from binary .pkg in 'support' folder"
+	install_bin_framework_pkg
+
+elif [ "$1" == "build-python" ]; then
+	echo "Building from python source as framework"
+	build_python_zipped
+
+else
+	usage
+fi
