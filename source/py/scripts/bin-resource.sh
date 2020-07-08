@@ -9,6 +9,8 @@ RESOURCES=${PREFIX}/Resources
 
 URL_PYTHON=https://www.python.org/ftp/python/${SEMVER}/python-${SEMVER}-macosx10.9.pkg
 FWK_TARGET=Frameworks/Python.Framework/Versions/${VERSION}/lib/${DYLIB}
+RES_TARGET=Resources/Python.Framework/Versions/${VERSION}/lib/${DYLIB}
+
 
 fix_python_dylib_for_pkg() {
 	cd $PREFIX/lib
@@ -20,7 +22,8 @@ fix_python_dylib_for_pkg() {
 fix_python_dylib_for_ext() {
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../${FWK_TARGET} ${DYLIB}
+	# install_name_tool -id @loader_path/../${FWK_TARGET} ${DYLIB}
+	install_name_tool -id @loader_path/../${RES_TARGET} ${DYLIB}
 	# cp -rf ${FRAMEWORKS} $PY_EXTERNAL/Contents
 	cd $ROOT
 }
@@ -114,6 +117,20 @@ install_python_ext() {
 	fix_python_dylib_for_ext
 }
 
+sign() {
+	section "codesign version $1"
+	/usr/bin/codesign -s $DEV_ID --force --sign - --timestamp=none \
+		--deep \
+		--preserve-metadata=identifier,entitlements,flags $1/Contents/Resources/Python.Framework/Versions/${VERSION}
+
+	/usr/bin/codesign -s $DEV_ID --force --deep $1
+
+	section "codesign verify $1"
+	codesign --verify --verbose $1
+}
+
+
+
 
 
 if [ "$1" == "pkg" ]; then
@@ -127,6 +144,11 @@ elif [ "$1" == "ext" ]; then
 elif [ "$1" == "bin" ]; then
 	echo "Installing python framework from binary .pkg in 'support' folder"
 	install_bin_framework_pkg
+
+elif [ "$1" == "sign" ]; then
+	echo "Installing python framework from binary .pkg in 'support' folder"
+	sign ${PY_EXTERNAL}
+	sign ${PYJS_EXTERNAL}
 
 elif [ "$1" == "build-python" ]; then
 	echo "Building from python source as framework"

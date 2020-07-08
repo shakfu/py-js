@@ -1,22 +1,42 @@
 # Packaging notes
 
+
+
+
+## codesigning and notarization
+
+
+see:
+
+- http://www.zarkonnen.com/signing_notarizing_catalina
+- https://stackoverflow.com/questions/56890749/macos-notarize-in-script
+- https://github.com/rednoah/notarize-app/blob/master/notarize-app
+- https://glyphsapp.com/tutorials/how-to-notarize-your-plug-ins
+- https://developer.apple.com/forums/thread/129228
+- https://developer.apple.com/forums/thread/128166
+- https://developer.apple.com/forums/thread/129546
+- https://developer.apple.com/forums/thread/129045
+- https://developer.apple.com/documentation/macos-release-notes/macos-catalina-10_15-release-notes?preferredLanguage=occ
+
+
 ## packaging results
 
-method        | size  | works  | codesign  | standalone 
-:------------ | :---- | :----: | :-------: | :--------: 
-framework-ext |       |  0c    |           |      
-framework-pkg | 7.5   |  1c    | 1         |  0 
-homebrew-ext  | 8.5   |  1     | 0  c      |  1 (py)
-homebrew-pkg  | 8.5   |  1     | 1c        |  0
-homebrew-sys  | 0.0   |  1     | 1 c       |  1 (py)
-static-ext    | 7.4   |  1     | 1         |  1 (py)
-static-pkg    |       |        |           | 
-shared-ext    |       |        |           | 
-shared-pkg    |       |        |           | 
+method            | size  | works  | codesign  | standalone 
+:---------------- | :---- | :----: | :-------: | :--------: 
+bin-framework-ext |       |  0c    |           |      
+bin-framework-pkg | 12+   |  1c    |           |   
+src-framework-ext |       |  0c    |           |      
+src-framework-pkg | 7.5   |  1c    | 1         |  0 
+bin-homebrew-ext  | 8.5   |  1     | 0c        |  1 (py)
+bin-homebrew-pkg  | 8.5   |  1     | 1c        |  0
+bin-homebrew-sys  | 0.0   |  1     | 1c        |  1 (py)
+src-static-ext    | 7.4   |  1     | 1         |  1 (py)
+src-static-pkg    |       |        |           | 
+src-shared-ext    |       |        |           | 
+src-shared-pkg    |       |        |           | 
 
 
-framework-ext has a build error (fix then retry)
-static-ext 
+framework-ext has a build error (fix then retry) static-ext 
 
 
 ## relocatable python

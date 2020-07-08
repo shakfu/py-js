@@ -16,6 +16,8 @@
 		1239836224A1DC4600ADF7CA /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835D24A1DC4600ADF7CA /* api.c */; };
 		1239836324A1DC4600ADF7CA /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835E24A1DC4600ADF7CA /* py.c */; };
 		1239836424A1DC4600ADF7CA /* py.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835F24A1DC4600ADF7CA /* py.h */; };
+		127196AB24B56F18006F0E49 /* Python.Framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 120E502324B24B8C00ADD134 /* Python.Framework */; };
+		127196AC24B56F18006F0E49 /* Python.Framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 120E502324B24B8C00ADD134 /* Python.Framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -27,6 +29,17 @@
 			dstSubfolderSpec = 10;
 			files = (
 				120E502624B24B9700ADD134 /* Python.Framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		127196AD24B56F18006F0E49 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				127196AC24B56F18006F0E49 /* Python.Framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -52,6 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				127196AB24B56F18006F0E49 /* Python.Framework in Frameworks */,
 				120266BD24AA15EF007DF876 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -130,10 +144,10 @@
 			buildConfigurationList = 120266C024AA15EF007DF876 /* Build configuration list for PBXNativeTarget "pyjs" */;
 			buildPhases = (
 				120266B424AA15EF007DF876 /* Headers */,
-				120266B724AA15EF007DF876 /* Resources */,
 				120266B924AA15EF007DF876 /* Sources */,
 				120266BC24AA15EF007DF876 /* Frameworks */,
 				120266BF24AA15EF007DF876 /* Rez */,
+				127196AD24B56F18006F0E49 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -149,7 +163,6 @@
 			buildConfigurationList = 2FBBEAE008F335360078DB84 /* Build configuration list for PBXNativeTarget "py" */;
 			buildPhases = (
 				2FBBEAD708F335360078DB84 /* Headers */,
-				2FBBEAD808F335360078DB84 /* Resources */,
 				2FBBEADA08F335360078DB84 /* Sources */,
 				2FBBEADC08F335360078DB84 /* Frameworks */,
 				2FBBEADF08F335360078DB84 /* Rez */,
@@ -171,6 +184,14 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0610;
+				TargetAttributes = {
+					120266B324AA15EF007DF876 = {
+						ProvisioningStyle = Manual;
+					};
+					2FBBEAD608F335360078DB84 = {
+						ProvisioningStyle = Manual;
+					};
+				};
 			};
 			buildConfigurationList = 2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "py-js" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -189,23 +210,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		120266B724AA15EF007DF876 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2FBBEAD808F335360078DB84 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXRezBuildPhase section */
 		120266BF24AA15EF007DF876 /* Rez */ = {
@@ -250,6 +254,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEVELOPMENT_TEAM = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -268,6 +273,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.pyjs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Development;
 		};
@@ -315,6 +321,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEVELOPMENT_TEAM = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -331,8 +338,9 @@
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
+				PRODUCT_BUNDLE_IDENTIFIER = me.org.py;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Development;
 		};
@@ -340,9 +348,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = GXY97B2JBX;
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
@@ -356,8 +365,9 @@
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibtakr.py;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Deployment;
 		};
