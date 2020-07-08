@@ -58,7 +58,8 @@ all: default
 		bin-framework-pkg bin-framework-ext \
 		src-framework-pkg src-framework-ext \
 		src-shared-pkg src-shared-ext \
-		src-static-pkg src-static-ext
+		src-static-pkg src-static-ext \
+		bin-resource-ext
 
 default: bin-homebrew-sys
 
@@ -71,6 +72,8 @@ bin-homebrew-ext: clean-bin-homebrew-ext build-bin-homebrew-ext pkg
 bin-framework-pkg: clean-bin-framework-pkg build-bin-framework-pkg pkg pkg-support
 
 bin-framework-ext: clean-bin-framework-ext build-bin-framework-ext pkg
+
+bin-resource-ext: clean-bin-resource-ext build-bin-resource-ext pkg
 
 src-framework-pkg: clean-src-framework-pkg build-src-framework-pkg pkg pkg-support
 
@@ -113,7 +116,8 @@ pkg-support:
 		build-bin-framework-pkg build-bin-framework-ext \
 		build-src-framework-pkg build-src-framework-ext \
 		build-src-shared-pkg build-src-shared-ext \
-		build-src-static-pkg build-src-static-ext
+		build-src-static-pkg build-src-static-ext \
+		build-bin-resource-ext
 
 build: build-bin-homebrew-sys
 	$(call section,"build project")
@@ -132,6 +136,9 @@ build-bin-framework-pkg: prep-bin-framework-pkg
 
 build-bin-framework-ext: prep-bin-framework-ext
 	$(call xbuild-targets,"bin-framework-ext")
+
+build-bin-resource-ext: prep-bin-resource-ext
+	$(call xbuild-targets,"bin-resource-ext")
 
 build-src-framework-pkg: prep-src-framework-pkg
 	$(call xbuild-targets,"src-framework-pkg")
@@ -161,7 +168,8 @@ build-extension:
 		prep-bin-framework-pkg prep-bin-framework-ext \
 		prep-src-framework-pkg prep-src-framework-ext \
 		prep-src-shared-pkg prep-src-shared-ext \
-		prep-src-static-pkg prep-src-static-ext
+		prep-src-static-pkg prep-src-static-ext \
+		prep-bin-resource-ext
 		
 
 prep-bin-homebrew-pkg:
@@ -179,6 +187,10 @@ prep-bin-framework-pkg:
 prep-bin-framework-ext:
 	$(call section,"build framework python from binary for external")
 	@bash scripts/bin-framework.sh ext
+
+prep-bin-resource-ext:
+	$(call section,"build resource python from binary for external")
+	@bash scripts/bin-resource-ext.sh ext
 
 prep-src-framework-pkg:
 	$(call section,"build framework python from source for package")
@@ -244,7 +256,8 @@ duplo:
 		clean-bin-framework-pkg clean-bin-framework-ext \
 		clean-src-framework-pkg clean-src-framework-ext \
 		clean-src-shared-pkg clean-src-shared-ext \
-		clean-src-static-pkg clean-src-static-ext 
+		clean-src-static-pkg clean-src-static-ext \
+		clean-bin-resource-ext
 
 reset: clean clean-targets-build
 
@@ -255,7 +268,8 @@ clean-build: clean-bin-homebrew-sys  \
 			 clean-bin-framework-pkg clean-bin-framework-ext \
 			 clean-src-framework-pkg clean-src-framework-ext \
 			 clean-src-shared-pkg clean-src-shared-ext \
-			 clean-src-static-pkg clean-src-static-ext 
+			 clean-src-static-pkg clean-src-static-ext \
+			 clean-bin-resource-ext
 
 clean-targets-build:
 	$(call section,"cleaning targets/build directory")
@@ -281,6 +295,9 @@ clean-bin-framework-pkg:
 
 clean-bin-framework-ext:
 	$(call xclean-build,"bin-framework-ext")
+
+clean-bin-resource-ext:
+	$(call xclean-build,"bin-resource-ext")
 
 clean-src-framework-pkg:
 	$(call xclean-build,"src-framework-pkg")
