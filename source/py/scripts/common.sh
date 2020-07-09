@@ -14,8 +14,8 @@ function warn {
     echo -e $COLOR_BOLD_YELLOW"WARNING: "$COLOR_RESET$1
 }
 
-VERSION_MAJOR=${PY_MAJ_VER:=3.7}
-VERSION_MINOR=${PY_MIN_VER:=7}
+VERSION_MAJOR=${PY_MAJ_VER:=3.8}
+VERSION_MINOR=${PY_MIN_VER:=3}
 SSL_VERSION=${SSL_VER:=1.1.1g}
 MAC_DEP_TARGET=${MAC_DEP:=10.13}
 
@@ -44,7 +44,7 @@ LIB=${PREFIX}/lib/python${VERSION}
 SSL_SRC=${BUILD}/openssl-${SSL_VERSION}
 SSL=${BUILD}/ssl
 TMP=${BUILD}/_tmp
-DYLIB_NAME=libpython${VERSION}m
+DYLIB_NAME=libpython${VERSION}
 DYLIB=${DYLIB_NAME}.dylib
 PY_EXTERNAL=${EXTERNALS}/py.mxo
 PYJS_EXTERNAL=${EXTERNALS}/pyjs.mxo
@@ -91,7 +91,7 @@ get_url() {
 	rm -rf $TMP
 }
 
-get__python() {
+get_python() {
 	get_url $URL_PYTHON
 }
 
@@ -132,7 +132,7 @@ rm_lib() {
 
 rm_ext() {
 	echo "removing $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so"
-	rm -rf $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so
+	rm -rf $LIB/lib-dynload/$1.cpython-${VER}-darwin.so
 }
 
 rm_bin() {
@@ -325,12 +325,14 @@ fix_python_libintl() {
 
 install_python() {
 	echo "checking if previous build exists"
-	if [ ! -d $BUILD ] ; then
-		echo "using cleaned prior build"
-		mkdir -p $BUILD
+	mkdir -p $BUILD
+	if [ ! -d $PYTHON ] ; then
+		echo "retrieving $PYTHON from $URL_PYTHON"
 		get_python
+	fi
+	if [ ! -d $SSL ] ; then
+		echo "retrieving $SSL from $URL_OPENSSL"
 		get_ssl
-		# don't need to rebuild ssl everytime
 		build_ssl
 	fi
 	build_python_zipped

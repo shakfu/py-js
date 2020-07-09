@@ -1,7 +1,142 @@
 # Packaging notes
 
+## py2app
+
+I have a use-case for an open-source project (https://github.com/shakfu/py-js) for a plugin which provides for arbitrary python code in [max](https://cycling74.com/products/max) and requires that I embed the python interpreter (via the c-api and cython) into a c-based plugin or 'external' in max/msp parlance.
+
+The operational code works well and is tested but I am continuously struggling to properly structure a Python.Framework-based build (against which the external is linked via @loader_path) which is embedded in the external in a manner which will pass the opaque code-signing and notarization steps.
+
+To give a concrete examples, the following 'bundle' actually works in the application and is based on compiling python.org's 3.7.7 as a framework:
+
+```
+$ tree -L 7 -n py.mxo
+py.mxo
+└── Contents
+    ├── Frameworks
+    │   └── Python.framework
+    │       ├── Python -> Versions/Current/Python
+    │       ├── Resources -> Versions/Current/Resources
+    │       └── Versions
+    │           ├── 3.7
+    │           │   ├── Python
+    │           │   ├── Resources
+    │           │   │   ├── English.lproj
+    │           │   │   ├── Info.plist
+    │           │   │   └── Python.app
+    │           │   ├── bin
+    │           │   │   ├── get_pip.sh
+    │           │   │   ├── python3.7
+    │           │   │   └── python3.7m-config
+    │           │   ├── include
+    │           │   │   └── python3.7m
+    │           │   └── lib
+    │           │       ├── libpython3.7.dylib -> ../Python
+    │           │       ├── libpython3.7m.dylib -> ../Python
+    │           │       ├── python3.7
+    │           │       └── python37.zip
+    │           └── Current -> 3.7
+    ├── Info.plist
+    ├── MacOS
+    │   └── py
+    ├── PkgInfo
+    └── _CodeSignature
+        └── CodeResources
+```
+Of course, this fails the code signing step for reasons that will be well known to you.
+
+In any case, I stumbled upon py2app and saw for the first time you had managed to place 'lib' in Resources which is a condition of a well-formed bundle I believe.
+
+So my question is: would it be possible to use py2app and/or macholib to address the embedding scenario above where I would need a full python library (or a specified subset thereof) but would not need an initial 'script' per se or to turn it into a .app as per the typical py2app use-case. In this sense, py2app would be more of a 'py2bundle' (-:
 
 
+
+
+```
+hello.app $ tree -L 6 -n .
+.
+└── Contents
+    ├── Frameworks
+    │   ├── Python.framework
+    │   │   ├── Python -> Versions/Current/Python
+    │   │   ├── Resources -> Versions/Current/Resources
+    │   │   └── Versions
+    │   │       ├── 3.7
+    │   │       │   ├── Python
+    │   │       │   ├── Resources
+    │   │       │   ├── include
+    │   │       │   └── lib
+    │   │       └── Current -> 3.7
+    │   ├── libcrypto.1.1.dylib
+    │   ├── libgdbm.6.dylib
+    │   ├── liblzma.5.dylib
+    │   └── libssl.1.1.dylib
+    ├── Info.plist
+    ├── MacOS
+    │   ├── hello
+    │   └── python
+    ├── PkgInfo
+    └── Resources
+        ├── PythonApplet.icns
+        ├── __boot__.py
+        ├── __error__.sh
+        ├── hello.py
+        ├── include
+        │   └── python3.7m
+        │       └── pyconfig.h
+        ├── lib
+        │   ├── python3.7
+        │   │   ├── config-3.7m-darwin
+        │   │   ├── lib-dynload
+        │   │   │   ├── _bisect.so
+        │   │   │   ├── _blake2.so
+        │   │   │   ├── _bz2.so
+        │   │   │   ├── _codecs_cn.so
+        │   │   │   ├── _codecs_hk.so
+        │   │   │   ├── _codecs_iso2022.so
+        │   │   │   ├── _codecs_jp.so
+        │   │   │   ├── _codecs_kr.so
+        │   │   │   ├── _codecs_tw.so
+        │   │   │   ├── _contextvars.so
+        │   │   │   ├── _ctypes.so
+        │   │   │   ├── _datetime.so
+        │   │   │   ├── _dbm.so
+        │   │   │   ├── _decimal.so
+        │   │   │   ├── _gdbm.so
+        │   │   │   ├── _hashlib.so
+        │   │   │   ├── _heapq.so
+        │   │   │   ├── _lzma.so
+        │   │   │   ├── _md5.so
+        │   │   │   ├── _multibytecodec.so
+        │   │   │   ├── _opcode.so
+        │   │   │   ├── _pickle.so
+        │   │   │   ├── _posixsubprocess.so
+        │   │   │   ├── _queue.so
+        │   │   │   ├── _random.so
+        │   │   │   ├── _scproxy.so
+        │   │   │   ├── _sha1.so
+        │   │   │   ├── _sha256.so
+        │   │   │   ├── _sha3.so
+        │   │   │   ├── _sha512.so
+        │   │   │   ├── _socket.so
+        │   │   │   ├── _ssl.so
+        │   │   │   ├── _struct.so
+        │   │   │   ├── _uuid.so
+        │   │   │   ├── array.so
+        │   │   │   ├── binascii.so
+        │   │   │   ├── fcntl.so
+        │   │   │   ├── grp.so
+        │   │   │   ├── math.so
+        │   │   │   ├── pyexpat.so
+        │   │   │   ├── resource.so
+        │   │   │   ├── select.so
+        │   │   │   ├── termios.so
+        │   │   │   ├── unicodedata.so
+        │   │   │   └── zlib.so
+        │   │   └── site.pyc -> ../../site.pyc
+        │   └── python37.zip
+        ├── site.pyc
+        └── zlib.cpython-37m-darwin.so
+```
 
 ## codesigning and notarization
 
