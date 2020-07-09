@@ -1,4 +1,6 @@
 # dirs to exclude
+project.xcworkspace
+xcuserdata
 .DS_Store
 __pycache__
 .pytest_cache
