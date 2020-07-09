@@ -8,5 +8,4 @@ __pycache__
 *.mxe64
 support/*
 leoenv
-lua
 
