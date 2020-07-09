@@ -6,7 +6,7 @@ PREFIX=${SUPPORT}/${NAME}
 BIN=${SUPPORT}/${NAME}/bin
 LIB=${PREFIX}/lib/${NAME}
 
-HOMEBREW=/usr/local/Cellar/python/${SEMVER}/Frameworks/Python.framework/Versions/${VERSION}
+HOMEBREW=/usr/local/opt/python3/Frameworks/Python.framework/Versions/${VERSION}
 
 
 
@@ -22,7 +22,7 @@ clean_python() {
 
 	rm $LIB/distutils/command/*.exe
 
-	rm_lib config-${VERSION}m-darwin
+	rm_lib config-${VERSION}-darwin
 	rm_lib idlelib
 	rm_lib lib2to3
 	rm_lib tkinter
@@ -129,7 +129,7 @@ install_python() {
 	cp_pkg xmlrpc
 	cp -rf ${HOMEBREW}/include ${PREFIX}/include
 	rm -rf ${PREFIX}/lib/${DYLIB}
-	rm -rf ${PREFIX}/lib/${DYLIB_NAME}m.dylib
+	rm -rf ${PREFIX}/lib/${DYLIB_NAME}.dylib
 	rm -rf ${PREFIX}/lib/pkgconfig
 	cp -rf ${HOMEBREW}/Resources/Python.app/Contents/MacOS/Python ${BIN}/$NAME
 	clean_python
