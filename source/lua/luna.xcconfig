@@ -18,7 +18,6 @@ PRODUCT_NAME = $(PROJECT_NAME)
 PRODUCT_VERSION = 8.0.2
 ARCHS = x86_64
 
-
 // Paths
 C74SUPPORT = $(SRCROOT)/../maxsdk/source/c74support
 HEADER_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes"
@@ -53,17 +52,14 @@ OTHER_LDFLAGS = -framework MaxAudioAPI -framework JitterAPI $(C74_SYM_LINKER_FLA
 
 // -------------------------------------------------------------------------------
 
-
 VERSION = 0.1
 
 BUILD = ${SRCROOT}/build
-LUAJIT = $(BUILD)/luajit
+LUA = $(BUILD)/lua
 
-LUNA_HEADERS = $(LUAJIT)/include/luajit-2.0
-LUNA_LIBS = $(LUAJIT)/lib
-LUNA_LDFLAGS = -lluajit -lm $(LUNA_LDFLAGS_EXTRA)
-//LUNA_LDFLAGS_EXTRA = -pagezero_size 10000 -image_base 100000000
-LUNA_LDFLAGS_EXTRA = -image_base 100000000
+LUNA_HEADERS = $(LUA)/include
+LUNA_LIBS = $(LUA)/lib
+LUNA_LDFLAGS = -llua -lm
 
 HEADER_SEARCH_PATHS = $(inherited) $(LUNA_HEADERS)
 LIBRARY_SEARCH_PATHS = $(inherited) $(LUNA_LIBS)

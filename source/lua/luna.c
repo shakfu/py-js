@@ -1,7 +1,7 @@
 #include "ext.h"
 #include "ext_obex.h"
 
-#include "luajit.h"
+#include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 
@@ -138,35 +138,35 @@ void luna_test(t_luna* x)
 
      L = luaL_newstate();
 
-     luaL_openlibs(L);
+      luaL_openlibs(L);
 
-     // status = luaL_loadfile(L, "script.lua");
-     // if (status) {
-     //     luna_error(x, "Couldn't load file: %s\n", lua_tostring(L, -1));
-     //     return;
-     // }
+      status = luaL_loadfile(L, "script.lua");
+      if (status) {
+          luna_error(x, "Couldn't load file: %s\n", lua_tostring(L, -1));
+          return;
+      }
 
-     // lua_newtable(L);
+      lua_newtable(L);
 
-     // for (i = 1; i <= 5; i++) {
-     //     lua_pushnumber(L, i);
-     //     lua_pushnumber(L, i*2);
-     //     lua_rawset(L, -3);
-     // }
+      for (i = 1; i <= 5; i++) {
+          lua_pushnumber(L, i);
+          lua_pushnumber(L, i*2);
+          lua_rawset(L, -3);
+      }
 
-     // lua_setglobal(L, "foo");
+      lua_setglobal(L, "foo");
 
-     // result = lua_pcall(L, 0, LUA_MULTRET, 0);
-     // if (result) {
-     //     luna_error(x, "Failed to run script: %s\n", lua_tostring(L, -1));
-     //     return;
-     // }
+      result = lua_pcall(L, 0, LUA_MULTRET, 0);
+      if (result) {
+          luna_error(x, "Failed to run script: %s\n", lua_tostring(L, -1));
+          return;
+      }
 
-     // sum = lua_tonumber(L, -1);
+      sum = lua_tonumber(L, -1);
 
-     // luna_log(x, "Script returned: %.0f\n", sum);
+      luna_log(x, "Script returned: %.0f\n", sum);
 
-     // lua_pop(L, 1);
+      lua_pop(L, 1);
      lua_close(L);
 
      return;
