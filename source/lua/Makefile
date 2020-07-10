@@ -1,14 +1,13 @@
 
-# variables
+# input variables
 NAME=luna
 VERSION=5.4.0
 MACOSX_DEPLOYMENT_TARGET=10.9
 
-# constants
+# misc variables
 URL_LUA=https://www.lua.org/ftp/lua-${VERSION}.tar.gz
 ARCHIVE=$(shell basename ${URL_LUA})
 SRC_LUA=$(shell basename -s .tar.gz ${ARCHIVE})
-
 
 ROOT=$(shell pwd)
 EXTERNALS=${ROOT}/../../externals
@@ -42,6 +41,7 @@ show:
 	@echo "BUILD: ${BUILD}"
 
 prep-lua:
+	$(call section,"building ${SRC_LUA} installation from source")
 	@mkdir -p ${BUILD}
 	@mkdir -p ${LUA}
 	@curl ${URL_LUA} -o ${BUILD}/${ARCHIVE}
@@ -50,6 +50,7 @@ prep-lua:
 	@make -C ${BUILD}/${SRC_LUA} install INSTALL_TOP=${LUA}
 
 external:
+	$(call section,"building ${NAME} external")
 	@xcodebuild -project ${NAME}.xcodeproj
 
 deploy:
