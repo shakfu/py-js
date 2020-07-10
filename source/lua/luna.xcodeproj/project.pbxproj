@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		127C5DDA24B7CD1B00527D30 /* libluajit-5.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 127C5DD924B7CD1B00527D30 /* libluajit-5.1.a */; };
 		127C5DDB24B7CD2B00527D30 /* luna.c in Sources */ = {isa = PBXBuildFile; fileRef = 128395A824B7C7C800DDE5E2 /* luna.c */; };
+		1288B71224B837B2001DF39A /* liblua.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1288B71124B83797001DF39A /* liblua.a */; };
 		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -27,9 +27,9 @@
 
 /* Begin PBXFileReference section */
 		121A8C6124A1E58000EC5F99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../Info.plist; sourceTree = "<group>"; };
-		127C5DD924B7CD1B00527D30 /* libluajit-5.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libluajit-5.1.a"; path = "build/luajit/lib/libluajit-5.1.a"; sourceTree = "<group>"; };
 		128395A824B7C7C800DDE5E2 /* luna.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = luna.c; sourceTree = "<group>"; };
 		128395A924B7C7C900DDE5E2 /* luna.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = luna.xcconfig; sourceTree = "<group>"; };
+		1288B71124B83797001DF39A /* liblua.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblua.a; path = build/lua/lib/liblua.a; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		2FBBEAE508F335360078DB84 /* luna.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = luna.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -40,7 +40,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */,
-				127C5DDA24B7CD1B00527D30 /* libluajit-5.1.a in Frameworks */,
+				1288B71224B837B2001DF39A /* liblua.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,7 +62,7 @@
 		12D5454A2463B03000BE010E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				127C5DD924B7CD1B00527D30 /* libluajit-5.1.a */,
+				1288B71124B83797001DF39A /* liblua.a */,
 				12D5454B2463B03000BE010E /* CoreFoundation.framework */,
 			);
 			name = Frameworks;
@@ -193,6 +193,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(LUNA_LIBS)",
 					"$(PROJECT_DIR)/build/luajit/lib",
+					"$(PROJECT_DIR)/build/lua/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
@@ -224,6 +225,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(LUNA_LIBS)",
 					"$(PROJECT_DIR)/build/luajit/lib",
+					"$(PROJECT_DIR)/build/lua/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
