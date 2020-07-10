@@ -162,6 +162,61 @@ build-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
 
+# re-compile only (without prep)
+# -----------------------------------------------------------------------
+.PHONY: recompile recompile-extension \
+		recompile-bin-homebrew-sys \
+		recompile-bin-homebrew-pkg recompile-bin-homebrew-ext \
+		recompile-bin-framework-pkg recompile-bin-framework-ext \
+		recompile-src-framework-pkg recompile-src-framework-ext \
+		recompile-src-shared-pkg recompile-src-shared-ext \
+		recompile-src-static-pkg recompile-src-static-ext \
+		recompile-bin-resource-ext
+
+recompile: recompile-bin-homebrew-sys
+	$(call section,"recompile project")
+
+recompile-bin-homebrew-sys: recompile-extension
+	$(call xbuild-targets,"bin-homebrew-sys")
+
+recompile-bin-homebrew-pkg:
+	$(call xbuild-targets,"bin-homebrew-pkg")
+
+recompile-bin-homebrew-ext:
+	$(call xbuild-targets,"bin-homebrew-ext")
+
+recompile-bin-framework-pkg:
+	$(call xbuild-targets,"bin-framework-pkg")
+
+recompile-bin-framework-ext:
+	$(call xbuild-targets,"bin-framework-ext")
+
+recompile-bin-resource-ext:
+	$(call xbuild-targets,"bin-resource-ext")
+
+recompile-src-framework-pkg:
+	$(call xbuild-targets,"src-framework-pkg")
+
+recompile-src-framework-ext:
+	$(call xbuild-targets,"src-framework-ext")
+
+recompile-src-shared-pkg:
+	$(call xbuild-targets,"src-shared-pkg")
+
+recompile-src-shared-ext:
+	$(call xbuild-targets,"src-shared-ext")
+
+recompile-src-static-pkg:
+	$(call xbuild-targets,"src-static-pkg")
+
+recompile-src-static-ext:
+	$(call xbuild-targets,"src-static-ext")
+
+recompile-extension:
+	$(call section,"generate c code from cython extension")
+	@cython -3 ${EXTENSION}
+
+
 # Pre-build prep
 # -----------------------------------------------------------------------
 .PHONY: prep-bin-homebrew-pkg prep-bin-homebrew-ext \
