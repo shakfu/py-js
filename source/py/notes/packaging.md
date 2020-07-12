@@ -1,5 +1,81 @@
 # Packaging notes
 
+## design
+
+simplified as much as possible
+
+```
+$tree -L 6 -n py.mxo
+py.mxo
+└── Contents
+    ├── Frameworks
+    │   ├── Python.framework
+    │   │   ├── Python -> Versions/Current/Python
+    │   │   ├── Resources -> Versions/Current/Resources
+    │   │   └── Versions
+    │   │       ├── 3.8
+    │   │       │   ├── Python
+    │   │       │   ├── Resources
+    │   │       │   ├── include
+    │   │       │   └── lib
+    │   │       └── Current -> 3.8
+    │   └── <non-python dylibs>
+    ├── Info.plist
+    ├── MacOS
+    │   ├── <external>
+    │   └── python
+    ├── PkgInfo
+    └── Resources
+        └── lib
+            ├── python3.8
+            │   ├── lib-dynload
+            │   │   └── <python .so extensions>
+            │   └── site.py
+            └── python38.zip
+
+```
+
+
+
+based on py2app
+
+```
+$tree -L 6 -n py.mxo
+py.mxo
+└── Contents
+    ├── Frameworks
+    │   ├── Python.framework
+    │   │   ├── Python -> Versions/Current/Python
+    │   │   ├── Resources -> Versions/Current/Resources
+    │   │   └── Versions
+    │   │       ├── 3.8
+    │   │       │   ├── Python
+    │   │       │   ├── Resources
+    │   │       │   ├── include
+    │   │       │   └── lib
+    │   │       └── Current -> 3.8
+    │   └── <non-python dylibs>
+    ├── Info.plist
+    ├── MacOS
+    │   ├── <external>
+    │   └── python
+    ├── PkgInfo
+    └── Resources
+        ├── include
+        │   └── python3.8
+        │       └── <includes>
+        ├── lib
+        │   ├── python3.8
+        │   │   ├── config-3.8-darwin
+        │   │   ├── lib-dynload
+        │   │   │   └── <python .so extensions>
+        │   │   └── site.pyc -> ../../site.pyc
+        │   └── python38.zip
+        ├── site.pyc
+        └── zlib.cpython-38-darwin.so
+```
+
+
 ## py2app
 
 I have a use-case for an open-source project (https://github.com/shakfu/py-js) for a plugin which provides for arbitrary python code in [max](https://cycling74.com/products/max) and requires that I embed the python interpreter (via the c-api and cython) into a c-based plugin or 'external' in max/msp parlance.
@@ -52,20 +128,20 @@ So my question is: would it be possible to use py2app and/or macholib to address
 
 
 ```
-hello.app $ tree -L 6 -n .
-.
+$tree -L 6 -n hello.app
+hello.app
 └── Contents
     ├── Frameworks
     │   ├── Python.framework
     │   │   ├── Python -> Versions/Current/Python
     │   │   ├── Resources -> Versions/Current/Resources
     │   │   └── Versions
-    │   │       ├── 3.7
+    │   │       ├── 3.8
     │   │       │   ├── Python
     │   │       │   ├── Resources
     │   │       │   ├── include
     │   │       │   └── lib
-    │   │       └── Current -> 3.7
+    │   │       └── Current -> 3.8
     │   ├── libcrypto.1.1.dylib
     │   ├── libgdbm.6.dylib
     │   ├── liblzma.5.dylib
@@ -79,14 +155,17 @@ hello.app $ tree -L 6 -n .
         ├── PythonApplet.icns
         ├── __boot__.py
         ├── __error__.sh
+        ├── __pycache__
+        │   └── site.cpython-38.pyc
         ├── hello.py
         ├── include
-        │   └── python3.7m
+        │   └── python3.8
         │       └── pyconfig.h
         ├── lib
-        │   ├── python3.7
-        │   │   ├── config-3.7m-darwin
+        │   ├── python3.8
+        │   │   ├── config-3.8-darwin
         │   │   ├── lib-dynload
+        │   │   │   ├── _asyncio.so
         │   │   │   ├── _bisect.so
         │   │   │   ├── _blake2.so
         │   │   │   ├── _bz2.so
@@ -97,18 +176,22 @@ hello.app $ tree -L 6 -n .
         │   │   │   ├── _codecs_kr.so
         │   │   │   ├── _codecs_tw.so
         │   │   │   ├── _contextvars.so
+        │   │   │   ├── _csv.so
         │   │   │   ├── _ctypes.so
         │   │   │   ├── _datetime.so
         │   │   │   ├── _dbm.so
         │   │   │   ├── _decimal.so
+        │   │   │   ├── _elementtree.so
         │   │   │   ├── _gdbm.so
         │   │   │   ├── _hashlib.so
         │   │   │   ├── _heapq.so
         │   │   │   ├── _lzma.so
         │   │   │   ├── _md5.so
         │   │   │   ├── _multibytecodec.so
+        │   │   │   ├── _multiprocessing.so
         │   │   │   ├── _opcode.so
         │   │   │   ├── _pickle.so
+        │   │   │   ├── _posixshmem.so
         │   │   │   ├── _posixsubprocess.so
         │   │   │   ├── _queue.so
         │   │   │   ├── _random.so
@@ -120,12 +203,15 @@ hello.app $ tree -L 6 -n .
         │   │   │   ├── _socket.so
         │   │   │   ├── _ssl.so
         │   │   │   ├── _struct.so
+        │   │   │   ├── _testcapi.so
+        │   │   │   ├── _tkinter.so
         │   │   │   ├── _uuid.so
         │   │   │   ├── array.so
         │   │   │   ├── binascii.so
         │   │   │   ├── fcntl.so
         │   │   │   ├── grp.so
         │   │   │   ├── math.so
+        │   │   │   ├── mmap.so
         │   │   │   ├── pyexpat.so
         │   │   │   ├── resource.so
         │   │   │   ├── select.so
@@ -133,9 +219,9 @@ hello.app $ tree -L 6 -n .
         │   │   │   ├── unicodedata.so
         │   │   │   └── zlib.so
         │   │   └── site.pyc -> ../../site.pyc
-        │   └── python37.zip
+        │   └── python38.zip
         ├── site.pyc
-        └── zlib.cpython-37m-darwin.so
+        └── zlib.cpython-38-darwin.so
 ```
 
 ## codesigning and notarization
