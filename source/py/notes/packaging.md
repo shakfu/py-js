@@ -2,6 +2,12 @@
 
 ## design
 
+The Homebrew copy of gettext leaks into the macOS build
+if it is present. Uninstall gettext to make sure that doesn't happen.
+```
+sudo brew uninstall --ignore-dependencies gettext
+```
+
 simplified as much as possible
 
 ```
@@ -238,7 +244,7 @@ see:
 - https://developer.apple.com/forums/thread/129546
 - https://developer.apple.com/forums/thread/129045
 - https://developer.apple.com/documentation/macos-release-notes/macos-catalina-10_15-release-notes?preferredLanguage=occ
-
+- https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt
 
 ## packaging results
 

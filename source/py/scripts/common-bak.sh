@@ -36,7 +36,6 @@ SUPPORT=${ROOT}/../../support
 EXTERNALS=${ROOT}/../../externals
 SOURCE=${ROOT}/../source
 FRAMEWORKS=${SUPPORT}/Frameworks
-SCRIPTS=${ROOT}/scripts
 BUILD=${ROOT}/targets/build
 PYTHON=${BUILD}/Python-${SEMVER}
 PREFIX=${SUPPORT}/${NAME}
@@ -230,11 +229,6 @@ build_ssl() {
 
 
 write_python_minim_setup_local() {
-	cp ${SCRIPTS}/Setup.local ${PYTHON}/Modules/Setup.local
-}
-
-
-write_python_minim_setup_local2() {
 
 FILE="${PYTHON}/Modules/Setup.local"
 
