@@ -38,6 +38,15 @@ $(call section,"build $1")
 	done
 endef
 
+# $(call xbuild,name,flags)
+define xbuild-targets-flags
+$(call section,"build $1 with flags: $2")
+@for target in ${TARGETS}; do \
+		xcodebuild -project targets/$1/py-js.xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
+	done
+endef
+
+
 # $call xclean,name)
 define xclean-build
 $(call section,"cleaning build artifacts from $1 target")
@@ -121,6 +130,9 @@ pkg-support:
 
 build: build-bin-homebrew-sys
 	$(call section,"build project")
+
+build-bin-beeware-ext: build-extension
+	$(call xbuild-targets-flags,"bin-beeware-ext","PY_STATIC_EXT")
 
 build-bin-homebrew-sys: build-extension
 	$(call xbuild-targets,"bin-homebrew-sys")

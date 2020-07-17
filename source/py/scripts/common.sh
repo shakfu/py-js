@@ -15,7 +15,7 @@ function warn {
 }
 
 VERSION_MAJOR=${PY_MAJ_VER:=3.8}
-VERSION_MINOR=${PY_MIN_VER:=3}
+VERSION_MINOR=${PY_MIN_VER:=4}
 SSL_VERSION=${SSL_VER:=1.1.1g}
 MAC_DEP_TARGET=${MAC_DEP:=10.13}
 
@@ -230,11 +230,6 @@ build_ssl() {
 
 
 write_python_minim_setup_local() {
-	cp ${SCRIPTS}/Setup.local ${PYTHON}/Modules/Setup.local
-}
-
-
-write_python_minim_setup_local2() {
 
 FILE="${PYTHON}/Modules/Setup.local"
 
