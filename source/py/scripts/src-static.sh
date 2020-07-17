@@ -10,12 +10,30 @@ configure_python() {
 	 	--enable-optimizations
 }
 
+# write_python_minim_setup_local() {
+# 	cp ${SCRIPTS}/Setup.local ${PYTHON}/Modules/Setup.local
+# }
+
+
 install_python() {
+	echo "checking if previous build exists"
+	mkdir -p $BUILD
+	if [ ! -d $PYTHON ] ; then
+		echo "retrieving $PYTHON from $URL_PYTHON"
+		get_python
+	fi
+	if [ ! -d $SSL ] ; then
+		echo "retrieving $SSL from $URL_OPENSSL"
+		get_ssl
+		build_ssl
+	fi
 	compile_python
 	clean_python
+
 	# zipped library causes a crash (works otherwise)
 	# zip_python_library
 }
+
 
 
 if [ "$1" == "pkg" ]; then

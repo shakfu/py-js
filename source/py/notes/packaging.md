@@ -1,5 +1,26 @@
 # Packaging notes
 
+## packaging results (3.8.4)
+
+method            | size  | works  | codesign  | standalone 
+:---------------- | :---- | :----: | :-------: | :--------: 
+bin-framework-ext |       |  0c    |           |      
+bin-framework-pkg | 12+   |  1c    |           |   
+src-framework-ext |       |  0c    |           |      
+src-framework-pkg | 7.5   |  1c    | 1         |  0 
+bin-homebrew-ext  | 8.5   |  1     | 0c        |  1 (py)
+bin-homebrew-pkg  | 9.0   |  1     | 1c        |  0
+bin-homebrew-sys  | 0.0   |  1     | 1c        |  1 (py)
+src-static-ext    | 7.4   |  1     | 1         |  1 (py)
+src-static-pkg    |       |        |           | 
+src-shared-ext    |       |        |           | 
+src-shared-pkg    |       |        |           | 
+
+
+framework-ext has a build error (fix then retry) static-ext 
+
+
+
 ## design
 
 The Homebrew copy of gettext leaks into the macOS build
@@ -246,7 +267,7 @@ see:
 - https://developer.apple.com/documentation/macos-release-notes/macos-catalina-10_15-release-notes?preferredLanguage=occ
 - https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt
 
-## packaging results
+## packaging results (3.7.7)
 
 method            | size  | works  | codesign  | standalone 
 :---------------- | :---- | :----: | :-------: | :--------: 
