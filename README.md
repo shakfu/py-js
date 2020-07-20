@@ -5,6 +5,39 @@ Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP]
 repo - https://github.com/shakfu/py-js
 
 
+
+
+## PENDING: 
+
+To consider whether to provide so many build options
+
+perhaps py.mxo is best.
+
+should try
+
+- freeing memory for PY_STATIC case
+- automating sucessful build sequence
+    - patch makesetup
+- make a less minimal packaging option (with ssl, etc.)
+- automate installation of packages
+- testing fat dynamic in a package
+- codesigning
+
+
+
+## Fixing Packaging (SOLVED)
+
+To build standalone:
+
+- add pyjs.mxo in build script
+
+- create a custom package with
+    - javascript
+    - jsextensions
+
+
+
+
 ## Summary
 
 This is a pre-alpha level project which provides two max externals:
