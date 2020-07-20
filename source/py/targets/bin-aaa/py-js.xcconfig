@@ -1,0 +1,9 @@
+#include "../common.xcconfig"
+
+BUILD = $(SRCROOT)/../build
+PREFIX = $(SUPPORT)/python$(VERSION)
+
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)
+PY_LIBS = $(PREFIX)
+PY_LDFLAGS = -lpython$(VERSION) -ldl -lz
+PY_MACROS = PY_STATIC_EXT
