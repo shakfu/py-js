@@ -1,6 +1,6 @@
 VERSION=3.8
 VER=38
-NAME=python-min
+NAME=python${VERSION}
 MAC_DEP_TARGET=10.13
 
 PREFIX=`pwd`/../${NAME}
