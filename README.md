@@ -15,6 +15,8 @@ perhaps py.mxo is best.
 
 should try
 
+- --enable-optimizations at configure
+- --enable-shared
 - freeing memory for PY_STATIC case
 - automating sucessful build sequence
     - patch makesetup
