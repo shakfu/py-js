@@ -1,4 +1,5 @@
 *disabled*
+
 _ctypes
 #_sqlite3
 _tkinter
@@ -13,3 +14,7 @@ _codecs_tw
 _codecs_cn
 _codecs_hk
 _codecs_iso2022
+
+_lzma
+_gdbm
+audioop
