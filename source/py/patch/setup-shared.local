@@ -1,0 +1,15 @@
+*disabled*
+_ctypes
+#_sqlite3
+_tkinter
+_curses
+_curses_panel
+xxlimited
+xxsubtype
+_multibytecodec
+_codecs_jp
+_codecs_kr
+_codecs_tw
+_codecs_cn
+_codecs_hk
+_codecs_iso2022
