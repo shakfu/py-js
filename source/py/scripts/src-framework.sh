@@ -2,12 +2,13 @@
 
 source "scripts/build.sh"
 
-# PREFIX=${SUPPORT}/Frameworks/Python.framework/Versions/${VERSION}
+FRAMEWORKS=${SUPPORT}/Frameworks
+# PREFIX=${SUPPORT}/Frameworks/Python.framework/Versions/${PYTHON_VER}
 PREFIX=${SUPPORT}/Frameworks
 BIN=${PREFIX}/bin
-LIB=${PREFIX}/lib/python${VERSION}
+LIB=${PREFIX}/lib/python${PYTHON_VER}
 
-FWK_TARGET=Frameworks/Python.Framework/Versions/${VERSION}/lib/${DYLIB}
+FWK_TARGET=Frameworks/Python.Framework/Versions/${PYTHON_VER}/lib/${DYLIB}
 
 install_python_pkg() {
 	install_dependencies
@@ -22,14 +23,14 @@ install_python_ext() {
 }
 
 fix_python_dylib_for_pkg() {
-	cd ${SUPPORT}/Frameworks/Python.Framework/Versions/${VERSION}/lib
+	cd ${SUPPORT}/Frameworks/Python.Framework/Versions/${PYTHON_VER}/lib
 	chmod 777 ${DYLIB}
 	install_name_tool -id @loader_path/../../../../support/${FWK_TARGET} ${DYLIB}
 	cd $ROOT
 }
 
 fix_python_dylib_for_ext() {
-	cd ${SUPPORT}/Frameworks/Python.Framework/Versions/${VERSION}/lib
+	cd ${SUPPORT}/Frameworks/Python.Framework/Versions/${PYTHON_VER}/lib
 	chmod 777 ${DYLIB}
 	install_name_tool -id @loader_path/../${FWK_TARGET} ${DYLIB}
 	#cp -rf ${FRAMEWORKS} $PY_EXTERNAL/Contents

@@ -300,6 +300,9 @@ clean-support:
 	$(call section,"cleaning support directory")
 	@rm -rf ${ROOTDIR}/support/*
 
+clean-local: clean-support clean-externals
+	$(call section,"cleaning local artifacts")
+
 clean-pkg:
 	$(call section,"cleaning py pkg")
 	@rm -rf ${PACKAGE}

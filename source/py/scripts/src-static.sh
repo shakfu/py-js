@@ -4,7 +4,7 @@ source "scripts/build.sh"
 
 PREFIX=${SUPPORT}/${PYTHON_NAME}
 BIN=${PREFIX}/bin
-LIB=${PREFIX}/lib/python${VERSION}
+LIB=${PREFIX}/lib/python${PYTHON_VER}
 
 
 install_python_pkg() {
