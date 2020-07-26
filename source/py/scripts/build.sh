@@ -5,6 +5,7 @@ PYTHON_VERSION=`python --version | sed s/Python[[:space:]]//`
 OPENSSL_VERSION=1.1.1g
 BZIP2_VERSION=1.0.8
 XZ_VERSION=5.2.5
+GETTEXT_VERSION=0.20.2
 
 MAC_DEP_TARGET=10.13
 
@@ -18,7 +19,13 @@ URL_PY=https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSI
 URL_SSL=https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
 URL_BZ2=https://sourceware.org/pub/bzip2/bzip2-${BZIP2_VERSION}.tar.gz
 URL_XZ=http://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz
+# URL_GETTEXT=https://ftp.gnu.org/pub/gnu/gettext/gettext-${GETTEXT_VERSION}.tar.gz
+
 URLS="$URL_PY $URL_SSL $URL_BZ2 $URL_XZ"
+
+# GETTEXT dependency
+LIBINTL=/usr/local/opt/gettext/lib/libintl.a
+
 
 ROOT=$(pwd)
 SUPPORT=${ROOT}/../../support

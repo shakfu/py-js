@@ -6,18 +6,9 @@
 - [ ] fix references (still pointing to compilled locations).
 
 
-## Fixing Packaging (SOLVED)
-
-To build standalone:
-
-- add pyjs.mxo in build script
-
-- create a custom package with
-    - javascript
-    - jsextensions
 
 
-## PENDING: 
+## PENDING 
 
 To consider whether to provide so many build options
 
@@ -35,8 +26,15 @@ should try
 - testing fat dynamic in a package
 - codesigning
 
+### Fixing Packaging (SOLVED)
 
+To build standalone:
 
+- add pyjs.mxo in build script
+
+- create a custom package with
+    - javascript
+    - jsextensions
 
 
 
@@ -51,7 +49,7 @@ should try
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
 
-## TODO
+## Features and Fixes
 
 
 ### Core
