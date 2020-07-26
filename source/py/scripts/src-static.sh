@@ -1,48 +1,50 @@
 #!/usr/bin/env bash
 
-source "scripts/common.sh"
+source "scripts/build.sh"
 
-configure_python() {
-	./configure MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
-	 	--prefix=$PREFIX 	\
-	 	--with-openssl=$SSL \
-	 	--with-lto 			\
-	 	--enable-optimizations
+PREFIX=${SUPPORT}/${PYTHON_NAME}
+BIN=${PREFIX}/bin
+LIB=${PREFIX}/lib/python${VERSION}
+
+
+install_python_pkg() {
+	install_dependencies
+	build_python_static $PREFIX
+	fix_python_dylib_for_pkg
 }
 
-# write_python_minim_setup_local() {
-# 	cp ${SCRIPTS}/Setup.local ${PYTHON}/Modules/Setup.local
-# }
-
-
-install_python() {
-	echo "checking if previous build exists"
-	mkdir -p $BUILD
-	if [ ! -d $PYTHON ] ; then
-		echo "retrieving $PYTHON from $URL_PYTHON"
-		get_python
-	fi
-	if [ ! -d $SSL ] ; then
-		echo "retrieving $SSL from $URL_OPENSSL"
-		get_ssl
-		build_ssl
-	fi
-	compile_python
-	clean_python
-
-	# zipped library causes a crash (works otherwise)
-	# zip_python_library
+install_python_ext() {
+	install_dependencies
+	build_python_static $PREFIX
+	fix_python_dylib_for_ext
 }
 
+fix_python_dylib_for_pkg() {
+	cd $PREFIX/lib
+	chmod 777 ${DYLIB}
+	install_name_tool -id @loader_path/../../../../support/${PYTHON_NAME}/lib/${DYLIB} ${DYLIB}
+	cd $ROOT
+}
+
+fix_python_dylib_for_ext() {
+	cd $PREFIX/lib
+	chmod 777 ${DYLIB}
+	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
+	cd $ROOT
+}
+
+reset() {
+	rm -rf $PREFIX
+}
 
 
 if [ "$1" == "pkg" ]; then
-    echo "Installing python from source as static lib into 'support' folder of package"
-    install_python
+	echo "Installing python from source as static lib into 'support' folder of package"
+	install_python_pkg
 
 elif [ "$1" == "ext" ]; then
-    echo "Installing python from source as static lib into external"
-    install_python
+	echo "Installing python from source as static lib into external"
+	install_python_ext
 else
-    usage
+	exit
 fi

@@ -629,7 +629,6 @@ class SharedPythonBuilder(PythonBuilder):
             dep.build()
 
         self.chdir(self.src_path)
-        self.write_setup_local()
         self.cmd(f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET={self.mac_dep_target} \
             --prefix={self.prefix} \
@@ -662,23 +661,28 @@ class SharedPythonBuilder(PythonBuilder):
 
 
 class FrameworkPythonBuilder(PythonBuilder):
-    # setup_local = 'setup-shared.local'
+    setup_local = 'setup-shared.local'
 
     @property
     def prefix(self):
-        return self.project.lib / 'Python.Framework'
+        return self.project.lib / 'Python.framework' / 'Versions' / self.ver
+
+    def reset(self):
+        self.remove(self.src_path)
+        self.remove(self.project.lib / 'Python.framework')
 
     def build(self):
         for dep in self.depends_on:
             dep.build()
 
         self.chdir(self.src_path)
-        self.write_setup_local()
         self.cmd(f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET={self.mac_dep_target} \
-            --prefix={self.prefix} \
             --enable-framework={self.project.lib} \
             --with-openssl={self.project.lib / 'openssl'} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
             --with-lto \
             --enable-optimizations
         """)
@@ -701,11 +705,15 @@ class FrameworkPythonBuilder(PythonBuilder):
             '_curses_panel',
         ])
 
+    def post_process(self):
+        self.clean()
+        self.zip_lib()
+
 
 
 if __name__ == '__main__':
-    p = SharedPythonBuilder()
-    # p.install()
+    p = FrameworkPythonBuilder()
+    p.install()
     # p.reset()
     # p.download()
     # p.build()
