@@ -1,6 +1,0 @@
-#include "../common.xcconfig"
-
-PREFIX = $(SUPPORT)/python$(VERSION)
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)
-PY_LIBS = $(PREFIX)
-PY_LDFLAGS = -lpython$(VERSION) -ldl

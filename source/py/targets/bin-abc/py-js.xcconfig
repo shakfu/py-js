@@ -1,7 +1,0 @@
-#include "../common.xcconfig"
-
-PREFIX = $(SUPPORT)/Python
-//PY_HEADERS = $(PREFIX)/Headers/python $(PREFIX)/Headers/openssl $(PREFIX)/Headers/bz2 $(PREFIX)/Headers/xz
-PY_HEADERS = $(PREFIX)/Headers/python
-PY_LIBS = $(PREFIX)/Libs /usr/local/Cellar/gettext/0.20.2_1/lib
-PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lcrypto -lbz2 -llzma -lxz -lintl -lsqlite3 -lz

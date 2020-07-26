@@ -1,0 +1,6 @@
+- copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for
+  static linking as building it takes ages.
+
+- fix references (still pointing to compilled locations).
+
+
