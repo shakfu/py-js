@@ -4,9 +4,14 @@ Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP]
 
 repo - https://github.com/shakfu/py-js
 
-**DO NOT USE RIGHT NOW** major breaking changes and restructuring underway.
+**WARNING** this is pre-alpha software. It currently works in a number
+of variations including a portable python-in-external, but a rigorous cleanup of experimental code must happen before it is released. As of this writing, the most reliable (but not portable for standalones) is to use the defaultbuild which uses your existing (or if not-existing the install it) brew installed python):
 
+Just run this in the root directory of the `py-js` source and it will create a `py` package in your Max Packages
 
+```
+$ ./build.sh
+```
 
 ## Summary
 
