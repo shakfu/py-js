@@ -4,8 +4,8 @@ Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP]
 
 repo - https://github.com/shakfu/py-js
 
-**WARNING** this is pre-alpha software. It currently works in a number
-of variations including a portable python-in-external, but a rigorous cleanup of experimental code must happen before it is released. As of this writing, the most reliable (but not portable for standalones) method is to use the default build which uses your existing brew installed python). Just run the following in the root directory of the `py-js` source and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
+**WARNING** this is pre-alpha software. It is intended to work in a number
+of variations including a portable python-in-external, but a rigorous cleanup of experimental code must happen before it is released. As of this writing, the most reliable (but not portable for standalones) method is to use the default build which uses your existing brew installed python 3.9). Just run the following in the root directory of the `py-js` source and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
 
 ```
 $ ./build.sh
@@ -112,9 +112,9 @@ There are two implementation variations:
 Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap the portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
 
 
-In addition there are essentially 3 deployment variations:
+The objective is to have 3 deployment variations:
 
-1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
+1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option. (only this works reliably right now)
 
 2. Embedding python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (untested).
 
@@ -319,6 +319,7 @@ This builds the default 'linked-to-system|homebrew python' version of `py`. Read
 
 ### Alternative Builds
 
+**WARNING**: these currently don't work.
 
 #### Embed Python in the Package
 
