@@ -361,7 +361,7 @@ class XzBuilder(OSXBuilder):
 
 class PythonBuilder(OSXBuilder):
     name = 'Python'
-    version = '3.8.4'
+    version = '3.8.5'
     url_template = 'https://www.python.org/ftp/python/{version}/{name}-{version}.tgz'
     depends_on = [OpensslBuilder, Bzip2Builder, XzBuilder]
     suffix = ""
@@ -612,7 +612,7 @@ class StaticPythonBuilder(PythonBuilder):
     def post_process(self):
         self.clean()
         self.zip_lib()
-        self.static_lib.rename(self.prefix / self.library)
+        #self.static_lib.rename(self.prefix / self.library)
 
 
 
@@ -712,7 +712,9 @@ class FrameworkPythonBuilder(PythonBuilder):
 
 
 if __name__ == '__main__':
-    p = FrameworkPythonBuilder()
+    # p = FrameworkPythonBuilder()
+    # p = StaticPythonBuilder()
+    p = SharedPythonBuilder()
     p.install()
     # p.reset()
     # p.download()
