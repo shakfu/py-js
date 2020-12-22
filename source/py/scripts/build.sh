@@ -167,8 +167,8 @@ build_xz() {
 test_python_build() {
 	DIR=$1
 	cd $DIR
-	RESULT=`./bin/python3.8 -c "import os; print(os.__file__)"`
-	EXPECTED=`pwd`/lib/python38.zip/os.py
+	RESULT=`./bin/python3.9 -c "import os; print(os.__file__)"`
+	EXPECTED=`pwd`/lib/python39.zip/os.py
 	if [[ $RESULT == $EXPECTED ]]; then
 		success "$DIR"
 	else
