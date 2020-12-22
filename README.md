@@ -8,8 +8,9 @@ repo - https://github.com/shakfu/py-js
 ![py-js test](./media/screenshot.png)
 
 
-**WARNING** this is pre-alpha software. It is intended to work in a number
-of variations including a portable python-in-external, but a rigorous cleanup of experimental code must happen before it is released. As of this writing, the most reliable (but not portable for standalones) method is to use the default build which uses your existing brew installed python 3.9). Just run the following in the root directory of the `py-js` source and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
+**WARNING** this is pre-alpha software.
+
+If you are interested to try this out, as of this writing, try the default build script which uses your existing brew installed python (3.9). Just run the following in the root directory of the `py-js` source (after completing the installation steps detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
 
 ```
 $ ./build.sh
@@ -17,7 +18,7 @@ $ ./build.sh
 
 ## Summary
 
-This is a pre-alpha level project which provides two max externals:
+This is a project which provides two max externals:
 
 
 ### `py` external
@@ -120,7 +121,9 @@ Both externals have access to builtin python modules and the whole universe of 3
 
 The objective is to have 3 deployment variations:
 
-1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option. (only this works reliably right now)
+1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option. Only this works reliably right now)
+
+(The following two are still not working currently)
 
 2. Embedding python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (untested).
 
@@ -129,9 +132,9 @@ The objective is to have 3 deployment variations:
 
 Deployment Scenario  | `py` | `pyjs`
 :------------------- | :--: | :--------:
-Link to sys python   | x    | x 
-Embed in package     | x    | untested
-Embed in external    | x    | untested
+Link to sys python   | 1    | 1 
+Embed in package     | 0    | 0
+Embed in external    | 0    | 0
 
 
 
@@ -231,6 +234,8 @@ Implemented for both `py` and `pyjs` objects:
 
 
 ## Caveats
+
+- The package and standalone deployment variations are still not yet working.
 
 - The `py` and `pyjs` objects are currently marked as experimental pre-alpha and still need further unit/functional/integration testing and field testing of course. Do not use it expecting they are battle-tested!
 
