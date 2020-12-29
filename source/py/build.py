@@ -2,6 +2,7 @@
 
 import logging
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -22,6 +23,9 @@ else:
 
 LOG_FORMAT = '%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s'
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
+
+PYTHON_VERSION_STRING = platform.python_version() # e.g '3.9.1'
+
 
 class DependencyManager:
     """Aggreggates, copies dylib dependencies and fixed references.
@@ -307,9 +311,10 @@ class OSXBuilder(Builder):
         if not self.download_path.exists():
             self.log.info(f"downloading {self.download_path}")
             self.cmd(f'curl -L --fail {self.url} -o {self.download_path}')
-     
+
         # unpack
         if not self.src_path.exists():
+            self.project.src.mkdir(parents=True, exist_ok=True)
             self.log.info(f"unpacking {self.src_path}")
             self.cmd(f'tar -C {self.project.src} -xvf {self.download_path}')
 
@@ -361,20 +366,22 @@ class XzBuilder(OSXBuilder):
 
 class PythonBuilder(OSXBuilder):
     name = 'Python'
-    version = '3.8.5'
+    version = PYTHON_VERSION_STRING
     url_template = 'https://www.python.org/ftp/python/{version}/{name}-{version}.tgz'
     depends_on = [OpensslBuilder, Bzip2Builder, XzBuilder]
     suffix = ""
     setup_local = None
     patch = None
 
-    def __init__(self, project=None, version=None, depends_on=None):
+    def __init__(self, project=None, version=None, depends_on=None,
+                 can_patch=False):
         super().__init__(project, version, depends_on)
 
         # dependency manager attributes (revise)
         self.install_names = {}
         self.deps = []
         self.dep_list = []
+        self.can_patch = self.can_patch
 
     # ------------------------------------------------------------------------
     # python properties
@@ -553,7 +560,7 @@ class PythonBuilder(OSXBuilder):
         temp_os_py.rename(self.python_lib / 'os.py')
         self.site_packages.mkdir()
 
-        
+
     def fix_python_dylib_for_pkg(self):
         self.chdir(self.prefix_lib)
         self.cmd(f'chmod 777 {self.dylib}')
@@ -571,8 +578,9 @@ class PythonBuilder(OSXBuilder):
 
     def pre_process(self):
         self.chdir(self.src_path)
-        self.write_setup_local()
-        self.apply_patch()
+        if self.can_patch:
+            self.write_setup_local()
+            self.apply_patch()
         self.chdir(self.project.root)
 
     def post_process(self):
@@ -713,8 +721,8 @@ class FrameworkPythonBuilder(PythonBuilder):
 
 if __name__ == '__main__':
     # p = FrameworkPythonBuilder()
-    # p = StaticPythonBuilder()
-    p = SharedPythonBuilder()
+    p = StaticPythonBuilder()
+    #p = SharedPythonBuilder()
     p.install()
     # p.reset()
     # p.download()
