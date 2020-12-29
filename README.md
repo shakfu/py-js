@@ -10,7 +10,7 @@ repo - https://github.com/shakfu/py-js
 
 **WARNING** this is pre-alpha software.
 
-If you are interested to try this out, as of this writing, try the default build script which uses your existing brew installed python (3.9). Just run the following in the root directory of the `py-js` source (after completing the installation steps detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
+If you are interested to try this out, please note that the default build script uses your existing brew installed python (currently 3.9). Just run the following in the root directory of the `py-js` source (after completing the installation steps detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
 
 ```
 $ ./build.sh
