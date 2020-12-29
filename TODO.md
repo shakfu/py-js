@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] pick up default homebrew installed python details by querying /usr/local/opt/python/libexec/bin/python
+
 - [ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for
   static linking as building it takes ages.
 
