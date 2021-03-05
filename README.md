@@ -8,13 +8,30 @@ repo - https://github.com/shakfu/py-js
 ![py-js test](./media/screenshot.png)
 
 
+
+## Quickstart
+
 **WARNING** this is pre-alpha software.
 
-If you are interested to try this out, please note that the default build script uses your existing brew installed python (currently 3.9). Just run the following in the root directory of the `py-js` source (after completing the installation steps detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
+If you are interested to try this out, please note that the default build script uses your existing brew installed python (currently 3.9) and assumes you have `pip installed cython`. 
+
+Clone the `py-js` source and run the following in the cloned repo to get the required submodule:
+
+```
+$ git submodule init
+$ git submodule update 
+
+```
+
+Then run the following in the root directory of the `py-js` source (more extensive  installation steps are detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
 
 ```
 $ ./build.sh
 ```
+
+Open up any of the patchers and look at .maxhelp patcher in the generated package to understand how `py` and the `pyjs` objects work.
+
+
 
 ## Summary
 
@@ -123,17 +140,17 @@ The objective is to have 3 deployment variations:
 
 1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
 
-(Note the above method only works reliably right now. The following two methods are still not working currently.)
-
-2. Embedding the python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This can possibly make it usable in standalones (still not demonstrated).
+2. Embedding the python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This makes it usable in standalones.
 
 3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external/jsextension object, which can make it portable and usable in standalones.
+
+(Note that only the two first methods work reliably right now. With the latter requiring some slight manual post-build tweaks to get the standalone working with python. Embedding the python interpreter in the external itself is still not implemented.
 
 
 Deployment Scenario  | `py` | `pyjs`
 :------------------- | :--: | :--------:
 Link to sys python   | 1    | 1 
-Embed in package     | 0    | 0
+Embed in package     | 1    | 1
 Embed in external    | 0    | 0
 
 
@@ -333,35 +350,32 @@ This builds the default 'linked-to-system|homebrew python' version of `py`. Read
 
 ### Alternative Builds
 
-**WARNING**: these currently don't work.
-
-#### Embed Python in the Package
+#### Embed Python in the Package (Now working with Standalones)
 
 **NOTE**: not working in standalones (use external method)
 
-In the root,
+In the root of the py-js directory:
 
 ```
-make source/py -C homebrew-pkg
+make source/py -C bin-homebrew-pkg
 ```
 
-or in root/source/py
+or in py-js/source/py
 
 ```
-make homebrew-pkg
+make bin-homebrew-pkg
 ```
 
-The same pattern applies to the rest of the options. We will assume that you have cd'ed into `root/source/py` so you can omit `-C source/py` which only applies if you call from the root directory.
+This will create a `py` package in $HOME/Documents/Max 8/packages/py
 
-If you want to copy and zip your system homebrew python and make it a dedicated python interpreter for the `py` object. Note, this does not install any modules. It's up to you to populate what you require.
+Once this is done you can run some of the patchers to test the py and pyjs objects.
 
-If you want to build and install cpython from source (will be done automatically):
+Recent changes in Max have allowed for this to work in standalones. Just create your standlone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built in say patch $STANDALONE then copy the whole aforementioned `py` package to $STANDALONE/Contents/Resources/C74/packages and delete the redundant `py.mxo` in $STANDALONE/Contents/Resources/C74/externals since it already exists in the just-copied package.
 
-```
-make python-org-pkg
-```
 
 #### Embed Python in the External itself
+
+**WARNING**: this currently doesn't work.
 
 This places a whole minimized python distribution in the external `py.mxo` itself.
 
