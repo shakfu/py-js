@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 #PYTHON_VERSION=3.8.5
-PYTHON_VERSION=`python --version | sed s/Python[[:space:]]//`
+PYTHON_VERSION=`python3 --version | sed s/Python[[:space:]]//`
 OPENSSL_VERSION=1.1.1g
 BZIP2_VERSION=1.0.8
 XZ_VERSION=5.2.5
 GETTEXT_VERSION=0.20.2
 
-MAC_DEP_TARGET=10.13
+MAC_DEP_TARGET=10.14
 
 # --- need not modify below except to change excluded modules
 
@@ -291,8 +291,8 @@ build_python_static() {
 	local PREFIX=${1:-$BUILD_LIB_PY_STATIC}
 	cd $BUILD_SRC_PY
 	make clean
-    write_setup_local setup-static-min2.local
-    apply_patch makesetup.patch
+    # write_setup_local setup-static-min2.local
+    #apply_patch makesetup.patch
 	./configure \
 		MACOSX_DEPLOYMENT_TARGET=$MAC_DEP_TARGET \
         --prefix=$PREFIX \
@@ -302,7 +302,7 @@ build_python_static() {
         --with-lto \
         --enable-optimizations
 	make altinstall
-	reverse_patch makesetup.patch
+	#reverse_patch makesetup.patch
 	cd $ROOT
 	clean_python $PREFIX
 	zip_python_library $PREFIX
@@ -316,7 +316,7 @@ build_python_framework() {
 	cd $BUILD_SRC_PY
 	make clean
     write_setup_local setup-shared.local
-    apply_patch makesetup.patch
+    #apply_patch makesetup.patch
 	./configure \
 		MACOSX_DEPLOYMENT_TARGET=${MAC_DEP_TARGET} \
         --enable-framework=${PREFIX} \
@@ -327,7 +327,7 @@ build_python_framework() {
         --with-lto \
         --enable-optimizations
 	make altinstall
-	reverse_patch makesetup.patch
+	#reverse_patch makesetup.patch
 	cd $ROOT
 	clean_python $FWK_PREFIX
 	zip_python_library $FWK_PREFIX
