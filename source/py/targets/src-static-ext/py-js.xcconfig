@@ -1,9 +1,9 @@
 #include "../common.xcconfig"
 
 BUILD = $(SRCROOT)/../build/lib
-PREFIX = $(SUPPORT)/python$(VERSION)
+//PREFIX = $(SUPPORT)/python$(VERSION)
 // ALSO WORKED with PREFIX = .../python-static
-//PREFIX = $(SRCROOT)/../build/lib/python-static
+PREFIX = $(SRCROOT)/../build/lib/python-static
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)
 //PY_LIBS = $(PREFIX)/lib $(BUILD)/bzip2/lib $(BUILD)/openssl/lib $(BUILD)/xz/lib $(BUILD)
 
