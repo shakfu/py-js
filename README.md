@@ -357,7 +357,7 @@ This builds the default 'linked-to-system|homebrew python' version of `py`. Read
 In the root of the py-js directory:
 
 ```
-make source/py -C bin-homebrew-pkg
+make -C source/py bin-homebrew-pkg
 ```
 
 or in py-js/source/py
