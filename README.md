@@ -13,9 +13,9 @@ repo - https://github.com/shakfu/py-js
 
 **WARNING** this is pre-alpha software.
 
-If you are interested to try this out, please note that the default build script uses your existing brew installed python (currently 3.9) and assumes you have `pip installed cython`. 
+If you are interested to try this out, please note that the current implementation only works on MacOS right now, and requires a compiler to be installed on your system (xcode or the commandline tools via `xcode-select --install` and that the default build script uses your existing homebrew installed python (currently 3.9.2) and assumes you have already `pip` installed `cython` (more detailed installation steps below if required)
 
-Clone the `py-js` source and run the following in the cloned repo to get the required submodule:
+Git Clone the `py-js` source and run the following in the cloned repo to get the required submodule:
 
 ```
 $ git submodule init
@@ -23,15 +23,15 @@ $ git submodule update
 
 ```
 
-Then run the following in the root directory of the `py-js` source (more extensive  installation steps are detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
+Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
 
 ```
 $ ./build.sh
 ```
 
-Open up any of the patchers and look at .maxhelp patcher in the generated package to understand how `py` and the `pyjs` objects work.
+Open up any of the patchers in the generated package and look at the `.maxhelp` patcher to understand how `py` and the `pyjs` objects work.
 
-
+Have fun!
 
 ## Summary
 
@@ -144,7 +144,7 @@ The objective is to have 3 deployment variations:
 
 3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external/jsextension object, which can make it portable and usable in standalones.
 
-(Note that only the two first methods work reliably right now. With the latter requiring some slight manual post-build tweaks to get the standalone working with python. Embedding the python interpreter in the external itself is still not implemented.
+(Note that only the two first methods work reliably right now. With the latter requiring some slight manual post-build tweaks to get the standalone working with python. Embedding the python interpreter in the external itself is still in progress and not implemented.
 
 
 Deployment Scenario  | `py` | `pyjs`
@@ -240,8 +240,9 @@ Implemented for `py` objects only.
 
 - **Line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all of the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of entries in a session. Of course, a coll can made to save all commands if required.
 
-- **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
+- **Experimental Remote Console**. A new method (due to Ian Duncan) of sending code to the `py` node via `udp` has been implemented and allows for an send-from-editor and send-from-interactive-console capabilities. The clients are still in their infancy, but this method looks promising since you get syntax highlighting, syntax checking, and other features for free. It assumes you want to treat your `py` nodes as remotely accessible `server/interpreters-in-max`.
 
+- **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
 
 For `pyjs` objects, code editing is already built into the `js` objects.
 
