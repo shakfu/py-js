@@ -21,8 +21,8 @@ from libc.string cimport strcpy, strlen
 cimport api_max as mx # api is a cython keyword!
 cimport api_py as px
 
-import numpy
-import numpy as np
+#import numpy
+#import numpy as np
 
 
 DEF MAX_CHARS = 32767
@@ -256,7 +256,9 @@ cpdef public str hello():
 
 
 def random(int n):
-    return np.random.rand(n)
+    import random
+    # return np.random.rand(n)
+    return random.randint(0, n)
 
 
 def echo(*args):
