@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
+"""pybuild -- build python3 from source (currently for macos)
 
+    usage: pybuild.py [-h] [-v] {all,framework,shared,static} ...
+
+    pybuild: builds python from src
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -v, --version         show program's version number and exit
+
+    subcommands:
+      valid subcommands
+
+      {framework,shared,static}
+                            additional help
+        all                 build all python variations
+        framework           build framework python
+        shared              build shared python
+        static              build static python
+
+"""
+
+import argparse
 import logging
 import os
 import platform
@@ -24,7 +46,17 @@ else:
 LOG_FORMAT = '%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s'
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
 
-PYTHON_VERSION_STRING = platform.python_version() # e.g '3.9.1'
+PYTHON_VERSION_STRING = platform.python_version()  # e.g '3.9.1'
+
+
+class Project:
+    root = Path.cwd()
+    patch = root / 'patch'
+    targets = root / 'targets'
+    build = targets / 'build'
+    downloads = build / 'downloads'
+    src = build / 'src'
+    lib = build / 'lib'
 
 
 class DependencyManager:
@@ -34,9 +66,11 @@ class DependencyManager:
     frameworks_dir: where target dylib will be copied to with copied dependents
     exec_ref: back ref for executable or plugin
     """
-
-    def __init__(self, target, frameworks_dir='build', staticlibs_dir=None,
-            exec_ref='@loader_path/../Frameworks'):
+    def __init__(self,
+                 target,
+                 frameworks_dir='build',
+                 staticlibs_dir=None,
+                 exec_ref='@loader_path/../Frameworks'):
         self.target = target
         self.frameworks_dir = frameworks_dir
         self.staticlibs_dir = staticlibs_dir
@@ -46,10 +80,9 @@ class DependencyManager:
         self.dep_list = []
 
     def is_valid_path(self, dep_path):
-        return (dep_path == '' or 
-                dep_path.startswith('/opt/local/') or 
-                dep_path.startswith('/usr/local/') or 
-                dep_path.startswith('/User/'))
+        return (dep_path == '' or dep_path.startswith('/opt/local/')
+                or dep_path.startswith('/usr/local/')
+                or dep_path.startswith('/User/'))
 
     def get_deps(self, target=None):
         if not target:
@@ -57,9 +90,12 @@ class DependencyManager:
         key = os.path.basename(target)
         self.install_names[key] = []
         result = subprocess.check_output(['otool', '-L', target])
-        entries = [line.decode('utf-8').strip() for line in result.splitlines()]
+        entries = [
+            line.decode('utf-8').strip() for line in result.splitlines()
+        ]
         for entry in entries:
-            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$', entry)
+            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$',
+                             entry)
             if match:
                 path = match.group(1)
                 (dep_path, dep_filename) = os.path.split(path)
@@ -86,13 +122,15 @@ class DependencyManager:
 
         # cp target to frameworks_dir
         if os.path.dirname(self.target) != self.frameworks_dir:
-            dest = os.path.join(self.frameworks_dir, os.path.basename(self.target))
+            dest = os.path.join(self.frameworks_dir,
+                                os.path.basename(self.target))
             shutil.copyfile(self.target, dest)
             os.chmod(dest, 0o644)
             cmdline = ['install_name_tool', '-id', self.exec_ref, dest]
             err = subprocess.call(cmdline)
             if err != 0:
-                raise RuntimeError("Failed to change '{0}' '{1}'".format(dest, self.exec_ref))
+                raise RuntimeError("Failed to change '{0}' '{1}'".format(
+                    dest, self.exec_ref))
 
         # copy the rest
         for item in self.dep_list:
@@ -121,17 +159,24 @@ class DependencyManager:
                 if key == old_name_filename:
                     cmdline = ['install_name_tool', '-id', new, target]
                 else:
-                    cmdline = ['install_name_tool', '-change', old, new, target]
+                    cmdline = [
+                        'install_name_tool', '-change', old, new, target
+                    ]
 
                 err = subprocess.call(cmdline)
                 if err != 0:
-                    raise RuntimeError("Failed to change '{0}' to '{1}' in '{2}".format(old, new, target))
+                    raise RuntimeError(
+                        "Failed to change '{0}' to '{1}' in '{2}".format(
+                            old, new, target))
 
     def transform_exec(self, target):
         result = subprocess.check_output(['otool', '-L', target])
-        entries = [line.decode('utf-8').strip() for line in result.splitlines()]
+        entries = [
+            line.decode('utf-8').strip() for line in result.splitlines()
+        ]
         for entry in entries:
-            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$', entry)
+            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$',
+                             entry)
             if match:
                 path = match.group(1)
                 (dep_path, dep_filename) = os.path.split(path)
@@ -142,7 +187,9 @@ class DependencyManager:
                     dep_path, dep_filename = os.path.split(path)
 
                     dest = os.path.join(self.exec_ref, dep_filename)
-                    cmdline = ['install_name_tool', '-change', path, dest, target]
+                    cmdline = [
+                        'install_name_tool', '-change', path, dest, target
+                    ]
                     subprocess.call(cmdline)
 
     def copy_staticlibs(self):
@@ -156,7 +203,8 @@ class DependencyManager:
             static = os.path.join(head, name)
             exists = os.path.exists(static)
             if exists:
-                shutil.copyfile(static, os.path.join(self.staticlibs_dir, name))
+                shutil.copyfile(static, os.path.join(self.staticlibs_dir,
+                                                     name))
             else:
                 print("revise: not exists", static)
 
@@ -167,18 +215,6 @@ class DependencyManager:
         self.copy_dylibs()
         self.change_install_names()
         self.transform_exec('./eg')
-
-class Project:
-    root = Path.cwd()
-    source = root.parent / 'source'
-    support = root.parent.parent / 'support'
-    scripts = root / 'scripts'
-    patch = root / 'patch'
-    targets =  root / 'targets'
-    build = targets / 'build'
-    downloads = build / 'downloads'
-    src = build / 'src'
-    lib = build / 'lib'
 
 
 class Builder(ABC):
@@ -202,9 +238,10 @@ class Builder(ABC):
             yield dependency
             for subdependency in iter(dependency):
                 yield subdependency
+
     @property
     def ver(self):
-        return  ".".join(self.version.split('.')[:2])
+        return ".".join(self.version.split('.')[:2])
 
     @property
     def ver_nodot(self):
@@ -220,8 +257,9 @@ class Builder(ABC):
 
     @property
     def url(self):
-        return Path(self.url_template.format(name=self.name, 
-                                        version=self.version))
+        return Path(
+            self.url_template.format(name=self.name, version=self.version))
+
     @property
     def name_archive(self):
         return f'{self.name_version}.tgz'
@@ -254,7 +292,6 @@ class Builder(ABC):
     def prefix_bin(self):
         return self.prefix / 'bin'
 
-
     def libs_static_exist(self):
         for lib in self.libs_static:
             if not (self.prefix_lib / lib).exists():
@@ -284,7 +321,7 @@ class Builder(ABC):
 
     def reset(self):
         self.remove(self.src_path)
-        self.remove(self.prefix) # aka self.prefix
+        self.remove(self.prefix)  # aka self.prefix
 
     def download(self):
         "download target src"
@@ -294,11 +331,11 @@ class Builder(ABC):
 
 
 class OSXBuilder(Builder):
-    mac_dep_target = '10.13'
+    mac_dep_target = '10.14'
 
     @property
     def dylib(self):
-        return f'lib{self.name.lower()}{self.ver}.dylib'        
+        return f'lib{self.name.lower()}{self.ver}.dylib'
 
     def download(self):
         "download src"
@@ -333,6 +370,7 @@ class OpensslBuilder(OSXBuilder):
             self.cmd('make install_sw')
             self.chdir(self.project.root)
 
+
 class Bzip2Builder(OSXBuilder):
     name = 'bzip2'
     version = '1.0.8'
@@ -347,7 +385,6 @@ class Bzip2Builder(OSXBuilder):
             self.chdir(self.project.root)
 
 
-
 class XzBuilder(OSXBuilder):
     name = 'xz'
     version = '5.2.5'
@@ -359,7 +396,8 @@ class XzBuilder(OSXBuilder):
         if not self.libs_static_exist():
             self.chdir(self.src_path)
             self.cmd(f"""MACOSX_DEPLOYMENT_TARGET={self.mac_dep_target} \
-                ./configure --disable-shared --enable-static --prefix={self.prefix}""")
+                ./configure --disable-shared --enable-static --prefix={self.prefix}"""
+                     )
             self.cmd(f'make && make install')
             self.chdir(self.project.root)
 
@@ -373,15 +411,13 @@ class PythonBuilder(OSXBuilder):
     setup_local = None
     patch = None
 
-    def __init__(self, project=None, version=None, depends_on=None,
-                 can_patch=False):
+    def __init__(self, project=None, version=None, depends_on=None):
         super().__init__(project, version, depends_on)
 
         # dependency manager attributes (revise)
         self.install_names = {}
         self.deps = []
         self.dep_list = []
-        self.can_patch = self.can_patch
 
     # ------------------------------------------------------------------------
     # python properties
@@ -400,7 +436,7 @@ class PythonBuilder(OSXBuilder):
 
     @property
     def lib_dynload(self):
-        return self.python_lib / 'lib-dynload'    
+        return self.python_lib / 'lib-dynload'
 
     # ------------------------------------------------------------------------
     # src-level operations
@@ -416,15 +452,15 @@ class PythonBuilder(OSXBuilder):
             return
         if not setup_local:
             setup_local = self.setup_local
-        self.copyfile(self.project.patch / setup_local, 
-                  self.src_path /'Modules' / 'Setup.local')
+        self.copyfile(self.project.patch / self.ver / setup_local,
+                      self.src_path / 'Modules' / 'Setup.local')
 
     def apply_patch(self, patch=None):
         if not any([patch, self.patch]):
             return
         if not patch:
             patch = self.patch
-        self.cmd(f'patch -p1 < {self.project.patch}/{patch}')
+        self.cmd(f'patch -p1 < {self.project.patch}/{self.ver}/{patch}')
 
     def install(self):
         self.reset()
@@ -437,7 +473,6 @@ class PythonBuilder(OSXBuilder):
         self.install_python()
         self.fix_python_dylib_for_pkg()
 
-
     def install_python_ext(self):
         self.install_python()
         self.fix_python_dylib_for_ext()
@@ -446,10 +481,9 @@ class PythonBuilder(OSXBuilder):
     # post-processing operations
 
     def is_valid_path(self, dep_path):
-        return (dep_path == '' or 
-                dep_path.startswith('/opt/local/') or 
-                dep_path.startswith('/usr/local/') or 
-                dep_path.startswith('/User/'))
+        return (dep_path == '' or dep_path.startswith('/opt/local/')
+                or dep_path.startswith('/usr/local/')
+                or dep_path.startswith('/User/'))
 
     def get_deps(self, target=None):
         if not target:
@@ -457,9 +491,12 @@ class PythonBuilder(OSXBuilder):
         key = os.path.basename(target)
         self.install_names[key] = []
         result = subprocess.check_output(['otool', '-L', target])
-        entries = [line.decode('utf-8').strip() for line in result.splitlines()]
+        entries = [
+            line.decode('utf-8').strip() for line in result.splitlines()
+        ]
         for entry in entries:
-            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$', entry)
+            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$',
+                             entry)
             if match:
                 path = match.group(1)
                 (dep_path, dep_filename) = os.path.split(path)
@@ -472,8 +509,6 @@ class PythonBuilder(OSXBuilder):
                     if path not in self.deps:
                         self.deps.append(path)
                         self.get_deps(path)
-
-
 
     def recursive_clean(self, name, pattern):
         self.cmd(f'find {name} | grep -E "({pattern})" | xargs rm -rf')
@@ -514,7 +549,8 @@ class PythonBuilder(OSXBuilder):
             'venv',
         ])
 
-    def remove_extensions(self): pass
+    def remove_extensions(self):
+        pass
 
     def remove_binaries(self):
         self.rm_bins([
@@ -543,7 +579,7 @@ class PythonBuilder(OSXBuilder):
         self.remove_extensions()
         self.remove_binaries()
 
-    def zip_lib(self):
+    def ziplib(self):
         temp_lib_dynload = self.prefix_lib / 'lib-dynload'
         temp_os_py = self.prefix_lib / 'os.py'
 
@@ -551,7 +587,7 @@ class PythonBuilder(OSXBuilder):
         self.lib_dynload.rename(temp_lib_dynload)
         self.copyfile(self.python_lib / 'os.py', temp_os_py)
 
-        zip_path = self.prefix_lib  / f'python{self.ver_nodot}'
+        zip_path = self.prefix_lib / f'python{self.ver_nodot}'
         shutil.make_archive(zip_path, 'zip', self.python_lib)
 
         self.remove(self.python_lib)
@@ -559,7 +595,6 @@ class PythonBuilder(OSXBuilder):
         temp_lib_dynload.rename(self.lib_dynload)
         temp_os_py.rename(self.python_lib / 'os.py')
         self.site_packages.mkdir()
-
 
     def fix_python_dylib_for_pkg(self):
         self.chdir(self.prefix_lib)
@@ -573,25 +608,25 @@ class PythonBuilder(OSXBuilder):
     def fix_python_dylib_for_ext(self):
         self.chdir(self.prefix_lib)
         self.cmd(f'chmod 777 {self.dylib}')
-        self.cmd('install_name_tool -id @loader_path/{self.dylib} {self.dylib}')
+        self.cmd(
+            'install_name_tool -id @loader_path/{self.dylib} {self.dylib}')
         self.chdir(self.root)
 
     def pre_process(self):
         self.chdir(self.src_path)
-        if self.can_patch:
-            self.write_setup_local()
-            self.apply_patch()
+        self.write_setup_local()
+        #self.apply_patch()
         self.chdir(self.project.root)
 
     def post_process(self):
         self.clean()
-        self.zip_lib()
+        self.ziplib()
         # self.fix()
         # self.sign()
 
 
 class StaticPythonBuilder(PythonBuilder):
-    setup_local = 'setup-static-min2.local'
+    setup_local = 'setup-static-min3.local'
     patch = 'makesetup.patch'
 
     @property
@@ -616,12 +651,10 @@ class StaticPythonBuilder(PythonBuilder):
         self.cmd('make altinstall')
         self.chdir(self.project.root)
 
-
     def post_process(self):
         self.clean()
-        self.zip_lib()
+        self.ziplib()
         #self.static_lib.rename(self.prefix / self.library)
-
 
 
 class SharedPythonBuilder(PythonBuilder):
@@ -650,7 +683,6 @@ class SharedPythonBuilder(PythonBuilder):
         """)
         self.cmd('make altinstall')
         self.chdir(self.project.root)
-
 
     def remove_extensions(self):
         self.rm_exts([
@@ -697,7 +729,6 @@ class FrameworkPythonBuilder(PythonBuilder):
         self.cmd('make altinstall')
         self.chdir(self.project.root)
 
-
     def remove_extensions(self):
         self.rm_exts([
             '_tkinter',
@@ -715,17 +746,178 @@ class FrameworkPythonBuilder(PythonBuilder):
 
     def post_process(self):
         self.clean()
-        self.zip_lib()
+        self.ziplib()
 
 
+# ------------------------------------------------------------------------------
+# Generic utility functions and classes for commandline ops
+
+
+# option decorator
+def option(*args, **kwds):
+    def _decorator(func):
+        _option = (args, kwds)
+        if hasattr(func, 'options'):
+            func.options.append(_option)
+        else:
+            func.options = [_option]
+        return func
+
+    return _decorator
+
+
+# arg decorator
+arg = option
+
+
+# combines option decorators
+def option_group(*options):
+    def _decorator(func):
+        for option in options:
+            func = option(func)
+        return func
+
+    return _decorator
+
+
+class MetaCommander(type):
+    def __new__(cls, classname, bases, classdict):
+        subcmds = {}
+        for name, func in list(classdict.items()):
+            if name.startswith('do_'):
+                name = name[3:]
+                subcmd = {
+                    'name': name,
+                    'func': func,
+                    'options': [],
+                }
+                if hasattr(func, 'options'):
+                    subcmd['options'] = func.options
+                subcmds[name] = subcmd
+        classdict['_argparse_subcmds'] = subcmds
+        return type.__new__(cls, classname, bases, classdict)
+
+
+class Commander(metaclass=MetaCommander):
+    """app: description here
+    """
+    name = 'app name'
+    epilog = ''
+    version = '0.1'
+    default_args = ['--help']
+
+    def cmdline(self):
+        parser = argparse.ArgumentParser(
+            # prog = self.name,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            description=self.__doc__,
+            epilog=self.epilog,
+        )
+
+        parser.add_argument('-v',
+                            '--version',
+                            action='version',
+                            version='%(prog)s ' + self.version)
+
+        ## default arg
+        # parser.add_argument('db', help='arg')
+        # parser.add_argument('--db', help='option')
+
+        # non-subcommands here
+
+        subparsers = parser.add_subparsers(
+            title='subcommands',
+            description='valid subcommands',
+            help='additional help',
+        )
+
+        for name in sorted(self._argparse_subcmds.keys()):
+            subcmd = self._argparse_subcmds[name]
+            subparser = subparsers.add_parser(subcmd['name'],
+                                              help=subcmd['func'].__doc__)
+            for args, kwds in subcmd['options']:
+                subparser.add_argument(*args, **kwds)
+            subparser.set_defaults(func=subcmd['func'])
+
+        if len(sys.argv) <= 1:
+            options = parser.parse_args(self.default_args)
+        else:
+            options = parser.parse_args()
+        options.func(self, options)
+
+
+# ------------------------------------------------------------------------------
+# Commandline interface
+
+common_options = option_group(
+    option("-d",
+           "--download",
+           action="store_true",
+           help="download python build/downloads"),
+    option("-r", "--reset", action="store_true", help="reset python build"),
+    option("-i",
+           "--install",
+           action="store_true",
+           help="install python to build/lib"),
+    option("-b",
+           "--build",
+           action="store_true",
+           help="build python in build/src"),
+    option("-c",
+           "--clean",
+           action="store_true",
+           help="clean python in build/src"),
+    option("-z", "--ziplib", action="store_true", help="zip python library"),
+)
+
+
+class Application(Commander):
+    """pybuild: builds python from src
+    """
+    name = 'pybuild'
+    epilog = ''
+    version = '0.1'
+    default_args = ['--help']
+
+    def dispatch(self, builder_class, args):
+        "generic dispatcher"
+        b = builder_class()
+        if args.download:
+            b.download()
+        elif args.reset:
+            b.reset()
+        elif args.install:
+            b.install()
+        elif args.build:
+            b.build()
+        elif args.clean:
+            b.clean()
+        elif args.ziplib:
+            b.ziplib()
+        else:
+            pass
+
+    @common_options
+    def do_static(self, args):
+        "build static python"
+        self.dispatch(StaticPythonBuilder, args)
+
+    @common_options
+    def do_shared(self, args):
+        "build shared python"
+        self.dispatch(SharedPythonBuilder, args)
+
+    @common_options
+    def do_framework(self, args):
+        "build framework python"
+        self.dispatch(FrameworkPythonBuilder, args)
+
+    @common_options
+    def do_all(self, args):
+        "build all python variations"
+        for klass in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
+            self.dispatch(klass, args)
 
 if __name__ == '__main__':
-    # p = FrameworkPythonBuilder()
-    p = StaticPythonBuilder()
-    #p = SharedPythonBuilder()
-    p.install()
-    # p.reset()
-    # p.download()
-    # p.build()
-    # p.clean()
-    # p.zip_lib()
+    app = Application()
+    app.cmdline()
