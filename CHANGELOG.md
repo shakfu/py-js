@@ -4,6 +4,16 @@
 
 ## v0.1
 
+## Key Fixes
+
+- bin-homebrew-pkg is now working without issues and can even be used in standalones
+
+    - the package has to be manually moved into the standalone C74/packages directory and the py.mxo external which was automatically copied during standalone creation has to to be removed since it already exists in the package which copied in manually.
+
+- re-introduced updated pure python build script (pybuild.py) to build python in differrent variations.
+
+	- the static python build was used in a new target `static-ext` to statically build `py.mxo` and `pyjs.mxo` externals successfully.
+
 
 ### Features
 

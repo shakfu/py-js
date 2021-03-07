@@ -80,24 +80,27 @@ fix_python_dylib_for_ext_executable_name() {
 	cd $ROOT
 }
 
-fix_python_dylib_for_ext_plugins() {
+
+# fix_python_dylib_for_ext_resources() {
+# 	cd $PREFIX
+# 	chmod 777 ${DYLIB}
+# 	install_name_tool -id @loader_path/../Resources/${NAME}/${DYLIB} ${DYLIB}
+# 	mkdir -p $PY_EXTERNAL/Contents/Resources/${NAME}
+# 	cp -rf $PREFIX/* $PY_EXTERNAL/Contents/Resources/${NAME}
+# 	cd $ROOT
+# }
+
+fix_python_dylib_for_ext_resources() {
 	cd $PREFIX
 	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../PlugIns/${NAME}/${DYLIB} ${DYLIB}
-	mkdir -p $PY_EXTERNAL/Contents/PlugIns/${NAME}
-	cp -rf $PREFIX/* $PY_EXTERNAL/Contents/PlugIns/${NAME}
+	install_name_tool -id @loader_path/../Resources/${NAME}/${DYLIB} ${DYLIB}
 	cd $ROOT
 }
 
-fix_python_dylib_for_ext_frameworks() {
-	cd $PREFIX
-	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../Frameworks/${NAME}/${DYLIB} ${DYLIB}
-	mkdir -p $PY_EXTERNAL/Contents/Frameworks/${NAME}
-	cp -rf $PREFIX/* $PY_EXTERNAL/Contents/Frameworks/${NAME}
-	cd $ROOT
+cp_python_to_ext_resources() {
+	mkdir -p $1/Contents/Resources/${NAME}
+	cp -rf $PREFIX/* $1/Contents/Resources/${NAME}
 }
-
 
 install_python() {
 	mkdir -p $LIB
@@ -145,9 +148,12 @@ install_python_pkg() {
 install_python_ext() {
 	install_python
 	# fix_python_dylib_for_ext
-	# fix_python_dylib_for_ext_plugins
 	# fix_python_dylib_for_ext_executable_name
-	fix_python_dylib_for_ext_frameworks
+	fix_python_dylib_for_ext_resources
+	cp_python_to_ext_resources $PY_EXTERNAL
+	# FIXME: for some reason both don't work at the same time!!!
+	# you have to pick one.
+	# cp_python_to_ext_resources $PYJS_EXTERNAL
 }
 
 

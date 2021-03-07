@@ -14,6 +14,8 @@
 		1239836224A1DC4600ADF7CA /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835D24A1DC4600ADF7CA /* api.c */; };
 		1239836324A1DC4600ADF7CA /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835E24A1DC4600ADF7CA /* py.c */; };
 		1239836424A1DC4600ADF7CA /* py.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835F24A1DC4600ADF7CA /* py.h */; };
+		125E0EB825F3A9DA003C4A4A /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 125E0EB725F3A9DA003C4A4A /* lib */; };
+		125E0EB925F3A9DA003C4A4A /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 125E0EB725F3A9DA003C4A4A /* lib */; };
 		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -25,7 +27,8 @@
 		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
 		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
 		1239835F24A1DC4600ADF7CA /* py.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = py.h; path = ../../py.h; sourceTree = "<group>"; };
-		12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "py-js.xcconfig"; sourceTree = "<group>"; };
+		125E0EB725F3A9DA003C4A4A /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = "../build/lib/python-static/lib"; sourceTree = "<group>"; };
+		12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "py-js.xcconfig"; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		2FBBEAE508F335360078DB84 /* py.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = py.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -53,12 +56,13 @@
 		089C166AFE841209C02AAC07 /* iterator */ = {
 			isa = PBXGroup;
 			children = (
+				125E0EB725F3A9DA003C4A4A /* lib */,
 				1239835E24A1DC4600ADF7CA /* py.c */,
 				1239835F24A1DC4600ADF7CA /* py.h */,
 				120266C524AA17B5007DF876 /* pyjs.c */,
 				1239835D24A1DC4600ADF7CA /* api.c */,
 				1239835C24A1DC4600ADF7CA /* api.h */,
-				12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */,
+				12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */,
 				121A8C6124A1E58000EC5F99 /* Info.plist */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 				12D5454A2463B03000BE010E /* Frameworks */,
@@ -115,6 +119,7 @@
 				120266B924AA15EF007DF876 /* Sources */,
 				120266BC24AA15EF007DF876 /* Frameworks */,
 				120266BF24AA15EF007DF876 /* Rez */,
+				125E0ED325F3DDF7003C4A4A /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -134,6 +139,7 @@
 				2FBBEADA08F335360078DB84 /* Sources */,
 				2FBBEADC08F335360078DB84 /* Frameworks */,
 				2FBBEADF08F335360078DB84 /* Rez */,
+				125E0ED225F3DC69003C4A4A /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -151,6 +157,15 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0610;
+				TargetAttributes = {
+					120266B324AA15EF007DF876 = {
+						DevelopmentTeam = GXY97B2JBX;
+						ProvisioningStyle = Automatic;
+					};
+					2FBBEAD608F335360078DB84 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "py-js" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -175,6 +190,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				125E0EB925F3A9DA003C4A4A /* lib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -182,6 +198,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				125E0EB825F3A9DA003C4A4A /* lib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,6 +220,43 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXRezBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		125E0ED225F3DC69003C4A4A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nrm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython3.9.a\n";
+		};
+		125E0ED325F3DDF7003C4A4A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "rm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython3.9.a\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		120266B924AA15EF007DF876 /* Sources */ = {
@@ -230,9 +284,15 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = GXY97B2JBX;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"\"DENORM_WANT_FIX = 1\"",
+					"\"NO_TRANSLATION_SUPPORT = 1\"",
+					PY_STATIC_EXT,
+				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
@@ -248,6 +308,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.pyjs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Development;
 		};
@@ -258,6 +319,11 @@
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = YES;
 				DEVELOPMENT_TEAM = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"\"DENORM_WANT_FIX = 1\"",
+					"\"NO_TRANSLATION_SUPPORT = 1\"",
+					PY_STATIC_EXT,
+				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
@@ -278,14 +344,14 @@
 		};
 		2FBBEAD008F335010078DB84 /* Development */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */;
+			baseConfigurationReference = 12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
 			};
 			name = Development;
 		};
 		2FBBEAD108F335010078DB84 /* Deployment */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */;
+			baseConfigurationReference = 12ADAF1624ACBE0B00B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
 			};
 			name = Deployment;
@@ -295,9 +361,15 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEVELOPMENT_TEAM = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"\"DENORM_WANT_FIX = 1\"",
+					"\"NO_TRANSLATION_SUPPORT = 1\"",
+					PY_STATIC_EXT,
+				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
@@ -306,13 +378,14 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Development;
 		};
@@ -323,6 +396,11 @@
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = YES;
 				DEVELOPMENT_TEAM = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"\"DENORM_WANT_FIX = 1\"",
+					"\"NO_TRANSLATION_SUPPORT = 1\"",
+					PY_STATIC_EXT,
+				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
@@ -331,7 +409,7 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",

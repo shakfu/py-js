@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#PYTHON_VERSION=3.8.5
+#PYTHON_VERSION=3.9.2
 PYTHON_VERSION=`python3 --version | sed s/Python[[:space:]]//`
 OPENSSL_VERSION=1.1.1g
 BZIP2_VERSION=1.0.8
@@ -11,9 +11,9 @@ MAC_DEP_TARGET=10.14
 
 # --- need not modify below except to change excluded modules
 
-PYTHON_VER=${PYTHON_VERSION%.*} 		# 3.8
-PYTHON_VER_NODOT="${PYTHON_VER//./}"	# 38 
-PYTHON_NAME=python${PYTHON_VER}			# python3.8
+PYTHON_VER=${PYTHON_VERSION%.*} 		# 3.9
+PYTHON_VER_NODOT="${PYTHON_VER//./}"	# 39
+PYTHON_NAME=python${PYTHON_VER}			# python3.9
 
 URL_PY=https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
 URL_SSL=https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
