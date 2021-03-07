@@ -1,11 +1,11 @@
 # TODO
 
-- [ ] pick up default homebrew installed python details by querying /usr/local/opt/python/libexec/bin/python
+- [x] pick up default homebrew installed python details by querying /usr/local/opt/python/libexec/bin/python
 
 - [ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for
   static linking as building it takes ages.
 
-- [ ] fix references (still pointing to compilled locations).
+- [ ] fix references (still pointing to compiled locations) ??
 
 
 

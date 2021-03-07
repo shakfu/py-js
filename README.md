@@ -8,7 +8,6 @@ repo - https://github.com/shakfu/py-js
 ![py-js test](./media/screenshot.png)
 
 
-
 ## Quickstart
 
 **WARNING** this is pre-alpha software.
