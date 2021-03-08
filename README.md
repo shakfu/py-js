@@ -375,7 +375,7 @@ Recent changes in Max have allowed for this to work in standalones. Just create 
 
 #### Embed Python in the External itself
 
-**WARNING**: this currently doesn't work.
+**WARNING**: this currently 'partially' works. Strangely, it works for one exernal and not the other! Not sure why...
 
 This places a whole minimized python distribution in the external `py.mxo` itself.
 
@@ -385,11 +385,7 @@ To use your system homebrew python to do this:
 make homebrew-ext
 ```
 
-If you want to download and build python from source (will be done automatically)
-
-```
-make python-org-ext
-```
+Another implementation variation builds both externals using a minimal static python build. This has provden reproducibly successful (see `py-js/source/py/targets/static-ext` after building a static-python build. A more robust implementation will following the ogoing cleanup.
 
 
 ### Sidenote about building on a Mac
@@ -412,29 +408,6 @@ $ brew install clang-format
 The style used in this project is specified in the `.clang-format` file.
 
 
-
-
-### leo (optional)
-
-[leo-editor](https://leoeditor.com) is used to factilitate documentation and restructuring.
-
-It is entirely optional, however, if one is interested it could be helpful to understand the project code in outline form:
-
-To install it you can create a python `virtual environment` in the project root (which is ignored by `.gitignore` if named as `leoenv`:
-
-```
-$ virtualenv leoenv
-$ source leoenv/bin/activate
-$ pip install leo
-```
-
-After installation, you can open the `project.leo` file as follows:
-
-```
-$ leo project.leo &
-```
-
-
 ## Prior Art and Thanks
 
 Every now and then when I am developing a patch in Max, I yearn for some simple python function or the other, like the `any` and `all` builtins for example, and I then spend more time than I want researching a Max workaround. 
@@ -445,11 +418,14 @@ Thinking that there must be a max external out there, I looked around and found 
 
 - [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 16 months as of this writing. Again c++ and using pybind11 which I'm not familiar with.
 
+- [nt.python_for_max](https://github.com/2bbb/nt.python_for_max) -- Basic implementation of python in max using a fork of Graham Wakefield's old c++ interface. Hasn't really been touched in 3 years.
+
 Around the time of the beginning of the covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts to embed a scheme implementation into a Max external.
 
 So I decided, during a period with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c that won't crash.
 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
-Thanks to Luigi Castelli for his help on Max/Msp questions and to Stefan Behnel for his help with Cython questions.
+Thanks to Luigi Castelli for his help on Max/Msp questions, to Stefan Behnel for his help with Cython questions, and to Iain Duncan for providing the initial inspiration and for saving me time with some great implementation ideas.
+
 
