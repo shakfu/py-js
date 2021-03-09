@@ -66,7 +66,7 @@ class PythonBuilder(OSXBuilder):
         """pre-build operations"""
         self.chdir(self.src_path)
         self.write_setup_local()
-        #self.apply_patch()
+        # self.apply_patch()
         self.chdir(self.project.root)
 
     def post_process(self):

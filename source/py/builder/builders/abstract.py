@@ -148,8 +148,8 @@ class Builder(ABC):
 
     @abstractmethod
     def download(self):
-        "download target src"
+        """download target src"""
 
     @abstractmethod
     def build(self):
-        "build target from src"
+        """build target from src"""
