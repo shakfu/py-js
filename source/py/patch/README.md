@@ -1,6 +1,6 @@
 # Module Setup Patches
 
-This folder contains patches to `Python-x.x.x/Modules/makesetup` and versions of Python-x.x.x/Modules/Setup.local`.
+This folder contains patches to `Python-x.x.x/Modules/makesetup` and versions of `Python-x.x.x/Modules/Setup.local`.
 
 ## Notes
 
