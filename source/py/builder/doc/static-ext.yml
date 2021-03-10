@@ -2,7 +2,7 @@
 
 # recipe 
 name: pyjs
-plaform: macos
+platform: macos
 mac_dep_target: '10.13'
 
 projects:

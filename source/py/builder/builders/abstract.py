@@ -13,21 +13,20 @@ import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL, Project
+from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL  # Project
 
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
 
 
 class Builder(ABC):
     """Abstract class to provide builder interface and common features."""
-    name: str
     version: str
     url_template: str
     depends_on: []
     libs_static = []
 
     def __init__(self, project, version=None, depends_on=None):
-        self.project = project or Project()
+        self.project = project #or Project()
         self.version = version or self.version
         self.depends_on = ([B(project) for B in depends_on] if depends_on else
                            [B(project) for B in self.depends_on])

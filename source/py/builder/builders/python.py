@@ -15,7 +15,7 @@ from .openssl import OpensslBuilder
 from .opsys import OSXBuilder
 from .xz import XzBuilder
 
-PYTHON_VERSION_STRING = platform.python_version()  # e.g '3.9.1'
+PYTHON_VERSION_STRING = platform.python_version()  # e.g '3.9.2'
 
 
 class PythonBuilder(OSXBuilder):
