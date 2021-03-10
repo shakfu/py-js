@@ -5,12 +5,7 @@ Place slow changing constants and variables here in UPPERCASE.
 
 
 """
-import configparser
 import logging
-import pathlib
-from types import SimpleNamespace
-
-import yaml
 
 IGNORE_ERRORS = False
 
@@ -22,23 +17,6 @@ else:
 
 LOG_FORMAT = '%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s'
 
-
-
-class Project:
-    """Project is the source of per-project configuration and methods"""
-    root = pathlib.Path.cwd()
-    patch = root / 'patch'
-    targets = root / 'targets'
-    build = targets / 'build'
-    downloads = build / 'downloads'
-    src = build / 'src'
-    lib = build / 'lib'
-
-
-with open('recipes/static-ext.yml') as f:
-    content = f.read()
-
-cfg = SimpleNamespace(**yaml.safe_load(content))
 
 
 # class Builder:

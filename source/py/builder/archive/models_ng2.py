@@ -21,7 +21,10 @@ from types import SimpleNamespace
 
 
 class Settings(SimpleNamespace):
-    """A dictionary object with dotted access to its members."""
+    """A dictionary object with dotted access to its members.
+
+    >>> settings = Settings(**dict)
+    """
 
     def copy(self):
         """provide a copy of the internal dictionary"""
@@ -58,12 +61,11 @@ class Builder:
     A Builder is analagous to a Target in Xcode.
     """
 
-    def __init__(self, name: str, product: Product, 
-                 depends_on: list["Builder"] = None, **settings):
+    def __init__(self, name: str, product: Product, **settings):
         self.name = name
         self.product = product
-        self.depends_on = depends_on or []
-        self.settings = Settings(**settings)
+        self.settings = settings
+        # self.settings = Settings(**settings)
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}-{self.settings}'>"
@@ -84,21 +86,24 @@ class Project:
     build one or more software products.
     """
 
-    def __init__(self, name: str, builders: list[Builder], 
-                 depends_on: list["Project"] = None, **settings):
+    def __init__(self, name: str, builders: list[Builder], **settings):
         self.name = name
-        self.depends_on = depends_on or []
-        self.settings = Settings(**settings)
-        self.builders = builders
+        self.settings = settings
+        self.builders = self.setup_builders(builders, settings)
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}-{self.settings}'>"
 
-    def setup(self, parent):
-        """inherit settings of parent object"""
-        parent_settings = parent.settings.copy()
-        parent_settings.update(self.settings)
-        self.settings = parent_settings
+    def setup_builders(self, builders, settings):
+        """setup builder objects"""
+        _builders = []
+        for builder in builders:
+            project_settings = settings.copy()
+            # update copy of project settings with builder.settings
+            project_settings.update(builder.settings)
+            builder.settings = project_settings
+            _builders.append(builder)
+        return _builders
 
     def build(self):
         """sequence builders in order of dependency"""
@@ -116,47 +121,54 @@ class Recipe:
 
     def __init__(self, name: str, projects: list[Project], **settings):
         self.name = name
-        self.settings = Settings(**settings)
-        self.projects = projects
+        self.settings = settings
+        self.projects = self.setup_projects(projects, settings)
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}-{self.settings}'>"
+
+    def setup_projects(self, projects, settings):
+        """setup project objects"""
+        _projects = []
+        for project in projects:
+            recipe_settings = settings.copy()
+            # update copy of recipe settings with project.settings
+            recipe_settings.update(project.settings)
+            project.settings = recipe_settings
+            _projects.append(project)
+        return _projects
 
     def build(self):
         """build projects in order of dependency"""
         print(f"{self}")
         for project in self.projects:
-            project.setup(self)
+            # project.setup(self)
             project.build()
+
+
 
 
 def test():
     """testing the schema"""
-    # products
-    py_mxo = Product("py_mxo", path="py.mxo")
-    pyjs_mxo = Product("pyjs_mxo", path="pyjs.mxo")
-    python_static = Product("python_static", path="libpython3.9.a")
+
+    p1 = Product("py_mxo", path="py.mxo")
+    p2 = Product("pyjs_mxo", path="pyjs.mxo")
+    p3 = Product("python_static", path="libpython3.9.a")
 
     # builders / target
-    python_static_builder = Builder("python_static_builder", product=python_static)
-    py_builder = Builder("py_builder", product=py_mxo, depends_on=python_static_builder)
-    pyjs_builder = Builder(
-        "pyjs_builder", product=pyjs_mxo, depends_on=python_static_builder, a=20, c=10
-    )
+    b1 = Builder("python_static_builder", product=p3)
+    b2 = Builder("py_builder", product=p1)
+    b3 = Builder("pyjs_builder", product=p2, a=20, c=10)
 
     # projects
-    build_python = Project("build_python", builders=[python_static_builder], a=4)
-    build_py_js = Project(
-        "build_py_js",
-        builders=[py_builder, pyjs_builder],
-        depends_on=[build_python],
-        a=3,
-    )
+    pr1 = Project("build_python", builders=[b1], a=4)
+    pr2 = Project("build_py_js", builders=[b2, b3], a=3)
 
     # recipe / workspace
-    py_js = Recipe("py-js", projects=[build_python, build_py_js], a=1, b=2)
+    r1 = Recipe("py-js", projects=[pr1, pr2], a=1, b=2, x=2000)
 
-    py_js.build()
+    r1.build()
+
 
 
 if __name__ == "__main__":
