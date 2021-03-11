@@ -2,9 +2,8 @@
 
 # recipe 
 name: pyjs
-settings:
-  platform: macos
-  mac_dep_target: '10.13'
+platform: macos
+mac_dep_target: '10.13'
 
 projects:
   - name: build_python
