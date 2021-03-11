@@ -1,0 +1,58 @@
+
+# recipe 
+recipe:
+  name: pyjs
+  projects:
+    - build_python
+    - build_pyjs_externals
+  settings:
+    platform: macos
+    mac_dep_target: '10.13'
+
+projects:
+  - name: build_python
+    builders:
+      - bzip2
+      - openssl
+      - xz
+      - static_python
+    settings:
+      version: '3.9.2'
+      url: https://www.python.org/ftp/python/${version}/Python-${version}.tgz
+      url_getpip: https://bootstrap.pypa.io/get-pip.py
+
+  - name: build_pyjs_externals
+    builders:
+      - static_python
+      - py_external
+      - pyjs_external
+    settings: {}
+
+builders:  
+  - name: bzip2
+    settings:
+      version: '1.0.8'
+      url: https://sourceware.org/pub/bzip2/bzip2-${version}.tar.gz
+      static_libs: ['libbzip2.a']
+  
+  - name: openssl
+    settings:
+      version: 1.1.1g
+      url: https://www.openssl.org/source/openssl-${version}.tar.gz
+      static_libs: ['libssl.a', 'libcrypto.a']
+  
+  - name: xz
+    settings:
+      version: '1.0.8'
+      url: http://tukaani.org/xz/xz-{version}.tar.gz
+      static_libs: ['libbzip2.a']
+
+  - name: static_python
+    settings:
+      static_libs: ['libpython3.9.a']
+
+  - name: py_external
+    settings: {}
+
+  - name: pyjs_external
+    settings: {}

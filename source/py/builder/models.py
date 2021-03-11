@@ -43,7 +43,7 @@ class Settings(SimpleNamespace):
             raise TypeError
 
 
-class Product:
+class Product(ABC):
     """Produced by running a builder."""
 
     def __init__(self, name: str, path: pathlib.Path):
@@ -58,7 +58,7 @@ class Product:
         return self.path.exists()
 
 
-class Builder:
+class Builder(ABC):
     """A Builder know how to build a single product type in a project.
 
     A Builder is analagous to a Target in Xcode.
@@ -78,7 +78,7 @@ class Builder:
         print(f"\t\t{self} -> {self.product}")
 
 
-class Project:
+class Project(ABC):
     """A repository for all the files, resources, and information required to
     build one or more software products.
     """
@@ -86,7 +86,7 @@ class Project:
     def __init__(self, name: str = None , builders: list[Builder] = None, **settings):
         self.name = name
         self.settings = Settings(**settings)
-        self.builders = self.init_builders(builders)
+        self.builders = self.init_builders(builders) if builders else []
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -99,7 +99,7 @@ class Project:
         return _builders
 
     @classmethod
-    def from_factory(cls, name=None, builder_classes=None, **settings):
+    def from_defaults(cls, name=None, builder_classes=None, **settings):
         if not builder_classes:
             builder_classes = cls.builder_classes
         _builders = []
@@ -116,7 +116,7 @@ class Project:
             builder.build()
 
 
-class Recipe:
+class Recipe(ABC):
     """A platform-specific container for multiple build projects.
 
     A recipe is analogous to a workspace in xcode
@@ -133,15 +133,43 @@ class Recipe:
     __repr__=__str__
 
     @classmethod
-    def from_factory(cls, name=None, project_classes=None, **settings):
+    def from_defaults(cls, name=None, project_classes=None, **settings):
         if not project_classes:
             project_classes = cls.project_classes
         _projects = []
         for project_class in project_classes:            
             project_name = Text(project_class.__name__).mixed_to_word().abbreviate()
-            project = project_class.from_factory(project_name, **settings)
+            project = project_class.from_defaults(project_name, **settings)
             _projects.append(project)
         return cls(name, _projects, **settings)
+
+    @classmethod
+    def from_yaml(cls, path):
+        import yaml
+        with open(path) as f:
+            yml = f.read()
+            cfg = yaml.safe_load(yml)
+
+        # create builders
+        _builders = {}
+        for builder_cfg in cfg['builders']:
+            classname = Text(builder_cfg['name']).classname + 'Builder'
+            builder_class = type(classname, (Builder,), {})
+            builder = builder_class(builder_cfg['name'], **builder_cfg['settings'])
+            _builders[builder_cfg['name']] = builder
+
+        # create projects
+        _projects = {}
+        for project_cfg in cfg['projects']:
+            classname = Text(project_cfg['name']).classname + 'Project'
+            project_class = type(classname, (Project,), {})
+            project_builders = [_builders[key] for key in project_cfg['builders']]
+            project = project_class(project_cfg['name'], builders=project_builders, **project_cfg['settings'])
+            _projects[project_cfg['name']] = project
+
+        recipe = cfg['recipe']
+        recipe_projects = [_projects[key] for key in recipe['projects']]
+        return cls(recipe['name'], recipe_projects, **recipe['settings'])
 
     def build(self):
         """build projects in order of dependency"""
@@ -149,10 +177,7 @@ class Recipe:
         for project in self.projects:
             project.build()
 
-
-
-
-def test():
+def test_from_defaults():
     """testing the schema"""
 
     # product classes
@@ -190,10 +215,20 @@ def test():
 
 
     # recipe / workspace
-    r1 = StaticPyJSRecipe.from_factory(a=1, b=2, x=2000)
+    r1 = StaticPyJSRecipe.from_defaults(a=1, b=2, x=2000)
     r1.build()
 
+def test_from_yaml():
+    class MacOSRecipe(Recipe):
+        """A macos-specific build recipe"""
 
+    r1 = MacOSRecipe.from_yaml('yaml/flat.yml')
+    print(r1)
+    for p in r1.projects:
+        print('\t', p)
+        for b in p.builders:
+            print('\t\t', b)
 
 if __name__ == "__main__":
-    test()
+    test_from_defaults()
+    test_from_yaml()

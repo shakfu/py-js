@@ -14,7 +14,7 @@ repo - https://github.com/shakfu/py-js
 
 If you are interested to try this out, please note that the current implementation only works on MacOS right now, and requires a compiler to be installed on your system (xcode or the commandline tools via `xcode-select --install` and that the default build script uses your existing homebrew installed python (currently 3.9.2) and assumes you have already `pip` installed `cython` (more detailed installation steps below if required)
 
-Git Clone the `py-js` source and run the following in the cloned repo to get the required submodule:
+Git clone the `py-js` source and run the following in the cloned repo to get the required submodules:
 
 ```
 $ git submodule init
@@ -28,7 +28,7 @@ Then run the following in the root directory of the `py-js` source (other instal
 $ ./build.sh
 ```
 
-Open up any of the patchers in the generated package and look at the `.maxhelp` patcher to understand how `py` and the `pyjs` objects work.
+Open up any of the patchers in the generated package and also look at the `.maxhelp` patcher to understand how `py` and the `pyjs` objects work.
 
 Have fun!
 
