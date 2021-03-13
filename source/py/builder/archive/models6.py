@@ -64,9 +64,8 @@ class Builder(ABC):
     A Builder is analagous to a Target in Xcode.
     """
 
-    def __init__(self, name: str = None, depends_on: ['Builder'] = None, **settings):
+    def __init__(self, name: str = None, **settings):
         self.name = name
-        self.depends_on = depends_on or []
         self.settings = Settings(**settings)
         self.project = None
         self.product = None
@@ -84,10 +83,8 @@ class Project(ABC):
     build one or more software products.
     """
 
-    def __init__(self, name: str = None , builders: list[Builder] = None, 
-                 depends_on: ['Project'] = None, **settings):
+    def __init__(self, name: str = None , builders: list[Builder] = None, **settings):
         self.name = name
-        self.depends_on = depends_on or []
         self.settings = Settings(**settings)
         self.builders = self.init_builders(builders) if builders else []
 
@@ -156,34 +153,19 @@ class Recipe(ABC):
         # create builders
         _builders = {}
         for builder_cfg in cfg['builders']:
-            builder_name = builder_cfg['name']
-            classname = Text(builder_name).classname + 'Builder'
+            classname = Text(builder_cfg['name']).classname + 'Builder'
             builder_class = type(classname, (Builder,), {})
-            builder = builder_class(builder_name, depends_on=None, **builder_cfg['settings'])
-            _builders[builder_name] = builder
-
-        # set builder dependencies
-        for builder_cfg in cfg['builders']:
-            builder_name = builder_cfg['name']
-            depends_on = [_builders[name] for name in builder_cfg['depends_on']]
-            _builders[builder_name].depends_on = depends_on
+            builder = builder_class(builder_cfg['name'], **builder_cfg['settings'])
+            _builders[builder_cfg['name']] = builder
 
         # create projects
         _projects = {}
         for project_cfg in cfg['projects']:
-            project_name = project_cfg['name']
-            classname = Text(project_name).classname + 'Project'
+            classname = Text(project_cfg['name']).classname + 'Project'
             project_class = type(classname, (Project,), {})
             project_builders = [_builders[key] for key in project_cfg['builders']]
-            project = project_class(project_name, builders=project_builders, 
-                                    depends_on=None, **project_cfg['settings'])
+            project = project_class(project_cfg['name'], builders=project_builders, **project_cfg['settings'])
             _projects[project_cfg['name']] = project
-
-        # set project dependencies
-        for project_cfg in cfg['projects']:
-            project_name = project_cfg['name']
-            depends_on = [_projects[name] for name in project_cfg['depends_on']]
-            _projects[project_name].depends_on = depends_on
 
         recipe = cfg['recipe']
         recipe_projects = [_projects[key] for key in recipe['projects']]
@@ -240,7 +222,7 @@ def test_from_yaml():
     class MacOSRecipe(Recipe):
         """A macos-specific build recipe"""
 
-    r1 = MacOSRecipe.from_yaml('yaml/depend.yml')
+    r1 = MacOSRecipe.from_yaml('yaml/flat.yml')
     print(r1)
     for p in r1.projects:
         print('\t', p)
@@ -250,7 +232,3 @@ def test_from_yaml():
 if __name__ == "__main__":
     test_from_defaults()
     test_from_yaml()
-    class MacOSRecipe(Recipe):
-        """A macos-specific build recipe"""
-
-    r1 = MacOSRecipe.from_yaml('yaml/depend.yml')
