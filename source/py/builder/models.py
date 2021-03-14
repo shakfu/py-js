@@ -148,7 +148,64 @@ class Recipe(ABC):
         return cls(name, _projects, **settings)
 
     @classmethod
-    def from_yaml(cls, path):
+    def from_tree_yaml(cls, path):
+        import yaml
+        with open(path) as f:
+            yml = f.read()
+            cfg = yaml.safe_load(yml)
+
+        # extract recipe
+        recipe_cfg = cfg['recipe']
+        recipe_name = recipe_cfg['name']
+        if 'type' in recipe_cfg:
+            classname = recipe_cfg['type']
+        else:
+            classname = Text(recipe_cfg).classname + 'Recipe'
+        recipe_class = type(classname, (Recipe,), {})
+        recipe = recipe_class(recipe_name, **recipe_cfg['settings'])
+
+        _projects, _builders = {}, {}
+
+        # extract recipe.projects
+        recipe.projects = []
+        for project_cfg in recipe_cfg['projects']:
+            project_name = project_cfg['name']
+            if 'type' in project_cfg:
+                classname = project_cfg['type']
+            else:
+                classname = Text(project_name).classname + 'Project'
+            project_class = type(classname, (Project,), {})
+            project = project_class(project_name, depends_on=project_cfg['depends_on'], 
+                                    **project_cfg['settings'])
+            _projects[project_name] = project
+
+            # extract recipe.project.builders
+            project.builders = []
+            for builder_cfg in project_cfg['builders']:
+                builder_name = builder_cfg['name']
+                if 'type' in builder_cfg:
+                    classname = builder_cfg['type']
+                else:
+                    classname = Text(builder_name).classname + 'Builder'
+                builder_class = type(classname, (Builder,), {})
+                builder = builder_class(builder_name, depends_on=builder_cfg['depends_on'],
+                                        **builder_cfg['settings'])
+                _builders[builder_name] = builder
+                project.builders.append(builder)   
+            recipe.projects.append(project)
+
+        # re-trace for dependencies
+        for project in recipe.projects:
+            project_depends_on = [_projects[name] for name in project.depends_on]
+            project.depends_on = project_depends_on
+            for builder in project.builders:
+                builder_depends_on = [_builders[name] for name in builder.depends_on]
+                builder.depends_on = builder_depends_on
+
+        return recipe
+
+    @classmethod
+    def from_flat_yaml(cls, path):
         import yaml
         with open(path) as f:
             yml = f.read()
@@ -195,7 +252,7 @@ class Recipe(ABC):
         return cls(recipe['name'], recipe_projects, **recipe['settings'])
 
     @classmethod
-    def gen_from_yaml(cls, path):
+    def gen_from_flat_yaml(cls, path):
         from textwrap import dedent
         import yaml
         from mako.template import Template
@@ -304,26 +361,45 @@ def test_from_defaults():
     r1 = StaticPyJSRecipe.from_defaults(a=1, b=2, x=2000)
     r1.build()
 
-def test_from_yaml():
+
+def test_from_flat_yaml():
+    print()
+    print("flat"*20)
+    print()
     class MacOSRecipe(Recipe):
         """A macos-specific build recipe"""
 
-    r1 = MacOSRecipe.from_yaml('yaml/final.yml')
+    r1 = MacOSRecipe.from_flat_yaml('yaml/flat.yml')
     print(r1)
     for p in r1.projects:
         print('\t', p)
         for b in p.builders:
             print('\t\t', b)
 
-
-def test_gen_from_yaml():
+def test_from_tree_yaml():
+    print()
+    print("tree"*20)
+    print()
     class MacOSRecipe(Recipe):
         """A macos-specific build recipe"""
 
-    r1 = MacOSRecipe.gen_from_yaml('yaml/final.yml')
+    r1 = MacOSRecipe.from_tree_yaml('yaml/tree.yml')
+    print(r1)
+    for p in r1.projects:
+        print('\t', p)
+        for b in p.builders:
+            print('\t\t', b)
+
+def test_gen_from_flat_yaml():
+    class MacOSRecipe(Recipe):
+        """A macos-specific build recipe"""
+
+    r1 = MacOSRecipe.gen_from_flat_yaml('yaml/flat.yml')
+
 
 
 if __name__ == "__main__":
-    # test_from_defaults()
-    # test_from_yaml()
-    test_gen_from_yaml()
+    test_from_defaults()
+    test_from_flat_yaml()
+    test_from_tree_yaml()
+    test_gen_from_flat_yaml()

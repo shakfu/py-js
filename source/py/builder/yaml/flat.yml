@@ -1,5 +1,5 @@
 
-# recipe 
+# recipe example in 'flat' yaml format
 recipe:
   name: pyjs
   projects:
@@ -11,48 +11,86 @@ recipe:
 
 projects:
   - name: build_python
+    type: BuildStaticPythonProject
     builders:
       - bzip2
       - openssl
       - xz
       - static_python
+    depends_on: []
     settings:
       version: '3.9.2'
       url: https://www.python.org/ftp/python/${version}/Python-${version}.tgz
       url_getpip: https://bootstrap.pypa.io/get-pip.py
 
   - name: build_pyjs_externals
+    type: BuildPyJSExternalProject
     builders:
-      - static_python
       - py_external
       - pyjs_external
+    depends_on: [build_python]
     settings: {}
 
 builders:  
   - name: bzip2
+    type: Bzip2Builder
+    depends_on: []
+    product: static_bzip2
     settings:
       version: '1.0.8'
       url: https://sourceware.org/pub/bzip2/bzip2-${version}.tar.gz
       static_libs: ['libbzip2.a']
   
   - name: openssl
+    depends_on: []
+    product: static_openssl
     settings:
       version: 1.1.1g
       url: https://www.openssl.org/source/openssl-${version}.tar.gz
       static_libs: ['libssl.a', 'libcrypto.a']
   
   - name: xz
+    depends_on: []
+    product: static_xz
     settings:
       version: '1.0.8'
       url: http://tukaani.org/xz/xz-{version}.tar.gz
       static_libs: ['libbzip2.a']
 
   - name: static_python
+    depends_on: [bzip2, openssl, xz]
+    product: static_py
     settings:
       static_libs: ['libpython3.9.a']
 
   - name: py_external
+    depends_on: [static_python]
+    product: py_ext
     settings: {}
 
   - name: pyjs_external
+    depends_on: [static_python]
+    product: pyjs_ext
     settings: {}
+
+products:
+  - name: py_ext
+    path: py.mxo
+
+  - name: pyjs_ext
+    path: pyjs.mxo
+
+  - name: static_py
+    path: static-python
+
+  - name: static_bzip2
+    path: bzip2
+
+  - name: static_openssl
+    path: openssl
+
+  - name: static_xz
+    path: xz
+
+
+
