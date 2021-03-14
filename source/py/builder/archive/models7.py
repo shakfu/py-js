@@ -20,7 +20,6 @@ import pathlib
 from abc import ABC, abstractmethod
 from types import SimpleNamespace
 
-from utils.dotmap import DotMap
 from utils.text import Text
 
 
@@ -158,10 +157,7 @@ class Recipe(ABC):
         _builders = {}
         for builder_cfg in cfg['builders']:
             builder_name = builder_cfg['name']
-            if 'type' in builder_cfg:
-                classname = builder_cfg['type']
-            else:
-                classname = Text(builder_name).classname + 'Builder'
+            classname = Text(builder_name).classname + 'Builder'
             builder_class = type(classname, (Builder,), {})
             builder = builder_class(builder_name, depends_on=None, **builder_cfg['settings'])
             _builders[builder_name] = builder
@@ -175,10 +171,7 @@ class Recipe(ABC):
         _projects = {}
         for project_cfg in cfg['projects']:
             project_name = project_cfg['name']
-            if 'type' in project_cfg:
-                classname = project_cfg['type']
-            else:
-                classname = Text(project_name).classname + 'Project'
+            classname = Text(project_name).classname + 'Project'
             project_class = type(classname, (Project,), {})
             project_builders = [_builders[key] for key in project_cfg['builders']]
             project = project_class(project_name, builders=project_builders, 
@@ -194,74 +187,11 @@ class Recipe(ABC):
         recipe_projects = [_projects[key] for key in recipe['projects']]
         return cls(recipe['name'], recipe_projects, **recipe['settings'])
 
-    @classmethod
-    def gen_from_yaml(cls, path):
-        from textwrap import dedent
-        import yaml
-        from mako.template import Template
-
-        with open(path) as f:
-            yml = f.read()
-            cfg = yaml.safe_load(yml)
-
-        template = dedent("""
-
-        <%
-            # utility funcs
-            classname = lambda x: Text(x).classname
-            prefix = lambda p: lambda x: classname(x)+p
-            Pd = prefix('Product')
-            P = prefix('Project')
-            B = prefix('Builder')
-            R = prefix('Recipe')
-
-            # filters
-            def unquote(s):
-                return s.replace("'", "")
-        %>
-
-        # product classes
-        # -------------------------------------------------
-        % for product in products:
-        class ${Pd(product.name)}(Product):
-            path = "${product.path}"
-
-        % endfor
-
-        # builder classes
-        # -------------------------------------------------
-        % for builder in builders:
-        class ${B(builder.name)}(Builder):
-            product_class = ${Pd(builder.product)}
-
-        % endfor
-
-        # project classes
-        # -------------------------------------------------
-        % for project in projects:
-        class ${P(project.name)}(Project):
-            builder_classes = ${[B(b) for b in project.builders] | unquote}
-
-        % endfor
-
-        # recipe classes
-        # -------------------------------------------------
-        class ${R(recipe.name)}(Recipe):
-            project_classes = ${[P(p) for p in recipe.projects] | unquote} 
-
-        """)
-
-        cfg.update({'Text': Text})
-        cfg = DotMap(cfg)
-        print(Template(template).render(**cfg))
-
-
     def build(self):
         """build projects in order of dependency"""
         print(f"{self}")
         for project in self.projects:
             project.build()
-
 
 def test_from_defaults():
     """testing the schema"""
@@ -308,22 +238,13 @@ def test_from_yaml():
     class MacOSRecipe(Recipe):
         """A macos-specific build recipe"""
 
-    r1 = MacOSRecipe.from_yaml('yaml/final.yml')
+    r1 = MacOSRecipe.from_yaml('yaml/depends.yml')
     print(r1)
     for p in r1.projects:
         print('\t', p)
         for b in p.builders:
             print('\t\t', b)
 
-
-def test_gen_from_yaml():
-    class MacOSRecipe(Recipe):
-        """A macos-specific build recipe"""
-
-    r1 = MacOSRecipe.gen_from_yaml('yaml/final.yml')
-
-
 if __name__ == "__main__":
-    # test_from_defaults()
-    # test_from_yaml()
-    test_gen_from_yaml()
+    test_from_defaults()
+    test_from_yaml()
