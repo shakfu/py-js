@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL  # Project
+from ..domain import PythonProject
 
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
 
@@ -26,7 +27,7 @@ class Builder(ABC):
     libs_static = []
 
     def __init__(self, project, version=None, depends_on=None):
-        self.project = project #or Project()
+        self.project = project or PythonProject()
         self.version = version or self.version
         self.depends_on = ([B(project) for B in depends_on] if depends_on else
                            [B(project) for B in self.depends_on])
@@ -153,10 +154,10 @@ class Builder(ABC):
     def build(self):
         """build target from src"""
 
-    @abstractmethod
+    # @abstractmethod
     def pre_process(self):
         """pre-build operations"""
 
-    @abstractmethod
+    # @abstractmethod
     def post_process(self):
         """post-build operations"""

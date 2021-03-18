@@ -21,7 +21,6 @@
 from .builders import (FrameworkPythonBuilder, SharedPythonBuilder,
                        StaticPythonBuilder)
 from .cli import Commander, option, option_group
-from .domain import framework_python, shared_python, static_python
 
 # ------------------------------------------------------------------------------
 # Commandline interface

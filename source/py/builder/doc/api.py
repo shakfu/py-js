@@ -150,6 +150,13 @@ class Project(ABC):
 
     def build(self):
         """Sequence builders in FIFO order"""
+        for proj_dep in depends_on:
+            proj_dep.build()
+
+        for builder in self.builders:
+            for builder_dep in builder.depends_on:
+                builder_dep.build()
+            builder.dep()
 
 class PythonProject(Project):
     """Project to build Python from source with different variations."""
