@@ -1,9 +1,14 @@
-
-#source "scripts/common.sh"
-
+"""homebrew: useing homeebrew python project
 
 
-class HomebrewProject:
+"""
+
+import pathlib
+
+from ..models import Project
+
+
+class HomebrewProject(Project):
     """
     PREFIX=${SUPPORT}/${NAME}
     BIN=${SUPPORT}/${NAME}/bin
