@@ -18,10 +18,14 @@ makes more sense in this context.
 """
 import pathlib
 from abc import ABC, abstractmethod
+from importlib import import_module
 from types import SimpleNamespace
 
-from utils.dotmap import DotMap
-from utils.text import Text
+from .utils.dotmap import DotMap
+from .utils.text import Text
+
+# utility funcs
+import_from_module = lambda module, obj: getattr(import_module(module), obj)
 
 
 class Settings(SimpleNamespace):
@@ -96,6 +100,7 @@ class Project(ABC):
         return f"<{self.__class__.__name__}:'{self.name}'>"
 
     def init_builders(self, builders):
+        """Associate builders with parent project during initialization"""
         _builders = []
         for builder in builders:
             builder.project = self
@@ -104,6 +109,7 @@ class Project(ABC):
 
     @classmethod
     def from_defaults(cls, name=None, builder_classes=None, **settings):
+        """Create project instance from default class attributes."""
         if not builder_classes:
             builder_classes = cls.builder_classes
         _builders = []
@@ -114,7 +120,7 @@ class Project(ABC):
         return cls(name, _builders, **settings)
 
     def build(self):
-        """sequence builders in order of dependency"""
+        """Sequence builders in FIFO order"""
         print(f"\t{self}")
         for builder in self.builders:
             builder.build()
@@ -138,6 +144,7 @@ class Recipe(ABC):
 
     @classmethod
     def from_defaults(cls, name=None, project_classes=None, **settings):
+        """Create from default class attributes."""
         if not project_classes:
             project_classes = cls.project_classes
         _projects = []
@@ -149,6 +156,7 @@ class Recipe(ABC):
 
     @classmethod
     def from_tree_yaml(cls, path):
+        """Create from hierarchical yaml file."""
         import yaml
         with open(path) as f:
             yml = f.read()
@@ -174,6 +182,11 @@ class Recipe(ABC):
                 classname = project_cfg['type']
             else:
                 classname = Text(project_name).classname + 'Project'
+            # if 'base' in project_cfg:
+            #     baseclass = import_from_module('projects', project_cfg['base'])
+            # else:
+            #     baseclass = Project
+            # project_class = type(classname, (baseclass,), {})
             project_class = type(classname, (Project,), {})
             project = project_class(project_name, depends_on=project_cfg['depends_on'], 
                                     **project_cfg['settings'])
@@ -187,6 +200,11 @@ class Recipe(ABC):
                     classname = builder_cfg['type']
                 else:
                     classname = Text(builder_name).classname + 'Builder'
+                # if 'base' in builder_cfg:
+                #     baseclass = import_from_module('.builders', builder_cfg['base'])
+                # else:
+                #     baseclass = Builder
+                # builder_class = type(classname, (baseclass,), {})
                 builder_class = type(classname, (Builder,), {})
                 builder = builder_class(builder_name, depends_on=builder_cfg['depends_on'],
                                         **builder_cfg['settings'])
@@ -206,6 +224,7 @@ class Recipe(ABC):
 
     @classmethod
     def from_flat_yaml(cls, path):
+        """Create from flat yaml file."""
         import yaml
         with open(path) as f:
             yml = f.read()
@@ -219,6 +238,11 @@ class Recipe(ABC):
                 classname = builder_cfg['type']
             else:
                 classname = Text(builder_name).classname + 'Builder'
+            # if 'base' in builder_cfg:
+            #     baseclass = import_from_module('.builders', builder_cfg['base'])
+            # else:
+            #     baseclass = Builder
+            # builder_class = type(classname, (baseclass,), {})
             builder_class = type(classname, (Builder,), {})
             builder = builder_class(builder_name, depends_on=None, **builder_cfg['settings'])
             _builders[builder_name] = builder
@@ -236,6 +260,11 @@ class Recipe(ABC):
                 classname = project_cfg['type']
             else:
                 classname = Text(project_name).classname + 'Project'
+            # if 'base' in project_cfg:
+            #     baseclass = import_from_module('.projects', project_cfg['base'])
+            # else:
+            #     baseclass = Project
+            # project_class = type(classname, (baseclass,), {})
             project_class = type(classname, (Project,), {})
             project_builders = [_builders[key] for key in project_cfg['builders']]
             project = project_class(project_name, builders=project_builders, 
@@ -253,6 +282,7 @@ class Recipe(ABC):
 
     @classmethod
     def gen_from_flat_yaml(cls, path):
+        """Generate code from flat yaml file."""
         from textwrap import dedent
         import yaml
         from mako.template import Template
@@ -332,7 +362,6 @@ def test_from_defaults():
 
     class StaticPython(Product):
         name = "static-python"
-
 
     # builder classes
     class StaticPythonBuilder(Builder):

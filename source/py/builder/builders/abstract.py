@@ -58,7 +58,7 @@ class Builder(ABC):
 
     @property
     def name_ver(self):
-        """Pproduct-major.minor: python-3.9"""
+        """Product-major.minor: python-3.9"""
         return f'{self.name.lower()}{self.ver}'
 
     @property
@@ -134,7 +134,7 @@ class Builder(ABC):
         shutil.copyfile(src, dst)
 
     def remove(self, path):
-        """Gemove file or folder."""
+        """Remove file or folder."""
         if path.is_dir():
             shutil.rmtree(path, ignore_errors=IGNORE_ERRORS)
         else:
@@ -152,3 +152,11 @@ class Builder(ABC):
     @abstractmethod
     def build(self):
         """build target from src"""
+
+    @abstractmethod
+    def pre_process(self):
+        """pre-build operations"""
+
+    @abstractmethod
+    def post_process(self):
+        """post-build operations"""
