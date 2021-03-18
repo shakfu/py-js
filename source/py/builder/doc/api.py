@@ -26,17 +26,17 @@ Application
 
 
 - Recipe
-    - PyJSRecipe -> (PythonProject, PyJSProject)
+    - PyJsRecipe -> (PythonProject, PyJsProject)
 
 - Project 
     - PythonProject (builds python from source)
-    - PyJSProject
-        - HomebrewProject (implements)
+    - PyJsProject
+        - HomebrewProject (provides context)
             - bin-homebrew-sys  -> HomebrewSysBuilder
             - bin-homebrew-pkg  -> HomebrewPkgBuilder
             - bin-homebrew-ext  -> HomebrewExtBuilder
 
-        - SrcProject (implements)
+        - SrcProject (provides context)
             - src-framework-pkg -> SrcFrameworkPkgBuilder
             - src-framework-ext -> SrcFrameworkExtBuilder
             - src-shared-pkg    -> SrcSharedPkgBuilder
@@ -50,12 +50,12 @@ Application
         - SharedPythonBuilder
         - FrameworkPythonBuilder
 
-    - PyJSHomebrewBuilder
+    - PyJsHomebrewBuilder
         - HomebrewSysBuilder
         - HomebrewPkgBuilder
         - HomebrewExtBuilder
 
-    - PyJSSrcBuilder
+    - PyJsSrcBuilder
         - SrcFrameworkPkgBuilder
         - SrcFrameworkExtBuilder
         - SrcSharedPkgBuilder
@@ -83,7 +83,6 @@ from abc import ABC, abstractmethod
 
 from ..models import Settings
 from ..utils.text import Text
-
 
 # -------------------------------------------------------------------------------
 # RECIPES
@@ -117,7 +116,7 @@ class Recipe(ABC):
         """install projects in order of dependency"""
 
 
-class PyJSRecipe(Recipe):
+class PyJsRecipe(Recipe):
     def reset(self):
         """clean projects in order of dependency"""
         for project in self.projects:
@@ -217,7 +216,7 @@ class PythonProject(Project):
     lib = build / "lib"
 
 
-class PyJSProject(Project):
+class PyJsProject(Project):
     """max external projects"""
 
     py_version_major = "3.9"
@@ -241,7 +240,7 @@ class PyJSProject(Project):
     dylib = f"libpython_{py_version}.dylib"
 
     py_external = externals / "py.mxo"
-    pyjs_external = externals / "pyjs.mxo"
+    PyJs_external = externals / "PyJs.mxo"
 
     bzip2_version = "1.0.8"
     ssl_version = "1.1.1g"
@@ -252,7 +251,7 @@ class PyJSProject(Project):
     url_getpip = "https://bootstrap.pypa.io/get-pip.py"
 
 
-class HomebrewProject(PyJSProject):
+class HomebrewProject(PyJsProject):
     """
     PREFIX=${SUPPORT}/${NAME}
     BIN=${SUPPORT}/${NAME}/bin
@@ -282,7 +281,7 @@ class HomebrewProject(PyJSProject):
     dylib = f"libpython_{py_version}.dylib"
 
     py_external = externals / "py.mxo"
-    pyjs_external = externals / "pyjs.mxo"
+    PyJs_external = externals / "PyJs.mxo"
 
     @property
     def prefix(self):
@@ -290,7 +289,7 @@ class HomebrewProject(PyJSProject):
         return self.support / self.name
 
 
-class SrcProject(PyJSProject):
+class SrcProject(PyJsProject):
     """py-js externals build from python source in different build formats"""
 
 
@@ -564,6 +563,8 @@ class PythonBuilder(Builder):
 
 
 class HomebrewBuilder(Builder):
+    """Builder for Hombrew based PyJs products"""
+
     def cp_pkg(self, pkg):
         """copy homebrew package to prefix"""
 
