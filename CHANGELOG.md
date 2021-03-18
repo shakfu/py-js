@@ -23,7 +23,6 @@
 
 - [x] no-return ops in`pyjs` such as `exec` and `import` somehow make javascript assume an error has occured.
 
-
 - [x] Convert `py` into a `jsextension` class
 
 - [x] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
@@ -57,7 +56,6 @@
 - [x] add third (middle) outlet which bangs on an error
 
 #### Extra
-
 
 - [x] check whether setting a normal attr name, can also set scripting name
 

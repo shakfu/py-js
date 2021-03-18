@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL  # Project
-from ..domain import PythonProject
+from ..projects import PythonProject
 
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
 
