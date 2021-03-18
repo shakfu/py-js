@@ -5,9 +5,10 @@
 
 import pathlib
 
-from .builders import (FrameworkPythonBuilder, SharedPythonBuilder,
-                       StaticPythonBuilder)
-from .models import Builder, Product, Project, Recipe
+# from .builders import (FrameworkPythonBuilder, SharedPythonBuilder,
+#                        StaticPythonBuilder)
+# from .models import Builder, Product, Project, Recipe
+from .models import Project
 
 # -------------------------------------------------------------------------------
 # PROJECTS
@@ -62,58 +63,57 @@ class PyJSProject(Project):
 # -------------------------------------------------------------------------------
 # RECIPES
 
-static_python = Recipe(
-    "static_python", project=PythonProject, builders=[SharedPythonBuilder]
-)
+# static_python = Recipe(
+#     "static_python", project=PythonProject, builders=[SharedPythonBuilder]
+# )
 
-shared_python = Recipe(
-    "shared_python", project=PythonProject, builders=[SharedPythonBuilder]
-)
+# shared_python = Recipe(
+#     "shared_python", project=PythonProject, builders=[SharedPythonBuilder]
+# )
 
-framework_python = Recipe(
-    "framework_python", project=PythonProject, builders=[FrameworkPythonBuilder]
-)
-
-
+# framework_python = Recipe(
+#     "framework_python", project=PythonProject, builders=[FrameworkPythonBuilder]
+# )
 
 
-# product classes
-class PyExt(Product):
-    name = "py.mxo"
 
-class PyJSExt(Product):
-    name = "pyjs.mxo"
+# # product classes
+# class PyExt(Product):
+#     name = "py.mxo"
 
-class StaticPython(Product):
-    name = "static-python"
+# class PyJSExt(Product):
+#     name = "pyjs.mxo"
 
-# builder classes
-class StaticPythonBuilder(Builder):
-    product_class = StaticPython
+# class StaticPython(Product):
+#     name = "static-python"
 
-class PyExtBuilder(Builder):
-    product_class = PyExt
+# # builder classes
+# class StaticPythonBuilder(Builder):
+#     product_class = StaticPython
 
-class PyJSExtBuilder(Builder):
-    product_class = PyJSExt
+# class PyExtBuilder(Builder):
+#     product_class = PyExt
+
+# class PyJSExtBuilder(Builder):
+#     product_class = PyJSExt
 
 
-# project classes
-class StaticPythonProject(Project):
-    builder_classes = [StaticPythonBuilder]
+# # project classes
+# class StaticPythonProject(Project):
+#     builder_classes = [StaticPythonBuilder]
 
-class SharedPythonProject(Project):
-    builder_classes = [SharedPythonBuilder]
+# class SharedPythonProject(Project):
+#     builder_classes = [SharedPythonBuilder]
 
-class FrameworkPythonProject(Project):
-    builder_classes = [FrameworkPythonBuilder]
+# class FrameworkPythonProject(Project):
+#     builder_classes = [FrameworkPythonBuilder]
 
-class PyJSExternalsProject(Project):
-    builder_classes = [PyExtBuilder, PyJSExtBuilder]
+# class PyJSExternalsProject(Project):
+#     builder_classes = [PyExtBuilder, PyJSExtBuilder]
 
-# recipe classes
-class StaticPyJSRecipe(Recipe):
-    project_classes = [StaticPythonProject, PyJSExternalsProject]
+# # recipe classes
+# class StaticPyJSRecipe(Recipe):
+#     project_classes = [StaticPythonProject, PyJSExternalsProject]
 
 
 # # recipe / workspace
