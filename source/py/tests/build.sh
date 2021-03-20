@@ -10,9 +10,9 @@ do
     echo "compiling $fname"
     bname=$(basename $fname .c)
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    clang -g -I /usr/include/python3.8 -lpython3.8 $fname -o $bname
+    clang -g -I /usr/include/python3.9 -lpython3.9 $fname -o $bname
 	elif [[ "$OSTYPE" == "darwin"* ]]; then
-    gcc -g `python3.7-config --cflags --ldflags` $fname -o $bname
+	gcc -g `python3.9-config --cflags --ldflags` -lpython3.9 $fname -o $bname
 	else
 		echo "not implemented"
 	fi

@@ -1,8 +1,8 @@
 
 CC = gcc
 CFLAGS = -Wall -g -std=c99
-INCLUDES=`python3.7-config --cflags`
-LDFLAGS=`python3.7-config --ldflags`
+INCLUDES=`python3.9-config --cflags`
+LDFLAGS=`python3.9-config --ldflags` -lpython3.9
 
 
 READLINE_INCLUDES=-I/usr/local/Cellar/readline/8.0.4/include \
@@ -21,7 +21,7 @@ all:
 # -----------------------------------------------------------------------
 .PHONY: build test_py test_interactive
 
-build: test_py test_interactive
+build: test_py
 	$(call section,"build tests")
 
 test_py:

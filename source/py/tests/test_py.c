@@ -197,7 +197,7 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
                 i++;
             }
 
-            if PyFloat_Check (item) {
+            if (PyFloat_Check(item)) {
                 float float_item = PyFloat_AsDouble(item);
                 if (float_item == -1.0) {
                     if (PyErr_Occurred())
@@ -207,7 +207,7 @@ void py_handle_list_output(t_py* x, PyObject* plist, bool free_now)
                 i++;
             }
 
-            if PyUnicode_Check (item) {
+            if (PyUnicode_Check(item)) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
                 if (unicode_item == NULL) {
                     goto error;

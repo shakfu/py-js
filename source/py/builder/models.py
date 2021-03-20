@@ -21,7 +21,6 @@ from abc import ABC, abstractmethod
 from importlib import import_module
 from types import SimpleNamespace
 
-from .utils.dotmap import DotMap
 from .utils.text import Text
 
 # utility funcs
