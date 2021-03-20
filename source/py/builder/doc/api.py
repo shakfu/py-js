@@ -1,88 +1,38 @@
 # api.py: high level api of builder
-"""
-## CURRENT
-## --------------------------------------------------------------
-
-
-
-Builder(ABC)
-    - OSXBuilder
-        - Bzip2Builder
-        - OpensslBuilder
-        - XzBuilder
-        - PythonBuilder
-            - StaticPythonBuilder
-            - SharedPythonBuilder
-            - FrameworkPythonBuilder
-
-Application
-    - do_shared -> SharedPythonBuilder
-    - do_static -> StaticPythonBuilder
-    - do_framework -> FrameworkPythonBuilder
-    - do_all
-
-## TO BE
-## --------------------------------------------------------------
-
-
-- Recipe
-    - PyJsRecipe -> (PythonProject, PyJsProject)
-
-- Project 
-    - PythonProject (builds python from source)
-    - PyJsProject
-        - HomebrewProject (provides context)
-            - bin-homebrew-sys  -> HomebrewSysBuilder
-            - bin-homebrew-pkg  -> HomebrewPkgBuilder
-            - bin-homebrew-ext  -> HomebrewExtBuilder
-
-        - SrcProject (provides context)
-            - src-framework-pkg -> SrcFrameworkPkgBuilder
-            - src-framework-ext -> SrcFrameworkExtBuilder
-            - src-shared-pkg    -> SrcSharedPkgBuilder
-            - src-shared-ext    -> SrcSharedExtBuilder
-            - src-static-pkg    -> SrcStaticPkgBuilder
-            - src-static-ext    -> SrcStaticExtBuilder
-
-- Builder
-    - PythonBuilder
-        - StaticPythonBuilder
-        - SharedPythonBuilder
-        - FrameworkPythonBuilder
-
-    - PyJsHomebrewBuilder
-        - HomebrewSysBuilder
-        - HomebrewPkgBuilder
-        - HomebrewExtBuilder
-
-    - PyJsSrcBuilder
-        - SrcFrameworkPkgBuilder
-        - SrcFrameworkExtBuilder
-        - SrcSharedPkgBuilder
-        - SrcSharedExtBuilder
-        - SrcStaticPkgBuilder
-        - SrcStaticExtBuilder
-
-Application
-    - do_python --static --shared --framework --all
-    
-    - do_local
-        builds locally-linked homebrew version
-
-    - do_package
-        builds homebrew package version
-
-    - do_external
-        builds homebrew external version
-
-"""
-
 import logging
 import pathlib
 from abc import ABC, abstractmethod
 
 from ..models import Settings
 from ..utils.text import Text
+
+# -------------------------------------------------------------------------------
+# MIXINS
+
+class Shell:
+    """Mixin for platform agnostic file/folder handling operations."""
+
+    def cmd(self, shellcmd, *args, **kwargs):
+        """Run shell command with args and keywords"""
+
+    def chdir(self, path):
+        """Change current workding directory to path"""
+
+    def move(self, src, dst):
+        """Move from src path to dst path."""
+
+    def copytree(self, src, dst):
+        """Copy recursively from src path to dst path."""
+
+    def copyfile(self, src, dst):
+        """Copy file from src path to dst path."""
+
+    def remove(self, path):
+        """Remove file or folder."""
+
+
+
+
 
 # -------------------------------------------------------------------------------
 # RECIPES
@@ -93,9 +43,12 @@ class Recipe(ABC):
 
     A recipe is analogous to a workspace in xcode
     """
-
-    def __init__(self, name: str = None, projects: list["Project"] = None, **settings):
-        self.name = name or Text(self.__class__.__name__).mixed_to_word().abbreviate()
+    def __init__(self,
+                 name: str = None,
+                 projects: list["Project"] = None,
+                 **settings):
+        self.name = name or Text(
+            self.__class__.__name__).mixed_to_word().abbreviate()
         self.settings = Settings(**settings)
         self.projects = projects
 
@@ -142,7 +95,7 @@ class PyJsRecipe(Recipe):
         """install projects in order of dependency"""
         for project in self.projects:
             for dependent in project.depends_on:
-                dependent.build()
+                dependent.install()
             project.install()
 
     # -------------------------------------------------------------------------
@@ -171,15 +124,14 @@ class PyJsRecipe(Recipe):
 
 class Project(ABC):
     """A repository for all the files, resources, and information required to
-    build one or more software products.
+    install one or more software products.
     """
-
     def __init__(
-            self,
-            name: str = None,
-            builders: list["Builder"] = None,
-            depends_on: ["Project"] = None,
-            **settings,
+        self,
+        name: str = None,
+        builders: list["Builder"] = None,
+        depends_on: ["Project"] = None,
+        **settings,
     ):
         self.name = name
         self.depends_on = depends_on or []
@@ -193,15 +145,21 @@ class Project(ABC):
     def from_defaults(cls, name=None, builder_classes=None, **settings):
         """Create project instance from default class attributes."""
 
-    def build(self):
-        """Sequence builders in FIFO order"""
-        for proj_dep in self.depends_on:
-            proj_dep.build()
+    @abstractmethod
+    def clean(self):
+        """shallow cleanse build"""
 
-        for builder in self.builders:
-            for builder_dep in builder.depends_on:
-                builder_dep.build()
-            builder.dep()
+    @abstractmethod
+    def reset(self):
+        """reset (deep cleanse) build"""
+
+    @abstractmethod
+    def build(self):
+        """build product"""
+
+    @abstractmethod
+    def install(self):
+        """install product"""
 
 
 class PythonProject(Project):
@@ -281,7 +239,7 @@ class HomebrewProject(PyJsProject):
     dylib = f"libpython_{py_version}.dylib"
 
     py_external = externals / "py.mxo"
-    PyJs_external = externals / "PyJs.mxo"
+    pyjs_external = externals / "pyjs.mxo"
 
     @property
     def prefix(self):
@@ -294,69 +252,22 @@ class SrcProject(PyJsProject):
 
 
 # -------------------------------------------------------------------------------
-# BUILDERS
+# PRODUCTS
 
 
-class Builder(ABC):
-    """A Builder know how to build a single product type in a project.
+class Product(ABC):
+    """Produced by running a builder."""
 
-    A Builder is analagous to a Target in Xcode.
-    """
-
-    def __init__(self, name: str = None, version: str = None, depends_on: ["Builder"] = None, **settings):
+    def __init__(self, name: str, path: pathlib.Path):
         self.name = name
-        self.version = version
-        self.depends_on = depends_on or []
-        self.settings = Settings(**settings)
-        self.project = None
-        self.product = None
+        self.path = pathlib.Path(path)
 
-    def build(self):
-        """build product"""
+    def __str__(self):
+        return f"<{self.__class__.__name__}:'{self.name}'>"
 
-
-class BuilderCurrent(ABC):
-    """Abstract class to provide builder interface and common features."""
-
-    version: str
-    url_template: str
-    depends_on: []
-    libs_static: []
-    name = "osx"
-    mac_dep_target = "10.14"
-
-    def __init__(self, project, version=None, depends_on=None):
-        self.project = project  # or Project()
-        self.version = version or self.version
-        self.depends_on = (
-            [B(project) for B in depends_on]
-            if depends_on
-            else [B(project) for B in self.depends_on]
-        )
-        self.log = logging.getLogger(self.__class__.__name__)
-
-    # -------------------------------------------------------------------------
-    # Abstract Methods
-
-    @abstractmethod
-    def reset(self):
-        """reset build state."""
-
-    @abstractmethod
-    def download(self):
-        """download target src"""
-
-    @abstractmethod
-    def build(self):
-        """build target from src"""
-
-    @abstractmethod
-    def pre_process(self):
-        """pre-build operations"""
-
-    @abstractmethod
-    def post_process(self):
-        """post-build operations"""
+    def exists(self) -> bool:
+        """returns True if product exists at self.path"""
+        return self.path.exists()
 
     # -------------------------------------------------------------------------
     # Version Methods
@@ -423,26 +334,135 @@ class BuilderCurrent(ABC):
     def libs_static_exist(self) -> bool:
         """check that libs_static exists"""
 
+
+# -------------------------------------------------------------------------------
+# BUILDERS
+
+
+class Builder(ABC):
+    """A Builder know how to build a single product type in a project.
+
+    A Builder is analagous to a Target in Xcode.
+    """
+    def __init__(self,
+                 name: str = None,
+                 version: str = None,
+                 depends_on: ["Builder"] = None,
+                 **settings):
+        self.name = name
+        self.version = version
+        self.depends_on = depends_on or []
+        self.settings = Settings(**settings)
+        self.project = None
+        self.product = None
+
+    @abstractmethod
+    def clean(self):
+        """shallow cleanse build"""
+
+    @abstractmethod
+    def reset(self):
+        """reset (deep cleanse) build"""
+
+    @abstractmethod
+    def build(self):
+        """build product"""
+
+    @abstractmethod
+    def install(self):
+        """install product"""
+
+
+class BuilderCurrent(ABC, Shell):
+    """Abstract class to provide builder interface and common features."""
+
+    version: str
+    url_template: str
+    depends_on: []
+    libs_static: []
+    name = "osx"
+    mac_dep_target = "10.14"
+
+    def __init__(self, project, version=None, depends_on=None):
+        self.project = project  # or Project()
+        self.version = version or self.version
+        self.depends_on = ([B(project) for B in depends_on] if depends_on else
+                           [B(project) for B in self.depends_on])
+        self.log = logging.getLogger(self.__class__.__name__)
+
     # -------------------------------------------------------------------------
-    # Generic Shell Methods
+    # Abstract Methods
 
-    def cmd(self, shellcmd, *args, **kwargs):
-        """Run shell command with args and keywords"""
+    @abstractmethod
+    def reset(self):
+        """reset build state."""
 
-    def chdir(self, path):
-        """Change current workding directory to path"""
+    @abstractmethod
+    def download(self):
+        """download target src"""
 
-    def move(self, src, dst):
-        """Move from src path to dst path."""
+    @abstractmethod
+    def build(self):
+        """build target from src"""
 
-    def copytree(self, src, dst):
-        """Copy recursively from src path to dst path."""
+    @abstractmethod
+    def pre_process(self):
+        """pre-build operations"""
 
-    def copyfile(self, src, dst):
-        """Copy file from src path to dst path."""
+    @abstractmethod
+    def post_process(self):
+        """post-build operations"""
 
-    def remove(self, path):
-        """Remove file or folder."""
+    # -------------------------------------------------------------------------
+    # Version Methods
+
+    # moved to Product
+
+    # -------------------------------------------------------------------------
+    # Path Methods
+
+    # @property
+    def url(self):
+        """Returns url to download product as a pathlib.Path instance."""
+
+    # @property
+    def name_archive(self):
+        """Archival name of Product-version: Python-3.9.1.tgz"""
+
+    # @property
+    def download_path(self):
+        """Returns path to downloaded product-version archive."""
+
+    # @property
+    def src_path(self):
+        """Return product source directory."""
+
+    # @property
+    def lib_path(self):
+        """alias to self.prefix"""
+
+    # @property
+    def prefix(self):
+        """compiled product destination root directory."""
+
+    # @property
+    def prefix_lib(self):
+        """compiled product destination lib directory."""
+
+    # @property
+    def prefix_include(self):
+        """compiled product destination include directory."""
+
+    # @property
+    def prefix_bin(self) -> str:
+        """compiled product destination bin directory."""
+
+    # @property
+    def dylib(self):
+        """name of dynamic library in macos parlance."""
+
+    def libs_static_exist(self) -> bool:
+        """check that libs_static exists"""
 
 
 class PythonBuilder(Builder):
@@ -564,7 +584,7 @@ class PythonBuilder(Builder):
 
 class HomebrewBuilder(Builder):
     """Builder for Hombrew based PyJs products"""
-
+    
     def cp_pkg(self, pkg):
         """copy homebrew package to prefix"""
 
