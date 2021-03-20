@@ -79,9 +79,34 @@ class Builder(ABC):
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
 
+    # @abstractmethod
+    def clean(self):
+        """shallow cleanse build"""
+        for builder in self.depends_on:
+            builder.clean()
+        print(f"\t\t{self} -> {self.product}")
+
+    # @abstractmethod
+    def reset(self):
+        """reset (deep cleanse) build"""
+        for builder in self.depends_on:
+            builder.reset()
+        print(f"\t\t{self} -> {self.product}")
+
+    # @abstractmethod
     def build(self):
         """build product"""
+        for builder in self.depends_on:
+            builder.build()
         print(f"\t\t{self} -> {self.product}")
+
+    # @abstractmethod
+    def install(self):
+        """install product"""
+        for builder in self.depends_on:
+            builder.install()
+        print(f"\t\t{self} -> {self.product}")
+
 
 
 class Project(ABC):
@@ -119,11 +144,45 @@ class Project(ABC):
             _builders.append(builder)
         return cls(name, _builders, **settings)
 
-    def build(self):
-        """Sequence builders in FIFO order"""
+    # @abstractmethod
+    def clean(self):
+        """Sequence  builder cleaning in FIFO order"""
         print(f"\t{self}")
+        for project in self.depends_on:
+            project.clean()
+
+        for builder in self.builders:
+            builder.clean()
+
+    # @abstractmethod
+    def reset(self):
+        """Sequence builder resetting in FIFO order"""
+        print(f"\t{self}")
+        for project in self.depends_on:
+            project.reset()
+
+        for builder in self.builders:
+            builder.reset()
+
+    # @abstractmethod
+    def build(self):
+        """Sequence builder building in FIFO order"""
+        print(f"\t{self}")
+        for project in self.depends_on:
+            project.build()
+
         for builder in self.builders:
             builder.build()
+
+    # @abstractmethod
+    def install(self):
+        """Sequence builder installing in FIFO order"""
+        print(f"\t{self}")
+        for project in self.depends_on:
+            project.install()
+
+        for builder in self.builders:
+            builder.install()
 
 
 class Recipe(ABC):
@@ -154,281 +213,7 @@ class Recipe(ABC):
             _projects.append(project)
         return cls(name, _projects, **settings)
 
-    @classmethod
-    def from_tree_yaml(cls, path):
-        """Create from hierarchical yaml file."""
-        import yaml
-        with open(path) as f:
-            yml = f.read()
-            cfg = yaml.safe_load(yml)
-
-        # extract recipe
-        recipe_cfg = cfg['recipe']
-        recipe_name = recipe_cfg['name']
-        if 'type' in recipe_cfg:
-            classname = recipe_cfg['type']
-        else:
-            classname = Text(recipe_cfg).classname + 'Recipe'
-        recipe_class = type(classname, (Recipe,), {})
-        recipe = recipe_class(recipe_name, **recipe_cfg['settings'])
-
-        _projects, _builders = {}, {}
-
-        # extract recipe.projects
-        recipe.projects = []
-        for project_cfg in recipe_cfg['projects']:
-            project_name = project_cfg['name']
-            if 'type' in project_cfg:
-                classname = project_cfg['type']
-            else:
-                classname = Text(project_name).classname + 'Project'
-            # if 'base' in project_cfg:
-            #     baseclass = import_from_module('projects', project_cfg['base'])
-            # else:
-            #     baseclass = Project
-            # project_class = type(classname, (baseclass,), {})
-            project_class = type(classname, (Project,), {})
-            project = project_class(project_name, depends_on=project_cfg['depends_on'], 
-                                    **project_cfg['settings'])
-            _projects[project_name] = project
-
-            # extract recipe.project.builders
-            project.builders = []
-            for builder_cfg in project_cfg['builders']:
-                builder_name = builder_cfg['name']
-                if 'type' in builder_cfg:
-                    classname = builder_cfg['type']
-                else:
-                    classname = Text(builder_name).classname + 'Builder'
-                # if 'base' in builder_cfg:
-                #     baseclass = import_from_module('.builders', builder_cfg['base'])
-                # else:
-                #     baseclass = Builder
-                # builder_class = type(classname, (baseclass,), {})
-                builder_class = type(classname, (Builder,), {})
-                builder = builder_class(builder_name, depends_on=builder_cfg['depends_on'],
-                                        **builder_cfg['settings'])
-                _builders[builder_name] = builder
-                project.builders.append(builder)   
-            recipe.projects.append(project)
-
-        # re-trace for dependencies
-        for project in recipe.projects:
-            project_depends_on = [_projects[name] for name in project.depends_on]
-            project.depends_on = project_depends_on
-            for builder in project.builders:
-                builder_depends_on = [_builders[name] for name in builder.depends_on]
-                builder.depends_on = builder_depends_on
-
-        return recipe
-
-    @classmethod
-    def from_flat_yaml(cls, path):
-        """Create from flat yaml file."""
-        import yaml
-        with open(path) as f:
-            yml = f.read()
-            cfg = yaml.safe_load(yml)
-
-        # create builders
-        _builders = {}
-        for builder_cfg in cfg['builders']:
-            builder_name = builder_cfg['name']
-            if 'type' in builder_cfg:
-                classname = builder_cfg['type']
-            else:
-                classname = Text(builder_name).classname + 'Builder'
-            # if 'base' in builder_cfg:
-            #     baseclass = import_from_module('.builders', builder_cfg['base'])
-            # else:
-            #     baseclass = Builder
-            # builder_class = type(classname, (baseclass,), {})
-            builder_class = type(classname, (Builder,), {})
-            builder = builder_class(builder_name, depends_on=None, **builder_cfg['settings'])
-            _builders[builder_name] = builder
-
-        # set builder dependencies
-        for builder_cfg in cfg['builders']:
-            depends_on = [_builders[name] for name in builder_cfg['depends_on']]
-            _builders[builder_cfg['name']].depends_on = depends_on
-
-        # create projects
-        _projects = {}
-        for project_cfg in cfg['projects']:
-            project_name = project_cfg['name']
-            if 'type' in project_cfg:
-                classname = project_cfg['type']
-            else:
-                classname = Text(project_name).classname + 'Project'
-            # if 'base' in project_cfg:
-            #     baseclass = import_from_module('.projects', project_cfg['base'])
-            # else:
-            #     baseclass = Project
-            # project_class = type(classname, (baseclass,), {})
-            project_class = type(classname, (Project,), {})
-            project_builders = [_builders[key] for key in project_cfg['builders']]
-            project = project_class(project_name, builders=project_builders, 
-                                    depends_on=None, **project_cfg['settings'])
-            _projects[project_cfg['name']] = project
-
-        # set project dependencies
-        for project_cfg in cfg['projects']:
-            depends_on = [_projects[name] for name in project_cfg['depends_on']]
-            _projects[project_cfg['name']].depends_on = depends_on
-
-        recipe = cfg['recipe']
-        recipe_projects = [_projects[key] for key in recipe['projects']]
-        return cls(recipe['name'], recipe_projects, **recipe['settings'])
-
-    @classmethod
-    def gen_from_flat_yaml(cls, path):
-        """Generate code from flat yaml file."""
-        from textwrap import dedent
-        import yaml
-        from mako.template import Template
-
-        with open(path) as f:
-            yml = f.read()
-            cfg = yaml.safe_load(yml)
-
-        template = dedent("""
-
-        <%
-            # utility funcs
-            classname = lambda x: Text(x).classname
-            prefix = lambda p: lambda x: classname(x)+p
-            Pd = prefix('Product')
-            P = prefix('Project')
-            B = prefix('Builder')
-            R = prefix('Recipe')
-
-            # filters
-            def unquote(s):
-                return s.replace("'", "")
-        %>
-
-        # product classes
-        # -------------------------------------------------
-        % for product in products:
-        class ${Pd(product.name)}(Product):
-            path = "${product.path}"
-
-        % endfor
-
-        # builder classes
-        # -------------------------------------------------
-        % for builder in builders:
-        class ${B(builder.name)}(Builder):
-            product_class = ${Pd(builder.product)}
-
-        % endfor
-
-        # project classes
-        # -------------------------------------------------
-        % for project in projects:
-        class ${P(project.name)}(Project):
-            builder_classes = ${[B(b) for b in project.builders] | unquote}
-
-        % endfor
-
-        # recipe classes
-        # -------------------------------------------------
-        class ${R(recipe.name)}(Recipe):
-            project_classes = ${[P(p) for p in recipe.projects] | unquote} 
-
-        """)
-
-        cfg.update({'Text': Text})
-        cfg = DotMap(cfg)
-        print(Template(template).render(**cfg))
-
-
     def build(self):
-        """build projects in order of dependency"""
-        print(f"{self}")
+        """build projects"""
         for project in self.projects:
             project.build()
-
-
-def test_from_defaults():
-    """testing the schema"""
-
-    # product classes
-    class PyExt(Product):
-        name = "py.mxo"
-
-    class PyJSExt(Product):
-        name = "pyjs.mxo"
-
-    class StaticPython(Product):
-        name = "static-python"
-
-    # builder classes
-    class StaticPythonBuilder(Builder):
-        product_class = StaticPython
-
-    class PyExtBuilder(Builder):
-        product_class = PyExt
-
-    class PyJSExtBuilder(Builder):
-        product_class = PyJSExt
-
-
-    # project classes
-    class StaticPythonProject(Project):
-        builder_classes = [StaticPythonBuilder]
-
-    class PyJSExternalsProject(Project):
-        builder_classes = [PyExtBuilder, PyJSExtBuilder]
-
-    # recipe classes
-    class StaticPyJSRecipe(Recipe):
-        project_classes = [StaticPythonProject, PyJSExternalsProject]
-
-
-    # recipe / workspace
-    r1 = StaticPyJSRecipe.from_defaults(a=1, b=2, x=2000)
-    r1.build()
-
-
-def test_from_flat_yaml():
-    print()
-    print("flat"*20)
-    print()
-    class MacOSRecipe(Recipe):
-        """A macos-specific build recipe"""
-
-    r1 = MacOSRecipe.from_flat_yaml('yaml/flat.yml')
-    print(r1)
-    for p in r1.projects:
-        print('\t', p)
-        for b in p.builders:
-            print('\t\t', b)
-
-def test_from_tree_yaml():
-    print()
-    print("tree"*20)
-    print()
-    class MacOSRecipe(Recipe):
-        """A macos-specific build recipe"""
-
-    r1 = MacOSRecipe.from_tree_yaml('yaml/tree.yml')
-    print(r1)
-    for p in r1.projects:
-        print('\t', p)
-        for b in p.builders:
-            print('\t\t', b)
-
-def test_gen_from_flat_yaml():
-    class MacOSRecipe(Recipe):
-        """A macos-specific build recipe"""
-
-    r1 = MacOSRecipe.gen_from_flat_yaml('yaml/flat.yml')
-
-
-
-if __name__ == "__main__":
-    test_from_defaults()
-    test_from_flat_yaml()
-    test_from_tree_yaml()
-    test_gen_from_flat_yaml()
