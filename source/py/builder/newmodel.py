@@ -1,58 +1,20 @@
-"""model: schema of builder
+import logging
+from abc import ABC
+from pathlib import Path
 
-Baically a simplified copy of the xcode model. The only difference is that I have
-renamed `Target` as `Builder` and `Workspace` as `Recipe` since it
-makes more sense in this context.
-
-    Recipe -- Settings
-        |           ∆
-        |*          |
-        Project -- Settings
-            |           ∆
-            |*          |
-            Builder -- Settings
-                |
-                v
-                Product
-
-"""
-import pathlib
-from abc import ABC, abstractmethod
-from importlib import import_module
-from types import SimpleNamespace
-
-# utility funcs
-import_from_module = lambda module, obj: getattr(import_module(module), obj)
-
-
-class Settings(SimpleNamespace):
-    """A dictionary object with dotted access to its members.
-
-    >>> settings = Settings(**dict)
-    """
-
-    def copy(self):
-        """provide a copy of the internal dictionary"""
-        return Settings(**self.__dict__.copy())
-
-    def update(self, other):
-        """Like a dict.update but using the internal dict instead"""
-        if isinstance(other, dict):
-            self.__dict__.update(other)
-        elif isinstance(other, Settings):
-            self.__dict__.update(other.__dict__)
-        else:
-            raise TypeError
-
+from utils.shell import ShellCmd
 
 
 class Product(ABC):
     """Produced by running a builder."""
+    name = 'prototype1'
+    version = '0.0.1'
+    libs_static = []
 
-    def __init__(self, name: str, version: str = None, path: pathlib.Path = None):
-        self.name = name
-        self.version = version or '0.0.1'
-        self.path = pathlib.Path(path) if path else None
+    def __init__(self, name: str, version: str = None, path: Path = None):
+        self.name = name or self.name
+        self.version = version or self.version
+        self.path = Path(path) if path else None
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -84,7 +46,8 @@ class Product(ABC):
     @property
     def url(self):
         """Returns url to download product as a pathlib.Path instance."""
-        return Path(self.url_template.format(name=self.name, version=self.version))
+        return Path(
+            self.url_template.format(name=self.name, version=self.version))
 
     @property
     def name_archive(self):
@@ -126,53 +89,105 @@ class Product(ABC):
         return True
 
 
-
-
-
-
 class Builder(ABC):
-    """A Builder know how to build a single product type in a project.
+    """Abstract class to provide builder interface and common features."""
+    product_class = None
+    depends_on: []
 
-    A Builder is analagous to a Target in Xcode.
-    """
+    def __init__(self, project=None, product=None):
+        self.project = project
+        self.product = product if product else self.product_class(project)
+        self.cmd = ShellCmd()
+        self.log = logging.getLogger(self.__class__.__name__)
 
-    def __init__(self, name: str = None, depends_on: ['Builder'] = None, **settings):
-        self.name = name
-        self.depends_on = depends_on or []
-        self.settings = Settings(**settings)
-        self.project = None
-        self.product = None
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>"
 
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
+    @property
+    def version(self):
+        """provides major.minor.patch version: 3.9.1"""
+        return str(self.product.version)
 
-    # @abstractmethod
-    def clean(self):
-        """shallow cleanse build"""
-        for builder in self.depends_on:
-            builder.clean()
-        print(f"\t\t{self} -> {self.product}")
+    @property
+    def ver(self):
+        """provides major.minor version: 3.9.1 -> 3.9"""
+        return self.product.ver
 
-    # @abstractmethod
+    @property
+    def ver_nodot(self):
+        """provides 'majorminor' version without space in between: 3.9.1 -> 39"""
+        return self.product.ver_nodot
+
+    @property
+    def name_version(self):
+        """Product-version: Python-3.9.1"""
+        return self.product.name_version
+
+    @property
+    def name_ver(self):
+        """Product-major.minor: python-3.9"""
+        return self.product.name_ver
+
+    @property
+    def url(self):
+        """Returns url to download product as a pathlib.Path instance."""
+        return Path(self.product.url)
+
+    @property
+    def name_archive(self):
+        """Archival name of Product-version: Python-3.9.1.tgz"""
+        return self.product.archive
+
+    @property
+    def download_path(self):
+        """Returns path to downloaded product-version archive."""
+        return self.project.downloads / self.name_archive
+
+    @property
+    def src_path(self):
+        """Return product source directory."""
+        return self.project.src / self.name_version
+
+    @property
+    def prefix(self):
+        """Compiled product destination root directory."""
+        return self.product.dst
+
+    @property
+    def prefix_lib(self):
+        """Compiled product destination lib directory."""
+        return self.product.lib
+
+    @property
+    def prefix_include(self):
+        """Compiled product destination include directory."""
+        return self.product.include
+
+    @property
+    def prefix_bin(self):
+        """Compiled product destination bin directory."""
+        return self.product.bin
+
+    @property
+    def product_static_libs_exist(self):
+        return self.product.has_static_libs()
+
     def reset(self):
-        """reset (deep cleanse) build"""
-        for builder in self.depends_on:
-            builder.reset()
-        print(f"\t\t{self} -> {self.product}")
+        """Remove product src directory and compiled product directory."""
+        self.cmd.remove(self.src_path)
+        self.cmd.remove(self.prefix)  # aka self.prefix
 
-    # @abstractmethod
+    def download(self):
+        """Download target src."""
+
     def build(self):
-        """build product"""
-        for builder in self.depends_on:
-            builder.build()
-        print(f"\t\t{self} -> {self.product}")
+        """Build target from src."""
 
-    # @abstractmethod
-    def install(self):
-        """install product"""
-        for builder in self.depends_on:
-            builder.install()
-        print(f"\t\t{self} -> {self.product}")
+    def pre_process(self):
+        """Pre-build operations."""
+
+    def post_process(self):
+        """Post-build operations."""
 
 
 class Project(ABC):
@@ -180,15 +195,22 @@ class Project(ABC):
     build one or more software products.
     """
 
-    def __init__(self, name: str = None , builders: list[Builder] = None, 
+    def __init__(self, name: str = None , root: Path = None, builders: list[Builder] = None, 
                  depends_on: ['Project'] = None, **settings):
         self.name = name
+        self.root = path or Path('.')
         self.depends_on = depends_on or []
         self.settings = Settings(**settings)
         self.builders = self.init_builders(builders) if builders else []
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
+
+   def __iter__(self):
+        for dep in self.depends_on:
+            yield dep
+            for subdep in iter(dep):
+                yield subdep
 
     def init_builders(self, builders):
         """Associate builders with parent project during initialization"""
@@ -251,35 +273,11 @@ class Project(ABC):
             builder.install()
 
 
-class Recipe(ABC):
-    """A platform-specific container for multiple build projects.
+class PythonProduct(Product):
+    name='Python'
+    version='3.9.2'
+    libs_static = ['libpython3.9.a']
 
-    A recipe is analogous to a workspace in xcode
-    """
-
-    def __init__(self, name: str = None, projects: list[Project] = None, **settings):
-        self.name = name
-        self.settings = Settings(**settings)
-        self.projects = projects
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    __repr__=__str__
-
-    @classmethod
-    def from_defaults(cls, name=None, project_classes=None, **settings):
-        """Create from default class attributes."""
-        if not project_classes:
-            project_classes = cls.project_classes
-        _projects = []
-        for project_class in project_classes:            
-            project_name = None
-            project = project_class.from_defaults(project_name, **settings)
-            _projects.append(project)
-        return cls(name, _projects, **settings)
-
-    def build(self):
-        """build projects"""
-        for project in self.projects:
-            project.build()
+class MyBuilder(Builder):
+    product_class = PythonProduct
+    depends_on = []

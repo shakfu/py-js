@@ -126,7 +126,7 @@ t_max_err atom_setatom_array(long ac, t_atom *av, long count, t_atom *vals);
 t_max_err atom_setobj_array(long ac, t_atom *av, long count, t_object **vals);
 ```
 
-## Max APU -- ext_obex.h
+## Max API -- ext_obex.h
 
 ```c
 

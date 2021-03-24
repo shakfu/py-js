@@ -8,12 +8,14 @@ import shutil
 from pathlib import Path
 
 
-class Shell:
+class ShellCmd:
     """Mixin for platform agnostic file/folder handling operations."""
 
     def cmd(self, shellcmd, *args, **kwargs):
         """Run shell command with args and keywords"""
         os.system(shellcmd.format(*args, **kwargs))
+
+    __call__ = cmd
 
     def chdir(self, path):
         """Change current workding directory to path"""
