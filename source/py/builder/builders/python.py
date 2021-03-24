@@ -1,40 +1,26 @@
-"""python: a python builder and its subtypes
-
-TODO: move PYTHON_VERSION_STRING to config.py
-
-"""
-
 import os
 import platform
 import re
 import shutil
 import subprocess
 
-from .bzip2 import Bzip2Builder
-from .openssl import OpensslBuilder
-from .opsys import OSXBuilder
-from .xz import XzBuilder
+from ..projects import PythonProject
+from .abstract import Builder
 
-PYTHON_VERSION_STRING = platform.python_version()  # e.g '3.9.2'
+# ----------------------------------------------------------------------------
+# GENERIC PYTHON BUILDER
 
 
-class PythonBuilder(OSXBuilder):
+
+class PythonBuilder(Builder):
     """Generic Python from src builder."""
     name = 'Python'
-    version = PYTHON_VERSION_STRING
-    url_template = 'https://www.python.org/ftp/python/{version}/{name}-{version}.tgz'
-    depends_on = [OpensslBuilder, Bzip2Builder, XzBuilder]
+    project_class = PythonProject
+    version = platform.python_version()  # e.g '3.9.2'
+    depends_on = []
     suffix = ""
     setup_local = None
     patch = None
-
-    def __init__(self, project=None, version=None, depends_on=None):
-        super().__init__(project, version, depends_on)
-
-        # dependency manager attributes (revise)
-        self.install_names = {}
-        self.deps = []
-        self.dep_list = []
 
     # ------------------------------------------------------------------------
     # python properties
@@ -64,10 +50,6 @@ class PythonBuilder(OSXBuilder):
 
     def pre_process(self):
         """pre-build operations"""
-        self.chdir(self.src_path)
-        self.write_setup_local()
-        # self.apply_patch()
-        self.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
@@ -76,38 +58,20 @@ class PythonBuilder(OSXBuilder):
         # self.fix()
         # self.sign()
 
-    def write_setup_local(self, setup_local=None):
-        """Write to Setup.local file for cusom compilations of python builtins."""
-        if not any([setup_local, self.setup_local]):
-            return
-        if not setup_local:
-            setup_local = self.setup_local
-        self.copyfile(self.project.patch / self.ver / setup_local,
-                      self.src_path / 'Modules' / 'Setup.local')
-
-    def apply_patch(self, patch=None):
-        """Apply a standard patch from the patch directory (prefixed by major.minor ver)"""
-        if not any([patch, self.patch]):
-            return
-        if not patch:
-            patch = self.patch
-        self.cmd(f'patch -p1 < {self.project.patch}/{self.ver}/{patch}')
-
     def install(self):
         """install compilation product into lib"""
         self.reset()
-        self.download()
         self.pre_process()
         self.build()
         self.post_process()
 
-    # def install_python_pkg(self):
-    #     self.install_python()
-    #     self.fix_python_dylib_for_pkg()
+    def install_python_pkg(self):
+        self.install_python()
+        self.fix_python_dylib_for_pkg()
 
-    # def install_python_ext(self):
-    #     self.install_python()
-    #     self.fix_python_dylib_for_ext()
+    def install_python_ext(self):
+        self.install_python()
+        self.fix_python_dylib_for_ext()
 
     # ------------------------------------------------------------------------
     # post-processing operations
@@ -180,6 +144,7 @@ class PythonBuilder(OSXBuilder):
         """remove python site-packages"""
         self.remove(self.python_lib / 'site-packages')
 
+
     def remove_packages(self):
         """remove list of non-critical packages"""
         self.rm_libs([
@@ -195,9 +160,25 @@ class PythonBuilder(OSXBuilder):
             'venv',
         ])
 
+    # def remove_extensions(self):
+    #     """remove extensions: not implemented"""
+
     def remove_extensions(self):
-        """remove extensions: not implemented"""
-        pass
+        """remove extensions"""
+        self.rm_exts([
+            '_tkinter',
+            '_ctypes',
+            '_multibytecodec',
+            '_codecs_jp',
+            '_codecs_hk',
+            '_codecs_cn',
+            '_codecs_kr',
+            '_codecs_tw',
+            '_codecs_iso2022',
+            '_curses',
+            '_curses_panel',
+        ])
+
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
@@ -227,6 +208,7 @@ class PythonBuilder(OSXBuilder):
         self.remove_packages()
         self.remove_extensions()
         self.remove_binaries()
+
 
     def ziplib(self):
         """zip python package in site-packages in .zip archive"""
@@ -261,127 +243,3 @@ class PythonBuilder(OSXBuilder):
         self.cmd(
             'install_name_tool -id @loader_path/{self.dylib} {self.dylib}')
         self.chdir(self.project.root)
-
-
-class StaticPythonBuilder(PythonBuilder):
-    setup_local = 'setup-static-min3.local'
-    patch = 'makesetup.patch'
-
-    @property
-    def prefix(self):
-        name = f'{self.name.lower()}-static' # pylint: disable=E1101
-        return self.project.lib / name
-
-    def build(self):
-        for dep in self.depends_on:
-            dep.build()
-
-        self.chdir(self.src_path)
-        self.cmd(f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET={self.mac_dep_target} \
-            --prefix={self.prefix} \
-            --without-doc-strings \
-            --enable-ipv6 \
-            --without-ensurepip \
-            --with-lto \
-            --enable-optimizations
-        """)
-        self.cmd('make altinstall')
-        self.chdir(self.project.root)
-
-    def post_process(self):
-        self.clean()
-        self.ziplib()
-        #self.static_lib.rename(self.prefix / self.library)
-
-
-class SharedPythonBuilder(PythonBuilder):
-    setup_local = 'setup-shared.local'
-
-    @property
-    def prefix(self):
-        name = f'{self.name.lower()}-shared' # pylint: disable=E1101
-        return self.project.lib / name
-
-    def build(self):
-        for dep in self.depends_on:
-            dep.build()
-
-        self.chdir(self.src_path)
-        self.cmd(f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET={self.mac_dep_target} \
-            --prefix={self.prefix} \
-            --enable-shared \
-            --with-openssl={self.project.lib / 'openssl'} \
-            --without-doc-strings \
-            --enable-ipv6 \
-            --without-ensurepip \
-            --with-lto \
-            --enable-optimizations
-        """)
-        self.cmd('make altinstall')
-        self.chdir(self.project.root)
-
-    def remove_extensions(self):
-        self.rm_exts([
-            '_tkinter',
-            '_ctypes',
-            '_multibytecodec',
-            '_codecs_jp',
-            '_codecs_hk',
-            '_codecs_cn',
-            '_codecs_kr',
-            '_codecs_tw',
-            '_codecs_iso2022',
-            '_curses',
-            '_curses_panel',
-        ])
-
-
-class FrameworkPythonBuilder(PythonBuilder):
-    setup_local = 'setup-shared.local'
-
-    @property
-    def prefix(self):
-        return self.project.lib / 'Python.framework' / 'Versions' / self.ver
-
-    def reset(self):
-        self.remove(self.src_path)
-        self.remove(self.project.lib / 'Python.framework')
-
-    def build(self):
-        for dep in self.depends_on:
-            dep.build()
-
-        self.chdir(self.src_path)
-        self.cmd(f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET={self.mac_dep_target} \
-            --enable-framework={self.project.lib} \
-            --with-openssl={self.project.lib / 'openssl'} \
-            --without-doc-strings \
-            --enable-ipv6 \
-            --without-ensurepip \
-            --with-lto \
-            --enable-optimizations
-        """)
-        self.cmd('make altinstall')
-        self.chdir(self.project.root)
-
-    def remove_extensions(self):
-        self.rm_exts([
-            '_tkinter',
-            '_ctypes',
-            '_multibytecodec',
-            '_codecs_jp',
-            '_codecs_hk',
-            '_codecs_cn',
-            '_codecs_kr',
-            '_codecs_tw',
-            '_codecs_iso2022',
-            '_curses',
-            '_curses_panel',
-        ])
-
-    def post_process(self):
-        self.clean()
-        self.ziplib()

@@ -20,7 +20,7 @@
 """
 from .builders import (FrameworkPythonBuilder, SharedPythonBuilder,
                        StaticPythonBuilder)
-from .cli import Commander, option, option_group
+from .utils.cli import Commander, option, option_group
 
 # ------------------------------------------------------------------------------
 # Commandline interface

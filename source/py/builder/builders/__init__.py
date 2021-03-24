@@ -1,7 +1,33 @@
 """package: builder
 
-Make sure to import builder implementations here.
+## class Hierarchy
+
+
+Builder                             abstract.py
+    Bzip2Builder                    python_deps.py
+    OpensslBuilder                  
+    XzBuilder                       
+    PythonBuilder                   python.py
+
+        HomebrewBuilder             pyjs_homebrew.py
+            HomebrewSysBuilder
+            HomebrewPkgBuilder
+            HomebrewExtBuilder
+
+        PythonSrcBuilder            python_src.py
+            SharedPythonBuilder
+            FrameworkPythonBuilder
+            StaticPythonBuilder
+        
+        SrcBuilder                  pyjs_src.py
+            SrcFrameworkPkgBuilder
+            SrcFrameworkExtBuilder
+            SrcSharedPkgBuilder
+            SrcSharedExtBuilder
+            SrcStaticPkgBuilder
+            SrcStaticExtBuilder
+
 
 """
-from .python import (FrameworkPythonBuilder, SharedPythonBuilder,
-                     StaticPythonBuilder)
+from .python_src import (FrameworkPythonBuilder, SharedPythonBuilder,
+                         StaticPythonBuilder)

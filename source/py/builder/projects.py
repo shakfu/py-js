@@ -1,14 +1,26 @@
-"""python: python project
+"""package: projects
 
+Make sure to import project implementations here.
 
 """
 
 import pathlib
 
-from ..models import Project
+from .models import Project
 
 
-class PyJSProject(Project):
+class PythonProject(Project):
+    """Project to build Python from source with different variations."""
+    root = pathlib.Path.cwd()
+    patch = root / 'patch'
+    targets = root / 'targets'
+    build = targets / 'build'
+    downloads = build / 'downloads'
+    src = build / 'src'
+    lib = build / 'lib'
+
+
+class PyJsProject(Project):
     """max external projects"""
     py_version_major = '3.9'
     py_version_minor = '2'
