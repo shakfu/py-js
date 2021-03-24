@@ -140,6 +140,12 @@ class PythonBuilder(Builder):
         for name in names:
             self.remove(self.prefix_bin / name)
 
+    def install_name_tool(self, src, dst, mode='id'):
+        """change dynamic shared library install names"""
+        _cmd = f'install_name_tool -{mode} {src}, {dst}'
+        self.log.info(_cmd)
+        os.cmd(_cmd)
+
     def clean_python_site_packages(self):
         """remove python site-packages"""
         self.remove(self.python_lib / 'site-packages')
