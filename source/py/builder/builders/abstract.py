@@ -128,6 +128,11 @@ class Builder(ABC):
         self.log.info("changing working dir to: %s", path)
         os.chdir(path)
 
+    def chmod(self, path, perm=0o777):
+        """Change permission of file"""
+        self.log.info("change permission of %s to %s", path, perm)
+        os.chmod(path, perm)
+
     def move(self, src, dst):
         """Move from src path to dst path."""
         self.log.info("move path %s to %s", src, dst)

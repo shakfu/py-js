@@ -65,9 +65,16 @@ class HomebrewBuilder(PythonBuilder):
         """compiled product destination root directory."""
         return self.project.prefix
     
-    def cp_pkg(self, pkg):
-        self.log("copying %s", pkg)
-        self.cmd(f"cp -rf {self.homebrew}/lib/{self.name}/{pkg} {self.lib}/{pkg}")
+    def cp_pkg(self, pkgs):
+        for pkg in pkgks:
+            self.log("copying %s", pkg)
+            self.cmd(f"cp -rf {self.homebrew}/lib/{self.name}/{pkg} {self.lib}/{pkg}")
+
+    def rm_libs(self, names):
+        """remove all named python dylib libraries"""
+        for name in names:
+            self.remove(self.python_lib / name)
+
 
     def remove_extensions(self):
         """remove extensions: not implemented"""
@@ -90,107 +97,98 @@ class HomebrewBuilder(PythonBuilder):
 
 
     def fix_python_exec(self):
-        cd $BIN
-        install_name_tool -change ${HOMEBREW}/Python @executable_path/../${DYLIB} ${NAME}
-        cd $ROOT
+        self.chdir(self.bin)
+        self.cmd(f'install_name_tool -change {self.homebrew}/Python @executable_path/../{self.dylib} {self.name}')
+        self.chdir(self.root)
 
 
     def fix_python_dylib_for_pkg(self):
-        cd $PREFIX
-        chmod 777 ${DYLIB}
+        self.chdir(self.prefix)
+        self.chmod(self.dylib)
         # assumes python in installed in $PREFIX
-        install_name_tool -id @loader_path/../../../../support/${NAME}/${DYLIB} ${DYLIB}
-        cd $ROOT
-
+        self.install_name_tool(
+            f'@loader_path/../../../../support/{self.name}/{self.dylib}', self.dylib)
+        self.chdir(self.root)
 
     def fix_python_dylib_for_ext_executable(self):
-        cd $PREFIX
-        chmod 777 ${DYLIB}
+        self.chdir(self.prefix)
+        self.chmod(self.dylib)
         # assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
-        install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
-        cp -rf $PREFIX/* $PY_EXTERNAL/Contents/MacOS
-        cd $ROOT
-
+        self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
+        self.cmd(f'cp -rf {self.prefix}/* {self.py_external}/Contents/MacOS')
+        self.chdir(self.root)
 
     def fix_python_dylib_for_ext_executable_name(self):
-        cd $PREFIX
-        chmod 777 ${DYLIB}
-        install_name_tool -id @loader_path/${NAME}/${DYLIB} ${DYLIB}
-        mkdir -p $PY_EXTERNAL/Contents/MacOS/${NAME}
-        cp -rf $PREFIX/* $PY_EXTERNAL/Contents/MacOS/${NAME}
-        cd $ROOT
+        self.chdir(self.prefix)
+        self.chmod(self.dylib)
+        self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
+        self.cmd(f'mkdir -p {self.py_external}/Contents/MacOS/{self.name}')
+        self.cmd(f'cp -rf {self.prefix}/* {self.py_external}/Contents/MacOS/{self.name}')
+        self.chdir(self.root)
 
-
-
-    # fix_python_dylib_for_ext_resources():
-    #   cd $PREFIX
-    #   chmod 777 ${DYLIB}
-    #   install_name_tool -id @loader_path/../Resources/${NAME}/${DYLIB} ${DYLIB}
-    #   mkdir -p $PY_EXTERNAL/Contents/Resources/${NAME}
-    #   cp -rf $PREFIX/* $PY_EXTERNAL/Contents/Resources/${NAME}
-    #   cd $ROOT
-    # }
 
     def fix_python_dylib_for_ext_resources(self):
-        cd $PREFIX
-        chmod 777 ${DYLIB}
-        install_name_tool -id @loader_path/../Resources/${NAME}/${DYLIB} ${DYLIB}
-        cd $ROOT
+        self.chdir(self.prefix)
+        self.chmod(self.dylib)
+        self.install_name_tool(f'@loader_path/../Resources/{self.name}/{self.dylib}', self.dylib)
+        self.chdir(self.root)
 
-
-    def cp_python_to_ext_resources(self):
-        mkdir -p $1/Contents/Resources/${NAME}
-        cp -rf $PREFIX/* $1/Contents/Resources/${NAME}
+    def cp_python_to_ext_resources(self, arg):
+        self.cmd(f'mkdir -p {arg}/Contents/Resources/{self.name}')
+        self.cmd(f'cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.name}')
 
 
     # def install_python(self):
     def build(self):
         mkdir -p $LIB
         mkdir -p $BIN
-        cp -rf ${HOMEBREW}/Python ${PREFIX}/${DYLIB}
-        cp -rf ${HOMEBREW}/lib/${NAME}/*.py ${LIB}
-        cp_pkg asyncio
-        cp_pkg collections
-        cp_pkg concurrent
-        # cp_pkg ctypes
-        # cp_pkg curses
-        cp_pkg dbm
-        cp_pkg distutils
-        cp_pkg email
-        cp_pkg encodings
-        cp_pkg html
-        cp_pkg http
-        cp_pkg importlib
-        cp_pkg json
-        cp_pkg lib-dynload
-        cp_pkg logging
-        cp_pkg multiprocessing
-        cp_pkg pydoc_data
-        cp_pkg sqlite3
-        cp_pkg unittest
-        cp_pkg urllib
-        cp_pkg wsgiref
-        cp_pkg xml
-        cp_pkg xmlrpc
-        cp -rf ${HOMEBREW}/include ${PREFIX}/include
-        rm -rf ${PREFIX}/lib/${DYLIB}
-        rm -rf ${PREFIX}/lib/${DYLIB_NAME}.dylib
-        rm -rf ${PREFIX}/lib/pkgconfig
-        cp -rf ${HOMEBREW}/Resources/Python.app/Contents/MacOS/Python ${BIN}/$NAME
-        clean_python
-        zip_python_library
+        cp -rf ${self.homebrew}/Python ${PREFIX}/${self.dylib}
+        cp -rf ${self.homebrew}/lib/${NAME}/*.py ${LIB}
+        pkgs_to_cp = [
+            'asyncio',
+            'collections',
+            'concurrent',
+            #'ctypes',
+            #'curses',
+            'dbm',
+            'distutils',
+            'email',
+            'encodings',
+            'html',
+            'http',
+            'importlib',
+            'json',
+            'lib-dynload',
+            'logging',
+            'multiprocessing',
+            'pydoc_data',
+            'sqlite3',
+            'unittest',
+            'urllib',
+            'wsgiref',
+            'xml',
+            'xmlrpc',
+        ]
+
+        self.cmd(f'cp -rf ${self.homebrew}/include ${self.prefix}/include')
+        self.cmd(f'rm -rf ${self.prefix}/lib/{self.dylib}')
+        self.cmd(f'rm -rf ${self.prefix}/lib/${DYLIB_NAME}.dylib')
+        self.cmd(f'rm -rf ${self.prefix}/lib/pkgconfig')
+        self.cmd(f'cp -rf ${self.homebrew}/Resources/Python.app/Contents/MacOS/Python {self.bin}/{self.name}')
+        self.clean_python()
+        self.zip_python_library()
 
     def install_python_pkg(self):
-        install_python
-        fix_python_dylib_for_pkg
+        self.install_python()
+        self.fix_python_dylib_for_pkg()
 
 
     def install_python_ext(self):
-        install_python
+        self.install_python()
         # fix_python_dylib_for_ext
         # fix_python_dylib_for_ext_executable_name
-        fix_python_dylib_for_ext_resources
-        cp_python_to_ext_resources $PY_EXTERNAL
+        self.fix_python_dylib_for_ext_resources()
+        self.cp_python_to_ext_resources(self.py_external)
         # FIXME: for some reason both don't work at the same time!!!
         # you have to pick one.
         # cp_python_to_ext_resources $PYJS_EXTERNAL
