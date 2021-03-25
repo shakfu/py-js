@@ -52,7 +52,8 @@ class HomebrewProject(Project):
 class HomebrewBuilder(PyJsBuilder):
     """A Python Builder using Homebrew"""
     name = 'python'
-    project_class = PythonProject
+    project_class = HomebrewProject
+    # project_class = PythonProject
     version = PYTHON_VERSION_STRING
     # url_template = 'https://www.python.org/ftp/python/{version}/{name}-{version}.tgz'
     depends_on = []
@@ -66,7 +67,7 @@ class HomebrewBuilder(PyJsBuilder):
         return self.project.prefix
     
     def cp_pkg(self, pkgs):
-        for pkg in pkgks:
+        for pkg in pkgs:
             self.log("copying %s", pkg)
             self.cmd(f"cp -rf {self.homebrew}/lib/{self.name}/{pkg} {self.lib}/{pkg}")
 

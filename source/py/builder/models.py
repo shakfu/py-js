@@ -16,7 +16,7 @@ makes more sense in this context.
                 Product
 
 """
-import pathlib
+from pathlib import Path
 from abc import ABC, abstractmethod
 from importlib import import_module
 from types import SimpleNamespace
@@ -49,10 +49,10 @@ class Settings(SimpleNamespace):
 class Product(ABC):
     """Produced by running a builder."""
 
-    def __init__(self, name: str, version: str = None, path: pathlib.Path = None):
+    def __init__(self, name: str, version: str = None, path: Path = None):
         self.name = name
         self.version = version or '0.0.1'
-        self.path = pathlib.Path(path) if path else None
+        self.path = Path(path) if path else None
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"

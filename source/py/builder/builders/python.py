@@ -1,20 +1,16 @@
-"""python: a builder mixin for python related builders
+"""python: contains PythonBuilderm a generic mixin for python related builders
 
 Not meant to be directly.
 
 """
-import os
+# import os
 import platform
-import re
+# import re
 import shutil
-import subprocess
+# import subprocess
 
 from ..projects import PythonProject
 from .abstract import Builder
-
-# ----------------------------------------------------------------------------
-# GENERIC PYTHON BUILDER
-
 
 
 class PythonBuilder(Builder):
@@ -33,7 +29,7 @@ class PythonBuilder(Builder):
     @property
     def static_lib(self):
         """Name of static library: libpython.3.9.a"""
-        return f'lib{self.name.lower()}{self.ver}.a' # pylint: disable=E1101
+        return f'lib{self.name.lower()}{self.ver}.a'  # pylint: disable=E1101
 
     @property
     def python_lib(self):
@@ -70,6 +66,19 @@ class PythonBuilder(Builder):
         self.build()
         self.post_process()
 
+    # def install_python(self):
+    #     """install python"""
+    #     self.build_python_zipped()
+
+    # def build_python_zipped(self):
+    #     self.build_python()
+    #     self.ziplib()
+    #
+    # def build_python(self):
+    #     self.compile_python()
+    #     self.clean_python()
+    #     self.write_python_getpip()
+
     def install_python_pkg(self):
         """install python product as a package"""
         self.install_python()
@@ -80,6 +89,9 @@ class PythonBuilder(Builder):
         self.install_python()
         self.fix_python_dylib_for_ext()
 
+    def install_python(self):
+        """install python"""
+
     # ------------------------------------------------------------------------
     # post-processing operations
 
@@ -89,35 +101,35 @@ class PythonBuilder(Builder):
                 or dep_path.startswith('/usr/local/')
                 or dep_path.startswith('/User/'))
 
-    def get_deps(self, target):
-        """get dependencies of dylibs.
-
-        check if they non-system (i.e. non-portable)
-
-        """
-        # if not target:
-        #     target = self.target
-        key = os.path.basename(target)
-        self.install_names[key] = []
-        result = subprocess.check_output(['otool', '-L', target])
-        entries = [
-            line.decode('utf-8').strip() for line in result.splitlines()
-        ]
-        for entry in entries:
-            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$',
-                             entry)
-            if match:
-                path = match.group(1)
-                (dep_path, dep_filename) = os.path.split(path)
-                if self.is_valid_path(dep_path):
-                    if dep_path == '':
-                        path = os.path.join('/usr/local/lib', dep_filename)
-                    dep_path, dep_filename = os.path.split(path)
-                    item = (path, '@rpath/' + dep_filename)
-                    self.install_names[key].append(item)
-                    if path not in self.deps:
-                        self.deps.append(path)
-                        self.get_deps(path)
+    # def get_deps(self, target):
+    #     """get dependencies of dylibs.
+    #
+    #     check if they non-system (i.e. non-portable)
+    #
+    #     """
+    #     # if not target:
+    #     #     target = self.target
+    #     key = os.path.basename(target)
+    #     self.install_names[key] = []
+    #     result = subprocess.check_output(['otool', '-L', target])
+    #     entries = [
+    #         line.decode('utf-8').strip() for line in result.splitlines()
+    #     ]
+    #     for entry in entries:
+    #         match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$',
+    #                          entry)
+    #         if match:
+    #             path = match.group(1)
+    #             (dep_path, dep_filename) = os.path.split(path)
+    #             if self.is_valid_path(dep_path):
+    #                 if dep_path == '':
+    #                     path = os.path.join('/usr/local/lib', dep_filename)
+    #                 dep_path, dep_filename = os.path.split(path)
+    #                 item = (path, '@rpath/' + dep_filename)
+    #                 self.install_names[key].append(item)
+    #                 if path not in self.deps:
+    #                     self.deps.append(path)
+    #                     self.get_deps(path)
 
     def clean_python_pyc(self, name):
         """remove python .pyc files."""
@@ -146,7 +158,6 @@ class PythonBuilder(Builder):
     def clean_python_site_packages(self):
         """remove python site-packages"""
         self.remove(self.python_lib / 'site-packages')
-
 
     def remove_packages(self):
         """remove list of non-critical packages"""
@@ -182,7 +193,6 @@ class PythonBuilder(Builder):
             '_curses_panel',
         ])
 
-
     def remove_binaries(self):
         """remove list of non-critical executables"""
         self.rm_bins([
@@ -195,7 +205,6 @@ class PythonBuilder(Builder):
             # f'python{self.ver}{self.suffix}',
             # f'python{self.ver}-config',
         ])
-
 
     def clean(self):
         """clean everything."""
@@ -213,7 +222,6 @@ class PythonBuilder(Builder):
         self.remove_extensions()
         self.remove_binaries()
 
-
     def ziplib(self):
         """zip python package in site-packages in .zip archive"""
         temp_lib_dynload = self.prefix_lib / 'lib-dynload'
@@ -224,14 +232,13 @@ class PythonBuilder(Builder):
         self.copyfile(self.python_lib / 'os.py', temp_os_py)
 
         zip_path = self.prefix_lib / f'python{self.ver_nodot}'
-        shutil.make_archive(zip_path, 'zip', self.python_lib)
+        shutil.make_archive(zip_path, 'zip', str(self.python_lib))
 
         self.remove(self.python_lib)
         self.python_lib.mkdir()
         temp_lib_dynload.rename(self.lib_dynload)
         temp_os_py.rename(self.python_lib / 'os.py')
         self.site_packages.mkdir()
-
 
     def fix_python_dylib_for_pkg(self):
         self.chdir(self.prefix_lib)
