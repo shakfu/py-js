@@ -6,7 +6,7 @@
 import pathlib
 
 from ..models import Project
-from .python import PythonBuilder
+from .pyjs import PyJsBuilder
 
 
 class HomebrewProject(Project):
@@ -49,7 +49,7 @@ class HomebrewProject(Project):
 
 
 
-class HomebrewBuilder(PythonBuilder):
+class HomebrewBuilder(PyJsBuilder):
     """A Python Builder using Homebrew"""
     name = 'python'
     project_class = PythonProject

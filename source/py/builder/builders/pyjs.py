@@ -46,12 +46,15 @@ class PyJsBuilder(PythonBuilder):
 
     # ------------------------------------------------------------------------
     # src-level operations
+
     def xcodebuild(self, project, target, flag=None):
         """build via xcode the given targets"""
             if not flag:
                 self.cmd(f'xcodebuild -project targets/{project}/py-js.xcodeproj -target {target}')
             else:
-                self.cmd(f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} GCC_PREPROCESSOR_DEFINITIONS=$GCC_PREPROCESSOR_DEFINITIONS  {flag} ")
+                _flag = f'{flag}=1'
+                self.cmd(f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} "
+                         f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'")
 
     def xbuild_targets(self, project, flag=None):
         """build via xcode the given targets"""
