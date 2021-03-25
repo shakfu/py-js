@@ -24,7 +24,6 @@ def test_from_defaults():
     class PyJsExtBuilder(Builder):
         product_class = PyJsExt
 
-
     # project classes
     class StaticPythonProject(Project):
         builder_classes = [StaticPythonBuilder]
@@ -35,7 +34,6 @@ def test_from_defaults():
     # recipe classes
     class StaticPyJsRecipe(Recipe):
         project_classes = [StaticPythonProject, PyJsExternalsProject]
-
 
     # recipe / workspace
     r1 = StaticPyJsRecipe.from_defaults(a=1, b=2, x=2000)

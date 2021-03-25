@@ -93,6 +93,7 @@ class Application(Commander):
         for klass in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
             self.dispatch(klass, args)
 
+
 if __name__ == '__main__':
     app = Application()
     app.cmdline()
