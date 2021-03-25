@@ -3,29 +3,32 @@
 ## class Hierarchy
 
 
-Builder                             abstract.py
-    Bzip2Builder                    python_deps.py
+Builder                                 abstract.py
+    Bzip2Builder                        python_deps.py
     OpensslBuilder                  
     XzBuilder                       
-    PythonBuilder                   python.py
+    PythonBuilder                       python.py
 
-        HomebrewBuilder             pyjs_homebrew.py
-            HomebrewSysBuilder
-            HomebrewPkgBuilder
-            HomebrewExtBuilder
-
-        PythonSrcBuilder            python_src.py
+        PythonSrcBuilder                python_src.py
             SharedPythonBuilder
             FrameworkPythonBuilder
             StaticPythonBuilder
+
+        PyJsBuilder                     pyjs.py
+
+            HomebrewBuilder             pyjs_homebrew.py
+                HomebrewSysBuilder
+                HomebrewPkgBuilder
+                HomebrewExtBuilder
+
         
-        SrcBuilder                  pyjs_src.py
-            SrcFrameworkPkgBuilder
-            SrcFrameworkExtBuilder
-            SrcSharedPkgBuilder
-            SrcSharedExtBuilder
-            SrcStaticPkgBuilder
-            SrcStaticExtBuilder
+            SrcBuilder                  pyjs_src.py
+                SrcFrameworkPkgBuilder
+                SrcFrameworkExtBuilder
+                SrcSharedPkgBuilder
+                SrcSharedExtBuilder
+                SrcStaticPkgBuilder
+                SrcStaticExtBuilder
 
 
 """

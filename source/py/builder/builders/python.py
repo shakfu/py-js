@@ -1,3 +1,8 @@
+"""python: a builder mixin for python related builders
+
+Not meant to be directly.
+
+"""
 import os
 import platform
 import re
@@ -66,10 +71,12 @@ class PythonBuilder(Builder):
         self.post_process()
 
     def install_python_pkg(self):
+        """install python product as a package"""
         self.install_python()
         self.fix_python_dylib_for_pkg()
 
     def install_python_ext(self):
+        """install python product as a max external"""
         self.install_python()
         self.fix_python_dylib_for_ext()
 
@@ -112,10 +119,6 @@ class PythonBuilder(Builder):
                         self.deps.append(path)
                         self.get_deps(path)
 
-    def recursive_clean(self, name, pattern):
-        """generic recursive clean/remove method."""
-        self.cmd(f'find {name} | grep -E "({pattern})" | xargs rm -rf')
-
     def clean_python_pyc(self, name):
         """remove python .pyc files."""
         self.recursive_clean(name, r"__pycache__|\.pyc|\.pyo$")
@@ -139,12 +142,6 @@ class PythonBuilder(Builder):
         """remove all named binary executables"""
         for name in names:
             self.remove(self.prefix_bin / name)
-
-    def install_name_tool(self, src, dst, mode='id'):
-        """change dynamic shared library install names"""
-        _cmd = f'install_name_tool -{mode} {src}, {dst}'
-        self.log.info(_cmd)
-        os.cmd(_cmd)
 
     def clean_python_site_packages(self):
         """remove python site-packages"""
@@ -199,6 +196,7 @@ class PythonBuilder(Builder):
             # f'python{self.ver}-config',
         ])
 
+
     def clean(self):
         """clean everything."""
         self.clean_python_pyc(self.prefix)
@@ -234,18 +232,17 @@ class PythonBuilder(Builder):
         temp_os_py.rename(self.python_lib / 'os.py')
         self.site_packages.mkdir()
 
+
     def fix_python_dylib_for_pkg(self):
         self.chdir(self.prefix_lib)
-        self.cmd(f'chmod 777 {self.dylib}')
-        self.cmd(
-            'install_name_tool -id '
-            '@loader_path/../../../../support/{self.name}/lib/{self.dylib} '
-            '${self.dylib}')
+        self.chmod(self.dylib)
+        self.install_name_tool(
+            f'@loader_path/../../../../support/{self.name}/lib/{self.dylib}',
+            self.dylib)
         self.chdir(self.project.root)
 
     def fix_python_dylib_for_ext(self):
         self.chdir(self.prefix_lib)
-        self.cmd(f'chmod 777 {self.dylib}')
-        self.cmd(
-            'install_name_tool -id @loader_path/{self.dylib} {self.dylib}')
+        self.chmod(self.dylib)
+        self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
         self.chdir(self.project.root)

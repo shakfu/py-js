@@ -140,10 +140,10 @@ class HomebrewBuilder(PythonBuilder):
 
     # def install_python(self):
     def build(self):
-        mkdir -p $LIB
-        mkdir -p $BIN
-        cp -rf ${self.homebrew}/Python ${PREFIX}/${self.dylib}
-        cp -rf ${self.homebrew}/lib/${NAME}/*.py ${LIB}
+        self.cmd(f'mkdir -p {self.lib}')
+        self.cmd(f'mkdir =p {self.bin}')
+        self.cmd('cp -rf ${self.homebrew}/Python ${PREFIX}/${self.dylib}')
+        self.cmd('cp -rf ${self.homebrew}/lib/${self.name}/*.py ${self.lib}')
         pkgs_to_cp = [
             'asyncio',
             'collections',
