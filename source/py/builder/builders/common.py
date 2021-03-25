@@ -191,12 +191,12 @@ class PyJSProject(Project):
 
 
     def compile_python(self):
-        cd $PYTHON
+        self.chdir(self.python)
         self.write_python_minim_setup_local()
-        make clean
+        self.cmd('make clean')
         self.configure_python()
-        make altinstall
-        cd $ROOT
+        self.cmd('make altinstall')
+        self.chdir(self.root)
 
 
     def build_python(self):
@@ -208,64 +208,3 @@ class PyJSProject(Project):
     def build_python_zipped(self):
         self.build_python()
         self.zip_python_library()
-
-
-
-    def fix_python_dylib_for_pkg(self):
-        cd {self.prefix}/lib
-        chmod 777 ${DYLIB}
-        # assumes python in installed in {self.prefix}
-        # ../../../../support/python3.7/lib/libpython3.7m.dylib
-        install_name_tool -id @loader_path/../../../../support/${NAME}/lib/${DYLIB} ${DYLIB}
-        echo "fix_python_dylib_for_pkg done"
-        # otool -L ${DYLIB}
-        cd $ROOT
-
-
-    def fix_python_dylib_for_ext(self):
-        cd {self.prefix}/lib
-        chmod 777 ${DYLIB}
-        # assumes cp -rf {self.prefix}/* -> same directory as py extension in py.mxo
-        install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
-        echo "fix_python_dylib_for_ext done"
-        cd $ROOT
-
-
-    # FIXME: not complete!
-    def fix_python_libintl(self):
-        #otool -L {self.prefix}/lib/libpython{self.py_version}.dylib
-        cp /usr/local/opt/gettext/lib/libintl.8.dylib ${PREFIX}/lib
-        chmod 777 ${PREFIX}/lib/libintl.8.dylib
-        install_name_tool -id @executable_path/libintl.8.dylib ${PREFIX}/lib/libintl.8.dylib
-        install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython{self.py_version}.dylib
-
-
-
-    def install_python(self):
-        echo "checking if previous build exists"
-        mkdir -p $BUILD
-        if [ ! -d $PYTHON ] ; then
-            echo "retrieving $PYTHON from $URL_PYTHON"
-            get_python
-        fi
-        if [ ! -d $SSL ] ; then
-            echo "retrieving $SSL from $URL_OPENSSL"
-            get_ssl
-            build_ssl
-        fi
-        self.build_python_zipped()
-
-
-    def install_python_pkg(self):
-        self.install_python()
-        self.fix_python_dylib_for_pkg()
-
-
-    def install_python_ext(self):
-        self.install_python()
-        self.fix_python_dylib_for_ext()
-
-
-    def usage(self):
-        print("No argument given. Can be 'pkg' or 'ext'")
-        print("for package or external installation respectively")

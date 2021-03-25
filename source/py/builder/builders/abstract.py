@@ -9,7 +9,7 @@ import logging
 import os
 import shutil
 import sys
-from abc import ABC, abstractmethod
+from abc import ABC
 from pathlib import Path
 
 from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL
@@ -43,6 +43,9 @@ class Builder(ABC):
             for subdependency in iter(dependency):
                 yield subdependency
 
+    # -------------------------------------------------------------------------
+    # Name / Version Methods
+
     @property
     def ver(self) -> str:
         """provides major.minor version: 3.9.1 -> 3.9"""
@@ -64,15 +67,23 @@ class Builder(ABC):
         return f'{self.name.lower()}{self.ver}'
 
     @property
-    def url(self) -> Path:
-        """Returns url to download product as a pathlib.Path instance."""
-        return Path(self.url_template.format(name=self.name, 
-                                             version=self.version))
-
-    @property
     def name_archive(self) -> str:
         """Archival name of Product-version: Python-3.9.1.tgz"""
         return f'{self.name_version}.tgz'
+
+    @property
+    def dylib(self) -> str:
+        """name of dynamic library in macos case."""
+        return f'lib{self.name.lower()}{self.ver}.dylib' # pylint: disable=E1101
+
+    # -------------------------------------------------------------------------
+    # Path Methods
+
+    @property
+    def url(self) -> Path:
+        """Returns url to download product as a pathlib.Path instance."""
+        return Path(self.url_template.format(name=self.name,
+                                             version=self.version))
 
     @property
     def download_path(self) -> Path:
@@ -109,13 +120,16 @@ class Builder(ABC):
         """compiled product destination bin directory."""
         return self.prefix / 'bin'
 
-    @property
-    def dylib(self) -> str:
-        """name of dynamic library in macos case."""
-        return f'lib{self.name.lower()}{self.ver}.dylib' # pylint: disable=E1101
+    # -------------------------------------------------------------------------
+    # Test Methods
+
 
     def libs_static_exist(self) -> bool:
+        """tests for existance of all provided static libs"""
         return all((self.prefix_lib / lib).exists() for lib in self.libs_static)
+
+    # -------------------------------------------------------------------------
+    # Generic Shell Methods
 
     def cmd(self, shellcmd, *args, **kwargs):
         """Run shell command with args and keywords"""
@@ -157,18 +171,40 @@ class Builder(ABC):
             self.log.info("remove file: %s", path)
             path.unlink(missing_ok=True)
 
+    def recursive_clean(self, name, pattern):
+        """generic recursive clean/remove method."""
+        self.cmd(f'find {name} | grep -E "({pattern})" | xargs rm -rf')
+
+    def install_name_tool(self, src, dst, mode='id'):
+        """change dynamic shared library install names"""
+        _cmd = f'install_name_tool -{mode} {src} {dst}'
+        self.log.info(_cmd)
+        self.cmd(_cmd)
+
+    def xcodebuild(self, project, target=None):
+        """build via xcode the given targets"""
+        if not target:
+            self.cmd(f'xcodebuild -project {project}')
+        else:
+            self.cmd(f'xcodebuild -project {project} -target {target}')
+
+    # -------------------------------------------------------------------------
+    # Core Methods
+
+    def reset_prefix(self):
+        """remove prefix or compilation destinations"""
+        self.remove(self.prefix)
+
     def reset(self):
         """remove product src directory and compiled product directory."""
         self.remove(self.src_path)
         self.remove(self.prefix)  # aka self.prefix
-
 
     def download(self):
         """download src using curl and tar.
 
         curl and tar are automatically available on mac platforms.
         """
-
         self.project.downloads.mkdir(parents=True, exist_ok=True)
         for dep in self.depends_on:
             dep.download()
@@ -184,14 +220,11 @@ class Builder(ABC):
             self.log.info("unpacking %s", self.src_path)
             self.cmd(f'tar -C {self.project.src} -xvf {self.download_path}')
 
-    # @abstractmethod
     def build(self):
         """build target from src"""
 
-    # @abstractmethod
     def pre_process(self):
         """pre-build operations"""
 
-    # @abstractmethod
     def post_process(self):
         """post-build operations"""
