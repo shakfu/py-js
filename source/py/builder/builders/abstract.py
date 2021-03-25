@@ -13,6 +13,7 @@ from abc import ABC
 from pathlib import Path
 
 from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL
+from ..models import Project
 
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
 
@@ -24,7 +25,7 @@ class Builder(ABC):
     url_template: str
     depends_on: ['Builder']
     libs_static: [str]
-    project_class: 'Project'
+    project_class = Project
     mac_dep_target = '10.14'
 
     def __init__(self, project=None, version=None, depends_on=None):
@@ -38,10 +39,10 @@ class Builder(ABC):
         return f"<{self.__class__.__name__} '{self.name}-{self.version}'>"
 
     def __iter__(self):
-        for dependency in self.depends_on:
-            yield dependency
-            for subdependency in iter(dependency):
-                yield subdependency
+        for dep in self.depends_on:
+            yield dep
+            for subdep in iter(dep):
+                yield subdep
 
     # -------------------------------------------------------------------------
     # Name / Version Methods
@@ -74,7 +75,7 @@ class Builder(ABC):
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        return f'lib{self.name.lower()}{self.ver}.dylib' # pylint: disable=E1101
+        return f'lib{self.name.lower()}{self.ver}.dylib '  # pylint: disable=E1101
 
     # -------------------------------------------------------------------------
     # Path Methods
@@ -122,7 +123,6 @@ class Builder(ABC):
 
     # -------------------------------------------------------------------------
     # Test Methods
-
 
     def libs_static_exist(self) -> bool:
         """tests for existance of all provided static libs"""
@@ -181,12 +181,12 @@ class Builder(ABC):
         self.log.info(_cmd)
         self.cmd(_cmd)
 
-    def xcodebuild(self, project, target=None):
-        """build via xcode the given targets"""
-        if not target:
-            self.cmd(f'xcodebuild -project {project}')
-        else:
-            self.cmd(f'xcodebuild -project {project} -target {target}')
+    # def xcodebuild(self, project, target=None):
+    #     """build via xcode the given targets"""
+    #     if not target:
+    #         self.cmd(f'xcodebuild -project {project}')
+    #     else:
+    #         self.cmd(f'xcodebuild -project {project} -target {target}')
 
     # -------------------------------------------------------------------------
     # Core Methods

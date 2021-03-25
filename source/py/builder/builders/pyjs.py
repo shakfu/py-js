@@ -4,11 +4,11 @@ TODO: move PYTHON_VERSION_STRING to config.py
 
 """
 
-import os
+# import os
 import platform
-import re
-import shutil
-import subprocess
+# import re
+# import shutil
+# import subprocess
 
 from ..projects import PyJsProject
 from .python import PythonBuilder
@@ -43,24 +43,22 @@ class PyJsBuilder(PythonBuilder):
     # ------------------------------------------------------------------------
     # python properties
 
-
     # ------------------------------------------------------------------------
     # src-level operations
 
     def xcodebuild(self, project, target, flag=None):
         """build via xcode the given targets"""
-            if not flag:
-                self.cmd(f'xcodebuild -project targets/{project}/py-js.xcodeproj -target {target}')
-            else:
-                _flag = f'{flag}=1'
-                self.cmd(f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} "
-                         f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'")
+        if not flag:
+            self.cmd(f'xcodebuild -project targets/{project}/py-js.xcodeproj -target {target}')
+        else:
+            _flag = f'{flag}=1'
+            self.cmd(f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} "
+                     f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'")
 
     def xbuild_targets(self, project, flag=None):
         """build via xcode the given targets"""
         for target in self.targets:
             self.xcodebuild(project, target, flag)
-
 
     def pre_process(self):
         """pre-build operations"""
