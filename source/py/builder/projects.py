@@ -46,9 +46,9 @@ class PyJsProject(Project):
     pyjs_external = externals / 'pyjs.mxo'
 
     bzip2_version = '1.0.8'
-    ssl_version='1.1.1g'
-    mac_dep_target='10.13'
+    ssl_version = '1.1.1g'
+    mac_dep_target = '10.13'
 
-    url_python='https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz'
-    url_openssl='https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz'
-    url_getpip='https://bootstrap.pypa.io/get-pip.py'
+    url_python = 'https://www.python.org/ftp/python/${SEMVER}/Python-${SEMVER}.tgz'
+    url_openssl = 'https://www.openssl.org/source/openssl-${SSL_VERSION}.tar.gz'
+    url_getpip = 'https://bootstrap.pypa.io/get-pip.py'

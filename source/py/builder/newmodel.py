@@ -1,8 +1,30 @@
 import logging
 from abc import ABC
 from pathlib import Path
+from types import SimpleNamespace
+
 
 from utils.shell import ShellCmd
+
+
+class Settings(SimpleNamespace):
+    """A dictionary object with dotted access to its members.
+
+    >>> settings = Settings(**dict)
+    """
+
+    def copy(self):
+        """provide a copy of the internal dictionary"""
+        return Settings(**self.__dict__.copy())
+
+    def update(self, other):
+        """Like a dict.update but using the internal dict instead"""
+        if isinstance(other, dict):
+            self.__dict__.update(other)
+        elif isinstance(other, Settings):
+            self.__dict__.update(other.__dict__)
+        else:
+            raise TypeError
 
 
 class Product(ABC):
@@ -10,6 +32,7 @@ class Product(ABC):
     name = 'prototype1'
     version = '0.0.1'
     libs_static = []
+    url_template: str
 
     def __init__(self, name: str, version: str = None, path: Path = None):
         self.name = name or self.name
@@ -97,8 +120,8 @@ class Builder(ABC):
     def __init__(self, project=None, product=None):
         self.project = project
         self.product = product if product else self.product_class(project)
-        self.cmd = ShellCmd()
         self.log = logging.getLogger(self.__class__.__name__)
+        self.cmd = ShellCmd(self.log)
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -194,11 +217,12 @@ class Project(ABC):
     """A repository for all the files, resources, and information required to
     build one or more software products.
     """
+    builder_classes: ['Builder']
 
-    def __init__(self, name: str = None , root: Path = None, builders: list[Builder] = None, 
+    def __init__(self, name: str = None, root: Path = None, builders: list[Builder] = None,
                  depends_on: ['Project'] = None, **settings):
         self.name = name
-        self.root = path or Path('.')
+        self.root = root or Path('.')
         self.depends_on = depends_on or []
         self.settings = Settings(**settings)
         self.builders = self.init_builders(builders) if builders else []
@@ -206,7 +230,7 @@ class Project(ABC):
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
 
-   def __iter__(self):
+    def __iter__(self):
         for dep in self.depends_on:
             yield dep
             for subdep in iter(dep):
@@ -274,9 +298,10 @@ class Project(ABC):
 
 
 class PythonProduct(Product):
-    name='Python'
-    version='3.9.2'
+    name = 'Python'
+    version = '3.9.2'
     libs_static = ['libpython3.9.a']
+
 
 class MyBuilder(Builder):
     product_class = PythonProduct

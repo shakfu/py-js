@@ -1,6 +1,6 @@
 """model: schema of builder
 
-Baically a simplified copy of the xcode model. The only difference is that I have
+Basically a simplified copy of the xcode model. The only difference is that I have
 renamed `Target` as `Builder` and `Workspace` as `Recipe` since it
 makes more sense in this context.
 
@@ -17,12 +17,15 @@ makes more sense in this context.
 
 """
 from pathlib import Path
-from abc import ABC, abstractmethod
+from abc import ABC
 from importlib import import_module
 from types import SimpleNamespace
 
+
 # utility funcs
-import_from_module = lambda module, obj: getattr(import_module(module), obj)
+def import_from_module(module, obj):
+    """helper func for getting child object of imported module dynamically."""
+    return getattr(import_module(module), obj)
 
 
 class Settings(SimpleNamespace):
@@ -45,14 +48,15 @@ class Settings(SimpleNamespace):
             raise TypeError
 
 
-
 class Product(ABC):
     """Produced by running a builder."""
+    libs_static: [str]
 
     def __init__(self, name: str, version: str = None, path: Path = None):
         self.name = name
         self.version = version or '0.0.1'
         self.path = Path(path) if path else None
+        self.url_template = None
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -120,14 +124,7 @@ class Product(ABC):
 
     @property
     def has_static_libs(self):
-        for lib in self.libs_static:
-            if not (self.prefix_lib / lib).exists():
-                return False
-        return True
-
-
-
-
+        return all((self.prefix_lib / lib).exists() for lib in self.libs_static)
 
 
 class Builder(ABC):
@@ -179,8 +176,9 @@ class Project(ABC):
     """A repository for all the files, resources, and information required to
     build one or more software products.
     """
+    builder_classes: ['Builder']
 
-    def __init__(self, name: str = None , builders: list[Builder] = None, 
+    def __init__(self, name: str = None, builders: list[Builder] = None,
                  depends_on: ['Project'] = None, **settings):
         self.name = name
         self.depends_on = depends_on or []
@@ -256,6 +254,7 @@ class Recipe(ABC):
 
     A recipe is analogous to a workspace in xcode
     """
+    project_classes: ['Project']
 
     def __init__(self, name: str = None, projects: list[Project] = None, **settings):
         self.name = name
@@ -265,7 +264,7 @@ class Recipe(ABC):
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
 
-    __repr__=__str__
+    __repr__ = __str__
 
     @classmethod
     def from_defaults(cls, name=None, project_classes=None, **settings):
