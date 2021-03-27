@@ -30,15 +30,15 @@ class PyJsBuilder(PythonBuilder):
     patch = None
     targets = ['py', 'pyjs']
 
-    def __init__(self, project=None, version=None, depends_on=None):
-        if not project:
-            project = self.project_class()
-        super().__init__(project, version, depends_on)
-
-        # dependency manager attributes (revise)
-        self.install_names = {}
-        self.deps = []
-        self.dep_list = []
+    # def __init__(self, project=None, version=None, depends_on=None):
+    #     if not project:
+    #         project = self.project_class()
+    #     super().__init__(project, version, depends_on)
+    #
+    #     # dependency manager attributes (revise)
+    #     self.install_names = {}
+    #     self.deps = []
+    #     self.dep_list = []
 
     # ------------------------------------------------------------------------
     # python properties
