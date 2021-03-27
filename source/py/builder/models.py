@@ -16,9 +16,9 @@ makes more sense in this context.
                 Product
 
 """
-from pathlib import Path
 from abc import ABC
 from importlib import import_module
+from pathlib import Path
 from types import SimpleNamespace
 
 
@@ -178,7 +178,7 @@ class Project(ABC):
     """
     builder_classes: ['Builder']
 
-    def __init__(self, name: str = None, builders: list[Builder] = None,
+    def __init__(self, name: str = None, builders: ['Builder'] = None,
                  depends_on: ['Project'] = None, **settings):
         self.name = name
         self.depends_on = depends_on or []
@@ -256,7 +256,7 @@ class Recipe(ABC):
     """
     project_classes: ['Project']
 
-    def __init__(self, name: str = None, projects: list[Project] = None, **settings):
+    def __init__(self, name: str = None, projects: [Project] = None, **settings):
         self.name = name
         self.settings = Settings(**settings)
         self.projects = projects

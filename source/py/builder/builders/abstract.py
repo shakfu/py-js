@@ -81,27 +81,6 @@ class Builder(ABC):
     # Path Methods
 
     @property
-    def url(self) -> Path:
-        """Returns url to download product as a pathlib.Path instance."""
-        return Path(self.url_template.format(name=self.name,
-                                             version=self.version))
-
-    @property
-    def download_path(self) -> Path:
-        """Returns path to downloaded product-version archive."""
-        return self.project.downloads / self.name_archive
-
-    @property
-    def src_path(self) -> Path:
-        """Return product source directory."""
-        return self.project.src / self.name_version
-
-    @property
-    def lib_path(self) -> Path:
-        """alias to self.prefix"""
-        return self.prefix
-
-    @property
     def prefix(self) -> Path:
         """compiled product destination root directory."""
         return self.project.lib / self.name.lower()
@@ -120,6 +99,28 @@ class Builder(ABC):
     def prefix_bin(self) -> Path:
         """compiled product destination bin directory."""
         return self.prefix / 'bin'
+
+    @property
+    def download_path(self) -> Path:
+        """Returns path to downloaded product-version archive."""
+        return self.project.downloads / self.name_archive
+
+    @property
+    def src_path(self) -> Path:
+        """Return product source directory."""
+        return self.project.src / self.name_version
+
+    @property
+    def lib_path(self) -> Path:
+        """alias to self.prefix"""
+        return self.prefix
+
+    @property
+    def url(self) -> Path:
+        """Returns url to download product as a pathlib.Path instance."""
+        return Path(self.url_template.format(name=self.name,
+                                             version=self.version))
+
 
     # -------------------------------------------------------------------------
     # Test Methods

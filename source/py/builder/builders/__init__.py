@@ -32,5 +32,6 @@ Builder                                 abstract.py
 
 
 """
+from .pyjs_homebrew import HomebrewBuilder
 from .python_src import (FrameworkPythonBuilder, SharedPythonBuilder,
                          StaticPythonBuilder)

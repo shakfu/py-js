@@ -18,8 +18,8 @@
         static              build static python
 
 """
-from .builders import (FrameworkPythonBuilder, SharedPythonBuilder,
-                       StaticPythonBuilder)
+from .builders import (FrameworkPythonBuilder, HomebrewBuilder,
+                       SharedPythonBuilder, StaticPythonBuilder)
 from .utils.cli import Commander, option, option_group
 
 # ------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ class Application(Commander):
     version = '0.1'
     default_args = ['--help']
 
-    def dispatch(self, builder_class, args):
+    def dispatch1(self, builder_class, args):
         """generic dispatcher"""
         builder = builder_class()
         if args.download:
@@ -71,6 +71,18 @@ class Application(Commander):
             builder.ziplib()
         else:
             pass
+
+    def dispatch(self, builder_class, args):
+        """generic argument dispatcher"""
+        builder = builder_class()
+        for key in vars(args):
+            if key == 'func':
+                continue
+            if getattr(args, key):
+                try:
+                    getattr(builder, key)()
+                except AttributeError:
+                    print(builder, 'has no method', key)
 
     @common_options
     def do_static(self, args):
@@ -90,8 +102,16 @@ class Application(Commander):
     @common_options
     def do_all(self, args):
         """build all python variations"""
-        for klass in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
-            self.dispatch(klass, args)
+        for builder_class in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
+            self.dispatch(builder_class, args)
+
+    @common_options
+    def do_test(self, args):
+        """interactive testing shell"""
+        from IPython import embed
+        b = HomebrewBuilder()
+        embed(colors="neutral")
+
 
 
 if __name__ == '__main__':
