@@ -18,7 +18,8 @@ else:
 LOG_FORMAT = '%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s'
     
 #COLOR_FMT = '%(log_color)s%(levelname)s:%(name)s:%(message)s'
-COLOR_FMT = "%(log_color)s%(levelname)-8s:%(reset)s %(message)s"
+# COLOR_FMT = "%(log_color)s%(levelname)-8s:%(reset)s %(message)s"
+COLOR_FMT = "%(log_color)s%(levelname)-5s:%(reset)s %(message)s"
 
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter(COLOR_FMT))

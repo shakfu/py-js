@@ -5,17 +5,18 @@ The following classes are available:
     - Builder: provides generic builder interface and common file-handling features.
 
 """
-import logging
+# import logging
 import os
 import shutil
 import sys
 from abc import ABC
 from pathlib import Path
 
-from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL
+# from ..config import IGNORE_ERRORS, LOG_FORMAT, LOG_LEVEL
+from ..config import IGNORE_ERRORS, get_logger
 from ..models import Project
 
-logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
+# logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout)
 
 
 class Builder(ABC):
@@ -33,7 +34,8 @@ class Builder(ABC):
         self.version = version or self.version
         self.depends_on = ([B(project) for B in depends_on] if depends_on else
                            [B(project) for B in self.depends_on])
-        self.log = logging.getLogger(self.__class__.__name__)
+        # self.log = logging.getLogger(self.__class__.__name__)
+        self.log = get_logger(self.__class__.__name__)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.name}-{self.version}'>"
@@ -171,9 +173,9 @@ class Builder(ABC):
             self.log.info("remove file: %s", path)
             path.unlink(missing_ok=True)
 
-    def recursive_clean(self, name, pattern):
+    def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
-        self.cmd(f'find {name} | grep -E "({pattern})" | xargs rm -rf')
+        self.cmd(f'find {path} | grep -E "({pattern})" | xargs rm -rf')
 
     def install_name_tool(self, src, dst, mode='id'):
         """change dynamic shared library install names"""

@@ -99,19 +99,26 @@ class Application(Commander):
         """build framework python"""
         self.dispatch(FrameworkPythonBuilder, args)
 
+    # @common_options
+    # def do_all(self, args):
+    #     """build all python variations"""
+    #     for builder_class in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
+    #         self.dispatch(builder_class, args)
+
     @common_options
-    def do_all(self, args):
-        """build all python variations"""
-        for builder_class in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
-            self.dispatch(builder_class, args)
+    def do_homebrew(self, args):
+        """build homebrew python"""
+        b = HomebrewBuilder()
+        b.install_homebrew_sys()
+        # b.install_homebrew_pkg()
+        # b.install_homebrew_ext()
 
     @common_options
     def do_test(self, args):
         """interactive testing shell"""
-        # from IPython import embed
-        b = HomebrewBuilder()
-        b.install_python_pkg()
-        # embed(colors="neutral")
+        from IPython import embed
+        embed(colors="neutral")
+
 
 
 
