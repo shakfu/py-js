@@ -10,7 +10,8 @@ from ..projects import Project
 from .pyjs import PyJsBuilder
 
 
-class HomebrewProject(Project):
+# class HomebrewProject(Project):
+class HomebrewProject:
     """Project to build Python from source with different variations."""
     root = pathlib.Path.cwd()
     scripts = root / 'scripts'
@@ -35,6 +36,7 @@ class HomebrewProject(Project):
 
     py_external = externals / 'py.mxo'
     pyjs_external = externals / 'pyjs.mxo'
+    
 
 
 class HomebrewBuilder(PyJsBuilder):
@@ -121,12 +123,13 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd(f'mkdir -p {arg}/Contents/Resources/{self.project.name}')
         self.cmd(f'cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.project.name}')
 
-    def install_python(self):
     # def build(self):
+    def install_python(self):
         self.cmd(f'mkdir -p {self.project.lib}')
         self.cmd(f'mkdir -p {self.project.bin}')
-        self.cmd(f'cp -rf {self.project.homebrew}/Python {self.prefix}/{self.dylib}')
-        self.cmd(f'cp -rf {self.project.homebrew}/lib/${self.project.name}/*.py {self.project.lib}')
+        self.cmd(f'cp {self.project.homebrew}/Python {self.prefix}/{self.dylib}')
+        self.cmd(f'cp -rf {self.project.homebrew}/lib/{self.project.name}/*.py {self.project.lib}')
+        # from IPython import embed; embed(colors="neutral")
         self.cp_pkgs([
             'asyncio',
             'collections',
@@ -161,8 +164,11 @@ class HomebrewBuilder(PyJsBuilder):
         self.ziplib()
 
     def install_python_pkg(self):
+        # self.reset()
         self.install_python()
         self.fix_python_dylib_for_pkg()
+        # self.build_pkg()
+        self.xbuild_targets('bin-homebrew-pkg', targets=['py', 'pyjs'])
 
     def install_python_ext(self):
         self.install_python()

@@ -108,9 +108,10 @@ class Application(Commander):
     @common_options
     def do_test(self, args):
         """interactive testing shell"""
-        from IPython import embed
+        # from IPython import embed
         b = HomebrewBuilder()
-        embed(colors="neutral")
+        b.install_python_pkg()
+        # embed(colors="neutral")
 
 
 

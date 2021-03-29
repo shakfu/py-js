@@ -15,7 +15,6 @@ Builder                                 abstract.py
             StaticPythonBuilder
 
         PyJsBuilder                     pyjs.py
-
             HomebrewBuilder             pyjs_homebrew.py
                 HomebrewSysBuilder
                 HomebrewPkgBuilder
