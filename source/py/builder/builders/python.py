@@ -7,10 +7,12 @@ Not meant to be directly.
 import platform
 # import re
 import shutil
-# import subprocess
 
 from ..projects import PythonProject
 from .abstract import Builder
+
+# import subprocess
+
 
 
 class PythonBuilder(Builder):
@@ -131,13 +133,13 @@ class PythonBuilder(Builder):
     #                     self.deps.append(path)
     #                     self.get_deps(path)
 
-    def clean_python_pyc(self, name):
+    def clean_python_pyc(self, path):
         """remove python .pyc files."""
-        self.recursive_clean(name, r"__pycache__|\.pyc|\.pyo$")
+        self.recursive_clean(path, r"__pycache__|\.pyc|\.pyo$")
 
-    def clean_python_tests(self, name):
+    def clean_python_tests(self, path):
         """remove python tests files."""
-        self.recursive_clean(name, "tests|test")
+        self.recursive_clean(path, "tests|test")
 
     def rm_libs(self, names):
         """remove all named python dylib libraries"""
