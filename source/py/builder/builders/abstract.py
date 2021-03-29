@@ -75,7 +75,7 @@ class Builder(ABC):
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        return f'lib{self.name.lower()}{self.ver}.dylib '  # pylint: disable=E1101
+        return f'lib{self.name.lower()}{self.ver}.dylib'  # pylint: disable=E1101
 
     # -------------------------------------------------------------------------
     # Path Methods
@@ -120,7 +120,6 @@ class Builder(ABC):
         """Returns url to download product as a pathlib.Path instance."""
         return Path(self.url_template.format(name=self.name,
                                              version=self.version))
-
 
     # -------------------------------------------------------------------------
     # Test Methods

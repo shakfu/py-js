@@ -31,7 +31,6 @@ class PythonBuilder(Builder):
         """Name of static library: libpython.3.9.a"""
         return f'lib{self.name.lower()}{self.ver}.a'  # pylint: disable=E1101
 
-
     @property
     def python_lib(self):
         """python/lib/product.major.minor: python/lib/python3.9"""
