@@ -19,10 +19,10 @@ makes more sense in this context.
 import os
 import shutil
 from abc import ABC
-from importlib import import_module
 from pathlib import Path
 import logging
 from types import SimpleNamespace
+from typing import Type, List
 
 DEBUG = True
 if DEBUG:
@@ -103,18 +103,14 @@ class Settings(SimpleNamespace):
 
 class Product(ABC):
     """Produced by running a builder."""
-
+    default_name: str
+    default_version: str
     libs_static: list[str]
 
-    def __init__(
-        self,
-        name: str,
-        version: str = None,
-        path: Path = None,
-        url_template: str = None,
-    ):
-        self.name = name
-        self.version = version or "0.0.1"
+    def __init__(self, name: str = None, version: str = None, path: Path = None,
+                url_template: str = None):
+        self.name = name or self.default_name
+        self.version = version or self.default_version
         self.path = Path(path) if path else None
         self.url_template = url_template
 
@@ -152,7 +148,7 @@ class Product(ABC):
 
     @property
     def url(self) -> Path:
-        """Returns url to download product as a pathlib.Path instance."""
+        """Returns url to download product src as a pathlib.Path instance."""
         return Path(self.url_template.format(name=self.name, version=self.version))
 
     @property
@@ -184,6 +180,7 @@ class Product(ABC):
 
     @property
     def has_static_libs(self) -> bool:
+        """check for presence of static libs"""
         return all((self.prefix_lib / lib).exists() for lib in self.libs_static)
 
 
@@ -192,20 +189,19 @@ class Builder(ABC):
 
     A Builder is analagous to a Target in Xcode.
     """
+    product_class: Type[Product]
 
-    def __init__(
-        self, name: str = None, depends_on: list["Builder"] = None, **settings
-    ):
-        self.name = name
+    def __init__(self, product: Product = None, project: 'Project' = None,
+                 depends_on: list["Builder"] = None, **settings):
+        self.product = product if product else self.product_class()
+        self.project = project
         self.depends_on = depends_on or []
         self.settings = Settings(**settings)
-        self.project = None
-        self.product = None
         self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
 
     def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
+        return f"<{self.__class__.__name__}>"
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
@@ -260,46 +256,35 @@ class Project(ABC):
     """A repository for all the files, resources, and information required to
     build one or more software products.
     """
+    builder_classes: List[Type['Builder']]
 
-    def __init__(self, name: str = None, builders: list["Builder"] = None, **settings):
+    def __init__(self, name: str = None, builders: list['Builder'] = None, **settings):
         self.name = name
-        self.builders = builders if builders else []
+        self.builders = builders if builders else [
+            builder_class(project=self) for builder_class in self.builder_classes]
         self.settings = Settings(**settings)
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
 
-    def clean(self):
-        """Sequence  builder cleaning in FIFO order"""
-        for builder in self.builders:
-            builder.clean()
-
-    def reset(self):
-        """Sequence builder resetting in FIFO order"""
-        for builder in self.builders:
-            builder.reset()
-
     def build(self):
-        """Sequence builder building in FIFO order"""
+        """delegate building to builders"""
         for builder in self.builders:
             builder.build()
 
-    def install(self):
-        """Sequence builder installing in FIFO order"""
-        for builder in self.builders:
-            builder.install()
 
-
-class Recipe(ABC):
-    """A platform-specific container for multiple build projects.
+class ProjectRecipe(ABC):
+    """A project-centric platform-specific container for multiple build projects.
 
     A recipe is analogous to a workspace in xcode
     """
+    project_classes: List[Type['Project']]
 
     def __init__(self, name: str = None, projects: list[Project] = None, **settings):
         self.name = name
         self.settings = Settings(**settings)
-        self.projects = projects
+        self.projects = projects if projects else [
+            project_class() for project_class in self.project_classes]
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -310,3 +295,25 @@ class Recipe(ABC):
         """build projects"""
         for project in self.projects:
             project.build()
+
+
+class BuilderRecipe(ABC):
+    """A platform-specific container for multiple builder-centric projects.
+
+    A recipe is analogous to a workspace in xcode
+    """
+
+    def __init__(self, name: str = None, builders: list[Builder] = None, **settings):
+        self.name = name
+        self.settings = Settings(**settings)
+        self.builders = builders
+
+    def __str__(self):
+        return f"<{self.__class__.__name__}:'{self.name}'>"
+
+    __repr__ = __str__
+
+    def build(self):
+        """build builders"""
+        for builder in self.builders:
+            builder.build()
