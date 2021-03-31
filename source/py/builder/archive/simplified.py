@@ -206,7 +206,12 @@ class Builder:
 
 
 
+class Inner:
+    a = 10
+
+
 class P:
+    b = Inner()
     def __init__(self, **kwds):
         self.kwds = kwds
     def cmd(self, shellcmd, *args, **kwds):

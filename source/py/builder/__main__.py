@@ -85,33 +85,45 @@ class Application(Commander):
                     print(builder, 'has no method', key)
 
     @common_options
-    def do_static(self, args):
+    def do_py_static(self, args):
         """build static python"""
         self.dispatch(StaticPythonBuilder, args)
 
     @common_options
-    def do_shared(self, args):
+    def do_py_shared(self, args):
         """build shared python"""
         self.dispatch(SharedPythonBuilder, args)
 
     @common_options
-    def do_framework(self, args):
+    def do_py_framework(self, args):
         """build framework python"""
         self.dispatch(FrameworkPythonBuilder, args)
 
-    # @common_options
-    # def do_all(self, args):
-    #     """build all python variations"""
-    #     for builder_class in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
-    #         self.dispatch(builder_class, args)
+    @common_options
+    def do_py_all(self, args):
+        """build all python variations"""
+        for builder_class in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
+            self.dispatch(builder_class, args)
 
     @common_options
-    def do_homebrew(self, args):
-        """build homebrew python"""
+    def do_pyjs_sys(self, args):
+        """build non-portable pyjs package from homebrew python"""
         b = HomebrewBuilder()
         b.install_homebrew_sys()
-        # b.install_homebrew_pkg()
+
+    @common_options
+    def do_pyjs_pkg(self, args):
+        """build portable pyjs package from homebrew python"""
+        b = HomebrewBuilder()
+        b.install_homebrew_pkg()
+
+    @common_options
+    def do_pyjs_ext(self, args):
+        """build portable pyjs externals from homebrew python"""
+        b = HomebrewBuilder()
         # b.install_homebrew_ext()
+        b.install_homebrew_ext_py()
+        b.install_homebrew_ext_pyjs()
 
     @common_options
     def do_test(self, args):

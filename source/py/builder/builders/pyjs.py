@@ -4,7 +4,7 @@ TODO: move PYTHON_VERSION_STRING to config.py
 
 """
 
-# import os
+import os
 import platform
 
 from ..projects import PyJsProject
@@ -31,6 +31,12 @@ class PyJsBuilder(PythonBuilder):
     setup_local = None
     patch = None
     targets = ['py', 'pyjs']
+    
+    HOME = os.getenv('HOME')
+    PKG_NAME = 'py'
+    PACKAGE=f'{HOME}/Documents/Max 8/Packages/{PKG_NAME}'
+    PKG_DIRS= ['docs', 'examples', 'externals', 'help', 'init', 
+         'javascript', 'jsextensions', 'media', 'patchers']
 
     # def __init__(self, project=None, version=None, depends_on=None):
     #     if not project:
@@ -77,3 +83,9 @@ class PyJsBuilder(PythonBuilder):
         # self.pre_process()
         # self.build()
         # self.post_process()
+
+    def deploy(self):
+        """deploy to package"""
+        self.cmd(f'mkdir -p {self.package}')
+        for subdir in self.subdirs:
+            self.cmd(f'rsync -a --delete {self.pyjs_rootdir}/{subdir} {self.package}')
