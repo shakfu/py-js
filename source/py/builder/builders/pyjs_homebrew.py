@@ -177,15 +177,31 @@ class HomebrewBuilder(PyJsBuilder):
         self.xbuild_targets('bin-homebrew-pkg', targets=['py', 'pyjs'])
         # MISSING: copy package to $HOME/Max 8/Packages/py
 
-    def install_homebrew_ext(self):
+    # def install_homebrew_ext(self):
+    #     self.reset_prefix()
+    #     self.copy_python()
+    #     # fix_python_dylib_for_ext
+    #     # fix_python_dylib_for_ext_executable_name
+    #     self.fix_python_dylib_for_ext_resources()
+    #     self.cp_python_to_ext_resources(self.project.py_external)
+    #     self.cp_python_to_ext_resources(self.project.pyjs_external)
+    #     # FIXME: for some reason both don't work at the same time!!!
+    #     # you have to pick one.
+    #     self.xbuild_targets('bin-homebrew-ext', targets=['py', 'pyjs'])
+    #     self.reset_prefix()
+
+    def install_homebrew_ext_py(self):
         self.reset_prefix()
         self.copy_python()
-        # fix_python_dylib_for_ext
-        # fix_python_dylib_for_ext_executable_name
         self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.py_external)
+        self.xbuild_targets('bin-homebrew-ext', targets=['py'])
+        self.reset_prefix()
+
+    def install_homebrew_ext_pyjs(self):
+        self.reset_prefix()
+        self.copy_python()
+        self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.pyjs_external)
-        # FIXME: for some reason both don't work at the same time!!!
-        # you have to pick one.
-        self.xbuild_targets('bin-homebrew-ext', targets=['py', 'pyjs'])
+        self.xbuild_targets('bin-homebrew-ext', targets=['pyjs'])
         self.reset_prefix()
