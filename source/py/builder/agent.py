@@ -1,6 +1,6 @@
 """model: schema of builder
 
-Basically a simplified copy of the xcode model. The only difference is that I have
+Basically a simplified copy of the xcode model, with thhe difference that I have
 renamed `Target` as `Builder` and `Workspace` as `Recipe` since it
 makes more sense in this context.
 
@@ -16,13 +16,13 @@ makes more sense in this context.
                 Product
 
 """
+import logging
 import os
 import shutil
 from abc import ABC
 from pathlib import Path
-import logging
 from types import SimpleNamespace
-from typing import Type, List
+from typing import List, Type
 
 DEBUG = True
 if DEBUG:
@@ -31,6 +31,8 @@ else:
     LOG_LEVEL = logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 
+# ------------------------------------------------------------------------------
+# Model and Utility Classes
 
 class ShellCmd:
     """Provides platform agnostic file/folder handling."""
@@ -473,6 +475,9 @@ class BaseBuilder(Builder):
         """post-build operations"""
 
 
+# ------------------------------------------------------------------------------
+# Implementation Classes
+
 class Bzip2Product(Product):
     """Bzip2 product"""
 
@@ -542,3 +547,4 @@ class XzBuilder(BaseBuilder):
             )
             self.cmd("make && make install")
             self.cmd.chdir(self.project.root)
+
