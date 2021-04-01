@@ -235,7 +235,7 @@ class Builder(ABC):
 
     product_class: Type[Product]
     project_class: Type[Project]
-    dependencies: List[Type['Builder']]
+    dependencies: List[Type["Builder"]]
 
     def __init__(
         self,
@@ -247,7 +247,8 @@ class Builder(ABC):
         self.product = product or self.product_class()
         self.project = project or self.project_class()
         self.depends_on = depends_on or [
-            klass(project=self.project) for klass in self.dependencies]
+            klass(project=self.project) for klass in self.dependencies
+        ]
         self.settings = Settings(**settings)
         self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
@@ -359,12 +360,13 @@ class BuilderRecipe(ABC):
 class BaseProject(Project):
     """Project to build Python from source with different variations."""
 
-    root = Path.cwd()
+    # python-naming
+    py_version = platform.python_version()
+    py_ver = ".".join(py_version.split(".")[:2])
+    py_name = f"python{py_ver}"
 
-    # project
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-    externals = pyjs / "externals"
+    # current working directory
+    root = Path.cwd()
 
     # project-build section
     scripts = root / "scripts"
@@ -375,15 +377,41 @@ class BaseProject(Project):
     src = build / "src"
     lib = build / "lib"
 
+    # project
+    pyjs = root.parent.parent
+    support = pyjs / "support"
+    externals = pyjs / "externals"
+
+    py_external = externals / "py.mxo"
+    pyjs_external = externals / "pyjs.mxo"
+
+    dylib = f"libpython_{py_ver}.dylib"
+
+    # environmental vars
+    HOME = os.getenv("HOME")
+    package_name = "py"
+    package = f"{HOME}/Documents/Max 8/Packages/{package_name}"
+    package_dirs = [
+        "docs",
+        "examples",
+        "externals",
+        "help",
+        "init",
+        "javascript",
+        "jsextensions",
+        "media",
+        "patchers",
+    ]
+
     # settings
     mac_dep_target = "10.14"
 
 
 class BaseBuilder(Builder):
     """Abstract class to provide builder interface and common features."""
-    project_class: Type[BaseProject]
-    dependencies: List[Type['BaseBuilder']]
 
+    project_class: Type[BaseProject]
+    dependencies: List[Type["BaseBuilder"]]
 
     # mac_dep_target = '10.14'
 
@@ -397,7 +425,8 @@ class BaseBuilder(Builder):
         self.product = product or self.product_class()
         self.project = project or self.project_class()
         self.depends_on = depends_on or [
-            klass(project=self.project) for klass in self.dependencies]
+            klass(project=self.project) for klass in self.dependencies
+        ]
         self.settings = Settings(**settings)
         self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
@@ -486,6 +515,14 @@ class BaseBuilder(Builder):
     def post_process(self):
         """post-build operations"""
 
+    def deploy(self):
+        """deploy to package"""
+        self.cmd(f"mkdir -p {self.project.package}")
+        for subdir in self.project.package_dirs:
+            self.cmd(
+                f"rsync -a --delete {self.project.pyjs}/{subdir} {self.project.package}"
+            )
+
 
 # ------------------------------------------------------------------------------
 # Implementation Classes
@@ -564,6 +601,7 @@ class XzBuilder(BaseBuilder):
 
 class PythonProject(BaseProject):
     """generic python project"""
+
     builder_classes = []
 
 
@@ -891,6 +929,7 @@ class FrameworkPythonProduct(Product):
 
 class FrameworkPythonBuilder(PythonSrcBuilder):
     """builds python in a macos framework format."""
+
     product_class = FrameworkPythonProduct
     setup_local = "setup-shared.local"
 
@@ -938,6 +977,7 @@ class SharedPythonProduct(Product):
 
 class SharedPythonBuilder(PythonSrcBuilder):
     """builds python in a shared format."""
+
     product_class = SharedPythonProduct
     setup_local = "setup-shared.local"
 
@@ -979,6 +1019,7 @@ class StaticPythonProduct(Product):
 
 class StaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
+
     product_class = StaticPythonProduct
     project_class = PythonProject
     setup_local = "setup-static-min3.local"
@@ -1015,3 +1056,232 @@ class StaticPythonBuilder(PythonSrcBuilder):
     #     self.clean()
     #     self.ziplib()
     # self.static_lib.rename(self.prefix / self.library)
+
+
+class PyJsProduct(Product):
+    default_name = "Python"
+    default_version = PYTHON_VERSION_STRING
+    url_template = ""
+
+
+class PyJsProject(PythonProject):
+    """base pyjs project class"""
+
+    builder_classes = []
+
+    root = Path.cwd()
+    pyjs = root.parent.parent
+    support = pyjs / "support"
+
+    py_version = PYTHON_VERSION_STRING
+    py_ver = ".".join(py_version.split(".")[:2])
+    py_name = f"python{py_ver}"
+
+    prefix = support / py_name
+    bin = prefix / "bin"
+    lib = prefix / "lib" / py_name
+
+    homebrew = (
+        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
+    )
+
+    homebrew_pkgs = homebrew / "lib" / py_name
+
+
+class PyJsBuilder(PythonBuilder):
+    project_class: Type[PyJsProject]
+    dependencies: List[Type["BaseBuilder"]]
+
+    def __init__(
+        self,
+        product: PyJsProduct = None,
+        project: PyJsProject = None,
+        depends_on: list["BaseBuilder"] = None,
+        **settings,
+    ):
+        self.product = product or self.product_class()
+        self.project = project or self.project_class()
+        self.depends_on = depends_on or [
+            klass(project=self.project) for klass in self.dependencies
+        ]
+        self.settings = Settings(**settings)
+        self.log = logging.getLogger(self.__class__.__name__)
+        self.cmd = ShellCmd(self.log)
+
+
+class HomebrewBuilder(PyJsBuilder):
+    product_class = PyJsProduct
+    project_class = PyJsProject
+    dependencies = []
+    suffix = ""
+    setup_local = None
+    patch = None
+
+    @property
+    def prefix(self):
+        """compiled product destination root directory."""
+        return self.project.prefix
+
+    # @property
+    # def python_lib(self):
+    #     """python/lib/product.major.minor: python/lib/python3.9"""
+    #     return self.prefix / 'lib' / self.name_ver
+
+    def cp_pkgs(self, pkgs):
+        for pkg in pkgs:
+            # self.log("copying %s", pkg)
+            self.cmd(
+                f"cp -rf {self.project.homebrew_pkgs}/{pkg} {self.project.lib}/{pkg}"
+            )
+
+    def rm_libs(self, names):
+        """remove all named python dylib libraries"""
+        for name in names:
+            self.cmd.remove(self.python_lib / name)
+
+    def remove_extensions(self):
+        """remove extensions: not implemented"""
+
+    def clean_python(self):
+        """clean everything."""
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        # self.clean_python_site_packages()
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+            self.cmd.remove(i)
+        # self.remove(self.prefix_lib / 'pkgconfig')
+        # self.remove(self.prefix / 'share')
+
+        self.remove_packages()
+        self.remove_extensions()
+        # self.remove_binaries()
+
+    # def fix_python_exec(self):
+    #     self.chdir(self.project.bin)
+    #     self.cmd(f'install_name_tool -change {self.project.homebrew}/Python'
+    #              f' @executable_path/../{self.dylib} {self.project.name}')
+    #     self.chdir(self.project.root)
+
+    def fix_python_dylib_for_pkg(self):
+        self.cmd.chdir(self.project.prefix)
+        self.cmd.chmod(self.product.dylib)
+        # assumes python in installed in $PREFIX
+        self.install_name_tool(
+            f"@loader_path/../../../../support/{self.project.name}/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+    # def fix_python_dylib_for_ext_executable(self):
+    #     self.chdir(self.project.prefix)
+    #     self.chmod(self.dylib)
+    #     # assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
+    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
+    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS')
+    #     self.chdir(self.project.root)
+
+    # def fix_python_dylib_for_ext_executable_name(self):
+    #     self.chdir(self.prefix)
+    #     self.chmod(self.dylib)
+    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
+    #     self.cmd(f'mkdir -p {self.project.py_external}/Contents/MacOS/{self.project.name}')
+    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS/{self.project.name}')
+    #     self.chdir(self.project.root)
+
+    def fix_python_dylib_for_ext_resources(self):
+        self.cmd.chdir(self.prefix)
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool(
+            f"@loader_path/../Resources/{self.project.name}/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+    def cp_python_to_ext_resources(self, arg):
+        self.cmd(f"mkdir -p {arg}/Contents/Resources/{self.project.name}")
+        self.cmd(f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.project.name}")
+
+    def copy_python(self):
+        self.cmd(f"mkdir -p {self.project.lib}")
+        self.cmd(f"mkdir -p {self.project.bin}")
+        self.cmd(
+            f"cp {self.project.homebrew}/Python {self.prefix}/{self.product.dylib}"
+        )
+        self.cmd(f"cp -rf {self.project.homebrew_pkgs}/*.py {self.project.lib}")
+        # from IPython import embed; embed(colors="neutral")
+        self.cp_pkgs(
+            [
+                "asyncio",
+                "collections",
+                "concurrent",
+                # 'ctypes',
+                # 'curses',
+                "dbm",
+                "distutils",
+                "email",
+                "encodings",
+                "html",
+                "http",
+                "importlib",
+                "json",
+                "lib-dynload",
+                "logging",
+                "multiprocessing",
+                "pydoc_data",
+                "sqlite3",
+                "unittest",
+                "urllib",
+                "wsgiref",
+                "xml",
+                "xmlrpc",
+            ]
+        )
+        self.cmd(f"cp -rf {self.project.homebrew}/include {self.prefix}/include")
+        self.cmd(f"rm -rf {self.project.prefix}/lib/{self.product.dylib}")
+        self.cmd(f"rm -rf {self.project.prefix}/lib/pkgconfig")
+        self.cmd(
+            f"cp -rf {self.project.homebrew}/Resources/Python.app/Contents/MacOS/Python"
+            f" {self.project.bin}/{self.project.name}"
+        )
+        self.clean_python()
+        self.ziplib()
+
+    def install_homebrew_sys(self):
+        self.reset_prefix()
+        self.xbuild_targets("bin-homebrew-sys", targets=["py", "pyjs"])
+
+    def install_homebrew_pkg(self):
+        self.reset_prefix()
+        self.copy_python()
+        self.fix_python_dylib_for_pkg()
+        self.xbuild_targets("bin-homebrew-pkg", targets=["py", "pyjs"])
+        # MISSING: copy package to $HOME/Max 8/Packages/py
+
+    # def install_homebrew_ext(self):
+    #     self.reset_prefix()
+    #     self.copy_python()
+    #     # fix_python_dylib_for_ext
+    #     # fix_python_dylib_for_ext_executable_name
+    #     self.fix_python_dylib_for_ext_resources()
+    #     self.cp_python_to_ext_resources(self.project.py_external)
+    #     self.cp_python_to_ext_resources(self.project.pyjs_external)
+    #     # FIXME: for some reason both don't work at the same time!!!
+    #     # you have to pick one.
+    #     self.xbuild_targets('bin-homebrew-ext', targets=['py', 'pyjs'])
+    #     self.reset_prefix()
+
+    def install_homebrew_ext_py(self):
+        self.reset_prefix()
+        self.copy_python()
+        self.fix_python_dylib_for_ext_resources()
+        self.cp_python_to_ext_resources(self.project.py_external)
+        self.xbuild_targets("bin-homebrew-ext", targets=["py"])
+        self.reset_prefix()
+
+    def install_homebrew_ext_pyjs(self):
+        self.reset_prefix()
+        self.copy_python()
+        self.fix_python_dylib_for_ext_resources()
+        self.cp_python_to_ext_resources(self.project.pyjs_external)
+        self.xbuild_targets("bin-homebrew-ext", targets=["pyjs"])
+        self.reset_prefix()
