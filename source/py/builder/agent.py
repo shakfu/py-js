@@ -31,6 +31,8 @@ LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 PYTHON_VERSION_STRING = platform.python_version()
 
+logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+
 # ------------------------------------------------------------------------------
 # Utility Classes
 
@@ -413,8 +415,6 @@ class BaseBuilder(Builder):
     project_class: Type[BaseProject]
     dependencies: List[Type["BaseBuilder"]]
 
-    # mac_dep_target = '10.14'
-
     def __init__(
         self,
         product: Product = None,
@@ -422,15 +422,27 @@ class BaseBuilder(Builder):
         depends_on: list["BaseBuilder"] = None,
         **settings,
     ):
-        self.product = product or self.product_class()
         self.project = project or self.project_class()
         self.depends_on = depends_on or [
             klass(project=self.project) for klass in self.dependencies
         ]
-        self.settings = Settings(**settings)
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.cmd = ShellCmd(self.log)
+        super().__init__(product, None, None, **settings)
 
+    # def __init__(
+    #     self,
+    #     product: Product = None,
+    #     project: "BaseProject" = None,
+    #     depends_on: list["BaseBuilder"] = None,
+    #     **settings,
+    # ):
+    #     self.product = product or self.product_class()
+    #     self.project = project or self.project_class()
+    #     self.depends_on = depends_on or [
+    #         klass(project=self.project) for klass in self.dependencies
+    #     ]
+    #     self.settings = Settings(**settings)
+    #     self.log = logging.getLogger(self.__class__.__name__)
+    #     self.cmd = ShellCmd(self.log)
     # -------------------------------------------------------------------------
     # Path Methods
 
@@ -1059,13 +1071,15 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
 
 class PyJsProduct(Product):
+    """pyjs concrete base product class"""
+
     default_name = "Python"
     default_version = PYTHON_VERSION_STRING
     url_template = ""
 
 
 class PyJsProject(PythonProject):
-    """base pyjs project class"""
+    """pyjs concrete base project class"""
 
     builder_classes = []
 
@@ -1089,6 +1103,8 @@ class PyJsProject(PythonProject):
 
 
 class PyJsBuilder(PythonBuilder):
+    """pyjs concrete base class"""
+
     project_class: Type[PyJsProject]
     dependencies: List[Type["BaseBuilder"]]
 
@@ -1101,15 +1117,28 @@ class PyJsBuilder(PythonBuilder):
     ):
         self.product = product or self.product_class()
         self.project = project or self.project_class()
-        self.depends_on = depends_on or [
-            klass(project=self.project) for klass in self.dependencies
-        ]
-        self.settings = Settings(**settings)
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.cmd = ShellCmd(self.log)
+        super().__init__(None, None, depends_on, **settings)
+
+    # def __init__(
+    #     self,
+    #     product: PyJsProduct = None,
+    #     project: PyJsProject = None,
+    #     depends_on: list["BaseBuilder"] = None,
+    #     **settings,
+    # ):
+    #     self.product = product or self.product_class()
+    #     self.project = project or self.project_class()
+    #     self.depends_on = depends_on or [
+    #         klass(project=self.project) for klass in self.dependencies
+    #     ]
+    #     self.settings = Settings(**settings)
+    #     self.log = logging.getLogger(self.__class__.__name__)
+    #     self.cmd = ShellCmd(self.log)
 
 
 class HomebrewBuilder(PyJsBuilder):
+    """homebrew python builder"""
+
     product_class = PyJsProduct
     project_class = PyJsProject
     dependencies = []
@@ -1128,6 +1157,7 @@ class HomebrewBuilder(PyJsBuilder):
     #     return self.prefix / 'lib' / self.name_ver
 
     def cp_pkgs(self, pkgs):
+        """copy package dirs from homebrew pkg folder to destination pkg folder"""
         for pkg in pkgs:
             # self.log("copying %s", pkg)
             self.cmd(
@@ -1163,6 +1193,7 @@ class HomebrewBuilder(PyJsBuilder):
     #     self.chdir(self.project.root)
 
     def fix_python_dylib_for_pkg(self):
+        """change dylib ref to point to loader in a package build format"""
         self.cmd.chdir(self.project.prefix)
         self.cmd.chmod(self.product.dylib)
         # assumes python in installed in $PREFIX
@@ -1189,6 +1220,7 @@ class HomebrewBuilder(PyJsBuilder):
     #     self.chdir(self.project.root)
 
     def fix_python_dylib_for_ext_resources(self):
+        """change dylib ref to point to loader in the pure external build format"""
         self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(
@@ -1198,10 +1230,12 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd.chdir(self.project.root)
 
     def cp_python_to_ext_resources(self, arg):
+        """copy processed python libs to bundle resources directory"""
         self.cmd(f"mkdir -p {arg}/Contents/Resources/{self.project.name}")
         self.cmd(f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.project.name}")
 
     def copy_python(self):
+        """copy python from homebrew to destination"""
         self.cmd(f"mkdir -p {self.project.lib}")
         self.cmd(f"mkdir -p {self.project.bin}")
         self.cmd(
@@ -1247,10 +1281,12 @@ class HomebrewBuilder(PyJsBuilder):
         self.ziplib()
 
     def install_homebrew_sys(self):
+        """build externals use local homebrew python (non-portable)"""
         self.reset_prefix()
         self.xbuild_targets("bin-homebrew-sys", targets=["py", "pyjs"])
 
     def install_homebrew_pkg(self):
+        """build externals into package use local homebrew python (portable)"""
         self.reset_prefix()
         self.copy_python()
         self.fix_python_dylib_for_pkg()
@@ -1271,6 +1307,7 @@ class HomebrewBuilder(PyJsBuilder):
     #     self.reset_prefix()
 
     def install_homebrew_ext_py(self):
+        """build external into self-contained external using local homebrew python (portable)"""
         self.reset_prefix()
         self.copy_python()
         self.fix_python_dylib_for_ext_resources()
@@ -1279,6 +1316,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.reset_prefix()
 
     def install_homebrew_ext_pyjs(self):
+        """build external into self-contained external using local homebrew python (portable)"""
         self.reset_prefix()
         self.copy_python()
         self.fix_python_dylib_for_ext_resources()
