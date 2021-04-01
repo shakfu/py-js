@@ -16,6 +16,7 @@ makes more sense in this context.
                 Product
 
 """
+
 import logging
 import os
 import shutil
@@ -26,15 +27,12 @@ from types import SimpleNamespace
 from typing import List, Type
 
 DEBUG = True
-if DEBUG:
-    LOG_LEVEL = logging.DEBUG
-else:
-    LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 PYTHON_VERSION_STRING = platform.python_version()
 
 # ------------------------------------------------------------------------------
-# Model and Utility Classes
+# Utility Classes
 
 
 class ShellCmd:
@@ -104,6 +102,10 @@ class Settings(SimpleNamespace):
             self.__dict__.update(other.__dict__)
         else:
             raise TypeError
+
+
+# ------------------------------------------------------------------------------
+# Abstract Classes
 
 
 class Product(ABC):
@@ -210,11 +212,10 @@ class Project(ABC):
 
     def __init__(self, name: str = None, builders: list["Builder"] = None, **settings):
         self.name = name
-        self.builders = (
-            builders
-            if builders
-            else [builder_class(project=self) for builder_class in self.builder_classes]
-        )
+        self.builders = builders or [
+            builder_class(project=self) for builder_class in self.builder_classes
+        ]
+
         self.settings = Settings(**settings)
 
     def __str__(self):
@@ -234,6 +235,7 @@ class Builder(ABC):
 
     product_class: Type[Product]
     project_class: Type[Project]
+    dependencies: List[Type['Builder']]
 
     def __init__(
         self,
@@ -242,9 +244,10 @@ class Builder(ABC):
         depends_on: list["Builder"] = None,
         **settings,
     ):
-        self.product = product if product else self.product_class()
-        self.project = project if project else self.project_class()
-        self.depends_on = depends_on or []
+        self.product = product or self.product_class()
+        self.project = project or self.project_class()
+        self.depends_on = depends_on or [
+            klass(project=self.project) for klass in self.dependencies]
         self.settings = Settings(**settings)
         self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
@@ -312,11 +315,9 @@ class ProjectRecipe(ABC):
     def __init__(self, name: str = None, projects: list[Project] = None, **settings):
         self.name = name
         self.settings = Settings(**settings)
-        self.projects = (
-            projects
-            if projects
-            else [project_class() for project_class in self.project_classes]
-        )
+        self.projects = projects or [
+            project_class() for project_class in self.project_classes
+        ]
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -351,6 +352,10 @@ class BuilderRecipe(ABC):
             builder.build()
 
 
+# ------------------------------------------------------------------------------
+# Concrete Base Classes
+
+
 class BaseProject(Project):
     """Project to build Python from source with different variations."""
 
@@ -376,6 +381,9 @@ class BaseProject(Project):
 
 class BaseBuilder(Builder):
     """Abstract class to provide builder interface and common features."""
+    project_class: Type[BaseProject]
+    dependencies: List[Type['BaseBuilder']]
+
 
     # mac_dep_target = '10.14'
 
@@ -386,10 +394,10 @@ class BaseBuilder(Builder):
         depends_on: list["BaseBuilder"] = None,
         **settings,
     ):
-        # super(BaseBuilder, self).__init__(product, None, None, **settings)
-        self.product = product if product else self.product_class()
-        self.project = project
-        self.depends_on = depends_on or []
+        self.product = product or self.product_class()
+        self.project = project or self.project_class()
+        self.depends_on = depends_on or [
+            klass(project=self.project) for klass in self.dependencies]
         self.settings = Settings(**settings)
         self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
@@ -496,7 +504,7 @@ class Bzip2Builder(BaseBuilder):
     """Bzip2 static library builder"""
 
     product_class = Bzip2Product
-    depends_on = []
+    dependencies = []
 
     def build(self):
         if not self.product.has_static_libs:
@@ -518,7 +526,7 @@ class OpensslBuilder(BaseBuilder):
     """OpenSSL static library builder"""
 
     product_class = OpensslProduct
-    depends_on = []
+    dependencies = []
 
     def build(self):
         if not self.product.has_static_libs:
@@ -541,7 +549,7 @@ class XzBuilder(BaseBuilder):
     """Xz static library builder"""
 
     product_class = XzBuilderProduct
-    depends_on = []
+    dependencies = []
 
     def build(self):
         if not self.product.has_static_libs:
@@ -556,22 +564,13 @@ class XzBuilder(BaseBuilder):
 
 class PythonProject(BaseProject):
     """generic python project"""
-
-
-class StaticPythonProduct(Product):
-    """static python product"""
-
-    default_name = "static_python"
-    default_version = PYTHON_VERSION_STRING
-    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
-    libs_static = ["libpython3.9.a"]
+    builder_classes = []
 
 
 class PythonBuilder(BaseBuilder):
     """Generic Python from src builder."""
 
     project_class = PythonProject
-    depends_on = []
     # setup_local = None
     # patch = None
 
@@ -806,6 +805,7 @@ class PythonBuilder(BaseBuilder):
         self.site_packages.mkdir()
 
     def fix_python_dylib_for_pkg(self):
+        """redirect ref of dylib to loader in a package deployment."""
         self.cmd.chdir(self.prefix_lib)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(
@@ -815,6 +815,7 @@ class PythonBuilder(BaseBuilder):
         self.cmd.chdir(self.project.root)
 
     def fix_python_dylib_for_ext(self):
+        """redirect ref of dylib to loader in a self-contained external deployment."""
         self.cmd.chdir(self.prefix_lib)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(f"@loader_path/{self.product.dylib}", self.product.dylib)
@@ -827,7 +828,7 @@ class PythonSrcBuilder(PythonBuilder):
     project_class = PythonProject
     version = PYTHON_VERSION_STRING
     url_template = "https://www.python.org/ftp/python/{version}/{name}-{version}.tgz"
-    depends_on = [Bzip2Builder, OpensslBuilder, XzBuilder]
+    dependencies = [Bzip2Builder, OpensslBuilder, XzBuilder]
     setup_local = ""
     patch = None
 
@@ -879,7 +880,18 @@ class PythonSrcBuilder(PythonBuilder):
         self.post_process()
 
 
+class FrameworkPythonProduct(Product):
+    """framework python product"""
+
+    default_name = "framework-python"
+    default_version = PYTHON_VERSION_STRING
+    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
+    libs_static = ["libpython3.9.a"]
+
+
 class FrameworkPythonBuilder(PythonSrcBuilder):
+    """builds python in a macos framework format."""
+    product_class = FrameworkPythonProduct
     setup_local = "setup-shared.local"
 
     @property
@@ -915,7 +927,18 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
     #     self.ziplib()
 
 
+class SharedPythonProduct(Product):
+    """shared python product"""
+
+    default_name = "shared-python"
+    default_version = PYTHON_VERSION_STRING
+    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
+    libs_static = ["libpython3.9.a"]
+
+
 class SharedPythonBuilder(PythonSrcBuilder):
+    """builds python in a shared format."""
+    product_class = SharedPythonProduct
     setup_local = "setup-shared.local"
 
     @property
@@ -945,7 +968,19 @@ class SharedPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.project.root)
 
 
+class StaticPythonProduct(Product):
+    """static python product"""
+
+    default_name = "static-python"
+    default_version = PYTHON_VERSION_STRING
+    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
+    libs_static = ["libpython3.9.a"]
+
+
 class StaticPythonBuilder(PythonSrcBuilder):
+    """builds python in a static format."""
+    product_class = StaticPythonProduct
+    project_class = PythonProject
     setup_local = "setup-static-min3.local"
     patch = "makesetup.patch"
 
