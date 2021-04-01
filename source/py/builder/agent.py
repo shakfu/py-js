@@ -31,9 +31,11 @@ if DEBUG:
 else:
     LOG_LEVEL = logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
+PYTHON_VERSION_STRING = platform.python_version()
 
 # ------------------------------------------------------------------------------
 # Model and Utility Classes
+
 
 class ShellCmd:
     """Provides platform agnostic file/folder handling."""
@@ -480,6 +482,7 @@ class BaseBuilder(Builder):
 # ------------------------------------------------------------------------------
 # Implementation Classes
 
+
 class Bzip2Product(Product):
     """Bzip2 product"""
 
@@ -554,19 +557,21 @@ class XzBuilder(BaseBuilder):
 class PythonProject(BaseProject):
     """generic python project"""
 
+
 class StaticPythonProduct(Product):
     """static python product"""
 
     default_name = "static_python"
-    default_version = platform.python_version()
+    default_version = PYTHON_VERSION_STRING
     url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
     libs_static = ["libpython3.9.a"]
 
 
 class PythonBuilder(BaseBuilder):
     """Generic Python from src builder."""
+
     project_class = PythonProject
-    depends_on = [Bzip2Builder, OpensslBuilder, XzBuilder]
+    depends_on = []
     # setup_local = None
     # patch = None
 
@@ -576,7 +581,7 @@ class PythonBuilder(BaseBuilder):
     @property
     def static_lib(self):
         """Name of static library: libpython.3.9.a"""
-        return f'lib{self.product.name.lower()}{self.product.ver}.a'  # pylint: disable=E1101
+        return f"lib{self.product.name.lower()}{self.product.ver}.a"  # pylint: disable=E1101
 
     @property
     def python_lib(self):
@@ -586,12 +591,12 @@ class PythonBuilder(BaseBuilder):
     @property
     def site_packages(self):
         """path to 'site-packages'"""
-        return self.python_lib / 'site-packages'
+        return self.python_lib / "site-packages"
 
     @property
     def lib_dynload(self):
         """path to 'lib-dynload'"""
-        return self.python_lib / 'lib-dynload'
+        return self.python_lib / "lib-dynload"
 
     # ------------------------------------------------------------------------
     # src-level operations
@@ -644,9 +649,12 @@ class PythonBuilder(BaseBuilder):
 
     def is_valid_path(self, dep_path):
         """check if dependency path is a valid path."""
-        return (dep_path == '' or dep_path.startswith('/opt/local/')
-                or dep_path.startswith('/usr/local/')
-                or dep_path.startswith('/User/'))
+        return (
+            dep_path == ""
+            or dep_path.startswith("/opt/local/")
+            or dep_path.startswith("/usr/local/")
+            or dep_path.startswith("/User/")
+        )
 
     # def get_deps(self, target):
     #     """get dependencies of dylibs.
@@ -694,8 +702,11 @@ class PythonBuilder(BaseBuilder):
     def rm_exts(self, names):
         """remove all named extensions"""
         for name in names:
-            self.cmd.remove(self.python_lib / 'lib-dynload' /
-                        f'{name}.cpython-{self.product.ver_nodot}-darwin.so')
+            self.cmd.remove(
+                self.python_lib
+                / "lib-dynload"
+                / f"{name}.cpython-{self.product.ver_nodot}-darwin.so"
+            )
 
     def rm_bins(self, names):
         """remove all named binary executables"""
@@ -704,55 +715,61 @@ class PythonBuilder(BaseBuilder):
 
     def clean_python_site_packages(self):
         """remove python site-packages"""
-        self.cmd.remove(self.python_lib / 'site-packages')
+        self.cmd.remove(self.python_lib / "site-packages")
 
     def remove_packages(self):
         """remove list of non-critical packages"""
-        self.rm_libs([
-            f'config-{self.product.ver}-darwin',
-            'idlelib',
-            'lib2to3',
-            'tkinter',
-            'turtledemo',
-            'turtle.py',
-            'ctypes',
-            'curses',
-            'ensurepip',
-            'venv',
-        ])
+        self.rm_libs(
+            [
+                f"config-{self.product.ver}-darwin",
+                "idlelib",
+                "lib2to3",
+                "tkinter",
+                "turtledemo",
+                "turtle.py",
+                "ctypes",
+                "curses",
+                "ensurepip",
+                "venv",
+            ]
+        )
 
     # def remove_extensions(self):
     #     """remove extensions: not implemented"""
 
     def remove_extensions(self):
         """remove extensions"""
-        self.rm_exts([
-            '_tkinter',
-            '_ctypes',
-            '_multibytecodec',
-            '_codecs_jp',
-            '_codecs_hk',
-            '_codecs_cn',
-            '_codecs_kr',
-            '_codecs_tw',
-            '_codecs_iso2022',
-            '_curses',
-            '_curses_panel',
-        ])
+        self.rm_exts(
+            [
+                "_tkinter",
+                "_ctypes",
+                "_multibytecodec",
+                "_codecs_jp",
+                "_codecs_hk",
+                "_codecs_cn",
+                "_codecs_kr",
+                "_codecs_tw",
+                "_codecs_iso2022",
+                "_curses",
+                "_curses_panel",
+            ]
+        )
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
         ver = self.product.ver
-        self.rm_bins([
-            f'2to3-{ver}',
-            f'idle{ver}',
-            f'easy_install-{ver}',
-            f'pip{ver}',
-            f'pyvenv-{ver}',
-            f'pydoc{ver}',
-            # f'python{self.ver}{self.suffix}',
-            # f'python{self.ver}-config',
-        ])
+        self.rm_bins(
+            [
+                f"2to3-{ver}",
+                f"idle{ver}",
+                f"easy_install-{ver}",
+                f"pip{ver}",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+                # f'python{self.ver}{self.suffix}',
+                # f'python{self.ver}-config',
+            ]
+        )
 
     def clean(self):
         """clean everything."""
@@ -760,11 +777,11 @@ class PythonBuilder(BaseBuilder):
         self.clean_python_tests(self.python_lib)
         self.clean_python_site_packages()
 
-        for i in (self.python_lib / 'distutils' / 'command').glob('*.exe'):
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
             self.cmd.remove(i)
 
-        self.cmd.remove(self.prefix_lib / 'pkgconfig')
-        self.cmd.remove(self.prefix / 'share')
+        self.cmd.remove(self.prefix_lib / "pkgconfig")
+        self.cmd.remove(self.prefix / "share")
 
         self.remove_packages()
         self.remove_extensions()
@@ -772,32 +789,194 @@ class PythonBuilder(BaseBuilder):
 
     def ziplib(self):
         """zip python package in site-packages in .zip archive"""
-        temp_lib_dynload = self.prefix_lib / 'lib-dynload'
-        temp_os_py = self.prefix_lib / 'os.py'
+        temp_lib_dynload = self.prefix_lib / "lib-dynload"
+        temp_os_py = self.prefix_lib / "os.py"
 
         self.cmd.remove(self.site_packages)
         self.lib_dynload.rename(temp_lib_dynload)
-        self.cmd.copyfile(self.python_lib / 'os.py', temp_os_py)
+        self.cmd.copyfile(self.python_lib / "os.py", temp_os_py)
 
-        zip_path = self.prefix_lib / f'python{self.product.ver_nodot}'
-        shutil.make_archive(str(zip_path), 'zip', str(self.python_lib))
+        zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
+        shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
 
         self.cmd.remove(self.python_lib)
         self.python_lib.mkdir()
         temp_lib_dynload.rename(self.lib_dynload)
-        temp_os_py.rename(self.python_lib / 'os.py')
+        temp_os_py.rename(self.python_lib / "os.py")
         self.site_packages.mkdir()
 
     def fix_python_dylib_for_pkg(self):
         self.cmd.chdir(self.prefix_lib)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(
-            f'@loader_path/../../../../support/{self.product.name}/lib/{self.product.dylib}',
-            self.product.dylib)
+            f"@loader_path/../../../../support/{self.product.name}/lib/{self.product.dylib}",
+            self.product.dylib,
+        )
         self.cmd.chdir(self.project.root)
 
     def fix_python_dylib_for_ext(self):
         self.cmd.chdir(self.prefix_lib)
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool(f'@loader_path/{self.product.dylib}', self.product.dylib)
+        self.install_name_tool(f"@loader_path/{self.product.dylib}", self.product.dylib)
         self.cmd.chdir(self.project.root)
+
+
+class PythonSrcBuilder(PythonBuilder):
+    """Generic Python from src builder."""
+
+    project_class = PythonProject
+    version = PYTHON_VERSION_STRING
+    url_template = "https://www.python.org/ftp/python/{version}/{name}-{version}.tgz"
+    depends_on = [Bzip2Builder, OpensslBuilder, XzBuilder]
+    setup_local = ""
+    patch = None
+
+    # ------------------------------------------------------------------------
+    # python properties
+
+    # ------------------------------------------------------------------------
+    # src-level operations
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        # self.apply_patch()
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        # self.fix()
+        # self.sign()
+
+    def write_setup_local(self, setup_local=None):
+        """Write to Setup.local file for cusom compilations of python builtins."""
+        if not any([setup_local, self.setup_local]):
+            return
+        if not setup_local:
+            setup_local = self.setup_local
+        self.cmd.copyfile(
+            self.project.patch / self.product.ver / setup_local,
+            self.src_path / "Modules" / "Setup.local",
+        )
+
+    def apply_patch(self, patch=None):
+        """Apply a standard patch from the patch directory (prefixed by major.minor ver)"""
+        if not any([patch, self.patch]):
+            return
+        if not patch:
+            patch = self.patch
+        self.cmd(f"patch -p1 < {self.project.patch}/{self.product.ver}/{patch}")
+
+    def install(self):
+        """install compilation product into lib"""
+        self.reset()
+        self.download()
+        self.pre_process()
+        self.build()
+        self.post_process()
+
+
+class FrameworkPythonBuilder(PythonSrcBuilder):
+    setup_local = "setup-shared.local"
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.lib / "Python.framework" / "Versions" / self.product.ver
+
+    def reset(self):
+        self.cmd.remove(self.src_path)
+        self.cmd.remove(self.project.lib / "Python.framework")
+
+    def build(self):
+        for dep in self.depends_on:
+            dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+            --enable-framework={self.project.lib} \
+            --with-openssl={self.project.lib / 'openssl'} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
+            --with-lto \
+            --enable-optimizations
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+    # def post_process(self):
+    #     self.clean()
+    #     self.ziplib()
+
+
+class SharedPythonBuilder(PythonSrcBuilder):
+    setup_local = "setup-shared.local"
+
+    @property
+    def prefix(self) -> Path:
+        name = f"{self.product.name.lower()}-shared"  # pylint: disable=E1101
+        return self.project.lib / name
+
+    def build(self):
+        for dep in self.depends_on:
+            dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+            --prefix={self.prefix} \
+            --enable-shared \
+            --with-openssl={self.project.lib / 'openssl'} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
+            --with-lto \
+            --enable-optimizations
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+
+class StaticPythonBuilder(PythonSrcBuilder):
+    setup_local = "setup-static-min3.local"
+    patch = "makesetup.patch"
+
+    @property
+    def prefix(self) -> Path:
+        name = f"{self.product.name.lower()}-static"  # pylint: disable=E1101
+        return self.project.lib / name
+
+    def build(self):
+        for dep in self.depends_on:
+            dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+            --prefix={self.prefix} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
+            --with-lto \
+            --enable-optimizations
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+    def remove_extensions(self):
+        """remove extensions: not implemented"""
+
+    # def post_process(self):
+    #     self.clean()
+    #     self.ziplib()
+    # self.static_lib.rename(self.prefix / self.library)
