@@ -69,8 +69,6 @@ class Application(Commander):
             builder.clean()
         elif args.ziplib:
             builder.ziplib()
-        else:
-            pass
 
     def dispatch(self, builder_class, args):
         """generic argument dispatcher"""
