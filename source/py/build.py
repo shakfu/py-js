@@ -109,7 +109,7 @@ class Builder:
     targets = ["py", "pyjs"]
 
     def __init__(self, project=None, version=None, depends_on=None):
-        self.project = project if project else self.project_class()
+        self.project = project or self.project_class()
         self.version = version or self.version
         self.depends_on = depends_on or self.depends_on
         self.log = logging.getLogger(self.__class__.__name__)
@@ -719,7 +719,7 @@ class HomebrewBuilder(PythonBuilder):
     patch = None
 
     def __init__(self, project=None, version=None, depends_on=None):
-        self.project = project if project else self.project_class()
+        self.project = project or self.project_class()
         self.version = version or self.version
         self.depends_on = depends_on or self.depends_on
         self.log = logging.getLogger(self.__class__.__name__)

@@ -140,7 +140,7 @@ class Builder:
     def __init__(self, project=None, product=None):
         # domain data
         self.project = project
-        self.product = product if product else self.product_class(project)
+        self.product = product or self.product_class(project)
 
         # tools
         self.cmd = ShellCmd(self.log)

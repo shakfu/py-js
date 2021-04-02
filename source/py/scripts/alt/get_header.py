@@ -23,7 +23,7 @@ def read_file(path):
     return txt
 
 def remove_blanklines(txt):
-    return '\n'.join([l for l in txt.splitlines() if l])
+    return '\n'.join(l for l in txt.splitlines() if l)
 
 #----------------------------------------------------------------------
 ## main process pipeline

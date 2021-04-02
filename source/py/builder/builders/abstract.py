@@ -30,7 +30,7 @@ class Builder(ABC):
     mac_dep_target = '10.14'
 
     def __init__(self, project=None, version=None, depends_on=None):
-        self.project = project if project else self.project_class()
+        self.project = project or self.project_class()
         self.version = version or self.version
         self.depends_on = ([B(project) for B in depends_on] if depends_on else
                            [B(project) for B in self.depends_on])
@@ -43,8 +43,7 @@ class Builder(ABC):
     def __iter__(self):
         for dep in self.depends_on:
             yield dep
-            for subdep in iter(dep):
-                yield subdep
+            yield from iter(dep)
 
     # -------------------------------------------------------------------------
     # Name / Version Methods

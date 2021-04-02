@@ -106,10 +106,7 @@ class Product(ABC):
 
     @property
     def has_static_libs(self):
-        for lib in self.libs_static:
-            if not (self.prefix_lib / lib).exists():
-                return False
-        return True
+        return all((self.prefix_lib / lib).exists() for lib in self.libs_static)
 
 
 class Builder(ABC):
@@ -119,7 +116,7 @@ class Builder(ABC):
 
     def __init__(self, project=None, product=None):
         self.project = project
-        self.product = product if product else self.product_class(project)
+        self.product = product or self.product_class(project)
         self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
 
@@ -233,8 +230,7 @@ class Project(ABC):
     def __iter__(self):
         for dep in self.depends_on:
             yield dep
-            for subdep in iter(dep):
-                yield subdep
+            yield from iter(dep)
 
     def init_builders(self, builders):
         """Associate builders with parent project during initialization"""
