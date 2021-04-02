@@ -17,6 +17,7 @@ makes more sense in this context.
 
 """
 
+
 import logging
 import os
 import shutil
@@ -537,7 +538,10 @@ class BaseBuilder(Builder):
 
 
 # ------------------------------------------------------------------------------
-# Implementation Classes
+# IMPLEMENTATION
+
+# ------------------------------------------------------------------------------
+# Product Implementation Classes
 
 
 class Bzip2Product(Product):
@@ -547,6 +551,79 @@ class Bzip2Product(Product):
     default_version = "1.0.8"
     url_template = "https://sourceware.org/pub/bzip2/{name}-{version}.tar.gz"
     libs_static = ["libbz2.a"]
+
+
+class OpensslProduct(Product):
+    """OpenSSL product"""
+
+    default_name = "openssl"
+    default_version = "1.1.1g"
+    url_template = "https://www.openssl.org/source/{name}-{version}.tar.gz"
+    libs_static = ["libssl.a", "libcrypto.a"]
+
+
+class XzBuilderProduct(Product):
+    """Xz static product"""
+
+    default_name = "xz"
+    default_version = "5.2.5"
+    url_template = "http://tukaani.org/xz/{name}-{version}.tar.gz"
+    libs_static = ["libxz.a"]
+
+
+class PythonProduct(Product):
+    """framework python product"""
+
+    default_name = "Python"
+    default_version = PYTHON_VERSION_STRING
+    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
+    libs_static = ["libpython3.9.a"]
+
+
+class PyJsProduct(Product):
+    """pyjs concrete base product class"""
+
+    default_name = "Python"
+    default_version = PYTHON_VERSION_STRING
+    url_template = ""
+
+
+# ------------------------------------------------------------------------------
+# Project Implementation Classes
+
+
+class PythonProject(BaseProject):
+    """generic python project"""
+
+    builder_classes = []
+
+
+class PyJsProject(PythonProject):
+    """pyjs concrete base project class"""
+
+    builder_classes = []
+
+    root = Path.cwd()
+    pyjs = root.parent.parent
+    support = pyjs / "support"
+
+    py_version = PYTHON_VERSION_STRING
+    py_ver = ".".join(py_version.split(".")[:2])
+    py_name = f"python{py_ver}"
+
+    prefix = support / py_name
+    bin = prefix / "bin"
+    lib = prefix / "lib" / py_name
+
+    homebrew = (
+        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
+    )
+
+    homebrew_pkgs = homebrew / "lib" / py_name
+
+
+# ------------------------------------------------------------------------------
+# Builder Implementation Classes
 
 
 class Bzip2Builder(BaseBuilder):
@@ -562,15 +639,6 @@ class Bzip2Builder(BaseBuilder):
             self.cmd.chdir(self.project.root)
 
 
-class OpensslProduct(Product):
-    """OpenSSL product"""
-
-    default_name = "openssl"
-    default_version = "1.1.1g"
-    url_template = "https://www.openssl.org/source/{name}-{version}.tar.gz"
-    libs_static = ["libssl.a", "libcrypto.a"]
-
-
 class OpensslBuilder(BaseBuilder):
     """OpenSSL static library builder"""
 
@@ -583,15 +651,6 @@ class OpensslBuilder(BaseBuilder):
             self.cmd(f"./config no-shared no-tests --prefix={self.prefix}")
             self.cmd("make install_sw")
             self.cmd.chdir(self.project.root)
-
-
-class XzBuilderProduct(Product):
-    """Xz static product"""
-
-    default_name = "xz"
-    default_version = "5.2.5"
-    url_template = "http://tukaani.org/xz/{name}-{version}.tar.gz"
-    libs_static = ["libxz.a"]
 
 
 class XzBuilder(BaseBuilder):
@@ -609,12 +668,6 @@ class XzBuilder(BaseBuilder):
             )
             self.cmd("make && make install")
             self.cmd.chdir(self.project.root)
-
-
-class PythonProject(BaseProject):
-    """generic python project"""
-
-    builder_classes = []
 
 
 class PythonBuilder(BaseBuilder):
@@ -930,19 +983,10 @@ class PythonSrcBuilder(PythonBuilder):
         self.post_process()
 
 
-class FrameworkPythonProduct(Product):
-    """framework python product"""
-
-    default_name = "framework-python"
-    default_version = PYTHON_VERSION_STRING
-    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
-    libs_static = ["libpython3.9.a"]
-
-
 class FrameworkPythonBuilder(PythonSrcBuilder):
     """builds python in a macos framework format."""
 
-    product_class = FrameworkPythonProduct
+    product_class = PythonProduct
     setup_local = "setup-shared.local"
 
     @property
@@ -978,19 +1022,10 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
     #     self.ziplib()
 
 
-class SharedPythonProduct(Product):
-    """shared python product"""
-
-    default_name = "shared-python"
-    default_version = PYTHON_VERSION_STRING
-    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
-    libs_static = ["libpython3.9.a"]
-
-
 class SharedPythonBuilder(PythonSrcBuilder):
     """builds python in a shared format."""
 
-    product_class = SharedPythonProduct
+    product_class = PythonProduct
     setup_local = "setup-shared.local"
 
     @property
@@ -1020,19 +1055,10 @@ class SharedPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.project.root)
 
 
-class StaticPythonProduct(Product):
-    """static python product"""
-
-    default_name = "static-python"
-    default_version = PYTHON_VERSION_STRING
-    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
-    libs_static = ["libpython3.9.a"]
-
-
 class StaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
 
-    product_class = StaticPythonProduct
+    product_class = PythonProduct
     project_class = PythonProject
     setup_local = "setup-static-min3.local"
     patch = "makesetup.patch"
@@ -1068,38 +1094,6 @@ class StaticPythonBuilder(PythonSrcBuilder):
     #     self.clean()
     #     self.ziplib()
     # self.static_lib.rename(self.prefix / self.library)
-
-
-class PyJsProduct(Product):
-    """pyjs concrete base product class"""
-
-    default_name = "Python"
-    default_version = PYTHON_VERSION_STRING
-    url_template = ""
-
-
-class PyJsProject(PythonProject):
-    """pyjs concrete base project class"""
-
-    builder_classes = []
-
-    root = Path.cwd()
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-
-    py_version = PYTHON_VERSION_STRING
-    py_ver = ".".join(py_version.split(".")[:2])
-    py_name = f"python{py_ver}"
-
-    prefix = support / py_name
-    bin = prefix / "bin"
-    lib = prefix / "lib" / py_name
-
-    homebrew = (
-        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
-    )
-
-    homebrew_pkgs = homebrew / "lib" / py_name
 
 
 class PyJsBuilder(PythonBuilder):
