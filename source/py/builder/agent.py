@@ -27,7 +27,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import List, Type
 
-DEBUG = True
+DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 PYTHON_VERSION_STRING = platform.python_version()
@@ -630,6 +630,7 @@ class Bzip2Builder(BaseBuilder):
     """Bzip2 static library builder"""
 
     product_class = Bzip2Product
+    project_class = PythonProduct
     dependencies = []
 
     def build(self):
@@ -643,6 +644,7 @@ class OpensslBuilder(BaseBuilder):
     """OpenSSL static library builder"""
 
     product_class = OpensslProduct
+    project_class = PythonProduct
     dependencies = []
 
     def build(self):
@@ -657,6 +659,7 @@ class XzBuilder(BaseBuilder):
     """Xz static library builder"""
 
     product_class = XzBuilderProduct
+    project_class = PythonProduct
     dependencies = []
 
     def build(self):
