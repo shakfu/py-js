@@ -16,6 +16,9 @@ PYTHON_VERSION_STRING = platform.python_version()
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
+# ------------------------------------------------------------------------------------
+# Generic Classes
+
 
 class ShellCmd:
     """Provides platform agnostic file/folder handling."""
@@ -159,9 +162,19 @@ class Project:
 
 class Product:
     """A product of a builder."""
-    def __init__(self, name: str, version: str, **settings):
+
+    def __init__(
+        self,
+        name: str,
+        version: str,
+        libs_static: list[str] = None,
+        url_template: str = None,
+        **settings,
+    ):
         self.name = name
         self.version = version
+        self.libs_static = libs_static or []
+        self.url_template = url_template
         self.settings = Settings(**settings)
 
     def __str__(self):
@@ -200,8 +213,8 @@ class Product:
     @property
     def url(self) -> Path:
         """Returns url to download product src as a pathlib.Path instance."""
-        if url_template := self.settings.url_template:
-            return Path(url_template.format(name=self.name, version=self.version))
+        if self.url_template:
+            return Path(self.url_template.format(name=self.name, version=self.version))
         raise KeyError("url_template not providing in settings")
 
 
@@ -211,12 +224,12 @@ class Builder:
     def __init__(
         self,
         product: Product,
-        project: Project,
+        project: Project = None,
         depends_on: list["Builder"] = None,
         **settings,
     ):
         self.product = product
-        self.project = project
+        self.project = project or Project()
         self.depends_on = depends_on or []
         self.settings = Settings(**settings)
         self.log = logging.getLogger(self.__class__.__name__)
@@ -255,15 +268,18 @@ class Builder:
         """Return product source directory."""
         return self.project.src / self.product.name_version
 
-    @property
-    def lib_path(self) -> Path:
-        """alias to self.prefix"""
-        return self.prefix
+    # @property
+    # def lib_path(self) -> Path:
+    #     """alias to self.prefix"""
+    #     return self.prefix
 
     @property
     def url(self) -> Path:
         """Returns url to download product as a pathlib.Path instance."""
         return self.product.url
+
+    # -------------------------------------------------------------------------
+    # Core functions
 
     @property
     def has_static_libs(self) -> bool:
@@ -272,8 +288,41 @@ class Builder:
             return all((self.prefix_lib / lib).exists() for lib in libs)
         return False
 
+    def recursive_clean(self, path, pattern):
+        """generic recursive clean/remove method."""
+        self.cmd(f'find {path} | grep -E "({pattern})" | xargs rm -rf')
+
+    def install_name_tool(self, src, dst, mode="id"):
+        """change dynamic shared library install names"""
+        _cmd = f"install_name_tool -{mode} {src} {dst}"
+        self.log.info(_cmd)
+        self.cmd(_cmd)
+
+    def xcodebuild(self, project, target, flag=None):
+        """build via xcode the given targets"""
+        if not flag:
+            self.cmd(
+                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target}"
+            )
+        else:
+            _flag = f"{flag}=1"
+            self.cmd(
+                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} "
+                f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'"
+            )
+
+    def xbuild_targets(self, project, targets=None, flag=None):
+        """build via xcode the given targets"""
+        for target in targets:
+            self.xcodebuild(project, target, flag)
+
     # -------------------------------------------------------------------------
     # Core Methods
+
+    def clean(self):
+        """shallow cleanse build"""
+        for builder in self.depends_on:
+            builder.clean()
 
     def reset_prefix(self):
         """remove prefix or compilation destinations"""
@@ -283,6 +332,11 @@ class Builder:
         """remove product src directory and compiled product directory."""
         self.cmd.remove(self.src_path)
         self.cmd.remove(self.prefix)  # aka self.prefix
+
+    # def reset(self):
+    #     """reset (deep cleanse) build"""
+    #     for builder in self.depends_on:
+    #         builder.reset()
 
     def download(self):
         """download src using curl and tar.
@@ -305,7 +359,9 @@ class Builder:
             self.cmd(f"tar -C {self.project.src} -xvf {self.download_path}")
 
     def build(self):
-        """build target from src"""
+        """build product"""
+        for builder in self.depends_on:
+            builder.build()
 
     def pre_process(self):
         """pre-build operations"""
@@ -313,10 +369,612 @@ class Builder:
     def post_process(self):
         """post-build operations"""
 
-    def deploy(self):
+    def install(self):
         """deploy to package"""
         self.cmd(f"mkdir -p {self.project.package}")
         for subdir in self.project.package_dirs:
             self.cmd(
                 f"rsync -a --delete {self.project.pyjs}/{subdir} {self.project.package}"
             )
+
+
+class Recipe:
+    """A platform-specific container for multiple builder-centric projects."""
+
+    def __init__(self, name: str = None, builders: list[Builder] = None, **settings):
+        self.name = name
+        self.settings = Settings(**settings)
+        self.builders = builders or []
+
+    def __str__(self):
+        return f"<{self.__class__.__name__}:'{self.name}'>"
+
+    __repr__ = __str__
+
+    def build(self):
+        """build builders"""
+        for builder in self.builders:
+            builder.build()
+
+
+# ------------------------------------------------------------------------------------
+# Specialized Classes
+
+
+class Bzip2Builder(Builder):
+    """Bzip2 static library builder"""
+
+    def build(self):
+        if not self.has_static_libs:
+            self.cmd.chdir(self.src_path)
+            self.cmd(f"make install PREFIX={self.prefix}")
+            self.cmd.chdir(self.project.root)
+
+
+class OpensslBuilder(Builder):
+    """OpenSSL static library builder"""
+
+    def build(self):
+        if not self.has_static_libs:
+            self.cmd.chdir(self.src_path)
+            self.cmd(f"./config no-shared no-tests --prefix={self.prefix}")
+            self.cmd("make install_sw")
+            self.cmd.chdir(self.project.root)
+
+
+class XzBuilder(Builder):
+    """Xz static library builder"""
+
+    def build(self):
+        if not self.has_static_libs:
+            self.cmd.chdir(self.src_path)
+            self.cmd(
+                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+                ./configure --disable-shared --enable-static --prefix={self.prefix}"""
+            )
+            self.cmd("make && make install")
+            self.cmd.chdir(self.project.root)
+
+
+class PythonBuilder(Builder):
+    """Generic Python from src builder."""
+
+    @property
+    def static_lib(self):
+        """Name of static library: libpython.3.9.a"""
+        return f"lib{self.product.name.lower()}{self.product.ver}.a"  # pylint: disable=E1101
+
+    @property
+    def python_lib(self):
+        """python/lib/product.major.minor: python/lib/python3.9"""
+        return self.prefix_lib / self.product.name_ver
+
+    @property
+    def site_packages(self):
+        """path to 'site-packages'"""
+        return self.python_lib / "site-packages"
+
+    @property
+    def lib_dynload(self):
+        """path to 'lib-dynload'"""
+        return self.python_lib / "lib-dynload"
+
+    # ------------------------------------------------------------------------
+    # src-level operations
+
+    def pre_process(self):
+        """pre-build operations"""
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        # self.fix()
+        # self.sign()
+
+    def install(self):
+        """install compilation product into lib"""
+        self.reset()
+        self.pre_process()
+        self.build()
+        self.post_process()
+
+    def install_python_pkg(self):
+        """install python product as a package"""
+        self.install_python()
+        self.fix_python_dylib_for_pkg()
+
+    def install_python_ext(self):
+        """install python product as a max external"""
+        self.install_python()
+        self.fix_python_dylib_for_ext()
+
+    def install_python(self):
+        """install python"""
+
+    # ------------------------------------------------------------------------
+    # post-processing operations
+
+    def is_valid_path(self, dep_path):
+        """check if dependency path is a valid path."""
+        return (
+            dep_path == ""
+            or dep_path.startswith("/opt/local/")
+            or dep_path.startswith("/usr/local/")
+            or dep_path.startswith("/User/")
+        )
+
+    def clean_python_pyc(self, path):
+        """remove python .pyc files."""
+        self.recursive_clean(path, r"__pycache__|\.pyc|\.pyo$")
+
+    def clean_python_tests(self, path):
+        """remove python tests files."""
+        self.recursive_clean(path, "tests|test")
+
+    def rm_libs(self, names):
+        """remove all named python dylib libraries"""
+        for name in names:
+            self.cmd.remove(self.python_lib / name)
+
+    def rm_exts(self, names):
+        """remove all named extensions"""
+        for name in names:
+            self.cmd.remove(
+                self.python_lib
+                / "lib-dynload"
+                / f"{name}.cpython-{self.product.ver_nodot}-darwin.so"
+            )
+
+    def rm_bins(self, names):
+        """remove all named binary executables"""
+        for name in names:
+            self.cmd.remove(self.prefix_bin / name)
+
+    def clean_python_site_packages(self):
+        """remove python site-packages"""
+        self.cmd.remove(self.python_lib / "site-packages")
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.rm_libs(
+            [
+                f"config-{self.product.ver}-darwin",
+                "idlelib",
+                "lib2to3",
+                "tkinter",
+                "turtledemo",
+                "turtle.py",
+                "ctypes",
+                "curses",
+                "ensurepip",
+                "venv",
+            ]
+        )
+
+    def remove_extensions(self):
+        """remove extensions"""
+        self.rm_exts(
+            [
+                "_tkinter",
+                "_ctypes",
+                "_multibytecodec",
+                "_codecs_jp",
+                "_codecs_hk",
+                "_codecs_cn",
+                "_codecs_kr",
+                "_codecs_tw",
+                "_codecs_iso2022",
+                "_curses",
+                "_curses_panel",
+            ]
+        )
+
+    def remove_binaries(self):
+        """remove list of non-critical executables"""
+        ver = self.product.ver
+        self.rm_bins(
+            [
+                f"2to3-{ver}",
+                f"idle{ver}",
+                f"easy_install-{ver}",
+                f"pip{ver}",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+                # f'python{self.ver}{self.suffix}',
+                # f'python{self.ver}-config',
+            ]
+        )
+
+    def clean(self):
+        """clean everything."""
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        self.clean_python_site_packages()
+
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+            self.cmd.remove(i)
+
+        self.cmd.remove(self.prefix_lib / "pkgconfig")
+        self.cmd.remove(self.prefix / "share")
+
+        self.remove_packages()
+        self.remove_extensions()
+        self.remove_binaries()
+
+    def ziplib(self):
+        """zip python package in site-packages in .zip archive"""
+        temp_lib_dynload = self.prefix_lib / "lib-dynload"
+        temp_os_py = self.prefix_lib / "os.py"
+
+        self.cmd.remove(self.site_packages)
+        self.lib_dynload.rename(temp_lib_dynload)
+        self.cmd.copyfile(self.python_lib / "os.py", temp_os_py)
+
+        zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
+        shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
+
+        self.cmd.remove(self.python_lib)
+        self.python_lib.mkdir()
+        temp_lib_dynload.rename(self.lib_dynload)
+        temp_os_py.rename(self.python_lib / "os.py")
+        self.site_packages.mkdir()
+
+    def fix_python_dylib_for_pkg(self):
+        """redirect ref of dylib to loader in a package deployment."""
+        self.cmd.chdir(self.prefix_lib)
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool(
+            f"@loader_path/../../../../support/{self.product.name}/lib/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_dylib_for_ext(self):
+        """redirect ref of dylib to loader in a self-contained external deployment."""
+        self.cmd.chdir(self.prefix_lib)
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool(f"@loader_path/{self.product.dylib}", self.product.dylib)
+        self.cmd.chdir(self.project.root)
+
+
+class PythonSrcBuilder(PythonBuilder):
+    """Generic Python from src builder."""
+
+    setup_local = ""
+    patch: str = ""
+    # ------------------------------------------------------------------------
+    # python properties
+
+    # ------------------------------------------------------------------------
+    # src-level operations
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        # self.apply_patch()
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        # self.fix()
+        # self.sign()
+
+    def write_setup_local(self, setup_local=None):
+        """Write to Setup.local file for cusom compilations of python builtins."""
+        if not any([setup_local, self.setup_local]):
+            return
+        if not setup_local:
+            setup_local = self.setup_local
+        self.cmd.copyfile(
+            self.project.patch / self.product.ver / setup_local,
+            self.src_path / "Modules" / "Setup.local",
+        )
+
+    def apply_patch(self, patch=None):
+        """Apply a standard patch from the patch directory (prefixed by major.minor ver)"""
+        if not any([patch, self.patch]):
+            return
+        if not patch:
+            patch = self.patch
+        self.cmd(f"patch -p1 < {self.project.patch}/{self.product.ver}/{patch}")
+
+    def install(self):
+        """install compilation product into lib"""
+        self.reset()
+        self.download()
+        self.pre_process()
+        self.build()
+        self.post_process()
+
+
+class FrameworkPythonBuilder(PythonSrcBuilder):
+    """builds python in a macos framework format."""
+
+    setup_local = "setup-shared.local"
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.lib / "Python.framework" / "Versions" / self.product.ver
+
+    def reset(self):
+        self.cmd.remove(self.src_path)
+        self.cmd.remove(self.project.lib / "Python.framework")
+
+    def build(self):
+        for dep in self.depends_on:
+            dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+            --enable-framework={self.project.lib} \
+            --with-openssl={self.project.lib / 'openssl'} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
+            --with-lto \
+            --enable-optimizations
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+
+class SharedPythonBuilder(PythonSrcBuilder):
+    """builds python in a shared format."""
+
+    setup_local = "setup-shared.local"
+
+    @property
+    def prefix(self) -> Path:
+        name = f"{self.product.name.lower()}-shared"  # pylint: disable=E1101
+        return self.project.lib / name
+
+    def build(self):
+        for dep in self.depends_on:
+            dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+            --prefix={self.prefix} \
+            --enable-shared \
+            --with-openssl={self.project.lib / 'openssl'} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
+            --with-lto \
+            --enable-optimizations
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+
+class StaticPythonBuilder(PythonSrcBuilder):
+    """builds python in a static format."""
+
+    setup_local = "setup-static-min3.local"
+    patch = "makesetup.patch"
+
+    @property
+    def prefix(self) -> Path:
+        name = f"{self.product.name.lower()}-static"  # pylint: disable=E1101
+        return self.project.lib / name
+
+    def build(self):
+        for dep in self.depends_on:
+            dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+            --prefix={self.prefix} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
+            --with-lto \
+            --enable-optimizations
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+    def remove_extensions(self):
+        """remove extensions: not implemented"""
+
+
+class PyJsBuilder(PythonBuilder):
+    """pyjs concrete base class"""
+
+    # prefix = support / py_name
+    # bin = prefix / "bin"
+    # lib = prefix / "lib" / py_name
+
+    @property
+    def prefix(self):
+        return self.project.support / self.project.py_name
+
+    # @property
+    # def lib(self):
+    #     return self.prefix / "lib" / self.project.py_name
+
+
+class HomebrewBuilder(PyJsBuilder):
+    """homebrew python builder"""
+
+    suffix = ""
+    setup_local: str = ""
+    patch: str = ""
+
+    def cp_pkgs(self, pkgs):
+        """copy package dirs from homebrew pkg folder to destination pkg folder"""
+        for pkg in pkgs:
+            # self.log("copying %s", pkg)
+            self.cmd(
+                f"cp -rf {self.project.homebrew_pkgs}/{pkg} {self.project.lib}/{pkg}"
+            )
+
+    def rm_libs(self, names):
+        """remove all named python dylib libraries"""
+        for name in names:
+            self.cmd.remove(self.python_lib / name)
+
+    def remove_extensions(self):
+        """remove extensions: not implemented"""
+
+    def clean_python(self):
+        """clean everything."""
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+            self.cmd.remove(i)
+
+        self.remove_packages()
+        self.remove_extensions()
+
+    def fix_python_dylib_for_pkg(self):
+        """change dylib ref to point to loader in a package build format"""
+        self.cmd.chdir(self.prefix)
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool(
+            f"@loader_path/../../../../support/{self.project.name}/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_dylib_for_ext_resources(self):
+        """change dylib ref to point to loader in the pure external build format"""
+        self.cmd.chdir(self.prefix)
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool(
+            f"@loader_path/../Resources/{self.project.name}/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+    def cp_python_to_ext_resources(self, arg):
+        """copy processed python libs to bundle resources directory"""
+        self.cmd(f"mkdir -p {arg}/Contents/Resources/{self.project.name}")
+        self.cmd(f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.project.name}")
+
+    def copy_python(self):
+        """copy python from homebrew to destination"""
+        self.cmd(f"mkdir -p {self.python_lib}")
+        self.cmd(f"mkdir -p {self.prefix_bin}")
+        self.cmd(
+            f"cp {self.project.homebrew}/Python {self.prefix}/{self.product.dylib}"
+        )
+        self.cmd(f"cp -rf {self.project.homebrew_pkgs}/*.py {self.project.lib}")
+        # from IPython import embed; embed(colors="neutral")
+        self.cp_pkgs(
+            [
+                "asyncio",
+                "collections",
+                "concurrent",
+                # 'ctypes',
+                # 'curses',
+                "dbm",
+                "distutils",
+                "email",
+                "encodings",
+                "html",
+                "http",
+                "importlib",
+                "json",
+                "lib-dynload",
+                "logging",
+                "multiprocessing",
+                "pydoc_data",
+                "sqlite3",
+                "unittest",
+                "urllib",
+                "wsgiref",
+                "xml",
+                "xmlrpc",
+            ]
+        )
+        self.cmd(f"cp -rf {self.project.homebrew}/include {self.prefix}/include")
+        self.cmd(f"rm -rf {self.prefix}/lib/{self.product.dylib}")
+        self.cmd(f"rm -rf {self.prefix}/lib/pkgconfig")
+        self.cmd(
+            f"cp -rf {self.project.homebrew}/Resources/Python.app/Contents/MacOS/Python"
+            f" {self.prefix_bin}/{self.project.name}"
+        )
+        self.clean_python()
+        self.ziplib()
+
+    def install_homebrew_sys(self):
+        """build externals use local homebrew python (non-portable)"""
+        self.reset_prefix()
+        self.xbuild_targets("bin-homebrew-sys", targets=["py", "pyjs"])
+
+    def install_homebrew_pkg(self):
+        """build externals into package use local homebrew python (portable)"""
+        self.reset_prefix()
+        self.copy_python()
+        self.fix_python_dylib_for_pkg()
+        self.xbuild_targets("bin-homebrew-pkg", targets=["py", "pyjs"])
+
+    def install_homebrew_ext(self):
+        """build external into self-contained external using local homebrew python (portable)"""
+        self.reset_prefix()
+        self.copy_python()
+        self.fix_python_dylib_for_ext_resources()
+        self.cp_python_to_ext_resources(self.project.py_external)
+        self.cp_python_to_ext_resources(self.project.pyjs_external)
+        self.xbuild_targets("bin-homebrew-ext", targets=["py", "pyjs"])
+        self.reset_prefix()
+
+
+# ------------------------------------------------------------------------------------
+# Connfiguration Classes
+
+if __name__ == '__main__':
+    bzip2_product = Product(
+        name="bzip2",
+        version="1.0.8",
+        url_template="https://sourceware.org/pub/bzip2/{name}-{version}.tar.gz",
+        libs_static=["libbz2.a"],
+    )
+
+    ssl_product = Product(
+        name="openssl",
+        version="1.1.1g",
+        url_template="https://www.openssl.org/source/{name}-{version}.tar.gz",
+        libs_static=["libssl.a", "libcrypto.a"],
+    )
+
+    xz_product = Product(
+        name="xz",
+        version="5.2.5",
+        url_template="http://tukaani.org/xz/{name}-{version}.tar.gz",
+        libs_static=["libxz.a"],
+    )
+
+    python_product = Product(
+        name="Python",
+        version=PYTHON_VERSION_STRING,
+        url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
+        libs_static=["libpython3.9.a"],
+    )
+
+    pyjs_product = Product(
+        name="Python",
+        version=PYTHON_VERSION_STRING,
+    )
+
+    bzip2_builder = Bzip2Builder(product=bzip2_product)
+    ssl_builder = OpensslBuilder(product=ssl_product)
+    xz_builder = XzBuilder(product=xz_product)
+    static_python_builder = StaticPythonBuilder(
+        product=python_product, depends_on=[bzip2_builder, ssl_builder, xz_builder]
+    )
+    homebrew_builder = HomebrewBuilder(product=pyjs_product)
