@@ -1,13 +1,13 @@
 """model: schema of builder
 """
+from abc import ABC
 import logging
 import os
-import shutil
-import platform
-from abc import ABC
 from pathlib import Path
+import platform
+import shutil
 from types import SimpleNamespace
-from typing import List, Type, Union, Optional
+from typing import List, Optional, Type, Union
 
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
@@ -96,8 +96,8 @@ class Settings(SimpleNamespace):
 class Product:
     """Produced by running a builder."""
 
-    default_name: str
-    default_version: str
+    name: str = "Python"
+    version: str = PYTHON_VERSION_STRING
     url_template: str
     libs_static: list[str]
     path: Path
@@ -109,8 +109,8 @@ class Product:
         path: Path = None,
         url_template: str = None,
     ):
-        self.name = name or self.default_name
-        self.version = version or self.default_version
+        self.name = name or self.name
+        self.version = version or self.version
         self.path = Path(path) if path else self.path
         self.url_template = url_template or self.url_template
 
@@ -120,7 +120,6 @@ class Product:
     def exists(self) -> bool:
         """returns True if product exists at self.path"""
         return self.path.exists()
-
 
     @property
     def ver(self) -> str:
@@ -150,7 +149,7 @@ class Product:
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        return f"lib{self.name.lower()}{self.ver}.dylib"  # pylint: disable=E1101
+        return f"lib{self.name.lower()}{self.ver}.dylib"
 
     @property
     def url(self) -> Path:
@@ -160,13 +159,11 @@ class Product:
     @property
     def dst(self) -> Path:
         """compiled product destination root directory."""
-        # return self.project.lib / self.name.lower()
         return self.path / self.name.lower()
 
     @property
     def prefix(self) -> Path:
         """compiled product destination root directory."""
-        # return self.project.lib / self.name.lower()
         return self.dst
 
     @property
@@ -194,6 +191,7 @@ class Project:
     """A repository for all the files, resources, and information required to
     build one or more software products.
     """
+
     name = "Python"
     py_version = platform.python_version()
     py_ver = ".".join(py_version.split(".")[:2])
@@ -211,14 +209,11 @@ class Project:
     src = build / "src"
     lib = build / "lib"
 
-
     homebrew = (
         Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
     )
 
     homebrew_pkgs = homebrew / "lib" / py_name
-
-
 
     # project
     pyjs = root.parent.parent
@@ -361,7 +356,6 @@ class BuilderRecipe:
 
 # ------------------------------------------------------------------------------
 # Concrete Base Classes
-
 
 
 class BaseBuilder(Builder):
@@ -556,7 +550,6 @@ class OpensslBuilder(BaseBuilder):
     project_class = Project
     dependencies: list[Type[Union[Builder, BaseBuilder]]] = []
 
-
     def build(self):
         if not self.product.has_static_libs:
             self.cmd.chdir(self.src_path)
@@ -571,7 +564,6 @@ class XzBuilder(BaseBuilder):
     product_class = XzBuilderProduct
     project_class = Project
     dependencies: list[Type[Union[Builder, BaseBuilder]]] = []
-
 
     def build(self):
         if not self.product.has_static_libs:
@@ -622,8 +614,6 @@ class PythonBuilder(BaseBuilder):
         """post-build operations"""
         self.clean()
         self.ziplib()
-        # self.fix()
-        # self.sign()
 
     def install(self):
         """install compilation product into lib"""
@@ -802,9 +792,6 @@ class PythonSrcBuilder(PythonBuilder):
     patch: str = ""
 
     # ------------------------------------------------------------------------
-    # python properties
-
-    # ------------------------------------------------------------------------
     # src-level operations
 
     def pre_process(self):
@@ -818,8 +805,6 @@ class PythonSrcBuilder(PythonBuilder):
         """post-build operations"""
         self.clean()
         self.ziplib()
-        # self.fix()
-        # self.sign()
 
     def write_setup_local(self, setup_local=None):
         """Write to Setup.local file for cusom compilations of python builtins."""
@@ -1104,4 +1089,3 @@ class HomebrewBuilder(PyJsBuilder):
         self.cp_python_to_ext_resources(self.project.pyjs_external)
         self.xbuild_targets("bin-homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()
-
