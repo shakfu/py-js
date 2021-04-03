@@ -348,7 +348,7 @@ class Builder(ABC):
             builder.install()
 
 
-class Recipe(ABC):
+class BuilderRecipe(ABC):
     """A platform-specific container for multiple builder-centric projects.
 
     A recipe is analogous to a workspace in xcode
@@ -368,6 +368,32 @@ class Recipe(ABC):
         """build builders"""
         for builder in self.builders:
             builder.build()
+
+
+class ProjectRecipe(ABC):
+    """A project-centric platform-specific container for multiple build projects.
+
+    A recipe is analogous to a workspace in xcode
+    """
+
+    project_classes: List[Type["Project"]]
+
+    def __init__(self, name: str = None, projects: list[Project] = None, **settings):
+        self.name = name
+        self.settings = Settings(**settings)
+        self.projects = projects or [
+            project_class() for project_class in self.project_classes
+        ]
+
+    def __str__(self):
+        return f"<{self.__class__.__name__}:'{self.name}'>"
+
+    __repr__ = __str__
+
+    def build(self):
+        """build projects"""
+        for project in self.projects:
+            project.build()
 
 
 # ------------------------------------------------------------------------------
@@ -1195,32 +1221,3 @@ class HomebrewBuilder(PyJsBuilder):
         self.xbuild_targets("bin-homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()
 
-def test():
-    klasses = [
-        Bzip2Builder,
-        OpensslBuilder,
-        XzBuilder,
-        SharedPythonBuilder,
-        FrameworkPythonBuilder,
-        StaticPythonBuilder,
-        HomebrewBuilder,
-    ]
-    for klass in klasses:
-        obj = klass()
-        assert obj.product
-        assert obj.project
-
-if __name__ == '__main__':
-    
-
-    bzip2 = Bzip2Builder()
-    ssl = OpensslBuilder()
-    xz = XzBuilder()
-
-    shared = SharedPythonBuilder()
-    frame = FrameworkPythonBuilder()
-    static = StaticPythonBuilder()
-
-    homebrew = HomebrewBuilder()
-
-    test()

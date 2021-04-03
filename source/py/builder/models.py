@@ -20,6 +20,7 @@ from abc import ABC
 from importlib import import_module
 from pathlib import Path
 from types import SimpleNamespace
+from typing import List, Type
 
 
 # utility funcs
@@ -50,13 +51,14 @@ class Settings(SimpleNamespace):
 
 class Product(ABC):
     """Produced by running a builder."""
-    libs_static: [str]
+    libs_static: list[str]
+    url_template: str
 
-    def __init__(self, name: str, version: str = None, path: Path = None):
+    def __init__(self, name: str, version: str = None, path: Path = None, url_template: str = None):
         self.name = name
         self.version = version or '0.0.1'
         self.path = Path(path) if path else None
-        self.url_template = None
+        self.url_template = url_template or self.url_template
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -133,7 +135,7 @@ class Builder(ABC):
     A Builder is analagous to a Target in Xcode.
     """
 
-    def __init__(self, name: str = None, depends_on: ['Builder'] = None, **settings):
+    def __init__(self, name: str = None, depends_on: list['Builder'] = None, **settings):
         self.name = name
         self.depends_on = depends_on or []
         self.settings = Settings(**settings)
@@ -176,10 +178,10 @@ class Project(ABC):
     """A repository for all the files, resources, and information required to
     build one or more software products.
     """
-    builder_classes: ['Builder']
+    builder_classes: List[Type['Builder']]
 
-    def __init__(self, name: str = None, builders: ['Builder'] = None,
-                 depends_on: ['Project'] = None, **settings):
+    def __init__(self, name: str = None, builders: list['Builder'] = None,
+                 depends_on: list['Project'] = None, **settings):
         self.name = name
         self.depends_on = depends_on or []
         self.settings = Settings(**settings)
@@ -254,9 +256,9 @@ class Recipe(ABC):
 
     A recipe is analogous to a workspace in xcode
     """
-    project_classes: ['Project']
+    project_classes: list['Project']
 
-    def __init__(self, name: str = None, projects: [Project] = None, **settings):
+    def __init__(self, name: str = None, projects: list[Project] = None, **settings):
         self.name = name
         self.settings = Settings(**settings)
         self.projects = projects
