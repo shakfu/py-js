@@ -1,62 +1,4 @@
 """model: schema of builder
-
-Basically a simplified copy of the xcode model, with thhe difference that I have
-renamed `Target` as `Builder` and `Workspace` as `Recipe` since it
-makes more sense in this context.
-
-    Recipe -- Settings
-        |           ∆
-        |*          |
-        Project -- Settings
-            |           ∆
-            |*          |
-            Builder -- Settings
-                |
-                ▽
-                Product
-
-## Class Hierarchy
-
-ShellCmd
-Settings
-
-Product
-    Bzip2Product
-    OpensslProject
-    XzProject
-    PythonProject
-
-Project
-    BaseProject
-        PythonProject
-            PyJsProject
-
-Builder
-    BaseBuilder
-        Bzip2Builder
-        OpensslBuilder                  
-        XzBuilder
-
-        PythonBuilder
-            PythonSrcBuilder
-                SharedPythonBuilder
-                FrameworkPythonBuilder
-                StaticPythonBuilder
-
-            PyJsBuilder
-                HomebrewBuilder
-                    HomebrewSysBuilder
-                    HomebrewPkgBuilder
-                    HomebrewExtBuilder
-        
-            SrcBuilder
-                SrcFrameworkPkgBuilder
-                SrcFrameworkExtBuilder
-                SrcSharedPkgBuilder
-                SrcSharedExtBuilder
-                SrcStaticPkgBuilder
-                SrcStaticExtBuilder
-
 """
 import logging
 import os
@@ -65,7 +7,7 @@ import platform
 from abc import ABC
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List, Type
+from typing import List, Type, Union, Optional
 
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
@@ -151,7 +93,7 @@ class Settings(SimpleNamespace):
 # Abstract Classes
 
 
-class Product(ABC):
+class Product:
     """Produced by running a builder."""
 
     default_name: str
@@ -248,31 +190,71 @@ class Product(ABC):
         return all((self.prefix_lib / lib).exists() for lib in self.libs_static)
 
 
-class Project(ABC):
+class Project:
     """A repository for all the files, resources, and information required to
     build one or more software products.
     """
+    name = "Python"
+    py_version = platform.python_version()
+    py_ver = ".".join(py_version.split(".")[:2])
+    py_name = f"python{py_ver}"
 
-    builder_classes: List[Type["Builder"]]
+    # current working directory
+    root = Path.cwd()
 
-    def __init__(self, name: str = None, builders: list["Builder"] = None, **settings):
-        self.name = name
-        self.builders = builders or [
-            builder_class(project=self) for builder_class in self.builder_classes
-        ]
-
-        self.settings = Settings(**settings)
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    def build(self):
-        """delegate building to builders"""
-        for builder in self.builders:
-            builder.build()
+    # project-build section
+    scripts = root / "scripts"
+    patch = root / "patch"
+    targets = root / "targets"
+    build = targets / "build"
+    downloads = build / "downloads"
+    src = build / "src"
+    lib = build / "lib"
 
 
-class Builder(ABC):
+    homebrew = (
+        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
+    )
+
+    homebrew_pkgs = homebrew / "lib" / py_name
+
+
+
+    # project
+    pyjs = root.parent.parent
+    support = pyjs / "support"
+    externals = pyjs / "externals"
+
+    prefix = support / py_name
+    bin = prefix / "bin"
+    lib = prefix / "lib" / py_name
+
+    py_external = externals / "py.mxo"
+    pyjs_external = externals / "pyjs.mxo"
+
+    dylib = f"libpython_{py_ver}.dylib"
+
+    # environmental vars
+    HOME = os.getenv("HOME")
+    package_name = "py"
+    package = f"{HOME}/Documents/Max 8/Packages/{package_name}"
+    package_dirs = [
+        "docs",
+        "examples",
+        "externals",
+        "help",
+        "init",
+        "javascript",
+        "jsextensions",
+        "media",
+        "patchers",
+    ]
+
+    # settings
+    mac_dep_target = "10.14"
+
+
+class Builder:
     """A Builder know how to build a single product type in a project.
 
     A Builder is analagous to a Target in Xcode.
@@ -329,6 +311,11 @@ class Builder(ABC):
         for target in targets:
             self.xcodebuild(project, target, flag)
 
+    def download(self):
+        """download product"""
+        for builder in self.depends_on:
+            builder.download()
+
     def clean(self):
         """shallow cleanse build"""
         for builder in self.depends_on:
@@ -350,7 +337,7 @@ class Builder(ABC):
             builder.install()
 
 
-class BuilderRecipe(ABC):
+class BuilderRecipe:
     """A platform-specific container for multiple builder-centric projects.
 
     A recipe is analogous to a workspace in xcode
@@ -372,97 +359,22 @@ class BuilderRecipe(ABC):
             builder.build()
 
 
-class ProjectRecipe(ABC):
-    """A project-centric platform-specific container for multiple build projects.
-
-    A recipe is analogous to a workspace in xcode
-    """
-
-    project_classes: List[Type["Project"]]
-
-    def __init__(self, name: str = None, projects: list[Project] = None, **settings):
-        self.name = name
-        self.settings = Settings(**settings)
-        self.projects = projects or [
-            project_class() for project_class in self.project_classes
-        ]
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    __repr__ = __str__
-
-    def build(self):
-        """build projects"""
-        for project in self.projects:
-            project.build()
-
-
 # ------------------------------------------------------------------------------
 # Concrete Base Classes
 
-
-class BaseProject(Project):
-    """Project to build Python from source with different variations."""
-
-    # python-naming
-    py_version = platform.python_version()
-    py_ver = ".".join(py_version.split(".")[:2])
-    py_name = f"python{py_ver}"
-
-    # current working directory
-    root = Path.cwd()
-
-    # project-build section
-    scripts = root / "scripts"
-    patch = root / "patch"
-    targets = root / "targets"
-    build = targets / "build"
-    downloads = build / "downloads"
-    src = build / "src"
-    lib = build / "lib"
-
-    # project
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-    externals = pyjs / "externals"
-
-    py_external = externals / "py.mxo"
-    pyjs_external = externals / "pyjs.mxo"
-
-    dylib = f"libpython_{py_ver}.dylib"
-
-    # environmental vars
-    HOME = os.getenv("HOME")
-    package_name = "py"
-    package = f"{HOME}/Documents/Max 8/Packages/{package_name}"
-    package_dirs = [
-        "docs",
-        "examples",
-        "externals",
-        "help",
-        "init",
-        "javascript",
-        "jsextensions",
-        "media",
-        "patchers",
-    ]
-
-    # settings
-    mac_dep_target = "10.14"
 
 
 class BaseBuilder(Builder):
     """Abstract class to provide builder interface and common features."""
 
-    project_class: Type[BaseProject]
-    dependencies: List[Type["BaseBuilder"]]
+    project_class: Type[Project]
+    dependencies: List[Type[Union["Builder", "BaseBuilder"]]]
 
     def __init__(
         self,
         product: Product = None,
-        project: "BaseProject" = None,
-        depends_on: list["BaseBuilder"] = None,
+        project: "Project" = None,
+        depends_on: list[Union["Builder", "BaseBuilder"]] = None,
         **settings,
     ):
         self.project = project or self.project_class()
@@ -619,36 +531,6 @@ class PyJsProduct(Product):
 # Project Implementation Classes
 
 
-class PythonProject(BaseProject):
-    """generic python project"""
-
-    builder_classes = []
-
-
-class PyJsProject(PythonProject):
-    """pyjs concrete base project class"""
-
-    builder_classes = []
-
-    root = Path.cwd()
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-
-    py_version = PYTHON_VERSION_STRING
-    py_ver = ".".join(py_version.split(".")[:2])
-    py_name = f"python{py_ver}"
-
-    prefix = support / py_name
-    bin = prefix / "bin"
-    lib = prefix / "lib" / py_name
-
-    homebrew = (
-        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
-    )
-
-    homebrew_pkgs = homebrew / "lib" / py_name
-
-
 # ------------------------------------------------------------------------------
 # Builder Implementation Classes
 
@@ -657,8 +539,8 @@ class Bzip2Builder(BaseBuilder):
     """Bzip2 static library builder"""
 
     product_class = Bzip2Product
-    project_class = PythonProduct
-    dependencies = []
+    project_class = Project
+    dependencies: list[Type[Union[Builder, BaseBuilder]]] = []
 
     def build(self):
         if not self.product.has_static_libs:
@@ -671,8 +553,9 @@ class OpensslBuilder(BaseBuilder):
     """OpenSSL static library builder"""
 
     product_class = OpensslProduct
-    project_class = PythonProduct
-    dependencies = []
+    project_class = Project
+    dependencies: list[Type[Union[Builder, BaseBuilder]]] = []
+
 
     def build(self):
         if not self.product.has_static_libs:
@@ -686,8 +569,9 @@ class XzBuilder(BaseBuilder):
     """Xz static library builder"""
 
     product_class = XzBuilderProduct
-    project_class = PythonProduct
-    dependencies = []
+    project_class = Project
+    dependencies: list[Type[Union[Builder, BaseBuilder]]] = []
+
 
     def build(self):
         if not self.product.has_static_libs:
@@ -703,9 +587,7 @@ class XzBuilder(BaseBuilder):
 class PythonBuilder(BaseBuilder):
     """Generic Python from src builder."""
 
-    project_class = PythonProject
-    # setup_local = None
-    # patch = None
+    project_class = Project
 
     # ------------------------------------------------------------------------
     # python properties
@@ -912,12 +794,12 @@ class PythonBuilder(BaseBuilder):
 class PythonSrcBuilder(PythonBuilder):
     """Generic Python from src builder."""
 
-    project_class = PythonProject
+    project_class = Project
     version = PYTHON_VERSION_STRING
     url_template = "https://www.python.org/ftp/python/{version}/{name}-{version}.tgz"
     dependencies = [Bzip2Builder, OpensslBuilder, XzBuilder]
     setup_local = ""
-    patch = None
+    patch: str = ""
 
     # ------------------------------------------------------------------------
     # python properties
@@ -1039,7 +921,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
 
     product_class = PythonProduct
-    project_class = PythonProject
+    project_class = Project
     setup_local = "setup-static-min3.local"
     patch = "makesetup.patch"
 
@@ -1074,14 +956,14 @@ class StaticPythonBuilder(PythonSrcBuilder):
 class PyJsBuilder(PythonBuilder):
     """pyjs concrete base class"""
 
-    project_class: Type[PyJsProject]
-    dependencies: List[Type["BaseBuilder"]]
+    project_class: Type[Project]
+    dependencies: List[Union[Type[Builder], Type[BaseBuilder]]]
 
     def __init__(
         self,
         product: PyJsProduct = None,
-        project: PyJsProject = None,
-        depends_on: list["BaseBuilder"] = None,
+        project: Project = None,
+        depends_on: List[Union[Builder, BaseBuilder]] = None,
         **settings,
     ):
         self.product = product or self.product_class()
@@ -1093,11 +975,11 @@ class HomebrewBuilder(PyJsBuilder):
     """homebrew python builder"""
 
     product_class = PyJsProduct
-    project_class = PyJsProject
-    dependencies = []
+    project_class = Project
+    dependencies: list[Union[Type[Builder], Type[BaseBuilder]]] = []
     suffix = ""
-    setup_local = None
-    patch = None
+    setup_local: str = ""
+    patch: str = ""
 
     @property
     def prefix(self):
