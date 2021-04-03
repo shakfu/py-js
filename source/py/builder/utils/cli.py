@@ -66,6 +66,7 @@ class Commander(metaclass=MetaCommander):
     epilog = ''
     version = '0.1'
     default_args = ['--help']
+    _argparse_subcmds: dict # just to silence static checkers
 
     def cmdline(self):
         """Main commandline function to process commandline arguments and options."""

@@ -63,7 +63,7 @@ class NameVersion:
         self._major = version_parts["major"]
         self._minor = version_parts["minor"]
         self._patch = version_parts["patch"]
-        self._tag = None if tag is None else str(tag)
+        self._tag = "" if tag is None else str(tag)
 
     @property
     def major(self) -> int:
@@ -98,7 +98,7 @@ class NameVersion:
             tag=self.tag,
         )
 
-    def finalize_version(self) -> "Version":
+    def finalize_version(self) -> "NameVersion":
         """remove tag if any and create semantic version compatible instance"""
         cls = type(self)
         return cls(self.name, f"{self.major}.{self.minor}.{self.patch}")

@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 
 class DependencyManager:
@@ -18,14 +19,14 @@ class DependencyManager:
     exec_ref: back ref for executable or plugin
     """
     def __init__(self,
-                 target,
-                 frameworks_dir='build',
-                 staticlibs_dir=None,
-                 exec_ref='@loader_path/../Frameworks'):
+                 target: Path,
+                 frameworks_dir: Path = None,
+                 staticlibs_dir: Path = None,
+                 exec_ref: str = None):
         self.target = target
-        self.frameworks_dir = frameworks_dir
+        self.frameworks_dir = frameworks_dir or Path('build')
         self.staticlibs_dir = staticlibs_dir
-        self.exec_ref = exec_ref
+        self.exec_ref = exec_ref or '@loader_path/../Frameworks'
         self.install_names = {}
         self.deps = []
         self.dep_list = []
@@ -73,8 +74,7 @@ class DependencyManager:
 
         # cp target to frameworks_dir
         if os.path.dirname(self.target) != self.frameworks_dir:
-            dest = os.path.join(self.frameworks_dir,
-                                os.path.basename(self.target))
+            dest = self.frameworks_dir / os.path.basename(self.target)
             shutil.copyfile(self.target, dest)
             os.chmod(dest, 0o644)
             cmdline = ['install_name_tool', '-id', self.exec_ref, dest]

@@ -234,7 +234,7 @@ class PythonBuilder(Builder):
         self.copyfile(self.python_lib / 'os.py', temp_os_py)
 
         zip_path = self.prefix_lib / f'python{self.ver_nodot}'
-        shutil.make_archive(zip_path, 'zip', str(self.python_lib))
+        shutil.make_archive(str(zip_path), 'zip', str(self.python_lib))
 
         self.remove(self.python_lib)
         self.python_lib.mkdir()
