@@ -1,4 +1,12 @@
-"""model: schema of builder
+"""builder: a builder of py-js max externals
+
+Aims to be pure python without any dependencies except the standard library.
+
+TODO:
+1. make .name use consistent across project and product
+
+
+
 """
 import logging
 import os
@@ -267,11 +275,6 @@ class Builder:
     def src_path(self) -> Path:
         """Return product source directory."""
         return self.project.src / self.product.name_version
-
-    # @property
-    # def lib_path(self) -> Path:
-    #     """alias to self.prefix"""
-    #     return self.prefix
 
     @property
     def url(self) -> Path:
