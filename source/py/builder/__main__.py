@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 """builder -- build python3 from source (currently for macos)
 
-    usage: pybuild.py [-h] [-v] {all,framework,shared,static} ...
+usage: builder [-h] [-v] [subcommand] [action]
 
-    pybuild: builds python from src
+builder: builds the py-js max external and python from source.
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -v, --version         show program's version number and exit
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
 
-    subcommands:
-      valid subcommands
-                            additional help
-        all                 build all variations
-        framework           build framework python
-        shared              build shared python
-        static              build static python
-
+subcommands:
+  valid subcommands
+                        additional help
+    py_all              build all python variations
+    py_framework        build framework python
+    py_shared           build shared python
+    py_static           build static python
+    pyjs_ext            build portable pyjs externals (homebrew)
+    pyjs_pkg            build portable pyjs package (homebrew)
+    pyjs_sys            build non-portable pyjs package (homebrew)
+    test                interactive testing shell
 """
 from . import config
 from .cli import Commander, option, option_group
