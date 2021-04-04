@@ -3,7 +3,7 @@
 source "scripts/common.sh"
 
 PREFIX=${SUPPORT}/${NAME}
-BIN=${SUPPORT}/${NAME}/bin
+BIN=${PREFIX}/bin
 LIB=${PREFIX}/lib/${NAME}
 
 HOMEBREW=/usr/local/opt/python3/Frameworks/Python.framework/Versions/${VERSION}
