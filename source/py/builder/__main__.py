@@ -18,9 +18,8 @@
         static              build static python
 
 """
-from .builders import (FrameworkPythonBuilder, HomebrewBuilder,
-                       SharedPythonBuilder, StaticPythonBuilder)
-from .utils.cli import Commander, option, option_group
+from . import config
+from .cli import Commander, option, option_group
 
 # ------------------------------------------------------------------------------
 # Commandline interface
@@ -54,25 +53,8 @@ class Application(Commander):
     version = '0.1'
     default_args = ['--help']
 
-    def dispatch1(self, builder_class, args):
-        """generic dispatcher"""
-        builder = builder_class()
-        if args.download:
-            builder.download()
-        elif args.reset:
-            builder.reset()
-        elif args.install:
-            builder.install()
-        elif args.build:
-            builder.build()
-        elif args.clean:
-            builder.clean()
-        elif args.ziplib:
-            builder.ziplib()
-
-    def dispatch(self, builder_class, args):
+    def dispatch(self, builder, args):
         """generic argument dispatcher"""
-        builder = builder_class()
         for key in vars(args):
             if key == 'func':
                 continue
@@ -85,43 +67,40 @@ class Application(Commander):
     @common_options
     def do_py_static(self, args):
         """build static python"""
-        self.dispatch(StaticPythonBuilder, args)
+        self.dispatch(config.static_python_builder, args)
 
     @common_options
     def do_py_shared(self, args):
         """build shared python"""
-        self.dispatch(SharedPythonBuilder, args)
+        self.dispatch(config.shared_python_builder, args)
 
     @common_options
     def do_py_framework(self, args):
         """build framework python"""
-        self.dispatch(FrameworkPythonBuilder, args)
+        self.dispatch(config.framework_python_builder, args)
 
     @common_options
     def do_py_all(self, args):
         """build all python variations"""
-        for builder_class in [FrameworkPythonBuilder, SharedPythonBuilder, StaticPythonBuilder]:
+        for builder_class in [config.framework_python_builder, 
+                              config.shared_python_builder, 
+                              config.static_python_builder]:
             self.dispatch(builder_class, args)
 
     @common_options
     def do_pyjs_sys(self, args):
-        """build non-portable pyjs package from homebrew python"""
-        b = HomebrewBuilder()
-        b.install_homebrew_sys()
+        """build non-portable pyjs package (homebrew)"""
+        config.homebrew_builder.install_homebrew_sys()
 
     @common_options
     def do_pyjs_pkg(self, args):
-        """build portable pyjs package from homebrew python"""
-        b = HomebrewBuilder()
-        b.install_homebrew_pkg()
+        """build portable pyjs package (homebrew)"""
+        config.homebrew_builder.install_homebrew_pkg()
 
     @common_options
     def do_pyjs_ext(self, args):
-        """build portable pyjs externals from homebrew python"""
-        b = HomebrewBuilder()
-        # b.install_homebrew_ext()
-        b.install_homebrew_ext_py()
-        b.install_homebrew_ext_pyjs()
+        """build portable pyjs externals (homebrew)"""
+        config.homebrew_builder.install_homebrew_ext()
 
     @common_options
     def do_test(self, args):

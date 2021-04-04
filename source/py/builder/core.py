@@ -1,31 +1,24 @@
-"""model: schema of builder
+"""builder: a builder of py-js max externals
 
-Basically a simplified copy of the xcode model, with thhe difference that I have
-renamed `Target` as `Builder` and `Workspace` as `Recipe` since it
-makes more sense in this context.
+Aims to be pure python without any dependencies except the standard library.
 
-    Recipe -- Settings
-        |           ∆
-        |*          |
-        Project -- Settings
-            |           ∆
-            |*          |
-            Builder -- Settings
-                |
-                ▽
-                Product
+## TODO
+[ ] make .name use consistent across project and product
+[ ] should check for existance of libs (not just static libs)
+[ ] should not re-run unecessarily
+[ ] reset should be deep, clean should be shallow
+[ ] assert builder.product_exists
+
 
 """
-
-
 import logging
 import os
-import shutil
 import platform
-from abc import ABC
+import shutil
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List, Type
+
+# from typing import List, Optional, Type, Union
 
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
@@ -34,8 +27,8 @@ PYTHON_VERSION_STRING = platform.python_version()
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
-# ------------------------------------------------------------------------------
-# Utility Classes
+# ------------------------------------------------------------------------------------
+# Generic Classes
 
 
 class ShellCmd:
@@ -107,36 +100,96 @@ class Settings(SimpleNamespace):
             raise TypeError
 
 
-# ------------------------------------------------------------------------------
-# Abstract Classes
+class Project:
+    """A repository for all the files, resources, and information required to
+    build one or more software products.
+    """
 
+    name = "Python"
+    py_version = platform.python_version()
+    py_ver = ".".join(py_version.split(".")[:2])
+    py_name = f"python{py_ver}"
 
-class Product(ABC):
-    """Produced by running a builder."""
+    # current working directory
+    root = Path.cwd()
 
-    default_name: str
-    default_version: str
-    url_template: str
-    libs_static: list[str]
+    # project-build section
+    scripts = root / "scripts"
+    patch = root / "patch"
+    targets = root / "targets"
+    build = targets / "build"
+    downloads = build / "downloads"
+    src = build / "src"
+    lib = build / "lib"
 
-    def __init__(
-        self,
-        name: str = None,
-        version: str = None,
-        path: Path = None,
-        url_template: str = None,
-    ):
-        self.name = name or self.default_name
-        self.version = version or self.default_version
-        self.path = Path(path) if path else None
-        self.url_template = url_template or self.url_template
+    homebrew = (
+        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
+    )
+
+    homebrew_pkgs = homebrew / "lib" / py_name
+
+    # project
+    pyjs = root.parent.parent
+    support = pyjs / "support"
+    externals = pyjs / "externals"
+
+    # prefix = support / py_name
+    # bin = prefix / "bin"
+    # lib = prefix / "lib" / py_name
+
+    py_external = externals / "py.mxo"
+    pyjs_external = externals / "pyjs.mxo"
+
+    dylib = f"libpython_{py_ver}.dylib"
+
+    # environmental vars
+    HOME = os.getenv("HOME")
+    package_name = "py"
+    package = f"{HOME}/Documents/Max 8/Packages/{package_name}"
+    package_dirs = [
+        "docs",
+        "examples",
+        "externals",
+        "help",
+        "init",
+        "javascript",
+        "jsextensions",
+        "media",
+        "patchers",
+    ]
+
+    # settings
+    mac_dep_target = "10.14"
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
 
-    def exists(self) -> bool:
-        """returns True if product exists at self.path"""
-        return self.path.exists()
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return hash((self.name, self.py_name, self.mac_dep_target))
+
+
+class Product:
+    """A product of a builder."""
+
+    def __init__(
+        self,
+        name: str,
+        version: str,
+        libs_static: list[str] = None,
+        url_template: str = None,
+        **settings,
+    ):
+        self.name = name
+        self.version = version
+        self.libs_static = libs_static or []
+        self.url_template = url_template
+        self.settings = Settings(**settings)
+
+    def __str__(self):
+        return f"<{self.__class__.__name__}:'{self.name}'>"
 
     @property
     def ver(self) -> str:
@@ -166,286 +219,35 @@ class Product(ABC):
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        return f"lib{self.name.lower()}{self.ver}.dylib"  # pylint: disable=E1101
+        return f"lib{self.name.lower()}{self.ver}.dylib"
 
     @property
     def url(self) -> Path:
         """Returns url to download product src as a pathlib.Path instance."""
-        return Path(self.url_template.format(name=self.name, version=self.version))
-
-    @property
-    def dst(self) -> Path:
-        """compiled product destination root directory."""
-        # return self.project.lib / self.name.lower()
-        return self.path / self.name.lower()
-
-    @property
-    def prefix(self) -> Path:
-        """compiled product destination root directory."""
-        # return self.project.lib / self.name.lower()
-        return self.dst
-
-    @property
-    def prefix_lib(self) -> Path:
-        """compiled product destination lib directory."""
-        return self.dst / "lib"
-
-    @property
-    def prefix_include(self) -> Path:
-        """compiled product destination include directory."""
-        return self.dst / "include"
-
-    @property
-    def prefix_bin(self) -> Path:
-        """compiled product destination bin directory."""
-        return self.dst / "bin"
-
-    @property
-    def has_static_libs(self) -> bool:
-        """check for presence of static libs"""
-        return all((self.prefix_lib / lib).exists() for lib in self.libs_static)
+        if self.url_template:
+            return Path(self.url_template.format(name=self.name, version=self.version))
+        raise KeyError("url_template not providing in settings")
 
 
-class Project(ABC):
-    """A repository for all the files, resources, and information required to
-    build one or more software products.
-    """
-
-    builder_classes: List[Type["Builder"]]
-
-    def __init__(self, name: str = None, builders: list["Builder"] = None, **settings):
-        self.name = name
-        self.builders = builders or [
-            builder_class(project=self) for builder_class in self.builder_classes
-        ]
-
-        self.settings = Settings(**settings)
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    def build(self):
-        """delegate building to builders"""
-        for builder in self.builders:
-            builder.build()
-
-
-class Builder(ABC):
-    """A Builder know how to build a single product type in a project.
-
-    A Builder is analagous to a Target in Xcode.
-    """
-
-    product_class: Type[Product]
-    project_class: Type[Project]
-    dependencies: List[Type["Builder"]]
+class Builder:
+    """A Builder know how to build a single product type in a project."""
 
     def __init__(
         self,
-        product: Product = None,
-        project: "Project" = None,
+        product: Product,
+        project: Project = None,
         depends_on: list["Builder"] = None,
         **settings,
     ):
-        self.product = product or self.product_class()
-        self.project = project or self.project_class()
-        self.depends_on = depends_on or [
-            klass(project=self.project) for klass in self.dependencies
-        ]
+        self.product = product
+        self.project = project or Project()
+        self.depends_on = depends_on or []
         self.settings = Settings(**settings)
         self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
 
     def __str__(self):
-        return f"<{self.__class__.__name__}>"
-
-    def recursive_clean(self, path, pattern):
-        """generic recursive clean/remove method."""
-        self.cmd(f'find {path} | grep -E "({pattern})" | xargs rm -rf')
-
-    def install_name_tool(self, src, dst, mode="id"):
-        """change dynamic shared library install names"""
-        _cmd = f"install_name_tool -{mode} {src} {dst}"
-        self.log.info(_cmd)
-        self.cmd(_cmd)
-
-    def xcodebuild(self, project, target, flag=None):
-        """build via xcode the given targets"""
-        if not flag:
-            self.cmd(
-                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target}"
-            )
-        else:
-            _flag = f"{flag}=1"
-            self.cmd(
-                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} "
-                f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'"
-            )
-
-    def xbuild_targets(self, project, targets=None, flag=None):
-        """build via xcode the given targets"""
-        for target in targets:
-            self.xcodebuild(project, target, flag)
-
-    def clean(self):
-        """shallow cleanse build"""
-        for builder in self.depends_on:
-            builder.clean()
-
-    def reset(self):
-        """reset (deep cleanse) build"""
-        for builder in self.depends_on:
-            builder.reset()
-
-    def build(self):
-        """build product"""
-        for builder in self.depends_on:
-            builder.build()
-
-    def install(self):
-        """install product"""
-        for builder in self.depends_on:
-            builder.install()
-
-
-class ProjectRecipe(ABC):
-    """A project-centric platform-specific container for multiple build projects.
-
-    A recipe is analogous to a workspace in xcode
-    """
-
-    project_classes: List[Type["Project"]]
-
-    def __init__(self, name: str = None, projects: list[Project] = None, **settings):
-        self.name = name
-        self.settings = Settings(**settings)
-        self.projects = projects or [
-            project_class() for project_class in self.project_classes
-        ]
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    __repr__ = __str__
-
-    def build(self):
-        """build projects"""
-        for project in self.projects:
-            project.build()
-
-
-class BuilderRecipe(ABC):
-    """A platform-specific container for multiple builder-centric projects.
-
-    A recipe is analogous to a workspace in xcode
-    """
-
-    def __init__(self, name: str = None, builders: list[Builder] = None, **settings):
-        self.name = name
-        self.settings = Settings(**settings)
-        self.builders = builders
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    __repr__ = __str__
-
-    def build(self):
-        """build builders"""
-        for builder in self.builders:
-            builder.build()
-
-
-# ------------------------------------------------------------------------------
-# Concrete Base Classes
-
-
-class BaseProject(Project):
-    """Project to build Python from source with different variations."""
-
-    # python-naming
-    py_version = platform.python_version()
-    py_ver = ".".join(py_version.split(".")[:2])
-    py_name = f"python{py_ver}"
-
-    # current working directory
-    root = Path.cwd()
-
-    # project-build section
-    scripts = root / "scripts"
-    patch = root / "patch"
-    targets = root / "targets"
-    build = targets / "build"
-    downloads = build / "downloads"
-    src = build / "src"
-    lib = build / "lib"
-
-    # project
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-    externals = pyjs / "externals"
-
-    py_external = externals / "py.mxo"
-    pyjs_external = externals / "pyjs.mxo"
-
-    dylib = f"libpython_{py_ver}.dylib"
-
-    # environmental vars
-    HOME = os.getenv("HOME")
-    package_name = "py"
-    package = f"{HOME}/Documents/Max 8/Packages/{package_name}"
-    package_dirs = [
-        "docs",
-        "examples",
-        "externals",
-        "help",
-        "init",
-        "javascript",
-        "jsextensions",
-        "media",
-        "patchers",
-    ]
-
-    # settings
-    mac_dep_target = "10.14"
-
-
-class BaseBuilder(Builder):
-    """Abstract class to provide builder interface and common features."""
-
-    project_class: Type[BaseProject]
-    dependencies: List[Type["BaseBuilder"]]
-
-    def __init__(
-        self,
-        product: Product = None,
-        project: "BaseProject" = None,
-        depends_on: list["BaseBuilder"] = None,
-        **settings,
-    ):
-        self.project = project or self.project_class()
-        self.depends_on = depends_on or [
-            klass(project=self.project) for klass in self.dependencies
-        ]
-        super().__init__(product, None, None, **settings)
-
-    # def __init__(
-    #     self,
-    #     product: Product = None,
-    #     project: "BaseProject" = None,
-    #     depends_on: list["BaseBuilder"] = None,
-    #     **settings,
-    # ):
-    #     self.product = product or self.product_class()
-    #     self.project = project or self.project_class()
-    #     self.depends_on = depends_on or [
-    #         klass(project=self.project) for klass in self.dependencies
-    #     ]
-    #     self.settings = Settings(**settings)
-    #     self.log = logging.getLogger(self.__class__.__name__)
-    #     self.cmd = ShellCmd(self.log)
-    # -------------------------------------------------------------------------
-    # Path Methods
+        return f"<{self.__class__.__name__}: '{self.project.name}/{self.product.name}'>"
 
     @property
     def prefix(self) -> Path:
@@ -478,17 +280,60 @@ class BaseBuilder(Builder):
         return self.project.src / self.product.name_version
 
     @property
-    def lib_path(self) -> Path:
-        """alias to self.prefix"""
-        return self.prefix
-
-    @property
     def url(self) -> Path:
         """Returns url to download product as a pathlib.Path instance."""
         return self.product.url
 
     # -------------------------------------------------------------------------
+    # Core functions
+
+    @property
+    def product_exists(self) -> bool:
+        """checks if product is built"""
+        return self.has_static_libs
+
+    @property
+    def has_static_libs(self) -> bool:
+        """check for presence of static libs"""
+        if (libs := self.product.libs_static) :
+            return all((self.prefix_lib / lib).exists() for lib in libs)
+        return False
+
+    def recursive_clean(self, path, pattern):
+        """generic recursive clean/remove method."""
+        self.cmd(f'find {path} | grep -E "({pattern})" | xargs rm -rf')
+
+    def install_name_tool(self, src, dst, mode="id"):
+        """change dynamic shared library install names"""
+        _cmd = f"install_name_tool -{mode} {src} {dst}"
+        self.log.info(_cmd)
+        self.cmd(_cmd)
+
+    def xcodebuild(self, project, target, flag=None):
+        """build via xcode the given targets"""
+        if not flag:
+            self.cmd(
+                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target}"
+            )
+        else:
+            _flag = f"{flag}=1"
+            self.cmd(
+                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} "
+                f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'"
+            )
+
+    def xbuild_targets(self, project, targets=None, flag=None):
+        """build via xcode the given targets"""
+        for target in targets:
+            self.xcodebuild(project, target, flag)
+
+    # -------------------------------------------------------------------------
     # Core Methods
+
+    def clean(self):
+        """shallow cleanse build"""
+        for builder in self.depends_on:
+            builder.clean()
 
     def reset_prefix(self):
         """remove prefix or compilation destinations"""
@@ -496,6 +341,8 @@ class BaseBuilder(Builder):
 
     def reset(self):
         """remove product src directory and compiled product directory."""
+    #     for builder in self.depends_on:
+    #         builder.reset()
         self.cmd.remove(self.src_path)
         self.cmd.remove(self.prefix)  # aka self.prefix
 
@@ -520,7 +367,9 @@ class BaseBuilder(Builder):
             self.cmd(f"tar -C {self.project.src} -xvf {self.download_path}")
 
     def build(self):
-        """build target from src"""
+        """build product"""
+        for builder in self.depends_on:
+            builder.build()
 
     def pre_process(self):
         """pre-build operations"""
@@ -528,7 +377,7 @@ class BaseBuilder(Builder):
     def post_process(self):
         """post-build operations"""
 
-    def deploy(self):
+    def install(self):
         """deploy to package"""
         self.cmd(f"mkdir -p {self.project.package}")
         for subdir in self.project.package_dirs:
@@ -537,133 +386,56 @@ class BaseBuilder(Builder):
             )
 
 
-# ------------------------------------------------------------------------------
-# IMPLEMENTATION
+class Recipe:
+    """A platform-specific container for multiple builder-centric projects."""
 
-# ------------------------------------------------------------------------------
-# Product Implementation Classes
+    # def __init__(self, name: str = None, builders: list[Builder] = None, **settings):
+    def __init__(self, name: str = None, builders: list[Builder] = None):
+        self.name = name
+        # self.settings = Settings(**settings)
+        self.builders = builders or []
 
+    def __str__(self):
+        return f"<{self.__class__.__name__}:'{self.name}'>"
 
-class Bzip2Product(Product):
-    """Bzip2 product"""
-
-    default_name = "bzip2"
-    default_version = "1.0.8"
-    url_template = "https://sourceware.org/pub/bzip2/{name}-{version}.tar.gz"
-    libs_static = ["libbz2.a"]
-
-
-class OpensslProduct(Product):
-    """OpenSSL product"""
-
-    default_name = "openssl"
-    default_version = "1.1.1g"
-    url_template = "https://www.openssl.org/source/{name}-{version}.tar.gz"
-    libs_static = ["libssl.a", "libcrypto.a"]
-
-
-class XzBuilderProduct(Product):
-    """Xz static product"""
-
-    default_name = "xz"
-    default_version = "5.2.5"
-    url_template = "http://tukaani.org/xz/{name}-{version}.tar.gz"
-    libs_static = ["libxz.a"]
-
-
-class PythonProduct(Product):
-    """framework python product"""
-
-    default_name = "Python"
-    default_version = PYTHON_VERSION_STRING
-    url_template = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
-    libs_static = ["libpython3.9.a"]
-
-
-class PyJsProduct(Product):
-    """pyjs concrete base product class"""
-
-    default_name = "Python"
-    default_version = PYTHON_VERSION_STRING
-    url_template = ""
-
-
-# ------------------------------------------------------------------------------
-# Project Implementation Classes
-
-
-class PythonProject(BaseProject):
-    """generic python project"""
-
-    builder_classes = []
-
-
-class PyJsProject(PythonProject):
-    """pyjs concrete base project class"""
-
-    builder_classes = []
-
-    root = Path.cwd()
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-
-    py_version = PYTHON_VERSION_STRING
-    py_ver = ".".join(py_version.split(".")[:2])
-    py_name = f"python{py_ver}"
-
-    prefix = support / py_name
-    bin = prefix / "bin"
-    lib = prefix / "lib" / py_name
-
-    homebrew = (
-        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
-    )
-
-    homebrew_pkgs = homebrew / "lib" / py_name
-
-
-# ------------------------------------------------------------------------------
-# Builder Implementation Classes
-
-
-class Bzip2Builder(BaseBuilder):
-    """Bzip2 static library builder"""
-
-    product_class = Bzip2Product
-    project_class = PythonProduct
-    dependencies = []
+    __repr__ = __str__
 
     def build(self):
-        if not self.product.has_static_libs:
+        """build builders"""
+        for builder in self.builders:
+            builder.build()
+
+
+# ------------------------------------------------------------------------------------
+# Specialized Classes
+
+
+class Bzip2Builder(Builder):
+    """Bzip2 static library builder"""
+
+    def build(self):
+        if not self.product_exists:
             self.cmd.chdir(self.src_path)
             self.cmd(f"make install PREFIX={self.prefix}")
             self.cmd.chdir(self.project.root)
 
 
-class OpensslBuilder(BaseBuilder):
+class OpensslBuilder(Builder):
     """OpenSSL static library builder"""
 
-    product_class = OpensslProduct
-    project_class = PythonProduct
-    dependencies = []
-
     def build(self):
-        if not self.product.has_static_libs:
+        if not self.product_exists:
             self.cmd.chdir(self.src_path)
             self.cmd(f"./config no-shared no-tests --prefix={self.prefix}")
             self.cmd("make install_sw")
             self.cmd.chdir(self.project.root)
 
 
-class XzBuilder(BaseBuilder):
+class XzBuilder(Builder):
     """Xz static library builder"""
 
-    product_class = XzBuilderProduct
-    project_class = PythonProduct
-    dependencies = []
-
     def build(self):
-        if not self.product.has_static_libs:
+        if not self.product_exists:
             self.cmd.chdir(self.src_path)
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
@@ -673,15 +445,8 @@ class XzBuilder(BaseBuilder):
             self.cmd.chdir(self.project.root)
 
 
-class PythonBuilder(BaseBuilder):
+class PythonBuilder(Builder):
     """Generic Python from src builder."""
-
-    project_class = PythonProject
-    # setup_local = None
-    # patch = None
-
-    # ------------------------------------------------------------------------
-    # python properties
 
     @property
     def static_lib(self):
@@ -722,19 +487,6 @@ class PythonBuilder(BaseBuilder):
         self.pre_process()
         self.build()
         self.post_process()
-
-    # def install_python(self):
-    #     """install python"""
-    #     self.build_python_zipped()
-
-    # def build_python_zipped(self):
-    #     self.build_python()
-    #     self.ziplib()
-    #
-    # def build_python(self):
-    #     self.compile_python()
-    #     self.clean_python()
-    #     self.write_python_getpip()
 
     def install_python_pkg(self):
         """install python product as a package"""
@@ -791,6 +543,7 @@ class PythonBuilder(BaseBuilder):
     #                     self.deps.append(path)
     #                     self.get_deps(path)
 
+
     def clean_python_pyc(self, path):
         """remove python .pyc files."""
         self.recursive_clean(path, r"__pycache__|\.pyc|\.pyo$")
@@ -838,9 +591,6 @@ class PythonBuilder(BaseBuilder):
                 "venv",
             ]
         )
-
-    # def remove_extensions(self):
-    #     """remove extensions: not implemented"""
 
     def remove_extensions(self):
         """remove extensions"""
@@ -931,13 +681,8 @@ class PythonBuilder(BaseBuilder):
 class PythonSrcBuilder(PythonBuilder):
     """Generic Python from src builder."""
 
-    project_class = PythonProject
-    version = PYTHON_VERSION_STRING
-    url_template = "https://www.python.org/ftp/python/{version}/{name}-{version}.tgz"
-    dependencies = [Bzip2Builder, OpensslBuilder, XzBuilder]
     setup_local = ""
-    patch = None
-
+    patch: str = ""
     # ------------------------------------------------------------------------
     # python properties
 
@@ -989,7 +734,6 @@ class PythonSrcBuilder(PythonBuilder):
 class FrameworkPythonBuilder(PythonSrcBuilder):
     """builds python in a macos framework format."""
 
-    product_class = PythonProduct
     setup_local = "setup-shared.local"
 
     @property
@@ -1020,15 +764,10 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
 
-    # def post_process(self):
-    #     self.clean()
-    #     self.ziplib()
-
 
 class SharedPythonBuilder(PythonSrcBuilder):
     """builds python in a shared format."""
 
-    product_class = PythonProduct
     setup_local = "setup-shared.local"
 
     @property
@@ -1061,8 +800,6 @@ class SharedPythonBuilder(PythonSrcBuilder):
 class StaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
 
-    product_class = PythonProduct
-    project_class = PythonProject
     setup_local = "setup-static-min3.local"
     patch = "makesetup.patch"
 
@@ -1093,65 +830,20 @@ class StaticPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions: not implemented"""
 
-    # def post_process(self):
-    #     self.clean()
-    #     self.ziplib()
-    # self.static_lib.rename(self.prefix / self.library)
-
 
 class PyJsBuilder(PythonBuilder):
     """pyjs concrete base class"""
 
-    project_class: Type[PyJsProject]
-    dependencies: List[Type["BaseBuilder"]]
-
-    def __init__(
-        self,
-        product: PyJsProduct = None,
-        project: PyJsProject = None,
-        depends_on: list["BaseBuilder"] = None,
-        **settings,
-    ):
-        self.product = product or self.product_class()
-        self.project = project or self.project_class()
-        super().__init__(None, None, depends_on, **settings)
-
-    # def __init__(
-    #     self,
-    #     product: PyJsProduct = None,
-    #     project: PyJsProject = None,
-    #     depends_on: list["BaseBuilder"] = None,
-    #     **settings,
-    # ):
-    #     self.product = product or self.product_class()
-    #     self.project = project or self.project_class()
-    #     self.depends_on = depends_on or [
-    #         klass(project=self.project) for klass in self.dependencies
-    #     ]
-    #     self.settings = Settings(**settings)
-    #     self.log = logging.getLogger(self.__class__.__name__)
-    #     self.cmd = ShellCmd(self.log)
-
+    @property
+    def prefix(self):
+        return self.project.support / self.project.py_name
 
 class HomebrewBuilder(PyJsBuilder):
     """homebrew python builder"""
 
-    product_class = PyJsProduct
-    project_class = PyJsProject
-    dependencies = []
     suffix = ""
-    setup_local = None
-    patch = None
-
-    @property
-    def prefix(self):
-        """compiled product destination root directory."""
-        return self.project.prefix
-
-    # @property
-    # def python_lib(self):
-    #     """python/lib/product.major.minor: python/lib/python3.9"""
-    #     return self.prefix / 'lib' / self.name_ver
+    setup_local: str = ""
+    patch: str = ""
 
     def cp_pkgs(self, pkgs):
         """copy package dirs from homebrew pkg folder to destination pkg folder"""
@@ -1173,48 +865,21 @@ class HomebrewBuilder(PyJsBuilder):
         """clean everything."""
         self.clean_python_pyc(self.prefix)
         self.clean_python_tests(self.python_lib)
-        # self.clean_python_site_packages()
         for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
             self.cmd.remove(i)
-        # self.remove(self.prefix_lib / 'pkgconfig')
-        # self.remove(self.prefix / 'share')
 
         self.remove_packages()
         self.remove_extensions()
-        # self.remove_binaries()
-
-    # def fix_python_exec(self):
-    #     self.chdir(self.project.bin)
-    #     self.cmd(f'install_name_tool -change {self.project.homebrew}/Python'
-    #              f' @executable_path/../{self.dylib} {self.project.name}')
-    #     self.chdir(self.project.root)
 
     def fix_python_dylib_for_pkg(self):
         """change dylib ref to point to loader in a package build format"""
-        self.cmd.chdir(self.project.prefix)
+        self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
-        # assumes python in installed in $PREFIX
         self.install_name_tool(
             f"@loader_path/../../../../support/{self.project.name}/{self.product.dylib}",
             self.product.dylib,
         )
         self.cmd.chdir(self.project.root)
-
-    # def fix_python_dylib_for_ext_executable(self):
-    #     self.chdir(self.project.prefix)
-    #     self.chmod(self.dylib)
-    #     # assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
-    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
-    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS')
-    #     self.chdir(self.project.root)
-
-    # def fix_python_dylib_for_ext_executable_name(self):
-    #     self.chdir(self.prefix)
-    #     self.chmod(self.dylib)
-    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
-    #     self.cmd(f'mkdir -p {self.project.py_external}/Contents/MacOS/{self.project.name}')
-    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS/{self.project.name}')
-    #     self.chdir(self.project.root)
 
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in the pure external build format"""
@@ -1233,8 +898,8 @@ class HomebrewBuilder(PyJsBuilder):
 
     def copy_python(self):
         """copy python from homebrew to destination"""
-        self.cmd(f"mkdir -p {self.project.lib}")
-        self.cmd(f"mkdir -p {self.project.bin}")
+        self.cmd(f"mkdir -p {self.python_lib}")
+        self.cmd(f"mkdir -p {self.prefix_bin}")
         self.cmd(
             f"cp {self.project.homebrew}/Python {self.prefix}/{self.product.dylib}"
         )
@@ -1268,11 +933,11 @@ class HomebrewBuilder(PyJsBuilder):
             ]
         )
         self.cmd(f"cp -rf {self.project.homebrew}/include {self.prefix}/include")
-        self.cmd(f"rm -rf {self.project.prefix}/lib/{self.product.dylib}")
-        self.cmd(f"rm -rf {self.project.prefix}/lib/pkgconfig")
+        self.cmd(f"rm -rf {self.prefix}/lib/{self.product.dylib}")
+        self.cmd(f"rm -rf {self.prefix}/lib/pkgconfig")
         self.cmd(
             f"cp -rf {self.project.homebrew}/Resources/Python.app/Contents/MacOS/Python"
-            f" {self.project.bin}/{self.project.name}"
+            f" {self.prefix_bin}/{self.project.name}"
         )
         self.clean_python()
         self.ziplib()
@@ -1288,35 +953,13 @@ class HomebrewBuilder(PyJsBuilder):
         self.copy_python()
         self.fix_python_dylib_for_pkg()
         self.xbuild_targets("bin-homebrew-pkg", targets=["py", "pyjs"])
-        # MISSING: copy package to $HOME/Max 8/Packages/py
 
-    # def install_homebrew_ext(self):
-    #     self.reset_prefix()
-    #     self.copy_python()
-    #     # fix_python_dylib_for_ext
-    #     # fix_python_dylib_for_ext_executable_name
-    #     self.fix_python_dylib_for_ext_resources()
-    #     self.cp_python_to_ext_resources(self.project.py_external)
-    #     self.cp_python_to_ext_resources(self.project.pyjs_external)
-    #     # FIXME: for some reason both don't work at the same time!!!
-    #     # you have to pick one.
-    #     self.xbuild_targets('bin-homebrew-ext', targets=['py', 'pyjs'])
-    #     self.reset_prefix()
-
-    def install_homebrew_ext_py(self):
+    def install_homebrew_ext(self):
         """build external into self-contained external using local homebrew python (portable)"""
         self.reset_prefix()
         self.copy_python()
         self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.py_external)
-        self.xbuild_targets("bin-homebrew-ext", targets=["py"])
-        self.reset_prefix()
-
-    def install_homebrew_ext_pyjs(self):
-        """build external into self-contained external using local homebrew python (portable)"""
-        self.reset_prefix()
-        self.copy_python()
-        self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.pyjs_external)
-        self.xbuild_targets("bin-homebrew-ext", targets=["pyjs"])
+        self.xbuild_targets("bin-homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()

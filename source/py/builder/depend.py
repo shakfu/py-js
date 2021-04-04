@@ -1,9 +1,4 @@
-"""depend: gather and resolve dylib depdencies.
-
-
-
-
-"""
+"""depend: gather and resolve dylib depdencies."""
 import os
 import re
 import shutil
