@@ -3,12 +3,10 @@
 Aims to be pure python without any dependencies except the standard library.
 
 ## TODO
-[ ] fix executable refs which do not point to dylibs (see `fix_python_exec` in bin-homebrew.sh)
-[ ] make .name use consistent across project and product
 [ ] should check for existance of libs (not just static libs)
-[ ] should not re-run unecessarily
 [ ] reset should be deep, clean should be shallow
 [ ] assert builder.product_exists
+[ ] test replacing 'cp -rf' with pure python self.copy
 
 
 """
