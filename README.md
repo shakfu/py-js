@@ -10,9 +10,21 @@ repo - <https://github.com/shakfu/py-js>
 
 **WARNING** this is pre-alpha software.
 
-If you are interested to try this out, please note that the current implementation only works on MacOS right now, and requires a compiler to be installed on your system (xcode or the commandline tools via `xcode-select --install` and that the default build script uses your existing homebrew installed python (currently 3.9.2) and assumes you already have `pip` installed `cython` (more detailed installation steps below if required)
+If you are interested to try this out, please note that the current implementation only works on MacOS right now. It's pretty straighforward to install:
 
-Git clone the `py-js` source and run the following in the cloned repo to get the required submodules:
+1. Make sure you have an c-compiler install on your system. On MacOS, this means either
+
+    Installing Xcode from the Mac App store (very large size)
+
+    OR
+
+    Installing Apple's much smaller commandline tools via `xcode-select --install`
+
+2. You should have have Homebrew python3 installed on your system (see below for specific instructions how to do this).
+
+    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.2 at the time of this writing.)
+
+3. Git clone the `py-js` source and run the following in the cloned repo to get the required submodules:
 
 ```bash
 git submodule init
@@ -25,7 +37,7 @@ Then run the following in the root directory of the `py-js` source (other instal
 ./build.sh
 ```
 
-Open up any of the patchers in the generated package and also look at the `.maxhelp` patcher to understand how `py` and the `pyjs` objects work.
+Open up any of the patchers in the generated package which is organized according to max package rules, and also look at the `.maxhelp` patcher to understand how `py` and the `pyjs` objects work. If you want to test both pyjs externals at the same time, open the `py_test_standalone.maxpat` file.
 
 Have fun!
 
@@ -251,13 +263,13 @@ Implemented for both `py` and `pyjs` objects:
 
 ## Building
 
-Only tested on OS X at present. Should be relatively easy to port to windows. I'm personally not in a position to do so since I don't have another Max license left for Windows and I'm on Macs and Linux.
+Only tested on OS X at present. Should be relatively straightforward to port to windows (a pure python build script is being developed to make this easier).
 
 The following is required:
 
 ### Xcode
 
-Not sure if full xcode is required, perhaps only the command line tools are sufficient
+Full xcode is not required, the freely available command line tools are sufficient
 
 ```bash
 xcode-select --install
@@ -265,14 +277,14 @@ xcode-select --install
 
 otherwise download xcode from the app store.
 
-### py external source and maxsdk
+### py-js externals source and maxsdk
 
-The py external is developed as a max package with a `source` folder which contains the max-sdk as a subfolder, which is conveniently available as a git submodule.
+The py external is developed as a max package with a `source` folder which contains the max-sdk as a subfolder and which is conveniently available as a git submodule.
 
-First git clone the `py` repo:
+First git clone the `py-js` repo:
 
 ```bash
-git clone https://github.com/shakfu/py.git
+git clone https://github.com/shakfu/py-js.git
 ```
 
 Then cd into the newly cloned source directory and run the following to get the max-sdk
@@ -283,11 +295,15 @@ git submodule update
 
 ```
 
-### python3
+### Homebrew Python3
 
-Python is used to develop `py`, and should be installed on a mac. However, `py` is tested again [Homebrew](https://brew.sh) python on a MacOS Mojave 10.14.6.
+Homebrew Python3 should be installed. See [Homebrew](https://brew.sh) for the install oneliner, it is provided here as well.
 
-The latest python3 can be easily installed can be installed as follows if you already have brew other click on the link above and install it before this step.
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Once Homebrew is installed, the latest version of python3 can be easily installed as follows:
 
 ```bash
 brew install python
@@ -297,7 +313,7 @@ see: <https://installpython3.com/mac> for further info if you are interested.
 
 ### cython (optional)
 
-[Cython](https://cython.org) is used for wrapping the max api. One could de-couple the cython generated c code from the external and it would work fine since the latter is developed directly using the python c-api, but you would lose the nice feature of calling the max api from python scripts running inside `py` objects.
+[Cython](https://cython.org) is only used for development and for wrapping the max api. It is advised to install it in case you want to customize the wrapping of the max api.
 
 Install cython as follows:
 
@@ -310,22 +326,24 @@ pip install cython
 In the root of the package:
 
 ```bash
-make -C source/py build
+./build.sh
 ```
 
 or
 
 ```bash
-./build.sh
+make -C source/py build
 ```
 
-or in the `py/sources/py` directory
+or in the `py-js/sources/py` directory
 
 ```bash
 make build
 ```
 
 This builds the default 'linked-to-system|homebrew python' version of `py`. Read further for alternative ways to build and install `py`.
+
+You can run alternative builds using make or the python `builder` from `py-js/sources/py`.
 
 ### Alternative Builds
 
@@ -349,21 +367,22 @@ This will create a `py` package in $HOME/Documents/Max 8/packages/py
 
 Once this is done you can run some of the patchers to test the py and pyjs objects.
 
-Recent changes in Max have allowed for this to work in standalones. Just create your standlone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built in say patch $STANDALONE then copy the whole aforementioned `py` package to $STANDALONE/Contents/Resources/C74/packages and delete the redundant `py.mxo` in $STANDALONE/Contents/Resources/C74/externals since it already exists in the just-copied package.
+*NOTE*: Recent changes in Max have allowed for this to work in standalones. Just create your standalone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built into a `<STANDALONE>` then copy the whole aforementioned `py` package to `<STANDALONE>/Contents/Resources/C74/packages` and delete the redundant `py.mxo` in `<STANDALONE>/Contents/Resources/C74/externals` since it already exists in the just-copied package.
 
-#### Embed Python in the External itself
+#### Embedding Python in the External itself
 
 **WARNING**: this currently 'partially' works. Strangely, it works for one exernal and not the other! Not sure why...
 
-This places a whole minimized python distribution in the external `py.mxo` itself.
+This places a minimized python distribution in the external `py.mxo` itself.
 
-To use your system homebrew python to do this:
+From the root of `py-js`, do this:
 
 ```bash
+cd source/py
 make homebrew-ext
 ```
 
-Another implementation variation builds both externals using a minimal static python build. This has provden reproducibly successful (see `py-js/source/py/targets/static-ext` after building a static-python build. A more robust implementation will following the ogoing cleanup.
+Another implementation variation builds both externals using a minimal static python build. This has provden reproducibly successful (see `py-js/source/py/targets/static-ext` after building a static-python build. A more robust implementation will following the ongoing cleanup and refactoring process.
 
 ### Sidenote about building on a Mac
 
@@ -385,19 +404,19 @@ The style used in this project is specified in the `.clang-format` file.
 
 ## Prior Art and Thanks
 
-Every now and then when I am developing a patch in Max, I yearn for some simple python function or the other, like the `any` and `all` builtins for example, and I then spend more time than I want researching a Max workaround.
+I was motivated to start this project because I yearned to to use some python libraries or functions in Max.
 
-Thinking that there must be a max external out there, I looked around and found the following:
+Looking around for for a python max external I found the following:
 
-- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which looked very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it's written in C++ and needs an additional [c++ flext](http://grrrr.org/ext/flext) layer  to compile. But I was further dissuaded from diving in as it supported only python 2 which seemed difficult to swallow considering it is no longer supported. Ironically, this project has become more active recently, so the above may no longer apply.
+- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which seemed very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it's written in C++ and needs an additional [c++ flext](http://grrrr.org/ext/flext) layer to compile. I was further dissuaded from diving in as it supported, at the time, only python 2 which seemed difficult to swallow considering it was no longer supported. Ironically, this project has become more active recently, so the above may no longer apply.
 
-- [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 16 months as of this writing. Again c++ and using pybind11 which I'm not familiar with.
+- [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 2 years as of this writing.
 
 - [nt.python_for_max](https://github.com/2bbb/nt.python_for_max) -- Basic implementation of python in max using a fork of Graham Wakefield's old c++ interface. Hasn't really been touched in 3 years.
 
-Around the time of the beginning of the covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts to embed a scheme implementation into a Max external.
+Around the time of the beginning of my first covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts and approaches to embed a scheme implementation into a Max external.
 
-So I decided, during a period with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c that won't crash.
+So it was decided, during a period with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c that didn't crash.
 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
