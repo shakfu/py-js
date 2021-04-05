@@ -13,6 +13,7 @@ class DependencyManager:
     frameworks_dir: where target dylib will be copied to with copied dependents
     exec_ref: back ref for executable or plugin
     """
+
     def __init__(self,
                  target: Path,
                  frameworks_dir: Path = None,
@@ -59,8 +60,9 @@ class DependencyManager:
 
     def process_deps(self):
         for dep in self.deps:
-            dep_path, dep_filename = os.path.split(dep)
-            dest = os.path.join(self.frameworks_dir, dep_filename)
+            _, dep_filename = os.path.split(dep)
+            # dep_path, dep_filename = os.path.split(dep)
+            # dest = os.path.join(self.frameworks_dir, dep_filename)
             self.dep_list.append([dep, '@rpath/' + dep_filename])
 
     def copy_dylibs(self):
@@ -80,8 +82,10 @@ class DependencyManager:
 
         # copy the rest
         for item in self.dep_list:
-            orig_path, transformed = item
-            dirname, dylib = os.path.split(orig_path)
+            # orig_path, transformed = item
+            # dirname, dylib = os.path.split(orig_path)
+            orig_path, _ = item
+            _, dylib = os.path.split(orig_path)
 
             dest = os.path.join(self.frameworks_dir, dylib)
 
@@ -101,7 +105,8 @@ class DependencyManager:
             for dep in deps:
                 old, new = dep
 
-                (old_name_path, old_name_filename) = os.path.split(old)
+                # (old_name_path, old_name_filename) = os.path.split(old)
+                _, old_name_filename = os.path.split(old)
                 if key == old_name_filename:
                     cmdline = ['install_name_tool', '-id', new, target]
                 else:

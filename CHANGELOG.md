@@ -119,6 +119,8 @@
 
 ### Bug Fixes
 
+- [x] pick up default homebrew installed python details by querying /usr/local/opt/python/libexec/bin/python
+
 - [x] fixed 'send' which did not have enough error checking and was crashing frequently
 
 - [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
