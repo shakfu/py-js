@@ -16,6 +16,7 @@ import logging
 import os
 import platform
 import shutil
+from textwrap import dedent
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -25,6 +26,7 @@ DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 PYTHON_VERSION_STRING = platform.python_version()
+URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
@@ -622,10 +624,23 @@ class PythonBuilder(Builder):
                 f"pip{ver}",
                 f"pyvenv-{ver}",
                 f"pydoc{ver}",
-                # f'python{self.ver}{self.suffix}',
-                # f'python{self.ver}-config',
+                # f'python{ver}{self.suffix}',
+                # f'python{ver}-config',
             ]
         )
+
+    def write_python_getpip(self):
+        """optionally provide latets pip to binary"""
+        with open(f"{self.prefix}/bin/get_pip.sh") as f:
+            f.write(
+                dedent(
+                    f"""
+                curl {URL_GETPIP} -s -o get-pip.py 
+                ./bin/{self.product.name_ver} get-pip.py
+                rm get-pip.py
+                """
+                )
+            )
 
     def clean(self):
         """clean everything."""
@@ -851,7 +866,7 @@ class HomebrewBuilder(PyJsBuilder):
         for pkg in pkgs:
             # self.log("copying %s", pkg)
             self.cmd(
-                f"cp -rf {self.project.homebrew_pkgs}/{pkg} {self.project.lib}/{pkg}"
+                f"cp -rf {self.project.homebrew_pkgs}/{pkg} {self.python_lib}/{pkg}"
             )
 
     def rm_libs(self, names):
@@ -872,6 +887,14 @@ class HomebrewBuilder(PyJsBuilder):
         self.remove_packages()
         self.remove_extensions()
 
+    def fix_python_exec(self):
+        """change ref on executable to point relative dylib"""
+        self.cmd.chdir(self.prefix_bin)
+        self.install_name_tool(mode='change',
+            src=self.project.homebrew / 'Python',
+            dst=f'@executable_path/../{self.product.dylib} {self.project.name}')
+        self.cmd.chdir(self.project.root)
+
     def fix_python_dylib_for_pkg(self):
         """change dylib ref to point to loader in a package build format"""
         self.cmd.chdir(self.prefix)
@@ -881,6 +904,22 @@ class HomebrewBuilder(PyJsBuilder):
             self.product.dylib,
         )
         self.cmd.chdir(self.project.root)
+
+    # def fix_python_dylib_for_ext_executable(self):
+    #     self.chdir(self.project.prefix)
+    #     self.chmod(self.dylib)
+    #     # assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
+    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
+    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS')
+    #     self.chdir(self.project.root)
+
+    # def fix_python_dylib_for_ext_executable_name(self):
+    #     self.chdir(self.prefix)
+    #     self.chmod(self.dylib)
+    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
+    #     self.cmd(f'mkdir -p {self.project.py_external}/Contents/MacOS/{self.project.name}')
+    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS/{self.project.name}')
+    #     self.chdir(self.project.root)
 
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in the pure external build format"""
@@ -904,8 +943,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd(
             f"cp {self.project.homebrew}/Python {self.prefix}/{self.product.dylib}"
         )
-        self.cmd(f"cp -rf {self.project.homebrew_pkgs}/*.py {self.project.lib}")
-        # from IPython import embed; embed(colors="neutral")
+        self.cmd(f"cp -rf {self.project.homebrew_pkgs}/*.py {self.python_lib}")
         self.cp_pkgs(
             [
                 "asyncio",
@@ -938,7 +976,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd(f"rm -rf {self.prefix}/lib/pkgconfig")
         self.cmd(
             f"cp -rf {self.project.homebrew}/Resources/Python.app/Contents/MacOS/Python"
-            f" {self.prefix_bin}/{self.project.name}"
+            f" {self.prefix_bin}/{self.product.name_ver}"
         )
         self.clean_python()
         self.ziplib()
@@ -953,6 +991,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.reset_prefix()
         self.copy_python()
         self.fix_python_dylib_for_pkg()
+        self.fix_python_exec()
         self.xbuild_targets("bin-homebrew-pkg", targets=["py", "pyjs"])
 
     def install_homebrew_ext(self):
