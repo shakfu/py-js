@@ -15,7 +15,9 @@ Aims to be pure python without any dependencies except the standard library.
 import logging
 import os
 import platform
+import re
 import shutil
+import subprocess
 from textwrap import dedent
 from pathlib import Path
 from types import SimpleNamespace
@@ -63,6 +65,17 @@ class ShellCmd:
         self.log.info("move path %s to %s", src, dst)
         shutil.move(src, dst)
 
+    def copy(self, src: Path, dst: Path):
+        """copy file or folders -- tries to be behave like `cp -rf`"""
+        self.log.info("copy %s to $s", src, dst)
+        src, dst = Path(src), Path(dst)
+        if dst.exists():
+            dst = dst / src.name
+        if src.is_dir():
+            shutil.copytree(src, dst)
+        else:
+            shutil.copyfile(src, dst)
+
     def copytree(self, src, dst):
         """Copy recursively from src path to dst path."""
         self.log.info("move tree %s to %s", src, dst)
@@ -108,11 +121,13 @@ class Project:
     build one or more software products.
     """
 
-    name = "Python"
+    name = "py-js"
     py_version = platform.python_version()
     py_ver = ".".join(py_version.split(".")[:2])
     py_name = f"python{py_ver}"
 
+    # root in this case is root assumed for build / make / scripts
+    # actual project is root.parent.parent (see below)
     # current working directory
     root = Path.cwd()
 
@@ -131,7 +146,7 @@ class Project:
 
     homebrew_pkgs = homebrew / "lib" / py_name
 
-    # project
+    # project root here
     pyjs = root.parent.parent
     support = pyjs / "support"
     externals = pyjs / "externals"
@@ -211,7 +226,7 @@ class Product:
 
     @property
     def name_ver(self) -> str:
-        """Product-major.minor: python-3.9"""
+        """Product(major.minor): python3.9"""
         return f"{self.name.lower()}{self.ver}"
 
     @property
@@ -518,9 +533,9 @@ class PythonBuilder(Builder):
 
     # def get_deps(self, target):
     #     """get dependencies of dylibs.
-    #
+    
     #     check if they non-system (i.e. non-portable)
-    #
+    
     #     """
     #     # if not target:
     #     #     target = self.target
@@ -545,7 +560,6 @@ class PythonBuilder(Builder):
     #                 if path not in self.deps:
     #                     self.deps.append(path)
     #                     self.get_deps(path)
-
 
     def clean_python_pyc(self, path):
         """remove python .pyc files."""
@@ -888,11 +902,21 @@ class HomebrewBuilder(PyJsBuilder):
         self.remove_extensions()
 
     def fix_python_exec(self):
-        """change ref on executable to point relative dylib"""
+        """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
-        self.install_name_tool(mode='change',
-            src=self.project.homebrew / 'Python',
-            dst=f'@executable_path/../{self.product.dylib} {self.project.name}')
+        executable = self.product.name_ver
+        result = subprocess.check_output(['otool', '-L', executable])
+        entries = [
+            line.decode('utf-8').strip() for line in result.splitlines()
+        ]
+        for entry in entries:
+            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$', entry)
+            if match:
+                path = match.group(1)
+                if path.startswith('/usr/local/Cellar/python'):
+                    self.install_name_tool(mode='change',
+                        src=path,
+                        dst=f'@executable_path/../{self.product.dylib} {executable}')
         self.cmd.chdir(self.project.root)
 
     def fix_python_dylib_for_pkg(self):
@@ -900,41 +924,25 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(
-            f"@loader_path/../../../../support/{self.project.name}/{self.product.dylib}",
+            f"@loader_path/../../../../support/{self.product.name_ver}/{self.product.dylib}",
             self.product.dylib,
         )
         self.cmd.chdir(self.project.root)
-
-    # def fix_python_dylib_for_ext_executable(self):
-    #     self.chdir(self.project.prefix)
-    #     self.chmod(self.dylib)
-    #     # assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
-    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
-    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS')
-    #     self.chdir(self.project.root)
-
-    # def fix_python_dylib_for_ext_executable_name(self):
-    #     self.chdir(self.prefix)
-    #     self.chmod(self.dylib)
-    #     self.install_name_tool(f'@loader_path/{self.dylib}', self.dylib)
-    #     self.cmd(f'mkdir -p {self.project.py_external}/Contents/MacOS/{self.project.name}')
-    #     self.cmd(f'cp -rf {self.prefix}/* {self.project.py_external}/Contents/MacOS/{self.project.name}')
-    #     self.chdir(self.project.root)
 
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in the pure external build format"""
         self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(
-            f"@loader_path/../Resources/{self.project.name}/{self.product.dylib}",
+            f"@loader_path/../Resources/{self.product.name_ver}/{self.product.dylib}",
             self.product.dylib,
         )
         self.cmd.chdir(self.project.root)
 
     def cp_python_to_ext_resources(self, arg):
         """copy processed python libs to bundle resources directory"""
-        self.cmd(f"mkdir -p {arg}/Contents/Resources/{self.project.name}")
-        self.cmd(f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.project.name}")
+        self.cmd(f"mkdir -p {arg}/Contents/Resources/{self.product.name_ver}")
+        self.cmd(f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.product.name_ver}")
 
     def copy_python(self):
         """copy python from homebrew to destination"""
