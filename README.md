@@ -2,30 +2,27 @@
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com)
 
-repo - https://github.com/shakfu/py-js
-
+repo - <https://github.com/shakfu/py-js>
 
 ![py-js test](./media/screenshot.png)
-
 
 ## Quickstart
 
 **WARNING** this is pre-alpha software.
 
-If you are interested to try this out, please note that the current implementation only works on MacOS right now, and requires a compiler to be installed on your system (xcode or the commandline tools via `xcode-select --install` and that the default build script uses your existing homebrew installed python (currently 3.9.2) and assumes you have already `pip` installed `cython` (more detailed installation steps below if required)
+If you are interested to try this out, please note that the current implementation only works on MacOS right now, and requires a compiler to be installed on your system (xcode or the commandline tools via `xcode-select --install` and that the default build script uses your existing homebrew installed python (currently 3.9.2) and assumes you already have `pip` installed `cython` (more detailed installation steps below if required)
 
 Git clone the `py-js` source and run the following in the cloned repo to get the required submodules:
 
-```
-$ git submodule init
-$ git submodule update 
-
+```bash
+git submodule init
+git submodule update 
 ```
 
 Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
 
-```
-$ ./build.sh
+```bash
+./build.sh
 ```
 
 Open up any of the patchers in the generated package and also look at the `.maxhelp` patcher to understand how `py` and the `pyjs` objects work.
@@ -36,10 +33,9 @@ Have fun!
 
 This is a project which provides two max externals:
 
-
 ### `py` external
 
-```
+```text
 globals
     obj_count                    : number of active py objects
     registry                     : global registry to lookup object names
@@ -96,7 +92,7 @@ py max external
 
 ### `pyjs` external (experimental)
 
-```
+```text
 pyjs max external (jsextension)
     attributes
         name                     : unique object name
@@ -125,7 +121,6 @@ pyjs max external (jsextension)
 
 `py/js` started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into a more ambitious framework for using python3 in max.
 
-
 There are two implementation variations:
 
 1. A `py` external which provides a more featureful two-way interface between max and python in a way that feels natural to both languages.
@@ -133,7 +128,6 @@ There are two implementation variations:
 2. A `pyjs` max external/jsextension providing a `PyJS` class and a minimal subset of `py's` features which work well with the max `js` object and javascript code (like returning json directly from evaluations of python expressions).
 
 Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
-
 
 The objective is to have 3 deployment variations:
 
@@ -145,22 +139,18 @@ The objective is to have 3 deployment variations:
 
 (Note that only the two first methods work reliably right now. With the latter requiring some slight manual post-build tweaks to get the standalone working with python. Embedding the python interpreter in the external itself is still in progress and not implemented.
 
-
 Deployment Scenario  | `py` | `pyjs`
 :------------------- | :--: | :--------:
-Link to sys python   | 1    | 1 
+Link to sys python   | 1    | 1
 Embed in package     | 1    | 1
 Embed in external    | 0    | 0
 
-
-
 ### Key Features
-
 
 The more mature `py` external has the following c-level methods:
 
-category | method   | param(s)      | in/out | can change ns 
-:------- | :--------| :------------ | :----: | :------------: 
+category | method   | param(s)      | in/out | can change ns
+:------- | :--------| :------------ | :----: | :------------:
 core     | import   | module        | in     | yes
 core     | eval     | expression    | out    | no
 core     | exec     | statement     | in     | yes
@@ -176,10 +166,9 @@ interobj | scan     |               | n/a    | no
 interobj | send     | name, msg, .. | n/a    | no
 meta     | count    |               | n/a    | no
 
-
 The more recently developed `pyjs` external implements the following c-level methods:
 
-category | method       | param(s)      | in/out | can change ns 
+category | method       | param(s)      | in/out | can change ns
 :------- | :----------- | :------------ | :----: | :------------:
 core     | import       | module        | in     | yes
 core     | eval         | expression    | out    | no
@@ -187,7 +176,6 @@ core     | exec         | statement     | in     | yes
 core     | execfile     | file          | in     | yes
 extra    | code         | expr or stmt  | out?   | yes
 in-code  | eval_to_json | expression    | out    | no
-
 
 In both cases, the `code` method allows for import/exec/eval of python code, which can be said to make those 'fit-for-purpose' methods redundant. However, I have retained them since they are stricter in what they allow and further provide a helpful prefix in messages which indicates message intent.
 
@@ -201,7 +189,6 @@ py/js's *core* features have a one-to-one correspondance to python's very high l
 
 - **Exec Messages**. Responds to an `exec <statement>` message and an `execfile <filepath>` message which executes the statement or the file's code in the object's namespace. For `py` objects, this produces no output from the left outlet, sends a bang from the right outlet upon success or a bang from the middle outlet upon failure. For `pyjs` objects no output is given.
 
-
 #### Extra
 
 The *extra* category of methods  makes the `py` or `pyjs` object play nice with the max/msp ecosystem:
@@ -214,7 +201,6 @@ Implemented for `py` objects at present:
 
 - **Pipe message**. Like a `call` in reverse, responds to a `pipe <arg> <f1> <f2> ... <fN>` message. In this sense, a value is *piped* through a chain of python functions in the objects namespace and returns the output to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-
 Implemented for both `py` and `pyjs` objects:
 
 - **Code or Anything Messages**. Responds to a `code <expression || statement>` or (anything) `<expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by Max's parsing and excaping rules. (EXPERIMENTAL and evolving).
@@ -223,7 +209,6 @@ Implemented for `pyjs` objects only:
 
 - **Evaluate to JSON**. Can be used in javascript code only to automatically serialize the results of a python expression as a json string as follows: `evaluate_to_json <expression> -> JSON`.
 
-
 #### Interobject Communication
 
 Implemented for `py` objects only:
@@ -231,7 +216,6 @@ Implemented for `py` objects only:
 - **Scan Message**. Responds to a `scan` message with arguments. This scans the parent patcher of the object and stores scripting names in the global registry.
 
 - **Send Message**. Responds to a `send <object-name> <msg> <msg-body>` message. Used to send *typed* messages to any named object. Evokes a `scan` for the patcher's objects if a `registry` of names is empty.
-
 
 #### Editing Support
 
@@ -245,13 +229,11 @@ Implemented for `py` objects only.
 
 For `pyjs` objects, code editing is already built into the `js` objects.
 
-
 #### Scripting
 
 Implemented for both `py` and `pyjs` objects:
 
 - **Exposing Max API to Python** A portion of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This code enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called directly by python scripts or via messages in a patcher.
-
 
 ## Caveats
 
@@ -263,10 +245,9 @@ Implemented for both `py` and `pyjs` objects:
 
 - As an example of the above, `Numpy`, the popular python numerical analysis package, falls in the above category. Indeed, it actually **crashes** Max if imported in a new patch after first use in a prior patch. To address this special case, the module is provided as an object in the `api` module (and this prevents a crash if used again). As above, just restart Max and use it in one patch normally. After closing the first patch, restart Max to use it again in a new patch. (New patch is taken to mean new document.)
 
-- `core` features are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc.. 
+- `core` features are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
 
 - The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
-
 
 ## Building
 
@@ -278,12 +259,11 @@ The following is required:
 
 Not sure if full xcode is required, perhaps only the command line tools are sufficient
 
-```
-$ xcode-select --install
+```bash
+xcode-select --install
 ```
 
 otherwise download xcode from the app store.
-
 
 ### py external source and maxsdk
 
@@ -291,15 +271,15 @@ The py external is developed as a max package with a `source` folder which conta
 
 First git clone the `py` repo:
 
-```
-$ git clone https://github.com/shakfu/py.git
+```bash
+git clone https://github.com/shakfu/py.git
 ```
 
 Then cd into the newly cloned source directory and run the following to get the max-sdk
 
-```
-$ git submodule init
-$ git submodule update 
+```bash
+git submodule init
+git submodule update 
 
 ```
 
@@ -309,12 +289,11 @@ Python is used to develop `py`, and should be installed on a mac. However, `py` 
 
 The latest python3 can be easily installed can be installed as follows if you already have brew other click on the link above and install it before this step.
 
-```
-$ brew install python
+```bash
+brew install python
 ```
 
-see: https://installpython3.com/mac for further info if you are interested.
-
+see: <https://installpython3.com/mac> for further info if you are interested.
 
 ### cython (optional)
 
@@ -322,31 +301,31 @@ see: https://installpython3.com/mac for further info if you are interested.
 
 Install cython as follows:
 
-```
+```bash
 pip install cython
 ```
-
 
 ### Build it
 
 In the root of the package:
 
-```
+```bash
 make -C source/py build
 ```
+
 or
 
-```
+```bash
 ./build.sh
 ```
+
 or in the `py/sources/py` directory
 
-```
+```bash
 make build
 ```
 
 This builds the default 'linked-to-system|homebrew python' version of `py`. Read further for alternative ways to build and install `py`.
-
 
 ### Alternative Builds
 
@@ -356,13 +335,13 @@ This builds the default 'linked-to-system|homebrew python' version of `py`. Read
 
 In the root of the py-js directory:
 
-```
+```bash
 make -C source/py bin-homebrew-pkg
 ```
 
 or in py-js/source/py
 
-```
+```bash
 make bin-homebrew-pkg
 ```
 
@@ -372,7 +351,6 @@ Once this is done you can run some of the patchers to test the py and pyjs objec
 
 Recent changes in Max have allowed for this to work in standalones. Just create your standlone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built in say patch $STANDALONE then copy the whole aforementioned `py` package to $STANDALONE/Contents/Resources/C74/packages and delete the redundant `py.mxo` in $STANDALONE/Contents/Resources/C74/externals since it already exists in the just-copied package.
 
-
 #### Embed Python in the External itself
 
 **WARNING**: this currently 'partially' works. Strangely, it works for one exernal and not the other! Not sure why...
@@ -381,36 +359,33 @@ This places a whole minimized python distribution in the external `py.mxo` itsel
 
 To use your system homebrew python to do this:
 
-```
+```bash
 make homebrew-ext
 ```
 
 Another implementation variation builds both externals using a minimal static python build. This has provden reproducibly successful (see `py-js/source/py/targets/static-ext` after building a static-python build. A more robust implementation will following the ogoing cleanup.
 
-
 ### Sidenote about building on a Mac
 
 If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can mostly ignored (unless your only focus is codesigning the external).
 
-The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). 
+The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified).
 
 I've tried this several times and  and it works (for "sign to run locally" case and for the "Development" case).
-
 
 ### Style it
 
 The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
 
-```
-$ brew install clang-format
+```bash
+brew install clang-format
 ```
 
 The style used in this project is specified in the `.clang-format` file.
 
-
 ## Prior Art and Thanks
 
-Every now and then when I am developing a patch in Max, I yearn for some simple python function or the other, like the `any` and `all` builtins for example, and I then spend more time than I want researching a Max workaround. 
+Every now and then when I am developing a patch in Max, I yearn for some simple python function or the other, like the `any` and `all` builtins for example, and I then spend more time than I want researching a Max workaround.
 
 Thinking that there must be a max external out there, I looked around and found the following:
 
@@ -427,5 +402,3 @@ So I decided, during a period with less distractions than usual, to try to make 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
 Thanks to Luigi Castelli for his help on Max/Msp questions, to Stefan Behnel for his help with Cython questions, and to Iain Duncan for providing the initial inspiration and for saving me time with some great implementation ideas.
-
-

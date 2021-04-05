@@ -1,19 +1,23 @@
 
 # CHANGELOG
 
-
 ## v0.1
 
 ## Key Fixes
 
-- bin-homebrew-pkg is now working without issues and can even be used in standalones
+- builder: new python build system
 
-    - the package has to be manually moved into the standalone C74/packages directory and the py.mxo external which was automatically copied during standalone creation has to to be removed since it already exists in the package which copied in manually.
+  - While the makefile/bash based build system works quite well for the homebrew cases, it was found to be a little limited in complex cases and I went off on a protracted tangent to develop a pure python build system which is now included.
+  
+  - In retrospect, I should have probably just implemented the complex solutions in a bunch of python scripts instead of a whole new build system. But for the task of automatically building python from source to make self-contained static libraries, it was probably useful in the end.
+  
+  - This does not mean that bash and makefile will be abandoned. A parallel track is possible, where the python code is called in case the bash code hits a wall. Ultimately the python code should be able to address all use cases comprehensively.
 
-- re-introduced updated pure python build script (pybuild.py) to build python in differrent variations.
+- `bin-homebrew-pkg` is now working without issues and can even be used in standalones
 
-	- the static python build was used in a new target `static-ext` to statically build `py.mxo` and `pyjs.mxo` externals successfully.
+  - The package has to be manually moved into the standalone C74/packages directory and the py.mxo external which was automatically copied during standalone creation has to to be removed since it already exists in the package which copied in manually.
 
+  - The static python build was used in a new target `static-ext` to statically build `py.mxo` and `pyjs.mxo` externals successfully.
 
 ### Features
 
@@ -45,7 +49,7 @@
 
 - [x] Each py object has its own python 'globals' namespace and responds to the following
       msgs
-    - [x] `import <module>`: adds module to the namespace
+  - [x] `import <module>`: adds module to the namespace
     - [x] `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
     - [x] `exec <statement>`: executes statement into the namespace (can modify ns)
     - [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
@@ -59,30 +63,27 @@
 
 - [x] check whether setting a normal attr name, can also set scripting name
 
-- [x] Implement 'send' msg, which sends typed messages to (script) named objects (see: https://cycling74.com/forums/error-handling-with-object_method_typed)
+- [x] Implement 'send' msg, which sends typed messages to (script) named objects (see: <https://cycling74.com/forums/error-handling-with-object_method_typed>)
 
 - [x] Add `call (anything)` method to call python callables in a namespace
-
 
 #### Code Editor (Usability)
 
 - [x] Edit default with text editor
 
 - [x] Add text edit object
-    - [x] enable code to be run from editor
-
+  - [x] enable code to be run from editor
 
 #### Line REPL (Usability)
 
 - [x] Add line repl
-    - [x] Add up-arrow last line recall (great for 'random.random()')
-
+  - [x] Add up-arrow last line recall (great for 'random.random()')
 
 #### Extensibility
 
 - [x] Create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
 
-- [x] Implement section on two-way globals setting and reading (from python and c) in https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html (deferred for now)
+- [x] Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
 
 - [x] Add bpatcher line repl
 
@@ -94,16 +95,13 @@
 
 - [x] Exposing of good portion of the max api to cython scripting
 
-
 #### Architectural
 
 - [x] Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
 
-
 #### Documentation
 
 - [x] Add .maxref.xml to docs
-
 
 #### Code Quality
 
@@ -113,13 +111,11 @@
 
 - [x] Refactor into functions
 
-
 #### Testing
 
 - [x] pytest testing harness
 
 - [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
-
 
 ### Bug Fixes
 
@@ -137,6 +133,6 @@
 
 - [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
 
-- [x] `import` statement in eval causes a segmentation fault. see: https://docs.python.org/3/c-api/intro.html exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
+- [x] `import` statement in eval causes a segmentation fault. see: <https://docs.python.org/3/c-api/intro.html> exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
 - [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
