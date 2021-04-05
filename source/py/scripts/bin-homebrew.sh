@@ -130,6 +130,7 @@ install_python() {
 	cp_pkg wsgiref
 	cp_pkg xml
 	cp_pkg xmlrpc
+	
 	cp -rf ${HOMEBREW}/include ${PREFIX}/include
 	rm -rf ${PREFIX}/lib/${DYLIB}
 	rm -rf ${PREFIX}/lib/${DYLIB_NAME}.dylib
