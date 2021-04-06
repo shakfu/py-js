@@ -520,45 +520,6 @@ class PythonBuilder(Builder):
     # ------------------------------------------------------------------------
     # post-processing operations
 
-    def is_valid_path(self, dep_path):
-        """check if dependency path is a valid path."""
-        return (
-            dep_path == ""
-            or dep_path.startswith("/opt/local/")
-            or dep_path.startswith("/usr/local/")
-            or dep_path.startswith("/User/")
-        )
-
-    # def get_deps(self, target):
-    #     """get dependencies of dylibs.
-    
-    #     check if they non-system (i.e. non-portable)
-    
-    #     """
-    #     # if not target:
-    #     #     target = self.target
-    #     key = os.path.basename(target)
-    #     self.install_names[key] = []
-    #     result = subprocess.check_output(['otool', '-L', target])
-    #     entries = [
-    #         line.decode('utf-8').strip() for line in result.splitlines()
-    #     ]
-    #     for entry in entries:
-    #         match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$',
-    #                          entry)
-    #         if match:
-    #             path = match.group(1)
-    #             (dep_path, dep_filename) = os.path.split(path)
-    #             if self.is_valid_path(dep_path):
-    #                 if dep_path == '':
-    #                     path = os.path.join('/usr/local/lib', dep_filename)
-    #                 dep_path, dep_filename = os.path.split(path)
-    #                 item = (path, '@rpath/' + dep_filename)
-    #                 self.install_names[key].append(item)
-    #                 if path not in self.deps:
-    #                     self.deps.append(path)
-    #                     self.get_deps(path)
-
     def clean_python_pyc(self, path):
         """remove python .pyc files."""
         self.recursive_clean(path, r"__pycache__|\.pyc|\.pyo$")
