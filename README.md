@@ -8,19 +8,13 @@ repo - <https://github.com/shakfu/py-js>
 
 ## Quickstart
 
-**WARNING** this is pre-alpha software.
+If you are interested to try this out, please note that it currently only works on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this as pre-alpha level code. There is still quite a bit to before a release can be made in good concience.
 
-If you are interested to try this out, please note that the current implementation only works on MacOS right now. It's pretty straighforward to install:
+With such caveats aside installation is pretty straighforward:
 
-1. Make sure you have an c-compiler install on your system. On MacOS, this means either
+1. For c compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
-    Installing Xcode from the Mac App store (very large size)
-
-    OR
-
-    Installing Apple's much smaller commandline tools via `xcode-select --install`
-
-2. You should have have Homebrew python3 installed on your system (see below for specific instructions how to do this).
+2. You should have also have Homebrew python3 installed on your system (see below for specific instructions how to do this) via:
 
     Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.2 at the time of this writing.)
 
@@ -37,7 +31,7 @@ Then run the following in the root directory of the `py-js` source (other instal
 ./build.sh
 ```
 
-Open up any of the patchers in the generated package which is organized according to max package rules, and also look at the `.maxhelp` patcher to understand how `py` and the `pyjs` objects work. If you want to test both pyjs externals at the same time, open the `py_test_standalone.maxpat` file.
+Open up any of the patch files in the `patcher` directory in in the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work. If you want to test both externals at the same time, open the `py_test_standalone.maxpat` file.
 
 Have fun!
 

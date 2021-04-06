@@ -1,26 +1,26 @@
 # TODO
 
-[ ] should check for existance of libs (not just static libs)
+- [ ] should check for existance of libs (not just static libs)
 
-[ ] reset should be deep, clean should be shallow
+- [ ] reset should be deep, clean should be shallow
 
-[ ] assert builder.product_exists
+- [ ] assert builder.product_exists
 
-[ ] test replacing 'cp -rf' with pure python self.copy
+- [ ] test replacing 'cp -rf' with pure python self.copy
 
-[ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for
+- [ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for
 static linking as building it takes ages.
 
-[ ] fix references (still pointing to compiled locations) ??
+- [ ] fix references (still pointing to compiled locations) ??
 
 ## PENDING
 
-- --enable-optimizations at configure
-- --enable-shared
-- freeing memory for PY_STATIC case
-- automate installation of packages
-- testing fat dynamic in a package
-- codesigning
+- [ ] --enable-optimizations at configure
+- [ ] --enable-shared
+- [ ] freeing memory for PY_STATIC case
+- [ ] automate installation of packages
+- [ ] testing fat dynamic in a package
+- [ ] codesigning
 
 ## BUGS
 
