@@ -24,7 +24,7 @@ subcommands:
 from . import config
 from .cli import Commander, option, option_group
 
-# ------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Commandline interface
 
 common_options = option_group(
@@ -77,15 +77,15 @@ class Application(Commander):
         """build shared python"""
         self.dispatch(config.shared_python_builder, args)
 
-    @common_options
-    def do_py_framework(self, args):
-        """build framework python"""
-        self.dispatch(config.framework_python_builder, args)
+    # @common_options
+    # def do_py_framework(self, args):
+    #     """build framework python"""
+    #     self.dispatch(config.framework_python_builder, args)
 
     @common_options
     def do_py_all(self, args):
         """build all python variations"""
-        for builder_class in [config.framework_python_builder, 
+        for builder_class in [#config.framework_python_builder, 
                               config.shared_python_builder, 
                               config.static_python_builder]:
             self.dispatch(builder_class, args)
@@ -104,6 +104,11 @@ class Application(Commander):
     def do_pyjs_ext(self, args):
         """build portable pyjs externals (homebrew)"""
         config.homebrew_builder.install_homebrew_ext()
+
+    @common_options
+    def do_static_ext(self, args):
+        """build portable pyjs externals (static py)"""
+        config.staticext_builder.build()
 
     @common_options
     def do_test(self, args):

@@ -3,7 +3,7 @@
 Aims to be pure python without any dependencies except the standard library.
 
 ## TODO
-- [ ] should check for existance of libs (not just static libs)
+- [ ] should check for existance of all built libs (not just static libs)
 - [ ] reset should be deep, clean should be shallow
 - [ ] assert builder.product_exists
 - [ ] check whether it is better to remove 'exist_ok=True' param in Path.mkdir
@@ -28,7 +28,7 @@ URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
-# ------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Generic Classes
 
 
@@ -127,7 +127,8 @@ class Project:
     lib = build / "lib"
 
     homebrew = (
-        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") / py_ver
+        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") 
+        / py_ver
     )
 
     homebrew_pkgs = homebrew / "lib" / py_name
@@ -140,7 +141,8 @@ class Project:
     py_external = externals / "py.mxo"
     pyjs_external = externals / "pyjs.mxo"
 
-    dylib = f"libpython_{py_ver}.dylib"
+    staticlib = f"libpython{py_ver}.a"
+    dylib = f"libpython{py_ver}.dylib"
 
     # environmental vars
     HOME = os.getenv("HOME")
@@ -178,12 +180,14 @@ class Product:
         self,
         name: str,
         version: str,
+        build_dir: str = None,
         libs_static: list[str] = None,
         url_template: str = None,
         **settings,
     ):
         self.name = name
         self.version = version
+        self.build_dir = build_dir or self.name
         self.libs_static = libs_static or []
         self.url_template = url_template
         self.settings = Settings(**settings)
@@ -198,7 +202,7 @@ class Product:
 
     @property
     def ver_nodot(self) -> str:
-        """provides 'majorminor' version without space in between: 3.9.1 -> 39"""
+        """provides 'majorminor' version: 3.9.1 -> 39"""
         return self.ver.replace(".", "")
 
     @property
@@ -341,10 +345,10 @@ class Builder:
 
     def reset(self):
         """remove product src directory and compiled product directory."""
-    #     for builder in self.depends_on:
-    #         builder.reset()
+        #     for builder in self.depends_on:
+        #         builder.reset()
         self.cmd.remove(self.src_path)
-        self.cmd.remove(self.prefix)  # aka self.prefix
+        self.cmd.remove(self.prefix)
 
     def download(self):
         """download src using curl and tar.
@@ -357,7 +361,7 @@ class Builder:
 
         # download
         if not self.download_path.exists():
-            self.log.info("downloading %s", self.download_path)
+            self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail {self.url} -o {self.download_path}")
 
         # unpack
@@ -653,7 +657,7 @@ class PythonBuilder(Builder):
 class PythonSrcBuilder(PythonBuilder):
     """Generic Python from src builder."""
 
-    setup_local = ""
+    setup_local: str = ""
     patch: str = ""
     # ------------------------------------------------------------------------
     # python properties
@@ -744,8 +748,7 @@ class SharedPythonBuilder(PythonSrcBuilder):
 
     @property
     def prefix(self) -> Path:
-        name = f"{self.product.name.lower()}-shared"  # pylint: disable=E1101
-        return self.project.lib / name
+        return self.project.lib / self.product.build_dir
 
     def build(self):
         for dep in self.depends_on:
@@ -777,8 +780,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
     @property
     def prefix(self) -> Path:
-        name = f"{self.product.name.lower()}-static"  # pylint: disable=E1101
-        return self.project.lib / name
+        return self.project.lib / self.product.build_dir
 
     def build(self):
         for dep in self.depends_on:
@@ -810,6 +812,7 @@ class PyJsBuilder(PythonBuilder):
     def prefix(self):
         return self.project.support / self.project.py_name
 
+
 class HomebrewBuilder(PyJsBuilder):
     """homebrew python builder"""
 
@@ -820,7 +823,7 @@ class HomebrewBuilder(PyJsBuilder):
     def cp_pkgs(self, pkgs):
         """copy package dirs from homebrew python lib to target python lib"""
         for pkg in pkgs:
-            self.cmd.copy(self.project.homebrew_pkgs/pkg, self.python_lib/pkg)
+            self.cmd.copy(self.project.homebrew_pkgs / pkg, self.python_lib / pkg)
 
     def rm_libs(self, names):
         """remove all named python dylib libraries"""
@@ -844,22 +847,23 @@ class HomebrewBuilder(PyJsBuilder):
         """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
         executable = self.product.name_ver
-        result = subprocess.check_output(['otool', '-L', executable])
-        entries = [
-            line.decode('utf-8').strip() for line in result.splitlines()
-        ]
+        result = subprocess.check_output(["otool", "-L", executable])
+        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
         for entry in entries:
-            match = re.match(r'\s*(\S+)\s*\(compatibility version .+\)$', entry)
+            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
             if match:
                 path = match.group(1)
-                if path.startswith('/usr/local/Cellar/python'):
-                    self.install_name_tool(mode='change',
+                # homebrew files are installed in /usr/local/Cellar
+                if path.startswith("/usr/local/Cellar/python"):
+                    self.install_name_tool(
+                        mode="change",
                         src=path,
-                        dst=f'@executable_path/../{self.product.dylib} {executable}')
+                        dst=f"@executable_path/../{self.product.dylib} {executable}",
+                    )
         self.cmd.chdir(self.project.root)
 
     def fix_python_dylib_for_pkg(self):
-        """change dylib ref to point to loader in a package build format"""
+        """change dylib ref to point to loader in package build format"""
         self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(
@@ -869,7 +873,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd.chdir(self.project.root)
 
     def fix_python_dylib_for_ext_resources(self):
-        """change dylib ref to point to loader in the pure external build format"""
+        """change dylib ref to point to loader in external build format"""
         self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool(
@@ -881,14 +885,16 @@ class HomebrewBuilder(PyJsBuilder):
     def cp_python_to_ext_resources(self, arg):
         """copy processed python libs to bundle resources directory"""
         self.cmd(f"mkdir -p {arg}/Contents/Resources/{self.product.name_ver}")
-        self.cmd(f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.product.name_ver}")
+        self.cmd(
+            f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.product.name_ver}"
+        )
 
     def copy_python(self):
         """copy python from homebrew to destination"""
         self.python_lib.mkdir(parents=True, exist_ok=True)
         self.prefix_bin.mkdir(parents=True, exist_ok=True)
         self.cmd.copy(
-            self.project.homebrew / 'Python', self.prefix / self.product.dylib
+            self.project.homebrew / "Python", self.prefix / self.product.dylib
         )
         self.cmd(f"cp -rf {self.project.homebrew_pkgs}/*.py {self.python_lib}")
         self.cp_pkgs(
@@ -918,12 +924,12 @@ class HomebrewBuilder(PyJsBuilder):
                 "xmlrpc",
             ]
         )
-        self.cmd.copy(self.project.homebrew/'include', self.prefix_include)
+        self.cmd.copy(self.project.homebrew / "include", self.prefix_include)
         self.cmd.remove(self.prefix_lib / self.product.dylib)
-        self.cmd.remove(self.prefix_lib / 'pkgconfig')
+        self.cmd.remove(self.prefix_lib / "pkgconfig")
         self.cmd.copy(
-            self.project.homebrew / 'Resources/Python.app/Contents/MacOS/Python',
-            self.prefix_bin / self.product.name_ver
+            self.project.homebrew / "Resources/Python.app/Contents/MacOS/Python",
+            self.prefix_bin / self.product.name_ver,
         )
         self.clean_python()
         self.ziplib()
@@ -950,3 +956,19 @@ class HomebrewBuilder(PyJsBuilder):
         self.cp_python_to_ext_resources(self.project.pyjs_external)
         self.xbuild_targets("bin-homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()
+
+
+class StaticExtBuilder(PyJsBuilder):
+    """pyjs externals from minimal statically built python"""
+
+    @property
+    def product_exists(self):
+        static_lib = self.project.lib / 'python-static' / 'lib' / self.project.staticlib
+        if not static_lib.exists():
+            self.log.warning("static python is not built: %s", static_lib)
+        return static_lib.exists()
+
+    def build(self):
+        """builds externals from statically built python"""
+        if self.product_exists:
+            self.xbuild_targets("static-ext", targets=["py", "pyjs"])

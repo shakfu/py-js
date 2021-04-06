@@ -350,6 +350,7 @@ name             | uses      | format     | size     | portable  | standalone
 bin-homebrew-sys | homebrew  | externals  | 300K     | no        | no  [1]
 bin-homebrew-pkg | homebrew  | package    | 13.5MB   | yes       | yes
 bin-homebrew-ext | homebrew  | externals  | 27.1MB   | yes       | yes [2]
+static-ext       | static-py | externals  | 17.6MB   | yes       | yes
 
 [1] additional benefit is you can use all your system python packages
 
