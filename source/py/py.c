@@ -91,10 +91,9 @@ error:
 }
 
 
-t_hashtab* get_global_registry(void) { return py_global_registry; }
-
-
-
+t_hashtab* get_global_registry(void) { 
+    return py_global_registry; 
+}
 
 
 void py_locate_path_from_symbol(t_py* x, t_symbol* s)

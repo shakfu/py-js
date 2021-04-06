@@ -1,5 +1,5 @@
 # api.pyx
-"""
+"""api: max api wrapped by cython for use by `py` external
 
 The main place to create wrappers and utilities to access max's api
 

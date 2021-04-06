@@ -1505,8 +1505,8 @@ static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_no_arguments_given[] = "no arguments given";
 static const char __pyx_k_registry_not_populated[] = "registry not populated";
 static const char __pyx_k_no_object_found_with_name[] = "no object found with name";
-static const char __pyx_k_The_main_place_to_create_wrappe[] = "\n\nThe main place to create wrappers and utilities to access max's api\n\nSee below for examples of this.\n\n- [x] mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)\n- [ ] t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)\n\n\n";
 static const char __pyx_k_cannot_convert_c_parsestring_to[] = "cannot convert c parsestring to atom array";
+static const char __pyx_k_api_max_api_wrapped_by_cython_fo[] = "api: max api wrapped by cython for use by `py` external\n\nThe main place to create wrappers and utilities to access max's api\n\nSee below for examples of this.\n\n- [x] mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)\n- [ ] t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)\n\n\n";
 static const char __pyx_k_no_default___reduce___due_to_non[] = "no default __reduce__ due to non-trivial __cinit__";
 static const char __pyx_k_number_of_args_exceeded_app_limi[] = "number of args exceeded app limit";
 static PyObject *__pyx_kp_u_Hello_World;
@@ -5836,7 +5836,7 @@ static PyModuleDef_Slot __pyx_moduledef_slots[] = {
 static struct PyModuleDef __pyx_moduledef = {
     PyModuleDef_HEAD_INIT,
     "api",
-    __pyx_k_The_main_place_to_create_wrappe, /* m_doc */
+    __pyx_k_api_max_api_wrapped_by_cython_fo, /* m_doc */
   #if CYTHON_PEP489_MULTI_PHASE_INIT
     0, /* m_size */
   #else
@@ -6471,7 +6471,7 @@ if (!__Pyx_RefNanny) {
   Py_INCREF(__pyx_m);
   #else
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("api", __pyx_methods, __pyx_k_The_main_place_to_create_wrappe, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("api", __pyx_methods, __pyx_k_api_max_api_wrapped_by_cython_fo, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -6749,7 +6749,7 @@ if (!__Pyx_RefNanny) {
 
   /* "api.pyx":1
  * # api.pyx             # <<<<<<<<<<<<<<
- * """
+ * """api: max api wrapped by cython for use by `py` external
  * 
  */
   __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
