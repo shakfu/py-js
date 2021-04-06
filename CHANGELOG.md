@@ -7,11 +7,38 @@
 
 - builder: new python build system
 
-  - While the makefile/bash based build system works quite well for the homebrew cases, it was found to be a little limited in complex cases and I went off on a protracted tangent to develop a pure python build system which is now included.
+  - While the makefile/bash based build system works quite well for the homebrew cases, it was found to be a little limited in more complex cases. This led me to go off on a protracted tangent to develop a pure python build system which is now included as a parallel build system.
   
-  - In retrospect, I should have probably just implemented the complex solutions in a bunch of python scripts instead of a whole new build system. But for the task of automatically building python from source to make self-contained static libraries, it was probably useful in the end.
-  
-  - This does not mean that bash and makefile will be abandoned. A parallel track is possible, where the python code is called in case the bash code hits a wall. Ultimately the python code should be able to address all use cases comprehensively.
+  - This does not mean that bash and makefile will be abandoned. This parallel track just means that I can use the python build system when bash scripts and makefiles become unwieldy. Ultimately the python builder should be able to address all compilation cases comprehensively.
+
+  To test it, from path `py-js/source/py` run the following
+
+  ```bash
+  $ python3 -m builder --help
+
+  usage: builder [-h] [-v]
+
+  builder: builds the py-js max external and python from source.
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    -v, --version         show program's version number and exit
+
+  subcommands:
+    valid subcommands
+
+    {py_all,py_shared,py_static,pyjs_ext,pyjs_pkg,pyjs_sys,static_ext,test}
+                          additional help
+      py_all              build all python variations
+      py_shared           build shared python
+      py_static           build static python
+      pyjs_ext            build portable pyjs externals (homebrew)
+      pyjs_pkg            build portable pyjs package (homebrew)
+      pyjs_sys            build non-portable pyjs package (homebrew)
+      static_ext          build portable pyjs externals (static py)
+      test                interactive testing shell
+
+  ```
 
 - `bin-homebrew-pkg` is now working without issues and can even be used in standalones
 
