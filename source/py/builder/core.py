@@ -76,16 +76,6 @@ class ShellCmd:
         else:
             shutil.copy2(src, dst)
 
-    # def copytree(self, src, dst):
-    #     """Copy recursively from src path to dst path."""
-    #     self.log.info("move tree %s to %s", src, dst)
-    #     shutil.copytree(src, dst)
-
-    # def copyfile(self, src, dst):
-    #     """Copy file from src path to dst path."""
-    #     self.log.info("copy %s to %s", src, dst)
-    #     shutil.copyfile(src, dst)
-
     def remove(self, path):
         """Remove file or folder."""
         if path.is_dir():
@@ -150,10 +140,6 @@ class Project:
     pyjs = root.parent.parent
     support = pyjs / "support"
     externals = pyjs / "externals"
-
-    # prefix = support / py_name
-    # bin = prefix / "bin"
-    # lib = prefix / "lib" / py_name
 
     py_external = externals / "py.mxo"
     pyjs_external = externals / "pyjs.mxo"
@@ -397,7 +383,6 @@ class Builder:
 
     def install(self):
         """deploy to package"""
-        # self.cmd(f"mkdir -p {self.project.package}")
         self.project.package.mkdir(exist_ok=True)
         for subdir in self.project.package_dirs:
             self.cmd(
@@ -408,10 +393,9 @@ class Builder:
 class Recipe:
     """A platform-specific container for multiple builder-centric projects."""
 
-    # def __init__(self, name: str = None, builders: list[Builder] = None, **settings):
-    def __init__(self, name: str = None, builders: list[Builder] = None):
+    def __init__(self, name: str = None, builders: list[Builder] = None, **settings):
         self.name = name
-        # self.settings = Settings(**settings)
+        self.settings = Settings(**settings)
         self.builders = builders or []
 
     def __str__(self):
@@ -906,9 +890,7 @@ class HomebrewBuilder(PyJsBuilder):
     def copy_python(self):
         """copy python from homebrew to destination"""
         self.python_lib.mkdir(parents=True, exist_ok=True)
-        # self.cmd(f"mkdir -p {self.python_lib}")
         self.prefix_bin.mkdir(parents=True, exist_ok=True)
-        # self.cmd(f"mkdir -p {self.prefix_bin}")
         self.cmd.copy(
             self.project.homebrew / 'Python', self.prefix / self.product.dylib
         )
@@ -942,17 +924,11 @@ class HomebrewBuilder(PyJsBuilder):
         )
         self.cmd.copy(self.project.homebrew/'include', self.prefix_include)
         self.cmd.remove(self.prefix_lib / self.product.dylib)
-        # self.cmd(f"rm -rf {self.prefix}/lib/{self.product.dylib}")
         self.cmd.remove(self.prefix_lib / 'pkgconfig')
-        # self.cmd(f"rm -rf {self.prefix}/lib/pkgconfig")
         self.cmd.copy(
             self.project.homebrew / 'Resources/Python.app/Contents/MacOS/Python',
             self.prefix_bin / self.product.name_ver
         )
-        # self.cmd(
-        #     f"cp -rf {self.project.homebrew}/Resources/Python.app/Contents/MacOS/Python"
-        #     f" {self.prefix_bin}/{self.product.name_ver}"
-        # )
         self.clean_python()
         self.ziplib()
 
