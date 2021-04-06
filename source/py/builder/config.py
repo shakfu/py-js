@@ -1,7 +1,7 @@
 from .core import (Product, Recipe, PYTHON_VERSION_STRING,
                    Bzip2Builder, XzBuilder, OpensslBuilder,
                    StaticPythonBuilder, SharedPythonBuilder, FrameworkPythonBuilder,
-                   HomebrewBuilder)
+                   HomebrewBuilder, StaticExtBuilder)
 
 bzip2_product = Product(
     name="bzip2",
@@ -24,12 +24,14 @@ xz_product = Product(
     libs_static=["libxz.a"],
 )
 
-python_product = Product(
-    name="Python",
-    version=PYTHON_VERSION_STRING,
-    url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
-    libs_static=["libpython3.9.a"],
-)
+def py_product(build_dir):
+    return Product(
+        name="Python",
+        version=PYTHON_VERSION_STRING,
+        build_dir=build_dir,
+        url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
+        libs_static=["libpython3.9.a"],
+    )
 
 pyjs_product = Product(
     name="Python",
@@ -37,28 +39,36 @@ pyjs_product = Product(
 )
 
 bzip2_builder = Bzip2Builder(product=bzip2_product)
+
 ssl_builder = OpensslBuilder(product=ssl_product)
+
 xz_builder = XzBuilder(product=xz_product)
+
 static_python_builder = StaticPythonBuilder(
-    product=python_product, depends_on=[
+    product=py_product('python-static'), depends_on=[
         bzip2_builder, ssl_builder, xz_builder]
 )
+
 shared_python_builder = SharedPythonBuilder(
-    product=python_product, depends_on=[
+    product=py_product('python-shared'), depends_on=[
         bzip2_builder, ssl_builder, xz_builder]
 )
-framework_python_builder = FrameworkPythonBuilder(
-    product=python_product, depends_on=[
-        bzip2_builder, ssl_builder, xz_builder]
-)
+
+# framework_python_builder = FrameworkPythonBuilder(
+#     product=py_product('python-framework'), depends_on=[
+#         bzip2_builder, ssl_builder, xz_builder]
+# )
+
 homebrew_builder = HomebrewBuilder(product=pyjs_product)
+
+staticext_builder = StaticExtBuilder(product=pyjs_product)
 
 build_all_recipe = Recipe(
     name="build_all",
     builders=[
         static_python_builder,
         shared_python_builder,
-        framework_python_builder,
+        # framework_python_builder,
         homebrew_builder,
     ],
 )
@@ -70,6 +80,7 @@ self_contained_recipe = Recipe(
             product=Product(
                 name="Python",
                 version=PYTHON_VERSION_STRING,
+                build_dir="python-static",
                 url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
                 libs_static=["libpython3.9.a"],
             ),
