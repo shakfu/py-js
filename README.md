@@ -291,7 +291,7 @@ git submodule update
 
 ### Homebrew Python3
 
-Homebrew Python3 should be installed. See [Homebrew](https://brew.sh) for the install oneliner, it is provided here as well.
+Homebrew Python3 is required. If it is not already install see [Homebrew](https://brew.sh) for the install oneliner (provided here as well for reference).
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -339,11 +339,22 @@ This builds the default 'linked-to-system|homebrew python' version of `py`. Read
 
 You can run alternative builds using make or the python `builder` from `py-js/sources/py`.
 
-### Alternative Builds
+### Build Variations
+
+One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work the most reliably. Externals built on custom minimized static build of python from src also work well but need to be further documented.
+
+There is generally tradeoff of size vs. portability:
+
+name             | uses      | format     | size     | portable  | standalone
+:--------------- | :-------: | :--------: | :------: | :-------: | :---------
+bin-homebrew-sys | homebrew  | externals  | 300K     | no        | no  [1]
+bin-homebrew-pkg | homebrew  | package    | 13.5MB   | yes       | yes
+bin-homebrew-ext | homebrew  | externals  | 27.1MB   | yes       | yes [2]
+
+[1] additional benefit is you can use all your system python packages
+[2] not 100% working yet.
 
 #### Embed Python in the Package (Now working with Standalones)
-
-**NOTE**: not working in standalones (use external method)
 
 In the root of the py-js directory:
 
@@ -351,7 +362,7 @@ In the root of the py-js directory:
 make -C source/py bin-homebrew-pkg
 ```
 
-or in py-js/source/py
+or in `py-js/source/py`
 
 ```bash
 make bin-homebrew-pkg
@@ -359,7 +370,7 @@ make bin-homebrew-pkg
 
 This will create a `py` package in $HOME/Documents/Max 8/packages/py
 
-Once this is done you can run some of the patchers to test the py and pyjs objects.
+Once this is done you can run some of the patchers to in the package test the py and pyjs objects.
 
 *NOTE*: Recent changes in Max have allowed for this to work in standalones. Just create your standalone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built into a `<STANDALONE>` then copy the whole aforementioned `py` package to `<STANDALONE>/Contents/Resources/C74/packages` and delete the redundant `py.mxo` in `<STANDALONE>/Contents/Resources/C74/externals` since it already exists in the just-copied package.
 
@@ -376,7 +387,7 @@ cd source/py
 make homebrew-ext
 ```
 
-Another implementation variation builds both externals using a minimal static python build. This has provden reproducibly successful (see `py-js/source/py/targets/static-ext` after building a static-python build. A more robust implementation will following the ongoing cleanup and refactoring process.
+Another implementation variation builds both externals using a minimal static python build. This has provden reproducibly successful (see `py-js/source/py/targets/static-ext` after building a static-python build. A more robust implementation will be be documented eventually.
 
 ### Sidenote about building on a Mac
 

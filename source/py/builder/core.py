@@ -3,10 +3,12 @@
 Aims to be pure python without any dependencies except the standard library.
 
 ## TODO
-[ ] should check for existance of libs (not just static libs)
-[ ] reset should be deep, clean should be shallow
-[ ] assert builder.product_exists
-[ ] test replacing 'cp -rf' with pure python self.copy
+- [ ] should check for existance of libs (not just static libs)
+- [ ] reset should be deep, clean should be shallow
+- [ ] assert builder.product_exists
+- [ ] test replacing 'cp -rf' with pure python self.copy
+- [ ] check whether it is better to remove 'exist_ok=True' param in Path.mkdir
+      to raise the error.
 
 
 """
@@ -65,24 +67,24 @@ class ShellCmd:
 
     def copy(self, src: Path, dst: Path):
         """copy file or folders -- tries to be behave like `cp -rf`"""
-        self.log.info("copy %s to $s", src, dst)
+        self.log.info("copy %s to %s", src, dst)
         src, dst = Path(src), Path(dst)
         if dst.exists():
             dst = dst / src.name
         if src.is_dir():
             shutil.copytree(src, dst)
         else:
-            shutil.copyfile(src, dst)
+            shutil.copy2(src, dst)
 
-    def copytree(self, src, dst):
-        """Copy recursively from src path to dst path."""
-        self.log.info("move tree %s to %s", src, dst)
-        shutil.copytree(src, dst)
+    # def copytree(self, src, dst):
+    #     """Copy recursively from src path to dst path."""
+    #     self.log.info("move tree %s to %s", src, dst)
+    #     shutil.copytree(src, dst)
 
-    def copyfile(self, src, dst):
-        """Copy file from src path to dst path."""
-        self.log.info("copy %s to %s", src, dst)
-        shutil.copyfile(src, dst)
+    # def copyfile(self, src, dst):
+    #     """Copy file from src path to dst path."""
+    #     self.log.info("copy %s to %s", src, dst)
+    #     shutil.copyfile(src, dst)
 
     def remove(self, path):
         """Remove file or folder."""
@@ -161,7 +163,7 @@ class Project:
     # environmental vars
     HOME = os.getenv("HOME")
     package_name = "py"
-    package = f"{HOME}/Documents/Max 8/Packages/{package_name}"
+    package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
     package_dirs = [
         "docs",
         "examples",
@@ -395,7 +397,8 @@ class Builder:
 
     def install(self):
         """deploy to package"""
-        self.cmd(f"mkdir -p {self.project.package}")
+        # self.cmd(f"mkdir -p {self.project.package}")
+        self.project.package.mkdir(exist_ok=True)
         for subdir in self.project.package_dirs:
             self.cmd(
                 f"rsync -a --delete {self.project.pyjs}/{subdir} {self.project.package}"
@@ -638,7 +641,7 @@ class PythonBuilder(Builder):
 
         self.cmd.remove(self.site_packages)
         self.lib_dynload.rename(temp_lib_dynload)
-        self.cmd.copyfile(self.python_lib / "os.py", temp_os_py)
+        self.cmd.copy(self.python_lib / "os.py", temp_os_py)
 
         zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
         shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
@@ -698,7 +701,7 @@ class PythonSrcBuilder(PythonBuilder):
             return
         if not setup_local:
             setup_local = self.setup_local
-        self.cmd.copyfile(
+        self.cmd.copy(
             self.project.patch / self.product.ver / setup_local,
             self.src_path / "Modules" / "Setup.local",
         )
@@ -835,12 +838,9 @@ class HomebrewBuilder(PyJsBuilder):
     patch: str = ""
 
     def cp_pkgs(self, pkgs):
-        """copy package dirs from homebrew pkg folder to destination pkg folder"""
+        """copy package dirs from homebrew python lib to target python lib"""
         for pkg in pkgs:
-            # self.log("copying %s", pkg)
-            self.cmd(
-                f"cp -rf {self.project.homebrew_pkgs}/{pkg} {self.python_lib}/{pkg}"
-            )
+            self.cmd.copy(self.project.homebrew_pkgs/pkg, self.python_lib/pkg)
 
     def rm_libs(self, names):
         """remove all named python dylib libraries"""
@@ -905,10 +905,12 @@ class HomebrewBuilder(PyJsBuilder):
 
     def copy_python(self):
         """copy python from homebrew to destination"""
-        self.cmd(f"mkdir -p {self.python_lib}")
-        self.cmd(f"mkdir -p {self.prefix_bin}")
-        self.cmd(
-            f"cp {self.project.homebrew}/Python {self.prefix}/{self.product.dylib}"
+        self.python_lib.mkdir(parents=True, exist_ok=True)
+        # self.cmd(f"mkdir -p {self.python_lib}")
+        self.prefix_bin.mkdir(parents=True, exist_ok=True)
+        # self.cmd(f"mkdir -p {self.prefix_bin}")
+        self.cmd.copy(
+            self.project.homebrew / 'Python', self.prefix / self.product.dylib
         )
         self.cmd(f"cp -rf {self.project.homebrew_pkgs}/*.py {self.python_lib}")
         self.cp_pkgs(
@@ -938,13 +940,19 @@ class HomebrewBuilder(PyJsBuilder):
                 "xmlrpc",
             ]
         )
-        self.cmd(f"cp -rf {self.project.homebrew}/include {self.prefix}/include")
-        self.cmd(f"rm -rf {self.prefix}/lib/{self.product.dylib}")
-        self.cmd(f"rm -rf {self.prefix}/lib/pkgconfig")
-        self.cmd(
-            f"cp -rf {self.project.homebrew}/Resources/Python.app/Contents/MacOS/Python"
-            f" {self.prefix_bin}/{self.product.name_ver}"
+        self.cmd.copy(self.project.homebrew/'include', self.prefix_include)
+        self.cmd.remove(self.prefix_lib / self.product.dylib)
+        # self.cmd(f"rm -rf {self.prefix}/lib/{self.product.dylib}")
+        self.cmd.remove(self.prefix_lib / 'pkgconfig')
+        # self.cmd(f"rm -rf {self.prefix}/lib/pkgconfig")
+        self.cmd.copy(
+            self.project.homebrew / 'Resources/Python.app/Contents/MacOS/Python',
+            self.prefix_bin / self.product.name_ver
         )
+        # self.cmd(
+        #     f"cp -rf {self.project.homebrew}/Resources/Python.app/Contents/MacOS/Python"
+        #     f" {self.prefix_bin}/{self.product.name_ver}"
+        # )
         self.clean_python()
         self.ziplib()
 
