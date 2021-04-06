@@ -10,17 +10,17 @@ class DependencyManager:
     """Aggreggates, copies dylib dependencies and fixed references.
 
     target: dylib to made relocatable
-    frameworks_dir: where target dylib will be copied to with copied dependents
+    dest_dir: where target dylib will be copied to with copied dependents
     exec_ref: back ref for executable or plugin
     """
 
     def __init__(self,
                  target: Path,
-                 frameworks_dir: Path = None,
+                 dest_dir: Path = None,
                  staticlibs_dir: Path = None,
                  exec_ref: str = None):
         self.target = target
-        self.frameworks_dir = frameworks_dir or Path('build')
+        self.dest_dir = dest_dir or Path('build')
         self.staticlibs_dir = staticlibs_dir
         self.exec_ref = exec_ref or '@loader_path/../Frameworks'
         self.install_names = {}
@@ -62,16 +62,16 @@ class DependencyManager:
         for dep in self.deps:
             _, dep_filename = os.path.split(dep)
             # dep_path, dep_filename = os.path.split(dep)
-            # dest = os.path.join(self.frameworks_dir, dep_filename)
+            # dest = os.path.join(self.dest_dir, dep_filename)
             self.dep_list.append([dep, '@rpath/' + dep_filename])
 
     def copy_dylibs(self):
-        if not os.path.exists(self.frameworks_dir):
-            os.mkdir(self.frameworks_dir)
+        if not os.path.exists(self.dest_dir):
+            os.mkdir(self.dest_dir)
 
-        # cp target to frameworks_dir
-        if os.path.dirname(self.target) != self.frameworks_dir:
-            dest = self.frameworks_dir / os.path.basename(self.target)
+        # cp target to dest_dir
+        if os.path.dirname(self.target) != self.dest_dir:
+            dest = self.dest_dir / os.path.basename(self.target)
             shutil.copyfile(self.target, dest)
             os.chmod(dest, 0o644)
             cmdline = ['install_name_tool', '-id', self.exec_ref, dest]
@@ -87,7 +87,7 @@ class DependencyManager:
             orig_path, _ = item
             _, dylib = os.path.split(orig_path)
 
-            dest = os.path.join(self.frameworks_dir, dylib)
+            dest = os.path.join(self.dest_dir, dylib)
 
             if not os.path.exists(dest):
                 shutil.copyfile(orig_path, dest)
@@ -100,7 +100,7 @@ class DependencyManager:
             #     print('\t', i)
             # print()
 
-            target = os.path.join(self.frameworks_dir, key)
+            target = os.path.join(self.dest_dir, key)
             deps = self.install_names[key]
             for dep in deps:
                 old, new = dep
