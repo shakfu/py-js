@@ -352,6 +352,7 @@ bin-homebrew-pkg | homebrew  | package    | 13.5MB   | yes       | yes
 bin-homebrew-ext | homebrew  | externals  | 27.1MB   | yes       | yes [2]
 
 [1] additional benefit is you can use all your system python packages
+
 [2] not 100% working yet.
 
 #### Embed Python in the Package (Now working with Standalones)

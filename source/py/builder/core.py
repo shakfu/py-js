@@ -6,10 +6,8 @@ Aims to be pure python without any dependencies except the standard library.
 - [ ] should check for existance of libs (not just static libs)
 - [ ] reset should be deep, clean should be shallow
 - [ ] assert builder.product_exists
-- [ ] test replacing 'cp -rf' with pure python self.copy
 - [ ] check whether it is better to remove 'exist_ok=True' param in Path.mkdir
       to raise the error.
-
 
 """
 import logging
@@ -21,8 +19,6 @@ import subprocess
 from textwrap import dedent
 from pathlib import Path
 from types import SimpleNamespace
-
-# from typing import List, Optional, Type, Union
 
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
@@ -591,11 +587,11 @@ class PythonBuilder(Builder):
 
     def write_python_getpip(self):
         """optionally provide latets pip to binary"""
-        with open(f"{self.prefix}/bin/get_pip.sh") as f:
-            f.write(
+        with open(f"{self.prefix}/bin/get_pip.sh") as txtfile:
+            txtfile.write(
                 dedent(
                     f"""
-                curl {URL_GETPIP} -s -o get-pip.py 
+                curl {URL_GETPIP} -s -o get-pip.py
                 ./bin/{self.product.name_ver} get-pip.py
                 rm get-pip.py
                 """
