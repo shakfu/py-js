@@ -8,8 +8,7 @@
 
 - [ ] test replacing 'cp -rf' with pure python self.copy
 
-- [ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for
-static linking as building it takes ages.
+- [ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
 
 - [ ] fix references (still pointing to compiled locations) ??
 
