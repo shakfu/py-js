@@ -139,17 +139,17 @@ The objective is to have 3 deployment variations:
 
 1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
 
-2. Embedding the python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This makes it usable in standalones.
+2. Embedding the python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This makes it size efficient and usable in standalones.
 
-3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external/jsextension object, which can make it portable and usable in standalones.
+3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external bundle itself, which can make it portable and usable in standalones.
 
-(Note that only the two first methods work reliably right now. With the latter requiring some slight manual post-build tweaks to get the standalone working with python. Embedding the python interpreter in the external itself is still in progress and not implemented.
+As of this writing all three deployment scenarios, however it is worth looking more closely in into the tradeoff of each case more closely. This topic is treated in more specificity below (see [Build Variations](#build-variations))
 
 Deployment Scenario  | `py` | `pyjs`
 :------------------- | :--: | :--------:
 Link to sys python   | 1    | 1
 Embed in package     | 1    | 1
-Embed in external    | 0    | 0
+Embed in external    | 1    | 1
 
 ### Key Features
 
