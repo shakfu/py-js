@@ -143,7 +143,7 @@ The objective is to have 3 deployment variations:
 
 3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external bundle itself, which can make it portable and usable in standalones.
 
-As of this writing all three deployment scenarios, however it is worth looking more closely in into the tradeoff of each case more closely. This topic is treated in more specificity below (see [Build Variations](#build-variations))
+As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case. This topic is treated in more detail below (see [Build Variations](#build-variations))
 
 Deployment Scenario  | `py` | `pyjs`
 :------------------- | :--: | :--------:
