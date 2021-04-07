@@ -8,7 +8,7 @@ repo - <https://github.com/shakfu/py-js>
 
 ## Quickstart
 
-If you are interested to try this out, please note that it currently only works on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this as pre-alpha level code. There is still quite a bit to before a release can be made in good concience.
+If you are interested to try this out, please note that it currently only works on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this as pre-alpha level code and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module.) In any case, there is still quite a bit to do before a release can be made.
 
 With such caveats aside installation is pretty straighforward:
 
