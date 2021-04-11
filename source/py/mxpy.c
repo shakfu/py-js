@@ -6,13 +6,19 @@ from https://github.com/garthz/pdpython
 /// Copyright (c) 2014, Garth Zeglin.  All rights reserved.  Provided under the
 /// terms of the BSD 3-clause license.
 
-# LOG
+## LOG
 
 - still not working on load..
 - compiling without errors
 - translated some parts to max
 - renamed to mxpy.c
 - removed some comments
+ 
+## TODO
+
+ - to resolve: it is importing module the helper module but probably crashing mxgui
+ 
+ - separate 'mxgui' from 'mxpy' from 'python' as things behave confused somehow.
 
 */
 
@@ -22,14 +28,8 @@ from https://github.com/garthz/pdpython
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
-#include <libgen.h>
-#endif
-
 #include "ext.h"
 #include "ext_obex.h"
-
 
 typedef struct _mxpy {
     t_object x_ob;       ///< standard object header
@@ -41,12 +41,16 @@ static t_class* mxpy_class;
 
 static PyObject* t_atom_to_PyObject(t_atom* atom)
 {
+    post("t_atom_to_PyObject start");
+    
     switch (atom->a_type) {
 
     case A_FLOAT:
+        post("float: %f", atom_getfloat(atom));
         return PyFloat_FromDouble(atom_getfloat(atom));
 
     case A_SYM:
+        post("symbol: %s", atom_getsym(atom)->s_name);
         // symbols are returned as strings
         return PyUnicode_FromString(atom_getsym(atom)->s_name);
 
@@ -62,6 +66,8 @@ static PyObject* t_atom_to_PyObject(t_atom* atom)
 
 static PyObject* t_atom_list_to_PyObject_list(int argc, t_atom* argv)
 {
+    post("t_atom_list_to_PyObject_list start");
+    
     PyObject* list = PyTuple_New(argc);
     int i;
     for (i = 0; i < argc; i++) {
@@ -74,6 +80,8 @@ static PyObject* t_atom_list_to_PyObject_list(int argc, t_atom* argv)
 
 static void PyObject_to_atom(PyObject* value, t_atom* atom)
 {
+    post("PyObject_to_atom start");
+    
     if (value == Py_True)
         atom_setlong(atom, 1);
     else if (value == Py_False)
@@ -90,6 +98,8 @@ static void PyObject_to_atom(PyObject* value, t_atom* atom)
 
 static void new_list_from_sequence(PyObject* seq, int* argc, t_atom** argv)
 {
+    post("new_list_from_sequence start");
+    
     Py_ssize_t len = 0;
     Py_ssize_t i;
 
@@ -106,6 +116,8 @@ static void new_list_from_sequence(PyObject* seq, int* argc, t_atom** argv)
 
 static void emit_outlet_message(PyObject* value, void* x_outlet)
 {
+    post("emit_outlet_message start");
+    
     if (value == Py_True)
         outlet_float(x_outlet, 1.0);
     else if (value == Py_False)
@@ -140,6 +152,8 @@ static void emit_outlet_message(PyObject* value, void* x_outlet)
 static void mxpy_eval(t_mxpy* x, t_symbol* selector, int argcount,
                           t_atom* argvec)
 {
+    post("mxpy_eval start");
+
     PyObject* func = NULL;
     PyObject* args = NULL;
     PyObject* value = NULL;
@@ -190,10 +204,17 @@ static void mxpy_eval(t_mxpy* x, t_symbol* selector, int argcount,
 
 static void* mxpy_new(t_symbol* selector, int argcount, t_atom* argvec)
 {
+    post("mxpy_new start");
     
     t_mxpy* x = (t_mxpy*)object_alloc(mxpy_class);
-    x->py_object = NULL;
-
+    
+    if (x) {
+        x->py_object = NULL;
+    
+        // create an outlet on which to return values
+        x->x_outlet = outlet_new(x, NULL);
+    }
+    
     if (argcount < 2) {
         post("Error: python objects require a module and function specified "
              "in the creation arguments.");
@@ -214,6 +235,26 @@ static void* mxpy_new(t_symbol* selector, int argcount, t_atom* argvec)
         // }
         // Py_DECREF(modulePath);
 
+        PyObject* modulePath = PyUnicode_FromString("/usr/local/lib/python3.9/site-packages");
+         PyObject* sysPath = PySys_GetObject(
+             (char*)"path"); // borrowed reference
+
+         if (!PySequence_Contains(sysPath, modulePath)) {
+             post("Appending '/usr/local/lib/python3.9/site-packages' to Python load path");
+             PyList_Append(sysPath, modulePath);
+         }
+         Py_DECREF(modulePath);
+        
+        // try loading a system module
+        PyObject* os_name = PyUnicode_FromString("os");
+        PyObject* os_module = PyImport_Import(os_name);
+        Py_DECREF(os_name);
+        if (os_module == NULL) {
+            post("ERROR: unable to import os module");
+        } else {
+            post("os module imported");
+            Py_DECREF(os_module);
+        }
 
         // try loading the module
         PyObject* module_name = t_atom_to_PyObject(&argvec[0]);
@@ -249,15 +290,14 @@ static void* mxpy_new(t_symbol* selector, int argcount, t_atom* argvec)
         }
     }
 
-    // create an outlet on which to return values
-    x->x_outlet = outlet_new(&x->x_ob, NULL);
-    return (void*)x;
+    return (x);
 }
 /****************************************************************/
 /// Release an instance of a Pd 'python' object.
 static void mxpy_free(t_mxpy* x)
 {
     post("python freeing object");
+    
     if (x) {
         object_free(x->x_outlet); // ????
         //outlet_free(x->x_outlet);
@@ -271,6 +311,8 @@ static void mxpy_free(t_mxpy* x)
 static PyObject* mxgui_post(PyObject* self __attribute__((unused)),
                             PyObject* args)
 {
+    post("mxgui_post start");
+    
     char* text;
     if (!PyArg_ParseTuple(args, "s", &text)) {
         post("Warning: unprintable object posted to the console from a python "
@@ -294,10 +336,17 @@ static struct PyModuleDef mxguimodule = {
     mxgui_methods
 };
 
-PyMODINIT_FUNC PyInit_mxgui(void) { return PyModule_Create(&mxguimodule); }
+PyMODINIT_FUNC PyInit_mxgui(void) {
+    
+    post("PyMODINIT_FUNC start");
+    
+    return PyModule_Create(&mxguimodule);
+}
 
 void ext_main(void* moduleRef)
 {
+    post("ext_main start");
+    
     t_class* c;
 
     c = class_new("python",   // t_symbol *name
@@ -307,9 +356,9 @@ void ext_main(void* moduleRef)
                     0,                    // int flags
                     A_GIMME, 0);          // t_atomtype arg1, ...
 
-    class_addmethod(c, (method)mxpy_eval, "eval", A_GIMME, 0);
-//    class_addanything(mxpy_class,
-//                      (method)mxpy_eval); // (t_class *c, t_method fn)
+     class_addmethod(c, (method)mxpy_eval, "eval", A_GIMME, 0);
+    //    class_addanything(mxpy_class,
+    //                      (method)mxpy_eval); // (t_class *c, t_method fn)
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mxpy_class = c;
@@ -332,38 +381,4 @@ void ext_main(void* moduleRef)
     PySys_SetArgv(0, &arg0);
 
     post("completed: ext_main");
-
-
-// #ifdef __APPLE__
-//     wchar_t* python_home;
-//     // char path[150];
-
-//     // method 1
-//     CFURLRef resources_url;
-//     CFURLRef resources_abs_url;
-//     CFStringRef resources_str;
-//     const char* resources_path;
-
-//     // Look for a bundle using its identifier
-//     resources_url = CFBundleCopyResourcesDirectoryURL(moduleRef);
-//     resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-//     resources_str = CFURLCopyFileSystemPath(resources_abs_url,
-//                                             kCFURLPOSIXPathStyle);
-//     resources_path = CFStringGetCStringPtr(resources_str,
-//                                            kCFStringEncodingUTF8);
-//     python_home = Py_DecodeLocale(resources_path, NULL);
-
-//     // CFRelease(resources_url);
-//     // CFRelease(resources_abs_url);
-//     CFRelease(resources_str);
-//     // CFRelease(resources_path);
-
-//     post("resources_path: %s", resources_path);
-
-//     if (python_home == NULL) {
-//         error("python_home is NULL");
-//         // return;
-//     }
-//     Py_SetPythonHome(python_home);
-// #endif
 }

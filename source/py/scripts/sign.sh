@@ -8,7 +8,7 @@ function section {
 	echo -e "${COLOR_BOLD_CYAN}>>> ${1} ${COLOR_RESET}"
 }
 
-VERSION=3.7
+VERSION=3.9
 PY=${HOME}/Downloads/src/py
 PY_EXT=${PY}/externals/py.mxo
 PY_EXT_VERSION=${PY_EXT}/Contents/Resources/Python.Framework/Versions/${VERSION}
