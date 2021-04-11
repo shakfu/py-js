@@ -4,7 +4,8 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#ifdef PY_STATIC_EXT
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#include <CoreFoundation/CoreFoundation.h>
 #include <libgen.h>
 #endif
 
@@ -50,7 +51,15 @@ t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
 static t_class* pyjs_class;
 static int pyjs_global_obj_count; // when 0 then free interpreter
 
-void ext_main(void* r)
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+CFBundleRef bundle;
+#endif
+
+#if defined(_WIN64) && defined(PY_STATIC_EXT)
+static char* external_path[MAX_PATH_CHARS];
+#endif
+
+void ext_main(void* module_ref)
 {
     t_class* c;
 
@@ -75,6 +84,17 @@ void ext_main(void* r)
     c->c_flags = CLASS_FLAG_POLYGLOT;
     class_register(CLASS_NOBOX, c);
     pyjs_class = c;
+
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+    // set global bundle ref for macos case
+    bundle = module_ref;
+#endif
+#if defined(_WIN64) && defined(PY_STATIC_EXT)
+    // set external_path for win64 case
+    GetModuleFileName(moduleRef, (LPCH)external_path, sizeof(external_path));
+    post("external path: %s", external_path);
+#endif
+
 }
 
 void pyjs_free(t_pyjs* x)
@@ -152,37 +172,33 @@ error:
 void pyjs_init(t_pyjs* x)
 {
 
-    #ifdef PY_STATIC_EXT
-    wchar_t *python_home;
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+    wchar_t* python_home;
 
-    CFBundleRef bundle;
     CFURLRef resources_url;
     CFURLRef resources_abs_url;
     CFStringRef resources_str;
     const char* resources_path;
 
-    // Look for a bundle using its identifier
-    bundle = CFBundleGetBundleWithIdentifier(CFSTR("org.me.pyjs"));
+    // Look for a bundle using its using global bundle ref
     resources_url = CFBundleCopyResourcesDirectoryURL(bundle);
     resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-    resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
-    resources_path = CFStringGetCStringPtr(resources_str, kCFStringEncodingUTF8);
-    python_home = Py_DecodeLocale(resources_path, NULL);    
+    resources_str = CFURLCopyFileSystemPath(resources_abs_url,
+                                            kCFURLPOSIXPathStyle);
+    resources_path = CFStringGetCStringPtr(resources_str,
+                                           kCFStringEncodingUTF8);
+    python_home = Py_DecodeLocale(resources_path, NULL);
 
-    // CFRelease(resources_url);
-    // CFRelease(resources_abs_url);
-    // CFRelease(resources_str);
-    // CFRelease(resources_path);
+    CFRelease(resources_str);
 
-    post("resources_path: %s", resources_path);
+    post("pyjs resources_path: %s", resources_path);
 
     if (python_home == NULL) {
         error("python_home is NULL");
         // return;
     }
     Py_SetPythonHome(python_home);
-
-    #endif
+#endif
 
     Py_Initialize();
 

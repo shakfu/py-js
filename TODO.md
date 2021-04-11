@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] 
+
 - [ ] should check for existance of libs (not just static libs)
 
 - [ ] reset should be deep, clean should be shallow

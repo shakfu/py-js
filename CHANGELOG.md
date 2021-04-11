@@ -5,6 +5,13 @@
 
 ## Key Fixes
 
+- Finally managed to resolve the release blocking issue of letting the external know its own path without hardcoding the name of the bundle. This means that in the specific case of static externals, pythonhome can be set to the external's Resources folder. Thanks Timothy Place for the tip on the cycling74 forums.
+
+- Side project: translate [pdpython](https://github.com/garthz/pdpython) to max -> mxpy.c
+  - compiling without errors but non-functional right now.
+
+- New demo section: uses [xcodegen](https://github.com/yonaskolb/XcodeGen) to generate xcode projects from `yaml` spec files.
+
 - builder: new python build system
 
   - While the makefile/bash based build system works quite well for the homebrew cases, it was found to be a little limited in more complex cases. This led me to go off on a protracted tangent to develop a pure python build system which is now included as a parallel build system.
