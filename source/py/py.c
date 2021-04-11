@@ -9,9 +9,11 @@
 /* max/msp api */
 #include "api.h"
 
-#ifdef PY_STATIC_EXT
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#include <CoreFoundation/CoreFoundation.h>
 #include <libgen.h>
 #endif
+
 
 /*--------------------------------------------------------------------------*/
 // GLOBALS
@@ -21,6 +23,14 @@ t_class* py_class; // global pointer to object class
 static int py_global_obj_count = 0; // when 0 then free interpreter
 
 static t_hashtab* py_global_registry = NULL; // global object lookups
+
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+CFBundleRef bundle;
+#endif
+
+#if defined(_WIN64) && defined(PY_STATIC_EXT)
+static char* external_path[MAX_PATH_CHARS];
+#endif
 
 // static wchar_t* program;
 
@@ -132,6 +142,7 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s)
     }
 }
 
+
 void py_appendtodict(t_py* x, t_dictionary* dict)
 {
     if (dict) {
@@ -144,7 +155,7 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
 /*--------------------------------------------------------------------------*/
 // INIT & FREE
 
-void ext_main(void* r)
+void ext_main(void* module_ref)
 {
     t_class* c;
 
@@ -246,6 +257,16 @@ void ext_main(void* r)
     // class_register(CLASS_NOBOX, c);
 
     py_class = c;
+
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+    // set global bundle ref for macos case
+    bundle = module_ref;
+#endif
+#if defined(_WIN64) && defined(PY_STATIC_EXT)
+    // set external_path for win64 case
+    GetModuleFileName(moduleRef, (LPCH)external_path, sizeof(external_path));
+    post("external path: %s", external_path);
+#endif
 }
 
 
@@ -352,19 +373,16 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
 void py_init(t_py* x)
 {
-    #ifdef PY_STATIC_EXT
+    #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     wchar_t *python_home;
     // char path[150];
 
-    // method 1
-    CFBundleRef bundle;
     CFURLRef resources_url;
     CFURLRef resources_abs_url;
     CFStringRef resources_str;
     const char* resources_path;
 
-    // Look for a bundle using its identifier
-    bundle = CFBundleGetBundleWithIdentifier(CFSTR("org.me.py"));
+    // Look for a bundle using its using global bundle ref
     resources_url = CFBundleCopyResourcesDirectoryURL(bundle);
     resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
     resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
@@ -373,7 +391,7 @@ void py_init(t_py* x)
 
     // CFRelease(resources_url);
     // CFRelease(resources_abs_url);
-    // CFRelease(resources_str);
+    CFRelease(resources_str);
     // CFRelease(resources_path);
 
     // STRANGE: if I run the next line the python_home isn't set properly!!
@@ -381,7 +399,7 @@ void py_init(t_py* x)
     // sprintf(path, "%s/Resources", dirname(dirname(exec_path)));
     // python_home = Py_DecodeLocale(path, NULL);
 
-    post("resources_path: %s", resources_path);
+    post("py resources_path: %s", resources_path);
     // python_home = Py_DecodeLocale("<abs-path-to-Resources>", NULL);
     if (python_home == NULL) {
         error("python_home is NULL");
@@ -1241,6 +1259,7 @@ error:
     // fail bang
     outlet_bang(x->p_outlet_middle);
 }
+
 
 void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
