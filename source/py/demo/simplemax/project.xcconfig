@@ -1,0 +1,12 @@
+#include "../common.xcconfig"
+
+C74_SYM_LINKER_FLAGS = @$(C74SUPPORT)/max-includes/c74_linker_flags.txt
+
+PROJECT_HEADERS =
+PROJECT_LIBS =
+
+// for MAX
+PROJECT_LDFLAGS = $(C74_SYM_LINKER_FLAGS)
+
+// for MSP
+//PROJECT_LDFLAGS = -framework MaxAudioAPI -framework JitterAPI $(C74_SYM_LINKER_FLAGS)
