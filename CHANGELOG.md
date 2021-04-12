@@ -5,6 +5,8 @@
 
 ## Key Fixes
 
+- Fixed some shell expansion risk highlighted by jobor019.
+
 - Finally managed to resolve the release blocking issue of letting the external know its own path without hardcoding the name of the bundle. This means that in the specific case of static externals, pythonhome can be set to the external's Resources folder. Thanks Timothy Place for the tip on the cycling74 forums.
 
 - Side project: translate [pdpython](https://github.com/garthz/pdpython) to max -> mxpy.c

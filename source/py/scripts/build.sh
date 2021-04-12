@@ -94,7 +94,7 @@ remove() {
 }
 
 write_setup_local() {
-	cp $PATCH/$1 $BUILD_SRC_PY/Modules/Setup.local
+	cp $PATCH/$PYTHON_VER/$1 $BUILD_SRC_PY/Modules/Setup.local
 }
 
 apply_patch() {

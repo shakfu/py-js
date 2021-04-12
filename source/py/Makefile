@@ -12,7 +12,7 @@ TARGETS="py pyjs"
 EXTENSION="api.pyx"
 
 MAX_VERSION="8"
-PACKAGE="${HOME}/Documents/Max\ ${MAX_VERSION}/Packages/${NAME}"
+PACKAGE=${HOME}"/Documents/Max "${MAX_VERSION}"/Packages/"${NAME}
 PKG_DIRS=docs examples externals help init \
          javascript jsextensions media patchers
 
@@ -102,12 +102,12 @@ pkg:
 	$(call section,"deploying to local package")
 	@mkdir -p ${PACKAGE}
 	@for target in ${PKG_DIRS}; do \
-    	rsync -a --delete "$(ROOTDIR)/$${target}" "${PACKAGE}"; \
+    	rsync -a --delete $(ROOTDIR)/$${target} ${PACKAGE}; \
 	done
 
 pkg-support:
 	$(call section,"deploying support/ to local package")
-	@rsync -a --delete "$(ROOTDIR)/support" "${PACKAGE}"
+	@rsync -a --delete $(ROOTDIR)/support ${PACKAGE}
 
 
 
