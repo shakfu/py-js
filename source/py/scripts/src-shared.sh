@@ -78,5 +78,5 @@ elif [ "$1" == "ext" ]; then
 	echo "Installing python from source as shared into external"
 	install_python_ext
 else
-	exit
+	echo "src-shared manual mode"
 fi
