@@ -41,6 +41,13 @@ install_python_ext() {
 	fix_python_dylib_for_ext
 }
 
+
+fix_python_exec_for_pkg() {
+	cd $BIN
+	install_name_tool -change ${SOURCE}/py/../../support/${PYTHON_NAME}/lib/${DYLIB} @executable_path/../lib/${DYLIB} ${PYTHON_NAME}
+	cd $ROOT
+}
+
 fix_python_dylib_for_pkg() {
 	cd $PREFIX/lib
 	chmod 777 ${DYLIB}

@@ -6,13 +6,14 @@ COLOR_BOLD_CYAN="\033[1;36m"
 COLOR_RESET="\033[m"
 
 # project variables
-NAME="py"
-PROJECT="${NAME}.xcodeproj"
-TARGETS="py pyjs"
-EXTENSION="api.pyx"
+NAME=py
+PROJECT=${NAME}.xcodeproj
+TARGETS=py pyjs
+EXTENSION=api.pyx
 
 MAX_VERSION="8"
 PACKAGE=${HOME}"/Documents/Max "${MAX_VERSION}"/Packages/"${NAME}
+#PACKAGE=${HOME}"/Documents/Max 8/Packages/"${NAME}
 PKG_DIRS=docs examples externals help init \
          javascript jsextensions media patchers
 
@@ -293,12 +294,12 @@ clean-build: clean-bin-homebrew-sys  \
 
 clean-targets-build:
 	$(call section,"cleaning targets/build directory")
-	@rm -rf "${PYDIR}/targets/build"
+	@rm -rf ${PYDIR}/targets/build
 
 clean-externals:
 	$(call section,"cleaning externals")
 	@for target in ${TARGETS}; do \
-		rm -rf "${ROOTDIR}/externals/$$target.mxo"  ; \
+		rm -rf ${ROOTDIR}/externals/$$target.mxo  ; \
 	done
 
 clean-bin-homebrew-sys:
@@ -330,15 +331,12 @@ clean-src-static-ext:
 
 clean-support:
 	$(call section,"cleaning support directory")
-	@rm -rf "${ROOTDIR}/support/*"
+	@rm -rf ${ROOTDIR}/support/*
 
 clean-pkg:
 	$(call section,"cleaning py pkg")
-	@rm -rf "${PACKAGE}"
+	@rm -rf ${PACKAGE}
 
 clean-xcode: clean-build
 	$(call section,"cleaning xcode detritus")
 	@find . | grep -E "(project.xcworkspace|xcuserdata)" | xargs rm -rf
-
-demo-pkg:
-	@echo "${PACKAGE}"
