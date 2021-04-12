@@ -17,10 +17,10 @@ cp_pkg() {
 
 
 clean_python() {
-	clean_python_pyc $PREFIX
-	clean_python_tests $LIB
+	clean_python_pyc "$PREFIX"
+	clean_python_tests "$LIB"
 
-	rm $LIB/distutils/command/*.exe
+	rm "$LIB/distutils/command/*.exe"
 
 	rm_lib config-${VERSION}-darwin
 	rm_lib idlelib
@@ -132,9 +132,9 @@ install_python() {
 	cp_pkg xmlrpc
 	
 	cp -rf ${HOMEBREW}/include ${PREFIX}/include
-	rm -rf ${PREFIX}/lib/${DYLIB}
-	rm -rf ${PREFIX}/lib/${DYLIB_NAME}.dylib
-	rm -rf ${PREFIX}/lib/pkgconfig
+	rm -rf "${PREFIX}/lib/${DYLIB}"
+	rm -rf "${PREFIX}/lib/${DYLIB_NAME}.dylib"
+	rm -rf "${PREFIX}/lib/pkgconfig"
 	cp -rf ${HOMEBREW}/Resources/Python.app/Contents/MacOS/Python ${BIN}/$NAME
 	clean_python
 	zip_python_library

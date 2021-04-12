@@ -329,18 +329,18 @@ build_python_framework() {
 	make altinstall
 	#reverse_patch makesetup.patch
 	cd $ROOT
-	clean_python $FWK_PREFIX
+	clean_python "$FWK_PREFIX"
 	zip_python_library $FWK_PREFIX
 	test_python_build $FWK_PREFIX
 }
 
 
 reset_build_downloads() {
-	rm -rf $BUILD_DOWNLOADS
+	rm -rf "$BUILD_DOWNLOADS"
 }
 
 reset_build_src() {
-	rm -rf $BUILD_DOWNLOADS
+	rm -rf "$BUILD_DOWNLOADS"
 }
 
 # reset() {
@@ -348,9 +348,9 @@ reset_build_src() {
 # }
 
 reset_all() {
-	rm -rf $BUILD_DOWNLOADS
-	rm -rf $BUILD_SRC
-	rm -rf $BUILD_LIB
+	rm -rf "$BUILD_DOWNLOADS"
+	rm -rf "$BUILD_SRC"
+	rm -rf "$BUILD_LIB"
 }
 
 
