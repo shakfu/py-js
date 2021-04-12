@@ -89,7 +89,7 @@ get_url() {
 	fname=$(basename $1)
 	curl $1 -o $TMP/$fname
 	tar -C $BUILD -xvf $TMP/$fname
-	rm -rf $TMP
+	rm -rf "$TMP"
 }
 
 get_python() {
@@ -102,16 +102,16 @@ get_ssl() {
 }
 
 reset_python() {
-	remove $PYTHON
+	remove "$PYTHON"
 }
 
 reset_support() {
-	remove $PREFIX
+	remove "$PREFIX"
 }
 
 reset_ssl() {
-	remove $SSL_SRC
-	remove $SSL
+	remove "$SSL_SRC"
+	remove "$SSL"
 }
 
 reset() {
@@ -122,23 +122,23 @@ reset() {
 
 remove() {
 	echo "removing $1"
-	rm -rf $1
+	rm -rf "$1"
 }
 
 rm_lib() {
 	echo "removing $1"
-	rm -rf ${LIB}/$1
+	rm -rf "${LIB}/$1"
 }
 
 
 rm_ext() {
 	echo "removing $LIB/lib-dynload/$1.cpython-${VER}m-darwin.so"
-	rm -rf $LIB/lib-dynload/$1.cpython-${VER}-darwin.so
+	rm -rf "$LIB/lib-dynload/$1.cpython-${VER}-darwin.so"
 }
 
 rm_bin() {
 	echo "removing $PREFIX/bin/$1"
-	rm -rf $PREFIX/bin/$1
+	rm -rf "$PREFIX/bin/$1"
 }
 
 
@@ -159,17 +159,17 @@ clean_python_tests() {
 
 clean_python_site_packages() {
 	echo "removing everything in $LIB/site-packages"
-	rm -rf $LIB/site-packages/*
+	rm -rf "$LIB/site-packages/*"
 }
 
 clean_python() {
 	clean_python_pyc $PREFIX
-	clean_python_tests $LIB
+	clean_python_tests "$LIB"
 	clean_python_site_packages
 
-	remove $LIB/distutils/command/*.exe
-	remove $PREFIX/lib/pkgconfig
-	remove $PREFIX/share
+	remove "$LIB/distutils/command/*.exe"
+	remove "$PREFIX/lib/pkgconfig"
+	remove "$PREFIX/share"
 
 	rm_lib config-${VERSION}m-darwin
 	rm_lib idlelib
@@ -268,7 +268,7 @@ chmod +x ${PREFIX}/bin/get_pip.sh
 }
 
 reset_prefix() {
-	remove $PREFIX
+	remove "$PREFIX"
 }
 
 compile_python() {

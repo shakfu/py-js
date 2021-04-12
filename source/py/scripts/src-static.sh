@@ -34,7 +34,7 @@ fix_python_dylib_for_ext() {
 }
 
 reset() {
-	rm -rf $PREFIX
+	rm -rf "$PREFIX"
 }
 
 
