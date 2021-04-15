@@ -795,6 +795,56 @@ class SharedPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.project.root)
 
 
+class SharedPythonForExtBuilder(SharedPythonBuilder):
+    """builds python in a shared format for self-contained externals."""
+
+    setup_local = "setup-shared.local"
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        self.fix_python_dylib_for_ext_resources()
+        # self.sign()
+
+    def fix_python_dylib_for_ext_resources(self):
+        """change dylib ref to point to loader in external build format"""
+        self.cmd.chdir(self.prefix / 'lib')
+        dylib_path = self.prefix / 'lib' / self.product.dylib
+        assert dylib_path.exists()
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool(
+            f"@loader_path/../Resources/lib/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+
+class SharedPythonForPkgBuilder(SharedPythonBuilder):
+    """builds python in a shared format for self-contained externals."""
+
+    setup_local = "setup-shared.local"
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        self.fix_python_dylib_for_pkg()
+        # self.sign()
+
+    def fix_python_dylib_for_pkg(self):
+        """change dylib ref to point to loader in package build format"""
+        self.cmd.chdir(self.prefix / 'lib')
+        dylib_path = self.prefix / 'lib' / self.product.dylib
+        assert dylib_path.exists()
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool(
+            f"@loader_path/../../../../support/{self.product.name_ver}/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+
 class StaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
 
@@ -911,7 +961,6 @@ class StaticPythonFullBuilder(StaticPythonBuilder):
                 # f'python{ver}-config',
             ]
         )
-
 
 
 class PyJsBuilder(PythonBuilder):
