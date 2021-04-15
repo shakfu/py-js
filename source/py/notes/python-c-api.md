@@ -1,6 +1,5 @@
 # Python C API
 
-
 ## Numpy Blues
 
 ```python
@@ -21,22 +20,17 @@ Out[22]: False
 
 try PyNumber_Check and always convert to float???!!
 
-
 ## Good Example of Embedding
 
-https://gist.github.com/nad2000/9f69c5096e10c34acddb
-
-
-
+<https://gist.github.com/nad2000/9f69c5096e10c34acddb>
 
 ## Calling Methods from Pythons C API with Keywords
 
-# https://lists.gt.net/python/dev/573726
+<https://lists.gt.net/python/dev/573726>
 
-
-/* Equivalent to PyObject_CallMethod but accepts keyword args. The 
-format... arguments should produce a dictionary that will be passed 
-as keyword arguments to obj.method. 
+/* Equivalent to PyObject_CallMethod but accepts keyword args. The
+format... arguments should produce a dictionary that will be passed
+as keyword arguments to obj.method.
 
 ```c
 /*
@@ -72,12 +66,9 @@ return ret;
 } 
 ```
 
-
-
 ## Build Arguments to `PyObject_CallObject` Dynamically
 
-see: https://stackoverflow.com/questions/55987022/when-extending-python-with-c-how-do-one-dynamically-build-a-complex-structure-i
-
+see: <https://stackoverflow.com/questions/55987022/when-extending-python-with-c-how-do-one-dynamically-build-a-complex-structure-i>
 
 You're not supposed to use those functions to build dynamically-sized data structures. The FAQ says to use `PyTuple_Pack` instead of Py_BuildValue for an arbitrary-sized tuple, but that's wrong too; I don't know why it says that. `PyTuple_Pack` has the same varargs issues as `Py_BuildValue.`
 
@@ -95,17 +86,15 @@ for (int i = 0; i < n; i++) {
 
 To build a variable-length list from C, you can do the same thing with `PyList_New` and `PyList_SET_ITEM`, or you can construct an empty list with `PyList_New(0)` and append items with `PyList_Append`, much like you would use `[]` and append in Python if you didn't have list comprehensions or sequence multiplication.
 
-
-
 ## Which stdlib includes are included in `<Python.h>`
 
-```
+```c
 <stdio.h>, <string.h>, <errno.h>, <limits.h>, <assert.h> and <stdlib.h>
 ```
 
 ## How do I call an object’s method from C?
 
-see: https://docs.python.org/3/faq/extending.html#how-do-i-call-an-object-s-method-from-c
+see: <https://docs.python.org/3/faq/extending.html#how-do-i-call-an-object-s-method-from-c>
 
 The PyObject_CallMethod() function can be used to call an arbitrary method of an object. The parameters are the object, the name of the method to call, a format string like that used with Py_BuildValue(), and the argument values:
 
@@ -128,12 +117,12 @@ else {
         Py_DECREF(res);
 }
 ```
+
 Note that since `PyObject_CallObject()` always wants a tuple for the argument list, to call a function without arguments, pass “()” for the format, and to call a function with one argument, surround the argument in parentheses, e.g. “(i)”.
 
 ## Redirecting stdout to a variable
 
-
-see: https://docs.python.org/3/faq/extending.html#how-do-i-catch-the-output-from-pyerr-print-or-anything-that-prints-to-stdout-stderr
+see: <https://docs.python.org/3/faq/extending.html#how-do-i-catch-the-output-from-pyerr-print-or-anything-that-prints-to-stdout-stderr>
 
 In Python code, define an object that supports the write() method. Assign this object to `sys.stdout` and `sys.stderr`. Call `print_error`, or just allow the standard traceback mechanism to work. Then, the output will go wherever your write() method sends it.
 
@@ -150,11 +139,11 @@ foo
 hello world!
 ```
 
-also see: https://stackoverflow.com/questions/4307187/how-to-catch-python-stdout-in-c-code
+also see: <https://stackoverflow.com/questions/4307187/how-to-catch-python-stdout-in-c-code>
 
 ## Setting Module Globals in Embedded Python Extensions
 
-see: https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html
+see: <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html>
 
 ## Evaluation types
 
@@ -162,7 +151,7 @@ see: https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.htm
 - `Py_file_input` is equivalent to exec -- It executes Python code, but does not return anything.
 - `Py_single_input` evaluates an expression and prints its value -- used in the interpreter.
 
-- lack of execfile in python 3 (see https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3)
+- lack of execfile in python 3 (see <https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3>)
 
 ```python
 execfile("somefile.py", global_vars, local_vars)
@@ -175,7 +164,8 @@ with open("somefile.py") as f:
 ```
 
 ## Defensive Programming
-see: https://pythonextensionpatterns.readthedocs.io/en/latest/canonical_function.html
+
+see: <https://pythonextensionpatterns.readthedocs.io/en/latest/canonical_function.html>
 
 Mmmm....
 

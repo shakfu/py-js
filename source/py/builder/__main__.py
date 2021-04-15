@@ -73,6 +73,11 @@ class Application(Commander):
         self.dispatch(config.static_python_builder, args)
 
     @common_options
+    def do_py_static_full(self, args):
+        """build static python (fully-loaded)"""
+        self.dispatch(config.static_python_builder_full, args)
+
+    @common_options
     def do_py_shared(self, args):
         """build shared python"""
         self.dispatch(config.shared_python_builder, args)
@@ -109,6 +114,11 @@ class Application(Commander):
     def do_static_ext(self, args):
         """build portable pyjs externals (static py)"""
         config.staticext_builder.build()
+
+    @common_options
+    def do_static_ext_full(self, args):
+        """build portable pyjs externals (fully loaded static py)"""
+        config.staticext_full_builder.build()
 
     @common_options
     def do_test(self, args):

@@ -1,6 +1,5 @@
 # Is a real REPL possible?
 
-
 ## Is it possible to launch a python interactive loop / repl from the py external?
 
 Ideally it would be fantastic to launch a python repl per py external instance (and of course full access to the globals namespace and the embedded cython wrapping of the max api) which would allow one to script ma via an enteractive loop (real livecoding)
@@ -9,26 +8,25 @@ Ideally it would be fantastic to launch a python repl per py external instance (
 
 - What about integrating the new jupyter c++-based kernl [xeus](https://github.com/jupyter-xeus/xeus) or its python implementation [xeus-python](https://github.com/jupyter-xeus/xeus-python)?
 
-- What about just using `osc` via `[udpreceive]`? see [python-osc](https://github.com/attwad/python-osc) 
+- What about just using `osc` via `[udpreceive]`? see [python-osc](https://github.com/attwad/python-osc)
 
 - Iain Duncan's [Schema for Max](https://github.com/iainctduncan/scheme-for-max) has a novel repl which work nicely. Could be another way
 
 ## Javascript terminal emulators
 
-- core tech https://xtermjs.org
+- core tech <https://xtermjs.org>
 
-- https://github.com/cloudcmd/gritty (based on xtermjs and https://github.com/microsoft/node-pty)
+- gritty <https://github.com/cloudcmd/gritty> (based on xtermjs and <https://github.com/microsoft/node-pty>)
 
-- this is probably not suitable - http://www.erikosterberg.com/terminaljs/
+- this is probably not suitable - <http://www.erikosterberg.com/terminaljs/>
 
 ## Protocols
 
-- websockets: https://websockets.readthedocs.io/en/stable/intro.html
+- websockets: <https://websockets.readthedocs.io/en/stable/intro.html>
 
 - OSC ...
 
 - zmq (see below)
-
 
 ## zmq implementations in max
 
@@ -37,9 +35,7 @@ from the implementer of [nt.python_for_max](https://github.com/2bbb/nt.python_fo
 An implemetation of zmq in Max which must be studied.
 
 - see also:
-	- https://github.com/2bbb/bbb.max.dev
-	- https://github.com/2bbb/bbb.zmq.sub
-	- https://github.com/2bbb/bbb.zmq.pub
-	- https://github.com/2bbb/maxcpp
-
-
+  - <https://github.com/2bbb/bbb.max.dev>
+  - <https://github.com/2bbb/bbb.zmq.sub>
+  - <https://github.com/2bbb/bbb.zmq.pub>
+  - <https://github.com/2bbb/maxcpp>

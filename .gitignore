@@ -11,5 +11,6 @@ __pycache__
 *.mxe
 *.mxe64
 support/*
+source/py/scripts/archive/*
 leoenv
 

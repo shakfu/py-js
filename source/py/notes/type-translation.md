@@ -1,8 +1,6 @@
-# Convert to/from C, Python, and Atom types.
+# Convert to/from C, Python, and Atom types
 
-
-## Python <-> C 
-
+## Python <-> C
 
 Long (Int)
 
@@ -10,13 +8,11 @@ Long (Int)
 - Python -> C: PyLong_AsLong
 - C -> Python: PyLong_FromLong (NR)
 
-
 Double (Float)
 
 - Check: PyFloat_Check
 - Python -> C: PyFloat_AsDouble
 - C -> Python: PyFloat_FromDouble
-
 
 Bytes Strings
 
@@ -24,15 +20,13 @@ Bytes Strings
 - Python -> C: PyBytes_AsString
 - C -> Python: PyBytes_FromString
 
-
 Unicode Strings
 
 - Check: PyUnicode_Check
 - Python -> C: PyUnicode_AsUTF8
 - C -> Python: PyUnicode_FromString
 
-
-## Max API - ext_obex_utils.h:
+## Max API - ext_obex_utils.h
 
 ### C -> Atoms
 
@@ -99,7 +93,6 @@ t_max_err atom_getatom_array(long ac, t_atom *av, long count, t_atom *vals);
 t_max_err atom_getobj_array(long ac, t_atom *av, long count, t_object **vals);
 ```
 
-
 ### Check Max Types
 
 ```c
@@ -114,7 +107,8 @@ long atomisdictionary(t_atom *a);
 
 ```
 
-### Max Types -> Atoms 
+### Max Types -> Atoms
+
 ```c
 // Assign an array of #t_symbol* values to an array of atoms.
 t_max_err atom_setsym_array(long ac, t_atom *av, long count, t_symbol **vals);
@@ -137,7 +131,7 @@ t_max_err atom_setlong(t_atom *a, t_atom_long b);
 t_max_err atom_setfloat(t_atom *a, double b);
 
 // Inserts a #t_symbol * into a #t_atom and change the t_atom's type to #A_SYM. 
-t_max_err atom_setsym(t_atom *a, const t_symbol *b);				
+t_max_err atom_setsym(t_atom *a, const t_symbol *b);    
 
 // Inserts a generic pointer value into a #t_atom and change the t_atom's type to #A_OBJ. 
 t_max_err atom_setobj(t_atom *a, void *b);
@@ -175,7 +169,6 @@ long atom_arg_getdouble(double *c, long idx, long ac, const t_atom *av);
 // Retrieves the t_symbol * value of a particular t_atom from an atom list, if the atom exists.
 long atom_arg_getsym(t_symbol **c, long idx, long ac, const t_atom *av);
 
-	
 ```
 
 ## Examples
@@ -196,5 +189,3 @@ void postargs(long argc, t_atom *argv)
     }
 }
 ```
-
-

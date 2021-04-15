@@ -1,24 +1,25 @@
 # Testing
 
-
 ## testing robustness to python version change
 
 ### bin-homebrew-sys
 
 - test_external_lib
 
+```bash
 /usr/local/opt/python@3.8/Frameworks/Python.framework/Versions/3.8/lib/python3.8/os.py
+```
 
 - targets/bin-homebrew-sys
 
+```Makefile
 PREFIX = /usr/local/opt/python3/Frameworks/Python.framework/Versions/$(VERSION)
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)
 PY_LIBS = $(PREFIX)/lib
 PY_LDFLAGS = -lpython$(VERSION) -ldl
-
+```
 
 Note: tried to do it as a pure Framework, but had to change Header refs from "Python.h" to "Python/Python.h", too complex to experiment with this model (try it simpler)
-
 
 ### bin-homebrew-pkg
 
@@ -28,11 +29,12 @@ Note: tried to do it as a pure Framework, but had to change Header refs from "Py
 
 - targets/bin-homebrew-pkg
 
+```Makefile
 PREFIX = $(SUPPORT)/python$(VERSION)
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)
 PY_LIBS = $(PREFIX)
 PY_LDFLAGS = -lpython$(VERSION) -ldl
-
+```
 
 ### bin-homebrew-ext
 
@@ -43,6 +45,7 @@ PY_LDFLAGS = -lpython$(VERSION) -ldl
 works for py.mxo BUT
 
 ERRORS
+
 - Fails codesign step
 - pyjs not working
 
@@ -52,17 +55,13 @@ possible solutions:
 - use Resource as bin-beeware-ext
 - use copy_dylibs.py for dependencies
 
-
 ### src-framework-pkg
-
 
 ## Test c code
 
 - As much as possible, code unrelated to max should be separated into individual general functions and placed in a library
 
-
 ## Max Tests
 
 - Integrations tests using the `.maxtest.maxpat` format
 - each method a separate test file
-

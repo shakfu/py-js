@@ -7,32 +7,30 @@ An Xcode project is a repository for all the files, resources, and information r
 An Xcode project file contains the following information:
 
 References to source files:
-	- Source code, including header files and implementation files
-	- Libraries and frameworks, internal and external
-	- Resource files
-	- Image files
-	- Interface Builder (nib) files
+
+- Source code, including header files and implementation files
+- Libraries and frameworks, internal and external
+- Resource files
+- Image files
+- Interface Builder (nib) files
 
 - Groups used to organize the source files in the structure navigator
 
 - Project-level build configurations. You can specify more than one build configuration for a project; for example, you might have debug and release build settings for a project.
 
 - Targets, where each target specifies:
-	- A reference to one product built by the project
-	- References to the source files needed to build that product
-	- The build configurations that can be used to build that product, including dependencies on other targets and other settings; the project-level build settings are used when the targets’ build configurations do not override them
+  - A reference to one product built by the project
+  - References to the source files needed to build that product
+  - The build configurations that can be used to build that product, including dependencies on other targets and other settings; the project-level build settings are used when the targets’ build configurations do not override them
 
 - The executable environments that can be used to debug or test the program, where each executable environment specifies:
-	- What executable to launch when you run or debug from Xcode
-	- Command-line arguments to be passed to the executable, if any
-	- Environmental variables to be set when the program runs, if any
+  - What executable to launch when you run or debug from Xcode
+  - Command-line arguments to be passed to the executable, if any
+  - Environmental variables to be set when the program runs, if any
 
 A project can stand alone or can be included in a workspace.
 
 You use Xcode schemes to specify which target, build configuration, and executable configuration is active at a given time.
-
-
-
 
 ## Target
 
@@ -41,7 +39,6 @@ A target specifies a product to build and contains the instructions for building
 The instructions for building a product take the form of build settings and build phases, which you can examine and edit in the Xcode project editor. A target inherits the project build settings, but you can override any of the project settings by specifying different settings at the target level. There can be only one active target at a time; the Xcode scheme specifies the active target.
 
 A target and the product it creates can be related to another target. If a target requires the output of another target in order to build, the first target is said to depend upon the second. If both targets are in the same workspace, Xcode can discover the dependency, in which case it builds the products in the required order. Such a relationship is referred to as an implicit dependency. You can also specify explicit target dependencies in your build settings, and you can specify that two targets that Xcode might expect to have an implicit dependency are actually not dependent. For example, you might build both a library and an application that links against that library in the same workspace. Xcode can discover this relationship and automatically build the library first. However, if you actually want to link against a version of the library other than the one built in the workspace, you can create an explicit dependency in your build settings, which overrides this implicit dependency.
-
 
 ## Workspace
 
@@ -71,4 +68,3 @@ Each target organizes the source files needed to build one product. A build conf
 A build setting in Xcode has two parts: the setting title and the definition. The build setting title identifies the build setting and can be used within other settings. The build setting definition is a constant or a formula Xcode uses to determine the value of the build setting at build time. A build setting may also have a display name, which is used to display the build setting in the Xcode user interface.
 
 In addition to the default build settings provided by Xcode when you create a new project from a project template, you can create user-defined build settings for your project or for a particular target. You can also specify conditional build settings. The value of a conditional build setting depends on whether one or more prerequisites are met. This mechanism allows you to, for example, specify the SDK to use to build a product based on the targeted architecture.
-

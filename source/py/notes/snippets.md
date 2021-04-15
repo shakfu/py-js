@@ -1,10 +1,8 @@
 # Snippets
 
-
 ## Locate path from string
 
 - depends on specifying FOUR_CHAR_CODE
-
 
 ```c
 void py_locate_path_from_string(t_py* x, char* s)

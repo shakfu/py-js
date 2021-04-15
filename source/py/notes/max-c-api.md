@@ -1,9 +1,8 @@
 # Max C API Notes
 
-
 ## Memory management
 
-see: https://cycling74.com/forums/class_attr_float_array-question
+see: <https://cycling74.com/forums/class_attr_float_array-question>
 
 @Eric
 In your getter methods I strongly suggest you use two great little functions:
@@ -27,12 +26,11 @@ t_max_err a_amplitudes_get(t_oscil *x, void *attr, long *ac, t_atom **av)
     return MAX_ERR_NONE;
 }
 ```
+
 It makes for more streamlined and easy to read code.
 It is also less error-prone than having to use sysmem_newptr()
 
-
-and see: https://cycling74.com/forums/adding-persistent-data-to-a-external
-
+and see: <https://cycling74.com/forums/adding-persistent-data-to-a-external>
 
 For this specific issue, there are a couple of functions defined in ext_obex.h:
 
@@ -84,7 +82,6 @@ t_max_err macpod_getvalueof(t_macpod *x, long *ac, t_atom **av)
     return MAX_ERR_NONE;
 }
 ```
-
 
 ## Pattern of Use
 
@@ -209,6 +206,7 @@ void myobject_printpeers(t_myobject *x)
     }
 }
 ```
+
 #### creating objects
 
 Creating objects in a patcher generally requires the use of a `Dictionary`, but there is a convenience function `newobject_sprintf()` that can be used to avoid some of the complexity.
@@ -240,7 +238,6 @@ If you want to have a hidden connection, pass an optional fifth argument that is
 
 To delete an object in a patcher you call `object_free()` on the box. As of Max 5.0.6 this will properly redraw the patcher and remove any connected patch cords.
 
-
 #### Obtaining and Changing Patcher and Object Attributes
 
 lots of options to change attrs of patcher and box objects.
@@ -258,7 +255,6 @@ lots of options to change attrs of patcher and box objects.
 To access an attribute of a non-UI object, use `jbox_get_object()` on the box to obtain the non-UI object first.
 
 ### chapter 14: Enhancements to Objects
-
 
 #### Assistance
 
@@ -291,7 +287,6 @@ Objects such as coll and text display a text editor window when you double-click
 
 First, if you want to support double-clicking on a non-UI object, you can respond to the dblclick message.
 
-
 ```c
 class_addmethod(c, (method)myobject_dblclick, "dblclick",
       A_CANT, 0);
@@ -301,7 +296,6 @@ void myobject_dblclick(t_myobject *x)
 }
 
 ```
-
 
 You'll need to add a t_object pointer to your object's data structure to hold the editor.
 
@@ -343,6 +337,7 @@ object_attr_setsym(x->m_editor, gensym("title"), gensym("crazytext"));
 ```
 
 When the user closes the text window, your object (or the object you passed as an argument when creating the editor) will be sent the edclose message.
+
 ```c
 class_addmethod(c, (method)myobject_edclose, "edclose", A_CANT, 0);
 ```
@@ -356,6 +351,7 @@ void myobject_edclose(t_myobject *x, char **ht, long size)
     x->m_editor = NULL;
 }
 ```
+
 If your object will be showing the contents of a text file, you are still responsible for setting the initial text, but you can assign a file so that the editor will save the text data when the user chooses Save from the File menu. To assign a file, use the filename message, assuming you have a filename and path ID.
 
 ```c
@@ -384,8 +380,7 @@ long myobject_edsave(t_myobject *x, char **ht, long size)
 
 ## Memory Management
 
-
-see: https://cycling74.com/forums/multislider-like-ui
+see: <https://cycling74.com/forums/multislider-like-ui>
 
 example
 
@@ -403,13 +398,30 @@ t_max_err MY_getvalueof(t_MY *x, long *ac, t_atom **av)
 }
 ```
 
+also
+
+```c
+char *ptr;
+char **hand;
+ptr = sysmem_newptr(2000);
+post("I have a pointer %lx and it is %ld bytes in size",ptr, sysmem_ptrsize(ptr));
+ptr = sysmem_resizeptrclear(ptr, 3000);
+post("Now I have a pointer %lx and it is %ld bytes in size",ptr,
+      sysmem_ptrsize(ptr));
+sysmem_freeptr(ptr);
+hand = sysmem_newhandle(2000);
+post("I have a handle %lx and it is %ld bytes in size",hand,
+      sysmem_handlesize(hand));
+sysmem_resizehandle(hand, 3000);
+post("Now the handle %lx is %ld bytes in size",hand, sysmem_ptrsize(hand));
+sysmem_freehandle(hand);
+```
 
 ## Getting the Type of Methods Programmatically
 
 methods to get method type
 
-see: https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
-
+see: <https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101>
 
 ```cpp
 <template<typename T1, typename T2>
@@ -461,29 +473,10 @@ t_method_object* mobj = object_getmethod_object(obj, msg_sym);
 t_messlist m_entry = mobj->messlist_entry;
 post("MESSLIST_ENTRY method_name %s type %d", m_entry.m_sym->s_name,
      m_entry.m_type[0]);
-
-```
-
-## Memory management
-
-```c
-char *ptr;
-char **hand;
-ptr = sysmem_newptr(2000);
-post("I have a pointer %lx and it is %ld bytes in size",ptr, sysmem_ptrsize(ptr));
-ptr = sysmem_resizeptrclear(ptr, 3000);
-post("Now I have a pointer %lx and it is %ld bytes in size",ptr,
-      sysmem_ptrsize(ptr));
-sysmem_freeptr(ptr);
-hand = sysmem_newhandle(2000);
-post("I have a handle %lx and it is %ld bytes in size",hand,
-      sysmem_handlesize(hand));
-sysmem_resizehandle(hand, 3000);
-post("Now the handle %lx is %ld bytes in size",hand, sysmem_ptrsize(hand));
-sysmem_freehandle(hand);
 ```
 
 ## Typed vs Untyped Methods
+
 This is from the Max API docs:
 
 Max objects, such as the one you write, are C data structures in which methods are dynamically bound to functions. Your object's methods are called by Max, but your object can also call methods itself. When you call a method, it is essential to know whether the method you are calling is typed or not.
@@ -498,18 +491,17 @@ Certain methods you write for your object, such as the assist method for describ
 When you use an outlet, you're effectively making a typed method call on any objects connected to the outlet.
 
 ## Sending arbitrary messages to an object
-In https://cycling74.com/forums/error-handling-with-object_method_typed, there is a need to figure the type of the method which is being called in sending.
 
+In <https://cycling74.com/forums/error-handling-with-object_method_typed>, there is a need to figure the type of the method which is being called in sending.
 
 It looks like the `t_messlist` struct in `t_object` is key!
 
 ### Forum Discussions
 
-see: https://cycling74.com/forums/error-handling-with-object_method_typed
+see: <https://cycling74.com/forums/error-handling-with-object_method_typed>
 
-In the Min-Devkit there is an example object called min.remote whose source code is @ https://github.com/Cycling74/min-devkit/blob/master/source/projects/min.remote/min.remote.cpp 
-On line 35 a method is called on the "box".  What happens inside of this to get to the correct incantation of object_method() and friends is on line 101 of the file @ https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101
-
+In the Min-Devkit there is an example object called min.remote whose source code is @ <https://github.com/Cycling74/min-devkit/blob/master/source/projects/min.remote/min.remote.cpp>
+On line 35 a method is called on the "box".  What happens inside of this to get to the correct incantation of object_method() and friends is on line 101 of the file @ <https://github.com/Cycling74/min-api/blob/55c65a02a7d4133ac261908f5d47e1be2b7ef1fb/include/c74_min_patcher.h#L101>
 
 ```cpp
 template<typename T1, typename T2>
@@ -539,9 +531,7 @@ template<typename T1, typename T2>
         }
 ```
 
-
-
-see: https://cycling74.com/forums/sending-arbitrary-messages-to-other-objects-from-c
+see: <https://cycling74.com/forums/sending-arbitrary-messages-to-other-objects-from-c>
 
 Sending to a coll:
 
@@ -607,8 +597,6 @@ Look for functions which return `t_messlist`
 
 ### ext_obex.h
 
-
-
 Undocumented:
 
 ```c
@@ -629,6 +617,7 @@ typedef struct _method_object
 ```
 
 Undocumented:
+
 ```c
 t_method_object *method_object_new(method m, C74_CONST char *name, ...);
 t_method_object *method_object_new_messlist(t_messlist *m);
@@ -645,7 +634,6 @@ t_method_object *class_getmethod_object(t_class *x, t_symbol *methodname);
 // these methods are private -- instance methods are not actually fully implemented at this time
 t_method_object *object_getmethod_object(t_object *x, t_symbol *methodname);
 ```
-
 
 For Untyped Methods (A_CANT)
 
@@ -704,8 +692,8 @@ method object_method_direct_getmethod(t_object *x, t_symbol *sym);
 void *object_method_direct_getobject(t_object *x, t_symbol *sym);
 ```
 
-
 For Typed Methods (A_GIMME)
+
 ```c
 /**
   Sends a type-checked message to an object.
@@ -746,11 +734,12 @@ t_max_err object_method_parse(t_object *x, t_symbol *s, C74_CONST char *parsestr
 ```
 
 ## Object Reference
+
 It looks like `obex` is a type `hashtab` (Hash Table), which can be used for storing object references?
 
 ## Find named object
 
-see: https://cycling74.com/forums/find-named-object-and-send-it-a-message
+see: <https://cycling74.com/forums/find-named-object-and-send-it-a-message>
 
   I'm looking at some of the patcher scripting stuff in the api.  iterator.c is a good guide, but I do want to check if there's  a simple method similar to "getnamed" in javascript, such that I don't have to iterate through all the boxes in a patcher.
   Something along the lines of
@@ -758,6 +747,7 @@ see: https://cycling74.com/forums/find-named-object-and-send-it-a-message
 ```c
   t_object *desiredobject = jpatcher_get_namedobject("scriptedname");
 ```
+
   and you could then just pass desiredobject into the various jbox goodies.
 
 and the answer
@@ -776,19 +766,17 @@ yourobject = (t_object *)object_method(patcher, gensym("getnamedbox"), gensym("t
 
 ----
 
-see: https://cycling74.com/forums/error-handling-with-object_method_typed
+see: <https://cycling74.com/forums/error-handling-with-object_method_typed>
 
 Avoiding crashes when sending:
 
-  For messages which are internally defined as A_GIMME the correct call to use is object_method_typed(). But for other messages, say one with A_FLOAT as the argument, you will likely want to use object_method(). 
-
+  For messages which are internally defined as A_GIMME the correct call to use is object_method_typed(). But for other messages, say one with A_FLOAT as the argument, you will likely want to use object_method().
 
 ----
 
-see: https://cycling74.com/forums/messnamed-equivalent-send-function-in-c-send-to-named-object
+see: <https://cycling74.com/forums/messnamed-equivalent-send-function-in-c-send-to-named-object>
 
-
-Question: 
+Question:
 
   "want to send values to a named object, as there is in javascript with 'messnamed'... send values to receive objects."
 
@@ -816,15 +804,14 @@ t_max_err object_send_method_typed(void *x, t_symbol *name, t_symbol *s, long ac
 ```
 
 ## Storing Refs on a Hashtable
-see: https://cycling74.com/forums/help!-crashing-when-scripting-patcher-and-storing-refs-in-a-hashtable
 
-```
-solution for future readers: I needed to use the OBJ_FLAG_REF flag to the hashtab so that it wouldn't try to free pointers to objects.
-```
+see: <https://cycling74.com/forums/help!-crashing-when-scripting-patcher-and-storing-refs-in-a-hashtable>
+
+... solution for future readers: I needed to use the OBJ_FLAG_REF flag to the hashtab so that it wouldn't try to free pointers to objects.
 
 ## Coding GIMMEBACK
-see: https://cycling74.com/forums/multiple-atoms-return-by-a_gimmeback
 
+see: <https://cycling74.com/forums/multiple-atoms-return-by-a_gimmeback>
 
 ```c
 void max_jit_obex_gimmeback_dumpout(void *x, t_symbol *s, long ac, t_atom *av)
@@ -853,13 +840,16 @@ void max_jit_obex_gimmeback_dumpout(void *x, t_symbol *s, long ac, t_atom *av)
 ```
 
 ## Path operations
-see: https://cycling74.com/forums/locatefolder
+
+see: <https://cycling74.com/forums/locatefolder>
 
 ## Compiling on Ubuntu 20.04
-see: https://stackoverflow.com/questions/27672572/embedding-python-in-c-linking-fails-with-undefined-reference-to-py-initialize
+
+see: <https://stackoverflow.com/questions/27672572/embedding-python-in-c-linking-fails-with-undefined-reference-to-py-initialize>
 
 ## Writing a text file
-see: https://cycling74.com/forums/problem-with-sysfile_writetextfile
+
+see: <https://cycling74.com/forums/problem-with-sysfile_writetextfile>
 
 ```c
  void buffTest_writefile(t_buffTest *x, char *filename, short path)
@@ -879,6 +869,7 @@ see: https://cycling74.com/forums/problem-with-sysfile_writetextfile
 ```
 
 ## Getting Atoms from Argument
+
 in ext_obex.h:
 
 ```c
@@ -1037,6 +1028,7 @@ t_max_err object_free(void *x);
 ```
 
 ## Checking whether an object is an instance of a class
+
 in ext_obex.h
 
 ```c
@@ -1057,12 +1049,12 @@ long object_classname_compare(void *x, t_symbol *name);
 ```
 
 ## Outlets
+
 - outlet creation order is important in `outlet_new(x, NULL)`?
 
 ### Dynamic Outlets
 
-
-see: https://cycling74.com/forums/dynamic-inlets-outlets
+see: <https://cycling74.com/forums/dynamic-inlets-outlets>
 
 ```c
 // start the transaction with the box
@@ -1077,4 +1069,3 @@ object_method(b, gensym("dynlet_begin"));
 // end the transaction with the box
 object_method(b, gensym("dynlet_end"));
 ```
-
