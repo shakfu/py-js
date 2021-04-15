@@ -1,7 +1,8 @@
 from .core import (Product, Recipe, PYTHON_VERSION_STRING,
                    Bzip2Builder, XzBuilder, OpensslBuilder,
                    StaticPythonBuilder, SharedPythonBuilder, FrameworkPythonBuilder,
-                   HomebrewBuilder, StaticExtBuilder)
+                   HomebrewBuilder, StaticExtBuilder, 
+                   StaticExtFullBuilder, StaticPythonFullBuilder)
 
 bzip2_product = Product(
     name="bzip2",
@@ -49,6 +50,12 @@ static_python_builder = StaticPythonBuilder(
         bzip2_builder, ssl_builder, xz_builder]
 )
 
+static_python_builder_full = StaticPythonFullBuilder(
+    product=py_product('python-static'), depends_on=[
+        bzip2_builder, ssl_builder, xz_builder]
+)
+
+
 shared_python_builder = SharedPythonBuilder(
     product=py_product('python-shared'), depends_on=[
         bzip2_builder, ssl_builder, xz_builder]
@@ -62,6 +69,8 @@ shared_python_builder = SharedPythonBuilder(
 homebrew_builder = HomebrewBuilder(product=pyjs_product)
 
 staticext_builder = StaticExtBuilder(product=pyjs_product)
+
+staticext_full_builder = StaticExtFullBuilder(product=pyjs_product)
 
 build_all_recipe = Recipe(
     name="build_all",

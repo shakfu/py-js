@@ -1,16 +1,11 @@
 # Challenging Bugs
 
-
 ## Gettext Dependency
 
-
 SOLUTIONS:
-    
-    - [ ] check gettext dependency is not causing build failures (likely)
-    src-static-ext build ok but then fails to load with the libintl dependency,
-    so problem is pretty much to do with libintl/gettext issue.
 
-
+- [ ] check gettext dependency is not causing build failures (likely)
+src-static-ext build ok but then fails to load with the libintl dependency, so problem is pretty much to do with libintl/gettext issue.
 
 ## Numpy
 
@@ -24,14 +19,22 @@ Therefore, is there any API method or function, which provides some meta informa
 My basic idea is have some kind of flag_file which is available
 
 ```python
-
 if not flag_file.exists:
-	import normally
-	touch flag_file
+    import normally
+    touch flag_file
 
 else if flag_file.exists:
-	block imports
-	error("cannot import c-extensions, restart max to use")
-	remove flag_file
+    block imports
+    error("cannot import c-extensions, restart max to use")
+    remove flag_file
+```
 
+Related to this bug, I have just posted the following to [Issue 34309](https://bugs.python.org/issue34309) on the python bugtracker:
 
+In my [project](https://github.com/shakfu/py-js), which provides an embedded python3 interpreter to Max/MSP in the form of an 'external' plugin, I have faced similar issues of being unable to reload extension modules, namely numpy, without reliably crashing the host application, in this case Max.
+
+Being able to reload extension modules cleanly is absolutely critical especially in case when python is embedded. Since Numpy is one of the key reasons why people would want to use Python, such a constraint, in this embedded context, becomes a sufficient reason not to use Python at all.
+
+For example, I have recently taken note of similar frustration with this exact [same issue](https://community.vcvrack.com/t/blowing-the-dust-off-python-in-prototype/12909) from the VCV project. I quote: "I should add that CPython and more notably numpy do not support nor advise a complete restart of the interpreter in embedded scenarios without restarting the host process which kind of defeats our purpose in Prototype.
+
+At that point I think I can safely take a step back and turn to the dev community looking for suggestions. Should we throw away numpy, or even python, altogether?"

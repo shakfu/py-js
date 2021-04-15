@@ -254,7 +254,7 @@ zip_python_library() {
 	rm -rf ${LIB}/site-packages
 	mv $LIB/lib-dynload $DIR
 	cp $LIB/os.py $DIR
-	python -m zipfile -c $DIR/lib/python${PYTHON_VER_NODOT}.zip $LIB/*
+	python3 -m zipfile -c $DIR/lib/python${PYTHON_VER_NODOT}.zip $LIB/*
 	rm -rf $LIB
 	mkdir -p $LIB
 	mv $DIR/lib-dynload $LIB
@@ -408,3 +408,5 @@ install_python_ext() {
 	fix_python_dylib_for_ext
 }
 
+# Allows to call a function based on arguments passed to the script
+$*

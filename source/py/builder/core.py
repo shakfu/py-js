@@ -1,6 +1,6 @@
 """builder: a builder of py-js max externals
 
-Aims to be pure python without any dependencies except the standard library.
+Aims to be pure python builder without any dependencies except the standard library.
 
 ## TODO
 - [ ] should check for existance of all built libs (not just static libs)
@@ -28,8 +28,88 @@ URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
+
 # ----------------------------------------------------------------------------
-# Generic Classes
+# Configuration Classes
+
+
+class Project:
+    """A repository for all the files, resources, and information required to
+    build one or more software products.
+    """
+
+    name = "py-js"
+    py_version = platform.python_version()
+    py_ver = ".".join(py_version.split(".")[:2])
+    py_name = f"python{py_ver}"
+    
+    arch = platform.machine()
+
+
+    # root in this case is root assumed for build / make / scripts
+    # actual project is root.parent.parent (see below)
+    # current working directory
+    root = Path.cwd()
+
+    # project-build section
+    scripts = root / "scripts"
+    patch = root / "patch"
+    targets = root / "targets"
+    build = targets / "build"
+    downloads = build / "downloads"
+    src = build / "src"
+    lib = build / "lib"
+
+    homebrew = (
+        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions")
+        / py_ver
+    )
+
+    homebrew_pkgs = homebrew / "lib" / py_name
+
+    # project root here
+    pyjs = root.parent.parent
+    support = pyjs / "support"
+    externals = pyjs / "externals"
+
+    py_external = externals / "py.mxo"
+    pyjs_external = externals / "pyjs.mxo"
+
+    staticlib = f"libpython{py_ver}.a"
+    dylib = f"libpython{py_ver}.dylib"
+
+    # environmental vars
+    HOME = os.getenv("HOME")
+    package_name = "py"
+    package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
+    package_dirs = [
+        "docs",
+        "examples",
+        "externals",
+        "help",
+        "init",
+        "javascript",
+        "jsextensions",
+        "media",
+        "patchers",
+    ]
+
+    # settings
+    mac_dep_target = "10.13"
+
+
+    def __str__(self):
+        return f"<{self.__class__.__name__}:'{self.name}'>"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return hash((self.name, self.py_name, self.mac_dep_target))
+
+
+# ----------------------------------------------------------------------------
+# Utility Classes
 
 
 class ShellCmd:
@@ -102,75 +182,8 @@ class Settings(SimpleNamespace):
             raise TypeError
 
 
-class Project:
-    """A repository for all the files, resources, and information required to
-    build one or more software products.
-    """
-
-    name = "py-js"
-    py_version = platform.python_version()
-    py_ver = ".".join(py_version.split(".")[:2])
-    py_name = f"python{py_ver}"
-
-    # root in this case is root assumed for build / make / scripts
-    # actual project is root.parent.parent (see below)
-    # current working directory
-    root = Path.cwd()
-
-    # project-build section
-    scripts = root / "scripts"
-    patch = root / "patch"
-    targets = root / "targets"
-    build = targets / "build"
-    downloads = build / "downloads"
-    src = build / "src"
-    lib = build / "lib"
-
-    homebrew = (
-        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions") 
-        / py_ver
-    )
-
-    homebrew_pkgs = homebrew / "lib" / py_name
-
-    # project root here
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-    externals = pyjs / "externals"
-
-    py_external = externals / "py.mxo"
-    pyjs_external = externals / "pyjs.mxo"
-
-    staticlib = f"libpython{py_ver}.a"
-    dylib = f"libpython{py_ver}.dylib"
-
-    # environmental vars
-    HOME = os.getenv("HOME")
-    package_name = "py"
-    package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
-    package_dirs = [
-        "docs",
-        "examples",
-        "externals",
-        "help",
-        "init",
-        "javascript",
-        "jsextensions",
-        "media",
-        "patchers",
-    ]
-
-    # settings
-    mac_dep_target = "10.14"
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __hash__(self):
-        return hash((self.name, self.py_name, self.mac_dep_target))
+# ----------------------------------------------------------------------------
+# Implementation Classes
 
 
 class Product:
@@ -419,7 +432,9 @@ class Bzip2Builder(Builder):
     def build(self):
         if not self.product_exists:
             self.cmd.chdir(self.src_path)
-            self.cmd(f"make install PREFIX={self.prefix}")
+            self.cmd(
+                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+                    make install PREFIX={self.prefix}""")
             self.cmd.chdir(self.project.root)
 
 
@@ -429,8 +444,14 @@ class OpensslBuilder(Builder):
     def build(self):
         if not self.product_exists:
             self.cmd.chdir(self.src_path)
-            self.cmd(f"./config no-shared no-tests --prefix={self.prefix}")
-            self.cmd("make install_sw")
+            os.environ['MACOSX_DEPLOYMENT_TARGET'] = self.project.mac_dep_target
+            self.cmd(
+                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+                    ./config no-shared no-tests \
+                    --prefix={self.prefix}""")
+            self.cmd(
+                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+                    make install_sw""")
             self.cmd.chdir(self.project.root)
 
 
@@ -444,7 +465,9 @@ class XzBuilder(Builder):
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
                 ./configure --disable-shared --enable-static --prefix={self.prefix}"""
             )
-            self.cmd("make && make install")
+            self.cmd(
+                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+                    make && make install""")
             self.cmd.chdir(self.project.root)
 
 
@@ -776,7 +799,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
 
     setup_local = "setup-static-min3.local"
-    patch = "makesetup.patch"
+    # patch = "makesetup.patch"
 
     @property
     def prefix(self) -> Path:
@@ -803,6 +826,92 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
     def remove_extensions(self):
         """remove extensions: not implemented"""
+
+
+class StaticPythonFullBuilder(StaticPythonBuilder):
+    setup_local = "setup-static-min4.local"
+    patch = "makesetup2.patch"
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch()
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        # self.fix()
+        # self.sign()
+
+    def clean(self):
+        """clean everything."""
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        self.clean_python_site_packages()
+
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+            self.cmd.remove(i)
+
+        self.cmd.remove(self.prefix_lib / "pkgconfig")
+        self.cmd.remove(self.prefix / "share")
+
+        self.remove_packages()
+        self.remove_extensions()
+        self.remove_binaries()
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.rm_libs(
+            [
+                f"config-{self.product.ver}-darwin",
+                "idlelib",
+                "lib2to3",
+                "tkinter",
+                "turtledemo",
+                "turtle.py",
+                # "ctypes",
+                "curses",
+                "ensurepip",
+                "venv",
+            ]
+        )
+
+    def remove_extensions(self):
+        """remove extensions"""
+        self.rm_exts(
+            [
+                "_tkinter",
+                "_codecs_jp",
+                "_codecs_hk",
+                "_codecs_cn",
+                "_codecs_kr",
+                "_codecs_tw",
+                "_codecs_iso2022",
+                "_curses",
+                "_curses_panel",
+            ]
+        )
+
+
+    def remove_binaries(self):
+        """remove list of non-critical executables"""
+        ver = self.product.ver
+        self.rm_bins(
+            [
+                f"2to3-{ver}",
+                f"idle{ver}",
+                f"easy_install-{ver}",
+                f"pip{ver}",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+                # f'python{ver}{self.suffix}',
+                # f'python{ver}-config',
+            ]
+        )
+
 
 
 class PyJsBuilder(PythonBuilder):
@@ -972,3 +1081,12 @@ class StaticExtBuilder(PyJsBuilder):
         """builds externals from statically built python"""
         if self.product_exists:
             self.xbuild_targets("static-ext", targets=["py", "pyjs"])
+
+
+class StaticExtFullBuilder(StaticExtBuilder):
+    """pyjs externals from fully-loaded statically built python"""
+
+    def build(self):
+        """builds externals from statically built python"""
+        if self.product_exists:
+            self.xbuild_targets("static-ext-full", targets=["py", "pyjs"])
