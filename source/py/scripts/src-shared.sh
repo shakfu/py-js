@@ -10,7 +10,8 @@ LIB=${PREFIX}/lib/python${PYTHON_VER}
 build_python_shared() {
 	cd $BUILD_SRC_PY
 	make clean
-    #write_setup_local setup-shared.local
+	# apply_patch makesetup2.patch
+    write_setup_local setup-shared.local
 	./configure \
 		MACOSX_DEPLOYMENT_TARGET=$MAC_DEP_TARGET \
 	 	--prefix=$PREFIX \

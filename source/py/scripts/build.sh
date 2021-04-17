@@ -98,11 +98,11 @@ write_setup_local() {
 }
 
 apply_patch() {
-	patch -p1 < $PATCH/$1
+	patch -p1 < $PATCH/$PYTHON_VER/$1
 }
 
 reverse_patch() {
-	patch -p1 -R < $PATCH/$1
+	patch -p1 -R < $PATCH/$PYTHON_VER/$1
 }
 
 get_url() {
