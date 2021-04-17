@@ -3,7 +3,7 @@
 ## Re-sign after modifying bundle
 
 ```bash
-codesign -s $DEV_ID --force --deep ./external.mxo
+codesign -s $DEV_ID --force --deep ./py.mxo
 ```
 
 ## List your dev identities
