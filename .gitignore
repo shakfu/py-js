@@ -12,5 +12,6 @@ __pycache__
 *.mxe64
 support/*
 source/py/scripts/archive/*
+source/py/targets/relocatable-pkg
 leoenv
 

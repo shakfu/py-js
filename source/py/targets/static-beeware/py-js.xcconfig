@@ -1,0 +1,13 @@
+#include "../common.xcconfig"
+
+PREFIX = $(SRCROOT)
+PY_HEADERS = $(SRCROOT)/Python/HEADERS $(SRCROOT)/OpenSSL/HEADERS $(SRCROOT)/BZip2/HEADERS $(SRCROOT)/XZ/HEADERS
+
+PY_LIBS = $(SRCROOT)/Python $(SRCROOT)/OpenSSL $(SRCROOT)/BZip2 $(SRCROOT)/XZ
+
+
+//PY_LIBS = $(PREFIX)/lib $(BUILD)/bzip2/lib $(BUILD)/openssl/lib $(BUILD)/xz/lib /usr/local/Cellar/gettext/0.21/lib
+
+
+//PY_LDFLAGS = -lpython -ldl -lssl -lbz2 -llzma -lz -lintl -liconv
+PY_LDFLAGS = -lpython -ldl -lopenssl -lbz2 -lxz -lz -lffi -lsqlite3
