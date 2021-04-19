@@ -5,6 +5,10 @@
 
 ## Key Fixes
 
+- Added an example using Beeware's very static [python build metho](https://github.com/beeware/Python-Apple-support)
+
+- Added an example of framework-pkg bundle using Greg Neagle's [relocatable-python]( https://github.com/gregneagle/relocatable-python)
+
 - Fixed some shell expansion risk highlighted by jobor019.
 
 - Finally managed to resolve the release blocking issue of letting the external know its own path without hardcoding the name of the bundle. This means that in the specific case of static externals, pythonhome can be set to the external's Resources folder. Thanks Timothy Place for the tip on the cycling74 forums.
