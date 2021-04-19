@@ -1,5 +1,7 @@
 # Packaging notes
 
+see: https://discuss.python.org/c/packaging
+
 ## Static External Size Variations
 
 method                | external | size

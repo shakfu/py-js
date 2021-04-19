@@ -2,7 +2,24 @@
 
 Some basic links to capture research threads so far on relocatable python:
 
-## Repurposing Hombrew Python
+## py2app
+
+py2app seems like the most promising solution but i haven't seen any embedded python examples so far which fit the max/msp model.
+
+Although it definitely look like it deal with the common use cases, I'm not sure it can deal with our particular requirements.
+
+see: https://github.com/ronaldoussoren/py2app/issues/303
+
+## Python Bug Report asking for greater support for relocatable python
+
+- https://bugs.python.org/issue18309
+- https://bugs.python.org/issue42514
+
+Also python-packagin discussion forums:
+
+- https://discuss.python.org/c/packaging
+
+## Repurposing Homebrew Python
 
 This blog post by Joao Ventura, made this project possible since it provided a method to re=use the well-package homebrew python easily.
 
@@ -31,11 +48,13 @@ This ruby script builds Python for Homebrew packaging. Incredibly interesting an
 
 - https://github.com/gregneagle/relocatable-python
 - https://t-lark.github.io/posts/shipping-python/
-- https://bugs.python.org/issue42514
 
-Another related github project by Infinidata also seems to target the same as well. Must investigage further.
+Another related github project by Infinidata also seems to target the same as well. Must investigate further.
 
 - https://github.com/Infinidat/relocatable-python3
+
+It uses zc.buildout, installs modules without asking permission,
+loads custom dependencies from a commercial website.. Not my cup of tea.
 
 ## PyInstaller and Py2App and macholib
 
