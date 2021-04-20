@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] 
+- [ ] investigate static linking of numpy and python (see notes)
 
 - [ ] should check for existance of libs (not just static libs)
 

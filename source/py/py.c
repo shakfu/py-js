@@ -311,8 +311,10 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // create inlet(s)
         // create outlet(s)
-        x->p_outlet_right = outlet_new(x, NULL);
-        x->p_outlet_middle = outlet_new(x, NULL);
+        //x->p_outlet_right = outlet_new(x, NULL);
+        x->p_outlet_right = bangout((t_object*)x);
+        //x->p_outlet_middle = outlet_new(x, NULL);
+        x->p_outlet_middle = bangout((t_object*)x);
         x->p_outlet_left = outlet_new(x, NULL);
 
         // process @arg attributes
@@ -497,7 +499,7 @@ void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 
 void py_bang(t_py* x)
 {
-    // just a basic bang out the left outlet method
+    // just a passthrough: bang out the left outlet
     outlet_bang(x->p_outlet_left);
 }
 
