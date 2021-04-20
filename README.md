@@ -14,24 +14,28 @@ With such caveats aside installation is pretty straighforward:
 
 1. For c compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
-2. You should have also have Homebrew python3 installed on your system (see below for specific instructions how to do this) via:
+2. You should have also have [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
 
-    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.2 at the time of this writing.)
+    ```bash
+    brew install python
+    ```
 
-3. Git clone the `py-js` source and run the following in the cloned repo to get the required submodules:
+    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.4 at the time of this writing.)
+
+3. Git clone the `py-js` source from its [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
 ```bash
 git submodule init
 git submodule update 
 ```
 
-Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will automatically create a `py` package in your `$HOME/Max 8/Packages` directory:
+Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will generated a `py` package in your `$HOME/Max 8/Packages` directory:
 
 ```bash
 ./build.sh
 ```
 
-Open up any of the patch files in the `patcher` directory in in the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work. If you want to test both externals at the same time, open the `py_test_standalone.maxpat` file.
+Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work. If you want to test both externals at the same time, open the `py_test_standalone.maxpat` file.
 
 Have fun!
 
@@ -247,9 +251,15 @@ Implemented for both `py` and `pyjs` objects:
 
 - The `py` and `pyjs` objects are currently marked as experimental pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
 
-- As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309)in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
+- As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
 
-- As an example of the above, `Numpy`, the popular python numerical analysis package, falls in the above category. Indeed, it actually **crashes** Max if imported in a new patch after first use in a prior patch. To address this special case, the module can be imported into the `api` module (and this prevents a crash if used again). As above, just restart Max and use it in one patch normally. After closing the first patch, restart Max to use it again in a new patch. (New patch is taken to mean new document.) It's a pain, but unfortunately a limitation of current python c-extensions.
+- `Numpy`, the popular python numerical analysis package, falls in the above category. Indeed, it used to actually **crash** Max if imported in a new patch after first use in a prior patch. In python 3.9.x, it thankfully doesn't crash but gives the following error:
+
+```bash
+[py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
+```
+
+This just means that you imported `numpy`, used it (hopefully without issue) adn then closed your patch, and then in the same Max session, re-opened it or created a new one and imported `numpy` again. To fix it, just restart Max and use it normally in your patch. Treat each patch as a session and restart Max after each session. It's a pain, but unfortunately a limitation of current python c-extensions.
 
 - `core` features relying on pure pytho code are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
 
