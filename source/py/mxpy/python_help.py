@@ -19,10 +19,10 @@ class PyHelpClass:
     def mx_float(self, number):
         return number
 
-    def mx_symbol(self, string ):
+    def mx_symbol(self, string):
         return string
 
-    def mx_list(self, *args ):
+    def mx_list(self, *args):
         # note that the *args form provides a tuple
         return list(args)
 
