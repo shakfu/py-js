@@ -243,7 +243,7 @@ Implemented for both `py` and `pyjs` objects:
 
 ## Caveats
 
-- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress, needs further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build systems and to build self-contained static externals build `py_static` and the `static_ext` with the python `builder` system. Clearly this is not user-friendly and needs work. 
+- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and a new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build system for more use cases and if you would like to build self-contained static externals then use`python3 -m builder py_static && python3 -m builder static_ext` in the `py-js/sources/py`. Clearly this is not optimal / user-friendly and needs work.
 
 - The `py` and `pyjs` objects are currently marked as experimental pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
 
