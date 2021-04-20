@@ -6,15 +6,6 @@ from https://github.com/garthz/pdpython
 /// Copyright (c) 2014, Garth Zeglin.  All rights reserved.  Provided under the
 /// terms of the BSD 3-clause license.
 
-## LOG
-
-- compiling without errors
-- translated some parts to max
-- renamed to mxpy.c
-- removed some comments
-- convert 'python' to 'mxpy'
-- dropped mxgui since it was causing bugs due to the reloadability bug
-
 ## TODO
 
 - make ints, floats, and basic symbols work
@@ -193,11 +184,21 @@ static void emit_outlet_message(PyObject* value, void* x_outlet)
 
 static void mxpy_bang(t_mxpy* x)
 {
+    post("mxpy_bang start");
     mxpy_eval(x, gensym("mx_bang"), 0, NULL);
+}
+
+static void mxpy_sym(t_mxpy* x, t_symbol* s)
+{
+    post("mxpy_sym start");
+    t_atom atoms[1];
+    atom_setsym(atoms, s);
+    mxpy_eval(x, gensym("mx_symbol"), 1, atoms);
 }
 
 void mxpy_int(t_mxpy* x, long n)
 {
+    post("mxpy_int start");
     t_atom atoms[1];
     atom_setlong(atoms, n);
     mxpy_eval(x, gensym("mx_int"), 1, atoms);
@@ -205,6 +206,7 @@ void mxpy_int(t_mxpy* x, long n)
 
 void mxpy_float(t_mxpy* x, double n)
 {
+    post("mxpy_float start");
     t_atom atoms[1];
     atom_setfloat(atoms, n);
     mxpy_eval(x, gensym("mx_float"), 1, atoms);
@@ -283,20 +285,6 @@ static void* mxpy_new(t_symbol* selector, int argc, t_atom* argv)
              "in the creation arguments.");
 
     } else {
-
-        // t_symbol* canvas_path = canvas_getcurrentdir();
-        // PyObject* modulePath = PyUnicode_FromString(canvas_path->s_name);
-        // post("modulepath: %s", canvas_path->s_name);
-
-        // PyObject* sysPath = PySys_GetObject(
-        //     (char*)"path"); // borrowed reference
-
-        // if (!PySequence_Contains(sysPath, modulePath)) {
-        //     post("Appending current canvas path to Python load path: %s",
-        //          canvas_path->s_name);
-        //     PyList_Append(sysPath, modulePath);
-        // }
-        // Py_DECREF(modulePath);
 
 //        PyObject* modulePath = PyUnicode_FromString("/usr/local/lib/python3.9/site-packages");
 //         PyObject* sysPath = PySys_GetObject(
@@ -386,6 +374,7 @@ void ext_main(void* moduleRef)
 
     class_addmethod(c, (method)mxpy_eval, "anything", A_GIMME, 0);
     class_addmethod(c, (method)mxpy_bang, "bang", 0);
+    class_addmethod(c, (method)mxpy_sym, "symbol", A_SYM, 0);
     class_addmethod(c, (method)mxpy_int, "int", A_LONG, 0);
     class_addmethod(c, (method)mxpy_float, "float", A_FLOAT, 0);
 

@@ -25,11 +25,11 @@ static int py_global_obj_count = 0; // when 0 then free interpreter
 static t_hashtab* py_global_registry = NULL; // global object lookups
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
-CFBundleRef bundle;
+CFBundleRef py_global_bundle;
 #endif
 
 #if defined(_WIN64) && defined(PY_STATIC_EXT)
-static char* external_path[MAX_PATH_CHARS];
+static char* py_global_external_path[MAX_PATH_CHARS];
 #endif
 
 // static wchar_t* program;
@@ -260,12 +260,13 @@ void ext_main(void* module_ref)
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     // set global bundle ref for macos case
-    bundle = module_ref;
+    py_global_bundle = module_ref;
 #endif
 #if defined(_WIN64) && defined(PY_STATIC_EXT)
     // set external_path for win64 case
-    GetModuleFileName(moduleRef, (LPCH)external_path, sizeof(external_path));
-    post("external path: %s", external_path);
+    GetModuleFileName(moduleRef, (LPCH)py_global_external_path,
+                      sizeof(py_global_external_path));
+    post("external path: %s", py_global_external_path);
 #endif
 }
 
@@ -385,7 +386,7 @@ void py_init(t_py* x)
     const char* resources_path;
 
     // Look for a bundle using its using global bundle ref
-    resources_url = CFBundleCopyResourcesDirectoryURL(bundle);
+    resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
     resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
     resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
     resources_path = CFStringGetCStringPtr(resources_str, kCFStringEncodingUTF8);
