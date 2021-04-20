@@ -243,15 +243,15 @@ Implemented for both `py` and `pyjs` objects:
 
 ## Caveats
 
-- As mentioned earlier, the package and standalone deployment variations are still not yet working.
+- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress, needs further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build systems and to build self-contained static externals build `py_static` and the `static_ext` with the python `builder` system. Clearly this is not user-friendly and needs work. 
 
 - The `py` and `pyjs` objects are currently marked as experimental pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
 
 - As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309)in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
 
-- As an example of the above, `Numpy`, the popular python numerical analysis package, falls in the above category. Indeed, it actually **crashes** Max if imported in a new patch after first use in a prior patch. To address this special case, the module is provided as an object in the `api` module (and this prevents a crash if used again). As above, just restart Max and use it in one patch normally. After closing the first patch, restart Max to use it again in a new patch. (New patch is taken to mean new document.)
+- As an example of the above, `Numpy`, the popular python numerical analysis package, falls in the above category. Indeed, it actually **crashes** Max if imported in a new patch after first use in a prior patch. To address this special case, the module can be imported into the `api` module (and this prevents a crash if used again). As above, just restart Max and use it in one patch normally. After closing the first patch, restart Max to use it again in a new patch. (New patch is taken to mean new document.) It's a pain, but unfortunately a limitation of current python c-extensions.
 
-- `core` features are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
+- `core` features relying on pure pytho code are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
 
 - The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
 
