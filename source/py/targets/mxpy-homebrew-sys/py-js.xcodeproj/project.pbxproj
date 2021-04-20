@@ -8,9 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
-		12FD90C2262D95F50077C335 /* mxgui.h in Headers */ = {isa = PBXBuildFile; fileRef = 12FD90BE262D95F50077C335 /* mxgui.h */; };
 		12FD90C3262D95F50077C335 /* mxpy.c in Sources */ = {isa = PBXBuildFile; fileRef = 12FD90BF262D95F50077C335 /* mxpy.c */; };
-		12FD90C4262D95F50077C335 /* mxgui.c in Sources */ = {isa = PBXBuildFile; fileRef = 12FD90C0262D95F50077C335 /* mxgui.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,9 +16,7 @@
 		12ADAF1524ACBDC700B47EB9 /* py-js.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "py-js.xcconfig"; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		12FD90BD262D95F50077C335 /* python_help.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = python_help.py; path = ../../mxpy/python_help.py; sourceTree = "<group>"; };
-		12FD90BE262D95F50077C335 /* mxgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mxgui.h; path = ../../mxpy/mxgui.h; sourceTree = "<group>"; };
 		12FD90BF262D95F50077C335 /* mxpy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mxpy.c; path = ../../mxpy/mxpy.c; sourceTree = "<group>"; };
-		12FD90C0262D95F50077C335 /* mxgui.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mxgui.c; path = ../../mxpy/mxgui.c; sourceTree = "<group>"; };
 		2FBBEAE508F335360078DB84 /* mxpy.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mxpy.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -39,8 +35,6 @@
 		089C166AFE841209C02AAC07 /* iterator */ = {
 			isa = PBXGroup;
 			children = (
-				12FD90C0262D95F50077C335 /* mxgui.c */,
-				12FD90BE262D95F50077C335 /* mxgui.h */,
 				12FD90BF262D95F50077C335 /* mxpy.c */,
 				12FD90BD262D95F50077C335 /* python_help.py */,
 				12ADAF1524ACBDC700B47EB9 /* py-js.xcconfig */,
@@ -74,7 +68,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				12FD90C2262D95F50077C335 /* mxgui.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,7 +143,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				12FD90C4262D95F50077C335 /* mxgui.c in Sources */,
 				12FD90C3262D95F50077C335 /* mxpy.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

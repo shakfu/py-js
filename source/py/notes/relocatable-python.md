@@ -15,9 +15,9 @@ see: https://github.com/ronaldoussoren/py2app/issues/303
 - https://bugs.python.org/issue18309
 - https://bugs.python.org/issue42514
 
-Also python-packagin discussion forums:
+Also python-packaging discussion forums:
 
-- https://discuss.python.org/c/packaging
+- https://discuss.python.org/t/packaging-interpreter-embedding-frameworks/4577
 
 ## Repurposing Homebrew Python
 

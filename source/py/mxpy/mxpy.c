@@ -13,11 +13,42 @@ from https://github.com/garthz/pdpython
 - renamed to mxpy.c
 - removed some comments
 - convert 'python' to 'mxpy'
- 
+- dropped mxgui since it was causing bugs due to the reloadability bug
+
 ## TODO
 
-- figure out why it is either not loading the helper module or not able
-  to recognize the incoming messages.
+- make ints, floats, and basic symbols work
+- make mxpy_eval to handle  bang (see py_send), ints, floats, list, etc..
+- nonsense: the restriction is that typed methods will fail,
+unless we A_CANT or A_GIMMEBACK?
+
+See a simple A_GIMMEBACK example simplejs.c example in the maxsdk
+
+see:
+- https://cycling74.com/forums/a_gimmeback-routine-appears-in-quickref-menu
+- https://cycling74.com/forums/obex-how-to-get-return-values-from-object_method
+
+
+
+## Flow
+
+1. ext_main
+   sets up one 'anything' method:
+    class_addmethod(c, (method)mxpy_eval, "anything", A_GIMME, 0)
+
+2. mxpy_new
+     [mxpy module Class arg1 arg2 arg3 .. argN]
+   PyObject* args = t_atom_list_to_PyObject_list(argc- 2, argv + 2)
+   x->py_object = PyObject_CallObject(func, args)
+   note: if Class is actually a function which return a non-callable value
+   then x->py_object contains could be return with a bang
+
+3. mxpy_eval
+    responds to max message and dispatches to the python-Class
+
+4. emit_outlet_message
+    output returned values to outlet
+    tuples are output in sequence
 
 */
 #include "ext.h"
@@ -25,8 +56,6 @@ from https://github.com/garthz/pdpython
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
-#include "mxgui.h"
 
 typedef struct _mxpy {
     t_object x_ob;       ///< standard object header
@@ -56,13 +85,16 @@ static PyObject* t_atom_to_PyObject(t_atom* atom)
     
     switch (atom->a_type) {
 
+    case A_LONG:
+        post("int: %i", atom_getlong(atom));
+        return PyLong_FromLong(atom_getlong(atom));
+
     case A_FLOAT:
         post("float: %f", atom_getfloat(atom));
         return PyFloat_FromDouble(atom_getfloat(atom));
 
     case A_SYM:
         post("symbol: %s", atom_getsym(atom)->s_name);
-        // symbols are returned as strings
         return PyUnicode_FromString(atom_getsym(atom)->s_name);
 
     case A_NOTHING:
@@ -159,9 +191,29 @@ static void emit_outlet_message(PyObject* value, void* x_outlet)
     }
 }
 
+static void mxpy_bang(t_mxpy* x)
+{
+    mxpy_eval(x, gensym("mx_bang"), 0, NULL);
+}
+
+void mxpy_int(t_mxpy* x, long n)
+{
+    t_atom atoms[1];
+    atom_setlong(atoms, n);
+    mxpy_eval(x, gensym("mx_int"), 1, atoms);
+}
+
+void mxpy_float(t_mxpy* x, double n)
+{
+    t_atom atoms[1];
+    atom_setfloat(atoms, n);
+    mxpy_eval(x, gensym("mx_float"), 1, atoms);
+}
+
 static void mxpy_eval(t_mxpy* x, t_symbol* selector, int argc, t_atom* argv)
 {
     post("mxpy_eval start");
+    post("selector: %s argc: %i", selector->s_name, argc);
 
     PyObject* func = NULL;
     PyObject* args = NULL;
@@ -319,15 +371,13 @@ static void mxpy_free(t_mxpy* x)
     }
 }
 
-
-
 void ext_main(void* moduleRef)
 {
     post("ext_main start");
 
     t_class* c;
 
-    c = class_new("mxpy",             // t_symbol *name
+    c = class_new("mxpy",               // t_symbol *name
                   (method)mxpy_new,     // t_newmethod newmethod
                   (method)mxpy_free,    // t_method freemethod
                   (long)sizeof(t_mxpy), // size_t size
@@ -335,11 +385,12 @@ void ext_main(void* moduleRef)
                   A_GIMME, 0);          // t_atomtype arg1, ...
 
     class_addmethod(c, (method)mxpy_eval, "anything", A_GIMME, 0);
-    // class_addmethod(c, (method)mxpy_eval, "eval", A_GIMME, 0);
-    //    class_addanything(mxpy_class,
-    //                      (method)mxpy_eval); // (t_class *c, t_method fn)
+    class_addmethod(c, (method)mxpy_bang, "bang", 0);
+    class_addmethod(c, (method)mxpy_int, "int", A_LONG, 0);
+    class_addmethod(c, (method)mxpy_float, "float", A_FLOAT, 0);
 
-    class_register(CLASS_BOX, c); /* CLASS_NOBOX */
+    class_register(CLASS_BOX, c);
+
     mxpy_class = c;
 
     wchar_t* program;
@@ -349,10 +400,6 @@ void ext_main(void* moduleRef)
     }
 
     Py_SetProgramName(program);
-
-    if (PyImport_AppendInittab("mxgui", PyInit_mxgui) == -1) {
-        post("Error: unable to create the mxgui module.");
-    }
 
     Py_Initialize();
 
