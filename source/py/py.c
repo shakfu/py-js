@@ -882,9 +882,11 @@ error:
 
 /*--------------------------------------------------------------------------*/
 // CORE
-
 void py_import(t_py* x, t_symbol* s)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     PyObject* x_module = NULL;
 
     if (s != gensym("")) {
@@ -894,6 +896,7 @@ void py_import(t_py* x, t_symbol* s)
             goto error;
         }
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
+        PyGILState_Release(gstate);
         outlet_bang(x->p_outlet_right);
         py_log(x, "imported: %s", s->s_name);
     }
@@ -901,12 +904,16 @@ void py_import(t_py* x, t_symbol* s)
 
 error:
     py_handle_error(x, "import %s", s->s_name);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
 
 void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     char* py_argv = atom_getsym(argv)->s_name;
     py_log(x, "%s %s", s->s_name, py_argv);
 
@@ -915,9 +922,11 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     if (pval != NULL) {
         py_handle_output(x, pval);
+        PyGILState_Release(gstate);
         return;
     } else {
         py_handle_error(x, "eval %s", py_argv);
+        PyGILState_Release(gstate);
         outlet_bang(x->p_outlet_middle);
     }
 }
@@ -925,6 +934,9 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     char* py_argv = NULL;
     PyObject* pval = NULL;
 
@@ -937,22 +949,25 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     if (pval == NULL) {
         goto error;
     }
-    outlet_bang(x->p_outlet_right);
-
-    // success cleanup
     Py_DECREF(pval);
+    PyGILState_Release(gstate);
+
+    outlet_bang(x->p_outlet_right);
     py_log(x, "exec %s", py_argv);
     return;
 
 error:
     py_handle_error(x, "exec %s", py_argv);
     Py_XDECREF(pval);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
 
 void py_execfile(t_py* x, t_symbol* s)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
 
     PyObject* pval = NULL;
     FILE* fhandle = NULL;
@@ -987,12 +1002,14 @@ void py_execfile(t_py* x, t_symbol* s)
     // success cleanup
     fclose(fhandle);
     Py_DECREF(pval);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
     return;
 
 error:
     py_handle_error(x, "execfile");
     Py_XDECREF(pval);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
@@ -1001,6 +1018,9 @@ error:
 
 void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     char* callable_name = NULL;
     PyObject* py_argslist = NULL;
     PyObject* pval = NULL;
@@ -1065,6 +1085,7 @@ handle_output:
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     py_log(x, "END %s", s->s_name);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
     return;
 
@@ -1075,12 +1096,16 @@ error:
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
 
 void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     char* varname = NULL;
     PyObject* list = NULL;
 
@@ -1118,18 +1143,23 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
     // Py_XDECREF(list); // causes a crash
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
     return;
 
 error:
     py_handle_error(x, "assign %s", s->s_name);
     Py_XDECREF(list);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
 
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     long textsize = 0;
     char* text = NULL;
     PyObject* co = NULL;
@@ -1170,17 +1200,22 @@ void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
     } else {
         py_handle_output(x, pval);
     }
+    PyGILState_Release(gstate);
     return;
 
 error:
     py_handle_error(x, "call failed");
     // fail bang
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
 
 void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     t_atom atoms[PY_MAX_ATOMS];
     long textsize = 0;
     char* text = NULL;
@@ -1251,14 +1286,17 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     if (!is_eval) {
         // bang for exec-type op
+        PyGILState_Release(gstate);
         outlet_bang(x->p_outlet_right);
     } else {
         py_handle_output(x, pval);
+        PyGILState_Release(gstate);
     }
     return;
 
 error:
     py_handle_error(x, "anything failed");
+    PyGILState_Release(gstate);
     // fail bang
     outlet_bang(x->p_outlet_middle);
 }
@@ -1266,6 +1304,9 @@ error:
 
 void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     long textsize = 0;
     char* text = NULL;
     t_max_err err;
@@ -1329,6 +1370,7 @@ void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
         Py_XDECREF(pipe_pre);
         Py_XDECREF(pstr);
+        PyGILState_Release(gstate);
         outlet_bang(x->p_outlet_right);
         return;
     } else {
@@ -1341,6 +1383,7 @@ error:
     Py_XDECREF(pstr);
     Py_XDECREF(pval);
     // fail bang
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
@@ -1557,6 +1600,9 @@ void py_edclose(t_py* x, char** text, long size)
 
 void py_run(t_py* x)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     PyObject* pval = NULL;
 
     if ((*(x->p_code) != NULL) && (*(x->p_code)[0] == '\0'))
@@ -1570,12 +1616,14 @@ void py_run(t_py* x)
 
     // success cleanup
     Py_DECREF(pval);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
     return;
 
 error:
     py_handle_error(x, "run x->p_code failed");
     Py_XDECREF(pval);
+    PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
 }
 
@@ -1590,6 +1638,9 @@ error:
 
 long py_edsave(t_py* x, char** text, long size)
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
     PyObject* pval = NULL;
 
     if (x->p_run_on_save) {
@@ -1605,12 +1656,14 @@ long py_edsave(t_py* x, char** text, long size)
         // success cleanup
         Py_DECREF(pval);
     }
+    PyGILState_Release(gstate);
     py_log(x, "py_edsave: returning 0");
     return 0;
 
 error:
     py_handle_error(x, "py_edsave with (possible) execution failed");
     Py_XDECREF(pval);
+    PyGILState_Release(gstate);
     py_log(x, "py_edsave: returning 1");
     return 1;
 }
