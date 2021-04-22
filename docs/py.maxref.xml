@@ -216,6 +216,18 @@
 			</description>
 		</method>
 
+		<method name="sched">
+			<arglist>
+				<arg name="milliseconds" optional="0" type="float" />
+				<arg name="callable" optional="0" type="symbol" />
+				<arg name="args" optional="0" type="atom" />
+			</arglist>
+			<digest>Schedules to call a python function after a specified number of ms</digest>
+			<description>
+				This is like a <m>call</m> except the operation is deferred by N ms.
+			</description>
+		</method>
+
 	</methodlist>
 
 	<!--SEEALSO-->

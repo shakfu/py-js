@@ -41,9 +41,14 @@ typedef struct _py {
     t_bool p_debug;         /* bool to switch per-object debug state */
     PyObject* p_globals;    /* per object 'globals' python namespace */
 
-    /* infra objects */
+    /* infrastructure objects */
     t_patcher* p_patcher; /* to send msgs to objects */
     t_box* p_box;         /* the ui box of the py instance? */
+    void* p_clock;        /* a clock in case of scheduled ops */
+    t_atomarray* p_sched_atomarray; /* atomarray for scheduled python function call */
+
+    // void* p_qelem;        /* A queue element used to ensure that an
+    //                         op occurs in the low-priority thread. */
 
     /* text editor attrs */
     t_object* p_code_editor;
@@ -119,6 +124,8 @@ void py_appendtodict(t_py* x, t_dictionary* dict);
 
 /* testing */
 void py_bang(t_py* x);
+void py_task(t_py* x);
+void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /* interobject communications */
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);

@@ -168,7 +168,7 @@ void ext_main(void* module_ref)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",                  0);
-
+   
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,   0);
@@ -181,6 +181,9 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_code,       "code",       A_GIMME,   0);
     class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,   0);
     class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,   0);
+
+    // time based
+    class_addmethod(c, (method)py_sched,      "sched",      A_GIMME,   0);
 
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT,    0);
@@ -310,9 +313,13 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // set default debug level
         x->p_debug = 1;
 
+        // test tasks
+        x->p_clock = clock_new((t_object*)x, (method)py_task);
+        x->p_sched_atomarray = NULL;
+
         // create inlet(s)
         // create outlet(s)
-        //x->p_outlet_right = outlet_new(x, NULL);
+        // x->p_outlet_right = outlet_new(x, NULL);
         x->p_outlet_right = bangout((t_object*)x);
         //x->p_outlet_middle = outlet_new(x, NULL);
         x->p_outlet_middle = bangout((t_object*)x);
@@ -451,6 +458,7 @@ void py_free(t_py* x)
 {
     // code editor cleanup
     object_free(x->p_code_editor);
+    object_free(x->p_clock);
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
@@ -503,6 +511,79 @@ void py_bang(t_py* x)
     // just a passthrough: bang out the left outlet
     outlet_bang(x->p_outlet_left);
 }
+
+void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    // schedule a python call
+    // [sched <time> func arg1 arg2 ... argN]
+    float time = 0.0;
+
+    // first atom in argv must be a float
+    if (argv->a_type != A_FLOAT) {
+        py_error(x, "first atom must be a float!");
+        goto error;
+    }
+
+    if (argc < 2) {
+        py_error(x, "need at least 2 args to schedule function calls");
+        goto error;
+    }
+
+    if ((argv + 0)->a_type != A_FLOAT) {
+        py_error(
+            x, "1st arg of sched needs to be a float time in ms");
+        goto error;
+    }
+
+    // argv+0 is the object name to send to
+    time = atom_getfloat(argv);
+    if (time == 0.0) {
+        goto error;
+    }
+
+    // atom after the name of the time
+    if ((argv + 1)->a_type != A_SYM) {
+        py_error(x, "2nd arg of sched needs to be the name of the callable");
+        goto error;
+    }
+
+    // address the minimum case: e.g a bang
+    argc = argc - 1;
+    argv = argv + 1;
+
+    // success
+    // reset it
+    if (x->p_sched_atomarray != NULL) {
+        object_free(x->p_sched_atomarray);
+        x->p_sched_atomarray = NULL;
+    }
+
+    x->p_sched_atomarray = atomarray_new(argc, argv);
+    if (x->p_sched_atomarray == NULL) {
+        goto error;
+    }
+    clock_fdelay(x->p_clock, time);
+    return;
+
+error:
+    py_error(x, "send failed");
+    return;
+}
+
+void py_task(t_py* x)
+{
+    double time;
+    long argc = 0;
+    t_atom* argv = NULL;
+
+    clock_getftime(&time);
+    // also scheduler_gettime(&time);
+    post("instance %lx is executing at time %.2f", x, time);
+    t_max_err err = atomarray_getatoms(x->p_sched_atomarray, &argc, &argv);
+    py_call(x, gensym(""), argc, argv);
+    outlet_bang(x->p_outlet_right);
+}
+
 
 /*--------------------------------------------------------------------------*/
 // COMMON HANDLERS

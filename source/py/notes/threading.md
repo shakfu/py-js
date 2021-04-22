@@ -1,8 +1,8 @@
-# Notes on Implementing Threading
+# Notes on Implementing Thread Safety
 
 ## py-js very basic current approach
 
-Very basic wrapping of python c-api code between 
+Very basic wrapping of python c-api code as follows:
 
 ```c
 // func start
@@ -15,7 +15,25 @@ PyGILState_Release(gstate);
 // func end
 ```
 
+When there is a blocking non-python code:
+
+```c
+Py_BEGIN_ALLOW_THREADS
+//... Do some blocking I/O operation ...
+Py_END_ALLOW_THREADS
+```
+
 Seems to work ok, not sure what else to do here.
+
+Some relevant articles:
+
+- [Python Docs -- Thread State and the Global Interpreter Lock](https://docs.python.org/3/c-api/init.html#thread-state-and-the-global-interpreter-lock)
+
+- [Concurrency with embedded Python in a multi-threaded C++ application](https://www.codevate.com/blog/concurrency-with-embedded-python-in-a-multi-threaded-c-application)
+
+- [Blocking vs Non-Blocking](https://www.modernescpp.com/index.php/blocking-and-non-blocking)
+
+- [Python Threads do not run in C++ Application Embedded Interpreter](https://stackoverflow.com/questions/1775612/python-threads-do-not-run-in-c-application-embedded-interpreter)
 
 ## grrrr's py/pyext way
 
