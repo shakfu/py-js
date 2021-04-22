@@ -42,13 +42,10 @@ typedef struct _py {
     PyObject* p_globals;    /* per object 'globals' python namespace */
 
     /* infrastructure objects */
-    t_patcher* p_patcher; /* to send msgs to objects */
-    t_box* p_box;         /* the ui box of the py instance? */
-    void* p_clock;        /* a clock in case of scheduled ops */
-    t_atomarray* p_sched_atomarray; /* atomarray for scheduled python function call */
-
-    // void* p_qelem;        /* A queue element used to ensure that an
-    //                         op occurs in the low-priority thread. */
+    t_patcher* p_patcher;       /* to send msgs to objects */
+    t_box* p_box;               /* the ui box of the py instance? */
+    void* p_clock;              /* a clock in case of scheduled ops */
+    t_atomarray* p_sched_atoms; /* atomarray for scheduled python function call */
 
     /* text editor attrs */
     t_object* p_code_editor;

@@ -33,8 +33,6 @@ cdef extern from "Python.h":
     unicode PyUnicode_FromString(const char *u)
 
 
-
-
 cdef class PyExternal:
     cdef px.t_py *obj
     cdef bytes name
@@ -203,12 +201,15 @@ def get_globals():
 def bang():
     ext = PyExternal()
     ext.bang()
+
 def success():
     ext = PyExternal()
     ext.success()
+
 def fail():
     ext = PyExternal()
     ext.fail()
+
 def out_sym(s='hello outlet!'):
     ext = PyExternal()
     ext.out(s)
@@ -239,17 +240,12 @@ def lookup(name):
     ext = PyExternal()
     ext.lookup(name)
 
-
-
 def post(str s):
     mx.post(s.encode('utf-8'))
 
 
 def error(str s):
     mx.error(s.encode('utf-8'))
-
-
-
 
 cpdef public str hello():
     return greeting
@@ -271,7 +267,7 @@ def total(*args):
 
 # ext = PyExternal()
 
-txt = "Hey MAX!"
+txt = "Hello MAX!"
 
 greeting = 'Hello World'
 
