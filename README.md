@@ -78,7 +78,7 @@ py max external
             anything <expr|stmt> : anything version of the code method 
 
         time-based
-            sched <ms> <pyfunc> [arg] : defer a python function call by N millisecs
+            sched <t> <fn> [arg] : defer a python function call by t millisecs
 
         code editor
             read <path>          : read text file into editor

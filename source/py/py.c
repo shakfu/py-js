@@ -182,7 +182,7 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,   0);
     class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,   0);
 
-    // time based
+    // time-based
     class_addmethod(c, (method)py_sched,      "sched",      A_GIMME,   0);
 
     // meta
@@ -315,7 +315,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // test tasks
         x->p_clock = clock_new((t_object*)x, (method)py_task);
-        x->p_sched_atomarray = NULL;
+        x->p_sched_atoms = NULL;
 
         // create inlet(s)
         // create outlet(s)
@@ -459,6 +459,8 @@ void py_free(t_py* x)
     // code editor cleanup
     object_free(x->p_code_editor);
     object_free(x->p_clock);
+    if (x->p_sched_atoms)
+        object_free(x->p_sched_atoms);
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
@@ -553,13 +555,13 @@ void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // success
     // reset it
-    if (x->p_sched_atomarray != NULL) {
-        object_free(x->p_sched_atomarray);
-        x->p_sched_atomarray = NULL;
+    if (x->p_sched_atoms != NULL) {
+        object_free(x->p_sched_atoms);
+        x->p_sched_atoms = NULL;
     }
 
-    x->p_sched_atomarray = atomarray_new(argc, argv);
-    if (x->p_sched_atomarray == NULL) {
+    x->p_sched_atoms = atomarray_new(argc, argv);
+    if (x->p_sched_atoms == NULL) {
         goto error;
     }
     clock_fdelay(x->p_clock, time);
@@ -578,8 +580,12 @@ void py_task(t_py* x)
 
     clock_getftime(&time);
     // also scheduler_gettime(&time);
-    post("instance %lx is executing at time %.2f", x, time);
-    t_max_err err = atomarray_getatoms(x->p_sched_atomarray, &argc, &argv);
+    t_max_err err = atomarray_getatoms(x->p_sched_atoms, &argc, &argv);
+    if (err != MAX_ERR_NONE) {
+        py_error(x, "atomarry arg initialization failed");
+        return;
+    }
+    post("%lx instance is executing at time %.2f", x, time);
     py_call(x, gensym(""), argc, argv);
     outlet_bang(x->p_outlet_right);
 }
