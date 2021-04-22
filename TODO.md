@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] py_repl_plus -- message in from the inlet should be passed to the terminal line as if they were entered.
+
 - [ ] investigate static linking of numpy and python (see notes)
 
 - [ ] should check for existance of libs (not just static libs)

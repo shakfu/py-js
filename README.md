@@ -71,12 +71,15 @@ py max external
             execfile <path>      : python 'execfile' semantics
         
         extra
-            assign <var> [arg]   : max msg assignments to py object namespace
-            call <pyfunc> [arg]  : max friendly python function calling
+            assign <var> [arg]   : max-friendly msg assignments to py object namespace
+            call <pyfunc> [arg]  : max-friendly python function calling
             pipe <arg> [pyfunc]  : process a py/max value via a pipe of py funcs
             code <expr|stmt>     : alternative way to eval or exec py code
             anything <expr|stmt> : anything version of the code method 
-            
+
+        time-based
+            sched <ms> <pyfunc> [arg] : defer a python function call by N millisecs
+
         code editor
             read <path>          : read text file into editor
             load <path>          : combo of read <path> -> execfile <path>
@@ -170,6 +173,7 @@ extra    | call     | var(s), data  | out    | no
 extra    | code     | expr or stmt  | out?   | yes
 extra    | anything | expr or stmt  | out?   | yes
 extra    | pipe     | var, funcs    | out    | no
+time     | sched    | ms, fun, args | out    | no
 editor   | read     | file          | n/a    | no
 editor   | load     | file          | n/a    | no
 interobj | scan     |               | n/a    | no
