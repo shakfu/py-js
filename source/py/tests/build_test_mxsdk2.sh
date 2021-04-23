@@ -43,16 +43,15 @@ C74_SYM_LINKER_FLAGS=$(<${SRCROOT}/c74-link-flags.txt)
 # most likely this will only apply to the ext_main(} function which we've already prototyped for you
 OTHER_CFLAGS="-fvisibility=hidden -mmacosx-version-min=10.9 -arch x86_64 -isysroot ${SDK}"
 
-OTHER_LDFLAGS="-framework MaxAudioAPI -framework JitterAPI ${C74_SYM_LINKER_FLAGS}"
+OTHER_LDFLAGS="-framework MaxAudioAPI -framework JitterAPI ${C74_SYM_LINKER_FLAGS} -mmacosx-version-min=10.9"
 
-EXTRA_HEADERS="-I${SDK}/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers"
+EXTRA_HEADERS="-I ${SDK}/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers"
 
 echo "HELLO"
 
 SDK="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk"
 
 VERSION="3.9"
-
 PREFIX="/usr/local/opt/python@3.9/Frameworks/Python.framework/Versions/${VERSION}"
 
 PY_HEADERS="-I${PREFIX}/include/python${VERSION}"
