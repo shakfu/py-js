@@ -1,0 +1,32 @@
+name: simpwave~
+options:
+  bundleIdPrefix: org.me
+targets:
+  simpwave~:
+    type: bundle
+    platform: macOS
+    deploymentTarget: "10.13"
+    sources:
+      - src/
+    dependencies:
+      - sdk: CoreFoundation.framework
+    configFiles:
+      Debug: project.xcconfig
+      Release: project.xcconfig
+    settings:
+      CODE_SIGN_IDENTITY: "-"
+      DEVELOPMENT_TEAM: ""
+      GCC_OPTIMIZATION_LEVEL: 0
+      HEADER_SEARCH_PATHS:
+        - $(C74SUPPORT)/max-includes
+        - $(C74SUPPORT)/msp-includes
+        - $(C74SUPPORT)/jit-includes
+        - $(PROJECT_HEADERS)
+      INFOPLIST_FILE: $(SRCROOT)/../../../Info.plist
+      LIBRARY_SEARCH_PATHS: $(PROJECT_LIBS)
+      MACOSX_DEPLOYMENT_TARGET: "10.13"
+      OTHER_LDFLAGS:
+        - $(C74_SYM_LINKER_FLAGS)
+        - $(PROJECT_LDFLAGS)
+      PRODUCT_BUNDLE_IDENTIFIER: org.me.simpwav
+      PRODUCT_NAME: $(TARGET_NAME)

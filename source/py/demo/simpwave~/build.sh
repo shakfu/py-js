@@ -1,10 +1,9 @@
-PROJECT="simplemsp~"
+PROJECT="simpwave~"
 XCODEPROJ=${PROJECT}.xcodeproj
 HELPFILE=${PROJECT}.maxhelp
 
 if [[ -d ${XCODEPROJ} ]]
 then
-    echo "Regenerating xcode project"
     rm -rf ${XCODEPROJ}
 fi
 xcodegen
