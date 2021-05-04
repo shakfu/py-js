@@ -72,6 +72,6 @@ MACOSX_DEPLOYMENT_TARGET=10.9 \
         ${PY_LDFLAGS} \
         ${FRAMEWORK_SEARCH_PATHS} \
         -framework CoreFoundation \
-        -o test_sdk api.c test_mxsdk.c
+        -o test_mxsdk api.c test_mxsdk.c
 
 # note: -framework CoreService may or may not be required
