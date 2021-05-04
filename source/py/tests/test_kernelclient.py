@@ -12,6 +12,7 @@ from jupyter_client.blocking import BlockingKernelClient
 
 RUNTIME_DIR = os.path.join(os.environ['HOME'], 'Library/Jupyter/runtime')
 CONNECTION_FILE = os.path.join(RUNTIME_DIR, 'kernel-29857.json')
+
 kc = BlockingKernelClient(connection_file=CONNECTION_FILE)
 kc.load_connection_file()
 kc.start_channels()
