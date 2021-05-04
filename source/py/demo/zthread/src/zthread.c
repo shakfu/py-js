@@ -49,7 +49,7 @@ void ext_main(void *r)
 
 void zthread_bang(t_zthread *x)
 {
-	zthread_stop(x);								// kill thread if, any
+	zthread_stop(x);		// kill thread if, any
 
 	// create new thread + begin execution
 	if (x->x_systhread == NULL) {
@@ -61,7 +61,7 @@ void zthread_bang(t_zthread *x)
 void zthread_foo(t_zthread *x, long foo)
 {
 	systhread_mutex_lock(x->x_mutex);
-	x->x_foo = foo;																// override our current value
+	x->x_foo = (int)foo;	// override our current value
 	systhread_mutex_unlock(x->x_mutex);
 }
 
@@ -69,7 +69,7 @@ void zthread_sleeptime(t_zthread *x, long sleeptime)
 {
 	if (sleeptime<10)
 		sleeptime = 10;
-	x->x_sleeptime = sleeptime;														// no need to lock since we are readonly in worker thread
+	x->x_sleeptime = (int)sleeptime;	// no need to lock since we are readonly in worker thread
 }
 
 
@@ -79,8 +79,8 @@ void zthread_stop(t_zthread *x)
 
 	if (x->x_systhread) {
 		post("stopping our thread");
-		x->x_systhread_cancel = true;						// tell the thread to stop
-		systhread_join(x->x_systhread, &ret);					// wait for the thread to stop
+		x->x_systhread_cancel = true;				// tell the thread to stop
+		systhread_join(x->x_systhread, &ret);		// wait for the thread to stop
 		x->x_systhread = NULL;
 	}
 }
@@ -100,7 +100,7 @@ void* zthread_threadproc(t_zthread* x)
 	void* requester = zmq_socket(context, ZMQ_REQ);
 	zmq_connect(requester, "tcp://localhost:5555");
 
-	int request_nbr;
+	int request_nbr = 0;
 	post("request_nbr: %i", request_nbr);
 	for (request_nbr = 0; request_nbr != 10; request_nbr++) {
 		// if (x->x_systhread_cancel)
@@ -205,23 +205,3 @@ void *zthread_new(void)
 	return(x);
 }
 
-
-// int call_server(void)
-// {
-//     post("Connecting to hello world server…\n");
-//     void* context = zmq_ctx_new();
-//     void* requester = zmq_socket(context, ZMQ_REQ);
-//     zmq_connect(requester, "tcp://localhost:5555");
-
-//     int request_nbr;
-//     for (request_nbr = 0; request_nbr != 10; request_nbr++) {
-//         char buffer[10];
-//         post("Sending Hello %d…\n", request_nbr);
-//         zmq_send(requester, "Hello", 5, 0);
-//         zmq_recv(requester, buffer, 10, 0);
-//         post("Received World %d\n", request_nbr);
-//     }
-//     zmq_close(requester);
-//     zmq_ctx_destroy(context);
-//     return 0;
-// }

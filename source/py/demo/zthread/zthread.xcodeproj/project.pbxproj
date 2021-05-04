@@ -8,14 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		778B52E1FAA656A9E690061D /* zthread.c in Sources */ = {isa = PBXBuildFile; fileRef = C711368495EB0C3C83957E48 /* zthread.c */; };
-		B8F9FA2B718D6D293C7119EC /* zthread.c.bak in Resources */ = {isa = PBXBuildFile; fileRef = 6C43C332DFDC15BC367855C2 /* zthread.c.bak */; };
 		F112658610755EA4DD3BCF23 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DADC4665CF36487EB4CD74E /* CoreFoundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		42A36F68D255FF5D3E8F905C /* project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = project.xcconfig; sourceTree = "<group>"; };
 		4DADC4665CF36487EB4CD74E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		6C43C332DFDC15BC367855C2 /* zthread.c.bak */ = {isa = PBXFileReference; path = zthread.c.bak; sourceTree = "<group>"; };
 		84953B7DC09F0AC2103B39E1 /* zthread.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = zthread.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		C711368495EB0C3C83957E48 /* zthread.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = zthread.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -71,7 +69,6 @@
 			isa = PBXGroup;
 			children = (
 				C711368495EB0C3C83957E48 /* zthread.c */,
-				6C43C332DFDC15BC367855C2 /* zthread.c.bak */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -84,7 +81,6 @@
 			buildConfigurationList = B6E37F99A2A210D3C099B7F5 /* Build configuration list for PBXNativeTarget "zthread" */;
 			buildPhases = (
 				A566F6E188892E8431D65F44 /* Sources */,
-				75DE1A90DA630998B16D1C39 /* Resources */,
 				877B0E785056E3F013C92246 /* Frameworks */,
 			);
 			buildRules = (
@@ -125,17 +121,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		75DE1A90DA630998B16D1C39 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B8F9FA2B718D6D293C7119EC /* zthread.c.bak in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A566F6E188892E8431D65F44 /* Sources */ = {
