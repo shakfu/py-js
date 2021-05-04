@@ -3,7 +3,7 @@
 C74_SYM_LINKER_FLAGS = @$(C74SUPPORT)/max-includes/c74_linker_flags.txt
 
 PROJECT_HEADERS = /usr/local/include
-PROJECT_LIBS =  /usr/local/lib
+PROJECT_LIBS = /usr/local/lib
 
 // for MAX
 PROJECT_LDFLAGS = -lzmq $(C74_SYM_LINKER_FLAGS)
