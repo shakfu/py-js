@@ -15,12 +15,12 @@ patterns to parse:
 """
 
 def func(*args, **kwargs):
-    return args, kwards
+    return args, kwargs
 
 
 class Klass:
     def func(self, *args, **kwargs):
-        return args, kwards
+        return args, kwargs
 
 obj = Klass()
 

@@ -1,28 +1,12 @@
-# Zeromq c language libraries
+# Threading
 
-## CZMQ
+## Threads in MAX/MSP
 
-main site: http://czmq.zeromq.org
+- [Advanced Max: Learning About Threading](https://cycling74.com/tutorials/advanced-max-learning-about-threading)
 
-diffs with libzmq (quote from https://github.com/zeromq/czmq)
-
-    CZMQ has these goals:
-
-    - To wrap the ØMQ core API in semantics that lead to shorter, more readable applications.
-    
-    - To hide as far as possible the differences between different versions of ØMQ (2.x, 3.x, 4.x).
-    
-    - To provide a space for development of more sophisticated API semantics.
-    
-    - To wrap the ØMQ security features with high-level tools and APIs.
-    
-    - To become the basis for other language bindings built on top of CZMQ.
-
-Sounds promising.
+- [Min Guide to Threading in Max](https://cycling74.github.io/min-devkit/guide/threading)
 
 ## ZMQ Threading Model
-
-- https://zguide.zeromq.org
 
 see: http://wiki.zeromq.org/blog:multithreading-magic#toc6
 
