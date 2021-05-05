@@ -1,6 +1,6 @@
 # dirs to exclude
-project.xcworkspace
-xcuserdata
+**/project.xcworkspace
+**/xcshareddata
 .DS_Store
 __pycache__
 .pytest_cache
@@ -13,4 +13,5 @@ __pycache__
 support/*
 source/py/scripts/archive/*
 leoenv
+*.a
 

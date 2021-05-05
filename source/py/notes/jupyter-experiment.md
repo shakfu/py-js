@@ -55,14 +55,16 @@ The idea is basically that the 'frontend' to a python (or otherwise) kernel is a
 ### Implementation Requirements
 
 - Implement in an external the JUPYTER MSG FORMAT and WIRE PROTOCOL (see: https://github.com/jupyter/jupyter_client)
+
 - Implement the translation layer: MAX MESSAGE or ATOMS <-> JSON data and python code
+
 - Use of (ZeroMQ)[https://zguide.zeromq.org]
+
 - JSON lib in c:
   - https://github.com/json-c/json-c
   - https://github.com/DaveGamble/cJSON
+
 - Use of Max Threading
-
-
 
 ## Clients
 
@@ -75,7 +77,6 @@ The idea is basically that the 'frontend' to a python (or otherwise) kernel is a
 - https://stackoverflow.com/questions/33731744/executing-code-in-ipython-kernel-with-the-kernelclient-api
 
 - maybe: http://rpclib.net
-
 
 ## MSG FORMAT
 
@@ -121,9 +122,7 @@ The reference implementation of the message spec is our Session class.
 
 Note: This section should only be relevant to non-Python consumers of the protocol. Python consumers should import and the use implementation of the wire protocol in `jupyter_client.session.Session`
 
-
 Every message is serialized to a sequence of at least six blobs of bytes:
-
 
 ```python
 [
@@ -138,6 +137,9 @@ Every message is serialized to a sequence of at least six blobs of bytes:
   ...
 ]
 ```
+
+Note: beyond the scope to implement the HMAC / password part of the Wire protocol.
+It can be left blank for no authentication required considering that a kernel is launched locally.
 
 The front of the message is the ZeroMQ routing prefix, which can be zero or more socket identities. This is every piece of the message prior to the delimiter key <IDS|MSG>. In the case of IOPub, there should be just one prefix component, which is the topic for IOPub subscribers, e.g. execute_result, display_data.
 
@@ -174,8 +176,20 @@ list: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 - https://github.com/pakozm/IPyLua
 - https://github.com/guysv/ilua
 
+### Haskell
+
+- https://hackage.haskell.org/package/jupyter-0.9.0/docs/Jupyter-Messages.html
+
+## D Language
+
+- https://github.com/symmetryinvestments/jupyter-wire
 
 ## kernel testing tools
 
 - https://github.com/ipython/ipython/wiki/Dev-Testing-kernels-against-message-specification
 - https://github.com/jupyter/jupyter_kernel_test
+
+## Binary Serialization
+
+- JSON
+- msgpack: https://github.com/msgpack/msgpack-c/tree/c_master
