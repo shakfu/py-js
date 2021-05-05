@@ -7,9 +7,17 @@ targets:
     platform: macOS
     deploymentTarget: "10.13"
     sources:
-      - src/
+      - path: src/zthread.c
+        buildPhase: sources
+      - path: ../include
+        buildPhase: headers
+        type: folder
+        headerVisibility: project
     dependencies:
       - sdk: CoreFoundation.framework
+      - framework: ../lib/libsodium.a
+      - framework: ../lib/libzmq.a
+      - framework: ../lib/libjson-c.a
     configFiles:
       Debug: project.xcconfig
       Release: project.xcconfig

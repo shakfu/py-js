@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <zmq.h>
 
+// derived from maxsdk/sources/advanced/simplethread
 
 typedef struct _zthread {
 	t_object			x_ob;					// standard max object
@@ -128,32 +129,6 @@ void* zthread_threadproc(t_zthread* x)
     systhread_exit(0); // this can return a value to systhread_join();
     return NULL;
 }
-
-// void *zthread_threadproc(t_zthread *x)
-// {
-// 	// loop until told to stop
-// 	while (1) {
-
-// 		// test if we're being asked to die, and if so return before we do the work
-// 		if (x->x_systhread_cancel)
-// 			break;
-
-// 		systhread_mutex_lock(x->x_mutex);
-// 		x->x_foo++;																// fiddle with shared data
-// 		systhread_mutex_unlock(x->x_mutex);
-
-// 		qelem_set(x->x_qelem);													// notify main thread using qelem mechanism
-
-
-// 		systhread_sleep(x->x_sleeptime);						// sleep a bit
-// 	}
-
-// 	x->x_systhread_cancel = false;							// reset cancel flag for next time, in case
-// 	// the thread is created again
-
-// 	systhread_exit(0);															// this can return a value to systhread_join();
-// 	return NULL;
-// }
 
 // triggered by the helper thread
 void zthread_qfn(t_zthread *x)
