@@ -1,0 +1,8 @@
+#include "../../maxmspsdk.xcconfig"
+
+SUPPORT = $(SRCROOT)/../../../../support
+PRODUCT_NAME = $(TARGET_NAME)
+
+HEADER_SEARCH_PATHS = $(inherited) $(PROJECT_HEADERS)
+LIBRARY_SEARCH_PATHS = $(inherited) $(PROJECT_LIBS)
+OTHER_LDFLAGS = $(inherited) $(PROJECT_LDFLAGS)
