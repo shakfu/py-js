@@ -1,0 +1,41 @@
+name: jmx
+options:
+  bundleIdPrefix: org.me
+targets:
+  jmx:
+    type: bundle
+    platform: macOS
+    deploymentTarget: "10.14"
+    sources:
+      - path: src/jmx.c
+        buildPhase: sources
+      - path: ../include
+        buildPhase: headers
+        type: folder
+        headerVisibility: project
+      - path: ../../../maxsdk/source/c74support/max-includes/common/commonsyms.c
+        buildPhase: sources
+    dependencies:
+      - sdk: CoreFoundation.framework
+      - framework: ../lib/libsodium.a
+      - framework: ../lib/libzmq.a
+    configFiles:
+      Debug: project.xcconfig
+      Release: project.xcconfig
+    settings:
+      CODE_SIGN_IDENTITY: "-"
+      DEVELOPMENT_TEAM: ""
+      GCC_OPTIMIZATION_LEVEL: 0
+      HEADER_SEARCH_PATHS:
+        - $(C74SUPPORT)/max-includes
+        - $(C74SUPPORT)/msp-includes
+        - $(C74SUPPORT)/jit-includes
+        - $(PROJECT_HEADERS)
+      INFOPLIST_FILE: $(SRCROOT)/../../../Info.plist
+      LIBRARY_SEARCH_PATHS: $(PROJECT_LIBS)
+      MACOSX_DEPLOYMENT_TARGET: "10.14"
+      OTHER_LDFLAGS:
+        - $(C74_SYM_LINKER_FLAGS)
+        - $(PROJECT_LDFLAGS)
+      PRODUCT_BUNDLE_IDENTIFIER: org.me.jmx
+      PRODUCT_NAME: $(TARGET_NAME)
