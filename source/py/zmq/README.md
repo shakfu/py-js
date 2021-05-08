@@ -1,8 +1,8 @@
-# ZeroMQ Experiments
+# ZeroMQ / Jupyter Experiments
 
-This folder contains some experiments in the use of [zeromq](https://zeromq.org) in Max externals.
+This folder contains some experiments in the use of [zeromq](https://zeromq.org) in Max externals, ultimately toward an attempt to develop a minimal jupyter client for Max.
 
-Note that to build you need [Xcodegen](https://github.com/yonaskolb/XcodeGen) (which can be to generate the xcode project each time (not strictly necessary but fun anyway). It can be installed via Homebrew:
+If the Xcode project is not already generated, you need marvelous utility [Xcodegen](https://github.com/yonaskolb/XcodeGen) to generate the xcode project from the `project.yml` spec. I personally generate the xcode project for every build (by running `./build.sh` in the roo of the subproject), since its generally quicker than opening up the xcode gui. `Xcodegen` can be installed via Homebrew:
 
 ```bash
 brew install xcodegen
@@ -18,14 +18,29 @@ The other libraries are not required and are just for experimentation.
 
 ### zmqc
 
-`zmqc` is short for zmq client. The a zeromq hello-world level client is embedded in a Max external. A zeromq server is run from the terminal in separate process in a  REQUEST-REPLY pattern.
+`zmqc` is short for zmq client. This zeromq hello-world-level client is embedded in a Max external. To test it, the corresponding `zmqc_server` should be run from the terminal in a separate process in a  REQUEST-REPLY pattern. The `zmqc_server.c` can be compiled as follows:
+
+```bash
+
+clang -o zmqc_server -lzmq zmqc_server.c
+
+```
+
 
 This is example blocks the ui thread when it is run. The next example, `zthread`, solves this issue.
 
 ### zthread
 
-`zthread` is `zmqc` + Max threads to make it non-blocking. This works well: one thread per zmq socket as per the rules.
+`zthread` is `zmqc` + Max threads to make it non-blocking. This works: one thread per zmq socket as per the zmq rules.
 
 ### jmx
 
 An attempt to build a [jupyter_client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) as an external.
+
+So far implementing parts of the message protocol:
+
+- [x] generate uuid
+- [x] iso861 timestamp is generated
+- [x] build Max dictionary and convert to json
+- [ ] convert max messages to python syntax
+- [ ] ...
