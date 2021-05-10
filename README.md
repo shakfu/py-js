@@ -8,6 +8,8 @@ repo - <https://github.com/shakfu/py-js>
 
 ## Quickstart
 
+Ths project provides a python3 interpreter in a live Max environment. If you are only interested in using python3 with Max in an offline capacity, check out the [py2max](https://github.com/shakfu/py2max) project. Otherwise, read on!
+
 If you are interested to try this out, please note that it currently only works on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this as pre-alpha level code and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module.) In any case, there is still quite a bit to do before a release can be made.
 
 With such caveats aside installation is pretty straighforward:

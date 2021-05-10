@@ -8,13 +8,13 @@ If the Xcode project is not already generated, you need marvelous utility [Xcode
 brew install xcodegen
 ```
 
-## common dependencies
+## Common Dependencies
 
 The dependencies are `libzmq.a` (itself depending on `libsodium.a`) with associated headers.
 
 The other libraries are not required and are just for experimentation.
 
-## The Experiments
+## Experiments
 
 ### zmqc
 

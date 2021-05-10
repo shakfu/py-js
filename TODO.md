@@ -2,15 +2,13 @@
 
 - [ ] py_repl_plus -- message in from the inlet should be passed to the terminal line as if they were entered.
 
-- [ ] investigate static linking of numpy and python (see notes)
-
-- [ ] should check for existance of libs (not just static libs)
+- [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
 
 - [ ] reset should be deep, clean should be shallow
 
-- [ ] assert builder.product_exists
+- [x] assert builder.product_exists
 
-- [ ] test replacing 'cp -rf' with pure python self.copy
+- [x] replacing 'cp -rf' with pure python self.copy
 
 - [ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
 
@@ -27,13 +25,13 @@
 
 ## BUGS
 
-- [ ] Workflow using the code-editor is not intuitive. Test all scenarios
+- [ ] Workflow using the code-editor is not intuitive. The best implementation of this in the Thomas Grill's py/pyext project: double click on the external opens the preferred editor.
 
-- [ ] CRITICAL: attempting to reload numpy after the patcher is closed crashes Max (except when you load it through `api` module!)
-
-- [ ] `PyLong_Check` can't pick up `numpy` numbers
+- [ ] `PyLong_Check` can't pick up `numpy` numbers: the type of numpy numbers has to be implmented in the type translator.
 
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
+
+- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.*) just cause an non-crashingerror.
 
 ## Features and Fixes
 
@@ -43,7 +41,7 @@
 
 ### Extension
 
-- [ ] add more api wrappers.
+- [ ] add more api wrappers. (PAUSED PENDING JUPYTER WORK)
 
 ### Attributes & Infrastructure
 
