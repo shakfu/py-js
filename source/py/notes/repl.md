@@ -12,6 +12,8 @@ Ideally it would be fantastic to launch a python repl per py external instance (
 
 - Iain Duncan's [Schema for Max](https://github.com/iainctduncan/scheme-for-max) has a novel repl which work nicely. Could be another way
 
+- This forum post has a novel idea for unquoting textedit output: https://cycling74.com/forums/textedit-adds-quotes-around-text-that-contains-space-how-to-avoid-this
+
 ## Javascript terminal emulators
 
 - core tech <https://xtermjs.org>
