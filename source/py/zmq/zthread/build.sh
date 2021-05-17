@@ -8,7 +8,7 @@ then
 fi
 xcodegen
 xcodebuild -project ${XCODEPROJ}
-cp ${HELPFILE} ../../../../help
+# cp ${HELPFILE} ../../../../help
 cd ../../
 make pkg
 

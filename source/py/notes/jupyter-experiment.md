@@ -2,9 +2,9 @@
 
 ## Basic Concept
 
- The c-extension unloading [problem](https://bugs.python.org/issue34309)  is (well expressed)[https://pybind11.readthedocs.io/en/stable/advanced/embedding.html] by the pybind11 project:
+ The c-extension unloading [problem](https://bugs.python.org/issue34309)  is [well expressed](https://pybind11.readthedocs.io/en/stable/advanced/embedding.html) by the pybind11 project:
 
-  > **Modules created with pybind11 can be safely re-initialized after the interpreter has been restarted.** However, this may not apply to third-party extension modules. The issue is that Python itself cannot completely unload extension modules and there are several caveats with regard to interpreter restarting. In short, not all memory may be freed, either due to Python reference cycles or user-created global data.
+  > *Modules created with pybind11 can be safely re-initialized after the interpreter has been restarted.* However, this may not apply to third-party extension modules. The issue is that Python itself cannot completely unload extension modules and there are several caveats with regard to interpreter restarting. In short, not all memory may be freed, either due to Python reference cycles or user-created global data.
   
 One possible solution is to follow the Jupyter/IPython model which entails the following design elements:
 
@@ -12,7 +12,7 @@ One possible solution is to follow the Jupyter/IPython model which entails the f
 
 - [Frontends](https://speakerdeck.com/rgbkrk/jupyter-frontends-from-the-classic-jupyter-notebook-to-jupyterlab-nteract-and-beyond?slide=27): clients which communicate with the kernels by essentially sending code and getting sent back results.
 
-- [Jupyter message specification](https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter): :explains the basic communications design and messaging specification for how Jupyter frontends and kernels communicate. The (ZeroMQ)[https://zguide.zeromq.org] library provides the low-level transport layer over which these messages are sent." The communication is typically serialized over JSON.
+- [Jupyter message specification](https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter): :explains the basic communications design and messaging specification for how Jupyter frontends and kernels communicate. The [ZeroMQ](https://zguide.zeromq.org) library provides the low-level transport layer over which these messages are sent." The communication is typically serialized over JSON.
 
 see also [here](https://ipython.org/ipython-doc/3/development/how_ipython_works.html)
 
@@ -46,37 +46,45 @@ The idea is basically that the 'frontend' to a python (or otherwise) kernel is a
 
 ### The benefits
 
-- The primary benefit is that the kernel itself with all its c-extensions remains in a separate process. There can be multiple frontends accessing the kernel (let's say one from the python console or a jupyter notebook) and then the Max/MSP frontend, since they are already engaging witht the same namespace 
+- The primary benefit is that the kernel itself with all its c-extensions remains in a separate process. There can be multiple frontends accessing the kernel (let's say one from the python console or a jupyter notebook) and then the Max/MSP frontend, since they are already engaging witht the same namespace.
 
 - All of this very well tested and there are many examples and a healthy community.
 
 - It can then access the universe of language kernels out there.
 
+### Other Implementation Possibilities
+
+- to promote language agnosticism, (optionally) constrain the kernel to only return results in JSON.
+
+- retain python interpreter in the jupyter client.
+
+- embed a max `dict` object in the external for storing results.
+
 ### Implementation Requirements
 
-- Implement in an external the JUPYTER MSG FORMAT and WIRE PROTOCOL (see: https://github.com/jupyter/jupyter_client)
+- Implement in an external the [JUPYTER MSG FORMAT and WIRE PROTOCOL](https://github.com/jupyter/jupyter_client).
 
 - Implement the translation layer: MAX MESSAGE or ATOMS <-> JSON data and python code
 
-- Use of (ZeroMQ)[https://zguide.zeromq.org]
+- Use of [ZeroMQ](https://zguide.zeromq.org)
 
 - JSON lib in c:
-  - https://github.com/json-c/json-c
-  - https://github.com/DaveGamble/cJSON
+  - [json-c](https://github.com/json-c/json-c)
+  - [cJSON](https://github.com/DaveGamble/cJSON)
 
 - Use of Max Threading
 
-## Clients
+## Clients Examples
 
-- https://www.codeproject.com/Articles/5250119/jupyter-net-Client-A-Csharp-Library-to-Interact-wi
+- [Jupyter Client in C-Sharp](https://www.codeproject.com/Articles/5250119/jupyter-net-Client-A-Csharp-Library-to-Interact-wi)
 
-- https://hackage.haskell.org/package/jupyter-0.9.0/docs/Jupyter-Client.html
+- [Jupyter Client in Haskell](https://hackage.haskell.org/package/jupyter-0.9.0/docs/Jupyter-Client.html)
 
-- https://blog.jupyter.org/nbterm-jupyter-notebooks-in-the-terminal-6a2b55d08b70
+- [nbterm](https://blog.jupyter.org/nbterm-jupyter-notebooks-in-the-terminal-6a2b55d08b70)
 
-- https://stackoverflow.com/questions/33731744/executing-code-in-ipython-kernel-with-the-kernelclient-api
+- [stackoverflow - executing code in ipython kernal](https://stackoverflow.com/questions/33731744/executing-code-in-ipython-kernel-with-the-kernelclient-api)
 
-- maybe: http://rpclib.net
+- also: [rpclib](http://rpclib.net)
 
 ## MSG FORMAT
 
@@ -114,7 +122,7 @@ The idea is basically that the 'frontend' to a python (or otherwise) kernel is a
 
 ### THE WIRE PROTOCOL
 
-https://jupyter-client.readthedocs.io/en/latest/messaging.html#wire-protocol
+[wire protocol spec](https://jupyter-client.readthedocs.io/en/latest/messaging.html#wire-protocol)
 
 The above message format is only a logical representation of the contents of Jupyter messages, but does not describe the actual implementation at the wire level in zeromq. This section describes the protocol that must be implemented by Jupyter kernels and clients talking to each other over zeromq.
 
@@ -145,7 +153,7 @@ The front of the message is the ZeroMQ routing prefix, which can be zero or more
 
 ## list of kernels
 
-list: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
+[List of Jupyter Kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)
 
 ## blog posts
 
@@ -155,10 +163,10 @@ list: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
 ## ipykernel
 
-- https://github.com/ipython/ipykernel/tree/master/ipykernel
+- [ipykernel repo](https://github.com/ipython/ipykernel/tree/master/ipykernel)
 
-- embed the ipykernel - https://github.com/ipython/ipykernel/blob/master/ipykernel/embed.py
-- zmqshell - https://github.com/ipython/ipykernel/blob/master/ipykernel/zmqshell.py
+- [embed the ipykernel](https://github.com/ipython/ipykernel/blob/master/ipykernel/embed.py)
+- [zmqshell](https://github.com/ipython/ipykernel/blob/master/ipykernel/zmqshell.py)
 
 ## Via a protocol layer (Zeromq to Atoms)
 
@@ -166,30 +174,30 @@ list: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 
 ### Javascript
 
-- https://github.com/yunabe/tslab
-- https://github.com/n-riesco/ijavascript
-- https://github.com/winnekes/itypescript (typescript)
+- [tslab](https://github.com/yunabe/tslab)
+- [ijavascript](https://github.com/n-riesco/ijavascript)
+- [itypescript](https://github.com/winnekes/itypescript) (in typescript)
 
 ### Lua
 
-- https://github.com/neomantra/lua_ipython_kernel
-- https://github.com/pakozm/IPyLua
-- https://github.com/guysv/ilua
+- [lua_ipython_kernel](https://github.com/neomantra/lua_ipython_kernel)
+- [IPyLua](https://github.com/pakozm/IPyLua)
+- [ilua](https://github.com/guysv/ilua)
 
 ### Haskell
 
-- https://hackage.haskell.org/package/jupyter-0.9.0/docs/Jupyter-Messages.html
+- [Jupyter-Messages in Haskell](https://hackage.haskell.org/package/jupyter-0.9.0/docs/Jupyter-Messages.html)
 
 ## D Language
 
-- https://github.com/symmetryinvestments/jupyter-wire
+- [jupyter-wire](https://github.com/symmetryinvestments/jupyter-wire)
 
 ## kernel testing tools
 
-- https://github.com/ipython/ipython/wiki/Dev-Testing-kernels-against-message-specification
-- https://github.com/jupyter/jupyter_kernel_test
+- [testing kernels against message spec](https://github.com/ipython/ipython/wiki/Dev-Testing-kernels-against-message-specification)
+- [jupyter kernel test](https://github.com/jupyter/jupyter_kernel_test)
 
 ## Binary Serialization
 
-- JSON
-- msgpack: https://github.com/msgpack/msgpack-c/tree/c_master
+- Binary JSON
+- [msgpack](https://github.com/msgpack/msgpack-c/tree/c_master)

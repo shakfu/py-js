@@ -6,12 +6,15 @@
 	@ingroup	examples
 */
 
+
 #include "ext.h"							// standard Max include, always required
 #include "ext_obex.h"						// required for new style Max object
 
 // #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+
 #include <zmq.h>
 
 
@@ -94,24 +97,22 @@ void zmqc_bang(t_zmqc *x)
 }
 
 
-
-
 int call_server(void)
 {
-    post("Connecting to hello world server…\n");
-    void* context = zmq_ctx_new();
-    void* requester = zmq_socket(context, ZMQ_REQ);
-    zmq_connect(requester, "tcp://localhost:5555");
+	post("Connecting to hello world server...\n");
+	void* context = zmq_ctx_new();
+	void* requester = zmq_socket(context, ZMQ_REQ);
+	zmq_connect(requester, "tcp://localhost:5555");
 
-    int request_nbr;
-    for (request_nbr = 0; request_nbr != 1; request_nbr++) {
-        char buffer[10];
-        post("Sending Hello %d…\n", request_nbr);
-        zmq_send(requester, "Hello", 5, 0);
-        zmq_recv(requester, buffer, 10, 0);
-        post("Received World %d\n", request_nbr);
+	int request_nbr;
+	for (request_nbr = 0; request_nbr != 10; request_nbr++) {
+		char buffer[10];
+		printf("Sending Hello %d...\n", request_nbr);
+		zmq_send(requester, "Hello", 5, 0);
+		zmq_recv(requester, buffer, 10, 0);
+        post("Received (%d): '%s'\n", request_nbr, buffer);
     }
-    zmq_close(requester);
-    zmq_ctx_destroy(context);
-    return 0;
+	zmq_close(requester);
+	zmq_ctx_destroy(context);
+	return 0;
 }
