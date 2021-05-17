@@ -110,7 +110,7 @@ void* zthread_threadproc(t_zthread* x)
 		post("Sending Hello %d…\n", request_nbr);
 		zmq_send(requester, "Hello", 5, 0);
 		zmq_recv(requester, buffer, 10, 0);
-		post("Received World %d\n", request_nbr);
+		post("Received (%d): %s\n", request_nbr, buffer);
 	}
 	zmq_close(requester);
 	zmq_ctx_destroy(context);

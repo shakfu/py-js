@@ -10,11 +10,11 @@ fi
 xcodegen
 xcodebuild -project ${XCODEPROJ}
 
-echo "building the minimal zmq server"
-clang -o zmqc_server -lzmq zmqc_server.c
+# echo "building the minimal zmq server"
+# clang -o zmqc_server -lzmq zmqc_server.c
 
-echo "copying .maxhelp to proper package location"
-cp ${HELPFILE} ../../../../help
+# echo "copying .maxhelp to proper package location"
+# cp ${HELPFILE} ../../../../help
 
 echo "deploy"
 cd ../../

@@ -14,7 +14,7 @@ If you are interested to try this out, please note that it currently only works 
 
 With such caveats aside installation is pretty straighforward:
 
-1. For c compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
+1. For c compilation, make wsure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
 2. You should have also have [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
 
@@ -368,7 +368,7 @@ bin-homebrew-pkg | homebrew  | package    | 13.5MB   | yes       | yes
 bin-homebrew-ext | homebrew  | externals  | 27.1MB   | yes       | yes [2]
 static-ext       | static-py | externals  | 17.6MB   | yes       | yes
 
-[1] additional benefit is you can use all your system python packages
+[1] an additional benefit is you can use all your system python packages
 
 [2] not 100% working yet.
 
@@ -431,7 +431,7 @@ I was motivated to start this project because I yearned to to use some python li
 
 Looking around for for a python max external I found the following:
 
-- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) which seemed very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it's written in C++ and needs an additional [c++ flext](http://grrrr.org/ext/flext) layer to compile. I was further dissuaded from diving in as it supported, at the time, only python 2 which seemed difficult to swallow considering it was no longer supported. Ironically, this project has become more active recently, so the above may no longer apply.
+- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) is the most mature Max/Python implementation and when I was starting this project, it seemed very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it was written in C++ and that it needed an additional [c++ flext](http://grrrr.org/ext/flext) layer to compile. I was further dissuaded from diving in as it supported, at the time, only python 2 which seemed difficult to swallow considering Python2 is basically not developed anymore. Ironically, this project has become more active recently, and I finally was persuaded to try go back and try to compile it and finally got it running, and I found it to be extremely technically impressive work, but it had probably suffered from the burden of having to maintain several moving dependencies which made the above issues which are still not resolved. It would be great if this project could somehow help py/ext in some way or the other.
 
 - [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 2 years as of this writing.
 
