@@ -11,9 +11,24 @@ __pycache__
 *.mxe
 *.mxe64
 support/*
+externals/*
 source/py/scripts/archive/*
 leoenv
 *.a
 .vscode
 
-
+__*
+sysbuild
+*.sdf
+*.suo
+*.sln
+*.opensdf
+log.txt
+build
+*.o
+*.dylib
+tmp
+.DS_Store
+.vs
+package-info.json
+archive
