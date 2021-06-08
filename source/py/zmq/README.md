@@ -2,7 +2,7 @@
 
 This folder contains some experiments in the use of [zeromq](https://zeromq.org) in Max externals, ultimately toward an attempt to develop a minimal jupyter client for Max.
 
-If the Xcode project is not already generated, you need marvelous utility [Xcodegen](https://github.com/yonaskolb/XcodeGen) to generate the xcode project from the `project.yml` spec. I personally generate the xcode project for every build (by running `./build.sh` in the roo of the subproject), since its generally quicker than opening up the xcode gui. `Xcodegen` can be installed via Homebrew:
+If the Xcode project is not already generated, you need the marvelous utility [Xcodegen](https://github.com/yonaskolb/XcodeGen) to generate the xcode project from the `project.yml` spec. I personally generate the xcode project for every build (by running `./build.sh` in the root of the subproject), since its generally quicker than opening up the xcode gui. `Xcodegen` can be installed via Homebrew:
 
 ```bash
 brew install xcodegen

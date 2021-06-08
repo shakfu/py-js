@@ -6,24 +6,26 @@ repo - <https://github.com/shakfu/py-js>
 
 ![py-js test](./media/screenshot.png)
 
+
 ## Quickstart
 
 Ths project provides a number of implementations of python3 externals for use in a live Max environment. If you are only interested in using python3 with Max in an offline capacity, check out the [py2max](https://github.com/shakfu/py2max) project. Otherwise, read on!
 
-The python3 externals are currently implemented or under implementation as
-follows:
+The python3 externals are in order of relative maturity:
 
 - `py`   -- a straightforward c-based python3 external based on the `max-sdk`
 - `pyjs` -- python3 interpreter written as a Max javascript-extension
 - `pymx` -- a c++ based python3 external using `pybind11` and `min-devkit`
 - `jmx`  -- a planned jupyter client in Max
 
-It is suggest to try out the `py` and `pyjs` first since they are the most
-mature. If you are interested to try these out, please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this as pre-alpha level code and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module.) In any case, there is still quite a bit to do before a release can be made.
+It is suggested to try out the `py` and `pyjs` objects first since they are the most
+mature and best documented. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as pre-alpha and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module.) In any case, there is still quite a bit to do before a release can be made.
+
+Also please note that the project is undergoing a restructuring effort, so a number of things might look funny and redundant.
 
 With such caveats aside installation is pretty straighforward:
 
-1. For c compilation, make wsure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
+1. For c compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
 2. You should have also have [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
 
