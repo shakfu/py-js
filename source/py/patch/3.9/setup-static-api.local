@@ -14,8 +14,8 @@ PYTHONPATH=$(COREPYTHONPATH)
 
 MACOSX_DEPLOYMENT_TARGET=10.9
 SRCROOT="$(HOME)/Downloads/src/py-js/source"
-# C74SUPPORT=$(SRCROOT)/../../../../../maxsdk/source/c74support
-C74SUPPORT=$(HOME)/Downloads/src/py-js/source/maxsdk/source/c74support
+# C74SUPPORT=$(SRCROOT)/../../../../../max-sdk/source/c74support
+C74SUPPORT=$(HOME)/Downloads/src/py-js/source/max-sdk/source/c74support
 EXTRA_HEADERS="-I $(SDK)/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers"
 HEADER_SEARCH_PATHS="-I $(C74SUPPORT)/max-includes -I $(C74SUPPORT)/msp-includes -I $(C74SUPPORT)/jit-includes $(EXTRA_HEADERS)"
 FRAMEWORK_SEARCH_PATHS="-F$(C74SUPPORT)/max-includes" "-F$(C74SUPPORT)/msp-includes" "-F$(C74SUPPORT)/jit-includes"

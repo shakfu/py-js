@@ -13,7 +13,7 @@ targets:
         buildPhase: headers
         type: folder
         headerVisibility: project
-      - path: ../../../maxsdk/source/c74support/max-includes/common/commonsyms.c
+      - path: ../../../max-sdk/source/c74support/max-includes/common/commonsyms.c
         buildPhase: sources
     dependencies:
       - sdk: CoreFoundation.framework

@@ -29,7 +29,7 @@ ARCHS = x86_64
 
 
 // Paths
-C74SUPPORT = $(SRCROOT)/../../../maxsdk/source/c74support
+C74SUPPORT = $(SRCROOT)/../../../max-sdk/source/c74support
 HEADER_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes"
 FRAMEWORK_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes"
 DSTROOT = $(SRCROOT)/../../../../externals

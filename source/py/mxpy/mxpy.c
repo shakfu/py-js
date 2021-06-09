@@ -13,7 +13,7 @@ from https://github.com/garthz/pdpython
 - nonsense: the restriction is that typed methods will fail,
 unless we A_CANT or A_GIMMEBACK?
 
-See a simple A_GIMMEBACK example simplejs.c example in the maxsdk
+See a simple A_GIMMEBACK example simplejs.c example in the max-sdk
 
 see:
 - https://cycling74.com/forums/a_gimmeback-routine-appears-in-quickref-menu

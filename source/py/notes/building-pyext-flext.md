@@ -4,7 +4,7 @@
 
 - I managed to compile to both flext and py (albeit for system python 2.7 only)
 
-- Very complicated multi-step compilation process which included a need to change a header reference in the maxsdk
+- Very complicated multi-step compilation process which included a need to change a header reference in the max-sdk
 
 - Documentation is pretty poor but the project and its ambitions are impressive. It's a shame that it's so complex and that's it still not usable out-of-the-box for python3 (although there seems to be an effort to make that happen).
 
@@ -151,7 +151,7 @@ ARCH=x86_64
 ```Makefile
 # where are the Max/MSP SDK header files?
 
-MAXSDKPATH=$(HOME)/Downloads/src/py-js/source/maxsdk/source/c74support
+MAXSDKPATH=$(HOME)/Downloads/src/py-js/source/max-sdk/source/c74support
 
 ###############################################################
 
@@ -238,13 +238,13 @@ ARCH=x86_64
 OSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
 ```
 
-### Modify maxsdk header
+### Modify max-sdk header
 
-As a final point, I had to modify a header reference in the maxsdk to get it to compile after getting a <Multiprocessing.h> not found error.
+As a final point, I had to modify a header reference in the max-sdk to get it to compile after getting a <Multiprocessing.h> not found error.
 
 With a bit of research discovered the fix and that <Multiprocessing.h> was deprecated in this stackoverflow [post](https://stackoverflow.com/questions/11912815/compiling-pulseaudio-on-mac-os-x-with-coreservices-h)
 
-The change in ../maxsdk/source/c74support/max-includes/ext_critical.h
+The change in ../max-sdk/source/c74support/max-includes/ext_critical.h
 
 was to comment out as follows
 
