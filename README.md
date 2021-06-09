@@ -6,17 +6,19 @@ repo - <https://github.com/shakfu/py-js>
 
 ![py-js test](./media/screenshot.png)
 
-
 ## Quickstart
 
 Ths project provides a number of implementations of python3 externals for use in a live Max environment. If you are only interested in using python3 with Max in an offline capacity, check out the [py2max](https://github.com/shakfu/py2max) project. Otherwise, read on!
 
-The python3 externals are in order of relative maturity:
+The python3 externals are as follows (in order of relative maturity):
 
-- `py`   -- a straightforward c-based python3 external based on the `max-sdk`
-- `pyjs` -- python3 interpreter written as a Max javascript-extension
-- `pymx` -- a c++ based python3 external using `pybind11` and `min-devkit`
-- `jmx`  -- a planned jupyter client in Max
+name     | sdk        | lang   | description
+:------- | :--------- | :----: | :---------------------------------------------------
+py       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
+pyjs     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
+mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
+pymx     | min-devkit | c++    | concise modern implementation using [pybind11](https://github.com/pybind/pybind11)
+jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client in Max
 
 It is suggested to try out the `py` and `pyjs` objects first since they are the most
 mature and best documented. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as pre-alpha and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module.) In any case, there is still quite a bit to do before a release can be made.
@@ -448,7 +450,7 @@ Looking around for for a python max external I found the following:
 
 - [nt.python_for_max](https://github.com/2bbb/nt.python_for_max) -- Basic implementation of python in max using a fork of Graham Wakefield's old c++ interface. Hasn't really been touched in 3 years.
 
-Around the time of the beginning of my first covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts and approaches to embed a scheme implementation into a Max external.
+Around the time of the beginning of my first covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts and approach to embed a scheme implementation into a Max external.
 
 So it was decided, during a period with less distractions than usual, to try to make a minimal python3 external, learn the max sdk, the python c-api, and how to write more than a few lines of c that didn't crash.
 
