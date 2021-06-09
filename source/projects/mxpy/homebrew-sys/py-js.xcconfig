@@ -1,4 +1,4 @@
-#include "../common.xcconfig"
+#include "../../common.xcconfig"
 
 PREFIX = /usr/local/opt/python@3.9/Frameworks/Python.framework/Versions/$(VERSION)
 
