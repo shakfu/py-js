@@ -5,6 +5,8 @@
 
 ## Key Fixes
 
+- retructuring folder structure to properly separate subprojects and projects.
+
 - Added an example using Beeware's very static [python build method](https://github.com/beeware/Python-Apple-support)
 
 - Added an example of framework-pkg bundle using Greg Neagle's [relocatable-python]( https://github.com/gregneagle/relocatable-python)

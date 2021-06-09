@@ -1,4 +1,4 @@
-PROJECT="simplemax"
+PROJECT="jmx"
 XCODEPROJ=${PROJECT}.xcodeproj
 HELPFILE=${PROJECT}.maxhelp
 
@@ -8,6 +8,6 @@ then
 fi
 xcodegen
 xcodebuild -project ${XCODEPROJ}
-cp ${HELPFILE} ../../../../help
-cd ../../
-make pkg
+#cp ${HELPFILE} ../../../../help
+#cd ../../
+#make pkg
