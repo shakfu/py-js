@@ -6,7 +6,6 @@ VERSION = $(MAJ_VER)
 SEMVER = $(MAJ_VER).$(MIN_VER)
 
 SUPPORT = $(SRCROOT)/../../../../support
-
 PRODUCT_NAME = $(TARGET_NAME)
 
 HEADER_SEARCH_PATHS = $(inherited) $(PY_HEADERS)

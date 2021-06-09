@@ -1,4 +1,4 @@
-#include "../common.xcconfig"
+#include "../../common.xcconfig"
 
 C74_SYM_LINKER_FLAGS = @$(C74SUPPORT)/max-includes/c74_linker_flags.txt
 BASE_LDFLAGS = $(C74_SYM_LINKER_FLAGS)

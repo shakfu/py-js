@@ -16,8 +16,8 @@ xcodebuild -project ${XCODEPROJ}
 # echo "copying .maxhelp to proper package location"
 # cp ${HELPFILE} ../../../../help
 
-echo "deploy"
-cd ../../
-make pkg
+#echo "deploy"
+#cd ../../
+#make pkg
 
 
