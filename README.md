@@ -298,7 +298,7 @@ xcode-select --install
 
 otherwise download xcode from the app store.
 
-### py-js externals source and maxsdk
+### py-js externals source and max-sdk
 
 The py external is developed as a max package with a `source` folder which contains the max-sdk as a subfolder and which is conveniently available as a git submodule.
 

@@ -6,7 +6,7 @@ PRODUCT_VERSION=8.0.2
 ARCHS=x86_64
 
 SRCROOT=`pwd`
-C74SUPPORT=${SRCROOT}/../../maxsdk/source/c74support
+C74SUPPORT=${SRCROOT}/../../max-sdk/source/c74support
 HEADER_SEARCH_PATHS="-I ${C74SUPPORT}/max-includes -I ${C74SUPPORT}/msp-includes -I ${C74SUPPORT}/jit-includes"
 FRAMEWORK_SEARCH_PATHS="-F ${C74SUPPORT}/max-includes -F ${C74SUPPORT}/msp-includes -F ${C74SUPPORT}/jit-includes"
 # DSTROOT=${SRCROOT}/../../../externals

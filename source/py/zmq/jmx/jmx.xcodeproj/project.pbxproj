@@ -54,7 +54,7 @@
 				6329848AB70663E6664248BE /* commonsyms.c */,
 			);
 			name = common;
-			path = "../../../maxsdk/source/c74support/max-includes/common";
+			path = "../../../max-sdk/source/c74support/max-includes/common";
 			sourceTree = "<group>";
 		};
 		CDD25884AF2F6FABF7BE35DE = {

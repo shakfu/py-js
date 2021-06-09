@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <zmq.h>
 
-// derived from maxsdk/sources/advanced/simplethread
+// derived from max-sdk/sources/advanced/simplethread
 
 typedef struct _zthread {
 	t_object			x_ob;					// standard max object
