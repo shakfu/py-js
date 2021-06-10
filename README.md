@@ -17,7 +17,7 @@ name     | sdk        | lang   | description
 py       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
 pyjs     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
 mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
-pymx     | min-devkit | c++    | concise modern implementation using [pybind11](https://github.com/pybind/pybind11)
+pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client in Max
 
 It is suggested to try out the `py` and `pyjs` objects first since they are the most

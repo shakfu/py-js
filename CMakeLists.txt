@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Min-DevKit)
+project(pymx)
 
 enable_testing()
 
