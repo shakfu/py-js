@@ -8,6 +8,6 @@ note: make clean is run before each run
 - [x] src-framework-pkg
 - [f] src-framework-ext -- code object not signed in subcomponent (Python.Framework)
 - [x] src-shared-pkg
-- [x] src-shared-ext -- image not found (dylib)
+- [x] src-shared-ext (dylib ref still local)
 - [f] src-static-pkg -- gettext lib not found in linker
 - [f] src-static-ext -- Python.h not found

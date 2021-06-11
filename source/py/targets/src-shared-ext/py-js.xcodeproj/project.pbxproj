@@ -9,7 +9,8 @@
 /* Begin PBXBuildFile section */
 		120266BD24AA15EF007DF876 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
 		120266C624AA17B6007DF876 /* pyjs.c in Sources */ = {isa = PBXBuildFile; fileRef = 120266C524AA17B5007DF876 /* pyjs.c */; };
-		120266C724AA17E6007DF876 /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835C24A1DC4600ADF7CA /* api.h */; };
+		122D089C26732BDD00B87967 /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 122D089B26732BB600B87967 /* lib */; };
+		122D089F267332C400B87967 /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 122D089B26732BB600B87967 /* lib */; };
 		1239836124A1DC4600ADF7CA /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835C24A1DC4600ADF7CA /* api.h */; };
 		1239836224A1DC4600ADF7CA /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835D24A1DC4600ADF7CA /* api.c */; };
 		1239836324A1DC4600ADF7CA /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835E24A1DC4600ADF7CA /* py.c */; };
@@ -21,6 +22,7 @@
 		120266C324AA15EF007DF876 /* pyjs.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pyjs.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 		120266C524AA17B5007DF876 /* pyjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pyjs.c; path = ../../pyjs.c; sourceTree = "<group>"; };
 		121A8C6124A1E58000EC5F99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../Info.plist; sourceTree = "<group>"; };
+		122D089B26732BB600B87967 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../../../support/python3.9/lib; sourceTree = "<group>"; };
 		1239835C24A1DC4600ADF7CA /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = api.h; path = ../../api.h; sourceTree = "<group>"; };
 		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
 		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
@@ -53,6 +55,7 @@
 		089C166AFE841209C02AAC07 /* iterator */ = {
 			isa = PBXGroup;
 			children = (
+				122D089B26732BB600B87967 /* lib */,
 				1239835E24A1DC4600ADF7CA /* py.c */,
 				1239835F24A1DC4600ADF7CA /* py.h */,
 				120266C524AA17B5007DF876 /* pyjs.c */,
@@ -90,7 +93,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				120266C724AA17E6007DF876 /* api.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,6 +177,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				122D089F267332C400B87967 /* lib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -182,6 +185,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				122D089C26732BDD00B87967 /* lib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
