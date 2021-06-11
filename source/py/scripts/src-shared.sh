@@ -1,83 +1,80 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC1091
 source "scripts/build.sh"
 
 PREFIX=${SUPPORT}/${PYTHON_NAME}
 BIN=${PREFIX}/bin
 LIB=${PREFIX}/lib/python${PYTHON_VER}
 
-
 build_python_shared() {
-	cd $BUILD_SRC_PY
+	cd "$BUILD_SRC_PY" || exit
 	make clean
 	# apply_patch makesetup2.patch
-    write_setup_local setup-shared.local
+	write_setup_local setup-shared.local
 	./configure \
-		MACOSX_DEPLOYMENT_TARGET=$MAC_DEP_TARGET \
-	 	--prefix=$PREFIX \
-	 	--enable-shared \
-	 	--with-openssl=$BUILD_LIB_SSL \
-        --without-doc-strings \
-        --enable-ipv6 \
-        --without-ensurepip \
-	 	--with-lto \
-	 	--enable-optimizations
+		MACOSX_DEPLOYMENT_TARGET="$MAC_DEP_TARGET" \
+		--prefix="$PREFIX" \
+		--enable-shared \
+		--with-openssl="$BUILD_LIB_SSL" \
+		--without-doc-strings \
+		--enable-ipv6 \
+		--without-ensurepip \
+		--with-lto \
+		--enable-optimizations
 	make altinstall
-	cd $ROOT
-	clean_python $PREFIX
-	zip_python_library $PREFIX
-	test_python_build $PREFIX
+	cd "$ROOT" || exit
+	clean_python "$PREFIX"
+	zip_python_library "$PREFIX"
+	test_python_build "$PREFIX"
 }
-
 
 install_python_pkg() {
 	install_dependencies
-	build_python_shared $PREFIX
+	build_python_shared "$PREFIX"
 	fix_python_dylib_for_pkg
 	fix_python_exec_for_pkg
 }
 
 install_python_ext() {
 	install_dependencies
-	build_python_shared $PREFIX
+	build_python_shared "$PREFIX"
 	fix_python_dylib_for_ext
 }
 
-
 fix_python_exec_for_pkg() {
-	cd $BIN
-	install_name_tool -change ${SOURCE}/py/../../support/${PYTHON_NAME}/lib/${DYLIB} @executable_path/../lib/${DYLIB} ${PYTHON_NAME}
-	cd $ROOT
+	cd "$BIN" || exit
+	install_name_tool -change "${SOURCE}"/py/../../support/"${PYTHON_NAME}"/lib/"${DYLIB}" @executable_path/../lib/"${DYLIB}" "${PYTHON_NAME}"
+	cd "$ROOT" || exit
 }
 
 fix_python_dylib_for_pkg() {
-	cd $PREFIX/lib
-	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../../../../support/${PYTHON_NAME}/lib/${DYLIB} ${DYLIB}
-	cd $ROOT
+	cd "$PREFIX"/lib || exit
+	chmod 777 "${DYLIB}"
+	install_name_tool -id @loader_path/../../../../support/"${PYTHON_NAME}"/lib/"${DYLIB}" "${DYLIB}"
+	cd "$ROOT" || exit
 }
 
 fix_python_dylib_for_ext() {
-	cd $PREFIX/lib
-	chmod 777 ${DYLIB}
+	cd "$PREFIX"/lib || exit
+	chmod 777 "${DYLIB}"
 	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
-	install_name_tool -id @loader_path/${DYLIB} ${DYLIB}
-	cd $ROOT
+	install_name_tool -id @loader_path/"${DYLIB}" "${DYLIB}"
+	cd "$ROOT" || exit
 }
 
 # FIXME: not complete!
 fix_python_libintl() {
 	#otool -L $PREFIX/lib/libpython${PYTHON_VER}.dylib
-	cp /usr/local/opt/gettext/lib/libintl.8.dylib ${PREFIX}/lib
-	chmod 777 ${PREFIX}/lib/libintl.8.dylib
-	install_name_tool -id @executable_path/libintl.8.dylib ${PREFIX}/lib/libintl.8.dylib
-	install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython${PYTHON_VER}.dylib
+	cp /usr/local/opt/gettext/lib/libintl.8.dylib "${PREFIX}"/lib
+	chmod 777 "${PREFIX}"/lib/libintl.8.dylib
+	install_name_tool -id @executable_path/libintl.8.dylib "${PREFIX}"/lib/libintl.8.dylib
+	install_name_tool -change /usr/local/opt/gettext/lib/libintl.8.dylib @executable_path/libintl.8.dylib libpython"${PYTHON_VER}".dylib
 }
 
 reset() {
-	rm -rf $PREFIX
+	rm -rf "$PREFIX"
 }
-
 
 if [ "$1" == "pkg" ]; then
 	echo "Installing python from source as shared into 'support' folder of package"
