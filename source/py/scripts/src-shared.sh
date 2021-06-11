@@ -58,8 +58,7 @@ fix_python_dylib_for_pkg() {
 fix_python_dylib_for_ext() {
 	cd "$PREFIX"/lib || exit
 	chmod 777 "${DYLIB}"
-	# assumes cp -rf $PREFIX/* -> same directory as py extension in py.mxo
-	install_name_tool -id @loader_path/"${DYLIB}" "${DYLIB}"
+	install_name_tool -id @loader_path/../Resources/lib/"${DYLIB}" "${DYLIB}"
 	cd "$ROOT" || exit
 }
 
