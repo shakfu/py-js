@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC1091
 source "scripts/build.sh"
 
 FRAMEWORKS=${SUPPORT}/Frameworks
@@ -12,33 +13,33 @@ FWK_TARGET=Frameworks/Python.Framework/Versions/${PYTHON_VER}/lib/${DYLIB}
 
 install_python_pkg() {
 	install_dependencies
-	build_python_framework $PREFIX
+	build_python_framework "$PREFIX"
 	fix_python_dylib_for_pkg
 }
 
 install_python_ext() {
 	install_dependencies
-	build_python_framework $PREFIX
+	build_python_framework "$PREFIX"
 	fix_python_dylib_for_ext
 }
 
 fix_python_dylib_for_pkg() {
-	cd ${SUPPORT}/Frameworks/Python.Framework/Versions/${PYTHON_VER}/lib
-	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../../../../support/${FWK_TARGET} ${DYLIB}
-	cd $ROOT
+	cd "${SUPPORT}"/Frameworks/Python.Framework/Versions/"${PYTHON_VER}"/lib || exit
+	chmod 777 "${DYLIB}"
+	install_name_tool -id @loader_path/../../../../support/"${FWK_TARGET}" "${DYLIB}"
+	cd "$ROOT" || exit
 }
 
 fix_python_dylib_for_ext() {
-	cd ${SUPPORT}/Frameworks/Python.Framework/Versions/${PYTHON_VER}/lib
-	chmod 777 ${DYLIB}
-	install_name_tool -id @loader_path/../${FWK_TARGET} ${DYLIB}
+	cd "${SUPPORT}"/Frameworks/Python.Framework/Versions/"${PYTHON_VER}"/lib || exit
+	chmod 777 "${DYLIB}"
+	install_name_tool -id @loader_path/../"${FWK_TARGET}" "${DYLIB}"
 	#cp -rf ${FRAMEWORKS} $PY_EXTERNAL/Contents
-	cd $ROOT
+	cd "$ROOT" || exit
 }
 
 reset() {
-	rm -rf $PREFIX
+	rm -rf "$PREFIX"
 }
 
 if [ "$1" == "pkg" ]; then
