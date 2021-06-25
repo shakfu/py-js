@@ -27,17 +27,17 @@ Also please note that the project is undergoing a restructuring effort, so a num
 
 With such caveats aside installation is pretty straighforward:
 
-1. For c compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
+1. For compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
-2. You should have also have [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
+2. You should also have [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
 
     ```bash
     brew install python
     ```
 
-    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.4 at the time of this writing.)
+    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.5 at the time of this writing.)
 
-3. Git clone the `py-js` source from its [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
+3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
 ```bash
 git submodule init
@@ -56,7 +56,7 @@ Have fun!
 
 ## Summary
 
-This is a project which provides two max externals:
+Here's a summary of the features of the two core python3 max externals:
 
 ### `py` external
 
@@ -266,7 +266,7 @@ Implemented for both `py` and `pyjs` objects:
 
 ## Caveats
 
-- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and a new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build system for more use cases and if you would like to build self-contained static externals then use`python3 -m builder py_static && python3 -m builder static_ext` in the `py-js/sources/py`. Clearly this is not optimal / user-friendly and needs work.
+- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and a new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build system for most build use cases and if you would like to build self-contained static externals then use`python3 -m builder py_static && python3 -m builder static_ext` in the `py-js/sources/py`. Clearly this is not optimal / user-friendly and needs work.
 
 - The `py` and `pyjs` objects are currently marked as experimental pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
 
