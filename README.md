@@ -20,10 +20,9 @@ mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/
 pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client in Max
 
-It is suggested to try out the `py` and `pyjs` objects first since they are the most
-mature and best documented. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as pre-alpha and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module.) In any case, there is still quite a bit to do before a release can be made.
+It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as pre-alpha state and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module). 
 
-Also please note that the project is undergoing a restructuring effort, so a number of things might look funny and redundant.
+In any case, there is still quite a bit to do before a release can be made. Also note that the project is undergoing a restructuring effort, so a number of things might look funny and redundant.
 
 With such caveats aside installation is pretty straighforward:
 
@@ -51,6 +50,17 @@ Then run the following in the root directory of the `py-js` source (other instal
 ```
 
 Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work. If you want to test both externals at the same time, open the `py_test_standalone.maxpat` file.
+
+### Alternative Quickstart for Self-contained Python3 Externals
+
+If you would like to build a self-contained python3 external which can be included in standalones, another more advanced method is available but which take more time to compile since it downloads python source and compiles a static version and then creates the external. The steps are straightforward however:
+
+```bash
+cd py-js/sources/py
+python3 -m builder py_static --install && python3 -m builder static_ext
+```
+
+After a lengthy compilation and build session, you should find two differenet python externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo` each one of these is large and you probably would want to use only one in your project in any case.
 
 Have fun!
 
@@ -266,7 +276,7 @@ Implemented for both `py` and `pyjs` objects:
 
 ## Caveats
 
-- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and a new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build system for most build use cases and if you would like to build self-contained static externals then use`python3 -m builder py_static && python3 -m builder static_ext` in the `py-js/sources/py`. Clearly this is not optimal / user-friendly and needs work.
+- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and a new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build system for most build use cases and if you would like to build a self-contained static external then use `python3 -m builder py_static --install && python3 -m builder static_ext` in the `py-js/sources/py` directory. Clearly this is not optimal / user-friendly and needs work.
 
 - The `py` and `pyjs` objects are currently marked as experimental pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
 

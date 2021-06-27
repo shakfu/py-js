@@ -1,6 +1,8 @@
 # dirs to exclude
 **/project.xcworkspace
 **/xcshareddata
+javascript/node_modules
+
 .DS_Store
 __pycache__
 .pytest_cache
