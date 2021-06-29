@@ -53,14 +53,14 @@ Open up any of the patch files in the `patcher` directory of the generated max p
 
 ### Alternative Quickstart for Self-contained Python3 Externals
 
-If you would like to build a self-contained python3 external which can be included in standalones, another more advanced method is available but which take more time to compile since it downloads python source and compiles a static version and then creates the external. The steps are straightforward however:
+If you would like to build a self-contained python3 external which can be included in standalones, another method is available which take more time since it downloads python source and compiles it into static version and then creates the external. The steps are straightforward however:
 
 ```bash
 cd py-js/sources/py
 python3 -m builder py_static --install && python3 -m builder static_ext
 ```
 
-After a lengthy compilation and build session, you should find two differenet python externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo` each one of these is large and you probably would want to use only one in your project in any case.
+After a lengthy compilation and build session, you should find two different python externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo` each one of these is largish (~9MB) but includes a full python3 distribution embedded in the `Resources` folder of the bundle. Note that you probably would want to use only one of these in your project in any case.
 
 Have fun!
 
