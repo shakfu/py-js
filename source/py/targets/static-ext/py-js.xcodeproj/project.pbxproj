@@ -10,6 +10,8 @@
 		120266BD24AA15EF007DF876 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
 		120266C624AA17B6007DF876 /* pyjs.c in Sources */ = {isa = PBXBuildFile; fileRef = 120266C524AA17B5007DF876 /* pyjs.c */; };
 		120266C724AA17E6007DF876 /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835C24A1DC4600ADF7CA /* api.h */; };
+		121AD1A1269000CB00C5E912 /* libintl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 121AD1A0269000CB00C5E912 /* libintl.a */; };
+		121AD1A42690018100C5E912 /* libintl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 121AD1A0269000CB00C5E912 /* libintl.a */; };
 		1239836124A1DC4600ADF7CA /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835C24A1DC4600ADF7CA /* api.h */; };
 		1239836224A1DC4600ADF7CA /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835D24A1DC4600ADF7CA /* api.c */; };
 		1239836324A1DC4600ADF7CA /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835E24A1DC4600ADF7CA /* py.c */; };
@@ -23,6 +25,7 @@
 		120266C324AA15EF007DF876 /* pyjs.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pyjs.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 		120266C524AA17B5007DF876 /* pyjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pyjs.c; path = ../../pyjs.c; sourceTree = "<group>"; };
 		121A8C6124A1E58000EC5F99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../Info.plist; sourceTree = "<group>"; };
+		121AD1A0269000CB00C5E912 /* libintl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libintl.a; sourceTree = "<group>"; };
 		1239835C24A1DC4600ADF7CA /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = api.h; path = ../../api.h; sourceTree = "<group>"; };
 		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
 		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
@@ -39,6 +42,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				120266BD24AA15EF007DF876 /* CoreFoundation.framework in Frameworks */,
+				121AD1A42690018100C5E912 /* libintl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +51,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */,
+				121AD1A1269000CB00C5E912 /* libintl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,6 +78,7 @@
 		12D5454A2463B03000BE010E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				121AD1A0269000CB00C5E912 /* libintl.a */,
 				12D5454B2463B03000BE010E /* CoreFoundation.framework */,
 			);
 			name = Frameworks;
@@ -300,7 +306,10 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
@@ -331,7 +340,10 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
@@ -377,7 +389,10 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
@@ -408,7 +423,10 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",

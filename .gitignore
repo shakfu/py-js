@@ -16,7 +16,7 @@ support/*
 externals/*
 source/py/scripts/archive/*
 leoenv
-*.a
+#*.a
 .vscode
 
 __*
