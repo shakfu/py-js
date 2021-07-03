@@ -38,11 +38,23 @@ For example, I have recently taken note of similar frustration with this exact [
 
 At that point I think I can safely take a step back and turn to the dev community looking for suggestions. Should we throw away numpy, or even python, altogether?"
 
-## Gettext Dependency
+## Xcode Strangeness: Gettext Dependency
 
-NOTE: This should not be classified as a challenging bug. It's straighforward to solve and is resolved in newer versions of Python and in the use of `pybind11` and `min-devkit`.
+This is not really a bug but some strangeness in xcode.
 
-SOLUTIONS:
+Since the python3 externals have a dependency on libintl, if one `-lint`
+normally in the LDFLAGS the external then links to the homebrew version of
+libintl.dylib which is not desired since it creates a requirement for users to
+`brew install gettext`
 
-- [ ] check gettext dependency is not causing build failures (likely)
-src-static-ext build ok but then fails to load with the libintl dependency, so problem is pretty much to do with libintl/gettext issue.
+The solution is to link statically via including `libintl.a` in the xcode
+project folder itself and then adding the static library as a `link to binary`
+entry in `build phases`
+
+The strangeness is that if `libintla.a` resides in director outside the xcode
+project directory (let's one parent directory above) and the same method is
+used, xcode will fail to compile and assume that it being linked dynamically
+with a `-lintl`.
+
+The solution is obviously to keep `libintl.a` in the xcode project folder.
+
