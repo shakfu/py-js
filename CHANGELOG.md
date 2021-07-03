@@ -1,7 +1,13 @@
 
 # CHANGELOG
 
+
+
 ## v0.1
+
+## Pre-release0
+
+- created a release of statically built `py.mxo` and `pyjs.mxo`.
 
 ## Key Fixes
 
