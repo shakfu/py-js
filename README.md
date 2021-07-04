@@ -64,7 +64,13 @@ This above command automatically downloads python3 source from python.org and al
 
 After a somewhat lengthy build, you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped stdlib in the `Resources` folder which also has a `site-packages` directory for your own code. The python interpreter in each external is statically compiled and self-contained without any non-system dependencies which makes it appropriate for use in 'relocatable' Max Packages and Standalones.
 
-As a quick test of whether these two externals work ok in a standalone, let's build a standalone application using the test patcher, `py-js/patchers/py_test_standalone.maxpat`. After building this patcher as Max standalone and opening it, you should see that the `py` external is working fine, yet the `pyjs` external which has a couple of more dependencies on some javascript code gives an error. This is straightforward to fix: copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Re-run the standalone app again and now the `pyjs` external should work. (Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatl appreciated.)
+As a quick test of whether these two externals work ok in a standalone, let's build a standalone application using the test patcher, `py-js/patchers/py_test_standalone.maxpat`. After building this patcher as Max standalone and opening it, you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error. 
+
+If you look inside the built standalone bundle, `py_test_standalone.app`, you find that the `py.mxo` external has been copied into the `py_test_standalone.app/Contents/Resources/C74/externals` folder but not `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Re-run the standalone app again and now the `pyjs` external should work. (Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatl appreciated.)
+
+Note you would only want to pick one of these externals to use in your standalone depending on your requirements.
+
+Incidentally, a pre-built standalone that was built using exactly the same steps as above is in the releases` section: `py_test_standalone_demo.zip`.
 
 Have fun!
 
