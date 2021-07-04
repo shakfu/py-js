@@ -53,14 +53,18 @@ Open up any of the patch files in the `patcher` directory of the generated max p
 
 ### Alternative Quickstart for Self-contained Python3 Externals
 
-If you would like to build a self-contained python3 external which can be included in standalones, another method is available which take more time since it downloads python source and compiles it into static version and then creates the external. The steps are straightforward however:
+If you would like to build a couple of self-contained python3 externals which can be included in standalones, another method is available:
 
 ```bash
 cd py-js/sources/py
 python3 -m builder py_static --install && python3 -m builder static_ext
 ```
 
-After a lengthy compilation and build session, you should find two different python externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo` each one of these is largish (~9MB) but includes a full python3 distribution embedded in the `Resources` folder of the bundle. Note that you probably would want to use only one of these in your project in any case.
+This above command automatically downloads python3 source from python.org and also its dependencies from their respective sites, and then compiles a static version of python3 which is then used to compile the externals.
+
+After a somewhat lengthy build, you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped stdlib in the `Resources` folder which also has a `site-packages` directory for your own code. The python interpreter in each external is statically compiled and self-contained without any non-system dependencies which makes it appropriate for use in 'relocatable' Max Packages and Standalones.
+
+As a quick test of whether these two externals work ok in a standalone, let's build a standalone application using the test patcher, `py-js/patchers/py_test_standalone.maxpat`. After building this patcher as Max standalone and opening it, you should see that the `py` external is working fine, yet the `pyjs` external which has a couple of more dependencies on some javascript code gives an error. This is straightforward to fix: copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Re-run the standalone app again and now the `pyjs` external should work. (Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatl appreciated.)
 
 Have fun!
 

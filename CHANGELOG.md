@@ -7,7 +7,7 @@
 
 ## Pre-release0
 
-- created a release of statically built `py.mxo` and `pyjs.mxo`.
+- created a release (using python 3.96) of statically built `py.mxo` and `pyjs.mxo`.
 
 ## Key Fixes
 
