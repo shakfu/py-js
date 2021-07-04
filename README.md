@@ -8,7 +8,7 @@ repo - <https://github.com/shakfu/py-js>
 
 ## Quickstart
 
-Ths project provides a number of implementations of python3 externals for use in a live Max environment. If you are only interested in using python3 with Max in an offline capacity, check out the [py2max](https://github.com/shakfu/py2max) project. Otherwise, read on!
+This project provides a number of implementations of python3 externals for use in a live Max environment. If you are only interested in using python3 with Max in an offline capacity, check out the [py2max](https://github.com/shakfu/py2max) project. Otherwise, read on!
 
 The python3 externals are as follows (in order of relative maturity):
 
@@ -176,13 +176,13 @@ pyjs max external (jsextension)
 
 ## Overview
 
-`py/js` started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into a more ambitious framework for using python3 in max.
+`py/js` started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring a number of different ways of using python3 in max.
 
-There are two implementation variations:
+This overview will cover two of the most mature and best documented implementations:
 
 1. A `py` external which provides a more featureful two-way interface between max and python in a way that feels natural to both languages.
 
-2. A `pyjs` max external/jsextension providing a `PyJS` class and a minimal subset of `py's` features which work well with the max `js` object and javascript code (like returning json directly from evaluations of python expressions).
+2. A `pyjs` max external/jsextension providing a `PyJS` class and a minimal subset of the `py` external's features which work well with the max `js` object and javascript code (like returning json directly from evaluations of python expressions).
 
 Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
 
@@ -204,7 +204,7 @@ Embed in external    | 1    | 1
 
 ### Key Features
 
-The more mature `py` external has the following c-level methods:
+The `py` external has the following c-level methods:
 
 category | method   | param(s)      | in/out | can change ns
 :------- | :--------| :------------ | :----: | :------------:
@@ -224,7 +224,7 @@ interobj | scan     |               | n/a    | no
 interobj | send     | name, msg, .. | n/a    | no
 meta     | count    |               | n/a    | no
 
-The more recently developed `pyjs` external implements the following c-level methods:
+The `pyjs` external implements the following c-level methods:
 
 category | method       | param(s)      | in/out | can change ns
 :------- | :----------- | :------------ | :----: | :------------:
@@ -297,7 +297,7 @@ Implemented for both `py` and `pyjs` objects:
 
 - Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and a new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build system for most build use cases and if you would like to build a self-contained static external then use `python3 -m builder py_static --install && python3 -m builder static_ext` in the `py-js/sources/py` directory. Clearly this is not optimal / user-friendly and needs work.
 
-- The `py` and `pyjs` objects are currently marked as experimental pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
+- Despite their relative maturity, the `py` and `pyjs` objects are currently marked as pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
 
 - As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
 
@@ -309,7 +309,7 @@ Implemented for both `py` and `pyjs` objects:
 
 This just means that you imported `numpy`, used it (hopefully without issue) adn then closed your patch, and then in the same Max session, re-opened it or created a new one and imported `numpy` again. To fix it, just restart Max and use it normally in your patch. Treat each patch as a session and restart Max after each session. It's a pain, but unfortunately a limitation of current python c-extensions.
 
-- `core` features relying on pure pytho code are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
+- `core` features relying on pure python code are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
 
 - The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
 
@@ -331,7 +331,7 @@ otherwise download xcode from the app store.
 
 ### py-js externals source and max-sdk
 
-The py external is developed as a max package with a `source` folder which contains the max-sdk as a subfolder and which is conveniently available as a git submodule.
+This project is developed as a max package with a `source` folder which contains the max-sdk as a subfolder and which is conveniently available as a git submodule.
 
 First git clone the `py-js` repo:
 
@@ -399,7 +399,7 @@ You can run alternative builds using make or the python `builder` from `py-js/so
 
 ### Build Variations
 
-One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work the most reliably. Externals built on custom minimized static build of python from src also work well but need to be further documented.
+One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work the most reliably. Externals built on custom minimized static build of python from src also work well but use a different build system.
 
 There is generally tradeoff of size vs. portability:
 
@@ -408,7 +408,7 @@ name             | uses      | format     | size     | portable  | standalone
 bin-homebrew-sys | homebrew  | externals  | 300K     | no        | no  [1]
 bin-homebrew-pkg | homebrew  | package    | 13.5MB   | yes       | yes
 bin-homebrew-ext | homebrew  | externals  | 27.1MB   | yes       | yes [2]
-static-ext       | static-py | externals  | 17.6MB   | yes       | yes
+static-ext       | static-py | externals  | 9.1MB    | yes       | yes
 
 [1] an additional benefit is you can use all your system python packages
 
