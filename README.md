@@ -20,7 +20,7 @@ mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/
 pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client in Max
 
-It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as pre-alpha state and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module). 
+It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as having a pre-alpha state and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped `api` module). 
 
 Also note that the project is undergoing a slow restructuring effort, so a number of things might look funny and redundant.
 
@@ -53,31 +53,35 @@ Open up any of the patch files in the `patcher` directory of the generated max p
 
 Note that the default build creates a package with two externals which are linked to your system homebrew python3. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
-Not to worry, if want have a need for portable relocatable externals then read on!
+Not to worry however, if have a need for portable relocatable python3 externals then read on!
 
 
 ### Alternative Quickstart for Self-contained Python3 Externals
 
-If you would like to build a couple of self-contained python3 externals which can be included in standalones you can download a [pre-release](https://github.com/shakfu/py-js/releases) OR even better, you can do the following:
+If you would like a couple of self-contained python3 externals which can be included in standalones you can download the [pre-release](https://github.com/shakfu/py-js/releases) OR even better, you can build your own with the following:
 
 ```bash
 cd py-js/sources/py
 python3 -m builder py_static --install && python3 -m builder static_ext
 ```
 
-This above command automatically downloads python3 source from python.org and also its dependencies from their respective sites, and then compiles a static version of python3 which is then used to compile the externals.
+The above command automatically downloads python3 source from [python.org](https://www.python.org) as well as dependencies from their respective sites, and then compiles a static version of python3 which is then used to compile the externals.
 
-After a somewhat lengthy build, you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped stdlib in the `Resources` folder which also has a `site-packages` directory for your own code. The python interpreter in each external is statically compiled and self-contained without any non-system dependencies which makes it appropriate for use in 'relocatable' Max Packages and Standalones.
+A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code. The python interpreter in each external is statically compiled and self-contained without any non-system dependencies which makes it appropriate for use in 'relocatable' Max Packages and Standalones.
 
-As a quick test of whether these two externals work ok in a standalone, let's build a standalone application using the test patcher, `py-js/patchers/py_test_standalone.maxpat`. After building this patcher as Max standalone and opening it, you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error. 
+Now test whether these two externals work ok in a standalone: first build `py-js/patchers/py_test_standalone.maxpat` as a standalone application using Max then open it: you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error. 
 
-If you look inside the built standalone bundle, `py_test_standalone.app`, you find that the `py.mxo` external has been copied into the `py_test_standalone.app/Contents/Resources/C74/externals` folder but not `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Re-run the standalone app again and now the `pyjs` external should work. (Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatl appreciated.)
-
-Note you would only want to pick one of these externals to use in your standalone depending on your requirements.
+If you look inside the built standalone bundle, `py_test_standalone.app`, you find that the `py.mxo` external has been copied into the `py_test_standalone.app/Contents/Resources/C74/externals` folder but not `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. (Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatl appreciated.)
 
 Incidentally, a pre-built standalone that was built using exactly the same steps as above is in the releases section: `py_test_standalone_demo.zip`.
 
+Note: it would normally be considered redundant to install two different python3 externals in your project. Nontheless, it's good to demonstrate that they can be used together if required.
+
+Please read on for further details about what the externals can do.
+
+
 Have fun!
+
 
 ## Summary
 
