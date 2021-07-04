@@ -22,9 +22,9 @@ jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client
 
 It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as pre-alpha state and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped api module). 
 
-In any case, there is still quite a bit to do before a release can be made. Also note that the project is undergoing a restructuring effort, so a number of things might look funny and redundant.
+Also note that the project is undergoing a slow restructuring effort, so a number of things might look funny and redundant.
 
-With such caveats aside installation is pretty straighforward:
+With such caveats aside, installation is pretty straighforward:
 
 1. For compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
@@ -34,7 +34,7 @@ With such caveats aside installation is pretty straighforward:
     brew install python
     ```
 
-    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.5 at the time of this writing.)
+    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.6 at the time of this writing.)
 
 3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
@@ -49,11 +49,16 @@ Then run the following in the root directory of the `py-js` source (other instal
 ./build.sh
 ```
 
-Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work. If you want to test both externals at the same time, open the `py_test_standalone.maxpat` file.
+Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work.
+
+Note that the default build creates a package with two externals which are linked to your system homebrew python3. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
+
+Not to worry, if want have a need for portable relocatable externals then read on!
+
 
 ### Alternative Quickstart for Self-contained Python3 Externals
 
-If you would like to build a couple of self-contained python3 externals which can be included in standalones, another method is available:
+If you would like to build a couple of self-contained python3 externals which can be included in standalones you can download a [pre-release](https://github.com/shakfu/py-js/releases) OR even better, you can do the following:
 
 ```bash
 cd py-js/sources/py
@@ -70,7 +75,7 @@ If you look inside the built standalone bundle, `py_test_standalone.app`, you fi
 
 Note you would only want to pick one of these externals to use in your standalone depending on your requirements.
 
-Incidentally, a pre-built standalone that was built using exactly the same steps as above is in the releases` section: `py_test_standalone_demo.zip`.
+Incidentally, a pre-built standalone that was built using exactly the same steps as above is in the releases section: `py_test_standalone_demo.zip`.
 
 Have fun!
 
