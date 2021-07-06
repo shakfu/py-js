@@ -331,7 +331,7 @@ otherwise download xcode from the app store.
 
 ### py-js externals source and max-sdk
 
-This project is developed as a max package with a `source` folder which contains the max-sdk as a subfolder and which is conveniently available as a git submodule.
+This project is developed as a max package with a `source` folder which contains the max-sdk as a subfolder. This is conveniently available as a git submodule.
 
 First git clone the `py-js` repo:
 
@@ -349,7 +349,7 @@ git submodule update
 
 ### Homebrew Python3
 
-Homebrew Python3 is required. If it is not already install see [Homebrew](https://brew.sh) for the install oneliner (provided here as well for reference).
+Homebrew Python3 is required for the default non-portable build case. If it is not already installed see [Homebrew](https://brew.sh) for the install oneliner (provided here as well for reference):
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -363,9 +363,9 @@ brew install python
 
 see: <https://installpython3.com/mac> for further info if you are interested.
 
-### cython (optional)
+### Cython
 
-[Cython](https://cython.org) is only used for development and for wrapping the max api. It is advised to install it in case you want to customize the wrapping of the max api.
+[Cython](https://cython.org) is used for wrapping the max api. It is advised to install it in case you want to play around or extend tthe wrapped max api.
 
 Install cython as follows:
 
@@ -373,7 +373,7 @@ Install cython as follows:
 pip install cython
 ```
 
-### Build it
+### Build the Default Externals
 
 In the root of the package:
 
@@ -393,13 +393,26 @@ or in the `py-js/sources/py` directory
 make build
 ```
 
-This builds the default 'linked-to-system|homebrew python' version of `py`. Read further for alternative ways to build and install `py`.
+This builds the default 'linked-to-system|homebrew python' version of `py` and (also python-in-javascript `pyjs`. Read further for alternative ways to build and install `py` and `pyjs`
 
-You can run alternative builds using make or the python `builder` from `py-js/sources/py`.
+### Current Status of Builders
+
+As of this writing this project has two separate build system which should be
+unified some day. You don't have to use both but it's understanding the
+differences.
+
+1. Homebrew python build system based on makefiles and bash scripts: re-uses your existing homebrew installation to build the externals with a number of variations. The default build uses this system.
+
+2. Python `builder` system: was developed to handle the complex case of
+   downloading python (from python.org) and its dependencies for their
+   respective sites in source form and then building minimal static python
+   binaries with which to reliably compile python3 externals which are
+   portable, relocatable, self-contained, small-in-size, and therefore usable
+   in Max Packages and Standalones.
 
 ### Build Variations
 
-One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work the most reliably. Externals built on custom minimized static build of python from src also work well but use a different build system.
+One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work mostly ok. Externals built using the python-builder system work well and fulfil the portability requirements.
 
 There is generally tradeoff of size vs. portability:
 
@@ -408,13 +421,13 @@ name             | uses      | format     | size     | portable  | standalone
 bin-homebrew-sys | homebrew  | externals  | 300K     | no        | no  [1]
 bin-homebrew-pkg | homebrew  | package    | 13.5MB   | yes       | yes
 bin-homebrew-ext | homebrew  | externals  | 27.1MB   | yes       | yes [2]
-static-ext       | static-py | externals  | 9.1MB    | yes       | yes
+static-ext       | builder   | externals  | 9.1MB    | yes       | yes
 
 [1] an additional benefit is you can use all your system python packages
 
 [2] not 100% working yet.
 
-#### Embed Python in the Package (Now working with Standalones)
+#### Embed Python in your Max Package (can work in Standalones)
 
 In the root of the py-js directory:
 
@@ -434,11 +447,21 @@ Once this is done you can run some of the patchers to in the package test the py
 
 *NOTE*: Recent changes in Max have allowed for this to work in standalones. Just create your standalone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built into a `<STANDALONE>` then copy the whole aforementioned `py` package to `<STANDALONE>/Contents/Resources/C74/packages` and delete the redundant `py.mxo` in `<STANDALONE>/Contents/Resources/C74/externals` since it already exists in the just-copied package.
 
-#### Embedding Python in the External itself
+#### Embedding Python in the External itself (Recommended)
 
-**WARNING**: this currently 'partially' works. Strangely, it works for one exernal and not the other! Not sure why...
 
-This places a minimized python distribution in the external `py.mxo` itself.
+The most reliable method is to use the python `builder` package which is included in the project:
+
+```bash
+cd py-js/sources/py
+python3 -m builder py_static --install && python3 -m builder static_ext
+```
+
+#### Embedding Python in the External itself (Alternative)
+
+Here's another method using Homebrew / bash build system which currently works with a caveat: strangely, although it buids both `py` or `pyjs` successfuly, you have to pick one and can't use both at the same time for some strange reason. This is not an issue because the use of both is redundant.
+
+This method places a minimized python distribution in the external `py.mxo` itself.
 
 From the root of `py-js`, do this:
 
@@ -447,19 +470,18 @@ cd source/py
 make homebrew-ext
 ```
 
-Another implementation variation builds both externals using a minimal static python build. This has provden reproducibly successful (see `py-js/source/py/targets/static-ext` after building a static-python build. A more robust implementation will be be documented eventually.
 
 ### Sidenote about building on a Mac
 
-If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can mostly ignored (unless your only focus is codesigning the external).
+If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can be mostly ignored (unless your only focus is codesigning the external).
 
 The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified).
 
 I've tried this several times and  and it works (for "sign to run locally" case and for the "Development" case).
 
-### Style it
+### Code Style
 
-The coding style for this project can applied automatically during the build process with `clang-format`. On OS X, you can easily install using brew:
+The coding style for this project can be applied automatically during the build process with `clang-format`. On OS X, you can easily install this using brew:
 
 ```bash
 brew install clang-format
@@ -467,17 +489,22 @@ brew install clang-format
 
 The style used in this project is specified in the `.clang-format` file.
 
+
 ## Prior Art and Thanks
 
-I was motivated to start this project because I yearned to to use some python libraries or functions in Max.
+I was motivated to start this project because I found myself recurrently wanting to use some python libraries or functions in Max.
 
-Looking around for for a python max external I found the following:
+Looking around for a python max external I found the following:
 
-- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) is the most mature Max/Python implementation and when I was starting this project, it seemed very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it was written in C++ and that it needed an additional [c++ flext](http://grrrr.org/ext/flext) layer to compile. I was further dissuaded from diving in as it supported, at the time, only python 2 which seemed difficult to swallow considering Python2 is basically not developed anymore. Ironically, this project has become more active recently, and I finally was persuaded to try go back and try to compile it and finally got it running, and I found it to be extremely technically impressive work, but it had probably suffered from the burden of having to maintain several moving dependencies which made the above issues which are still not resolved. It would be great if this project could somehow help py/ext in some way or the other.
+- Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) is the most mature Max/Python implementation and when I was starting this project, it seemed very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it was written in C++ and that it needed an additional [c++ flext](http://grrrr.org/ext/flext) layer to compile. I was further dissuaded from diving in as it supported, at the time, only python 2 which seemed difficult to swallow considering Python2 is basically not developed anymore. Ironically, this project has become more active recently, and I finally was persuaded to go back and try to compile it and finally got it running. I found it to be extremely technically impressive work, but it had probably suffered from the burden of having to maintain several moving dependencies (puredata, max, python, flext, c++). The complexity probably put off some possible contributors which have made the maintenance of the project easier for Thomas. In any case, it's an awesome project and it would be great if this project could somehow help py/ext in some way or the other.
 
 - [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 2 years as of this writing.
 
 - [nt.python_for_max](https://github.com/2bbb/nt.python_for_max) -- Basic implementation of python in max using a fork of Graham Wakefield's old c++ interface. Hasn't really been touched in 3 years.
+
+- [net.loadbang.jython](https://github.com/cassiel/net.loadbang.jython) -- A
+  jython implementation for Max which uses the MXJ java interface. It's looks
+  like a solid effort using Jython 2.7 but the last commit was in 2015.
 
 Around the time of the beginning of my first covid-19 lockdown, I stumbled upon Iain Duncan's [Scheme for Max](https://github.com/iainctduncan/scheme-for-max) project, and I was quite inspired by his efforts and approach to embed a scheme implementation into a Max external.
 
