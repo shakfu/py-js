@@ -71,6 +71,8 @@ cdef class PyExternal:
 
         if (mx.hashtab_getsize(registry) == 0):
             self.error("registry not populated")
+rustc -o hello hello.rs
+
             return
 
         err = mx.hashtab_lookup(registry, 
@@ -189,7 +191,6 @@ cdef class PyExternal:
         elif isinstance(arg, int): self.out_int(arg)
         elif isinstance(arg, str): self.out_sym(arg)
         elif isinstance(arg, list): self.out_list(arg)
-        # BUG: below cause crash? not sure why
         elif isinstance(arg, dict): self.out_dict(<dict>arg)
         else:
             return

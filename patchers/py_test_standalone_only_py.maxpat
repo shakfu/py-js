@@ -40,24 +40,33 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-12",
-					"linecount" : 7,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 347.0, 105.0, 202.0, 100.0 ],
-					"text" : "Steps to Build\n\n1. File > Build Collect / Application...\n2. Press [Build]\n3.1 Select File Format: Application\n3.2 Select Destination of standalone\n3.3. Press [Save]"
+					"bgmode" : 0,
+					"border" : 0,
+					"clickthrough" : 0,
+					"enablehscroll" : 0,
+					"enablevscroll" : 0,
+					"id" : "obj-11",
+					"lockeddragscroll" : 0,
+					"maxclass" : "bpatcher",
+					"name" : "py_repl.maxpat",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"offset" : [ 0.0, 0.0 ],
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 350.0, 146.0, 214.0, 26.0 ],
+					"viewvisibility" : 1
 				}
 
 			}
 , 			{
 				"box" : 				{
 					"id" : "obj-10",
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 338.0, 20.0, 254.0, 20.0 ],
-					"text" : "Tests single [py] external in a standalone"
+					"patching_rect" : [ 17.0, 52.0, 185.0, 33.0 ],
+					"text" : "Tests single [py] external in a standalone."
 				}
 
 			}
@@ -67,7 +76,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 525.0, 48.0, 67.0, 22.0 ],
+					"patching_rect" : [ 540.0, 21.0, 67.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"allwindowsactive" : 0,
 						"appicon_mac" : "",
@@ -101,7 +110,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 38.0, 52.0, 185.0, 24.0 ],
+					"patching_rect" : [ 17.0, 20.0, 185.0, 24.0 ],
 					"text" : "standalone test py",
 					"textjustification" : 1
 				}
@@ -114,7 +123,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
-					"patching_rect" : [ 102.0, 189.0, 29.5, 22.0 ],
+					"patching_rect" : [ 154.0, 193.0, 29.5, 22.0 ],
 					"text" : "t l b"
 				}
 
@@ -126,7 +135,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 112.5, 277.0, 29.5, 22.0 ],
+					"patching_rect" : [ 164.5, 281.0, 29.5, 22.0 ],
 					"text" : "set"
 				}
 
@@ -162,7 +171,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 102.0, 142.0, 92.0, 22.0 ],
+					"patching_rect" : [ 154.0, 146.0, 92.0, 22.0 ],
 					"text" : "eval os.__file__"
 				}
 
@@ -170,13 +179,11 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-5",
-					"linecount" : 5,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 112.5, 325.0, 116.5, 76.0 ],
-					"text" : "/Users/sa/Downloads/src/py-js/externals/py.mxo/Contents/Resources/lib/python39.zip/os.py"
+					"patching_rect" : [ 164.5, 329.0, 116.5, 22.0 ]
 				}
 
 			}
@@ -187,7 +194,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 210.0, 142.0, 58.0, 22.0 ],
+					"patching_rect" : [ 262.0, 146.0, 58.0, 22.0 ],
 					"text" : "import os"
 				}
 
@@ -201,7 +208,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "bang", "bang" ],
-					"patching_rect" : [ 210.0, 237.0, 75.0, 22.0 ],
+					"patching_rect" : [ 262.0, 241.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
@@ -224,7 +231,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 238.0, 277.0, 24.0, 24.0 ]
+					"patching_rect" : [ 290.0, 281.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -237,7 +244,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 266.0, 277.0, 24.0, 24.0 ]
+					"patching_rect" : [ 318.0, 281.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -260,6 +267,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-5", 1 ],
 					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-11", 0 ]
 				}
 
 			}
@@ -321,6 +335,13 @@
 			}
  ],
 		"dependency_cache" : [ 			{
+				"name" : "py_repl.maxpat",
+				"bootpath" : "~/Downloads/src/py-js/patchers",
+				"patcherrelativepath" : ".",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"
 			}
