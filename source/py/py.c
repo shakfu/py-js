@@ -381,6 +381,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
     return (x);
 }
 
+
 void py_init(t_py* x)
 {
     #if defined(__APPLE__) && defined(PY_STATIC_EXT)
