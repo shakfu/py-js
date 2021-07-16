@@ -115,7 +115,9 @@ cdef extern from "ext_mess.h":
     ctypedef void *(*method)(void *, ...)
     ctypedef long (*t_intmethod)(void *, ...)
     ctypedef struct t_object
-    ctypedef struct t_symbol
+    ctypedef struct t_symbol:
+        char *s_name
+        # struct object *s_thing
     cdef long MAGIC
     cdef long OB_MAGIC
     cdef int NOGOOD(x)

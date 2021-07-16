@@ -15,7 +15,7 @@ from cpython cimport PyFloat_AsDouble
 from cpython cimport PyLong_AsLong
 from cpython.ref cimport PyObject
 
-from libc.stdlib cimport malloc
+from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy, strlen
 
 cimport api_max as mx # api is a cython keyword!
@@ -31,6 +31,121 @@ DEF PY_MAX_ATOMS = 128
 cdef extern from "Python.h":
     const char* PyUnicode_AsUTF8(object unicode)
     unicode PyUnicode_FromString(const char *u)
+
+
+
+cdef class Atom:
+    """A wrapper class for a Max t_atom
+    """
+    cdef mx.t_atom *ptr
+    cdef bint ptr_owner
+    cdef int size
+
+    def __cinit__(self):
+        self.ptr_owner = False
+
+    def __dealloc__(self):
+        # De-allocate if not null and flag is set
+        if self.ptr is not NULL and self.ptr_owner is True:
+            free(self.ptr)
+            self.ptr = NULL
+
+    def set_float(self, float f, int idx=0):
+        mx.atom_setfloat(self.ptr + idx, f)
+
+    def get_float(self, int idx=0) -> float:
+        return <float>mx.atom_getfloat(self.ptr + idx)
+
+    def set_long(self, long x, int idx=0):
+        mx.atom_setlong(self.ptr + idx, x)
+
+    def get_long(self, int idx=0) -> long:
+        return <long>mx.atom_getlong(self.ptr + idx)
+
+    def set_symbol(self, str symbol, int idx=0):
+        mx.atom_setsym(self.ptr + idx, mx.gensym(symbol.encode('utf8')))
+
+    cdef mx.t_symbol *get_symbol(self, int idx=0):
+        return mx.atom_getsym(self.ptr + idx)
+
+    def get_string(self, int idx=0) -> str:
+        return (self.get_symbol(idx).s_name).decode()
+
+    cdef bint is_symbol(self, int idx=0):
+        return (self.ptr + idx).a_type  == mx.A_SYM
+
+    cdef bint is_long(self, int idx=0):
+        return (self.ptr + idx).a_type  == mx.A_LONG
+
+    cdef bint is_float(self, int idx=0):
+        return (self.ptr + idx).a_type == mx.A_FLOAT
+
+    def to_list(self) -> list:
+        _res = []
+        for i in range(self.size):
+            if self.is_symbol(i):
+                _res.append(self.get_string(i))
+            elif self.is_float(i):
+                _res.append(self.get_float(i))
+        return _res
+
+    def display(self):
+        for i in range(self.size):
+            if self.is_float(i):
+                print("is_float:", i)
+            elif self.is_symbol(i):
+                print("is_symbol:", i)
+                s = self.get_string(i)
+                print("string:", type(s))
+            else:
+                print("other:", i)
+
+    @staticmethod
+    cdef Atom from_ptr(mx.t_atom *ptr, int size, bint owner=False):
+        # Call to __new__ bypasses __init__ constructor
+        cdef Atom atom = Atom.__new__(Atom)
+        atom.ptr = ptr
+        atom.ptr_owner = owner
+        atom.size = size
+        return atom
+
+    @staticmethod
+    cdef Atom new(int size):
+        cdef mx.t_atom *ptr = <mx.t_atom *>malloc(size * sizeof(mx.t_atom))
+        if ptr is NULL:
+            raise MemoryError
+        return Atom.from_ptr(ptr, size, owner=True)
+
+    @staticmethod
+    cdef Atom from_list(list lst):
+        cdef int size = len(lst)
+        cdef mx.t_atom *ptr = <mx.t_atom *>malloc(size * sizeof(mx.t_atom))
+        if ptr is NULL:
+            raise MemoryError
+
+        cdef int i
+        for i, obj in enumerate(lst):
+            
+            if isinstance(obj, float):
+                mx.atom_setfloat(ptr+i, <float>obj)
+            
+            elif isinstance(obj, int):
+                mx.atom_setlong(ptr+i, <long>obj)
+
+            elif isinstance(obj, bytes):
+                mx.atom_setsym(ptr+i, mx.gensym(obj))
+
+            elif isinstance(obj, str):
+                mx.atom_setsym(ptr+i, mx.gensym(obj.encode('UTF-8')))
+
+            else:
+                print("cannot convert:", obj)
+                continue
+
+        return Atom.from_ptr(ptr, size, owner=True)
+
+
+
 
 
 cdef class PyExternal:
@@ -71,8 +186,6 @@ cdef class PyExternal:
 
         if (mx.hashtab_getsize(registry) == 0):
             self.error("registry not populated")
-rustc -o hello hello.rs
-
             return
 
         err = mx.hashtab_lookup(registry, 
