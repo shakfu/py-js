@@ -47,7 +47,7 @@ cdef class Atom:
     def __dealloc__(self):
         # De-allocate if not null and flag is set
         if self.ptr is not NULL and self.ptr_owner is True:
-            free(self.ptr)
+            mx.sysmem_freeptr(self.ptr)
             self.ptr = NULL
 
     def set_float(self, float f, int idx=0):
@@ -61,6 +61,9 @@ cdef class Atom:
 
     def get_long(self, int idx=0) -> long:
         return <long>mx.atom_getlong(self.ptr + idx)
+
+    def get_int(self, int idx=0) -> int:
+        return <int>mx.atom_getlong(self.ptr + idx)
 
     def set_symbol(self, str symbol, int idx=0):
         mx.atom_setsym(self.ptr + idx, mx.gensym(symbol.encode('utf8')))
@@ -85,6 +88,8 @@ cdef class Atom:
         for i in range(self.size):
             if self.is_symbol(i):
                 _res.append(self.get_string(i))
+            elif self.is_long(i):
+                _res.append(self.get_int(i))
             elif self.is_float(i):
                 _res.append(self.get_float(i))
         return _res
@@ -111,7 +116,7 @@ cdef class Atom:
 
     @staticmethod
     cdef Atom new(int size):
-        cdef mx.t_atom *ptr = <mx.t_atom *>malloc(size * sizeof(mx.t_atom))
+        cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
         return Atom.from_ptr(ptr, size, owner=True)
@@ -119,7 +124,7 @@ cdef class Atom:
     @staticmethod
     cdef Atom from_list(list lst):
         cdef int size = len(lst)
-        cdef mx.t_atom *ptr = <mx.t_atom *>malloc(size * sizeof(mx.t_atom))
+        cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
 
@@ -143,8 +148,6 @@ cdef class Atom:
                 continue
 
         return Atom.from_ptr(ptr, size, owner=True)
-
-
 
 
 
@@ -307,6 +310,12 @@ cdef class PyExternal:
         elif isinstance(arg, dict): self.out_dict(<dict>arg)
         else:
             return
+
+
+def test_atom():
+    ext = PyExternal()
+    a1 = Atom.from_list([1, 2.5, b'hello', 'world'])
+    ext.out(a1.to_list())
 
 
 def get_globals():
