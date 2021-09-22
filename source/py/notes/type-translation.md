@@ -189,3 +189,40 @@ void postargs(long argc, t_atom *argv)
     }
 }
 ```
+
+### Example from Scheme-for-Max
+
+see this forum [post](https://cycling74.com/forums/need-help-replicating-tosymbol-functionality-stuck-on-binbuf-string-conversion) from Iain Duncan which includes the following snippet:
+
+```c
+void s4m_eval_atoms_as_string(t_s4m *x, t_symbol *sym, long argc, t_atom *argv){
+    post("s4m_eval_atoms_as_string");
+    char *token_1 = sym->s_name;
+    int token_1_size = strlen(token_1);
+    long size = 0;
+    char *atoms_as_text = NULL;
+   t_max_err err = atom_gettext(argc, argv, &size, &atoms_as_text, OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && size && atoms_as_text) {
+        int code_str_size = token_1_size + size + 1;
+        char *code_str = (char *)sysmem_newptr( sizeof( char ) * code_str_size);
+        sprintf(code_str, "%s %s", token_1, atoms_as_text);
+        post("code_str: %s", code_str);
+        // now we have code, but we need to clean up Max escape chars
+        char *code_str_clean = (char *)sysmem_newptr( sizeof( char ) * code_str_size);
+        for(int i=0, j=0; i < code_str_size; i++, j++){
+            if(code_str[j] == '\\') code_str_clean[i] = code_str[++j];
+            else code_str_clean[i] = code_str[j];
+        }
+        post("code_str cleaned: %s", code_str_clean);
+        // call s4m
+        s4m_s7_eval_c_string(x, code_str_clean);
+    }else{
+       // TODO abort error here
+    }
+    if (atoms_as_text) {
+        sysmem_freeptr(atoms_as_text);
+    }
+}
+```
+
+
