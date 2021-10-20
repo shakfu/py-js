@@ -412,7 +412,10 @@ differences.
    portable, relocatable, self-contained, small-in-size, and therefore usable
    in Max Packages and Standalones.
 
-### Build Variations
+
+
+
+### Other Build Variations
 
 One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work mostly ok. Externals built using the python-builder system work well and fulfil the portability requirements.
 
@@ -470,6 +473,34 @@ From the root of `py-js`, do this:
 ```bash
 cd source/py
 make homebrew-ext
+```
+
+
+### The pymx variation
+
+The `pymx` is a max wrapper of the python interpreter using the `min-api` `c++` version of the Max api.
+
+This needs:
+
+1. [pybind11](https://pybind11.readthedocs.io) which is used for wrapping the alternative `min-api` `c++` version of the Max api to make it accessible to python.
+
+2. [cmake](https://cmake.org) is used in the `min-api` build system. 
+
+
+First, install `cmake` and `pybind11` using homebrew:
+
+```bash
+brew install cmake
+```
+
+```bash
+brew install pybind11
+```
+
+then run the following script in the root of the project:
+
+```bash
+./build_pymx.sh
 ```
 
 
