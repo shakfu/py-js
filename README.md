@@ -26,7 +26,7 @@ Please note that all of the externals currently only work on MacOS x86_64. And w
 
 For some of the less developed externals and for some of the more experimental features don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped `api` module). 
 
-With such caveats aside, if you'd rather not download the [release]((https://github.com/shakfu/py-js/releases/tag/0.1), compilation / installation is pretty straighforward:
+With such caveats aside, if you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), compilation / installation is pretty straighforward:
 
 1. For compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
@@ -61,7 +61,7 @@ Not to worry however, if have a need for portable relocatable python3 externals 
 ### Alternative Quickstart for Self-contained Python3 Externals
 
 
-If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release]((https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own with the following:
+If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own with the following:
 
 
 ```bash
