@@ -20,11 +20,13 @@ mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/
 pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client in Max
 
-It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. Please note that all of the externals currently only work on MacOS and that while many aspects of the core externals are quite functional and relatively stable, please consider this project as having a pre-alpha state and don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped `api` module). 
+It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. There is no need to compile them as a [release (0.1)](https://github.com/shakfu/py-js/releases/tag/0.1) has just been made with both externals being fully codesigned and notarized.
 
-Also note that the project is undergoing a slow restructuring effort, so a number of things might look funny and redundant.
+Please note that all of the externals currently only work on MacOS x86_64. And while there is a branch which is working on Apple Silicon compatibility it is als part of a slow restructuring effort, so a number of things might look funny and redundant in the master branch.
 
-With such caveats aside, installation is pretty straighforward:
+For some of the less developed externals and for some of the more experimental features don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped `api` module). 
+
+With such caveats aside, if you'd rather not download the [release]((https://github.com/shakfu/py-js/releases/tag/0.1), compilation / installation is pretty straighforward:
 
 1. For compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
@@ -58,7 +60,9 @@ Not to worry however, if have a need for portable relocatable python3 externals 
 
 ### Alternative Quickstart for Self-contained Python3 Externals
 
-If you would like a couple of self-contained python3 externals which can be included in standalones you can download the [pre-release](https://github.com/shakfu/py-js/releases) OR even better, you can build your own with the following:
+
+If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release]((https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own with the following:
+
 
 ```bash
 cd py-js/sources/py
@@ -461,6 +465,9 @@ The most reliable method is to use the python `builder` package which is include
 cd py-js/sources/py
 python3 -m builder py_static --install && python3 -m builder static_ext
 ```
+
+If you want to codesign and notarize it for use in your standalone or package, the [codesigning / notarization script](source/py/scripts/notarize.sh) and related [entitlements file](source/py/scripts/entitlements.plist) can be found in the [source/py/scripts](source/py/scripts) folder.
+
 
 #### Embedding Python in the External itself (Alternative)
 
