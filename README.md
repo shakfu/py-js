@@ -6,7 +6,7 @@ repo - <https://github.com/shakfu/py-js>
 
 ![py-js test](./media/screenshot.png)
 
-## Quickstart
+## Preface
 
 This project provides a number of implementations of python3 externals for use in a live Max environment. If you are only interested in using python3 with Max in an offline capacity, check out the [py2max](https://github.com/shakfu/py2max) project. Otherwise, read on!
 
@@ -20,13 +20,24 @@ mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/
 pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client in Max
 
-It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. There is no need to compile them as a [release (0.1)](https://github.com/shakfu/py-js/releases/tag/0.1) has just been made with both externals being fully codesigned and notarized.
 
-Please note that all of the externals currently only work on MacOS x86_64. And while there is a branch which is working on Apple Silicon compatibility, it is also part of a slow cleanup and restructuring effort, so a number of things might look funny and redundant in the master branch.
+The common idea in these externals is to help you use and distribute python code and libraries in your Max applications. They are differentiated in the way that this is done.
+
+Please see below for a full overview and feature comparison of the externals.
+
+For a sense of relative maturity, about 80% of development time to-date has gone into the first two externals (`py` and `pyjs`) with the remaining part distributed to the others.
+
+Please note that all of the externals currently only work on MacOS x86_64 and were written when the max-sdk did yet fully transition to using cmake. 
+
+There is a branch (`m1` branch) which is working on Apple Silicon compatibility and using the new infrastructure, but it is is still not yet fully functional and is also part of a slow cleanup and restructuring effort, so a number of things might still look funny and redundant in the master branch.
 
 For some of the less developed externals and for some of the more experimental features don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
-With such caveats aside, if you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), compilation / installation is pretty straighforward:
+## Quickstart
+
+It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. There is also no need to compile them as a [release (0.1)](https://github.com/shakfu/py-js/releases/tag/0.1) has just been made with both externals being fully codesigned and notarized.
+
+If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), compilation / installation is pretty straightforward:
 
 1. For compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
 
@@ -85,10 +96,11 @@ Incidentally, a pre-built standalone that was built using exactly the same steps
 
 Note: it would normally be considered redundant to install two different python3 externals in your project. Nontheless, it's good to demonstrate that they can be used together if required.
 
-If there is a need to codesign / notarize the standalone, there is a [sister
-project](https://github.com/shakfu/maxutils)  which aims to make this straightforward..
+As a side note: if there is a need to codesign / notarize the standalone, there is a [sister
+project](https://github.com/shakfu/maxutils)  which aims to make this less painful.
 
-Please read on for further details about what the externals can do.
+
+Please read on for further details about what the py-js externals can do.
 
 
 Have fun!
@@ -158,7 +170,7 @@ py max external
 
 ![py-js test_py](./media/test_py.png)
 
-### `pyjs` external (experimental)
+### `pyjs` external
 
 ```text
 pyjs max external (jsextension)
