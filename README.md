@@ -22,9 +22,9 @@ jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client
 
 It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. There is no need to compile them as a [release (0.1)](https://github.com/shakfu/py-js/releases/tag/0.1) has just been made with both externals being fully codesigned and notarized.
 
-Please note that all of the externals currently only work on MacOS x86_64. And while there is a branch which is working on Apple Silicon compatibility it is als part of a slow restructuring effort, so a number of things might look funny and redundant in the master branch.
+Please note that all of the externals currently only work on MacOS x86_64. And while there is a branch which is working on Apple Silicon compatibility, it is also part of a slow cleanup and restructuring effort, so a number of things might look funny and redundant in the master branch.
 
-For some of the less developed externals and for some of the more experimental features don't be surprised if Max seg-faults (especially if you try some of the more experimental features such as the cython wrapped `api` module). 
+For some of the less developed externals and for some of the more experimental features don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
 With such caveats aside, if you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), compilation / installation is pretty straighforward:
 
@@ -40,16 +40,16 @@ With such caveats aside, if you'd rather not download the [0.1 release](https://
 
 3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
-```bash
-git submodule init
-git submodule update 
-```
+    ```bash
+    git submodule init
+    git submodule update 
+    ```
 
-Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will generated a `py` package in your `$HOME/Max 8/Packages` directory:
+4. Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will generated a `py` package in your `$HOME/Max 8/Packages` directory:
 
-```bash
-./build.sh
-```
+    ```bash
+    ./build.sh
+    ```
 
 Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work.
 
