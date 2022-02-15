@@ -73,13 +73,20 @@ The above command automatically downloads python3 source from [python.org](https
 
 A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code. The python interpreter in each external is statically compiled and self-contained without any non-system dependencies which makes it appropriate for use in 'relocatable' Max Packages and Standalones.
 
-Now test whether these two externals work ok in a standalone: first build `py-js/patchers/py_test_standalone.maxpat` as a standalone application using Max then open it: you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error. 
+### Using Self-contained Python Externals in a Standalone
+
+If you have downloaded the [0.1 Release](https://github.com/shakfu/py-js/releases/tag/0.1) or if you have built self-contained python externals as per the method above, then you should be ready to use these in a standalone.
+
+As a first step, test whether the two externals work ok in a standalone: first build `py-js/patchers/py_test_standalone.maxpat` as a standalone application using Max then open it: you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error. 
 
 If you look inside the built standalone bundle, `py_test_standalone.app`, you find that the `py.mxo` external has been copied into the `py_test_standalone.app/Contents/Resources/C74/externals` folder but not `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. (Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatl appreciated.)
 
 Incidentally, a pre-built standalone that was built using exactly the same steps as above is in the releases section: `py_test_standalone_demo.zip`.
 
 Note: it would normally be considered redundant to install two different python3 externals in your project. Nontheless, it's good to demonstrate that they can be used together if required.
+
+If there is a need to codesign / notarize the standalone, there is a [sister
+project](https://github.com/shakfu/maxutils)  which aims to make this straightforward..
 
 Please read on for further details about what the externals can do.
 
