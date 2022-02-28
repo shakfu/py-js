@@ -40,55 +40,6 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"bgcolor" : [ 0.498039215686275, 0.282352941176471, 0.282352941176471, 1.0 ],
-					"id" : "obj-39",
-					"maxclass" : "button",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 157.0, 178.0, 24.0, 24.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"bgcolor" : [ 0.235294117647059, 0.474509803921569, 0.258823529411765, 1.0 ],
-					"id" : "obj-26",
-					"maxclass" : "button",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 187.0, 178.0, 24.0, 24.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"autoload" : 0,
-					"file" : "",
-					"id" : "obj-1",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 3,
-					"outlettype" : [ "", "bang", "bang" ],
-					"patching_rect" : [ 127.0, 136.0, 79.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"autoload" : 0,
-						"debug" : 1,
-						"file" : "",
-						"pythonpath" : "",
-						"run_on_save" : 0
-					}
-,
-					"text" : "py",
-					"varname" : "__main__"
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"fontface" : 1,
 					"id" : "obj-35",
 					"maxclass" : "comment",
@@ -116,11 +67,11 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-32",
-					"linecount" : 12,
+					"linecount" : 13,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 158.0, 236.0, 87.0, 167.0 ],
+					"patching_rect" : [ 158.0, 236.0, 85.0, 181.0 ],
 					"text" : "The audio thread is also never blocked.\n\nSwitch DSP Audio on and call function (f1) you will see that audio does not get bloced at all.\n "
 				}
 
@@ -128,11 +79,11 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-30",
-					"linecount" : 11,
+					"linecount" : 12,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 452.0, 236.0, 153.0, 154.0 ],
+					"patching_rect" : [ 452.0, 236.0, 150.0, 167.0 ],
 					"text" : "In all cases, the scheduler thread which runs  separetely from the ui-thread and handles clocking and time-sensitive ops in Max is not blocked.\n\nclick on goto 0 during a non-asyncio sleep call and you will see the counter did not get blocked."
 				}
 
@@ -263,7 +214,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 315.0, 14.0, 291.0, 60.0 ],
+					"patching_rect" : [ 315.0, 14.0, 287.0, 60.0 ],
 					"text" : "This function (f1) will block the ui-thread for 5 seconds. This is not specific to python. If we use the standard c function 'sleep(5)' it would have the same blocking effect"
 				}
 
@@ -340,22 +291,29 @@
 				}
 
 			}
+, 			{
+				"box" : 				{
+					"bgmode" : 0,
+					"border" : 0,
+					"clickthrough" : 0,
+					"enablehscroll" : 0,
+					"enablevscroll" : 0,
+					"id" : "obj-1",
+					"lockeddragscroll" : 0,
+					"lockedsize" : 0,
+					"maxclass" : "bpatcher",
+					"name" : "py_repl_plus.maxpat",
+					"numinlets" : 3,
+					"numoutlets" : 1,
+					"offset" : [ 0.0, 0.0 ],
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 127.0, 121.0, 330.0, 50.0 ],
+					"viewvisibility" : 1
+				}
+
+			}
  ],
 		"lines" : [ 			{
-				"patchline" : 				{
-					"destination" : [ "obj-26", 0 ],
-					"source" : [ "obj-1", 2 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-39", 0 ],
-					"source" : [ "obj-1", 1 ]
-				}
-
-			}
-, 			{
 				"patchline" : 				{
 					"destination" : [ "obj-3", 0 ],
 					"source" : [ "obj-16", 0 ]
@@ -468,6 +426,13 @@
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"
+			}
+, 			{
+				"name" : "py_repl_plus.maxpat",
+				"bootpath" : "~/Documents/Max 8/Packages/py-js/patchers",
+				"patcherrelativepath" : "..",
+				"type" : "JSON",
+				"implicit" : 1
 			}
  ],
 		"autosave" : 0
