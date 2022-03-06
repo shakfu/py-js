@@ -288,7 +288,6 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         } else {
             x->p_name = symbol_unique();
         }
-        // x->p_name = symbol_unique();
 
         // communication
         x->p_patcher = NULL;
@@ -319,9 +318,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         // create inlet(s)
         // create outlet(s)
-        // x->p_outlet_right = outlet_new(x, NULL);
         x->p_outlet_right = bangout((t_object*)x);
-        //x->p_outlet_middle = outlet_new(x, NULL);
         x->p_outlet_middle = bangout((t_object*)x);
         x->p_outlet_left = outlet_new(x, NULL);
 
