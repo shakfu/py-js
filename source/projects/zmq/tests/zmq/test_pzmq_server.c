@@ -40,7 +40,8 @@ int main(int argc, char* argv[])
 
     //  Socket to talk to clients
     zsock_t *responder = zsock_new(ZMQ_REP);
-    assert (zsock_bind(responder, "tcp://*:5555") == 0);
+    int rc = zsock_bind(responder, "tcp://*:5555");
+    assert (rc == 0);
 
     int count = 0;
     while (1) {

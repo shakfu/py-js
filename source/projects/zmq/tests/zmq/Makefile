@@ -1,30 +1,24 @@
+CC = clang
+EXECUTABLES = $(patsubst %.c, %, $(wildcard *.c))
+PYTHON_VERSION = $(shell python3 --version | sed s/Python[[:space:]]//) # 3.9.5
+PY_MAJOR = $(shell echo $(PYTHON_VERSION) | cut -f1 -d'.')
+PY_MINOR = $(shell echo $(PYTHON_VERSION) | cut -f2 -d'.')
+PYTHON_VER = $(PY_MAJOR).$(PY_MINOR) # 3.9
+CFLAGS = $(shell python3-config --cflags) -I/usr/local/include -L/usr/local/lib
+LDFLAGS = $(shell python3-config --ldflags) -lpython$(PYTHON_VER) -lczmq -lzmq
 
-CFLAGS  = -I/usr/local/include -L/usr/local/lib
-CFLAGS  += $(shell python3-config --cflags)
-LDFLAGS = $(shell python3-config --ldflags)
-LDFLAGS += -lpython3.9 -lczmq -lzmq
+.PHONY: clean analyze
 
+all: $(EXECUTABLES)
+	@echo compile zeromq python tests..
 
-all: zmq czmq pzmq
+%: %.c
+	@$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) 
 
-
-zmq:
-	@clang -o test_zmq_client -lzmq test_zmq_client.c
-	@clang -o test_zmq_server -lzmq test_zmq_server.c
-
-
-czmq:
-	@clang -o test_czmq_client -lczmq -lzmq test_zmq_client.c
-	@clang -o test_czmq_server -lczmq -lzmq test_zmq_server.c
-
-pzmq:
-	@clang $(CFLAGS) $(LDFLAGS) -o server test_pzmq_server.c
-	@clang $(CFLAGS) $(LDFLAGS) -o client test_pzmq_client.c
-
+analyze:
+	@infer run -- make
 
 clean:
-	@rm -f test_zmq_client test_zmq_server
-	@rm -f test_czmq_client test_czmq_server
-	@rm -f client server
+	@rm -f $(EXECUTABLES)
 	@rm -rf *.dSYM
 	@rm -rf infer-out
