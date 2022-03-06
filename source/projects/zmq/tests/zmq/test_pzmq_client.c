@@ -1,10 +1,10 @@
 //  Hello World client
 #include <czmq.h>
 
-int main (void)
+int main(void)
 {
     printf("Connecting to python server…\n");
-    zsock_t *requester = zsock_new (ZMQ_REQ);
+    zsock_t *requester = zsock_new(ZMQ_REQ);
     zsock_connect (requester, "tcp://localhost:5555");
 
     char result[100];
