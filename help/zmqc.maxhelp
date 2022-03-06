@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 11,
+			"minor" : 2,
+			"revision" : 2,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -94,7 +94,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 282.0, 359.0, 50.0, 22.0 ],
-					"text" : "0"
+					"text" : "950"
 				}
 
 			}
@@ -154,7 +154,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 23.0, 54.0, 150.0, 60.0 ],
-					"text" : "The problem is that it is currently a blocking operation. How to make it non-blocking?"
+					"text" : "The problem is that it is currently blocking the ui-thread. How to make it non-blocking?"
 				}
 
 			}

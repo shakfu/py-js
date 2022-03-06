@@ -28,7 +28,7 @@
 //  CZMQ version macros for compile-time API detection
 #define CZMQ_VERSION_MAJOR 4
 #define CZMQ_VERSION_MINOR 2
-#define CZMQ_VERSION_PATCH 0
+#define CZMQ_VERSION_PATCH 1
 
 #define CZMQ_MAKE_VERSION(major, minor, patch) \
     ((major) * 10000 + (minor) * 100 + (patch))
@@ -145,6 +145,8 @@ typedef struct _zhttp_request_t zhttp_request_t;
 #define ZHTTP_REQUEST_T_DEFINED
 typedef struct _zhttp_response_t zhttp_response_t;
 #define ZHTTP_RESPONSE_T_DEFINED
+typedef struct _zosc_t zosc_t;
+#define ZOSC_T_DEFINED
 #endif // CZMQ_BUILD_DRAFT_API
 
 
@@ -189,6 +191,7 @@ typedef struct _zhttp_response_t zhttp_response_t;
 #include "zhttp_server_options.h"
 #include "zhttp_request.h"
 #include "zhttp_response.h"
+#include "zosc.h"
 #endif // CZMQ_BUILD_DRAFT_API
 
 #ifdef CZMQ_BUILD_DRAFT_API
