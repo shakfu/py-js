@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
         Py_XDECREF(pval);
         sleep(1);          //  Do some 'work'
         printf("server response: %s\n", cstr);
-        zmq_send(responder, cstr, sizeof(cstr), 0);
+        zmq_send(responder, cstr, 2, 0);
     }
     finally:
         zmq_close(responder);
