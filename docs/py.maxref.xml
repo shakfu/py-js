@@ -14,28 +14,18 @@
 		<metadata name="tag">Python</metadata>
 	</metadatalist>
 
-	<!--INLETS-->
-	<inletlist>
-		<inlet id="0" type="anything">
-			<digest>py object inlet</digest>
-			<description>The py object has only one inlet.</description>
-		</inlet>
-	</inletlist>
-
 	<!--OUTLETS-->
-	<outletlist>
-		<outlet id="0" type="bang">
-			<digest>Right outlet for bang notification when an operation succeeds.</digest>
-		</outlet>
-		
-		<outlet id="1" type="bang">
-			<digest>Middle outlet for bang notification when an operation fails</digest>
-		</outlet>
-
-		<outlet id="2" type="anything">
-			<digest>Left outlet for all outputs from python operations</digest>
-		</outlet>
-	</outletlist>
+	<misc name = "Outlets">
+		<entry name ="0 (anything)">
+			<description>Left outlet for all outputs from python operations. </description>
+		</entry>
+		<entry name ="1 (bang)">
+			<description>Middle outlet for bang notification when an operation fails. </description>
+		</entry>
+		<entry name ="2 (bang)">
+			<description>Right outlet for bang notification when an operation succeeds. </description>
+		</entry>
+	</misc>
 
 	<!--ARGUMENTS-->
 	<objarglist>
