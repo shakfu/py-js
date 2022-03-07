@@ -1,9 +1,5 @@
 //  Python interpreter server
-#include <zmq.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <assert.h>
+#include <czmq.h>
 #include <Python.h>
 
 
@@ -43,20 +39,17 @@ int main(int argc, char* argv[])
     PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
 
     //  Socket to talk to clients
-    void *context = zmq_ctx_new();
-    void *responder = zmq_socket(context, ZMQ_REP);
-    int rc = zmq_bind(responder, "tcp://*:5555");
+    zsock_t *responder = zsock_new(ZMQ_REP);
+    int rc = zsock_bind(responder, "tcp://*:5555");
     assert (rc == 0);
 
     int count = 0;
     while (1) {
-        char recv_req[10];
         count += 1;
         if (count > 10) break;
-
-        zmq_recv(responder, recv_req, sizeof(recv_req), 0);
-        printf("server received '%s'\n", recv_req);
-        PyObject *pval = PyRun_String(recv_req, Py_eval_input, globals, globals);
+        char *recv_str = zstr_recv(responder);
+        printf("server received '%s'\n", recv_str);
+        PyObject *pval = PyRun_String(recv_str, Py_eval_input, globals, globals);
         if (pval == NULL) {
             py_handle_error();
             goto finally;
@@ -67,13 +60,13 @@ int main(int argc, char* argv[])
         Py_XDECREF(pval);
         sleep(1);          //  Do some 'work'
         printf("server response: %s\n", cstr);
-        zmq_send(responder, cstr, sizeof(cstr), 0);
+        zstr_send(responder, cstr);
+        zstr_free(&recv_str);
     }
     finally:
-        zmq_close(responder);
-        zmq_ctx_destroy(context);
+        zsock_destroy (&responder);
         Py_Finalize();
         PyMem_RawFree(program);
         return 0;
 }
-
+// 
