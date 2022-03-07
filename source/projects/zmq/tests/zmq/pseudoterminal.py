@@ -6,7 +6,7 @@ import sys
 import tty
 
 master, slave = pty.openpty()
-p = Popen(['python'], stdin=slave, stdout=PIPE, stderr=PIPE)
+p = Popen(['python3'], stdin=slave, stdout=PIPE, stderr=PIPE)
 pin = os.fdopen(master, 'w')
 tty.setcbreak(sys.stdin)
 
@@ -33,7 +33,7 @@ while True:
             print(p.stdout.readline(), end=' ')
             sys.stderr.flush()
         elif r is p.stderr:
-            errmsg += p.stderr.read(1)
+            errmsg += p.stderr.read(1).decode('utf8')
             if errmsg.endswith('>>> '):
                 errmsg = errmsg[:-4]
             if errmsg.endswith('\n'):
