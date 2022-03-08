@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 99.0, 96.0, 640.0, 480.0 ],
+		"rect" : [ 81.0, 109.0, 640.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,43 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-24",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 302.0, 156.0, 44.0, 22.0 ],
+					"text" : "test int"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-23",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 238.0, 156.0, 54.0, 22.0 ],
+					"presentation_linecount" : 2,
+					"text" : "test float"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-22",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 182.0, 156.0, 46.0, 22.0 ],
+					"text" : "test list"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-13",
 					"maxclass" : "message",
@@ -104,7 +141,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 249.0, 206.0, 58.0, 22.0 ],
+					"patching_rect" : [ 415.0, 273.5, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -116,7 +153,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 249.0, 256.0, 35.0, 22.0 ],
+					"patching_rect" : [ 415.0, 323.5, 35.0, 22.0 ],
 					"text" : "set 0"
 				}
 
@@ -128,7 +165,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 282.0, 359.0, 50.0, 22.0 ],
+					"patching_rect" : [ 448.0, 426.5, 50.0, 22.0 ],
 					"text" : "0"
 				}
 
@@ -140,7 +177,7 @@
 					"numinlets" : 5,
 					"numoutlets" : 4,
 					"outlettype" : [ "int", "", "", "int" ],
-					"patching_rect" : [ 313.0, 315.0, 61.0, 22.0 ],
+					"patching_rect" : [ 479.0, 382.5, 61.0, 22.0 ],
 					"text" : "counter"
 				}
 
@@ -153,7 +190,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 391.0, 315.0, 55.0, 55.0 ]
+					"patching_rect" : [ 557.0, 382.5, 55.0, 55.0 ]
 				}
 
 			}
@@ -165,7 +202,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 313.0, 156.0, 24.0, 24.0 ]
+					"patching_rect" : [ 479.0, 223.5, 24.0, 24.0 ]
 				}
 
 			}
@@ -176,7 +213,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 313.0, 256.0, 63.0, 22.0 ],
+					"patching_rect" : [ 479.0, 323.5, 63.0, 22.0 ],
 					"text" : "metro 100"
 				}
 
@@ -184,11 +221,11 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-7",
-					"linecount" : 4,
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 23.0, 54.0, 150.0, 60.0 ],
+					"patching_rect" : [ 23.0, 54.0, 345.0, 33.0 ],
 					"text" : "The problem is that it is currently blocking the ui-thread. How to make it non-blocking?"
 				}
 
@@ -222,8 +259,8 @@
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
-					"numoutlets" : 3,
-					"outlettype" : [ "", "bang", "bang" ],
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
 					"patching_rect" : [ 140.0, 206.0, 27.0, 22.0 ],
 					"text" : "zpy"
 				}
@@ -300,6 +337,27 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-22", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-23", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-24", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-3", 0 ]
 				}
 
@@ -312,11 +370,7 @@
 
 			}
  ],
-		"dependency_cache" : [ 			{
-				"name" : "zpy.mxo",
-				"type" : "iLaX"
-			}
- ],
+		"dependency_cache" : [  ],
 		"autosave" : 0
 	}
 

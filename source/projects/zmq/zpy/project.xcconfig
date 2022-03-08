@@ -6,7 +6,7 @@ PROJECT_HEADERS = /usr/local/include
 PROJECT_LIBS =  /usr/local/lib
 
 // for MAX
-PROJECT_LDFLAGS = -lzmq $(C74_SYM_LINKER_FLAGS)
+PROJECT_LDFLAGS = -lczmq -lzmq $(C74_SYM_LINKER_FLAGS)
 
 // for MSP
 //PROJECT_LDFLAGS = -framework MaxAudioAPI -framework JitterAPI $(C74_SYM_LINKER_FLAGS)

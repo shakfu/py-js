@@ -1,21 +1,22 @@
-#include "ext.h"
-#include "ext_obex.h"
-
-// #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
 
-#include <zmq.h>
+#include "ext.h"
+#include "ext_obex.h"
+
+#include <czmq.h>
+
 
 #define ZPY_ADDRESS "tcp://localhost:5555"
+#define ZPY_BUFFER_SIZE 20
 
 typedef struct _zpy
 {
 	t_object ob;			 // the object itself (must be first)
 	void* p_outlet_left;   	 // left outlet for msg output
 	void* p_outlet_middle;   // middle outlet for error bang
-	void* p_outlet_right;    // right outlet for bang indicating process end without errors
+	void* p_outlet_right;    // right outlet for success bang
 
 } t_zpy;
 
@@ -23,6 +24,7 @@ void *zpy_new(t_symbol *s, long argc, t_atom *argv);
 void zpy_free(t_zpy *x);
 void zpy_assist(t_zpy *x, void *b, long m, long a, char *s);
 void zpy_bang(t_zpy* x);
+t_max_err zpy_test(t_zpy* x, t_symbol* s);
 t_max_err zpy_eval(t_zpy* x, t_symbol* s, long argc, t_atom* argv);
 
 void* zpy_class;
@@ -38,6 +40,7 @@ void ext_main(void *moduleRef)
 	/* you CAN'T call this from the patcher */
 	class_addmethod(c, (method)zpy_assist, "assist", A_CANT, 0);
     class_addmethod(c, (method)zpy_bang,   "bang", 0);
+    class_addmethod(c, (method)zpy_test,   "test",  A_SYM, 0);
     class_addmethod(c, (method)zpy_eval,   "eval",  A_GIMME, 0);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
@@ -97,40 +100,58 @@ void zpy_bang(t_zpy *x)
 }
 
 
+t_max_err communicate(t_zpy* x, char * request)
+{
+    post("Connecting to zpy server...");
+   	zsock_t *requester = zsock_new(ZMQ_REQ);
+    zsock_connect (requester, "tcp://localhost:5555");
+
+    post("client sending request '%s' with length: %zu", request, strlen(request));
+    zstr_send (requester, request);
+
+    char *response = zstr_recv(requester);
+    post("client received response: '%s' with length: %zu", response, strlen(response));
+
+    if (strlen(response) > 0) {
+    	post("client outputing response: '%s'", response);
+		t_atom *av = NULL;
+		long ac = 0;
+		t_max_err err = MAX_ERR_NONE;
+		err = atom_setparse(&ac, &av, response);
+		outlet_anything(x->p_outlet_left, gensym("list"), ac, av);
+        outlet_bang(x->p_outlet_right);
+        sysmem_freeptr(av);
+	    zstr_free (&response);
+	    zsock_destroy(&requester);
+	    return err;
+    } else {
+    	outlet_bang(x->p_outlet_middle);
+    	zstr_free (&response);
+	    zsock_destroy(&requester);
+        return MAX_ERR_GENERIC;
+    }
+}
+
+
+t_max_err zpy_test(t_zpy* x, t_symbol* s)
+{
+	char request[ZPY_BUFFER_SIZE];
+
+    object_post((t_object*)x, "client test %s", s->s_name);
+
+    sprintf(request, "test %s", s->s_name);
+
+    return communicate(x, &request);
+}
+
 
 t_max_err zpy_eval(t_zpy* x, t_symbol* s, long argc, t_atom* argv)
 {
-	t_max_err err;
-	char buffer[100];
+	char request[ZPY_BUFFER_SIZE];
 
-    char* text = atom_getsym(argv)->s_name;
-    object_post((t_object*)x, "client %s %s", s->s_name, text);
+	strcpy(request, atom_getsym(argv)->s_name);
 
-    post("Connecting to python server...");
-    void* context = zmq_ctx_new();
-    void* requester = zmq_socket(context, ZMQ_REQ);
-    zmq_connect(requester, ZPY_ADDRESS);
-
-    post("client sending request '%s'", text);
-    zmq_send(requester, text, strlen(text), 0);
-
-    zmq_recv(requester, buffer, 10, 0);
-    post("client received response: '%s'", buffer);
-
-    zmq_close(requester);
-    zmq_ctx_destroy(context);
-
-    if (strlen(buffer) > 0) {
-    	post("client outputing response: '%s'", buffer);
-        // py_handle_output(x, buffer);
-        outlet_anything(x->p_outlet_left, gensym(buffer), 0, NIL);
-        outlet_bang(x->p_outlet_right);
-        return MAX_ERR_NONE;
-    } else {
-        // py_handle_error(x, "eval %s", py_argv);
-        outlet_bang(x->p_outlet_middle);
-        return MAX_ERR_GENERIC;
-    }
+    return communicate(x, &request);
 }
 
 
