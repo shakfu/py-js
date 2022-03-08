@@ -1,6 +1,6 @@
 # py-js: python3 objects for max
 
-Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
+Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com)
 
 repo - <https://github.com/shakfu/py-js>
 
@@ -18,20 +18,19 @@ py       | max-sdk    | c      | well-featured, many packaging options + [cython
 pyjs     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
 mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
-jmx      | max-sdk    | c      | a planned [jupyter](https://jupyter.org) client in Max
-
+zpy      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
 
 The common idea in these externals is to help you use and distribute python code and libraries in your Max applications. They are differentiated in the way that this is done.
 
 Please see below for a full overview and feature comparison of the externals.
 
-For a sense of relative maturity, about 80% of development time to-date has gone into the first two externals (`py` and `pyjs`) with the remaining part distributed to the others.
+For a sense of relative maturity, about 80% of development time to-date has gone into the first two externals (`py` and `pyjs`) with the remaining distributed to the others.
 
 Please note that all of the externals currently only work on MacOS x86_64 and were written when the max-sdk did yet fully transition to using cmake. 
 
-There is a branch (`m1` branch) which is working on Apple Silicon compatibility and using the new infrastructure, but it is is still not yet fully functional and is also part of a slow cleanup and restructuring effort, so a number of things might still look funny and redundant in the master branch.
+There is a branch (`m1`) which is working on Apple Silicon compatibility and using the new build infrastructure, but it's still not yet fully functional and is also part of a slow cleanup and restructuring effort, so you may find that a number of things still look funny and redundant in the master branch.
 
-For some of the less developed externals and for some of the more experimental features don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
+For some of the less developed externals and for some of the more experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
 ## Quickstart
 
@@ -68,12 +67,9 @@ Note that the default build creates a package with two externals which are linke
 
 Not to worry however, if have a need for portable relocatable python3 externals then read on!
 
-
 ### Alternative Quickstart for Self-contained Python3 Externals
 
-
 If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own with the following:
-
 
 ```bash
 cd py-js/sources/py
@@ -99,12 +95,9 @@ Note: it would normally be considered redundant to install two different python3
 As a side note: if there is a need to codesign / notarize the standalone, there is a [sister
 project](https://github.com/shakfu/maxutils)  which aims to make this less painful.
 
-
 Please read on for further details about what the py-js externals can do.
 
-
 Have fun!
-
 
 ## Summary
 
@@ -423,7 +416,7 @@ This builds the default 'linked-to-system|homebrew python' version of `py` and (
 ### Current Status of Builders
 
 As of this writing this project has two separate build system which should be
-unified some day. You don't have to use both but it's understanding the
+unified some day. You don't have to use both but it's worth understanding the
 differences.
 
 1. Homebrew python build system based on makefiles and bash scripts: re-uses your existing homebrew installation to build the externals with a number of variations. The default build uses this system.
@@ -529,12 +522,11 @@ then run the following script in the root of the project:
 ./build_pymx.sh
 ```
 
-
 ### Sidenote about building on a Mac
 
-If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your icloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can be mostly ignored (unless your only focus is codesigning the external).
+If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your iCloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can be mostly ignored (unless your only focus is codesigning the external).
 
-The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified).
+The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). The just symlink the folder to `$HOME/Documents/Max 8/Packages/` to prevent this from recurring.
 
 I've tried this several times and  and it works (for "sign to run locally" case and for the "Development" case).
 
