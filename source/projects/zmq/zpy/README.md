@@ -2,11 +2,13 @@
 
 A max external which uses zmq to connect to a separate python process
 
+The objective is to replicate what the `py` external does but using zmq.
+
 
 
 ## Status
 
-- [ ] rudimentary proof-of-concept
+- [ ] proof-of-concept
 
 
 
