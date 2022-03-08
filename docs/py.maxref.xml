@@ -14,75 +14,6 @@
 		<metadata name="tag">Python</metadata>
 	</metadatalist>
 
-	<!--INLETS-->
-	<inletlist>
-		<inlet id="0" type="anything">
-			<digest>py object inlet</digest>
-			<description>The py object has only one inlet.</description>
-		</inlet>
-	</inletlist>
-
-	<!--OUTLETS-->
-	<outletlist>
-		<outlet id="0" type="bang">
-			<digest>Right outlet for bang notification when an operation succeeds.</digest>
-		</outlet>
-		
-		<outlet id="1" type="bang">
-			<digest>Middle outlet for bang notification when an operation fails</digest>
-		</outlet>
-
-		<outlet id="2" type="anything">
-			<digest>Left outlet for all outputs from python operations</digest>
-		</outlet>
-	</outletlist>
-
-	<!--ARGUMENTS-->
-	<objarglist>
-		<objarg name="name" optional="0" type="symbol">
-			<digest>Name of object</digest>
-			<description>
-				Every <o>py</o> object in a patcher must be named. A unique automatically generated name is assigned if the user doesn't pick a name for the object.
-			</description>
-		</objarg>
-		
-		<objarg name="file" optional="0" type="symbol">
-			<digest>Path to a default python file</digest>
-			<description>
-				A python file to <m>load</m> into the code editor. This path is saved.
-			</description>
-		</objarg>
-		
-		<objarg name="autoload" optional="0" type="bool">
-			<digest>Autoload default python file at start</digest>
-			<description>
-				Enabling this will <m>load</m> the default python file at start. This option is saved.
-			</description>
-		</objarg>
-
-		<objarg name="run_on_save" optional="0" type="bool">
-			<digest>Automatically run code in editor after saving</digest>
-			<description>
-				Enabling this will <m>execfile</m> code in the text editor after saving. This option is saved.
-			</description>
-		</objarg>
-
-		<objarg name="pythonpath" optional="1" type="symbol">
-			<digest>Additional <m>import</m> path for python interpreter</digest>
-			<description>
-				Provide an optional additional path which will be automatically added to the python interpreter's sys.path to enable <m>import</m> messages from that directory.
-			</description>
-		</objarg>
-
-		<objarg name="debug" optional="1" type="bool">
-			<digest>Debug mode</digest>
-			<description>
-				Switch on/off debug logging of the py object to the console.
-			</description>
-		</objarg>
-	</objarglist>
-	
-
 	<!--MESSAGES-->
 	<methodlist>
 
@@ -229,6 +160,54 @@
 		</method>
 
 	</methodlist>
+
+		<!--ATTRIBUTES-->
+	<attributelist>
+
+		<attribute name='name' get='1' set='1' type='symbol' size='1' >
+			<digest>Name of the py object </digest>
+			<description>Name of the py object. Every <o>py</o> object in a patcher must be named. A unique automatically generated name is assigned if the user doesn't pick a name for the object. </description>
+		</attribute>
+
+		<attribute name='file' get='1' set='1' type='symbol' size='1' >
+			<digest>Path to a default python file </digest>
+			<description>Path to a default python file. A python file to <m>load</m> into the code editor. This path is saved. </description>
+		</attribute>
+
+		<attribute name='autoload' get='1' set='1' type='bool' size='1' >
+			<digest>Autoload default python file at start </digest>
+			<description>Autoload default python file at start. Enabling this will <m>load</m> the default python file at start. This option is saved. </description>
+		</attribute>
+
+		<attribute name='run_on_save' get='1' set='1' type='bool' size='1' >
+			<digest>Automatically run code in editor after saving </digest>
+			<description>Automatically run code in editor after saving. Enabling this will <m>execfile</m> code in the text editor after saving. This option is saved. </description>
+		</attribute>
+
+		<attribute name='pythonpath' get='1' set='1' type='symbol' size='1' >
+			<digest>Additional <m>import</m> path for python interpreter </digest>
+			<description>Additional <m>import</m> path for python interpreter. Provide an optional additional path which will be automatically added to the python interpreter's sys.path to enable <m>import</m> messages from that directory. </description>
+		</attribute>
+		
+		<attribute name='debug' get='1' set='1' type='bool' size='1' >
+			<digest>Debug mode </digest>
+			<description>Debug mode. Switch on/off debug logging of the py object to the console. </description>
+		</attribute>
+
+	</attributelist>
+
+	<!--OUTLETS-->
+	<misc name = "Outlets">
+		<entry name ="0 (anything)">
+			<description>Left outlet for all outputs from python operations. </description>
+		</entry>
+		<entry name ="1 (bang)">
+			<description>Middle outlet for bang notification when an operation fails. </description>
+		</entry>
+		<entry name ="2 (bang)">
+			<description>Right outlet for bang notification when an operation succeeds. </description>
+		</entry>
+	</misc>
 
 	<!--SEEALSO-->
 	<seealsolist>
