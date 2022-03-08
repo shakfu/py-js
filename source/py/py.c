@@ -310,7 +310,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_run_on_save = 0;
 
         // set default debug level
-        x->p_debug = 1;
+        x->p_debug = 0;
 
         // test tasks
         x->p_clock = clock_new((t_object*)x, (method)py_task);

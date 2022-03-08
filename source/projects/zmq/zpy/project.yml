@@ -1,11 +1,11 @@
-name: zmqc
+name: zpy
 options:
   bundleIdPrefix: org.me
 targets:
-  zmqc:
+  zpy:
     type: bundle
     platform: macOS
-    deploymentTarget: "10.13"
+    deploymentTarget: "10.15"
     sources:
       - src/
     dependencies:
@@ -28,5 +28,5 @@ targets:
       OTHER_LDFLAGS:
         - $(C74_SYM_LINKER_FLAGS)
         - $(PROJECT_LDFLAGS)
-      PRODUCT_BUNDLE_IDENTIFIER: org.me.zmqc
+      PRODUCT_BUNDLE_IDENTIFIER: org.me.zpy
       PRODUCT_NAME: $(TARGET_NAME)

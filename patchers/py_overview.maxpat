@@ -3,14 +3,14 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 5,
+			"minor" : 2,
+			"revision" : 2,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 318.0, 88.0, 807.0, 787.0 ],
+		"rect" : [ 121.0, 79.0, 822.0, 787.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -403,20 +403,21 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
+					"file" : "",
 					"id" : "obj-7",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
-					"outlettype" : [ "", "", "" ],
+					"outlettype" : [ "", "bang", "bang" ],
 					"patching_rect" : [ 189.0, 268.0, 29.5, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 195.0, 268.0, 53.5, 22.0 ],
+					"presentation_rect" : [ 195.0, 268.0, 40.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
-						"debug" : 1,
-						"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
-						"pythonpath" : ""
+						"debug" : 0,
+						"file" : "",
+						"pythonpath" : "",
+						"run_on_save" : 0
 					}
 ,
 					"text" : "py",

@@ -554,6 +554,7 @@ error:
     Py_XDECREF(pval);
     return MAX_ERR_GENERIC;
 }
+
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
 {
     if (pval == NULL) {
@@ -792,8 +793,7 @@ t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
         goto error;
 
     atom_setsym(atoms, gensym(unicode_result));
-    atom_setobj(rv,
-                object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+    atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
 
     Py_XDECREF(pval);
     Py_XDECREF(json_module);
