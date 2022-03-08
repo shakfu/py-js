@@ -40,6 +40,41 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-13",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 51.0, 239.0, 29.5, 22.0 ],
+					"text" : "set"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-15",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 67.0, 156.0, 54.0, 22.0 ],
+					"text" : "eval 1+1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-8",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 51.0, 279.0, 108.0, 22.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-11",
 					"linecount" : 2,
 					"maxclass" : "comment",
@@ -57,7 +92,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 14.0, 246.0, 153.0, 181.0 ],
+					"patching_rect" : [ 436.0, 25.0, 153.0, 181.0 ],
 					"text" : "It makes a big difference if overdrive is on or not.\nIf it is, the count continues in the scheduler thread then updates the ui once zmqc stops blocking the ui thread.\nIf overdrive is off, then the count pauses with the blocking of the main ui thread and resumes from where it paused once zmqc stops blocking."
 				}
 
@@ -94,7 +129,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 282.0, 359.0, 50.0, 22.0 ],
-					"text" : "950"
+					"text" : "0"
 				}
 
 			}
@@ -165,8 +200,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 23.0, 17.0, 389.0, 24.0 ],
-					"text" : "zmqc: an example of a zmq client as an max external"
+					"patching_rect" : [ 23.0, 17.0, 345.0, 24.0 ],
+					"text" : "zpy: a zmq client connecting to a python server"
 				}
 
 			}
@@ -187,17 +222,32 @@
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 140.0, 206.0, 37.0, 22.0 ],
-					"text" : "zmqc"
+					"numoutlets" : 3,
+					"outlettype" : [ "", "bang", "bang" ],
+					"patching_rect" : [ 140.0, 206.0, 27.0, 22.0 ],
+					"text" : "zpy"
 				}
 
 			}
  ],
 		"lines" : [ 			{
 				"patchline" : 				{
+					"destination" : [ "obj-8", 1 ],
+					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-12", 1 ],
 					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-8", 0 ],
+					"source" : [ "obj-13", 0 ]
 				}
 
 			}
@@ -214,6 +264,13 @@
 					"destination" : [ "obj-12", 0 ],
 					"order" : 1,
 					"source" : [ "obj-14", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-15", 0 ]
 				}
 
 			}
@@ -256,7 +313,7 @@
 			}
  ],
 		"dependency_cache" : [ 			{
-				"name" : "zmqc.mxo",
+				"name" : "zpy.mxo",
 				"type" : "iLaX"
 			}
  ],
