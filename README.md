@@ -72,7 +72,7 @@ Not to worry however, if have a need for portable relocatable python3 externals 
 If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own with the following:
 
 ```bash
-cd py-js/sources/py
+cd py-js/source/py
 python3 -m builder py_static --install && python3 -m builder static_ext
 ```
 
