@@ -713,13 +713,20 @@ class PythonSrcBuilder(PythonBuilder):
             self.src_path / "Modules" / "Setup.local",
         )
 
-    def apply_patch(self, patch=None):
-        """Apply a standard patch from the patch directory (prefixed by major.minor ver)"""
+    def apply_patch(self, patch=None, to_file=None):
+        """Apply a standard patch from the patch directory (prefixed by major.minor ver)
+
+        if param `to_file` is given then the patch is applied directly the file (diff method)
+        otherwise: the patch is applied to the directory itself (git method)
+        """
         if not any([patch, self.patch]):
             return
         if not patch:
             patch = self.patch
-        self.cmd(f"patch -p1 < {self.project.patch}/{self.product.ver}/{patch}")
+        if to_file:
+            self.cmd(f"patch {to_file} < {self.project.patch}/{self.product.ver}/{patch}")
+        else:
+            self.cmd(f"patch -p1 < {self.project.patch}/{self.product.ver}/{patch}")
 
     def install(self):
         """install compilation product into lib"""
@@ -769,6 +776,13 @@ class SharedPythonBuilder(PythonSrcBuilder):
 
     setup_local = "setup-shared.local"
 
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch(patch="configure.patch", to_file="configure")
+        self.cmd.chdir(self.project.root)
+
     @property
     def prefix(self) -> Path:
         return self.project.lib / self.product.build_dir
@@ -788,7 +802,8 @@ class SharedPythonBuilder(PythonSrcBuilder):
             --enable-ipv6 \
             --without-ensurepip \
             --with-lto \
-            --enable-optimizations
+            --enable-optimizations \
+            ac_cv_lib_intl_textdomain=no
         """
         )
         self.cmd("make altinstall")
@@ -799,6 +814,13 @@ class SharedPythonForExtBuilder(SharedPythonBuilder):
     """builds python in a shared format for self-contained externals."""
 
     setup_local = "setup-shared.local"
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch(patch="configure.patch", to_file="configure")
+        self.cmd.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
@@ -1131,7 +1153,6 @@ class StaticExtBuilder(PyJsBuilder):
         if self.product_exists:
             self.xbuild_targets("static-ext", targets=["py", "pyjs"])
 
-
 class StaticExtFullBuilder(StaticExtBuilder):
     """pyjs externals from fully-loaded statically built python"""
 
@@ -1139,3 +1160,18 @@ class StaticExtFullBuilder(StaticExtBuilder):
         """builds externals from statically built python"""
         if self.product_exists:
             self.xbuild_targets("static-ext-full", targets=["py", "pyjs"])
+
+class SharedExtBuilder(PyJsBuilder):
+    """pyjs externals from minimal statically built python"""
+
+    @property
+    def product_exists(self):
+        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.dylib
+        if not shared_lib.exists():
+            self.log.warning("shared python is not built: %s", shared_lib)
+        return shared_lib.exists()
+
+    def build(self):
+        """builds externals from shared python"""
+        if self.product_exists:
+            self.xbuild_targets("shared-ext", targets=["py", "pyjs"])
