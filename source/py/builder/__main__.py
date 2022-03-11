@@ -82,6 +82,11 @@ class Application(Commander):
         """build shared python"""
         self.dispatch(config.shared_python_builder, args)
 
+    @common_options
+    def do_py_shared_ext(self, args):
+        """build shared python for external embedding"""
+        self.dispatch(config.shared_python_ext_builder, args)
+
     # @common_options
     # def do_py_framework(self, args):
     #     """build framework python"""
@@ -109,6 +114,11 @@ class Application(Commander):
     def do_pyjs_ext(self, args):
         """build portable pyjs externals (homebrew)"""
         config.homebrew_builder.install_homebrew_ext()
+
+    @common_options
+    def do_shared_ext(self, args):
+        """build portable pyjs externals (shared py)"""
+        config.sharedext_builder.build()
 
     @common_options
     def do_static_ext(self, args):
