@@ -1,5 +1,11 @@
 # TODO
 
+- [ ] create a pkg distribution built from python src which retains pip for easily installing python packages
+
+- [ ] add step in bundle-creation to prepopulate site-packages with list of packages
+
+- [ ] create FAQ.md
+
 - [ ] py_repl_plus -- message in from the inlet should be passed to the terminal line as if they were entered.
 
 - [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
@@ -10,18 +16,18 @@
 
 - [x] replacing 'cp -rf' with pure python self.copy
 
-- [ ] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
+- [x] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
 
-- [ ] fix references (still pointing to compiled locations) ??
+- [x] fix references (still pointing to compiled locations) ??
 
 ## PENDING
 
 - [ ] --enable-optimizations at configure
-- [ ] --enable-shared
+- [x] --enable-shared
 - [ ] freeing memory for PY_STATIC case
 - [ ] automate installation of packages
 - [ ] testing fat dynamic in a package
-- [ ] codesigning
+- [x] codesigning
 
 ## BUGS
 
@@ -31,7 +37,7 @@
 
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
-- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.*) just cause an non-crashingerror.
+- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror.
 
 ## Features and Fixes
 
