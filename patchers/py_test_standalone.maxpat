@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 5,
+			"minor" : 2,
+			"revision" : 2,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -80,7 +80,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 102.0, 46.0, 122.0, 42.0 ],
-					"presentation_linecount" : 2,
 					"text" : "standalone test py",
 					"textjustification" : 1
 				}
@@ -156,7 +155,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 384.5, 325.0, 96.0, 22.0 ]
+					"patching_rect" : [ 384.5, 325.0, 96.0, 22.0 ],
+					"text" : "30"
 				}
 
 			}
@@ -241,11 +241,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-5",
+					"linecount" : 5,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 112.5, 325.0, 116.5, 22.0 ]
+					"patching_rect" : [ 112.5, 325.0, 116.5, 76.0 ],
+					"text" : "/Users/sa/Downloads/projects/py-js/externals/py.mxo/Contents/Resources/lib/python39.zip/os.py"
 				}
 
 			}
@@ -269,7 +271,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
-					"outlettype" : [ "", "", "" ],
+					"outlettype" : [ "", "bang", "bang" ],
 					"patching_rect" : [ 210.0, 237.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
@@ -280,7 +282,7 @@
 					}
 ,
 					"text" : "py",
-					"varname" : "u603001037"
+					"varname" : "__main__"
 				}
 
 			}
@@ -446,15 +448,15 @@
 			}
  ],
 		"dependency_cache" : [ 			{
-				"name" : "test_pyjs.js",
-				"bootpath" : "~/Documents/Max 8/Packages/py/javascript",
-				"patcherrelativepath" : "../../../../Documents/Max 8/Packages/py/javascript",
-				"type" : "TEXT",
-				"implicit" : 1
-			}
-, 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"
+			}
+, 			{
+				"name" : "test_pyjs.js",
+				"bootpath" : "~/Downloads/projects/py-js/javascript",
+				"patcherrelativepath" : "../javascript",
+				"type" : "TEXT",
+				"implicit" : 1
 			}
  ],
 		"autosave" : 0
