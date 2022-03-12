@@ -73,8 +73,8 @@ name     | type       | size (MB)
 :------- | :--------- | :----
 py       | static     | 9.0      
 pyjs     | static     | 8.8     
-py       | shared     |      
-pyjs     | shared     |     
+py       | shared     | 16.7     
+pyjs     | shared     | 16.5    
 
 
 If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own.
