@@ -871,7 +871,13 @@ class StaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
 
     setup_local = "setup-static-min3.local"
-    # patch = "makesetup.patch"
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch(patch="configure.patch", to_file="configure")
+        self.cmd.chdir(self.project.root)
 
     @property
     def prefix(self) -> Path:

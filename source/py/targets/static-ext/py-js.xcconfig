@@ -4,8 +4,10 @@ BUILD = $(SRCROOT)/../build/lib
 PREFIX = $(SRCROOT)/../build/lib/python-static
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)
 
-// Note: requires static linking of libintl.a in build phases "link library with binary section". A libintl.a is included in this project
-
 PY_LIBS = $(PREFIX)/lib $(BUILD)/bzip2/lib $(BUILD)/openssl/lib $(BUILD)/xz/lib
 
-PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lbz2 -llzma -lz -liconv
+// pre-patch
+// PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lbz2 -llzma -lz -liconv
+
+// post-patch
+PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lbz2 -llzma -lz

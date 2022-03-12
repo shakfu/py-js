@@ -4,7 +4,7 @@
 
 - [ ] add step in bundle-creation to prepopulate site-packages with list of packages
 
-- [ ] create FAQ.md
+- [x] create FAQ
 
 - [ ] py_repl_plus -- message in from the inlet should be passed to the terminal line as if they were entered.
 
@@ -15,6 +15,8 @@
 - [x] assert builder.product_exists
 
 - [x] replacing 'cp -rf' with pure python self.copy
+
+- [x] remove dependency on libintl via patching `configure` for both static and shared
 
 - [x] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
 
