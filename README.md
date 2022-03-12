@@ -69,16 +69,40 @@ Not to worry however, if have a need for portable relocatable python3 externals 
 
 ### Alternative Quickstart for Self-contained Python3 Externals
 
-If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own with the following:
+name     | type       | size (MB)  
+:------- | :--------- | :----
+py       | static     | 9.0      
+pyjs     | static     | 8.8     
+py       | shared     |      
+pyjs     | shared     |     
+
+
+If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own.
+
+1. To build statically-compiled self-contained python3 externals:
 
 ```bash
 cd py-js/source/py
 python3 -m builder py_static --install && python3 -m builder static_ext
 ```
 
-The above command automatically downloads python3 source from [python.org](https://www.python.org) as well as dependencies from their respective sites, and then compiles a static version of python3 which is then used to compile the externals.
+OR
 
-A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code. The python interpreter in each external is statically compiled and self-contained without any non-system dependencies which makes it appropriate for use in 'relocatable' Max Packages and Standalones.
+2. To build self-contained python3 exernals which include a dynamically linked libpythonX.Y.dylib:
+
+```bash
+cd py-js/source/py
+python3 -m builder py_shared_ext --install && python3 -m builder shared_ext
+```
+
+In both cases, the above commands automatically download python3 source from [python.org](https://www.python.org) as well as dependencies from their respective sites, and then compile a static or shared version of python3 which is then used to compile the externals.
+
+A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code. 
+
+Depending on your option above, the python interpreter in each external is either statically compiled or otherwise, and is completely self-contained without any non-system dependencies. This makes it appropriate for use in 'relocatable' Max Packages and Standalones.
+
+
+
 
 ### Using Self-contained Python Externals in a Standalone
 

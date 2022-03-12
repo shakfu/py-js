@@ -38,20 +38,20 @@ class CodesignExternal:
         self.targets = set()
         self.log = logging.getLogger(self.__class__.__name__)
         self._cmd_codesign = [
-            "codesign", 
-            "--sign", repr(self.authority), 
-            "--timestamp", 
+            "codesign",
+            "--sign", repr(self.authority),
+            "--timestamp",
             "--deep",
             "--force",
         ]
 
-    def _cmd(self, shellcmd, *args, **kwds):
+    def cmd(self, shellcmd, *args, **kwds):
         """run system command"""
         syscmd = shellcmd.format(*args, **kwds)
         self.log.debug(syscmd)
         os.system(syscmd)
 
-    def _cmd_check(self, arglist):
+    def cmd_check(self, arglist):
         """capture and check shell _cmd output."""
         res = subprocess.run(
             arglist,
@@ -96,19 +96,19 @@ class CodesignExternal:
     def sign_internal_binary(self, path: pathlib.Path):
         """sign internal binaries"""
         codesign_cmd = " ".join(self._cmd_codesign + [str(path)])
-        self._cmd(codesign_cmd)
-        # self._cmd_check(self._cmd_codesign + [str(path)])
+        self.cmd(codesign_cmd)
+        # self.cmd_check(self._cmd_codesign + [str(path)])
 
     def sign_runtime(self):
         """sign top-level bundle runtime"""
         # "codesign", "-s", repr(self.authority), "--timestamp", "--deep"
         codesign_runtime = " ".join(self._cmd_codesign + [
-             "--options", "runtime", 
-             "--entitlements", str(self.entitlements), 
+             "--options", "runtime",
+             "--entitlements", str(self.entitlements),
              str(self.path)
         ])
-        self._cmd(codesign_runtime)
-        # self._cmd_check(self._cmd_codesign + [
+        self.cmd(codesign_runtime)
+        # self.cmd_check(self._cmd_codesign + [
         #      "--options", "runtime", 
         #      "--entitlements", str(self.entitlements), 
         #      str(self.path)
@@ -139,7 +139,8 @@ class CodesignExternal:
         option("--dry-run", "-d", action="store_true", help="run without actual changes.")
         args = parser.parse_args()
         if args.path:
-            cls(args.path, args.dev_id, args.entitlements, args.dry_run).process()
+            app = cls(args.path, args.dev_id, args.entitlements, args.dry_run)
+            app.process()
 
 
 if __name__ == "__main__":
