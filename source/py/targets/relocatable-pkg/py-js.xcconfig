@@ -7,6 +7,6 @@ PY_HEADERS = $(PREFIX)/include/python$(VERSION)
 PY_LIBS = $(PREFIX)/lib
 PY_LDFLAGS = -lpython$(VERSION) -ldl
 
-// samve value as below set in build settings > run path settings
+// same value as below set in build settings > run path settings
 // somehow not picking it up from here?!
 //LD_RUNPATH_SEARCH_PATHS = @loader_path/../../../../support/Python.framework

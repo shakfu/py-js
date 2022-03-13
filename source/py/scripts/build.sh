@@ -289,9 +289,10 @@ function fix_python_dylib_for_ext() {
 function install_dependencies() {
 	echo "checking if previous build exists"
 	mkdir -p "$BUILD"
-	if [ ! -d "$BUILD_DOWNLOADS" ]; then
-		echo "retrieving downloads"
-		get_all
+	# if [ ! -d "$BUILD_DOWNLOADS" ]; then
+	# 	echo "retrieving downloads"
+	# 	get_all
+	get_all
 	fi
 	if [ ! -d "$BUILD_LIB_SSL" ]; then
 		echo "building ssl"
@@ -320,4 +321,4 @@ function install_python_ext() {
 }
 
 # Allows to call a function based on arguments passed to the script
-"$*"
+# "$*"

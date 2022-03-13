@@ -23,6 +23,7 @@ subcommands:
 """
 from . import config
 from .cli import Commander, option, option_group
+from .depend import DependencyManager
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -84,8 +85,13 @@ class Application(Commander):
 
     @common_options
     def do_py_shared_ext(self, args):
-        """build shared python for external embedding"""
+        """build shared python to embed in external"""
         self.dispatch(config.shared_python_ext_builder, args)
+
+    @common_options
+    def do_py_shared_pkg(self, args):
+        """build shared python to embed in package"""
+        self.dispatch(config.shared_python_pkg_builder, args)
 
     # @common_options
     # def do_py_framework(self, args):
@@ -129,6 +135,18 @@ class Application(Commander):
     def do_static_ext_full(self, args):
         """build portable pyjs externals (fully loaded static py)"""
         config.staticext_full_builder.build()
+
+    @option("--exec-ref", "-e", type=str, help="back ref for executable or plugin")
+    @option("--staticlibs-dir", "-l", type=str, help="static lib directory fir static substitutes")
+    @option("--dest-dir", "-d", type=str, help="where target dylib will be copied to with copied dependents")
+    @option("target", help="dylib or executable to made relocatable")
+    def do_dep_analyze(self, args):
+        """analyze dependencies"""
+        d = DependencyManager(args.target, args.dest_dir, args.staticlibs_dir, args.exec_ref)
+        d.analyze()
+        from pprint import pprint
+        d.get_deps()
+        pprint(d.install_names)
 
     @common_options
     def do_test(self, args):
