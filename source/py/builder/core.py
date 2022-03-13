@@ -20,6 +20,8 @@ from textwrap import dedent
 from pathlib import Path
 from types import SimpleNamespace
 
+from .depend import DependencyManager
+
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
@@ -156,7 +158,7 @@ class ShellCmd:
         """Remove file or folder."""
         if path.is_dir():
             self.log.info("remove folder: %s", path)
-            shutil.rmtree(path, ignore_errors=not DEBUG)
+            shutil.rmtree(path, ignore_errors=(not DEBUG))
         else:
             self.log.info("remove file: %s", path)
             path.unlink(missing_ok=True)
@@ -320,10 +322,14 @@ class Builder:
         """generic recursive clean/remove method."""
         self.cmd(f'find {path} | grep -E "({pattern})" | xargs rm -rf')
 
-    def install_name_tool(self, src, dst, mode="id"):
+    def install_name_tool_id(self, new_id, target):
         """change dynamic shared library install names"""
-        _cmd = f"install_name_tool -{mode} {src} {dst}"
-        self.log.info(_cmd)
+        _cmd = f"install_name_tool -id {new_id} {target}"
+        self.cmd(_cmd)
+
+    def install_name_tool_change(self, src, dst, target):
+        """change dependency reference"""
+        _cmd = f"install_name_tool -change {src} {dst} {target}"
         self.cmd(_cmd)
 
     def xcodebuild(self, project, target, flag=None):
@@ -663,7 +669,7 @@ class PythonBuilder(Builder):
         """redirect ref of dylib to loader in a package deployment."""
         self.cmd.chdir(self.prefix_lib)
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool(
+        self.install_name_tool_id(
             f"@loader_path/../../../../support/{self.product.name}/lib/{self.product.dylib}",
             self.product.dylib,
         )
@@ -673,8 +679,16 @@ class PythonBuilder(Builder):
         """redirect ref of dylib to loader in a self-contained external deployment."""
         self.cmd.chdir(self.prefix_lib)
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool(f"@loader_path/{self.product.dylib}", self.product.dylib)
+        self.install_name_tool_id(f"@loader_path/{self.product.dylib}", self.product.dylib)
         self.cmd.chdir(self.project.root)
+
+    # def fix_python_exe_for_pkg(self):
+    #     """redirect ref of pythonX to libpythonX.Y.dylib"""
+    #     self.cmd.chdir(self.prefix_bin)
+    #     self.install_name_tool_change(OLDREF, f"@executable_path/../lib/{self.product.dylib}", self.product.exe)
+    #     self.cmd.chdir(self.project.root)
+
+
 
 
 class PythonSrcBuilder(PythonBuilder):
@@ -835,7 +849,7 @@ class SharedPythonForExtBuilder(SharedPythonBuilder):
         dylib_path = self.prefix / 'lib' / self.product.dylib
         assert dylib_path.exists()
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool(
+        self.install_name_tool_id(
             f"@loader_path/../Resources/lib/{self.product.dylib}",
             self.product.dylib,
         )
@@ -847,12 +861,37 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
 
     setup_local = "setup-shared.local"
 
-    def post_process(self):
-        """post-build operations"""
-        self.clean()
-        self.ziplib()
-        self.fix_python_dylib_for_pkg()
-        # self.sign()
+    # def install(self):
+    #     """install compilation product into lib"""
+    #     self.reset()
+    #     self.download()
+    #     self.pre_process()
+    #     self.build()
+    #     self.post_process()
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch(patch="configure.patch", to_file="configure")
+        self.cmd.chdir(self.project.root)
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.rm_libs(
+            [
+                f"config-{self.product.ver}-darwin",
+                "idlelib",
+                "lib2to3",
+                "tkinter",
+                "turtledemo",
+                "turtle.py",
+                "ctypes",
+                "curses",
+                # "ensurepip",
+                "venv",
+            ]
+        )
 
     def fix_python_dylib_for_pkg(self):
         """change dylib ref to point to loader in package build format"""
@@ -860,11 +899,37 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         dylib_path = self.prefix / 'lib' / self.product.dylib
         assert dylib_path.exists()
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool(
-            f"@loader_path/../../../../support/{self.product.name_ver}/{self.product.dylib}",
+        self.install_name_tool_id(
+            f"@loader_path/../../../../support/{self.product.name_ver}/lib/{self.product.dylib}",
             self.product.dylib,
         )
         self.cmd.chdir(self.project.root)
+
+    def fix_python_exe_for_pkg(self):
+        """redirect ref of pythonX to libpythonX.Y.dylib"""
+        self.cmd.chdir(self.prefix_bin)
+        exe = self.product.name_ver
+        d = DependencyManager(exe)
+        dir_to_change = d.analyze_executable()[0]
+        self.install_name_tool_change(
+            dir_to_change,
+            f"@executable_path/../lib/{self.product.dylib}", 
+            exe
+        )
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        self.fix_python_exe_for_pkg()
+        self.fix_python_dylib_for_pkg()
+        src = self.project.lib / 'python-shared'
+        dst = f"{self.project.support}/{self.product.name_ver}"
+        self.cmd(f"rm -rf {dst}") # try to remove if it exists
+        # self.cmd(f"mv {src} {dst}")
+        self.cmd(f"cp -af {src} {dst}")
+        self.xbuild_targets("src-shared-pkg", targets=["py", "pyjs"])
 
 
 class StaticPythonBuilder(PythonSrcBuilder):
@@ -1041,10 +1106,10 @@ class HomebrewBuilder(PyJsBuilder):
                 path = match.group(1)
                 # homebrew files are installed in /usr/local/Cellar
                 if path.startswith("/usr/local/Cellar/python"):
-                    self.install_name_tool(
-                        mode="change",
-                        src=path,
-                        dst=f"@executable_path/../{self.product.dylib} {executable}",
+                    self.install_name_tool_change(
+                        path,
+                        f"@executable_path/../{self.product.dylib}",
+                        executable,
                     )
         self.cmd.chdir(self.project.root)
 
@@ -1052,7 +1117,7 @@ class HomebrewBuilder(PyJsBuilder):
         """change dylib ref to point to loader in package build format"""
         self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool(
+        self.install_name_tool_id(
             f"@loader_path/../../../../support/{self.product.name_ver}/{self.product.dylib}",
             self.product.dylib,
         )
@@ -1062,7 +1127,7 @@ class HomebrewBuilder(PyJsBuilder):
         """change dylib ref to point to loader in external build format"""
         self.cmd.chdir(self.prefix)
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool(
+        self.install_name_tool_id(
             f"@loader_path/../Resources/{self.product.name_ver}/{self.product.dylib}",
             self.product.dylib,
         )

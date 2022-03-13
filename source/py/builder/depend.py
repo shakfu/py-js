@@ -9,9 +9,12 @@ import shutil
 import subprocess
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
 from pprint import pprint
 from termcolor import colored, cprint
+
+Pathlike = Union[str, Path]
+
 
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
@@ -89,15 +92,14 @@ class DependencyManager:
     exec_ref: back ref for executable or plugin
     """
 
-    def __init__(self,
-                 target: Union[str, Path],
+    def __init__(self, target: Pathlike,
                 #  project: Project = None,
-                 dest_dir: Path = None,
-                 staticlibs_dir: Path = None,
+                 dest_dir: Pathlike = None,
+                 staticlibs_dir: Pathlike = None,
                  exec_ref: str = None):
         self.target = Path(target)
         # self.project = project
-        self.dest_dir = dest_dir or Path('build')
+        self.dest_dir = Path(dest_dir) if dest_dir else Path('build')
         self.staticlibs_dir = staticlibs_dir
         self.exec_ref = exec_ref or '@loader_path/../Frameworks'
         self.install_names = {}
@@ -130,6 +132,10 @@ class DependencyManager:
             print("target is dylib:", self.target)
         else:
             print("target is invalid:", self.target)
+
+    def analyze_executable(self):
+        assert self.is_executable(), "target is not an executable"
+        return self.get_references()
 
     def get_references(self):
         entries = []
@@ -189,7 +195,7 @@ class DependencyManager:
             _, dep_filename = os.path.split(dep)
             # dep_path, dep_filename = os.path.split(dep)
             # dest = os.path.join(self.dest_dir, dep_filename)
-            self.dep_list.append([dep, '@rpath/' + dep_filename])
+            self.dep_list.append([dep, f'@rpath/{dep_filename}'])
 
     def copy_dylibs(self):
         if not os.path.exists(self.dest_dir):

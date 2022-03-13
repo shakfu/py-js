@@ -92,6 +92,7 @@ class Commander(metaclass=MetaCommander):
             title='subcommands',
             description='valid subcommands',
             help='additional help',
+            metavar='',
         )
 
         for name in sorted(self._argparse_subcmds.keys()): # pylint: disable=E1101

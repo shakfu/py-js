@@ -3,6 +3,7 @@ from .core import (Product, Recipe, PYTHON_VERSION_STRING,
                    StaticPythonBuilder, SharedPythonBuilder, FrameworkPythonBuilder,
                    HomebrewBuilder, StaticExtBuilder, 
                    SharedPythonForExtBuilder, SharedExtBuilder,
+                   SharedPythonForPkgBuilder,
                    StaticExtFullBuilder, StaticPythonFullBuilder)
 
 bzip2_product = Product(
@@ -67,6 +68,12 @@ shared_python_ext_builder = SharedPythonForExtBuilder(
     product=py_product('python-shared'), depends_on=[
         bzip2_builder, ssl_builder, xz_builder]
 )
+
+shared_python_pkg_builder = SharedPythonForPkgBuilder(
+    product=py_product('python-shared'), depends_on=[
+        bzip2_builder, ssl_builder, xz_builder]
+)
+
 
 # framework_python_builder = FrameworkPythonBuilder(
 #     product=py_product('python-framework'), depends_on=[

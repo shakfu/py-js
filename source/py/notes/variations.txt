@@ -1,0 +1,51 @@
+# current
+
+build python from src:
+    py_shared
+    *py_shared_full
+    py_static
+    py_static_full
+    *py_framwork
+    *py_framwork_full
+
+build modded python from src:
+    py_shared_ext
+
+special case (does both python build and also shared_pkg)
+    py_shared_pkg
+
+build pyjs
+    shared_ext      -> pyjs_src_shared_ext
+    static_ext      -> pyjs_src_static_ext
+    static_ext_full -> pyjs_src_static_ext -- full
+
+build homebrew variations
+    pyjs_ext        -> pyjs_brew_shared_ext
+    pyjs_pkg        -> pyjs_brew_shared_pkg
+    pyjs_sys        -> pyjs_brew_shared_sys
+
+
+__________________________________________________
+
+# to be api
+
+python3 builder python
+                        shared
+                        shared_full
+                        static
+                        static_full
+                        framework
+                        framework --full
+
+python3 builder pyjs 
+                        brew_shared_ext
+                        brew_shared_pkg
+                        brew_shared_sys
+
+                        src_shared_ext
+                        src_shared_pkg
+                        src_static_ext
+                        src_static_ext --full
+                        src_framework_ext
+                        src_framework_pkg
+    
