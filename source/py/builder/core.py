@@ -332,6 +332,11 @@ class Builder:
         _cmd = f"install_name_tool -change {src} {dst} {target}"
         self.cmd(_cmd)
 
+    def install_name_tool_add_rpath(self, rpath, target):
+        """change dependency reference"""
+        _cmd = f"install_name_tool -add_rpath {rpath} {target}"
+        self.cmd(_cmd)
+
     def xcodebuild(self, project, target, flag=None):
         """build via xcode the given targets"""
         if not flag:
@@ -682,12 +687,6 @@ class PythonBuilder(Builder):
         self.install_name_tool_id(f"@loader_path/{self.product.dylib}", self.product.dylib)
         self.cmd.chdir(self.project.root)
 
-    # def fix_python_exe_for_pkg(self):
-    #     """redirect ref of pythonX to libpythonX.Y.dylib"""
-    #     self.cmd.chdir(self.prefix_bin)
-    #     self.install_name_tool_change(OLDREF, f"@executable_path/../lib/{self.product.dylib}", self.product.exe)
-    #     self.cmd.chdir(self.project.root)
-
 
 
 
@@ -899,10 +898,15 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         dylib_path = self.prefix / 'lib' / self.product.dylib
         assert dylib_path.exists()
         self.cmd.chmod(self.product.dylib)
+        # both of these are equivalent (and both don't work!)
         self.install_name_tool_id(
             f"@loader_path/../../../../support/{self.product.name_ver}/lib/{self.product.dylib}",
             self.product.dylib,
         )
+        # self.install_name_tool_id(
+        #     f"@rpath/lib/{self.product.dylib}",
+        #     self.product.dylib,
+        # )
         self.cmd.chdir(self.project.root)
 
     def fix_python_exe_for_pkg(self):
@@ -911,6 +915,15 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         exe = self.product.name_ver
         d = DependencyManager(exe)
         dir_to_change = d.analyze_executable()[0]
+        # self.install_name_tool_change(
+        #     dir_to_change,
+        #     f"@rpath/lib/{self.product.dylib}",
+        #     exe
+        # )
+        # self.install_name_tool_add_rpath(
+        #     f"@loader_path/../../../../support/{self.product.name_ver}",
+        #     exe
+        # )
         self.install_name_tool_change(
             dir_to_change,
             f"@executable_path/../lib/{self.product.dylib}", 

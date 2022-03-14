@@ -1,0 +1,56 @@
+
+xcrun dyldinfo -dylibs ./py
+py.mxo/Contents/MacOS/py
+attributes     dependent dylibs
+                @loader_path/../../../../support/python3.9/lib/libpython3.9.dylib
+                /usr/lib/libSystem.B.dylib
+                /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation
+
+xcrun dyldinfo -dylibs ./libpython3.9.dylib
+support/python3.9/lib/libpython3.9.dylib
+attributes     dependent dylibs
+                /usr/lib/libSystem.B.dylib
+                /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation
+
+
+
+
+py-js
+    externals
+        py.mxo
+            Contents
+                MacOS
+                    py
+    support
+        python3.9
+            lib
+                libpython3.9.dylib
+
+
+------------------------------------------------------------------------------------------------
+
+
+otool -L py.mxo/Contents/MacOS/py
+    @rpath/lib/libpython3.9.dylib
+
+
+set Runpath search strings to
+    @loader_path/../../../../support/python3.9
+
+
+otool -L ../support/Python.framework/Python
+    @rpath/lib/libpython3.9.dylib
+
+
+------------------------------------------------------------------------------------------------
+
+otool -L py.mxo/Contents/MacOS/py
+    @rpath/Versions/3.9/Python
+
+
+set Runpath search strings to
+    @loader_path/../../../../support/Python.framework
+
+
+otool -L ../support/Python.framework/Python
+    @rpath/Versions/3.9/Python
