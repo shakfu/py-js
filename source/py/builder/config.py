@@ -1,6 +1,7 @@
 from .core import (Product, Recipe, PYTHON_VERSION_STRING,
                    Bzip2Builder, XzBuilder, OpensslBuilder,
-                   StaticPythonBuilder, SharedPythonBuilder, FrameworkPythonBuilder,
+                   StaticPythonBuilder, SharedPythonBuilder, 
+                   FrameworkPythonBuilder,
                    HomebrewBuilder, StaticExtBuilder, 
                    SharedPythonForExtBuilder, SharedExtBuilder,
                    SharedPythonForPkgBuilder, SharedPkgBuilder,
@@ -93,10 +94,10 @@ shared_python_pkg_builder = SharedPythonForPkgBuilder(
 )
 
 
-# framework_python_builder = FrameworkPythonBuilder(
-#     product=py_product('python-framework'), depends_on=[
-#         bzip2_builder, ssl_builder, xz_builder]
-# )
+framework_python_builder = FrameworkPythonBuilder(
+    product=py_product('python-framework'), depends_on=[
+        bzip2_builder, ssl_builder, xz_builder]
+)
 
 
 # -----------------------------------------------------------------------------
