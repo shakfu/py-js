@@ -9,7 +9,7 @@
 /* max/msp api */
 #include "api.h"
 
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
 #include <CoreFoundation/CoreFoundation.h>
 #include <libgen.h>
 #endif
@@ -24,7 +24,7 @@ static int py_global_obj_count = 0; // when 0 then free interpreter
 
 static t_hashtab* py_global_registry = NULL; // global object lookups
 
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
 CFBundleRef py_global_bundle;
 #endif
 
@@ -261,7 +261,7 @@ void ext_main(void* module_ref)
 
     py_class = c;
 
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
     // set global bundle ref for macos case
     py_global_bundle = module_ref;
 #endif
@@ -379,11 +379,11 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 }
 
 
-void py_init(t_py* x)
-{
-    #if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+void py_init_osx_set_home_static_ext(void) {
+    // sets python_home to <bundle>/Resources folder
+
     wchar_t *python_home;
-    // char path[150];
 
     CFURLRef resources_url;
     CFURLRef resources_abs_url;
@@ -395,35 +395,91 @@ void py_init(t_py* x)
     resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
     resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
     resources_path = CFStringGetCStringPtr(resources_str, kCFStringEncodingUTF8);
-    python_home = Py_DecodeLocale(resources_path, NULL);    
 
-    // CFRelease(resources_url);
-    // CFRelease(resources_abs_url);
+    python_home = Py_DecodeLocale(resources_path, NULL);
+
     CFRelease(resources_str);
-    // CFRelease(resources_path);
-
-    // STRANGE: if I run the next line the python_home isn't set properly!!
-    // char* exec_path = Py_EncodeLocale(Py_GetProgramFullPath(), NULL);
-    // sprintf(path, "%s/Resources", dirname(dirname(exec_path)));
-    // python_home = Py_DecodeLocale(path, NULL);
+    CFRelease(resources_abs_url);
+    CFRelease(resources_url);
 
     post("py resources_path: %s", resources_path);
-    // python_home = Py_DecodeLocale("<abs-path-to-Resources>", NULL);
+
     if (python_home == NULL) {
-        error("python_home is NULL");
-        // return;
+        error("unable to set python_home");
+        return;
     }
     Py_SetPythonHome(python_home);
+}
+#endif
 
-    // wchar_t *program;
-    // program = Py_DecodeLocale("py", NULL);
-    // if (program == NULL) {
-    //     exit(1);
-    // }
 
-    // Py_SetProgramName(program);
+#if defined(__APPLE__) && defined(PY_SHARED_PKG)
+void py_init_osx_set_home_shared_pkg(void) {
+    // sets python_home to <package>/support/pythonX.Y folder
+
+    wchar_t *python_home;
+
+    CFURLRef bundle_url;
+    CFURLRef bundle_abs_url;
+    CFStringRef bundle_str;
+    const char* bundle_path;
+
+    const char* relative_path = "support/python3.9";
+    CFStringRef relative_path_str;
+    CFURLRef externals_url;
+    CFURLRef package_url;
+    CFURLRef py_home_url;
+    CFStringRef py_home_str;
+    const char* py_home_path;
+
+    // get self bundle path
+    bundle_url = CFBundleCopyBundleURL(py_global_bundle);
+    bundle_abs_url = CFURLCopyAbsoluteURL(bundle_url);
+    bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
+    bundle_path = CFStringGetCStringPtr(bundle_str, kCFStringEncodingUTF8);
+    
+    // get the absolute path of the <package>/support/python3.9 directory in a package
+    externals_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundle_abs_url);
+    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, externals_url);
+    relative_path_str = CFStringCreateWithCString(kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
+    py_home_url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, package_url, relative_path_str, FALSE);
+    py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
+    py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
+
+    CFRelease(bundle_str);
+    CFRelease(bundle_abs_url);
+    CFRelease(bundle_url);
+
+    CFRelease(py_home_str);
+    CFRelease(py_home_url);
+    CFRelease(relative_path_str);
+    CFRelease(package_url);
+    CFRelease(externals_url);
+
+    post("py bundle_path: %s", bundle_path);
+
+    post("py home path: %s", py_home_path);
+
+    python_home = Py_DecodeLocale(py_home_path, NULL);
+
+    if (python_home == NULL) {
+        error("unable to set python_home");
+        return;
+    }
+    Py_SetPythonHome(python_home);
+}
+#endif
+
+
+void py_init(t_py* x)
+{
+    #if defined(__APPLE__) && defined(PY_STATIC_EXT)
+    py_init_osx_set_home_static_ext();
     #endif
 
+    #if defined(__APPLE__) && defined(PY_SHARED_PKG)
+    py_init_osx_set_home_shared_pkg();
+    #endif
 
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
@@ -474,6 +530,11 @@ void py_free(t_py* x)
     //     }
     // }
 
+    // crashes if one attempts to free.
+    // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
+    // CFRelease(py_global_bundle);
+    // #endif
+
     Py_XDECREF(x->p_globals);
     // python objects cleanup
     py_log(x, "will be deleted");
@@ -486,6 +547,7 @@ void py_free(t_py* x)
         // PyMem_RawFree(program);
         Py_FinalizeEx();
     }
+
 }
 
 /*--------------------------------------------------------------------------*/

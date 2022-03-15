@@ -30,7 +30,7 @@ Please note that all of the externals currently only work on MacOS x86_64 and we
 
 There is a branch (`m1`) which is working on Apple Silicon compatibility and using the new build infrastructure, but it's still not yet fully functional and is also part of a slow cleanup and restructuring effort, so you may find that a number of things still look funny and redundant in the master branch.
 
-For some of the less developed externals and for some of the more experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
+For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
 ## Quickstart
 
@@ -81,19 +81,19 @@ If you would like a couple of self-contained python3 externals which can be incl
 
 1. To build statically-compiled self-contained python3 externals:
 
-```bash
-cd py-js/source/py
-python3 -m builder py_static --install && python3 -m builder static_ext
-```
+    ```bash
+    cd py-js/source/py
+    python3 -m builder static_ext --install --build
+    ```
 
 OR
 
 2. To build self-contained python3 exernals which include a dynamically linked libpythonX.Y.dylib:
 
-```bash
-cd py-js/source/py
-python3 -m builder py_shared_ext --install && python3 -m builder shared_ext
-```
+    ```bash
+    cd py-js/source/py
+    python3 -m builder shared_ext --install --build
+    ```
 
 In both cases, the above commands automatically download python3 source from [python.org](https://www.python.org) as well as dependencies from their respective sites, and then compile a static or shared version of python3 which is then used to compile the externals.
 
