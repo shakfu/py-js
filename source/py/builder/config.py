@@ -3,8 +3,12 @@ from .core import (Product, Recipe, PYTHON_VERSION_STRING,
                    StaticPythonBuilder, SharedPythonBuilder, FrameworkPythonBuilder,
                    HomebrewBuilder, StaticExtBuilder, 
                    SharedPythonForExtBuilder, SharedExtBuilder,
-                   SharedPythonForPkgBuilder,
+                   SharedPythonForPkgBuilder, SharedPkgBuilder,
                    StaticExtFullBuilder, StaticPythonFullBuilder)
+
+
+# -----------------------------------------------------------------------------
+# DEPENDENCY PRODUCTS
 
 bzip2_product = Product(
     name="bzip2",
@@ -27,6 +31,9 @@ xz_product = Product(
     libs_static=["libxz.a"],
 )
 
+# -----------------------------------------------------------------------------
+# PYTHON PRODUCTS
+
 def py_product(build_dir):
     return Product(
         name="Python",
@@ -41,11 +48,22 @@ pyjs_product = Product(
     version=PYTHON_VERSION_STRING,
 )
 
+
+# -----------------------------------------------------------------------------
+# DEPENDENCY BUILDERS
+
+
 bzip2_builder = Bzip2Builder(product=bzip2_product)
 
 ssl_builder = OpensslBuilder(product=ssl_product)
 
 xz_builder = XzBuilder(product=xz_product)
+
+
+
+# -----------------------------------------------------------------------------
+# PYTHON BUILDERS
+
 
 static_python_builder = StaticPythonBuilder(
     product=py_product('python-static'), depends_on=[
@@ -80,13 +98,44 @@ shared_python_pkg_builder = SharedPythonForPkgBuilder(
 #         bzip2_builder, ssl_builder, xz_builder]
 # )
 
-homebrew_builder = HomebrewBuilder(product=pyjs_product)
 
-staticext_builder = StaticExtBuilder(product=pyjs_product)
+# -----------------------------------------------------------------------------
+# PYJS BUILDERS
 
-staticext_full_builder = StaticExtFullBuilder(product=pyjs_product)
+homebrew_builder = HomebrewBuilder(
+    product=pyjs_product
+)
 
-sharedext_builder = SharedExtBuilder(product=pyjs_product)
+static_ext_builder = StaticExtBuilder(
+    product=pyjs_product,
+    depends_on=[static_python_builder]
+)
+
+static_ext_full_builder = StaticExtFullBuilder(
+    product=pyjs_product, 
+    depends_on=[static_python_builder_full]
+)
+
+shared_ext_builder = SharedExtBuilder(
+    product=pyjs_product,
+    depends_on=[shared_python_ext_builder]
+)
+
+shared_pkg_builder = SharedPkgBuilder(
+    product=pyjs_product, 
+    depends_on=[shared_python_pkg_builder]
+)
+
+# framework_pkg_builder = FrameworkPkgBuilder(
+#     product=pyjs_product,
+#     depends_on=[framework_python_builder]
+# )
+
+
+# -----------------------------------------------------------------------------
+# RECIPES
+
+
 
 build_all_recipe = Recipe(
     name="build_all",

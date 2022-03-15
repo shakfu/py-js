@@ -57,12 +57,12 @@ class Application(Commander):
     version = '0.1'
     default_args = ['--help']
 
-    def dispatch(self, builder, args):
-        """generic argument dispatcher"""
-        for key in vars(args):
-            if key == 'func':
-                continue
-            if getattr(args, key):
+    def ordered_dispatch(self, builder, args):
+        """generic ordered argument dispatcher"""
+        order = ['download', 'install', 'build', 'clean', 'ziplib']
+        d = vars(args)
+        for key in order:
+            if d[key]:
                 try:
                     getattr(builder, key)()
                 except AttributeError:
@@ -71,70 +71,73 @@ class Application(Commander):
     @common_options
     def do_py_static(self, args):
         """build static python"""
-        self.dispatch(config.static_python_builder, args)
+        self.ordered_dispatch(config.static_python_builder, args)
 
     @common_options
     def do_py_static_full(self, args):
         """build static python (fully-loaded)"""
-        self.dispatch(config.static_python_builder_full, args)
+        self.ordered_dispatch(config.static_python_builder_full, args)
 
     @common_options
     def do_py_shared(self, args):
         """build shared python"""
-        self.dispatch(config.shared_python_builder, args)
+        self.ordered_dispatch(config.shared_python_builder, args)
 
     @common_options
     def do_py_shared_ext(self, args):
         """build shared python to embed in external"""
-        self.dispatch(config.shared_python_ext_builder, args)
+        self.ordered_dispatch(config.shared_python_ext_builder, args)
 
     @common_options
     def do_py_shared_pkg(self, args):
         """build shared python to embed in package"""
-        self.dispatch(config.shared_python_pkg_builder, args)
+        self.ordered_dispatch(config.shared_python_pkg_builder, args)
 
     # @common_options
     # def do_py_framework(self, args):
     #     """build framework python"""
-    #     self.dispatch(config.framework_python_builder, args)
+    #     self.ordered_dispatch(config.framework_python_builder, args)
 
-    @common_options
-    def do_py_all(self, args):
-        """build all python variations"""
-        for builder_class in [#config.framework_python_builder, 
-                              config.shared_python_builder, 
-                              config.static_python_builder]:
-            self.dispatch(builder_class, args)
+    # @common_options
+    # def do_py_all(self, args):
+    #     """build all python variations"""
+    #     for builder_class in [#config.framework_python_builder, 
+    #                           config.shared_python_builder, 
+    #                           config.static_python_builder]:
+    #         self.ordered_dispatch(builder_class, args)
 
-    @common_options
-    def do_pyjs_sys(self, args):
+    def do_brew_sys(self, args):
         """build non-portable pyjs package (homebrew)"""
         config.homebrew_builder.install_homebrew_sys()
 
-    @common_options
-    def do_pyjs_pkg(self, args):
+    def do_brew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
         config.homebrew_builder.install_homebrew_pkg()
 
-    @common_options
-    def do_pyjs_ext(self, args):
+    def do_brew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
         config.homebrew_builder.install_homebrew_ext()
 
     @common_options
     def do_shared_ext(self, args):
         """build portable pyjs externals (shared py)"""
-        config.sharedext_builder.build()
+        self.ordered_dispatch(config.shared_ext_builder, args)
 
     @common_options
     def do_static_ext(self, args):
         """build portable pyjs externals (static py)"""
-        config.staticext_builder.build()
+        self.ordered_dispatch(config.static_ext_builder, args)
 
     @common_options
     def do_static_ext_full(self, args):
         """build portable pyjs externals (fully loaded static py)"""
-        config.staticext_full_builder.build()
+        self.ordered_dispatch(config.static_ext_full_builder, args)
+
+    @common_options
+    def do_shared_pkg(self, args):
+        """build portable pyjs externals embedded in a package"""
+        self.ordered_dispatch(config.shared_pkg_builder, args)
+
 
     @option("--exec-ref", "-e", type=str, help="back ref for executable or plugin")
     @option("--staticlibs-dir", "-l", type=str, help="static lib directory fir static substitutes")

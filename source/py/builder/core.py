@@ -860,14 +860,6 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
 
     setup_local = "setup-shared.local"
 
-    # def install(self):
-    #     """install compilation product into lib"""
-    #     self.reset()
-    #     self.download()
-    #     self.pre_process()
-    #     self.build()
-    #     self.post_process()
-
     def pre_process(self):
         """pre-build operations"""
         self.cmd.chdir(self.src_path)
@@ -903,10 +895,6 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
             f"@loader_path/../../../../support/{self.product.name_ver}/lib/{self.product.dylib}",
             self.product.dylib,
         )
-        # self.install_name_tool_id(
-        #     f"@rpath/lib/{self.product.dylib}",
-        #     self.product.dylib,
-        # )
         self.cmd.chdir(self.project.root)
 
     def fix_python_exe_for_pkg(self):
@@ -915,15 +903,6 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         exe = self.product.name_ver
         d = DependencyManager(exe)
         dir_to_change = d.analyze_executable()[0]
-        # self.install_name_tool_change(
-        #     dir_to_change,
-        #     f"@rpath/lib/{self.product.dylib}",
-        #     exe
-        # )
-        # self.install_name_tool_add_rpath(
-        #     f"@loader_path/../../../../support/{self.product.name_ver}",
-        #     exe
-        # )
         self.install_name_tool_change(
             dir_to_change,
             f"@executable_path/../lib/{self.product.dylib}", 
@@ -937,12 +916,6 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         self.ziplib()
         self.fix_python_exe_for_pkg()
         self.fix_python_dylib_for_pkg()
-        src = self.project.lib / 'python-shared'
-        dst = f"{self.project.support}/{self.product.name_ver}"
-        self.cmd(f"rm -rf {dst}") # try to remove if it exists
-        # self.cmd(f"mv {src} {dst}")
-        self.cmd(f"cp -af {src} {dst}")
-        self.xbuild_targets("src-shared-pkg", targets=["py", "pyjs"])
 
 
 class StaticPythonBuilder(PythonSrcBuilder):
@@ -1076,6 +1049,9 @@ class PyJsBuilder(PythonBuilder):
     def prefix(self):
         return self.project.support / self.project.py_name
 
+    def install(self):
+        for builder in self.depends_on:
+            builder.install()
 
 class HomebrewBuilder(PyJsBuilder):
     """homebrew python builder"""
@@ -1237,6 +1213,7 @@ class StaticExtBuilder(PyJsBuilder):
         if self.product_exists:
             self.xbuild_targets("static-ext", targets=["py", "pyjs"])
 
+
 class StaticExtFullBuilder(StaticExtBuilder):
     """pyjs externals from fully-loaded statically built python"""
 
@@ -1244,6 +1221,7 @@ class StaticExtFullBuilder(StaticExtBuilder):
         """builds externals from statically built python"""
         if self.product_exists:
             self.xbuild_targets("static-ext-full", targets=["py", "pyjs"])
+
 
 class SharedExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
@@ -1259,3 +1237,24 @@ class SharedExtBuilder(PyJsBuilder):
         """builds externals from shared python"""
         if self.product_exists:
             self.xbuild_targets("shared-ext", targets=["py", "pyjs"])
+
+class SharedPkgBuilder(PyJsBuilder):
+    """pyjs externals in a package from minimal statically built python"""
+
+    @property
+    def product_exists(self):
+        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.dylib
+        if not shared_lib.exists():
+            self.log.warning("shared python is not built: %s", shared_lib)
+        return shared_lib.exists()
+
+    def build(self):
+        """builds externals from shared python"""
+        src = self.project.lib / 'python-shared'
+        dst = f"{self.project.support}/{self.product.name_ver}"
+        self.cmd(f"rm -rf {dst}") # try to remove if it exists
+        self.cmd(f"cp -af {src} {dst}")
+        # self.xbuild_targets("src-shared-pkg", targets=["py", "pyjs"])
+        if self.product_exists:
+            self.xbuild_targets("shared-pkg", targets=["py", "pyjs"])
+

@@ -5,7 +5,6 @@
 
 /*--------------------------------------------------------------------------*/
 // INCLUDES
-
 /* max api */
 #include "ext.h"
 #include "ext_obex.h"
@@ -89,6 +88,8 @@ void py_init(t_py* x);
 void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
+void py_init_osx_set_home_static_ext(void);
+void py_init_osx_set_home_shared_pkg(void);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 t_hashtab* get_global_registry(void);
 
