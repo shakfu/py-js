@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] create a pkg distribution built from python src which retains pip for easily installing python packages
+- [x] create a pkg distribution built from python src which retains pip for easily installing python packages
 
 - [ ] add step in bundle-creation to prepopulate site-packages with list of packages
 
@@ -27,8 +27,6 @@
 - [ ] --enable-optimizations at configure
 - [x] --enable-shared
 - [ ] freeing memory for PY_STATIC case
-- [ ] automate installation of packages
-- [ ] testing fat dynamic in a package
 - [x] codesigning
 
 ## BUGS
