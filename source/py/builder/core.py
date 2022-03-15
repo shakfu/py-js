@@ -82,7 +82,7 @@ class Project:
 
     # environmental vars
     HOME = os.getenv("HOME")
-    package_name = "py"
+    package_name = "py-js"
     package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
     package_dirs = [
         "docs",
@@ -407,11 +407,17 @@ class Builder:
 
     def install(self):
         """deploy to package"""
-        self.project.package.mkdir(exist_ok=True)
-        for subdir in self.project.package_dirs:
-            self.cmd(
-                f"rsync -a --delete {self.project.pyjs}/{subdir} {self.project.package}"
-            )
+        if not self.project.package.exists():
+            self.log.info("package py-js symlink does not exists -- creating at %s", self.project.package)
+            self.project.pyjs.symlink_to(self.project.package)
+        else:
+            self.log.info("package py-js symlink exists -- not creating")
+
+        # self.project.package.mkdir(exist_ok=True)
+        # for subdir in self.project.package_dirs:
+        #     self.cmd(
+        #         f"rsync -a --delete {self.project.pyjs}/{subdir} {self.project.package}"
+        #     )
 
 
 class Recipe:
@@ -1049,9 +1055,15 @@ class PyJsBuilder(PythonBuilder):
     def prefix(self):
         return self.project.support / self.project.py_name
 
+    def remove_externals(self):
+        """remove py and pyjs externals from the py-js/externals directory"""
+        self.cmd.remove(self.project.py_external)
+        self.cmd.remove(self.project.pyjs_external)
+
     def install(self):
         for builder in self.depends_on:
             builder.install()
+
 
 class HomebrewBuilder(PyJsBuilder):
     """homebrew python builder"""
@@ -1176,7 +1188,8 @@ class HomebrewBuilder(PyJsBuilder):
 
     def install_homebrew_sys(self):
         """build externals use local homebrew python (non-portable)"""
-        self.reset_prefix()
+        # self.reset_prefix()
+        self.remove_externals()
         self.xbuild_targets("bin-homebrew-sys", targets=["py", "pyjs"])
 
     def install_homebrew_pkg(self):
@@ -1189,7 +1202,7 @@ class HomebrewBuilder(PyJsBuilder):
 
     def install_homebrew_ext(self):
         """build external into self-contained external using local homebrew python (portable)"""
-        self.reset_prefix()
+        # self.reset_prefix()
         self.copy_python()
         self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.py_external)
