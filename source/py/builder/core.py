@@ -1,13 +1,14 @@
 """builder: a builder of py-js max externals
 
-Aims to be pure python builder without any dependencies except the standard library.
+A pure python builder without any dependencies except the standard library.
 
-## TODO
-- [ ] should check for existance of all built libs (not just static libs)
-- [ ] reset should be deep, clean should be shallow
-- [ ] assert builder.product_exists
-- [ ] check whether it is better to remove 'exist_ok=True' param in Path.mkdir
-      to raise the error.
+
+Project
+
+ShellCmd
+Settings
+
+
 
 """
 import logging
@@ -440,8 +441,7 @@ class Recipe:
 
 
 # ------------------------------------------------------------------------------------
-# Specialized Classes
-
+# DEPENDENCY BUILDERS
 
 class Bzip2Builder(Builder):
     """Bzip2 static library builder"""
@@ -487,6 +487,8 @@ class XzBuilder(Builder):
                     make && make install""")
             self.cmd.chdir(self.project.root)
 
+# ------------------------------------------------------------------------------------
+# PYTHON BUILDERS (ABSTRACT)
 
 class PythonBuilder(Builder):
     """Generic Python from src builder."""
@@ -694,8 +696,6 @@ class PythonBuilder(Builder):
         self.cmd.chdir(self.project.root)
 
 
-
-
 class PythonSrcBuilder(PythonBuilder):
     """Generic Python from src builder."""
 
@@ -755,6 +755,8 @@ class PythonSrcBuilder(PythonBuilder):
         self.build()
         self.post_process()
 
+# ------------------------------------------------------------------------------------
+# PYTHON BUILDERS (BASE)
 
 class FrameworkPythonBuilder(PythonSrcBuilder):
     """builds python in a macos framework format."""
@@ -829,10 +831,10 @@ class SharedPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.project.root)
 
 
-class SharedPythonForExtBuilder(SharedPythonBuilder):
-    """builds python in a shared format for self-contained externals."""
+class StaticPythonBuilder(PythonSrcBuilder):
+    """builds python in a static format."""
 
-    setup_local = "setup-shared.local"
+    setup_local = "setup-static-min3.local"
 
     def pre_process(self):
         """pre-build operations"""
@@ -841,12 +843,40 @@ class SharedPythonForExtBuilder(SharedPythonBuilder):
         self.apply_patch(patch="configure.patch", to_file="configure")
         self.cmd.chdir(self.project.root)
 
-    def post_process(self):
-        """post-build operations"""
-        self.clean()
-        self.ziplib()
-        self.fix_python_dylib_for_ext_resources()
-        # self.sign()
+    @property
+    def prefix(self) -> Path:
+        return self.project.lib / self.product.build_dir
+
+    def build(self):
+        for dep in self.depends_on:
+            dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+            --prefix={self.prefix} \
+            --without-doc-strings \
+            --enable-ipv6 \
+            --without-ensurepip \
+            --with-lto \
+            --enable-optimizations
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+    def remove_extensions(self):
+        """remove extensions: not implemented"""
+
+
+# ------------------------------------------------------------------------------------
+# PYTHON BUILDERS (SPECIALIZED)
+
+class SharedPythonForExtBuilder(SharedPythonBuilder):
+    """builds python in a shared format for self-contained externals."""
+
+    setup_local = "setup-shared.local"
 
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in external build format"""
@@ -860,18 +890,17 @@ class SharedPythonForExtBuilder(SharedPythonBuilder):
         )
         self.cmd.chdir(self.project.root)
 
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        self.fix_python_dylib_for_ext_resources()
+
 
 class SharedPythonForPkgBuilder(SharedPythonBuilder):
     """builds python in a shared format for self-contained externals."""
 
     setup_local = "setup-shared.local"
-
-    def pre_process(self):
-        """pre-build operations"""
-        self.cmd.chdir(self.src_path)
-        self.write_setup_local()
-        self.apply_patch(patch="configure.patch", to_file="configure")
-        self.cmd.chdir(self.project.root)
 
     def remove_packages(self):
         """remove list of non-critical packages"""
@@ -924,45 +953,6 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         self.fix_python_dylib_for_pkg()
 
 
-class StaticPythonBuilder(PythonSrcBuilder):
-    """builds python in a static format."""
-
-    setup_local = "setup-static-min3.local"
-
-    def pre_process(self):
-        """pre-build operations"""
-        self.cmd.chdir(self.src_path)
-        self.write_setup_local()
-        self.apply_patch(patch="configure.patch", to_file="configure")
-        self.cmd.chdir(self.project.root)
-
-    @property
-    def prefix(self) -> Path:
-        return self.project.lib / self.product.build_dir
-
-    def build(self):
-        for dep in self.depends_on:
-            dep.build()
-
-        self.cmd.chdir(self.src_path)
-        self.cmd(
-            f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-            --prefix={self.prefix} \
-            --without-doc-strings \
-            --enable-ipv6 \
-            --without-ensurepip \
-            --with-lto \
-            --enable-optimizations
-        """
-        )
-        self.cmd("make altinstall")
-        self.cmd.chdir(self.project.root)
-
-    def remove_extensions(self):
-        """remove extensions: not implemented"""
-
-
 class StaticPythonFullBuilder(StaticPythonBuilder):
     setup_local = "setup-static-min4.local"
     patch = "makesetup2.patch"
@@ -971,6 +961,7 @@ class StaticPythonFullBuilder(StaticPythonBuilder):
         """pre-build operations"""
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
+        self.apply_patch(patch="configure.patch", to_file="configure")
         self.apply_patch()
         self.cmd.chdir(self.project.root)
 
@@ -1048,6 +1039,9 @@ class StaticPythonFullBuilder(StaticPythonBuilder):
         )
 
 
+# ------------------------------------------------------------------------------------
+# PYJS EXTERNAL BUILDERS (ABSTRACT)
+
 class PyJsBuilder(PythonBuilder):
     """pyjs concrete base class"""
 
@@ -1064,6 +1058,9 @@ class PyJsBuilder(PythonBuilder):
         for builder in self.depends_on:
             builder.install()
 
+
+# ------------------------------------------------------------------------------------
+# PYJS EXTERNAL BUILDERS (SPECIALIZED)
 
 class HomebrewBuilder(PyJsBuilder):
     """homebrew python builder"""
@@ -1190,7 +1187,7 @@ class HomebrewBuilder(PyJsBuilder):
         """build externals use local homebrew python (non-portable)"""
         # self.reset_prefix()
         self.remove_externals()
-        self.xbuild_targets("bin-homebrew-sys", targets=["py", "pyjs"])
+        self.xbuild_targets("homebrew-sys", targets=["py", "pyjs"])
 
     def install_homebrew_pkg(self):
         """build externals into package use local homebrew python (portable)"""
@@ -1198,7 +1195,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.copy_python()
         self.fix_python_dylib_for_pkg()
         self.fix_python_exec()
-        self.xbuild_targets("bin-homebrew-pkg", targets=["py", "pyjs"])
+        self.xbuild_targets("homebrew-pkg", targets=["py", "pyjs"])
 
     def install_homebrew_ext(self):
         """build external into self-contained external using local homebrew python (portable)"""
@@ -1207,7 +1204,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.py_external)
         self.cp_python_to_ext_resources(self.project.pyjs_external)
-        self.xbuild_targets("bin-homebrew-ext", targets=["py", "pyjs"])
+        self.xbuild_targets("homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()
 
 
@@ -1250,6 +1247,7 @@ class SharedExtBuilder(PyJsBuilder):
         """builds externals from shared python"""
         if self.product_exists:
             self.xbuild_targets("shared-ext", targets=["py", "pyjs"])
+
 
 class SharedPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal statically built python"""

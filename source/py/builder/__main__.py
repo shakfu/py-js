@@ -69,34 +69,34 @@ class Application(Commander):
                     print(builder, 'has no method', key)
 
     @common_options
-    def do_py_static(self, args):
+    def do_python_static(self, args):
         """build static python"""
         self.ordered_dispatch(config.static_python_builder, args)
 
     @common_options
-    def do_py_static_full(self, args):
+    def do_python_static_full(self, args):
         """build static python (fully-loaded)"""
         self.ordered_dispatch(config.static_python_builder_full, args)
 
     @common_options
-    def do_py_shared(self, args):
+    def do_python_shared(self, args):
         """build shared python"""
         self.ordered_dispatch(config.shared_python_builder, args)
 
     @common_options
-    def do_py_shared_ext(self, args):
+    def do_python_shared_ext(self, args):
         """build shared python to embed in external"""
         self.ordered_dispatch(config.shared_python_ext_builder, args)
 
     @common_options
-    def do_py_shared_pkg(self, args):
+    def do_python_shared_pkg(self, args):
         """build shared python to embed in package"""
         self.ordered_dispatch(config.shared_python_pkg_builder, args)
 
-    # @common_options
-    # def do_py_framework(self, args):
-    #     """build framework python"""
-    #     self.ordered_dispatch(config.framework_python_builder, args)
+    @common_options
+    def do_python_framework(self, args):
+        """build framework python"""
+        self.ordered_dispatch(config.framework_python_builder, args)
 
     # @common_options
     # def do_py_all(self, args):
@@ -106,36 +106,36 @@ class Application(Commander):
     #                           config.static_python_builder]:
     #         self.ordered_dispatch(builder_class, args)
 
-    def do_brew_sys(self, args):
-        """build non-portable pyjs package (homebrew)"""
+    def do_pyjs_homebrew_sys(self, args):
+        """build non-portable pyjs externals (homebrew)"""
         config.homebrew_builder.install_homebrew_sys()
 
-    def do_brew_pkg(self, args):
+    def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
         config.homebrew_builder.install_homebrew_pkg()
 
-    def do_brew_ext(self, args):
+    def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
         config.homebrew_builder.install_homebrew_ext()
 
     @common_options
-    def do_shared_ext(self, args):
-        """build portable pyjs externals (shared py)"""
+    def do_pyjs_shared_ext(self, args):
+        """build portable pyjs externals (shared)"""
         self.ordered_dispatch(config.shared_ext_builder, args)
 
     @common_options
-    def do_static_ext(self, args):
-        """build portable pyjs externals (static py)"""
+    def do_pyjs_static_ext(self, args):
+        """build portable pyjs externals (static)"""
         self.ordered_dispatch(config.static_ext_builder, args)
 
     @common_options
-    def do_static_ext_full(self, args):
-        """build portable pyjs externals (fully loaded static py)"""
+    def do_pyjs_static_ext_full(self, args):
+        """build portable pyjs externals (fully-loaded static)"""
         self.ordered_dispatch(config.static_ext_full_builder, args)
 
     @common_options
-    def do_shared_pkg(self, args):
-        """build portable pyjs externals embedded in a package"""
+    def do_pyjs_shared_pkg(self, args):
+        """build portable pyjs package (shared)"""
         self.ordered_dispatch(config.shared_pkg_builder, args)
 
 
