@@ -416,12 +416,6 @@ class Builder:
         else:
             self.log.info("package py-js symlink exists -- not creating")
 
-        # self.project.package.mkdir(exist_ok=True)
-        # for subdir in self.project.package_dirs:
-        #     self.cmd(
-        #         f"rsync -a --delete {self.project.pyjs}/{subdir} {self.project.package}"
-        #     )
-
 
 class Recipe:
     """A platform-specific container for multiple builder-centric projects."""

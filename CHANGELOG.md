@@ -12,9 +12,11 @@
 
 - [x] create FAQ
 
+- [x] shrunk external + numpy to 30MB
+
 - [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
 
-- [x] shrunk external + numpy to 30MB
+- [x] --enable-optimizations at configure
 
 - [x] replacing 'cp -rf' with pure python self.copy
 
