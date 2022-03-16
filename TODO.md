@@ -1,33 +1,5 @@
 # TODO
 
-- [x] create a pkg distribution built from python src which retains pip for easily installing python packages
-
-- [ ] add step in bundle-creation to prepopulate site-packages with list of packages
-
-- [x] create FAQ
-
-- [ ] py_repl_plus -- message in from the inlet should be passed to the terminal line as if they were entered.
-
-- [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
-
-- [ ] reset should be deep, clean should be shallow
-
-- [x] assert builder.product_exists
-
-- [x] replacing 'cp -rf' with pure python self.copy
-
-- [x] remove dependency on libintl via patching `configure` for both static and shared
-
-- [x] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
-
-- [x] fix references (still pointing to compiled locations) ??
-
-## PENDING
-
-- [ ] --enable-optimizations at configure
-- [x] --enable-shared
-- [ ] freeing memory for PY_STATIC case
-- [x] codesigning
 
 ## BUGS
 
@@ -41,11 +13,22 @@
 
 ## Features and Fixes
 
+### Build System (builder)
+
+- [ ] inject commandline parameters in python build system to enable more granular downstream decisions.
+
+- [ ] add step in bundle-creation to prepopulate site-packages with list of packages
+
+- [ ] --enable-optimizations at configure
+
+
 ### Core
 
 - [ ] enhance `call` to allow kwargs [call fn x1 x2 y1=z1 y2=z2]
 
 ### Extension
+
+- [ ] py_repl_plus -- message in from the inlet should be passed to the terminal line as if they were entered.
 
 - [ ] add more api wrappers. (PAUSED PENDING JUPYTER WORK)
 
