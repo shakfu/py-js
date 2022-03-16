@@ -1169,11 +1169,21 @@ class HomebrewBuilder(PyJsBuilder):
         self.clean_python()
         self.ziplib()
 
+    def install(self):
+        """install via symlink"""
+        print(self.project.pyjs, self.project.package)
+        if not self.project.package.exists():
+            self.log.info("package py-js symlink does not exist -- creating at %s", self.project.package)
+            self.project.package.symlink_to(self.project.pyjs)
+        else:
+            self.log.info("package py-js symlink exists -- not creating")
+
     def install_homebrew_sys(self):
         """build externals use local homebrew python (non-portable)"""
         # self.reset_prefix()
         self.remove_externals()
         self.xbuild_targets("homebrew-sys", targets=["py", "pyjs"])
+        self.install()
 
     def install_homebrew_pkg(self):
         """build externals into package use local homebrew python (portable)"""
@@ -1182,6 +1192,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.fix_python_dylib_for_pkg()
         self.fix_python_exec()
         self.xbuild_targets("homebrew-pkg", targets=["py", "pyjs"])
+        self.install()
 
     def install_homebrew_ext(self):
         """build external into self-contained external using local homebrew python (portable)"""
@@ -1193,6 +1204,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.cp_python_to_ext_resources(self.project.pyjs_external)
         self.xbuild_targets("homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()
+        self.install()
 
 
 class StaticExtBuilder(PyJsBuilder):
