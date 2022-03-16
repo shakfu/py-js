@@ -1065,8 +1065,8 @@ class HomebrewBuilder(PyJsBuilder):
         for name in names:
             self.cmd.remove(self.python_lib / name)
 
-    def remove_extensions(self):
-        """remove extensions: not implemented"""
+    # def remove_extensions(self):
+    #     """remove extensions: not implemented"""
 
     def clean_python(self):
         """clean everything."""
@@ -1187,6 +1187,7 @@ class HomebrewBuilder(PyJsBuilder):
         """build external into self-contained external using local homebrew python (portable)"""
         # self.reset_prefix()
         self.copy_python()
+        self.fix_python_exec()
         self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.py_external)
         self.cp_python_to_ext_resources(self.project.pyjs_external)
