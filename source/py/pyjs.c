@@ -663,7 +663,7 @@ t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
     }
 
     else {
-        pyjs_error(x, "cannot handle his type of value");
+        pyjs_error(x, "cannot handle this type of value");
         return MAX_ERR_GENERIC;
     }
 }
