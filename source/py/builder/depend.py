@@ -11,7 +11,6 @@ import logging
 from pathlib import Path
 from typing import Union, Optional
 from pprint import pprint
-from termcolor import colored, cprint
 
 Pathlike = Union[str, Path]
 
@@ -22,7 +21,7 @@ LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
-title = lambda x: cprint(x, 'green', attrs=['bold'])
+title = lambda x: print(x)
 
 # ----------------------------------------------------------------------------
 # Utility Classes

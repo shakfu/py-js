@@ -87,7 +87,7 @@ option | name     | type       | format     | size (MB)
 3      | py       | shared     | package    | 18.7 [1]
 3      | pyjs     | shared     | package    | 
 
-[1] size is sum of package size (including patches and help files and both externals)
+[1] size, in this case, is not the individual external but the package size (including patches and help files and both externals).
 
 
 This alternative quickstart assumes that you have a recent python3 installation (homebrew or otherwise). 
@@ -250,7 +250,7 @@ This overview will cover two of the most mature and best documented implementati
 
 Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
 
-The objective is to have 3 deployment variations:
+There are 3 general deployment variations:
 
 1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
 

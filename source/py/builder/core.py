@@ -20,6 +20,7 @@ import subprocess
 from textwrap import dedent
 from pathlib import Path
 from types import SimpleNamespace
+from typing import List
 
 from .depend import DependencyManager
 
@@ -197,7 +198,7 @@ class Product:
         name: str,
         version: str,
         build_dir: str = None,
-        libs_static: list[str] = None,
+        libs_static: List[str] = None,
         url_template: str = None,
         **settings,
     ):
@@ -256,7 +257,7 @@ class Builder:
         self,
         product: Product,
         project: Project = None,
-        depends_on: list["Builder"] = None,
+        depends_on: List["Builder"] = None,
         **settings,
     ):
         self.product = product
@@ -425,7 +426,7 @@ class Builder:
 class Recipe:
     """A platform-specific container for multiple builder-centric projects."""
 
-    def __init__(self, name: str = None, builders: list[Builder] = None, **settings):
+    def __init__(self, name: str = None, builders: List[Builder] = None, **settings):
         self.name = name
         self.settings = Settings(**settings)
         self.builders = builders or []
