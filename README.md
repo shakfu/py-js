@@ -467,6 +467,7 @@ pyjs_framework_ext -i -b | framework    | 16.8     | external  | no       | yes 
 pyjs_framework_pkg -i -b | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
 
 [1] has automatic access to your system python's site-packages
+
 [2] current static external implementation does not work with numpy due to symbol access issues.
 
 - builder command: is the command given to build the variation as follows:
