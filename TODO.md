@@ -19,7 +19,6 @@
 
 - [ ] add step in bundle-creation to prepopulate site-packages with list of packages
 
-- [ ] --enable-optimizations at configure
 
 
 ### Core
