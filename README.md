@@ -359,17 +359,16 @@ Only tested on OS X x86_64 at present. Should be relatively straightforward to p
 
 The following is required:
 
-### Xcode
+1. `python3`: best installed via [Homebrew](https://brew.sh) (see below)
 
-Full xcode is not required, the freely available command line tools are sufficient
+2. `xcode`: can be downloaded from the mac app store
 
-```bash
-xcode-select --install
-```
+3. [cython](https://cython.org): `pip3 install cython` (recommended)
 
-otherwise download xcode from the app store.
+4. [Max/MSP](https://cycling74.com): for testing (demo version is fine)
 
-### py-js externals source and max-sdk
+
+### Get source code
 
 This project is developed as a max package with a `source` folder which contains the max-sdk as a subfolder. This is conveniently available as a git submodule.
 
@@ -395,7 +394,7 @@ Homebrew Python3 is required for the default non-portable build case. If it is n
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Once Homebrew is installed, the latest version of python3 can be easily installed as follows:
+Once Homebrew is installed, the latest version of [python3](https://docs.brew.sh/Homebrew-and-Python) can be easily installed as follows:
 
 ```bash
 brew install python
@@ -425,7 +424,7 @@ or
 
 ```bash
 cd source/py
-python3 -m builder pyjs_homebrew_ext
+python3 -m builder pyjs_homebrew_sys
 ```
 
 This builds the default 'linked-to-system|homebrew python' version of `py` and (also python-in-javascript `pyjs`. Read further for alternative ways to build and install `py` and `pyjs`
@@ -456,16 +455,16 @@ One of the objectives of this project is to cater to a number of build variation
 
 There is generally tradeoff of size vs. portability:
 
-builder command          | requires   | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
-:----------------------- | :--------- | :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
-pyjs_brew_sys            | homebrew   | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
-pyjs_brew_ext            | homebrew   | fwk->shared  | 13.6     | external  | no       | yes      | yes      | no       |
-pyjs_brew_pkg            | homwbrew   | fwk->shared  | 13.9     | package   | yes      | yes      | yes      | yes      |
-pyjs_static_ext -i -b    | python.org | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
-pyjs_shared_ext -i -b    | python.org | shared       | 15.7     | external  | no       | yes      | yes      | no       |
-pyjs_shared_pkg -i -b    | python.org | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
-pyjs_framework_ext -i -b | python.org | framework    | 16.8     | external  | no       | yes      | yes      | no       |
-pyjs_framework_pkg -i -b | python.org | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
+builder command          | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
+:----------------------- | :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
+pyjs_brew_sys            | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
+pyjs_brew_ext            | fwk->shared  | 13.6     | external  | no       | yes      | yes      | no       |
+pyjs_brew_pkg            | fwk->shared  | 13.9     | package   | yes      | yes      | yes      | yes      |
+pyjs_static_ext -i -b    | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
+pyjs_shared_ext -i -b    | shared       | 15.7     | external  | no       | yes      | yes      | no       |
+pyjs_shared_pkg -i -b    | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
+pyjs_framework_ext -i -b | framework    | 16.8     | external  | no       | yes      | yes      | no       |
+pyjs_framework_pkg -i -b | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
 
 [1] has automatic access to your system python's site-packages
 [2] current static external implementation does not work with numpy due to symbol access issues.
