@@ -315,7 +315,8 @@ class Builder:
     @property
     def has_static_libs(self) -> bool:
         """check for presence of static libs"""
-        if (libs := self.product.libs_static) :
+        libs = self.product.libs_static
+        if libs:
             return all((self.prefix_lib / lib).exists() for lib in libs)
         return False
 

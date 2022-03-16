@@ -8,9 +8,9 @@ repo - <https://github.com/shakfu/py-js>
 
 ## Preface
 
-This project provides a number of implementations of python3 externals for use in a live Max environment. If you are only interested in using python3 with Max in an offline capacity, check out the [py2max](https://github.com/shakfu/py2max) project. Otherwise, read on!
+This project provides a number of implementations of python3 externals for use in a live Max environment.
 
-The python3 externals are as follows (in order of relative maturity):
+Over the course of this project, a number of python3 externals have been developed:
 
 name     | sdk        | lang   | description
 :------- | :--------- | :----: | :---------------------------------------------------
@@ -20,40 +20,48 @@ mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/
 pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 zpy      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
 
-The common idea in these externals is to help you use and distribute python code and libraries in your Max applications. They are differentiated in the way that this is done.
+The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. They are largely differentiated in the way that this is done and in the choice how to deploy your patch, package or standalone.
 
 Please see below for a full overview and feature comparison of the externals.
 
-For a sense of relative maturity, about 80% of development time to-date has gone into the first two externals (`py` and `pyjs`) with the remaining distributed to the others.
+For a sense of relative maturity, about 80% of development time to-date has gone into the first two externals (`py` and `pyjs`) with the remaining distributed in order of decreasing time to the others.
+
+A significant time of this project has been devoted to developing different ways that the externals can be packaged.
 
 Please note that all of the externals currently only work on MacOS x86_64 and were written when the max-sdk did yet fully transition to using cmake. 
 
-There is a branch (`m1`) which is working on Apple Silicon compatibility and using the new build infrastructure, but it's still not yet fully functional and is also part of a slow cleanup and restructuring effort, so you may find that a number of things still look funny and redundant in the master branch.
+There is a branch (`m1`) which is working on Apple Silicon compatibility and attempting to use the new build infrastructure, but it's still not yet fully functional and is also part of a slow cleanup and restructuring effort, so you may find that a number of things still look funny and redundant in the master branch.
 
 For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
+
+This README will mostly cover the first two externals and their many build variations. If you interested in the others, please look in the `py-js/source/projects` section.
+
 
 ## Quickstart
 
 It is suggested to try out the `py` and `pyjs` objects first since they are the most mature and best documented of the collection. There is also no need to compile them as a [release (0.1)](https://github.com/shakfu/py-js/releases/tag/0.1) has just been made with both externals being fully codesigned and notarized.
 
-If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), compilation / installation is pretty straightforward:
+If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), building them is pretty straightforward:
 
-1. For compilation, make sure you have either Xcode or the command line tools installed via `xcode-select --install` in the terminal.
+1. Make sure you have Xcode installed and you are on an intel-based Mac.
 
-2. You should also have [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
 
-    ```bash
-    brew install python
-    ```
-
-    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.6 at the time of this writing.)
-
-3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
+2. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
     ```bash
     git submodule init
     git submodule update 
     ```
+
+
+3. For the purposes of this quickstart, it is recommended to install [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
+
+    ```bash
+    brew install python
+    ```
+
+    Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.10 at the time of this writing.)
+
 
 4. Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will a symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
 
@@ -65,17 +73,24 @@ Open up any of the patch files in the `patcher` directory of the generated max p
 
 Note that the default build creates a package with two externals which are linked to your system homebrew python3. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
-Not to worry however, if have a need for portable relocatable python3 externals then read on!
 
-### Alternative Quickstart for Self-contained Python3 Externals
+If you don't have homebrew installed on your system, or if you have a need for portable relocatable python3 externals then read on!
 
-name     | type       | size (MB)  
-:------- | :--------- | :----
-py       | static     | 9.0      
-pyjs     | static     | 8.8     
-py       | shared     | 16.7     
-pyjs     | shared     | 16.5    
+### Alternative Quickstart for Self-contained Python3 Externals / Packages
 
+option | name     | type       | format     | size (MB)  
+:--:   | :------- | :--------- | :--------- | :----
+1      | py       | static     | external   | 9.0      
+1      | pyjs     | static     | external   | 8.8     
+2      | py       | shared     | external   | 16.7     
+2      | pyjs     | shared     | external   | 16.5
+3      | py       | shared     | package    | 18.7 [1]
+3      | pyjs     | shared     | package    | 
+
+[1] size is sum of package size (including patches and help files and both externals)
+
+
+This alternative quickstart assumes that you have a recent python3 installation (homebrew or otherwise). 
 
 If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own.
 
@@ -83,28 +98,39 @@ If you would like a couple of self-contained python3 externals which can be incl
 
     ```bash
     cd py-js/source/py
-    python3 -m builder static_ext --install --build
+    python3 -m builder pyjs_static_ext --install --build
     ```
 
-OR
+**OR**
 
 2. To build self-contained python3 exernals which include a dynamically linked libpythonX.Y.dylib:
 
     ```bash
     cd py-js/source/py
-    python3 -m builder shared_ext --install --build
+    python3 -m builder pyjs_shared_ext --install --build
     ```
 
-In both cases, the above commands automatically download python3 source from [python.org](https://www.python.org) as well as dependencies from their respective sites, and then compile a static or shared version of python3 which is then used to compile the externals.
+**OR**
 
-A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code. 
+3. To build python3 externals in a package, linked to a python installation in its `support` folder
 
-Depending on your option above, the python interpreter in each external is either statically compiled or otherwise, and is completely self-contained without any non-system dependencies. This makes it appropriate for use in 'relocatable' Max Packages and Standalones.
+    ```bash
+    cd py-js/source/py
+    python3 -m builder pyjs_shared_pkg --install --build
+    ```
+
+In all three options, the above commands automatically download python3 source from [python.org](https://www.python.org) as well as dependencies from their respective sites, and then compile a static or shared version of python3 which is then used to compile the externals.
+
+A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), with options (1) and (2) the external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code.
+
+With option 3, the externals are linked to, and have been compiled against, a relocatable python installation in the `support` folder.
+
+Depending on your choice of option above, the python interpreter in each external is either statically compiled or otherwise, and in all three cases is completely we have a self-contained structure (external or package) without any non-system dependencies. This makes it appropriate for use in 'relocatable' Max Packages and Standalones.
 
 
 ### Using Self-contained Python Externals in a Standalone
 
-If you have downloaded the [0.1 Release](https://github.com/shakfu/py-js/releases/tag/0.1) or if you have built self-contained python externals as per the method above, then you should be ready to use these in a standalone.
+If you have downloaded the [0.1 Release](https://github.com/shakfu/py-js/releases/tag/0.1) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
 
 As a first step, test whether the two externals work ok in a standalone: first build `py-js/patchers/py_test_standalone.maxpat` as a standalone application using Max then open it: you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error. 
 
@@ -630,6 +656,13 @@ You can also add your system `site-packages` to the externals pythonpath attribu
 If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `bin-homebrew-pkg` build option for example.
 
 It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this just be aware that it is very large and has not been minimized.
+
+
+## Related Project
+
+- [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
+
+- [maxutils](project](https://github.com/shakfu/maxutils) : scripts and utilities to help with codesigning and notarization of Max standalones and externals.
 
 
 ## Prior Art and Thanks

@@ -2,14 +2,40 @@
 # CHANGELOG
 
 
-
 ## v0.1
+
+### Core Features
+
+- [x] shift to python-based build system. Bash / Makefile is now deprecated.
+
+- [x] create a pkg distribution built from python src which retains pip for easily installing python packages
+
+- [x] create FAQ
+
+- [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
+
+- [x] shrunk external + numpy to 30MB
+
+- [x] replacing 'cp -rf' with pure python self.copy
+
+- [x] remove dependency on libintl via patching `configure` for both static and shared
+
+- [x] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
+
+- [x] fix references (still pointing to compiled locations) ??
+
+- [x] fix problem with `--enable-shared` builds where pythonhome is not found, and sys.prefix defaults to what is hardcoded at compilation time.
+
+- [x] codesigning / notarization solved.
+
+#### Testing
+
+- [x] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
+
 
 ## Pre-release0
 
 - created a release (using python 3.96) of statically built `py.mxo` and `pyjs.mxo`.
-
-## Key Fixes
 
 - retructuring folder structure to properly separate subprojects and projects.
 
@@ -19,7 +45,7 @@
 
 - Fixed some shell expansion risks highlighted by jobor019.
 
-- Finally managed to resolve the release blocking issue of letting the external know its own path without hardcoding the name of the bundle. This means that in the specific case of static externals, `PYTHONHOME` can be set to the external's `Resources` folder. Thanks toTimothy Place for the tip on the cycling74 forums.
+- Finally managed to resolve the release blocking issue of letting the external know its own path without hardcoding the name of the bundle. This means that in the specific case of static externals, `PYTHONHOME` can be set to the external's `Resources` folder. Thanks to Timothy Place for the tip on the cycling74 forums.
 
 - Side project: translate [pdpython](https://github.com/garthz/pdpython) to max -> mxpy.c
   - compiling without errors but non-functional right now.
