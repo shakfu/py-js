@@ -55,13 +55,13 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
     git submodule update 
     ```
 
-4. Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will generated a `py` package in your `$HOME/Max 8/Packages` directory:
+4. Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will a symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
 
     ```bash
     ./build.sh
     ```
 
-Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patcher to understand how the `py` and the `pyjs` objects work.
+Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
 
 Note that the default build creates a package with two externals which are linked to your system homebrew python3. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
@@ -100,8 +100,6 @@ In both cases, the above commands automatically download python3 source from [py
 A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), each external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code. 
 
 Depending on your option above, the python interpreter in each external is either statically compiled or otherwise, and is completely self-contained without any non-system dependencies. This makes it appropriate for use in 'relocatable' Max Packages and Standalones.
-
-
 
 
 ### Using Self-contained Python Externals in a Standalone
@@ -234,7 +232,7 @@ The objective is to have 3 deployment variations:
 
 3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external bundle itself, which can make it portable and usable in standalones.
 
-As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case. This topic is treated in more detail below (see [Build Variations](#build-variations))
+As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case, and a number of build variations exist. This topic is treated in more detail below (see [Build Variations](#build-variations))
 
 Deployment Scenario  | `py` | `pyjs`
 :------------------- | :--: | :--------:
@@ -335,19 +333,19 @@ Implemented for both `py` and `pyjs` objects:
 
 ## Caveats
 
-- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a bash/makefile build system and a new python based build system to handle more complex cases. Use the Homebrew variations in the bash/makefile build system for most build use cases and if you would like to build a self-contained static external then use `python3 -m builder py_static --install && python3 -m builder static_ext` in the `py-js/sources/py` directory. Clearly this is not optimal / user-friendly and needs work.
+- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a newer python3 based build system to handle simple to complex cases, and an older bash/makefile build system (which is deprecated and will be deleted eventually).
 
-- Despite their relative maturity, the `py` and `pyjs` objects are currently marked as pre-release pre-alpha and still need further unit/functional/integration testing and field testing of course!
+- Despite their relative maturity, the `py` and `pyjs` objects are only v0.1 and still need further unit/functional/integration testing and field testing of course!
 
-- As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions.
+- As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions (python 3.11 perhaps?).
 
-- `Numpy`, the popular python numerical analysis package, falls in the above category. Indeed, it used to actually **crash** Max if imported in a new patch after first use in a prior patch. In python 3.9.x, it thankfully doesn't crash but gives the following error:
+- `Numpy`, the popular python numerical analysis package, falls in the above category. In python 3.9.x, it thankfully doesn't crash but gives the following error:
 
 ```bash
 [py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
 ```
 
-This just means that you imported `numpy`, used it (hopefully without issue) then closed your patch and then, in the same Max session, re-opened it or created a new one and imported `numpy` again. 
+This just means that opened a patch with a `py-js` external then imported `numpy`, used it, then closed your patch and then, in the same Max session, re-opened it or created a new one and imported `numpy` again. 
 
 To fix it, just restart Max and use it normally in your patch. Treat each patch as a session and restart Max after each session. It's a pain, but unfortunately a limitation of current python c-extensions.
 
@@ -357,7 +355,7 @@ To fix it, just restart Max and use it normally in your patch. Treat each patch 
 
 ## Building
 
-Only tested on OS X at present. Should be relatively straightforward to port to windows (a pure python build script is being developed to make this easier).
+Only tested on OS X x86_64 at present. Should be relatively straightforward to port to windows (the pure python build system should make this easier).
 
 The following is required:
 
@@ -426,13 +424,8 @@ In the root of the package:
 or
 
 ```bash
-make -C source/py build
-```
-
-or in the `py-js/sources/py` directory
-
-```bash
-make build
+cd source/py
+python3 -m builder pyjs_homebrew_ext
 ```
 
 This builds the default 'linked-to-system|homebrew python' version of `py` and (also python-in-javascript `pyjs`. Read further for alternative ways to build and install `py` and `pyjs`
@@ -443,63 +436,78 @@ As of this writing this project has two separate build system which should be
 unified some day. You don't have to use both but it's worth understanding the
 differences.
 
-1. Homebrew python build system based on makefiles and bash scripts: re-uses your existing homebrew installation to build the externals with a number of variations. The default build uses this system.
+1. An older (deprecated) build system based on makefiles and bash scripts: re-uses your existing homebrew installation to build the externals with a number of variations. You should not use this system since it no longer maintained.
 
-2. Python `builder` system: was developed to handle the complex case of
-   downloading python (from python.org) and its dependencies for their
+2. The newer Python `builder` system: which was developed to handle the complex case of
+   downloading python (from python.org) and its dependencies from their
    respective sites in source form and then building minimal static python
    binaries with which to reliably compile python3 externals which are
    portable, relocatable, self-contained, small-in-size, and therefore usable
    in Max Packages and Standalones.
 
+   Eventually the bash / makefile builds were ported to the `builder` system and this is now the default build system.
 
 
 
-### Other Build Variations
+
+### Build Variations
 
 One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work mostly ok. Externals built using the python-builder system work well and fulfil the portability requirements.
 
 There is generally tradeoff of size vs. portability:
 
-name             | uses      | format     | size     | portable  | standalone
-:--------------- | :-------: | :--------: | :------: | :-------: | :---------
-bin-homebrew-sys | homebrew  | externals  | 300K     | no        | no  [1]
-bin-homebrew-pkg | homebrew  | package    | 13.5MB   | yes       | yes
-bin-homebrew-ext | homebrew  | externals  | 27.1MB   | yes       | yes [2]
-static-ext       | builder   | externals  | 9.1MB    | yes       | yes
+builder command          | requires   | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
+:----------------------- | :--------- | :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
+pyjs_brew_sys            | homebrew   | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
+pyjs_brew_ext            | homebrew   | fwk->shared  | 13.6     | external  | no       | yes      | yes      | no       |
+pyjs_brew_pkg            | homwbrew   | fwk->shared  | 13.9     | package   | yes      | yes      | yes      | yes      |
+pyjs_static_ext -i -b    | python.org | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
+pyjs_shared_ext -i -b    | python.org | shared       | 15.7     | external  | no       | yes      | yes      | no       |
+pyjs_shared_pkg -i -b    | python.org | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
+pyjs_framework_ext -i -b | python.org | framework    | 16.8     | external  | no       | yes      | yes      | no       |
+pyjs_framework_pkg -i -b | python.org | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
 
-[1] an additional benefit is you can use all your system python packages
+[1] has automatic access to your system python's site-packages
+[2] current static external implementation does not work with numpy due to symbol access issues.
 
-[2] not 100% working yet.
+- builder command: is the command given to build the variation as follows:
+
+    ```bash
+    cd py-js/source/py
+    python3 -m builder <builder command>
+    ```
+
+- *pip*: the build allows or provides for pip installation
+- *portable*: the externals can be deployed as portable packages or standalones
+- *numpy*: numpy compatibility
+- *isolated*: if yes, then different external types can run concurrently without issue
+
 
 #### Embed Python in your Max Package (can work in Standalones)
 
 In the root of the py-js directory:
 
 ```bash
-make -C source/py bin-homebrew-pkg
+python3 -m builder pyjs_brew_pkg
 ```
 
-or in `py-js/source/py`
 
-```bash
-make bin-homebrew-pkg
-```
+This will convert the `py-js` project into a max package, with two externals in the `externals` directory and a linked python distribution in the `support` directory.
 
-This will create a `py` package in $HOME/Documents/Max 8/packages/py
+The `py-js` project should now be symlinked to `$HOME/Documents/Max 8/Packages/py-js`
 
 Once this is done you can run some of the patchers to in the package test the py and pyjs objects.
 
 *NOTE*: Recent changes in Max have allowed for this to work in standalones. Just create your standalone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built into a `<STANDALONE>` then copy the whole aforementioned `py` package to `<STANDALONE>/Contents/Resources/C74/packages` and delete the redundant `py.mxo` in `<STANDALONE>/Contents/Resources/C74/externals` since it already exists in the just-copied package.
 
-#### Embedding Python in the External itself (Recommended)
 
+#### Embedding Python in the External itself (can work in Standalones)
 
-The most reliable method is to use the python `builder` package which is included in the project:
+The following builds a self-contained statically compiled python3 external:
 
 ```bash
 cd py-js/sources/py
-python3 -m builder py_static --install && python3 -m builder static_ext
+python3 -m builder pyjs_static_ext --install --build
 ```
 
 If you want to codesign and notarize it for use in your standalone or package, the [codesigning / notarization script](source/py/scripts/notarize.sh) and related [entitlements file](source/py/scripts/entitlements.plist) can be found in the [source/py/scripts](source/py/scripts) folder.
@@ -507,7 +515,7 @@ If you want to codesign and notarize it for use in your standalone or package, t
 
 #### Embedding Python in the External itself (Alternative)
 
-Here's another method using Homebrew / bash build system which currently works with a caveat: strangely, although it buids both `py` or `pyjs` successfuly, you have to pick one and can't use both at the same time for some strange reason. This is not an issue because the use of both is redundant.
+Here's another method using Homebrew / bash build system which currently works with a caveat: strangely, although it builds both `py` or `pyjs` successfuly, you have to pick one and can't use both at the same time. This is not an issue because the use of both is redundant.
 
 This method places a minimized python distribution in the external `py.mxo` itself.
 
@@ -515,7 +523,7 @@ From the root of `py-js`, do this:
 
 ```bash
 cd source/py
-make homebrew-ext
+python3 -m builder pyjs_homebrew_ext --install --build 
 ```
 
 
@@ -619,7 +627,7 @@ The easiest way is to just create an adhoc python external linked to your system
 
 You can also add your system `site-packages` to the externals pythonpath attribute.
 
-If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `bin-homebrew-pkg` build option.
+If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `bin-homebrew-pkg` build option for example.
 
 It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this just be aware that it is very large and has not been minimized.
 
