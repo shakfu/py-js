@@ -80,7 +80,11 @@ class Project:
     pyjs_external = externals / "pyjs.mxo"
 
     staticlib = f"libpython{py_ver}.a"
-    dylib = f"libpython{py_ver}.dylib"
+
+    if py_ver == '3.7': # special case 3.7
+        dylib = f"libpython3.7m.dylib"
+    else:
+        dylib = f"libpython{py_ver}.dylib"
 
     # environmental vars
     HOME = os.getenv("HOME")
@@ -163,7 +167,11 @@ class ShellCmd:
             shutil.rmtree(path, ignore_errors=(not DEBUG))
         else:
             self.log.info("remove file: %s", path)
-            path.unlink(missing_ok=True)
+            try:
+                # path.unlink(missing_ok=True)
+                path.unlink()
+            except FileNotFoundError:
+                self.log.warning("file not found: %s", path)
 
 
 class Settings(SimpleNamespace):
@@ -240,7 +248,11 @@ class Product:
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        return f"lib{self.name.lower()}{self.ver}.dylib"
+        if self.ver == '3.7': # special case 3.7
+            ver = '3.7m'
+        else:
+            ver = self.ver            
+        return f"lib{self.name.lower()}{ver}.dylib"
 
     @property
     def url(self) -> Path:
@@ -304,6 +316,14 @@ class Builder:
     def url(self) -> Path:
         """Returns url to download product as a pathlib.Path instance."""
         return self.product.url
+
+    @property
+    def config_ver_platform(self) -> Path:
+        """Returns config-{py_ver}-darwin"""
+        if self.product.ver == "3.7": # special case 3.7
+            return f"config-{self.product.ver}m-darwin"
+        else:
+            return f"config-{self.product.ver}-darwin"
 
     # -------------------------------------------------------------------------
     # Core functions
@@ -578,9 +598,11 @@ class PythonBuilder(Builder):
 
     def remove_packages(self):
         """remove list of non-critical packages"""
+
         self.rm_libs(
             [
-                f"config-{self.product.ver}-darwin",
+                # f"config-{self.product.ver}-darwin",
+                self.config_ver_platform,
                 "idlelib",
                 "lib2to3",
                 "tkinter",
@@ -884,11 +906,27 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
 
     setup_local = "setup-shared.local"
 
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch(patch="configure.patch", to_file="configure")
+        self.cmd.chdir(self.project.root)
+
+    def install(self):
+        """install compilation product into lib"""
+        self.reset()
+        self.download()
+        self.pre_process()
+        self.build()
+        self.post_process()
+
     def remove_packages(self):
         """remove list of non-critical packages"""
         self.rm_libs(
             [
-                f"config-{self.product.ver}-darwin",
+                # f"config-{self.product.ver}-darwin",
+                self.config_ver_platform,
                 "idlelib",
                 "lib2to3",
                 "tkinter",
@@ -905,7 +943,7 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         """change dylib ref to point to loader in package build format"""
         self.cmd.chdir(self.prefix / 'lib')
         dylib_path = self.prefix / 'lib' / self.product.dylib
-        assert dylib_path.exists()
+        assert dylib_path.exists(), f"{dylib_path} does not exist"
         self.cmd.chmod(self.product.dylib)
         # both of these are equivalent (and both don't work!)
         self.install_name_tool_id(
@@ -974,7 +1012,8 @@ class StaticPythonFullBuilder(StaticPythonBuilder):
         """remove list of non-critical packages"""
         self.rm_libs(
             [
-                f"config-{self.product.ver}-darwin",
+                # f"config-{self.product.ver}-darwin",
+                self.config_ver_platform,
                 "idlelib",
                 "lib2to3",
                 "tkinter",
