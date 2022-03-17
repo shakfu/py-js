@@ -36,8 +36,9 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 # ----------------------------------------------------------------------------
 # Aliases
 
-get_var = sysconfig.get_config_var
-get_path = sysconfig.get_path
+
+def get_var(x): return sysconfig.get_config_var(x)  # type: ignore
+get_path = lambda x: Path(sysconfig.get_config_var(x))  # type: ignore
 
 
 # ----------------------------------------------------------------------------
@@ -54,20 +55,19 @@ class Python:
     abiflags = get_var('abiflags')
     arch = platform.machine()
 
-    prefix = get_var('prefix')
-    bindir = get_var('BINDIR')
-    include = get_var('INCLUDEPY')
-    libdir = get_var('LIBDIR')
-
+    prefix = get_path('prefix')
+    bindir = get_path('BINDIR')
+    include = get_path('INCLUDEPY')
+    libdir = get_path('LIBDIR')
+    pkgs = get_path('BINLIBDEST')
 
     mac_dep_target = get_var('MACOSX_DEPLOYMENT_TARGET')
-    staticlibrary = library = get_var('LIBRARY')
+    staticlib = library = get_var('LIBRARY')
 
     # can be either: 
     # in case of framework: Python.framework/Versions/X.Y/Python
     # in case of shared lib: libpythonX.Ym.dylib
-    ldlibrary = get_var('LDLIBRARY')
-
+    ldlibrary = get_path('LDLIBRARY')
     dylib = f"libpython{version_short}{abiflags}.dylib"
 
     def dump(self):
@@ -88,7 +88,7 @@ class Python:
             'dylib',
         ]
         for v in _vars:
-            print(f"{v}: {self.getattr(v)}")
+            print(f"{v}: {getattr(self, v)}")
 
 
 
@@ -99,14 +99,8 @@ class Project:
 
     name = "py-js"
     python = Python()
-    py_version = sysconfig.get_config_var('py_version')
-    py_ver = py_version_short = sysconfig.get_config_var('py_version_short')
-    py_version_nodot = sysconfig.get_config_var('py_version_nodot')
-    py_name = f"python{py_ver}"
-    abiflags = sysconfig.get_config_var('abiflags')
     
     arch = platform.machine()
-
 
     # root in this case is root assumed for build / make / scripts
     # actual project is root.parent.parent (see below)
@@ -122,13 +116,6 @@ class Project:
     src = build / "src"
     lib = build / "lib"
 
-    homebrew = (
-        Path("/usr/local/opt/python3/Frameworks/Python.framework/Versions")
-        / py_ver
-    )
-
-    homebrew_pkgs = homebrew / "lib" / py_name
-
     # project root here
     pyjs = root.parent.parent
     support = pyjs / "support"
@@ -136,10 +123,6 @@ class Project:
 
     py_external = externals / "py.mxo"
     pyjs_external = externals / "pyjs.mxo"
-
-    staticlib = f"libpython{py_ver}.a"
-
-    dylib = f"libpython{py_ver}{abiflags}.dylib"
 
     # environmental vars
     HOME = os.getenv("HOME")
@@ -168,7 +151,7 @@ class Project:
         return self.__str__()
 
     def __hash__(self):
-        return hash((self.name, self.py_name, self.mac_dep_target))
+        return hash((self.name, self.python.name, self.mac_dep_target))
 
 
 # ----------------------------------------------------------------------------
@@ -260,9 +243,9 @@ class Product:
         self,
         name: str,
         version: str,
-        build_dir: str = None,
-        libs_static: List[str] = None,
-        url_template: str = None,
+        build_dir: str = None,  # type: ignore
+        libs_static: List[str] = None,  # type: ignore
+        url_template: str = None,  # type: ignore
         **settings,
     ):
         self.name = name
@@ -303,10 +286,7 @@ class Product:
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        if self.ver == '3.7': # special case 3.7
-            ver = '3.7m'
-        else:
-            ver = self.ver            
+        ver = '3.7m' if self.ver == '3.7' else self.ver
         return f"lib{self.name.lower()}{ver}.dylib"
 
     @property
@@ -323,8 +303,8 @@ class Builder:
     def __init__(
         self,
         product: Product,
-        project: Project = None,
-        depends_on: List["Builder"] = None,
+        project: Project = None,  # type: ignore
+        depends_on: List["Builder"] = None,  # type: ignore
         **settings,
     ):
         self.product = product
@@ -376,9 +356,9 @@ class Builder:
     def config_ver_platform(self) -> Path:
         """Returns config-{py_ver}-darwin"""
         if self.product.ver == "3.7": # special case 3.7
-            return f"config-{self.product.ver}m-darwin"
+            return Path(f"config-{self.product.ver}m-darwin")
         else:
-            return f"config-{self.product.ver}-darwin"
+            return Path(f"config-{self.product.ver}-darwin")
 
     # -------------------------------------------------------------------------
     # Core functions
@@ -389,7 +369,7 @@ class Builder:
         return self.has_static_libs
 
     @property
-    def has_static_libs(self) -> bool:
+    def has_static_libs(self) -> bool:  # sourcery skip: use-named-expression
         """check for presence of static libs"""
         libs = self.product.libs_static
         if libs:
@@ -437,7 +417,7 @@ class Builder:
                 f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'"
             )
 
-    def xbuild_targets(self, project, targets=None, flag=None):
+    def xbuild_targets(self, project, targets, flag=None):
         """build via xcode the given targets"""
         for target in targets:
             self.xcodebuild(project, target, flag)
@@ -460,6 +440,7 @@ class Builder:
         #         builder.reset()
         self.cmd.remove(self.src_path)
         self.cmd.remove(self.prefix)
+        assert not (self.src_path.exists() or self.prefix.exists()), "reset not completed"
 
     def download(self):
         """download src using curl and tar.
@@ -474,12 +455,14 @@ class Builder:
         if not self.download_path.exists():
             self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail {self.url} -o {self.download_path}")
+            assert self.download_path.exists(), f"could not download: {self.download_path}"
 
         # unpack
         if not self.src_path.exists():
             self.project.src.mkdir(parents=True, exist_ok=True)
             self.log.info("unpacking %s", self.src_path)
-            self.cmd(f"tar -C {self.project.src} -xvf {self.download_path}")
+            self.cmd(f"tar -xvf {self.download_path} --directory {self.project.src}")
+            assert self.src_path.exists(), f"{self.src_path} not created"
 
     def build(self):
         """build product"""
@@ -504,7 +487,7 @@ class Builder:
 class Recipe:
     """A platform-specific container for multiple builder-centric projects."""
 
-    def __init__(self, name: str = None, builders: List[Builder] = None, **settings):
+    def __init__(self, name: str, builders: List[Builder] = None, **settings):  # type: ignore
         self.name = name
         self.settings = Settings(**settings)
         self.builders = builders or []
@@ -1132,7 +1115,7 @@ class PyJsBuilder(PythonBuilder):
 
     @property
     def prefix(self):
-        return self.project.support / self.project.py_name
+        return self.project.support / self.project.python.name
 
     def remove_externals(self):
         """remove py and pyjs externals from the py-js/externals directory"""
@@ -1157,7 +1140,7 @@ class HomebrewBuilder(PyJsBuilder):
     def cp_pkgs(self, pkgs):
         """copy package dirs from homebrew python lib to target python lib"""
         for pkg in pkgs:
-            self.cmd.copy(self.project.homebrew_pkgs / pkg, self.python_lib / pkg)
+            self.cmd.copy(self.project.python.pkgs / pkg, self.python_lib / pkg)
 
     def rm_libs(self, names):
         """remove all named python dylib libraries"""
@@ -1177,7 +1160,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.remove_packages()
         self.remove_extensions()
 
-    def fix_python_exec(self):
+    def fix_python_exec(self):  # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
         executable = self.product.name_ver
@@ -1228,9 +1211,9 @@ class HomebrewBuilder(PyJsBuilder):
         self.python_lib.mkdir(parents=True, exist_ok=True)
         self.prefix_bin.mkdir(parents=True, exist_ok=True)
         self.cmd.copy(
-            self.project.homebrew / "Python", self.prefix / self.product.dylib
+            self.project.python.prefix / "Python", self.prefix / self.product.dylib
         )
-        self.cmd(f"cp -rf {self.project.homebrew_pkgs}/*.py {self.python_lib}")
+        self.cmd(f"cp -rf {self.project.python.pkgs}/*.py {self.python_lib}")
         self.cp_pkgs(
             [
                 "asyncio",
@@ -1258,11 +1241,11 @@ class HomebrewBuilder(PyJsBuilder):
                 "xmlrpc",
             ]
         )
-        self.cmd.copy(self.project.homebrew / "include", self.prefix_include)
+        self.cmd.copy(self.project.python.prefix / "include", self.prefix_include)
         self.cmd.remove(self.prefix_lib / self.product.dylib)
         self.cmd.remove(self.prefix_lib / "pkgconfig")
         self.cmd.copy(
-            self.project.homebrew / "Resources/Python.app/Contents/MacOS/Python",
+            self.project.python.prefix / "Resources/Python.app/Contents/MacOS/Python",
             self.prefix_bin / self.product.name_ver,
         )
         self.clean_python()
@@ -1311,7 +1294,7 @@ class StaticExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        static_lib = self.project.lib / 'python-static' / 'lib' / self.project.staticlib
+        static_lib = self.project.lib / 'python-static' / 'lib' / self.project.python.staticlib  # type: ignore
         if not static_lib.exists():
             self.log.warning("static python is not built: %s", static_lib)
         return static_lib.exists()
@@ -1336,7 +1319,7 @@ class SharedExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.dylib
+        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.python.dylib
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)
         return shared_lib.exists()
@@ -1352,7 +1335,7 @@ class SharedPkgBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.dylib
+        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.python.dylib
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)
         return shared_lib.exists()

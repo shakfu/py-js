@@ -1,7 +1,6 @@
 
 # CHANGELOG
 
-
 ## v0.1
 
 ### Core Features
@@ -29,11 +28,6 @@
 - [x] fix problem with `--enable-shared` builds where pythonhome is not found, and sys.prefix defaults to what is hardcoded at compilation time.
 
 - [x] codesigning / notarization solved.
-
-#### Testing
-
-- [x] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
-
 
 ## Pre-release0
 
@@ -190,6 +184,8 @@
 #### Testing
 
 - [x] pytest testing harness
+
+- [x] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
 
 - [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
 
