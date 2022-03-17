@@ -1,9 +1,10 @@
 
 #include "../common.xcconfig"
 
-VERSION = 3.7
-PREFIX = /Library/Frameworks/Python.framework/Versions/3.7
+PREFIX = /Library/Frameworks/Python.framework/Versions/$(VERSION)
 
-PY_HEADERS = /Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(SUFFIX)
 PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = -lpython$(VERSION) -ldl
+PY_LDFLAGS = $(LIBS) -lpython$(VERSION)$(SUFFIX)
+
+
