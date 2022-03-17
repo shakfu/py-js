@@ -28,14 +28,13 @@ For a sense of relative maturity, about 80% of development time to-date has gone
 
 A significant time of this project has been devoted to developing different ways that the externals can be packaged.
 
-Please note that all of the externals currently only work on MacOS x86_64 and were written when the max-sdk did yet fully transition to using cmake. 
+Please note that all of the externals currently only work on MacOS x86_64 and were written when the max-sdk did yet fully transition to using cmake.
 
 There is a branch (`m1`) which is working on Apple Silicon compatibility and attempting to use the new build infrastructure, but it's still not yet fully functional and is also part of a slow cleanup and restructuring effort, so you may find that a number of things still look funny and redundant in the master branch.
 
 For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
 This README will mostly cover the first two externals and their many build variations. If you interested in the others, please look in the `py-js/source/projects` section.
-
 
 ## Quickstart
 
@@ -45,14 +44,12 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
 
 1. Make sure you have Xcode installed and you are on an intel-based Mac.
 
-
 2. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
     ```bash
     git submodule init
     git submodule update 
     ```
-
 
 3. For the purposes of this quickstart, it is recommended to install [Homebrew](https://brew.sh) python3 installed on your system (see below for more detailed installation instructions), but it is as simple as:
 
@@ -61,7 +58,6 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
     ```
 
     Note: that the default build script automatically reads your existing homebrew installed python version (currently 3.9.10 at the time of this writing.)
-
 
 4. Then run the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will a symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
 
@@ -73,26 +69,24 @@ Open up any of the patch files in the `patcher` directory of the generated max p
 
 Note that the default build creates a package with two externals which are linked to your system homebrew python3. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
-
 If you don't have homebrew installed on your system, or if you have a need for portable relocatable python3 externals then read on!
 
 ### Alternative Quickstart for Self-contained Python3 Externals / Packages
 
 option | name     | type       | format     | size (MB)  
 :--:   | :------- | :--------- | :--------- | :----
-1      | py       | static     | external   | 9.0      
-1      | pyjs     | static     | external   | 8.8     
-2      | py       | shared     | external   | 16.7     
+1      | py       | static     | external   | 9.0
+1      | pyjs     | static     | external   | 8.8
+2      | py       | shared     | external   | 16.7
 2      | pyjs     | shared     | external   | 16.5
 3      | py       | shared     | package    | 18.7 [1]
-3      | pyjs     | shared     | package    | 
+3      | pyjs     | shared     | package    |
 
 [1] size, in this case, is not the individual external but the package size (including patches and help files and both externals).
 
+This alternative quickstart assumes that you have a recent python3 installation (homebrew or otherwise).
 
-This alternative quickstart assumes that you have a recent python3 installation (homebrew or otherwise). 
-
-If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, you can build your own.
+If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, pick on of the following and you can build your own:
 
 1. To build statically-compiled self-contained python3 externals:
 
@@ -101,16 +95,12 @@ If you would like a couple of self-contained python3 externals which can be incl
     python3 -m builder pyjs_static_ext --install --build
     ```
 
-**OR**
-
 2. To build self-contained python3 exernals which include a dynamically linked libpythonX.Y.dylib:
 
     ```bash
     cd py-js/source/py
     python3 -m builder pyjs_shared_ext --install --build
     ```
-
-**OR**
 
 3. To build python3 externals in a package, linked to a python installation in its `support` folder
 
@@ -119,20 +109,19 @@ If you would like a couple of self-contained python3 externals which can be incl
     python3 -m builder pyjs_shared_pkg --install --build
     ```
 
-In all three options, the above commands automatically download python3 source from [python.org](https://www.python.org) as well as dependencies from their respective sites, and then compile a static or shared version of python3 which is then used to compile the externals.
+With all three options, a python3 source distribution (matching your own python3 version) is automatically downloaded from [python.org](https://www.python.org) with dependencies, and then compiled into a static or shared version of python3 which is then used to compile the externals.
 
-A little patience and you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although they are somewhat different (see below for details), with options (1) and (2) the external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code.
+At the end of this process you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`. Although the three options deliver somewhat different products (see below for details), with options (1) and (2) the external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder which also has a `site-packages` directory for your own code.
 
-With option 3, the externals are linked to, and have been compiled against, a relocatable python installation in the `support` folder.
+With option (3), the externals are linked to, and have been compiled against, a relocatable python installation in the `support` folder.
 
-Depending on your choice of option above, the python interpreter in each external is either statically compiled or otherwise, and in all three cases is completely we have a self-contained structure (external or package) without any non-system dependencies. This makes it appropriate for use in 'relocatable' Max Packages and Standalones.
-
+Depending on your choice above, the python interpreter in each external is either statically compiled or dynamically linked, and in all three cases we have a self-contained structure (external or package) without any non-system dependencies. This makes it appropriate for use in 'relocatable' Max Packages and Standalones.
 
 ### Using Self-contained Python Externals in a Standalone
 
 If you have downloaded the [0.1 Release](https://github.com/shakfu/py-js/releases/tag/0.1) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
 
-As a first step, test whether the two externals work ok in a standalone: first build `py-js/patchers/py_test_standalone.maxpat` as a standalone application using Max then open it: you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error. 
+As a first step, test whether the two externals work ok in a standalone: first build `py-js/patchers/py_test_standalone.maxpat` as a standalone application using Max then open it: you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error.
 
 If you look inside the built standalone bundle, `py_test_standalone.app`, you find that the `py.mxo` external has been copied into the `py_test_standalone.app/Contents/Resources/C74/externals` folder but not `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. (Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatl appreciated.)
 
@@ -234,7 +223,6 @@ pyjs max external (jsextension)
 
         in-code (non-message)
             eval_to_json <expr>  : python 'eval' returns json
-
 
 ```
 
@@ -371,7 +359,7 @@ Implemented for both `py` and `pyjs` objects:
 [py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
 ```
 
-This just means that opened a patch with a `py-js` external then imported `numpy`, used it, then closed your patch and then, in the same Max session, re-opened it or created a new one and imported `numpy` again. 
+This just means that opened a patch with a `py-js` external then imported `numpy`, used it, then closed your patch and then, in the same Max session, re-opened it or created a new one and imported `numpy` again.
 
 To fix it, just restart Max and use it normally in your patch. Treat each patch as a session and restart Max after each session. It's a pain, but unfortunately a limitation of current python c-extensions.
 
@@ -393,7 +381,6 @@ The following is required:
 
 4. [Max/MSP](https://cycling74.com): for testing (demo version is fine)
 
-
 ### Get source code
 
 This project is developed as a max package with a `source` folder which contains the max-sdk as a subfolder. This is conveniently available as a git submodule.
@@ -409,7 +396,6 @@ Then cd into the newly cloned source directory and run the following to get the 
 ```bash
 git submodule init
 git submodule update 
-
 ```
 
 ### Homebrew Python3
@@ -472,9 +458,6 @@ differences.
 
    Eventually the bash / makefile builds were ported to the `builder` system and this is now the default build system.
 
-
-
-
 ### Build Variations
 
 One of the objectives of this project is to cater to a number of build variations. As of this writing, the homebrew based variations (except for one strange case detailed below) work mostly ok. Externals built using the python-builder system work well and fulfil the portability requirements.
@@ -508,7 +491,6 @@ pyjs_framework_pkg -i -b | framework    | 16.8     | package   | yes      | yes 
 - *numpy*: numpy compatibility
 - *isolated*: if yes, then different external types can run concurrently without issue
 
-
 #### Embed Python in your Max Package (can work in Standalones)
 
 In the root of the py-js directory:
@@ -517,7 +499,6 @@ In the root of the py-js directory:
 python3 -m builder pyjs_brew_pkg
 ```
 
-
 This will convert the `py-js` project into a max package, with two externals in the `externals` directory and a linked python distribution in the `support` directory.
 
 The `py-js` project should now be symlinked to `$HOME/Documents/Max 8/Packages/py-js`
@@ -525,7 +506,6 @@ The `py-js` project should now be symlinked to `$HOME/Documents/Max 8/Packages/p
 Once this is done you can run some of the patchers to in the package test the py and pyjs objects.
 
 *NOTE*: Recent changes in Max have allowed for this to work in standalones. Just create your standalone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built into a `<STANDALONE>` then copy the whole aforementioned `py` package to `<STANDALONE>/Contents/Resources/C74/packages` and delete the redundant `py.mxo` in `<STANDALONE>/Contents/Resources/C74/externals` since it already exists in the just-copied package.
-
 
 #### Embedding Python in the External itself (can work in Standalones)
 
@@ -537,7 +517,6 @@ python3 -m builder pyjs_static_ext --install --build
 ```
 
 If you want to codesign and notarize it for use in your standalone or package, the [codesigning / notarization script](source/py/scripts/notarize.sh) and related [entitlements file](source/py/scripts/entitlements.plist) can be found in the [source/py/scripts](source/py/scripts) folder.
-
 
 #### Embedding Python in the External itself (Alternative)
 
@@ -552,7 +531,6 @@ cd source/py
 python3 -m builder pyjs_homebrew_ext --install --build 
 ```
 
-
 ### The pymx variation
 
 The `pymx` is a max wrapper of the python interpreter using the `min-api` `c++` version of the Max api.
@@ -561,8 +539,7 @@ This needs:
 
 1. [pybind11](https://pybind11.readthedocs.io) which is used for wrapping the alternative `min-api` `c++` version of the Max api to make it accessible to python.
 
-2. [cmake](https://cmake.org) is used in the `min-api` build system. 
-
+2. [cmake](https://cmake.org) is used in the `min-api` build system.
 
 First, install `cmake` and `pybind11` using homebrew:
 
@@ -597,7 +574,6 @@ brew install clang-format
 ```
 
 The style used in this project is specified in the `.clang-format` file.
-
 
 ## FAQ
 
@@ -657,13 +633,11 @@ If you need numpy embedded in a portable variation of py-js, then you have a cou
 
 It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this just be aware that it is very large and has not been minimized.
 
-
 ## Related Project
 
 - [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
 
-- [maxutils](project](https://github.com/shakfu/maxutils) : scripts and utilities to help with codesigning and notarization of Max standalones and externals.
-
+- [maxutils](https://github.com/shakfu/maxutils) : scripts and utilities to help with codesigning and notarization of Max standalones and externals.
 
 ## Prior Art and Thanks
 

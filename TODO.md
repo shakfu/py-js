@@ -2,7 +2,6 @@
 
 ## ENHANCEMENTS
 
-
 ### Build System (builder)
 
 - [ ] make all xcodeprojects externally xcconfig-parametrizable to `builder`:
@@ -15,7 +14,6 @@
 
 - [ ] add step in bundle-creation to prepopulate site-packages with list of packages
 
-
 ## BUGS
 
 - [ ] Workflow using the code-editor is not intuitive. The best implementation of this in the Thomas Grill's py/pyext project: double click on the external opens the preferred editor.
@@ -26,12 +24,9 @@
 
 - [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror. In version 3.10, the import of does not raise an error but is still doesn't work (see bug above). At least there's progress!
 
-
 ## FEATURES
 
-
 ### Core
-
 
 - [ ] enhance `call` to allow kwargs [call fn x1 x2 y1=z1 y2=z2]
 
