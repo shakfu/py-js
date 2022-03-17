@@ -1,12 +1,15 @@
 """
-
 Running this with a particular python version will auto-config py-js.xcconfig
-
 
 """
 
 import sysconfig
 import os
+
+# adjust cwd if not run from within parent_folder
+parent_folder = os.path.dirname(os.path.abspath(__file__))
+if os.getcwd() != parent_folder:
+    os.chdir(parent_folder)
 
 get_var = sysconfig.get_config_var
 
