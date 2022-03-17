@@ -70,6 +70,8 @@ class Python:
     ldlibrary = get_path('LDLIBRARY')
     dylib = f"libpython{version_short}{abiflags}.dylib"
 
+    config_ver_platform = f"config-{version_short}{abiflags}-darwin"
+
     def dump(self):
         _vars = [
             'version',
@@ -351,14 +353,6 @@ class Builder:
     def url(self) -> Path:
         """Returns url to download product as a pathlib.Path instance."""
         return self.product.url
-
-    @property
-    def config_ver_platform(self) -> Path:
-        """Returns config-{py_ver}-darwin"""
-        if self.product.ver == "3.7": # special case 3.7
-            return Path(f"config-{self.product.ver}m-darwin")
-        else:
-            return Path(f"config-{self.product.ver}-darwin")
 
     # -------------------------------------------------------------------------
     # Core functions
@@ -648,8 +642,7 @@ class PythonBuilder(Builder):
 
         self.rm_libs(
             [
-                # f"config-{self.product.ver}-darwin",
-                self.config_ver_platform,
+                self.project.python.config_ver_platform,
                 "idlelib",
                 "lib2to3",
                 "tkinter",
@@ -972,8 +965,7 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         """remove list of non-critical packages"""
         self.rm_libs(
             [
-                # f"config-{self.product.ver}-darwin",
-                self.config_ver_platform,
+                self.project.python.config_ver_platform,
                 "idlelib",
                 "lib2to3",
                 "tkinter",
@@ -1059,8 +1051,7 @@ class StaticPythonFullBuilder(StaticPythonBuilder):
         """remove list of non-critical packages"""
         self.rm_libs(
             [
-                # f"config-{self.product.ver}-darwin",
-                self.config_ver_platform,
+                self.project.python.config_ver_platform,
                 "idlelib",
                 "lib2to3",
                 "tkinter",
@@ -1278,7 +1269,7 @@ class HomebrewBuilder(PyJsBuilder):
 
     def install_homebrew_ext(self):
         """build external into self-contained external using local homebrew python (portable)"""
-        # self.reset_prefix()
+        self.reset_prefix()
         self.copy_python()
         self.fix_python_exec()
         self.fix_python_dylib_for_ext_resources()
