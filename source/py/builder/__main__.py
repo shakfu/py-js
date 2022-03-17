@@ -61,10 +61,12 @@ class Application(Commander):
         """generic ordered argument dispatcher"""
         order = ['download', 'install', 'build', 'clean', 'ziplib']
         d = vars(args)
+        builder.settings.update(d)
         for key in order:
             if d[key]:
                 try:
                     getattr(builder, key)()
+                    # print(builder.settings)
                 except AttributeError:
                     print(builder, 'has no method', key)
 
