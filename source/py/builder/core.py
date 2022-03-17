@@ -17,6 +17,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sysconfig
 from textwrap import dedent
 from pathlib import Path
 from types import SimpleNamespace
@@ -32,20 +33,77 @@ URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
+# ----------------------------------------------------------------------------
+# Aliases
+
+get_var = sysconfig.get_config_var
+get_path = sysconfig.get_path
+
 
 # ----------------------------------------------------------------------------
 # Configuration Classes
 
+class Python:
+    """configuration object to to get info about the python implementation used
+    """
+
+    version = get_var('py_version')
+    version_short = get_var('py_version_short')
+    version_nodot = get_var('py_version_nodot')
+    name = f"python{version_short}"
+    abiflags = get_var('abiflags')
+    arch = platform.machine()
+
+    prefix = get_var('prefix')
+    bindir = get_var('BINDIR')
+    include = get_var('INCLUDEPY')
+    libdir = get_var('LIBDIR')
+
+
+    mac_dep_target = get_var('MACOSX_DEPLOYMENT_TARGET')
+    staticlibrary = library = get_var('LIBRARY')
+
+    # can be either: 
+    # in case of framework: Python.framework/Versions/X.Y/Python
+    # in case of shared lib: libpythonX.Ym.dylib
+    ldlibrary = get_var('LDLIBRARY')
+
+    dylib = f"libpython{version_short}{abiflags}.dylib"
+
+    def dump(self):
+        _vars = [
+            'version',
+            'version_short',
+            'version_nodot',
+            'abiflags',
+            'arch',
+            'prefix',
+            'bindir',
+            'INCLUDEPY',
+            'include',
+            'libdir',
+            'mac_dep_target',
+            'staticlibrary',
+            'ldlibrary',
+            'dylib',
+        ]
+        for v in _vars:
+            print(f"{v}: {self.getattr(v)}")
+
+
 
 class Project:
-    """A repository for all the files, resources, and information required to
+    """A place for all the files, resources, and information required to
     build one or more software products.
     """
 
     name = "py-js"
-    py_version = platform.python_version()
-    py_ver = ".".join(py_version.split(".")[:2])
+    python = Python()
+    py_version = sysconfig.get_config_var('py_version')
+    py_ver = py_version_short = sysconfig.get_config_var('py_version_short')
+    py_version_nodot = sysconfig.get_config_var('py_version_nodot')
     py_name = f"python{py_ver}"
+    abiflags = sysconfig.get_config_var('abiflags')
     
     arch = platform.machine()
 
@@ -81,10 +139,7 @@ class Project:
 
     staticlib = f"libpython{py_ver}.a"
 
-    if py_ver == '3.7': # special case 3.7
-        dylib = f"libpython3.7m.dylib"
-    else:
-        dylib = f"libpython{py_ver}.dylib"
+    dylib = f"libpython{py_ver}{abiflags}.dylib"
 
     # environmental vars
     HOME = os.getenv("HOME")
@@ -359,6 +414,15 @@ class Builder:
         """change dependency reference"""
         _cmd = f"install_name_tool -add_rpath {rpath} {target}"
         self.cmd(_cmd)
+
+    # def xcodebuild(self, project_path: str, target: str, *preprocessor_flags, **xcconfig_flags):
+    #     """build via xcode the given targets"""
+    #     x_flags = " ".join([f"{k}={repr(v)}" for k,v in xcconfig_flags.items()]) if xcconfig_flags else ''
+    #     p_flags = "GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {flags}'".format(
+    #         flags=" ".join([f"{k}=1" for k in preprocessor_flags])) if preprocessor_flags else ''
+    #     self.cmd(
+    #         f"xcodebuild -project {repr(project_path)} -target {repr(target)} {x_flags} {p_flags}"
+    #     )
 
     def xcodebuild(self, project, target, flag=None):
         """build via xcode the given targets"""

@@ -1,5 +1,13 @@
 # TODO
 
+## ENHANCEMENTS
+
+- make all xcodeprojects external xcconfig parametrizable to `builder`:
+
+  ```bash
+  xcodebuild -project py-js.xcodeproj -target py VERSION=3.7 SUFFIX=m
+  ```
+
 
 ## BUGS
 
@@ -11,14 +19,15 @@
 
 - [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror.
 
-## Features and Fixes
+
+
+## FEATURES
 
 ### Build System (builder)
 
 - [ ] inject commandline parameters in python build system to enable more granular downstream decisions.
 
 - [ ] add step in bundle-creation to prepopulate site-packages with list of packages
-
 
 
 ### Core
