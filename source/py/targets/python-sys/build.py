@@ -1,41 +1,31 @@
+"""
+
+Running this with a particular python version will auto-config py-js.xcconfig
+
+
+"""
+
 import sysconfig
 import os
 
-VERSION = sysconfig.get_python_version()
-PREFIX = sysconfig.get_config_var('prefix')
-INCLUDE = sysconfig.get_path('include')
+get_var = sysconfig.get_config_var
 
-print(f'configuring python-sys xcode project for python {VERSION}')
-print(f'prefix: {PREFIX}')
+def xcodebuild(project_path: str, target: str, *preprocessor_flags, **xcconfig_flags):
+    """python wrapper around command-line xcodebuild"""
+    x_flags = " ".join([f"{k}={repr(v)}" for k,v in xcconfig_flags.items()]) if xcconfig_flags else ''
+    p_flags = "GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {flags}'".format(
+        flags=" ".join([f"{k}=1" for k in preprocessor_flags])) if preprocessor_flags else ''
+    _cmd = f"xcodebuild -project {repr(project_path)} -target {repr(target)} {x_flags} {p_flags}"
+    print(_cmd)
+    os.system(_cmd)
 
-def cmd(shellcmd):
-    print(shellcmd)
-    os.system(shellcmd)
 
-config = """
-#include "../common.xcconfig"
-
-VERSION = {version}
-PREFIX = {prefix}
-
-PY_HEADERS = {include}
-PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = -lpython$(VERSION) -ldl
-""".format(
-    prefix = PREFIX,
-    version = VERSION,
-    include = INCLUDE,
+flags = dict(
+    PREFIX = get_var('prefix'),
+    VERSION = get_var('py_version_short'),
+    SUFFIX = get_var('abiflags'),
+    LIBS = get_var('LIBS'),
 )
 
-with open('py-js.xcconfig', 'w') as f:
-    f.write(config)
-
-
-print("configuration DONE.")
-
-
-print("running xcode")
-
-
-for target in ['py', 'pyjs']:
-    cmd(f'xcodebuild -project py-js.xcodeproj -target {target}')
+for t in ['py', 'pyjs']:
+    xcodebuild('py-js.xcodeproj', t, **flags)
