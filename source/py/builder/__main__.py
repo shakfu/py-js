@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""builder -- build python3 from source (currently for macos)
-
-usage: builder [-h] [-v] [subcommand] [action]
+"""python3 -m builder
+usage: builder [-h] [-v]  ...
 
 builder: builds the py-js max external and python from source.
 
@@ -11,19 +10,30 @@ optional arguments:
 
 subcommands:
   valid subcommands
+
                         additional help
-    py_all              build all python variations
-    py_framework        build framework python
-    py_shared           build shared python
-    py_static           build static python
-    pyjs_ext            build portable pyjs externals (homebrew)
-    pyjs_pkg            build portable pyjs package (homebrew)
-    pyjs_sys            build non-portable pyjs package (homebrew)
+    dep_analyze         analyze dependencies
+    pyjs_homebrew_ext   build portable pyjs externals (homebrew)
+    pyjs_homebrew_pkg   build portable pyjs package (homebrew)
+    pyjs_homebrew_sys   build non-portable pyjs externals (homebrew)
+    pyjs_shared_ext     build portable pyjs externals (shared)
+    pyjs_shared_pkg     build portable pyjs package (shared)
+    pyjs_static_ext     build portable pyjs externals (static)
+    pyjs_static_ext_full
+                        build portable pyjs externals (fully-loaded static)
+    python_framework    build framework python
+    python_shared       build shared python
+    python_shared_ext   build shared python to embed in external
+    python_shared_pkg   build shared python to embed in package
+    python_static       build static python
+    python_static_full  build static python (fully-loaded)
     test                interactive testing shell
 """
+import sysconfig
 from . import config
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
+from .factory import python_builder_factory, pyjs_builder_factory
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -47,6 +57,8 @@ common_options = option_group(
            action="store_true",
            help="clean python in build/src"),
     option("-z", "--ziplib", action="store_true", help="zip python library"),
+    option("-p", "--py-version", type=str, default=sysconfig.get_config_var('py_version'),
+           help="set required python version to download and build")
 )
 
 
