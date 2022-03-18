@@ -282,8 +282,9 @@ class Product:
 
     @property
     def name_archive(self) -> str:
-        """Archival name of Product-version: Python-3.9.1.tgz"""
-        return f"{self.name_version}.tgz"
+        """Archival name of Product-version"""
+        # return f"{self.name_version}.tgz"
+        return self.url.name
 
     @property
     def dylib(self) -> str:
