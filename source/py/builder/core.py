@@ -3,12 +3,30 @@
 A pure python builder without any dependencies except the standard library.
 
 
+Python
 Project
-
 ShellCmd
 Settings
+Product
+Recipe
+Builder
+    Bzip2Builder
+    OpensslBuilder
+    XzBuilder
+    PythonBuilder
+        PythonSrcBuilder
+            FrameworkPythonBuilder
+            SharedPythonBuilder
+                SharedPythonForExtBuilder
+                SharedPythonForPkgBuilder
+            StaticPythonBuilder
+                StaticPythonFullBuilder
 
-
+        PyJsBuilder
+            HomebrewBuilder
+            StaticExtBuilder
+            SharedExtBuilder
+            SharedPkgBuilder
 
 """
 import logging
@@ -244,7 +262,7 @@ class Product:
     def __init__(
         self,
         name: str,
-        version: str,
+        version: str = None,  # type: ignore
         build_dir: str = None,  # type: ignore
         libs_static: List[str] = None,  # type: ignore
         url_template: str = None,  # type: ignore
@@ -373,21 +391,21 @@ class Builder:
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
-        self.cmd(f'find {path} | grep -E "({pattern})" | xargs rm -rf')
+        self.cmd(f'find "{path}" | grep -E "({pattern})" | xargs rm -rf')
 
     def install_name_tool_id(self, new_id, target):
         """change dynamic shared library install names"""
-        _cmd = f"install_name_tool -id {new_id} {target}"
+        _cmd = f"install_name_tool -id '{new_id}' '{target}'"
         self.cmd(_cmd)
 
     def install_name_tool_change(self, src, dst, target):
         """change dependency reference"""
-        _cmd = f"install_name_tool -change {src} {dst} {target}"
+        _cmd = f"install_name_tool -change '{src}' '{dst}' '{target}'"
         self.cmd(_cmd)
 
     def install_name_tool_add_rpath(self, rpath, target):
         """change dependency reference"""
-        _cmd = f"install_name_tool -add_rpath {rpath} {target}"
+        _cmd = f"install_name_tool -add_rpath '{rpath}' '{target}'"
         self.cmd(_cmd)
 
     # def xcodebuild(self, project_path: str, target: str, *preprocessor_flags, **xcconfig_flags):
@@ -403,12 +421,12 @@ class Builder:
         """build via xcode the given targets"""
         if not flag:
             self.cmd(
-                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target}"
+                f"xcodebuild -project 'targets/{project}/py-js.xcodeproj' -target '{target}'"
             )
         else:
             _flag = f"{flag}=1"
             self.cmd(
-                f"xcodebuild -project targets/{project}/py-js.xcodeproj -target {target} "
+                f"xcodebuild -project 'targets/{project}/py-js.xcodeproj' -target '{target}' "
                 f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'"
             )
 
@@ -449,14 +467,14 @@ class Builder:
         # download
         if not self.download_path.exists():
             self.log.info("downloading %s to %s", self.url, self.download_path)
-            self.cmd(f"curl -L --fail {self.url} -o {self.download_path}")
+            self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
             assert self.download_path.exists(), f"could not download: {self.download_path}"
 
         # unpack
         if not self.src_path.exists():
             self.project.src.mkdir(parents=True, exist_ok=True)
             self.log.info("unpacking %s", self.src_path)
-            self.cmd(f"tar -xvf {self.download_path} --directory {self.project.src}")
+            self.cmd(f"tar -xvf '{self.download_path}' --directory '{self.project.src}'")
             assert self.src_path.exists(), f"{self.src_path} not created"
 
     def build(self):
@@ -472,20 +490,18 @@ class Builder:
 
     def install(self):
         """deploy to package"""
-        if not self.project.package.exists():
-            self.log.info("package py-js symlink does not exists -- creating at %s", self.project.package)
-            self.project.pyjs.symlink_to(self.project.package)
-        else:
-            self.log.info("package py-js symlink exists -- not creating")
 
 
 class Recipe:
     """A platform-specific container for multiple builder-centric projects."""
 
-    def __init__(self, name: str, builders: List[Builder] = None, **settings):  # type: ignore
+    # type: ignore
+    def __init__(self, name: str, py_version: str = None, builders: List[Builder] = None,  # type: ignore
+                 **settings):
         self.name = name
-        self.settings = Settings(**settings)
+        self.py_version = py_version or PYTHON_VERSION_STRING
         self.builders = builders or []
+        self.settings = Settings(**settings)
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -496,6 +512,7 @@ class Recipe:
         """build builders"""
         for builder in self.builders:
             builder.build()
+
 
 
 # ------------------------------------------------------------------------------------
@@ -509,7 +526,7 @@ class Bzip2Builder(Builder):
             self.cmd.chdir(self.src_path)
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-                    make install PREFIX={self.prefix}""")
+                    make install PREFIX='{self.prefix}'""")
             self.cmd.chdir(self.project.root)
 
 
@@ -523,9 +540,9 @@ class OpensslBuilder(Builder):
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
                     ./config no-shared no-tests \
-                    --prefix={self.prefix}""")
+                    --prefix='{self.prefix}'""")
             self.cmd(
-                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+                f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
                     make install_sw""")
             self.cmd.chdir(self.project.root)
 
@@ -538,10 +555,10 @@ class XzBuilder(Builder):
             self.cmd.chdir(self.src_path)
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-                ./configure --disable-shared --enable-static --prefix={self.prefix}"""
+                ./configure --disable-shared --enable-static --prefix='{self.prefix}'"""
             )
             self.cmd(
-                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
+                f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
                     make && make install""")
             self.cmd.chdir(self.project.root)
 
@@ -585,24 +602,11 @@ class PythonBuilder(Builder):
         # self.sign()
 
     def install(self):
-        """install compilation product into lib"""
+        """install and build compilation product"""
         self.reset()
         self.pre_process()
         self.build()
         self.post_process()
-
-    def install_python_pkg(self):
-        """install python product as a package"""
-        self.install_python()
-        self.fix_python_dylib_for_pkg()
-
-    def install_python_ext(self):
-        """install python product as a max external"""
-        self.install_python()
-        self.fix_python_dylib_for_ext()
-
-    def install_python(self):
-        """install python"""
 
     # ------------------------------------------------------------------------
     # post-processing operations
@@ -765,6 +769,19 @@ class PythonSrcBuilder(PythonBuilder):
 
     # ------------------------------------------------------------------------
     # src-level operations
+    def configure(self):
+        """configures overrides to defaults from commandline"""
+        if self.settings.py_version:
+            self.product.version = self.settings.py_version
+
+    def install(self):
+        """install and build compilation product"""
+        self.configure()
+        self.reset()
+        self.download()
+        self.pre_process()
+        self.build()
+        self.post_process()
 
     def pre_process(self):
         """pre-build operations"""
@@ -806,13 +823,6 @@ class PythonSrcBuilder(PythonBuilder):
         else:
             self.cmd(f"patch -p1 < {self.project.patch}/{self.product.ver}/{patch}")
 
-    def install(self):
-        """install compilation product into lib"""
-        self.reset()
-        self.download()
-        self.pre_process()
-        self.build()
-        self.post_process()
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BASE)
@@ -837,8 +847,8 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.src_path)
         self.cmd(
             f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-            --enable-framework={self.project.lib} \
+        ./configure MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
+            --enable-framework='{self.project.lib}' \
             --with-openssl={self.project.lib / 'openssl'} \
             --without-doc-strings \
             --enable-ipv6 \
@@ -868,7 +878,7 @@ class SharedPythonBuilder(PythonSrcBuilder):
         self.cmd(
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-            --prefix={self.prefix} \
+            --prefix='{self.prefix}' \
             --enable-shared \
             --with-openssl={self.project.lib / 'openssl'} \
             --without-doc-strings \
@@ -900,7 +910,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
         self.cmd(
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-            --prefix={self.prefix} \
+            --prefix='{self.prefix}' \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \
@@ -953,14 +963,6 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         self.write_setup_local()
         self.apply_patch(patch="configure.patch", to_file="configure")
         self.cmd.chdir(self.project.root)
-
-    def install(self):
-        """install compilation product into lib"""
-        self.reset()
-        self.download()
-        self.pre_process()
-        self.build()
-        self.post_process()
 
     def remove_packages(self):
         """remove list of non-critical packages"""
@@ -1116,6 +1118,7 @@ class PyJsBuilder(PythonBuilder):
 
     def install(self):
         for builder in self.depends_on:
+            builder.settings.update(self.settings)
             builder.install()
 
 
@@ -1193,9 +1196,9 @@ class HomebrewBuilder(PyJsBuilder):
 
     def cp_python_to_ext_resources(self, arg):
         """copy processed python libs to bundle resources directory"""
-        self.cmd(f"mkdir -p {arg}/Contents/Resources/{self.product.name_ver}")
+        self.cmd(f"mkdir -p '{arg}/Contents/Resources/{self.product.name_ver}'")
         self.cmd(
-            f"cp -rf {self.prefix}/* {arg}/Contents/Resources/{self.product.name_ver}"
+            f"cp -rf '{self.prefix}/*' '{arg}/Contents/Resources/{self.product.name_ver}'"
         )
 
     def copy_python(self):
@@ -1205,7 +1208,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd.copy(
             self.project.python.prefix / "Python", self.prefix / self.product.dylib
         )
-        self.cmd(f"cp -rf {self.project.python.pkgs}/*.py {self.python_lib}")
+        self.cmd(f"cp -rf '{self.project.python.pkgs}/*.py' '{self.python_lib}'")
         self.cp_pkgs(
             [
                 "asyncio",
@@ -1245,7 +1248,6 @@ class HomebrewBuilder(PyJsBuilder):
 
     def install(self):
         """install via symlink"""
-        print(self.project.pyjs, self.project.package)
         if not self.project.package.exists():
             self.log.info("package py-js symlink does not exist -- creating at %s", self.project.package)
             self.project.package.symlink_to(self.project.pyjs)
@@ -1336,8 +1338,8 @@ class SharedPkgBuilder(PyJsBuilder):
         """builds externals from shared python"""
         src = self.project.lib / 'python-shared'
         dst = f"{self.project.support}/{self.product.name_ver}"
-        self.cmd(f"rm -rf {dst}") # try to remove if it exists
-        self.cmd(f"cp -af {src} {dst}")
+        self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
+        self.cmd(f"cp -af '{src}' '{dst}'")
         # self.xbuild_targets("src-shared-pkg", targets=["py", "pyjs"])
         if self.product_exists:
             self.xbuild_targets("shared-pkg", targets=["py", "pyjs"])

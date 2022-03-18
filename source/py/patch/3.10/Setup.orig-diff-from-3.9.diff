@@ -1,0 +1,77 @@
+108c108
+< _sre _sre.c				# Fredrik Lundh's new regular expressions
+---
+> _sre -DPy_BUILD_CORE_BUILTIN _sre.c	# Fredrik Lundh's new regular expressions
+112c112
+< _operator _operator.c	        	# operator.add() and similar goodies
+---
+> _operator -DPy_BUILD_CORE_BUILTIN _operator.c	        	# operator.add() and similar goodies
+114c114
+< _abc _abc.c				# Abstract base classes
+---
+> _abc -DPy_BUILD_CORE_BUILTIN _abc.c	# Abstract base classes
+137,139d136
+< # PEG-based parser module -- slated to be *the* parser
+< _peg_parser _peg_parser.c
+< 
+172c169
+< #array arraymodule.c	# array objects
+---
+> #array -DPy_BUILD_CORE_MODULE arraymodule.c	# array objects
+176c173
+< #_struct _struct.c	# binary structure packing/unpacking
+---
+> #_struct -DPy_BUILD_CORE_MODULE _struct.c	# binary structure packing/unpacking
+182c179
+< #_pickle _pickle.c	# pickle accelerator
+---
+> #_pickle -DPy_BUILD_CORE_MODULE _pickle.c	# pickle accelerator
+184c181
+< #_zoneinfo _zoneinfo.c	# zoneinfo accelerator
+---
+> #_zoneinfo _zoneinfo.c -DPy_BUILD_CORE_MODULE	# zoneinfo accelerator
+186c183
+< #_heapq _heapqmodule.c	# Heap queue algorithm
+---
+> #_heapq _heapqmodule.c -DPy_BUILD_CORE_MODULE	# Heap queue algorithm
+191c188
+< #unicodedata unicodedata.c    # static Unicode character database
+---
+> #unicodedata unicodedata.c -DPy_BUILD_CORE_BUILTIN   # static Unicode character database
+213,217c210,226
+< # socket line above, and possibly edit the SSL variable:
+< #SSL=/usr/local/ssl
+< #_ssl _ssl.c \
+< #	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+< #	-L$(SSL)/lib -lssl -lcrypto
+---
+> # socket line above, and edit the OPENSSL variable:
+> # OPENSSL=/path/to/openssl/directory
+> # _ssl _ssl.c \
+> #     -I$(OPENSSL)/include -L$(OPENSSL)/lib \
+> #     -lssl -lcrypto
+> #_hashlib _hashopenssl.c \
+> #     -I$(OPENSSL)/include -L$(OPENSSL)/lib \
+> #     -lcrypto
+> 
+> # To statically link OpenSSL:
+> # _ssl _ssl.c \
+> #     -I$(OPENSSL)/include -L$(OPENSSL)/lib \
+> #     -l:libssl.a -Wl,--exclude-libs,libssl.a \
+> #     -l:libcrypto.a -Wl,--exclude-libs,libcrypto.a
+> #_hashlib _hashopenssl.c \
+> #     -I$(OPENSSL)/include -L$(OPENSSL)/lib \
+> #     -l:libcrypto.a -Wl,--exclude-libs,libcrypto.a
+232c241
+< #_posixsubprocess _posixsubprocess.c  # POSIX subprocess module helper
+---
+> #_posixsubprocess  -DPy_BUILD_CORE_BUILTIN _posixsubprocess.c  # POSIX subprocess module helper
+312c321
+< #_curses _cursesmodule.c -lcurses -ltermcap
+---
+> #_curses _cursesmodule.c -lcurses -ltermcap -DPy_BUILD_CORE_MODULE
+334,337d342
+< # Fred Drake's interface to the Python parser
+< #parser parsermodule.c
+< 
+< 
