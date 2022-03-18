@@ -86,7 +86,7 @@ option | name     | type       | format     | size (MB)
 
 This alternative quickstart assumes that you have a recent python3 installation (homebrew or otherwise).
 
-If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, pick on of the following and you can build your own:
+If you would like a couple of self-contained python3 externals which can be included in standalones you can download the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1) OR even better, pick **one** of the following and you can build your own:
 
 1. To build statically-compiled self-contained python3 externals:
 
