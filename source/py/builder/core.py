@@ -2,7 +2,6 @@
 
 A pure python builder without any dependencies except the standard library.
 
-
 Python
 Project
 ShellCmd
@@ -21,14 +20,62 @@ Builder
                 SharedPythonForPkgBuilder
             StaticPythonBuilder
                 StaticPythonFullBuilder
-
         PyJsBuilder
             HomebrewBuilder
             StaticExtBuilder
+                StaticExtFullBuilder
             SharedExtBuilder
             SharedPkgBuilder
 
+
+
+isnstall:
+    configure -> reset -> download -> pre_process -> build -> post_process
+
+
+configure:
+    if settings.py_version:
+        product.version = settings.py_version
+
+reset:
+    cmd.remove(src_path)
+    cmd.remove(project.lib / "Python.framework")
+
+    or
+    cmd.remove(prefix)
+
+
+pre_process:
+    write_setup_local()
+    apply_patch(patch="configure.patch", to_file="configure")
+
+build:
+    for builder in depends_on:
+        builder.build
+
+post_process:
+    clean
+    ziplib
+    fix
+    sign
+
+clean:
+    clean_python_pyc(prefix)
+    clean_python_tests(python_lib)
+    clean_python_site_packages()
+
+    for i in (python_lib / "distutils" / "command").glob("*.exe"):
+        cmd.remove(i)
+
+    cmd.remove(prefix_lib / "pkgconfig")
+    cmd.remove(prefix / "share")
+
+    remove_packages()
+    remove_extensions()
+    remove_binaries()
 """
+
+
 import logging
 import os
 import platform
@@ -131,6 +178,7 @@ class Project:
     scripts = root / "scripts"
     patch = root / "patch"
     targets = root / "targets"
+    # build = Path('/tmp/_build_pyjs')
     build = targets / "build"
     downloads = build / "downloads"
     src = build / "src"
@@ -408,32 +456,16 @@ class Builder:
         _cmd = f"install_name_tool -add_rpath '{rpath}' '{target}'"
         self.cmd(_cmd)
 
-    # def xcodebuild(self, project_path: str, target: str, *preprocessor_flags, **xcconfig_flags):
-    #     """build via xcode the given targets"""
-    #     x_flags = " ".join([f"{k}={repr(v)}" for k,v in xcconfig_flags.items()]) if xcconfig_flags else ''
-    #     p_flags = "GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {flags}'".format(
-    #         flags=" ".join([f"{k}=1" for k in preprocessor_flags])) if preprocessor_flags else ''
-    #     self.cmd(
-    #         f"xcodebuild -project {repr(project_path)} -target {repr(target)} {x_flags} {p_flags}"
-    #     )
-
-    def xcodebuild(self, project, target, flag=None):
-        """build via xcode the given targets"""
-        if not flag:
-            self.cmd(
-                f"xcodebuild -project 'targets/{project}/py-js.xcodeproj' -target '{target}'"
-            )
-        else:
-            _flag = f"{flag}=1"
-            self.cmd(
-                f"xcodebuild -project 'targets/{project}/py-js.xcodeproj' -target '{target}' "
-                f"GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {_flag}'"
-            )
-
-    def xbuild_targets(self, project, targets, flag=None):
-        """build via xcode the given targets"""
+    def xcodebuild(self, project: str, targets: List[str], *preprocessor_flags, **xcconfig_flags):
+        """python wrapper around command-line xcodebuild"""
+        x_flags = " ".join([f"{k}={repr(v)}" for k,v in xcconfig_flags.items()]) if xcconfig_flags else ''
+        p_flags = "GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {flags}'".format(
+            flags=" ".join([f"{k}=1" for k in preprocessor_flags])) if preprocessor_flags else ''
         for target in targets:
-            self.xcodebuild(project, target, flag)
+            self.cmd(
+                f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
+                f" -target {repr(target)} {x_flags} {p_flags}"
+            )
 
     # -------------------------------------------------------------------------
     # Core Methods
@@ -466,6 +498,7 @@ class Builder:
 
         # download
         if not self.download_path.exists():
+            self.project.downloads.mkdir(parents=True, exist_ok=True)
             self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
             assert self.download_path.exists(), f"could not download: {self.download_path}"
@@ -999,12 +1032,14 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         self.cmd.chdir(self.prefix_bin)
         exe = self.product.name_ver
         d = DependencyManager(exe)
-        dir_to_change = d.analyze_executable()[0]
-        self.install_name_tool_change(
-            dir_to_change,
-            f"@executable_path/../lib/{self.product.dylib}", 
-            exe
-        )
+        dirs_to_change = d.analyze_executable()
+        if dirs_to_change:
+            dir_to_change = dirs_to_change[0]
+            self.install_name_tool_change(
+                dir_to_change,
+                f"@executable_path/../lib/{self.product.dylib}", 
+                exe
+            )
         self.cmd.chdir(self.project.root)
 
     def post_process(self):
@@ -1258,7 +1293,7 @@ class HomebrewBuilder(PyJsBuilder):
         """build externals use local homebrew python (non-portable)"""
         # self.reset_prefix()
         self.remove_externals()
-        self.xbuild_targets("homebrew-sys", targets=["py", "pyjs"])
+        self.xcodebuild("homebrew-sys", targets=["py", "pyjs"])
         self.install()
 
     def install_homebrew_pkg(self):
@@ -1267,7 +1302,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.copy_python()
         self.fix_python_dylib_for_pkg()
         self.fix_python_exec()
-        self.xbuild_targets("homebrew-pkg", targets=["py", "pyjs"])
+        self.xcodebuild("homebrew-pkg", targets=["py", "pyjs"])
         self.install()
 
     def install_homebrew_ext(self):
@@ -1278,7 +1313,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.fix_python_dylib_for_ext_resources()
         self.cp_python_to_ext_resources(self.project.py_external)
         self.cp_python_to_ext_resources(self.project.pyjs_external)
-        self.xbuild_targets("homebrew-ext", targets=["py", "pyjs"])
+        self.xcodebuild("homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()
         self.install()
 
@@ -1296,7 +1331,7 @@ class StaticExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from statically built python"""
         if self.product_exists:
-            self.xbuild_targets("static-ext", targets=["py", "pyjs"])
+            self.xcodebuild("static-ext", targets=["py", "pyjs"])
 
 
 class StaticExtFullBuilder(StaticExtBuilder):
@@ -1305,7 +1340,7 @@ class StaticExtFullBuilder(StaticExtBuilder):
     def build(self):
         """builds externals from statically built python"""
         if self.product_exists:
-            self.xbuild_targets("static-ext-full", targets=["py", "pyjs"])
+            self.xcodebuild("static-ext-full", targets=["py", "pyjs"])
 
 
 class SharedExtBuilder(PyJsBuilder):
@@ -1321,7 +1356,7 @@ class SharedExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from shared python"""
         if self.product_exists:
-            self.xbuild_targets("shared-ext", targets=["py", "pyjs"])
+            self.xcodebuild("shared-ext", targets=["py", "pyjs"])
 
 
 class SharedPkgBuilder(PyJsBuilder):
@@ -1340,7 +1375,6 @@ class SharedPkgBuilder(PyJsBuilder):
         dst = f"{self.project.support}/{self.product.name_ver}"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
-        # self.xbuild_targets("src-shared-pkg", targets=["py", "pyjs"])
         if self.product_exists:
-            self.xbuild_targets("shared-pkg", targets=["py", "pyjs"])
+            self.xcodebuild("shared-pkg", targets=["py", "pyjs"])
 

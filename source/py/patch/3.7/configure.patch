@@ -1,0 +1,72 @@
+--- configure	2022-01-14 00:21:23.000000000 +0300
++++ configure.new	2022-03-11 10:28:16.000000000 +0300
+@@ -8031,7 +8031,7 @@
+ 
+ for ac_header in asm/types.h crypt.h conio.h direct.h dlfcn.h errno.h \
+ fcntl.h grp.h \
+-ieeefp.h io.h langinfo.h libintl.h process.h pthread.h \
++ieeefp.h io.h langinfo.h process.h pthread.h \
+ sched.h shadow.h signal.h stropts.h termios.h \
+ utime.h \
+ poll.h sys/devpoll.h sys/epoll.h sys/poll.h \
+@@ -10116,51 +10116,6 @@
+ fi
+ 
+ 
+-# check if we need libintl for locale functions
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for textdomain in -lintl" >&5
+-$as_echo_n "checking for textdomain in -lintl... " >&6; }
+-if ${ac_cv_lib_intl_textdomain+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lintl  $LIBS"
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char textdomain ();
+-int
+-main ()
+-{
+-return textdomain ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_lib_intl_textdomain=yes
+-else
+-  ac_cv_lib_intl_textdomain=no
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-LIBS=$ac_check_lib_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_intl_textdomain" >&5
+-$as_echo "$ac_cv_lib_intl_textdomain" >&6; }
+-if test "x$ac_cv_lib_intl_textdomain" = xyes; then :
+-
+-$as_echo "#define WITH_LIBINTL 1" >>confdefs.h
+-
+-        LIBS="-lintl $LIBS"
+-fi
+-
+-
+ # checks for system dependent C++ extensions support
+ case "$ac_sys_system" in
+ 	AIX*)	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for genuine AIX C++ extensions support" >&5
+@@ -11782,7 +11737,7 @@
+ fi
+ 
+ # checks for library functions
+-for ac_func in alarm accept4 setitimer getitimer bind_textdomain_codeset chown \
++for ac_func in alarm accept4 setitimer getitimer chown \
+  clock confstr copy_file_range ctermid dup3 execv explicit_bzero explicit_memset \
+  faccessat fchmod fchmodat fchown fchownat \
+  fdwalk fexecve fdopendir fork fpathconf fstatat ftime ftruncate futimesat \
