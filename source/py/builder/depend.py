@@ -111,7 +111,8 @@ class DependencyManager:
         return (dep_path == '' 
                 or dep_path.startswith('/opt/local/')
                 or dep_path.startswith('/usr/local/')
-                or dep_path.startswith('/Users/'))
+                or dep_path.startswith('/Users/')
+                or dep_path.startswith('/tmp/'))
 
     def is_executable(self):
         return (self.target.is_file()
