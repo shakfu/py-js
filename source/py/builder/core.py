@@ -1139,6 +1139,94 @@ class StaticPythonFullBuilder(StaticPythonBuilder):
         )
 
 
+class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
+    """builds python in a framework format for self-contained externals."""
+
+    setup_local = "setup-shared.local"
+
+    def fix_python_dylib_for_ext_resources(self):
+        """change dylib ref to point to loader in external build format"""
+        self.cmd.chdir(self.prefix / 'lib')
+        dylib_path = self.prefix / 'lib' / self.product.dylib
+        assert dylib_path.exists()
+        self.cmd.chmod(self.product.dylib)
+        self.install_name_tool_id(
+            f"@loader_path/../Resources/lib/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        self.fix_python_dylib_for_ext_resources()
+
+
+class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
+    """builds python in a framework format for relocatable max packages."""
+
+    setup_local = "setup-shared.local"
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch(patch="configure.patch", to_file="configure")
+        self.cmd.chdir(self.project.root)
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.rm_libs(
+            [
+                self.project.python.config_ver_platform,
+                "idlelib",
+                "lib2to3",
+                "tkinter",
+                "turtledemo",
+                "turtle.py",
+                "ctypes",
+                "curses",
+                # "ensurepip",
+                "venv",
+            ]
+        )
+
+    def fix_python_dylib_for_pkg(self):
+        """change dylib ref to point to loader in package build format"""
+        self.cmd.chdir(self.prefix / 'lib')
+        dylib_path = self.prefix / 'lib' / self.product.dylib
+        assert dylib_path.exists(), f"{dylib_path} does not exist"
+        self.cmd.chmod(self.product.dylib)
+        # both of these are equivalent (and both don't work!)
+        self.install_name_tool_id(
+            f"@loader_path/../../../../support/{self.product.name_ver}/lib/{self.product.dylib}",
+            self.product.dylib,
+        )
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_exe_for_pkg(self):
+        """redirect ref of pythonX to libpythonX.Y.dylib"""
+        self.cmd.chdir(self.prefix_bin)
+        exe = self.product.name_ver
+        d = DependencyManager(exe)
+        dirs_to_change = d.analyze_executable()
+        if dirs_to_change:
+            dir_to_change = dirs_to_change[0]
+            self.install_name_tool_change(
+                dir_to_change,
+                f"@executable_path/../lib/{self.product.dylib}", 
+                exe
+            )
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        self.fix_python_exe_for_pkg()
+        self.fix_python_dylib_for_pkg()
+
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
 
@@ -1392,4 +1480,39 @@ class SharedPkgBuilder(PyJsBuilder):
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
             self.xcodebuild("shared-pkg", targets=["py", "pyjs"])
+
+class FrameworkExtBuilder(PyJsBuilder):
+    """pyjs externals from minimal framework built python"""
+
+    @property
+    def product_exists(self):
+        shared_lib = self.project.lib / 'python-framework' / 'lib' / self.project.python.dylib
+        if not shared_lib.exists():
+            self.log.warning("framework python is not built: %s", shared_lib)
+        return shared_lib.exists()
+
+    def build(self):
+        """builds externals from shared python"""
+        if self.product_exists:
+            self.xcodebuild("framework-ext", targets=["py", "pyjs"])
+
+
+class FrameworkPkgBuilder(PyJsBuilder):
+    """pyjs externals in a package from minimal framework built python"""
+
+    @property
+    def product_exists(self):
+        shared_lib = self.project.lib / 'python-framework' / 'lib' / self.project.python.dylib
+        if not shared_lib.exists():
+            self.log.warning("framework python is not built: %s", shared_lib)
+        return shared_lib.exists()
+
+    def build(self):
+        """builds externals from framework python"""
+        src = self.project.lib / 'python-framework'
+        dst = f"{self.project.support}/{self.product.name_ver}"
+        self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
+        self.cmd(f"cp -af '{src}' '{dst}'")
+        if self.product_exists:
+            self.xcodebuild("framework-pkg", targets=["py", "pyjs"])
 

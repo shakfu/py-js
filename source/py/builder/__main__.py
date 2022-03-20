@@ -123,6 +123,16 @@ class Application(Commander):
         """build framework python"""
         self.ordered_dispatch('python_framework', args)
 
+    @common_options
+    def do_python_framework_ext(self, args):
+        """build framework python to embed external"""
+        self.ordered_dispatch('python_framework_ext', args)
+
+    @common_options
+    def do_python_framework_pkg(self, args):
+        """build framework python to embed in a package"""
+        self.ordered_dispatch('python_framework_pkg', args)
+
 
 # ----------------------------------------------------------------------------
 # py-js builder methods
@@ -145,24 +155,39 @@ class Application(Commander):
         pyjs_builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
 
     @common_options
-    def do_pyjs_shared_ext(self, args):
-        """build portable pyjs externals (shared)"""
-        self.ordered_dispatch('pyjs_shared_ext', args)
-
-    @common_options
-    def do_pyjs_static_ext(self, args):
+    def do_pyjs_static_pkg(self, args):
         """build portable pyjs externals (static)"""
-        self.ordered_dispatch('pyjs_static_ext', args)
+        self.ordered_dispatch('pyjs_static', args)
 
     @common_options
     def do_pyjs_static_ext_full(self, args):
         """build portable pyjs externals (fully-loaded static)"""
         self.ordered_dispatch('pyjs_static_ext_full', args)
 
+    # @common_options
+    # def do_pyjs_static_pkg(self, args):
+    #     """build portable pyjs externals (static)"""
+    #     self.ordered_dispatch('pyjs_static_pkg', args)
+
+    @common_options
+    def do_pyjs_shared_ext(self, args):
+        """build portable pyjs externals (shared)"""
+        self.ordered_dispatch('pyjs_shared_ext', args)
+
     @common_options
     def do_pyjs_shared_pkg(self, args):
         """build portable pyjs package (shared)"""
         self.ordered_dispatch('pyjs_static_ext_full', args)
+
+    @common_options
+    def do_pyjs_framework_ext(self, args):
+        """build portable pyjs externals (framework)"""
+        self.ordered_dispatch('pyjs_framework_ext', args)
+
+    @common_options
+    def do_pyjs_framework_pkg(self, args):
+        """build portable pyjs package (framework)"""
+        self.ordered_dispatch('pyjs_framework_pkg', args)
 
 
 # ----------------------------------------------------------------------------
@@ -185,8 +210,6 @@ class Application(Commander):
         """interactive testing shell"""
         from IPython import embed
         embed(colors="neutral")
-
-
 
 
 if __name__ == '__main__':

@@ -1,13 +1,17 @@
 from .core import (
     Product,
     Bzip2Builder, XzBuilder, OpensslBuilder,
-    StaticPythonBuilder, SharedPythonBuilder, 
-    StaticPythonFullBuilder, FrameworkPythonBuilder,
+    StaticPythonBuilder, StaticPythonFullBuilder, 
+    FrameworkPythonBuilder, 
+    FrameworkPythonForExtBuilder, FrameworkPythonForPkgBuilder,
+    SharedPythonBuilder,
     SharedPythonForExtBuilder, SharedPythonForPkgBuilder,
     #
     HomebrewBuilder, StaticExtBuilder, 
     SharedExtBuilder, SharedPkgBuilder,
-    StaticExtFullBuilder, 
+    StaticExtFullBuilder,
+    FrameworkExtBuilder,
+    FrameworkPkgBuilder,
     LocalSystemBuilder
 )
 
@@ -72,6 +76,8 @@ def python_builder_factory(name, **settings):
         python_shared_ext = SharedPythonForExtBuilder,
         python_shared_pkg = SharedPythonForPkgBuilder,
         python_framework = FrameworkPythonBuilder,
+        python_framework_ext = FrameworkPythonForExtBuilder,
+        python_framework_pkg = FrameworkPythonForPkgBuilder,
     )[name](
         product=Product(
             name="Python",
@@ -106,6 +112,8 @@ def pyjs_builder_factory(name,
         pyjs_static_ext_full = (StaticExtFullBuilder, ['python_static_full']),
         pyjs_shared_ext = (SharedExtBuilder, ['python_shared_ext']),
         pyjs_shared_pkg = (SharedPkgBuilder, ['python_shared_pkg']),
+        pyjs_framework_ext = (FrameworkExtBuilder, ['python_framework_ext']),
+        pyjs_framework_pkg = (FrameworkPkgBuilder, ['python_framework_pkg']),        
     )[name]
     if dependencies:
         return _builder(

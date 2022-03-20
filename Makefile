@@ -59,11 +59,18 @@ $(call section,"build $1 with flags: $2")
 endef
 
 
-# $call xclean,name)
+# $(call xclean,name)
 define xclean-build
 $(call section,"cleaning build artifacts from $1 target")
 @rm -rf $(PYDIR)/targets/$1/build 
 endef
+
+# $(call xcleanlib,name)
+define xclean-build
+$(call section,"cleaning build lib from $1 target")
+@rm -rf $(PYDIR)/targets/build/lib/$1 
+endef
+
 
 # ============================================================================
 # TARGETS
@@ -82,31 +89,55 @@ all: default
 
 default: local-sys
 
-local-sys: clean-local-sys build-local-sys
 
-homebrew-pkg: clean-homebrew-pkg build-homebrew-pkg
+local-sys: build-local-sys
 
-homebrew-ext: clean-homebrew-ext build-homebrew-ext
+homebrew-pkg: build-homebrew-pkg
 
-shared-pkg: clean-shared-pkg build-shared-pkg
+homebrew-ext: build-homebrew-ext
 
-shared-ext: clean-shared-ext build-shared-ext
+shared-pkg: build-shared-pkg
 
-static-ext: clean-static-ext build-static-ext
+shared-ext: build-shared-ext
 
-# static-pkg: clean-static-pkg build-static-pkg
+static-ext: build-static-ext
 
-framework-pkg: clean-framework-pkg build-framework-pkg
+# static-pkg: build-static-pkg
 
-framework-ext: clean-framework-ext build-framework-ext
+framework-pkg: build-framework-pkg
+
+framework-ext: build-framework-ext
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
 
+# -----------------------------------------------------------------------
+# python targets
+
+python-shared: build-python-shared
+
+python-shared-ext: build-python-shared-ext
+
+python-shared-pkg: build-python-shared-pkg
+
+python-static: build-python-static
+
+python-static-full: build-python-static-full
+
+python-framework: build-python-framework
+
+python-framework-ext: build-python-framework-ext
+
+python-framework-pkg: build-python-framework-pkg
+
+
+# -----------------------------------------------------------------------
+# utilities
 
 max-check:
 	@echo $(PACKAGE)
 	@ls $(PACKAGE)
+
 
 # DEPLOYING
 # -----------------------------------------------------------------------
@@ -119,7 +150,7 @@ dist:
 
 
 
-# Building
+# BUILDING
 # -----------------------------------------------------------------------
 .PHONY: build build-extension \
 		build-local-sys \
@@ -134,36 +165,64 @@ build: build-local-sys
 # build-bin-beeware-ext: build-extension
 # 	$(call xbuild-targets-flags,"bin-beeware-ext","PY_STATIC_EXT")
 
-build-local-sys: build-extension
+build-local-sys: clean-local-sys build-extension
 	$(call pybuild-targets, "pyjs" "local_sys")
 
-build-homebrew-pkg:
+build-homebrew-pkg: clean-homebrew-pkg
 	$(call pybuild-targets, "pyjs" "homebrew_pkg")
 
-build-homebrew-ext:
+build-homebrew-ext: clean-homebrew-ext
 	$(call pybuild-targets,"pyjs" "homebrew_ext")
 
-build-framework-pkg:
+build-framework-pkg: clean-framework-pkg
 	$(call pybuild-targets, "pyjs" "framework_pkg" "--install" "--build")
 
-build-framework-ext:
+build-framework-ext: clean-framework-ext
 	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
 
-build-shared-pkg:
+build-shared-pkg: clean-shared-pkg
 	$(call pybuild-targets, "pyjs" "shared_pkg" "--install" "--build")
 
-build-shared-ext:
+build-shared-ext: clean-shared-ext
 	$(call pybuild-targets, "pyjs" "shared_ext" "--install" "--build")
 
-build-static-ext:
+build-static-ext: clean-static-ext
 	$(call pybuild-targets, "pyjs" "static_ext" "--install" "--build")
 
-build-static-pkg:
+build-static-pkg: clean-static-pkg
 	$(call pybuild-targets, "pyjs" "static_pkg" "--install" "--build")
 
 build-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
+
+# -----------------------------------------------------------------------
+# python targets
+
+
+build-python-shared: clean-python-shared
+	$(call pybuild-targets, "python" "shared" "--install")
+
+build-python-shared-ext: clean-python-shared-ext
+	$(call pybuild-targets, "python" "shared-ext" "--install")
+
+build-python-shared-pkg: clean-python-shared-pkg
+	$(call pybuild-targets, "python" "shared-pkg" "--install")
+
+build-python-static: clean-python-static
+	$(call pybuild-targets, "python" "static" "--install")
+
+build-python-static-full: clean-python-static-full
+	$(call pybuild-targets, "python" "static-full" "--install")
+
+build-python-framework: clean-python-framework
+	$(call pybuild-targets, "python" "framework" "--install")
+
+build-python-framework-ext: clean-python-framework-ext
+	$(call pybuild-targets, "python" "framework-ext" "--install")
+
+build-python-framework-pkg: clean-python-framework-pkg
+	$(call pybuild-targets, "python" "framework-pkg" "--install")
 
 
 # re-compile only
@@ -226,6 +285,14 @@ clean-build: clean-local-sys  \
 			 clean-shared-pkg clean-shared-ext \
 			 clean-static-pkg clean-static-ext
 
+clean-build-lib: clean-python-shared \
+				 clean-python-shared-ext \
+				 clean-python-shared-pkg \
+				 clean-python-static \
+				 clean-python-static-full \
+				 clean-python-framework
+
+
 clean-targets-build:
 	$(call section,"cleaning targets/build directory")
 	@rm -rf ${PYDIR}/targets/build
@@ -239,6 +306,10 @@ clean-externals:
 clean-support:
 	$(call section,"cleaning support directory")
 	@rm -rf ${ROOTDIR}/support/*
+
+clean-xcode: clean-build
+	$(call section,"cleaning xcode detritus")
+	@find . | grep -E "(project.xcworkspace|xcuserdata)" | xargs rm -rf
 
 clean-local-sys: clean-externals
 	$(call xclean-build,"local-sys")
@@ -267,6 +338,33 @@ clean-static-pkg: clean-externals clean-support
 clean-static-ext: clean-externals
 	$(call xclean-build,"static-ext")
 
-clean-xcode: clean-build
-	$(call section,"cleaning xcode detritus")
-	@find . | grep -E "(project.xcworkspace|xcuserdata)" | xargs rm -rf
+# -----------------------------------------------------------------------
+# python clean targets
+
+
+
+clean-python-shared:
+	$(call xcleanlib, "python-shared")
+
+clean-python-shared-ext:
+	$(call xcleanlib, "python-shared")
+
+clean-python-shared-pkg: clean-externals clean-support
+	$(call xcleanlib, "python-shared")
+
+clean-python-static:
+	$(call xcleanlib, "python-static")
+
+clean-python-static-full:
+	$(call xcleanlib, "python-static")
+
+clean-python-framework:
+	$(call xcleanlib, "python-framework")
+
+clean-python-framework-ext:
+	$(call xcleanlib, "python-framework-ext")
+
+clean-python-framework-pkg: clean-externals clean-support
+	$(call xcleanlib, "python-framework-pkg")
+
+
