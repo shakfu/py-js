@@ -5,6 +5,22 @@
 
 ### Core Features
 
+- [x] UI -- commandline interface is more intuitive:
+
+```bash
+
+# before
+$ python3 -m builder pyjs_shared_ext -i -b
+
+# after
+$ python3 -m builder pyjs
+-> builds default
+
+$ python3 -m builder pyjs shared_ext -i -b
+-> builds pyjs_shared_ext
+
+```
+
 - [x] shift to python-based build system. Bash / Makefile is now deprecated.
 
 - [x] create a pkg distribution built from python src which retains pip for easily installing python packages
