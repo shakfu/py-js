@@ -12,7 +12,7 @@ from .core import (Product, PYTHON_VERSION_STRING,
 # PYTHON BUILDERS
 
 
-def python_builder_factory(name, version=PYTHON_VERSION_STRING, 
+def python_builder_factory(name, py_version=PYTHON_VERSION_STRING, 
                bz2_version="1.0.8", ssl_version="1.1.1g", xv_version="5.2.5", **settings):
     return dict(
         static_python_builder = StaticPythonBuilder,
@@ -24,10 +24,10 @@ def python_builder_factory(name, version=PYTHON_VERSION_STRING,
     )[name](
         product=Product(
             name="Python",
-            version=version,
+            version=py_version,
             build_dir="-".join(name.split('_')[-2:]),
             url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
-            libs_static=[f"libpython{'.'.join(version.split('.')[:-1])}.a"],
+            libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
         ),
         depends_on=[
             Bzip2Builder(
@@ -68,7 +68,7 @@ def python_builder_factory(name, version=PYTHON_VERSION_STRING,
 # -----------------------------------------------------------------------------
 # PYJS BUILDERS
 
-def pyjs_builder_factory(name, version=PYTHON_VERSION_STRING,
+def pyjs_builder_factory(name, py_version=PYTHON_VERSION_STRING,
                  bz2_version="1.0.8", ssl_version="1.1.1g", xv_version="5.2.5", **settings):
     _builder, dependencies = dict(
         homebrew_builder = (HomebrewBuilder, []),
@@ -78,9 +78,9 @@ def pyjs_builder_factory(name, version=PYTHON_VERSION_STRING,
         shared_pkg_builder = (SharedPkgBuilder, ['shared_python_pkg_builder']),
     )[name]
     return _builder(
-        product=Product(name='Python', version=version),
+        product=Product(name='Python', version=py_version),
         depends_on=[
-            python_builder(name, version, bz2_version, ssl_version, xv_version, **settings)
+            python_builder(name, py_version, bz2_version, ssl_version, xv_version, **settings)
             for name in dependencies
         ],
         **settings

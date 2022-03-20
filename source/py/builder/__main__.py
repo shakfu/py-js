@@ -68,6 +68,7 @@ class Application(Commander):
     epilog = ''
     version = '0.1'
     default_args = ['--help']
+    _argparse_levels = 1
 
     def ordered_dispatch(self, builder, args):
         """generic ordered argument dispatcher"""
@@ -81,6 +82,10 @@ class Application(Commander):
                     # print(builder.settings)
                 except AttributeError:
                     print(builder, 'has no method', key)
+
+
+    def do_python(self, args):
+        "download and build python from src"
 
     @common_options
     def do_python_static(self, args):
@@ -119,6 +124,10 @@ class Application(Commander):
     #                           config.shared_python_builder, 
     #                           config.static_python_builder]:
     #         self.ordered_dispatch(builder_class, args)
+
+
+    def do_pyjs(self, args):
+        """build pyjs externals"""
 
     def do_pyjs_homebrew_sys(self, args):
         """build non-portable pyjs externals (homebrew)"""
