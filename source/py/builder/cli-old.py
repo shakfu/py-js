@@ -67,8 +67,6 @@ class Commander(metaclass=MetaCommander):
     version = '0.1'
     default_args = ['--help']
     _argparse_subcmds: dict    # just to silence static checkers
-    _argparse_levels: int = 0  # how many subcommand levels to create
-    _argparse_structure: dict = {}
 
 
     def cmdline(self):
@@ -98,50 +96,16 @@ class Commander(metaclass=MetaCommander):
             metavar='',
         )
 
-        levels = self._argparse_levels
-        structure = self._argparse_structure
         for name in sorted(self._argparse_subcmds.keys()): # pylint: disable=E1101
             subcmd = self._argparse_subcmds[name]          # pylint: disable=E1101
-            if not levels:
-                subparser = subparsers.add_parser(subcmd['name'],
-                                                  help=subcmd['func'].__doc__)
-                for args, kwds in subcmd['options']:
-                    subparser.add_argument(*args, **kwds)
-                subparser.set_defaults(func=subcmd['func'])
-            else:
-                if levels == 1:
-                    if len(name.split('_')) == 1:
-                        # print(name)
-                        subparser = subparsers.add_parser(subcmd['name'],
-                              help=subcmd['func'].__doc__)
-
-                        if name not in structure:
-                            structure[name] = subparser.add_subparsers(
-                                title=f"{name} subcommands",
-                                description=subcmd['func'].__doc__,
-                                help='additional help',
-                                metavar='',
-                            )
-                        for args, kwds in subcmd['options']:
-                            subparser.add_argument(*args, **kwds)
-                        subparser.set_defaults(func=subcmd['func'])
-                    else:
-                        head, *tail = name.split('_')
-                        if head in structure:
-                            alt_subparsers = structure[head]
-                            newname = "_".join(tail)
-                            subparser = alt_subparsers.add_parser(newname,
-                                  help=subcmd['func'].__doc__)                            
-                            # subparser = subparsers.add_parser(subcmd['name'],
-                            #       help=subcmd['func'].__doc__)
-                            # print('\t', newname)
-                            for args, kwds in subcmd['options']:
-                                subparser.add_argument(*args, **kwds)
-                            subparser.set_defaults(func=subcmd['func'])
+            subparser = subparsers.add_parser(subcmd['name'],
+                                              help=subcmd['func'].__doc__)
+            for args, kwds in subcmd['options']:
+                subparser.add_argument(*args, **kwds)
+            subparser.set_defaults(func=subcmd['func'])
 
         if len(sys.argv) <= 1:
             options = parser.parse_args(self.default_args)
         else:
             options = parser.parse_args()
         options.func(self, options)
-
