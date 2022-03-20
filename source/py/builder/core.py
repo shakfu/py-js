@@ -89,11 +89,11 @@ from types import SimpleNamespace
 from typing import List
 
 from .depend import DependencyManager
+from . import constants
 
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
-PYTHON_VERSION_STRING = platform.python_version()
 URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
@@ -532,7 +532,7 @@ class Recipe:
     def __init__(self, name: str, py_version: str = None, builders: List[Builder] = None,  # type: ignore
                  **settings):
         self.name = name
-        self.py_version = py_version or PYTHON_VERSION_STRING
+        self.py_version = py_version or constants.DEFAULT_PYTHON_VERSION
         self.builders = builders or []
         self.settings = Settings(**settings)
 

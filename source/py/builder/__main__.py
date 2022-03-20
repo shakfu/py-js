@@ -29,7 +29,6 @@ subcommands:
     python_static_full  build static python (fully-loaded)
     test                interactive testing shell
 """
-from . import config
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
 from .factory import python_builder_factory, pyjs_builder_factory
