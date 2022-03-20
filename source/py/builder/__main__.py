@@ -73,16 +73,22 @@ class Application(Commander):
         order = ['download', 'install', 'build', 'clean', 'ziplib']
         kwdargs = vars(args)
         if name.startswith('python'):
+            # print('selecting python-factory')
             factory = python_builder_factory
         else:
+            # print('selecting pyjs-factory')
             factory = pyjs_builder_factory
+            # print(kwdargs)
         builder = factory(name, **kwdargs)
         for method in order:
-            if kwdargs[method]:
+            if method in kwdargs and kwdargs[method]:
                 try:
                     getattr(builder, method)()
                 except AttributeError:
                     print(builder, 'has no method', method)
+
+# ----------------------------------------------------------------------------
+# python builder methods
 
     def do_python(self, args):
         "download and build python from src"
@@ -117,20 +123,26 @@ class Application(Commander):
         """build framework python"""
         self.ordered_dispatch('python_framework', args)
 
+
+# ----------------------------------------------------------------------------
+# py-js builder methods
+
+
     def do_pyjs(self, args):
         """build pyjs externals"""
+        pyjs_builder_factory('pyjs_local_sys').build()
 
-    def do_pyjs_homebrew_sys(self, args):
-        """build non-portable pyjs externals (homebrew)"""
-        config.homebrew_builder.install_homebrew_sys()
+    def do_pyjs_local_sys(self, args):
+        """build non-portable pyjs externals"""
+        pyjs_builder_factory('pyjs_local_sys').build()
 
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
-        config.homebrew_builder.install_homebrew_pkg()
+        pyjs_builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()
 
     def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
-        config.homebrew_builder.install_homebrew_ext()
+        pyjs_builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
 
     @common_options
     def do_pyjs_shared_ext(self, args):
@@ -152,6 +164,9 @@ class Application(Commander):
         """build portable pyjs package (shared)"""
         self.ordered_dispatch('pyjs_static_ext_full', args)
 
+
+# ----------------------------------------------------------------------------
+# utility methods
 
     @option("--exec-ref", "-e", type=str, help="back ref for executable or plugin")
     @option("--staticlibs-dir", "-l", type=str, help="static lib directory fir static substitutes")

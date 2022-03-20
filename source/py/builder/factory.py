@@ -2,11 +2,13 @@ from .core import (
     Product,
     Bzip2Builder, XzBuilder, OpensslBuilder,
     StaticPythonBuilder, SharedPythonBuilder, 
-    FrameworkPythonBuilder,
+    StaticPythonFullBuilder, FrameworkPythonBuilder,
+    SharedPythonForExtBuilder, SharedPythonForPkgBuilder,
+    #
     HomebrewBuilder, StaticExtBuilder, 
-    SharedPythonForExtBuilder, SharedExtBuilder,
-    SharedPythonForPkgBuilder, SharedPkgBuilder,
-    StaticExtFullBuilder, StaticPythonFullBuilder,
+    SharedExtBuilder, SharedPkgBuilder,
+    StaticExtFullBuilder, 
+    LocalSystemBuilder
 )
 
 from .constants import (
@@ -33,7 +35,6 @@ def get_bzip2_product(bz2_version=DEFAULT_BZ2_VERSION, **settings):
         version=bz2_version,
         url_template="https://sourceware.org/pub/bzip2/{name}-{version}.tar.gz",
         libs_static=["libbz2.a"],
-        **settings
     )   
 
 def get_ssl_product(ssl_version=DEFAULT_SSL_VERSION, **settings):
@@ -42,7 +43,6 @@ def get_ssl_product(ssl_version=DEFAULT_SSL_VERSION, **settings):
         version=ssl_version,
         url_template="https://www.openssl.org/source/{name}-{version}.tar.gz",
         libs_static=["libssl.a", "libcrypto.a"],
-        **settings
     )
 
 def get_xz_product(xz_version=DEFAULT_XZ_VERSION, **settings):
@@ -51,7 +51,6 @@ def get_xz_product(xz_version=DEFAULT_XZ_VERSION, **settings):
         version="5.2.5",
         url_template="http://tukaani.org/xz/{name}-{version}.tar.gz",
         libs_static=["libxz.a"],
-        **settings
     )
 
 
@@ -94,30 +93,42 @@ def python_builder_factory(name, **settings):
 # -----------------------------------------------------------------------------
 # PYJS BUILDERS
 
-def pyjs_builder_factory(name, py_version=DEFAULT_PYTHON_VERSION,
-                 bz2_version=DEFAULT_BZ2_VERSION, ssl_version=DEFAULT_SSL_VERSION, 
-                 xv_version=DEFAULT_XZ_VERSION, **settings):
+def pyjs_builder_factory(name, 
+                         py_version=DEFAULT_PYTHON_VERSION,
+                         bz2_version=DEFAULT_BZ2_VERSION,
+                         ssl_version=DEFAULT_SSL_VERSION,
+                         xv_version=DEFAULT_XZ_VERSION, **settings):
     _builder, dependencies = dict(
-        homebrew_builder = (HomebrewBuilder, []),
-        static_ext_builder = (StaticExtBuilder, ['static_python_builder']),
-        static_ext_full_builder = (StaticExtFullBuilder, ['static_python_builder_full']),
-        shared_ext_builder = (SharedExtBuilder, ['shared_python_ext_builder']),
-        shared_pkg_builder = (SharedPkgBuilder, ['shared_python_pkg_builder']),
+        pyjs_local_sys = (LocalSystemBuilder, []),
+        pyjs_homebrew_pkg = (HomebrewBuilder, []),
+        pyjs_homebrew_ext = (HomebrewBuilder, []),
+        pyjs_static_ext = (StaticExtBuilder, ['static_python_builder']),
+        pyjs_static_ext_full = (StaticExtFullBuilder, ['static_python_builder_full']),
+        pyjs_shared_ext = (SharedExtBuilder, ['shared_python_ext_builder']),
+        pyjs_shared_pkg = (SharedPkgBuilder, ['shared_python_pkg_builder']),
     )[name]
-    return _builder(
-        product=Product(name='Python', version=py_version),
-        depends_on=[
-            python_builder(name, py_version, bz2_version, ssl_version, xv_version, **settings)
-            for name in dependencies
-        ],
-        **settings
-    )
+    if dependencies:
+        return _builder(
+            product=Product(name='Python', version=py_version),
+            depends_on=[
+                python_builder(name, py_version, bz2_version, ssl_version, xv_version, **settings)
+                for name in dependencies
+            ],
+            **settings
+        )
+    else:
+        # no dep builder is a local builder therefore default_py_ver
+        return _builder(
+            product=Product(name='Python', version=DEFAULT_PYTHON_VERSION),
+            **settings
+        )
 
 
 # -----------------------------------------------------------------------------
 # RECIPES
 
-def get_static_python_recipe(name, py_version=DEFAULT_PYTHON_VERSION, 
+def get_static_python_recipe(name,
+                             py_version=DEFAULT_PYTHON_VERSION, 
                              bz2_version=DEFAULT_BZ2_VERSION, 
                              ssl_version=DEFAULT_SSL_VERSION, 
                              xz_version=DEFAULT_XZ_VERSION, **settings):

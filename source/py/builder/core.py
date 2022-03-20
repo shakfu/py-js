@@ -124,6 +124,7 @@ class Python:
     bindir = get_path('BINDIR')
     include = get_path('INCLUDEPY')
     libdir = get_path('LIBDIR')
+    libs = get_path('LIBS')
     pkgs = get_path('BINLIBDEST')
 
     mac_dep_target = get_var('MACOSX_DEPLOYMENT_TARGET')
@@ -384,7 +385,9 @@ class Builder:
         self.cmd = ShellCmd(self.log)
 
     def __str__(self):
-        return f"<{self.__class__.__name__}: '{self.project.name}/{self.product.name}'>"
+        return f"<'{self.__class__.__name__}' product='{self.product.name}'>"
+
+    __repr__ = __str__
 
     @property
     def prefix(self) -> Path:
@@ -1233,7 +1236,7 @@ class HomebrewBuilder(PyJsBuilder):
         """copy processed python libs to bundle resources directory"""
         self.cmd(f"mkdir -p '{arg}/Contents/Resources/{self.product.name_ver}'")
         self.cmd(
-            f"cp -rf '{self.prefix}/*' '{arg}/Contents/Resources/{self.product.name_ver}'"
+            f"cp -rf {self.prefix}/* '{arg}/Contents/Resources/{self.product.name_ver}'"
         )
 
     def copy_python(self):
@@ -1243,7 +1246,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.cmd.copy(
             self.project.python.prefix / "Python", self.prefix / self.product.dylib
         )
-        self.cmd(f"cp -rf '{self.project.python.pkgs}/*.py' '{self.python_lib}'")
+        self.cmd(f"cp -rf {self.project.python.pkgs}/*.py '{self.python_lib}'")
         self.cp_pkgs(
             [
                 "asyncio",
@@ -1318,6 +1321,19 @@ class HomebrewBuilder(PyJsBuilder):
         self.install()
 
 
+class LocalSystemBuilder(PyJsBuilder):
+    """Builds externals from local python (non-portable)"""
+
+    def build(self):
+        """builds externals from local system python"""
+        flags = dict(
+            PREFIX = str(self.project.python.prefix),
+            VERSION = str(self.project.python.version_short),
+            SUFFIX = str(self.project.python.abiflags),
+            LIBS = str(self.project.python.libs),
+        )
+        self.xcodebuild("local-sys", targets=["py", "pyjs"], **flags)
+
 class StaticExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
 
@@ -1332,7 +1348,6 @@ class StaticExtBuilder(PyJsBuilder):
         """builds externals from statically built python"""
         if self.product_exists:
             self.xcodebuild("static-ext", targets=["py", "pyjs"])
-
 
 class StaticExtFullBuilder(StaticExtBuilder):
     """pyjs externals from fully-loaded statically built python"""

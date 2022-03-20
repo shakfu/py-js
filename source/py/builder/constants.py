@@ -7,7 +7,7 @@ DEFAULT_SSL_VERSION = "1.1.1g"
 DEFAULT_XZ_VERSION = "5.2.5"
 
 
-PACKAGES = [
+PACKAGES_TO_DEL = [
     # project.python.config_ver_platform,
     "config-{ver}-{platform}",
     "idlelib",
@@ -21,7 +21,33 @@ PACKAGES = [
     "venv",
 ]
 
-EXTENSIONS = [
+PACKAGES_TO_KEEP = [
+    "asyncio",
+    "collections",
+    "concurrent",
+    # 'ctypes',
+    # 'curses',
+    "dbm",
+    "distutils",
+    "email",
+    "encodings",
+    "html",
+    "http",
+    "importlib",
+    "json",
+    "lib-dynload",
+    "logging",
+    "multiprocessing",
+    "pydoc_data",
+    "sqlite3",
+    "unittest",
+    "urllib",
+    "wsgiref",
+    "xml",
+    "xmlrpc",
+]
+
+EXTENSIONS_TO_DEL = [
     "_tkinter",
     "_ctypes",
     "_multibytecodec",
@@ -35,7 +61,7 @@ EXTENSIONS = [
     "_curses_panel",
 ]
 
-BINS = [
+BINS_TO_DEL = [
     "2to3-{ver}",
     "idle{ver}",
     "easy_install-{ver}",
