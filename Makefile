@@ -5,6 +5,8 @@
 COLOR_BOLD_CYAN="\033[1;36m"
 COLOR_RESET="\033[m"
 
+# exec
+PYTHON=/usr/local/bin/python3
 
 # paths
 ROOTDIR:=$(shell pwd)
@@ -36,6 +38,12 @@ PKG_DIRS=docs examples externals help init \
 
 # $(call section,string)
 section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
+
+# $(call pybuild,name)
+define pybuild-targets
+$(call section,"builder $1 $2")
+@cd $(PYDIR) && $(PYTHON) -m builder $1 $2 $3 $4
+endef
 
 # $(call xbuild,name)
 define xbuild-targets
@@ -79,26 +87,26 @@ default: local-sys
 
 local-sys: clean-local-sys build-local-sys
 
-max:
-	@echo $(PACKAGE)
-	@ls $(PACKAGE)
-
-
 homebrew-pkg: clean-homebrew-pkg build-homebrew-pkg
 
 homebrew-ext: clean-homebrew-ext build-homebrew-ext
-
-framework-pkg: clean-framework-pkg build-framework-pkg
-
-framework-ext: clean-framework-ext build-framework-ext
 
 shared-pkg: clean-shared-pkg build-shared-pkg
 
 shared-ext: clean-shared-ext build-shared-ext
 
-static-pkg: clean-static-pkg build-static-pkg
-
 static-ext: clean-static-ext build-static-ext
+
+# static-pkg: clean-static-pkg build-static-pkg
+
+framework-pkg: clean-framework-pkg build-framework-pkg
+
+framework-ext: clean-framework-ext build-framework-ext
+
+
+max-check:
+	@echo $(PACKAGE)
+	@ls $(PACKAGE)
 
 # DEPLOYING
 # -----------------------------------------------------------------------
@@ -128,120 +136,45 @@ build: build-local-sys
 # 	$(call xbuild-targets-flags,"bin-beeware-ext","PY_STATIC_EXT")
 
 build-local-sys: build-extension
-	@echo $(ROOTDIR)
-	@python3 source/py/targets/local-sys/build.py
+	$(call pybuild-targets, "pyjs" "local_sys")
 
-build-homebrew-pkg: prep-homebrew-pkg
-	$(call xbuild-targets,"homebrew-pkg")
+build-homebrew-pkg:
+	$(call pybuild-targets, "pyjs" "homebrew_pkg")
 
-build-homebrew-ext: prep-homebrew-ext
-	$(call xbuild-targets,"homebrew-ext")
+build-homebrew-ext:
+	$(call pybuild-targets,"pyjs" "homebrew_ext")
 
-build-framework-pkg: prep-framework-pkg
-	$(call xbuild-targets,"framework-pkg")
+build-framework-pkg:
+	$(call pybuild-targets, "pyjs" "framework_pkg" "--install" "--build")
 
-build-framework-ext: prep-framework-ext
-	$(call xbuild-targets,"framework-ext")
+build-framework-ext:
+	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
 
-build-shared-pkg: prep-shared-pkg
-	$(call xbuild-targets,"shared-pkg")
+build-shared-pkg:
+	$(call pybuild-targets, "pyjs" "shared_pkg" "--install" "--build")
 
-build-shared-ext: prep-shared-ext
-	$(call xbuild-targets,"shared-ext")
+build-shared-ext:
+	$(call pybuild-targets, "pyjs" "shared_ext" "--install" "--build")
 
-build-static-pkg: prep-static-pkg
-	$(call xbuild-targets,"static-pkg")
+build-static-ext:
+	$(call pybuild-targets, "pyjs" "static_ext" "--install" "--build")
 
-build-static-ext: prep-static-ext
-	$(call xbuild-targets,"static-ext")
+build-static-pkg:
+	$(call pybuild-targets, "pyjs" "static_pkg" "--install" "--build")
 
 build-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
 
-# re-compile only (without prep)
+
+# re-compile only
 # -----------------------------------------------------------------------
-.PHONY: compile compile-extension \
-		compile-local-sys \
-		compile-homebrew-pkg compile-homebrew-ext \
-		compile-framework-pkg compile-framework-ext \
-		compile-shared-pkg compile-shared-ext \
-		compile-static-pkg compile-static-ext
-
-compile: compile-local-sys
-	$(call section,"compile project")
-
-compile-local-sys: compile-extension
-	$(call xbuild-targets,"local-sys")
-
-compile-homebrew-pkg:
-	$(call xbuild-targets,"homebrew-pkg")
-
-compile-homebrew-ext:
-	$(call xbuild-targets,"homebrew-ext")
-
-compile-framework-pkg:
-	$(call xbuild-targets,"framework-pkg")
-
-compile-framework-ext:
-	$(call xbuild-targets,"framework-ext")
-
-compile-shared-pkg:
-	$(call xbuild-targets,"shared-pkg")
-
-compile-shared-ext:
-	$(call xbuild-targets,"shared-ext")
-
-compile-static-pkg:
-	$(call xbuild-targets,"static-pkg")
-
-compile-static-ext:
-	$(call xbuild-targets,"static-ext")
+.PHONY: compile-extension \
 
 compile-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
 
-
-# Pre-build prep
-# -----------------------------------------------------------------------
-.PHONY: prep-homebrew-pkg prep-homebrew-ext \
-		prep-framework-pkg prep-framework-ext \
-		prep-shared-pkg prep-shared-ext \
-		prep-static-pkg prep-static-ext
-		
-
-prep-homebrew-pkg:
-	$(call section,"build homebrew python from binary for package")
-	@bash scripts/bin-homebrew.sh pkg
-	
-prep-homebrew-ext:
-	$(call section,"build homebrew python from binary for external")
-	@bash scripts/bin-homebrew.sh ext
-
-prep-framework-pkg:
-	$(call section,"build framework python from source for package")
-	@bash scripts/src-framework.sh pkg
-	
-prep-framework-ext:
-	$(call section,"build framework python from source for external")
-	@bash scripts/src-framework.sh ext
-
-prep-shared-pkg:
-	$(call section,"prepare shared python from source for package")
-	@bash scripts/src-shared.sh pkg
-
-prep-shared-ext:
-	$(call section,"prepare shared python from source for external")
-	@bash scripts/src-shared.sh ext
-
-prep-static-pkg:
-	$(call section,"build static python from source for package")
-	@bash scripts/src-static.sh pkg
-
-prep-static-ext:
-	$(call section,"build static python from source for external")
-	@bash scripts/src-static.sh ext
 
 # Testing
 # -----------------------------------------------------------------------

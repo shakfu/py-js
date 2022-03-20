@@ -63,7 +63,7 @@ def python_builder_factory(name, **settings):
     py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
-    xv_version = get(settings, 'xv_version', DEFAULT_XZ_VERSION)
+    xz_version = get(settings, 'xv_version', DEFAULT_XZ_VERSION)
 
     return dict(
         python_static = StaticPythonBuilder,
@@ -102,16 +102,18 @@ def pyjs_builder_factory(name,
         pyjs_local_sys = (LocalSystemBuilder, []),
         pyjs_homebrew_pkg = (HomebrewBuilder, []),
         pyjs_homebrew_ext = (HomebrewBuilder, []),
-        pyjs_static_ext = (StaticExtBuilder, ['static_python_builder']),
-        pyjs_static_ext_full = (StaticExtFullBuilder, ['static_python_builder_full']),
-        pyjs_shared_ext = (SharedExtBuilder, ['shared_python_ext_builder']),
-        pyjs_shared_pkg = (SharedPkgBuilder, ['shared_python_pkg_builder']),
+        pyjs_static_ext = (StaticExtBuilder, ['python_static']),
+        pyjs_static_ext_full = (StaticExtFullBuilder, ['python_static_full']),
+        pyjs_shared_ext = (SharedExtBuilder, ['python_shared_ext']),
+        pyjs_shared_pkg = (SharedPkgBuilder, ['python_shared_pkg']),
     )[name]
     if dependencies:
         return _builder(
             product=Product(name='Python', version=py_version),
             depends_on=[
-                python_builder(name, py_version, bz2_version, ssl_version, xv_version, **settings)
+                python_builder_factory(name, 
+                    py_version=py_version, bz2_version=bz2_version, 
+                    ssl_version=ssl_version, xv_version=xv_version, **settings)
                 for name in dependencies
             ],
             **settings
@@ -130,7 +132,7 @@ def pyjs_builder_factory(name,
 def get_static_python_recipe(name,
                              py_version=DEFAULT_PYTHON_VERSION, 
                              bz2_version=DEFAULT_BZ2_VERSION, 
-                             ssl_version=DEFAULT_SSL_VERSION, 
+                             ssl_version=DEFAULT_SSL_VERSION,
                              xz_version=DEFAULT_XZ_VERSION, **settings):
     return Recipe(
         name=name,
