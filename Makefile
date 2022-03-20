@@ -26,9 +26,6 @@ PKG_DIRS=docs examples externals help init \
          javascript jsextensions media patchers
 
 
-
-
-
 # ifdef MYFLAG
 # CFLAGS += -DMYFLAG
 # endif
@@ -103,6 +100,9 @@ framework-pkg: clean-framework-pkg build-framework-pkg
 
 framework-ext: clean-framework-ext build-framework-ext
 
+pymx:
+	@bash source/projects/pymx/build_pymx.sh
+
 
 max-check:
 	@echo $(PACKAGE)
@@ -116,7 +116,6 @@ max-check:
 dist:
 	$(call section,"preparing for distribution")
 	@echo "do it here with git"
-
 
 
 
@@ -192,9 +191,9 @@ style: clang-format
 
 clang-format:
 	$(call section,"clang-format")
-	@clang-format -i -style=file py.c
-	@clang-format -i -style=file py.h
-	@clang-format -i -style=file pyjs.c
+	@clang-format -i -style=file $(PYDIR)/py.c
+	@clang-format -i -style=file $(PYDIR)/py.h
+	@clang-format -i -style=file $(PYDIR)/pyjs.c
 
 lizard:
 	$(call section,"lizard complexity analysis")
@@ -210,7 +209,7 @@ duplo:
 
 # Cleaning
 # -----------------------------------------------------------------------
-.PHONY: reset clean clean-build clean-pkg clean-support clean-externals \
+.PHONY: reset clean clean-build clean-support clean-externals \
 		clean-targets-build clean-local-sys \
 		clean-homebrew-pkg clean-homebrew-ext \
 		clean-framework-pkg clean-framework-ext \
@@ -219,7 +218,7 @@ duplo:
 
 reset: clean clean-targets-build
 
-clean: clean-externals clean-build clean-support clean-pkg
+clean: clean-externals clean-build clean-support
 
 clean-build: clean-local-sys  \
 			 clean-homebrew-pkg clean-homebrew-ext  \
@@ -237,40 +236,36 @@ clean-externals:
 		rm -rf ${ROOTDIR}/externals/$$target.mxo  ; \
 	done
 
-clean-local-sys: clean-externals
-	$(call xclean-build,"local-sys")
-
-clean-homebrew-pkg:
-	$(call xclean-build,"homebrew-pkg")
-
-clean-homebrew-ext:
-	$(call xclean-build,"homebrew-ext")
-
-clean-framework-pkg:
-	$(call xclean-build,"framework-pkg")
-
-clean-framework-ext:
-	$(call xclean-build,"framework-ext")
-
-clean-shared-pkg:
-	$(call xclean-build,"shared-pkg")
-
-clean-shared-ext:
-	$(call xclean-build,"shared-ext")
-
-clean-static-pkg:
-	$(call xclean-build,"static-pkg")
-
-clean-static-ext:
-	$(call xclean-build,"static-ext")
-
 clean-support:
 	$(call section,"cleaning support directory")
 	@rm -rf ${ROOTDIR}/support/*
 
-clean-pkg:
-	$(call section,"cleaning py pkg")
-	@rm -rf ${PACKAGE}
+clean-local-sys: clean-externals
+	$(call xclean-build,"local-sys")
+
+clean-homebrew-pkg: clean-externals clean-support
+	$(call xclean-build,"homebrew-pkg")
+
+clean-homebrew-ext: clean-externals
+	$(call xclean-build,"homebrew-ext")
+
+clean-framework-pkg: clean-externals clean-support
+	$(call xclean-build,"framework-pkg")
+
+clean-framework-ext: clean-externals
+	$(call xclean-build,"framework-ext")
+
+clean-shared-pkg: clean-externals clean-support
+	$(call xclean-build,"shared-pkg")
+
+clean-shared-ext: clean-externals
+	$(call xclean-build,"shared-ext")
+
+clean-static-pkg: clean-externals clean-support
+	$(call xclean-build,"static-pkg")
+
+clean-static-ext: clean-externals
+	$(call xclean-build,"static-ext")
 
 clean-xcode: clean-build
 	$(call section,"cleaning xcode detritus")
