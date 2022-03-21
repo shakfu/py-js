@@ -138,28 +138,27 @@ class Python:
 
     config_ver_platform = f"config-{version_short}{abiflags}-darwin"
 
-    def dump(self):
-        print("\nPython vars")
-        _vars = [
-            'version',
-            'version_short',
-            'version_nodot',
-            'name',
-            'abiflags',
-            'arch',
-            'prefix',
-            'bindir',
-            'include',
-            'libdir',
-            'libs',
-            'mac_dep_target',
-            'staticlib',
-            'ldlibrary',
-            'dylib',
-            'config_ver_platform',
-        ]
-        for v in _vars:
-            print(f"\t{v}: {getattr(self, v)}")
+    def to_dict(self) -> dict:
+        return {
+            k : str(getattr(self, k)) for k in [
+                'version',
+                'version_short',
+                'version_nodot',
+                'name',
+                'abiflags',
+                'arch',
+                'prefix',
+                'bindir',
+                'include',
+                'libdir',
+                'libs',
+                'mac_dep_target',
+                'staticlib',
+                'ldlibrary',
+                'dylib',
+                'config_ver_platform',
+            ]
+        }
 
 
 class Project:
@@ -214,33 +213,33 @@ class Project:
     # settings
     mac_dep_target = "10.13"
 
-    def dump(self):
-        print("\nProject vars")
-        _vars = [
-            'name',
-            'python',
-            'arch',
-            'root',
-            'scripts',
-            'patch',
-            'targets',
-            'build',
-            'downloads',
-            'src',
-            'lib',
-            'pyjs',
-            'support',
-            'externals',
-            'py_external',
-            'pyjs_external',
-            'HOME',
-            'package_name',
-            'package',
-            'package_dirs',
-            'mac_dep_target',
-        ]
-        for v in _vars:
-            print(f"\t{v}: {getattr(self, v)}")
+    def to_dict(self) -> dict:
+        d = {
+            k : str(getattr(self, k)) for k in [
+                'name',
+                'arch',
+                'root',
+                'scripts',
+                'patch',
+                'targets',
+                'build',
+                'downloads',
+                'src',
+                'lib',
+                'pyjs',
+                'support',
+                'externals',
+                'py_external',
+                'pyjs_external',
+                'HOME',
+                'package_name',
+                'package',
+                'package_dirs',
+                'mac_dep_target',
+            ]
+        }
+        d['python'] = self.python.to_dict()
+        return d
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -315,6 +314,9 @@ class Settings(SimpleNamespace):
 
     >>> settings = Settings(**dict)
     """
+
+    def __str__(self):
+        return str(self.__dict__)
 
     def copy(self) -> "Settings":
         """provide a copy of the internal dictionary"""
@@ -396,25 +398,24 @@ class Product:
             return Path(self.url_template.format(name=self.name, version=self.version))
         # raise KeyError("url_template not providing in settings")
 
-    def dump(self):
-        print("\nProduct vars")
-        _vars = [
-            'name',
-            'version',
-            'build_dir',
-            'libs_static',
-            'url_template',
-            'settings',
-            'ver',
-            'ver_nodot',
-            'name_version',
-            'name_ver',
-            'name_archive',
-            'dylib',
-            'url',
-        ]
-        for v in _vars:
-            print(f"\t{v}: {getattr(self, v)}")
+    def to_dict(self) -> dict:
+        return {
+            k : str(getattr(self, k)) for k in [
+                'name',
+                'version',
+                'build_dir',
+                'libs_static',
+                'url_template',
+                'settings',
+                'ver',
+                'ver_nodot',
+                'name_version',
+                'name_ver',
+                'name_archive',
+                'dylib',
+                'url',
+            ]
+        }
 
 class Builder:
     """A Builder know how to build a single product type in a project."""
@@ -434,7 +435,8 @@ class Builder:
         self.cmd = ShellCmd(self.log)
 
     def __str__(self):
-        return f"<'{self.__class__.__name__}' project='{self.project.name}' product='{self.product.name}'>"
+        # return f"<'{self.__class__.__name__}' project='{self.project.name}' product='{self.product.name}'>"
+        return f'<{self.__class__.__name__}>'
 
     __repr__ = __str__
 
@@ -461,7 +463,8 @@ class Builder:
     @property
     def download_path(self) -> Path:
         """Returns path to downloaded product-version archive."""
-        return self.project.downloads / self.product.name_archive
+        if self.product.name_archive:
+            return self.project.downloads / self.product.name_archive
 
     @property
     def src_path(self) -> Path:
@@ -489,12 +492,40 @@ class Builder:
             return all((self.prefix_lib / lib).exists() for lib in libs)
         return False
 
-    def dump(self):
-        """dump configured vars"""
-        self.project.dump()
-        self.project.python.dump()
-        self.product.dump()
-        
+    def to_dict(self) -> dict:
+        """dump configured vars to dict"""
+
+        d = {
+            k : str(getattr(self, k)) for k in [
+                'prefix',
+                'prefix_lib',
+                'prefix_include',
+                'prefix_bin',
+                'download_path',
+                'src_path',
+                'url',
+                'product_exists',
+                'has_static_libs',
+            ]
+        }
+
+        d['project'] = self.project.to_dict()
+        d['product'] = self.product.to_dict()
+        d['depends_on'] = [str(i) for i in self.depends_on]
+        # d['depends_on'] = [dep.to_dict() for dep in self.depends_on]
+
+        return d
+
+    def to_yaml(self):
+        import yaml
+        with open('dump.yml', 'w') as f:
+            f.write(yaml.safe_dump(self.to_dict(), indent=4, default_flow_style=False))
+
+    def to_json(self):
+        import json
+        with open('dump.json', 'w') as f:
+            json.dump(self.to_dict(), f, 
+                sort_keys=True, indent=4)
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""

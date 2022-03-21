@@ -20,8 +20,30 @@ PythonBuilder [1,2]
 
 """
 
+from pathlib import Path
+
 class Fixer:
     """class to fix @rpath references"""
+
+    def __init__(self, src, dst, type: str = '@loader_path'):
+        self.src = Path(src)
+        self.dst = Path(dst)
+        self.cmd = ShellCmd(self.log)
+
+    def src_is_dylib(self) -> bool:
+        return self.src.suffix == '.dylib'
+
+    def install_name_tool_id(self, new_id, target):
+        """change dynamic shared library install names"""
+        self.cmd(f"install_name_tool -id '{new_id}' '{target}'")
+
+    def install_name_tool_change(self, src, dst, target):
+        """change dependency reference"""
+        self.cmd(f"install_name_tool -change '{src}' '{dst}' '{target}'")
+
+    def install_name_tool_add_rpath(self, rpath, target):
+        """add @rpath dependency reference"""
+        self.cmd(f"install_name_tool -add_rpath '{rpath}' '{target}'")
 
     def fix_shared_dylib_for_pkg(self):
         """install to dylib @rpath ref of external 'loader' to dylib in a pkg

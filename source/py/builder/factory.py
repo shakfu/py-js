@@ -74,7 +74,7 @@ def python_builder_factory(name, **settings):
     py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
-    xz_version = get(settings, 'xv_version', DEFAULT_XZ_VERSION)
+    xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
 
     return PYTHON_BUILDERS[name](
         product=core.Product(
@@ -100,7 +100,7 @@ def pyjs_builder_factory(name, **settings):
     py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
-    xz_version = get(settings, 'xv_version', DEFAULT_XZ_VERSION)
+    xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
 
     _builder, dependencies = PYJS_BUILDERS[name]
     if dependencies:
@@ -109,7 +109,7 @@ def pyjs_builder_factory(name, **settings):
             depends_on=[
                 python_builder_factory(name, 
                     py_version=py_version, bz2_version=bz2_version, 
-                    ssl_version=ssl_version, xv_version=xv_version, **settings)
+                    ssl_version=ssl_version, xz_version=xz_version, **settings)
                 for name in dependencies
             ],
             **settings
