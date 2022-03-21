@@ -85,7 +85,10 @@ all: default
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
-		static-pkg static-ext
+		static-pkg static-ext \
+		python-shared python-shared-pkg python-shared-ext \
+		python-static python-static-full \
+		python-framework python-framework-ext python-framework-pkg
 
 
 # -----------------------------------------------------------------------
@@ -93,23 +96,32 @@ all: default
 
 default: local-sys
 
-local-sys: build-local-sys
+local-sys: clean-local-sys
+	$(call pybuild-targets, "pyjs" "local_sys")
 
-homebrew-pkg: build-homebrew-pkg
+homebrew-pkg: clean-homebrew-pkg
+	$(call pybuild-targets, "pyjs" "homebrew_pkg")
 
-homebrew-ext: build-homebrew-ext
+homebrew-ext: clean-homebrew-ext
+	$(call pybuild-targets,"pyjs" "homebrew_ext")
 
-shared-pkg: build-shared-pkg
+shared-pkg: clean-shared-pkg
+	$(call pybuild-targets, "pyjs" "shared_pkg" "--install" "--build")
 
-shared-ext: build-shared-ext
+shared-ext: clean-shared-ext
+	$(call pybuild-targets, "pyjs" "shared_ext" "--install" "--build")
 
-static-ext: build-static-ext
+static-ext: clean-static-ext
+	$(call pybuild-targets, "pyjs" "static_ext" "--install" "--build")
 
-# static-pkg: build-static-pkg
+static-pkg: clean-static-pkg
+	$(call pybuild-targets, "pyjs" "static_pkg" "--install" "--build")
 
-framework-pkg: build-framework-pkg
+framework-pkg: clean-framework-pkg
+	$(call pybuild-targets, "pyjs" "framework_pkg" "--install" "--build")
 
-framework-ext: build-framework-ext
+framework-ext: clean-framework-ext
+	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
@@ -117,21 +129,29 @@ pymx:
 # -----------------------------------------------------------------------
 # python targets
 
-python-shared: build-python-shared
+python-shared: clean-python-shared
+	$(call pybuild-targets, "python" "shared" "--install")
 
-python-shared-ext: build-python-shared-ext
+python-shared-ext: clean-python-shared-ext
+	$(call pybuild-targets, "python" "shared-ext" "--install")
 
-python-shared-pkg: build-python-shared-pkg
+python-shared-pkg: clean-python-shared-pkg
+	$(call pybuild-targets, "python" "shared-pkg" "--install")
 
-python-static: build-python-static
+python-static: clean-python-static
+	$(call pybuild-targets, "python" "static" "--install")
 
-python-static-full: build-python-static-full
+python-static-full: clean-python-static-full
+	$(call pybuild-targets, "python" "static-full" "--install")
 
-python-framework: build-python-framework
+python-framework: clean-python-framework
+	$(call pybuild-targets, "python" "framework" "--install")
 
-python-framework-ext: build-python-framework-ext
+python-framework-ext: clean-python-framework-ext
+	$(call pybuild-targets, "python" "framework_ext" "--install")
 
-python-framework-pkg: build-python-framework-pkg
+python-framework-pkg: clean-python-framework-pkg
+	$(call pybuild-targets, "python" "framework_pkg" "--install")
 
 
 # -----------------------------------------------------------------------
@@ -155,77 +175,29 @@ dist:
 
 # BUILDING
 # -----------------------------------------------------------------------
-.PHONY: build build-extension \
-		build-local-sys \
-		build-homebrew-pkg build-homebrew-ext \
+.PHONY: build-homebrew-pkg build-homebrew-ext \
 		build-framework-pkg build-framework-ext \
 		build-shared-pkg build-shared-ext \
 		build-static-pkg build-static-ext
 
-build: build-local-sys
-	$(call section,"build project")
-
-# build-bin-beeware-ext: build-extension
-# 	$(call xbuild-targets-flags,"bin-beeware-ext","PY_STATIC_EXT")
-
-build-local-sys: clean-local-sys build-extension
-	$(call pybuild-targets, "pyjs" "local_sys")
-
-build-homebrew-pkg: clean-homebrew-pkg
-	$(call pybuild-targets, "pyjs" "homebrew_pkg")
-
-build-homebrew-ext: clean-homebrew-ext
-	$(call pybuild-targets,"pyjs" "homebrew_ext")
-
-build-framework-pkg: clean-framework-pkg
-	$(call pybuild-targets, "pyjs" "framework_pkg" "--install" "--build")
-
-build-framework-ext: clean-framework-ext
-	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
 
 build-shared-pkg: clean-shared-pkg
-	$(call pybuild-targets, "pyjs" "shared_pkg" "--install" "--build")
+	$(call pybuild-targets, "pyjs" "shared_pkg" "--build")
 
 build-shared-ext: clean-shared-ext
-	$(call pybuild-targets, "pyjs" "shared_ext" "--install" "--build")
+	$(call pybuild-targets, "pyjs" "shared_ext" "--build")
 
 build-static-ext: clean-static-ext
-	$(call pybuild-targets, "pyjs" "static_ext" "--install" "--build")
+	$(call pybuild-targets, "pyjs" "static_ext" "--build")
 
 build-static-pkg: clean-static-pkg
-	$(call pybuild-targets, "pyjs" "static_pkg" "--install" "--build")
+	$(call pybuild-targets, "pyjs" "static_pkg" "--build")
 
-build-extension:
-	$(call section,"generate c code from cython extension")
-	@cython -3 ${EXTENSION}
+build-framework-pkg: clean-framework-pkg
+	$(call pybuild-targets, "pyjs" "framework_pkg" "--build")
 
-# -----------------------------------------------------------------------
-# python targets
-
-
-build-python-shared: clean-python-shared
-	$(call pybuild-targets, "python" "shared" "--install")
-
-build-python-shared-ext: clean-python-shared-ext
-	$(call pybuild-targets, "python" "shared-ext" "--install")
-
-build-python-shared-pkg: clean-python-shared-pkg
-	$(call pybuild-targets, "python" "shared-pkg" "--install")
-
-build-python-static: clean-python-static
-	$(call pybuild-targets, "python" "static" "--install")
-
-build-python-static-full: clean-python-static-full
-	$(call pybuild-targets, "python" "static-full" "--install")
-
-build-python-framework: clean-python-framework
-	$(call pybuild-targets, "python" "framework" "--install")
-
-build-python-framework-ext: clean-python-framework-ext
-	$(call pybuild-targets, "python" "framework-ext" "--install")
-
-build-python-framework-pkg: clean-python-framework-pkg
-	$(call pybuild-targets, "python" "framework-pkg" "--install")
+build-framework-ext: clean-framework-ext
+	$(call pybuild-targets, "pyjs" "framework_ext" "--build")
 
 
 # re-compile only
@@ -343,7 +315,6 @@ clean-static-ext: clean-externals
 
 # -----------------------------------------------------------------------
 # python clean targets
-
 
 
 clean-python-shared:

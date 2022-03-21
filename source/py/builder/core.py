@@ -26,10 +26,10 @@ Builder
                 StaticExtFullBuilder
             SharedExtBuilder
             SharedPkgBuilder
+            FrameworkExtBuilder
+            FrameworkPkgBuilder
 
-
-
-isnstall:
+install:
     configure -> reset -> download -> pre_process -> build -> post_process
 
 
@@ -75,7 +75,6 @@ clean:
     remove_binaries()
 """
 
-
 import logging
 import os
 import platform
@@ -99,11 +98,11 @@ URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
 # ----------------------------------------------------------------------------
-# Aliases
+# Utility Functions
 
 
-def get_var(x): return sysconfig.get_config_var(x)  # type: ignore
-get_path = lambda x: Path(sysconfig.get_config_var(x))  # type: ignore
+def get_var(x): return sysconfig.get_config_var(x)         # type: ignore
+def get_path(x): return Path(sysconfig.get_config_var(x))  # type: ignore
 
 
 # ----------------------------------------------------------------------------
@@ -452,6 +451,11 @@ class Builder:
     def prefix_bin(self) -> Path:
         """compiled product destination bin directory."""
         return self.prefix / "bin"
+
+    @property
+    def prefix_resources(self) -> Path:
+        """compiled product Resources directory."""
+        return self.prefix / "Resources"
 
     @property
     def download_path(self) -> Path:
@@ -970,6 +974,12 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
 
+    def clean(self):
+        """clean everything."""
+        super().clean() # call superclass clean method
+        self.cmd.remove(self.prefix_resources / "Python.app")
+
+
 
 class SharedPythonBuilder(PythonSrcBuilder):
     """builds python in a shared format."""
@@ -1482,7 +1492,6 @@ class HomebrewBuilder(PyJsBuilder):
         self.reset_prefix()
         self.install()
 
-
 class LocalSystemBuilder(PyJsBuilder):
     """Builds externals from local python (non-portable)"""
 
@@ -1519,7 +1528,6 @@ class StaticExtFullBuilder(StaticExtBuilder):
         if self.product_exists:
             self.xcodebuild("static-ext-full", targets=["py", "pyjs"])
 
-
 class SharedExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
 
@@ -1534,7 +1542,6 @@ class SharedExtBuilder(PyJsBuilder):
         """builds externals from shared python"""
         if self.product_exists:
             self.xcodebuild("shared-ext", targets=["py", "pyjs"])
-
 
 class SharedPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal statically built python"""
@@ -1560,7 +1567,7 @@ class FrameworkExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / 'python-framework' / 'lib' / self.project.python.dylib
+        shared_lib = self.project.lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
         if not shared_lib.exists():
             self.log.warning("framework python is not built: %s", shared_lib)
         return shared_lib.exists()
@@ -1576,15 +1583,17 @@ class FrameworkPkgBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / 'python-framework' / 'lib' / self.project.python.dylib
+        shared_lib = self.project.lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
         if not shared_lib.exists():
             self.log.warning("framework python is not built: %s", shared_lib)
         return shared_lib.exists()
 
     def build(self):
         """builds externals from framework python"""
-        src = self.project.lib / 'python-framework'
-        dst = f"{self.project.support}/{self.product.name_ver}"
+        # src = self.project.lib / "Python.framework" / "Versions" / self.product.ver
+        # dst = f"{self.project.support}/{self.product.name_ver}"
+        src = self.project.lib / "Python.framework"
+        dst = f"{self.project.support}" / "Python.framework"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
