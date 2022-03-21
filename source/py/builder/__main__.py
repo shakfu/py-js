@@ -57,7 +57,7 @@ common_options = option_group(
            help="clean python in build/src"),
     option("-z", "--ziplib", action="store_true", help="zip python library"),
     option("-p", "--py-version", type=str,
-           help="set required python version to download and build")
+           help="set required python version to download and build"),
 )
 
 
@@ -73,14 +73,16 @@ class Application(Commander):
         """generic ordered argument dispatcher"""
         order = ['dump', 'download', 'install', 'build', 'clean', 'ziplib']
         kwdargs = vars(args)
+        print(kwdargs)
         if name.startswith('python'):
             # print('selecting python-factory')
             factory = python_builder_factory
         else:
             # print('selecting pyjs-factory')
             factory = pyjs_builder_factory
-            # print(kwdargs)
         builder = factory(name, **kwdargs)
+        if args.dump:
+            builder.to_yaml()
         for method in order:
             if method in kwdargs and kwdargs[method]:
                 try:

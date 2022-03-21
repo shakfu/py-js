@@ -2,6 +2,7 @@
 **/project.xcworkspace
 **/xcshareddata
 javascript/node_modules
+source/py/dump.yml
 
 .DS_Store
 __pycache__
