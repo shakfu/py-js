@@ -140,24 +140,22 @@ class Python:
 
     def to_dict(self) -> dict:
         return {
-            k : str(getattr(self, k)) for k in [
-                'version',
-                'version_short',
-                'version_nodot',
-                'name',
-                'abiflags',
-                'arch',
-                'prefix',
-                'bindir',
-                'include',
-                'libdir',
-                'libs',
-                'mac_dep_target',
-                'staticlib',
-                'ldlibrary',
-                'dylib',
-                'config_ver_platform',
-            ]
+            'version': self.version,
+            'version_short': self.version_short,
+            'version_nodot': self.version_nodot,
+            'name': self.name,
+            'abiflags': self.abiflags,
+            'arch': self.arch,
+            'prefix': str(self.prefix),
+            'bindir': str(self.bindir),
+            'include': str(self.include),
+            'libdir': str(self.libdir),
+            'libs': str(self.libs),
+            'mac_dep_target': self.mac_dep_target,
+            'staticlib': self.staticlib,
+            'ldlibrary': str(self.ldlibrary),
+            'dylib': self.dylib,
+            'config_ver_platform': self.config_ver_platform,
         }
 
 
@@ -214,32 +212,29 @@ class Project:
     mac_dep_target = "10.13"
 
     def to_dict(self) -> dict:
-        d = {
-            k : str(getattr(self, k)) for k in [
-                'name',
-                'arch',
-                'root',
-                'scripts',
-                'patch',
-                'targets',
-                'build',
-                'downloads',
-                'src',
-                'lib',
-                'pyjs',
-                'support',
-                'externals',
-                'py_external',
-                'pyjs_external',
-                'HOME',
-                'package_name',
-                'package',
-                'package_dirs',
-                'mac_dep_target',
-            ]
+        return {
+            'name': self.name,
+            'arch': self.arch,
+            'root': str(self.root),
+            'scripts': str(self.scripts),
+            'patch': str(self.patch),
+            'targets': str(self.targets),
+            'build': str(self.build),
+            'downloads': str(self.downloads),
+            'src': str(self.src),
+            'lib': str(self.lib),
+            'pyjs': str(self.pyjs),
+            'support': str(self.support),
+            'externals': str(self.externals),
+            'py_external': str(self.py_external),
+            'pyjs_external': str(self.pyjs_external),
+            'HOME': self.HOME,
+            'package_name': self.package_name,
+            'package': str(self.package),
+            'package_dirs': self.package_dirs,
+            'mac_dep_target': self.mac_dep_target,
+            'python': self.python.to_dict(),
         }
-        d['python'] = self.python.to_dict()
-        return d
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -399,22 +394,20 @@ class Product:
         # raise KeyError("url_template not providing in settings")
 
     def to_dict(self) -> dict:
-        return {
-            k : str(getattr(self, k)) for k in [
-                'name',
-                'version',
-                'build_dir',
-                'libs_static',
-                'url_template',
-                'settings',
-                'ver',
-                'ver_nodot',
-                'name_version',
-                'name_ver',
-                'name_archive',
-                'dylib',
-                'url',
-            ]
+        {
+            'name': self.name,
+            'version': self.version,
+            'build_dir': str(self.build_dir),
+            'libs_static': self.libs_static,
+            'url_template': self.url_template,
+            'settings': str(self.settings),
+            'ver': self.ver,
+            'ver_nodot': self.ver_nodot,
+            'name_version': self.name_version,
+            'name_ver': self.name_ver,
+            'name_archive': self.name_archive,
+            'dylib': self.dylib,
+            'url': str(self.url),
         }
 
 class Builder:
@@ -495,26 +488,20 @@ class Builder:
     def to_dict(self) -> dict:
         """dump configured vars to dict"""
 
-        d = {
-            k : str(getattr(self, k)) for k in [
-                'prefix',
-                'prefix_lib',
-                'prefix_include',
-                'prefix_bin',
-                'download_path',
-                'src_path',
-                'url',
-                'product_exists',
-                'has_static_libs',
-            ]
+        return {
+            'prefix': str(self.prefix),
+            'prefix_lib': str(self.prefix_lib),
+            'prefix_include': str(self.prefix_include),
+            'prefix_bin': str(self.prefix_bin),
+            'download_path': str(self.download_path),
+            'src_path': str(self.src_path),
+            'url': str(self.url),
+            'product_exists': self.product_exists,
+            'has_static_libs': self.has_static_libs,
+            'project': self.project.to_dict(),
+            'product': self.product.to_dict(),
+            'depends_on': [str(i) for i in self.depends_on],
         }
-
-        d['project'] = self.project.to_dict()
-        d['product'] = self.product.to_dict()
-        d['depends_on'] = [str(i) for i in self.depends_on]
-        # d['depends_on'] = [dep.to_dict() for dep in self.depends_on]
-
-        return d
 
     def to_yaml(self):
         import yaml
