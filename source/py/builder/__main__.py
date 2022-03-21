@@ -163,6 +163,11 @@ class Application(Commander):
         self.ordered_dispatch('pyjs_static', args)
 
     @common_options
+    def do_pyjs_static_ext(self, args):
+        """build portable pyjs externals (minimal static)"""
+        self.ordered_dispatch('pyjs_static_ext', args)
+
+    @common_options
     def do_pyjs_static_ext_full(self, args):
         """build portable pyjs externals (fully-loaded static)"""
         self.ordered_dispatch('pyjs_static_ext_full', args)
