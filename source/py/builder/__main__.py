@@ -37,6 +37,7 @@ from .factory import python_builder_factory, pyjs_builder_factory
 # Commandline interface
 
 common_options = option_group(
+    option("--dump", action="store_true", help="dump project and product vars"),
     option("-d",
            "--download",
            action="store_true",
@@ -70,7 +71,7 @@ class Application(Commander):
 
     def ordered_dispatch(self, name, args):
         """generic ordered argument dispatcher"""
-        order = ['download', 'install', 'build', 'clean', 'ziplib']
+        order = ['dump', 'download', 'install', 'build', 'clean', 'ziplib']
         kwdargs = vars(args)
         if name.startswith('python'):
             # print('selecting python-factory')

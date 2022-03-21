@@ -87,8 +87,11 @@ all: default
 		shared-pkg shared-ext \
 		static-pkg static-ext
 
-default: local-sys
 
+# -----------------------------------------------------------------------
+# python external argets
+
+default: local-sys
 
 local-sys: build-local-sys
 

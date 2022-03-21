@@ -139,25 +139,27 @@ class Python:
     config_ver_platform = f"config-{version_short}{abiflags}-darwin"
 
     def dump(self):
+        print("\nPython vars")
         _vars = [
             'version',
             'version_short',
             'version_nodot',
+            'name',
             'abiflags',
             'arch',
             'prefix',
             'bindir',
-            'INCLUDEPY',
             'include',
             'libdir',
+            'libs',
             'mac_dep_target',
-            'staticlibrary',
+            'staticlib',
             'ldlibrary',
             'dylib',
+            'config_ver_platform',
         ]
         for v in _vars:
-            print(f"{v}: {getattr(self, v)}")
-
+            print(f"\t{v}: {getattr(self, v)}")
 
 
 class Project:
@@ -212,6 +214,33 @@ class Project:
     # settings
     mac_dep_target = "10.13"
 
+    def dump(self):
+        print("\nProject vars")
+        _vars = [
+            'name',
+            'python',
+            'arch',
+            'root',
+            'scripts',
+            'patch',
+            'targets',
+            'build',
+            'downloads',
+            'src',
+            'lib',
+            'pyjs',
+            'support',
+            'externals',
+            'py_external',
+            'pyjs_external',
+            'HOME',
+            'package_name',
+            'package',
+            'package_dirs',
+            'mac_dep_target',
+        ]
+        for v in _vars:
+            print(f"\t{v}: {getattr(self, v)}")
 
     def __str__(self):
         return f"<{self.__class__.__name__}:'{self.name}'>"
@@ -351,7 +380,8 @@ class Product:
     def name_archive(self) -> str:
         """Archival name of Product-version"""
         # return f"{self.name_version}.tgz"
-        return self.url.name
+        if self.url:
+            return self.url.name
 
     @property
     def dylib(self) -> str:
@@ -364,8 +394,27 @@ class Product:
         """Returns url to download product src as a pathlib.Path instance."""
         if self.url_template:
             return Path(self.url_template.format(name=self.name, version=self.version))
-        raise KeyError("url_template not providing in settings")
+        # raise KeyError("url_template not providing in settings")
 
+    def dump(self):
+        print("\nProduct vars")
+        _vars = [
+            'name',
+            'version',
+            'build_dir',
+            'libs_static',
+            'url_template',
+            'settings',
+            'ver',
+            'ver_nodot',
+            'name_version',
+            'name_ver',
+            'name_archive',
+            'dylib',
+            'url',
+        ]
+        for v in _vars:
+            print(f"\t{v}: {getattr(self, v)}")
 
 class Builder:
     """A Builder know how to build a single product type in a project."""
@@ -385,7 +434,7 @@ class Builder:
         self.cmd = ShellCmd(self.log)
 
     def __str__(self):
-        return f"<'{self.__class__.__name__}' product='{self.product.name}'>"
+        return f"<'{self.__class__.__name__}' project='{self.project.name}' product='{self.product.name}'>"
 
     __repr__ = __str__
 
@@ -439,6 +488,13 @@ class Builder:
         if libs:
             return all((self.prefix_lib / lib).exists() for lib in libs)
         return False
+
+    def dump(self):
+        """dump configured vars"""
+        self.project.dump()
+        self.project.python.dump()
+        self.product.dump()
+        
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
