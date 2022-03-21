@@ -9,7 +9,6 @@ prefix_lib: py-js/support/python3.9/lib
 product: null
 product_exists: false
 project:
-    HOME: /Users/sa
     arch: x86_64
     build: py-js/source/py/targets/build
     downloads: py-js/source/py/targets/build/downloads
@@ -17,7 +16,7 @@ project:
     lib: py-js/source/py/targets/build/lib
     mac_dep_target: '10.13'
     name: py-js
-    package: /Users/sa/Documents/Max 8/Packages/py-js
+    package: $HOME/Documents/Max 8/Packages/py-js
     package_dirs:
     - docs
     - examples
