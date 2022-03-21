@@ -18,6 +18,21 @@ PythonBuilder [1,2]
 [ ] fix_framework_dylib_for_pkg
 [ ] fix_framework_dylib_for_ext
 
+
+Framework output for relocatabilizer:
+
+install_name_tool -id @rpath/Versions/3.9/Python $PROJECTS/py-js/support/Python.framework/Versions/3.9/Python
+install_name_tool -change $PROJECTS//py-js/source/py/targets/build/lib/Python.framework/Versions/3.9/Python @rpath/Versions/3.9/Python $PROJECTS//py-js/support/Python.framework/Versions/3.9/bin/python3.9
+install_name_tool -add_rpath @executable_path/../../../ $PROJECTS/py-js/support/Python.framework/Versions/3.9/bin/python3.9
+
+affected files:
+
+{'/Users/sa/Downloads/projects/py-js/support/Python.framework/Versions/3.9/Python',
+ '/Users/sa/Downloads/projects/py-js/support/Python.framework/Versions/3.9/bin/python3.9'}
+
+
+
+
 """
 
 from pathlib import Path
