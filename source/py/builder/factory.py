@@ -80,7 +80,7 @@ def python_builder_factory(name, **settings):
         product=core.Product(
             name="Python",
             version=py_version,
-            build_dir="-".join(name.split('_')[:-1]),
+            build_dir="-".join(name.split('_')[:2]),
             url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
             libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
         ),

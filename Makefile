@@ -38,7 +38,7 @@ section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # $(call pybuild,name)
 define pybuild-targets
-$(call section,"builder $1 $2")
+$(call section,"builder $1 $2 $3 $4")
 @cd $(PYDIR) && $(PYTHON) -m builder $1 $2 $3 $4
 endef
 

@@ -48,8 +48,7 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
 2. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
     ```bash
-    git submodule init
-    git submodule update 
+    git submodule init && git submodule update 
     ```
 
 3. For the purposes of this quickstart, use a recent python3 (3.8+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
