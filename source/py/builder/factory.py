@@ -80,7 +80,7 @@ def python_builder_factory(name, **settings):
         product=core.Product(
             name="Python",
             version=py_version,
-            build_dir="-".join(name.split('_')[-2:]),
+            build_dir="-".join(name.split('_')[:-1]),
             url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
             libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
         ),
@@ -107,9 +107,7 @@ def pyjs_builder_factory(name, **settings):
         return _builder(
             product=core.Product(name='Python', version=py_version),
             depends_on=[
-                python_builder_factory(name, 
-                    py_version=py_version, bz2_version=bz2_version, 
-                    ssl_version=ssl_version, xz_version=xz_version, **settings)
+                python_builder_factory(name, **settings)
                 for name in dependencies
             ],
             **settings
@@ -117,7 +115,7 @@ def pyjs_builder_factory(name, **settings):
     else:
         # no dep builder is a local builder therefore default_py_ver
         return _builder(
-            product=Product(name='Python', version=DEFAULT_PYTHON_VERSION),
+            product=core.Product(name='Python', version=DEFAULT_PYTHON_VERSION),
             **settings
         )
 
