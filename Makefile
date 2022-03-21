@@ -20,7 +20,7 @@ TARGETS=py pyjs
 EXTENSION=$(PYDIR)/api.pyx
 
 MAX_VERSION := "8"
-MAX_DIR := Max\ $(MAX_VERSION)
+MAX_DIR := "Max $(MAX_VERSION)"
 PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages
 PKG_DIRS=docs examples externals help init \
          javascript jsextensions media patchers

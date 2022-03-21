@@ -87,7 +87,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import List
 
-from .depend import DependencyManager
+from .depend import DependencyManager, PATTERNS_TO_FIX
 from . import constants
 
 DEBUG = False
@@ -1230,21 +1230,42 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
 
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in external build format"""
-        self.cmd.chdir(self.prefix / 'lib')
-        dylib_path = self.prefix / 'lib' / self.product.dylib
+        self.cmd.chdir(self.prefix_lib)
+        dylib_path = (self.prefix_lib) / self.product.dylib
         assert dylib_path.exists()
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool_id(
-            f"@loader_path/../Resources/lib/{self.product.dylib}",
+            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/lib/{self.product.dylib}",
             self.product.dylib,
         )
         self.cmd.chdir(self.project.root)
+
+    # def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
+    #     """change ref on executable to point to relative dylib"""
+    #     self.cmd.chdir(self.prefix_bin)
+    #     executable = self.product.name_ver
+    #     result = subprocess.check_output(["otool", "-L", executable])
+    #     entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+    #     for entry in entries:
+    #         match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+    #         if match:
+    #             path = match.group(1)
+    #             # homebrew files are installed in /usr/local/Cellar
+    #             if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+    #                 self.install_name_tool_change(
+    #                     path,
+    #                     f"@executable_path/../Python",
+    #                     executable,
+    #                 )
+    #     self.cmd.chdir(self.project.root)
+
 
     def post_process(self):
         """post-build operations"""
         self.clean()
         self.ziplib()
         self.fix_python_dylib_for_ext_resources()
+        self.fix_python_exec_for_framework()
 
 
 class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
