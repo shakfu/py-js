@@ -20,6 +20,15 @@ LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
+
+PATTERNS_TO_FIX = [
+    "/usr/local",
+    "/opt/local"
+    "/Library/Frameworks/Python.framework",
+    "/tmp/",
+    "/Users/"
+]
+
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 title = lambda x: print(x)
 

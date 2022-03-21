@@ -6,6 +6,7 @@ repo - <https://github.com/shakfu/py-js>
 
 ![py-js test](./media/screenshot.png)
 
+
 ## Preface
 
 This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring a number of different ways of using python3 in max. 
@@ -524,17 +525,17 @@ This release contains relocatable python3 externals which are useful for distrib
 
 First note that there several ways to add code to the external:
 
-A. The external's site-packages: py-js/externals/py.mxo/Contents/Resources/lib/python3.9/site-packages
+1. The external's site-packages: `py-js/externals/py.mxo/Contents/Resources/lib/python3.9/site-packages`
 
-B. The package script folder: `py-js/examples/scripts`
+2. The package script folder: `py-js/examples/scripts`
 
-C. Whichever path you set the patcher PYTHONPATH property to (during object creation).
+3. Whichever path you set the patcher PYTHONPATH property to (during object creation).
 
-For A, I have tested pure python scripts which should work without re-codesigning the externals, but if you add compiled extensions, then I think you have to re-codesign the external. Check out my [maxutils](https://github.com/shakfu/maxutils) project for help with that.
+For (1), I have tested pure python scripts which should work without re-codesigning the externals, but if you add compiled extensions, then I think you have to re-codesign the external. Check out my [maxutils](https://github.com/shakfu/maxutils) project for help with that.
 
-For B, this is just a location that's searched automatically with `load`, `read`, and `execfile` messages so it can contain dependent files.
+For (2), this is just a location that's searched automatically with `load`, `read`, and `execfile` messages so it can contain dependent files.
 
-For C, this is just setting that is done at the patch level so it should be straightforward. As mentioned, the extra pythonpath is currently only set at object creation. It should be updated when changed but this is something on the todo list.
+For (3), this is just setting that is done at the patch level so it should be straightforward. As mentioned, the extra pythonpath is currently only set at object creation. It should be updated when changed but this is something on the todo list.
 
 ### How to get numpy to work in py-js
 
@@ -546,13 +547,15 @@ If you need numpy embedded in a portable variation of py-js, then you have a cou
 
 It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this just be aware that it is very large and has not been minimized.
 
-## Related Project
+## Related Projects
 
 - [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
 
 - [maxutils](https://github.com/shakfu/maxutils) : scripts and utilities to help with codesigning and notarization of Max standalones and externals.
 
 ## Prior Art and Thanks
+
+![py-js testing](./media/xkcd-python-environment.png)
 
 I was motivated to start this project because I found myself recurrently wanting to use some python libraries or functions in Max.
 
