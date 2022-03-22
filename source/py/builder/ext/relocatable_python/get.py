@@ -27,7 +27,7 @@ CURL = "/usr/bin/curl"
 DITTO = "/usr/bin/ditto"
 PKGUTIL = "/usr/sbin/pkgutil"
 DEFAULT_BASEURL = "https://www.python.org/ftp/python/%s/python-%s-macosx%s.pkg"
-DEFAULT_PYTHON_VERSION = "2.7.15"
+DEFAULT_PYTHON_VERSION = "3.9.10"
 DEFAULT_OS_VERSION = "10.9"
 
 

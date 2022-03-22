@@ -1618,7 +1618,7 @@ class FrameworkExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from shared python"""
         if self.product_exists:
-            self.xcodebuild("framework-ext", targets=["py", "pyjs"])
+            self.xcodebuild("framework-ext", targets=["py", "pyjs"], preprocessor_flags=["PY_FWK_EXT"])
 
 
 class FrameworkPkgBuilder(PyJsBuilder):

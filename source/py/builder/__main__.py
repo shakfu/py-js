@@ -33,9 +33,9 @@ from .cli import Commander, option, option_group
 from .depend import DependencyManager
 from .factory import python_builder_factory, pyjs_builder_factory
 from .ext.relocatable_python import analyze, relocatablize
-# from .ext.relocatable_python import install_extras
-# from .ext.relocatable_python import get_framework
-# from .ext.relocatable_python import fix_broken_signatures, fix_other_things
+from .ext.relocatable_python import install_extras
+from .ext.relocatable_python import get
+from .ext.relocatable_python import fix_broken_signatures, fix_other_things
 
 
 # ----------------------------------------------------------------------------
@@ -64,6 +64,38 @@ common_options = option_group(
     option("-p", "--py-version", type=str,
            help="set required python version to download and build"),
 )
+
+relocatable_options = option_group(
+    option("--destination",default="../../support",
+        help="Directory destination for the Python.framework",
+    ),
+    option("--baseurl", default=get.DEFAULT_BASEURL,
+        help="Override the base URL used to download the framework.",
+    ),
+    option("--os-version", default=get.DEFAULT_OS_VERSION,
+        help="Override the macOS version of the downloaded pkg. "
+        'Current supported versions are "10.6", "10.9", and "11". '
+        "Not all Python version and macOS version combinations are valid.",
+    ),
+    option("--python-version", default=get.DEFAULT_PYTHON_VERSION,
+        help="Override the version of the Python framework to be downloaded. "
+        "See available versions at "
+        "https://www.python.org/downloads/mac-osx/",
+    ),
+    option("--pip-requirements", default=None,
+        help="Path to a pip freeze requirements.txt file that describes extra "
+        "Python modules to be installed. If not provided, no modules will be installed.",
+    ),
+    option("--no-unsign", dest="unsign", action="store_false",
+        help="Do not unsign binaries and libraries after they are relocatablized."
+    ),
+    option("--upgrade-pip", default=False, action="store_true",
+        help="Upgrade pip prior to installing extra python modules."
+    ),
+    option("--without-pip", default=False, action="store_true",
+        help="Do not install pip."
+    ),)
+
 
 
 class Application(Commander):
@@ -193,20 +225,42 @@ class Application(Commander):
         """build portable pyjs package (shared)"""
         self.ordered_dispatch('pyjs_static_ext_full', args)
 
-    @common_options
-    def do_pyjs_framework_ext(self, args):
-        """build portable pyjs externals (framework)"""
-        self.ordered_dispatch('pyjs_framework_ext', args)
-        import yaml
-        with open('dump.yml', 'w') as f:
-            d = analyze('./targets/build/lib/Python.framework')
-            yaml.safe_dump(d, f, indent=4)
+    # @common_options
+    # def do_pyjs_framework_ext(self, args):
+    #     """build portable pyjs externals (framework)"""
+    #     self.ordered_dispatch('pyjs_framework_ext', args)
+    #     import yaml
+    #     with open('dump.yml', 'w') as f:
+    #         d = analyze('./targets/build/lib/Python.framework')
+    #         yaml.safe_dump(d, f, indent=4)
 
-    @common_options
+    @relocatable_options
     def do_pyjs_framework_pkg(self, args):
         """build portable pyjs package (framework)"""
-        self.ordered_dispatch('pyjs_framework_pkg', args)
-        # pprint(analyze('./targets/build/lib/Python.framework'))
+        framework_path = get.FrameworkGetter(
+            python_version=args.python_version,
+            os_version=args.os_version,
+            base_url=args.baseurl,
+        ).download_and_extract(destination=args.destination)
+
+        if framework_path:
+            files_relocatablized = relocatablize(framework_path)
+            if args.unsign:
+                fix_broken_signatures(files_relocatablized)
+            short_version = ".".join(args.python_version.split(".")[0:2])
+            install_extras(
+                framework_path,
+                version=short_version,
+                requirements_file=args.pip_requirements,
+                upgrade_pip=args.upgrade_pip,
+                without_pip=args.without_pip
+            )
+            if fix_other_things(framework_path, short_version):
+                print()
+                print("Done!")
+                print("Customized, relocatable framework is at %s" % framework_path)
+
+        #self.ordered_dispatch('pyjs_framework_pkg', args)
 
 
 # ----------------------------------------------------------------------------
