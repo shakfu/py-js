@@ -20,6 +20,17 @@
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 /*--------------------------------------------------------------------------*/
+// MACROS
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+#define _CONCAT(a,b) a##b
+#define CONCAT(a,b) _CONCAT(a,b)
+#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(.,PY_MINOR_VERSION))
+#define PY_VER STR(_PY_VER)
+// PY_VERSION is already defined Major.Minor.Patch by patchlevel.h
+
+/*--------------------------------------------------------------------------*/
 // GLOBALS
 
 t_class* py_class;                    // global pointer to object class
@@ -90,6 +101,7 @@ void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
 void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
+void py_init_osx_set_home_framework_ext(void);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 t_hashtab* get_global_registry(void);
 

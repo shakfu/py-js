@@ -9,7 +9,7 @@
 /* max/msp api */
 #include "api.h"
 
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
+#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG) || defined(PY_FWK_EXT))
 #include <CoreFoundation/CoreFoundation.h>
 #include <libgen.h>
 #endif
@@ -24,7 +24,7 @@ static int py_global_obj_count = 0; // when 0 then free interpreter
 
 static t_hashtab* py_global_registry = NULL; // global object lookups
 
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
+#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG) || defined(PY_FWK_EXT))
 CFBundleRef py_global_bundle;
 #endif
 
@@ -261,7 +261,7 @@ void ext_main(void* module_ref)
 
     py_class = c;
 
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
+#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG) || defined(PY_FWK_EXT))
     // set global bundle ref for macos case
     py_global_bundle = module_ref;
 #endif
@@ -342,6 +342,9 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // python init
         py_init(x);
 
+        post("initialized python version: %s", PY_VERSION);
+        // post("python version %s compatible", PY_VER);
+
         py_log(x, "object created");
         for (int i = 0; i < argc; i++) {
             py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
@@ -413,6 +416,53 @@ void py_init_osx_set_home_static_ext(void) {
 #endif
 
 
+#if defined(__APPLE__) && defined(PY_FWK_EXT)
+void py_init_osx_set_home_framework_ext(void) {
+
+    const char* relative_path = "Python.framework/Versions/Current/lib/python" PY_VER;
+    // const char* relative_path = "Python.framework/Versions/" PY_VER;
+
+    wchar_t *python_home;
+
+    CFURLRef resources_url;
+    CFURLRef resources_abs_url;
+    CFStringRef resources_str;
+    CFStringRef relative_path_str;
+    CFURLRef py_home_url;
+    CFStringRef py_home_str;
+    const char* py_home_path;
+
+    // Look for a bundle using its using global bundle ref
+    resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
+    resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
+    resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
+
+    relative_path_str = CFStringCreateWithCString(kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
+    py_home_url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, resources_str, relative_path_str, FALSE);
+    py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
+    py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
+
+    python_home = Py_DecodeLocale(resources_path, NULL);
+
+    CFRelease(resources_str);
+    CFRelease(resources_abs_url);
+    CFRelease(resources_url);
+
+    CFRelease(py_home_str);
+    CFRelease(py_home_url);
+    CFRelease(relative_path_str);
+
+    post("py home path: %s", py_home_path);
+
+    if (python_home == NULL) {
+        error("unable to set python_home");
+        return;
+    }
+    Py_SetPythonHome(python_home);
+}
+#endif
+
+
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
 void py_init_osx_set_home_shared_pkg(void) {
     // sets python_home to <package>/support/pythonX.Y folder
@@ -424,7 +474,7 @@ void py_init_osx_set_home_shared_pkg(void) {
     CFStringRef bundle_str;
     const char* bundle_path;
 
-    const char* relative_path = "support/python3.9";
+    const char* relative_path = "support/python" PY_VER;
     CFStringRef relative_path_str;
     CFURLRef externals_url;
     CFURLRef package_url;
@@ -438,7 +488,7 @@ void py_init_osx_set_home_shared_pkg(void) {
     bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
     bundle_path = CFStringGetCStringPtr(bundle_str, kCFStringEncodingUTF8);
     
-    // get the absolute path of the <package>/support/python3.9 directory in a package
+    // get the absolute path of the <package>/support/pythonX.Y directory in a package
     externals_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundle_abs_url);
     package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, externals_url);
     relative_path_str = CFStringCreateWithCString(kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
@@ -475,6 +525,10 @@ void py_init(t_py* x)
 {
     #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     py_init_osx_set_home_static_ext();
+    #endif
+
+    #if defined(__APPLE__) && defined(PY_FWK_EXT)
+    py_init_osx_set_home_framework_ext();
     #endif
 
     #if defined(__APPLE__) && defined(PY_SHARED_PKG)
