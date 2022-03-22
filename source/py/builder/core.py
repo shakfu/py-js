@@ -974,10 +974,12 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
 
-    def clean(self):
-        """clean everything."""
-        super().clean() # call superclass clean method
-        self.cmd.remove(self.prefix_resources / "Python.app")
+    # PYTHONBUG: Python.framework/Versions/3.9/Resources/Python.app
+    #            is linked to executable in the frameowork
+    # def clean(self):
+    #     """clean everything."""
+    #     super().clean() # call superclass clean method
+    #     self.cmd.remove(self.prefix_resources / "Python.app")
 
 
 
@@ -1240,25 +1242,44 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         )
         self.cmd.chdir(self.project.root)
 
-    # def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
-    #     """change ref on executable to point to relative dylib"""
-    #     self.cmd.chdir(self.prefix_bin)
-    #     executable = self.product.name_ver
-    #     result = subprocess.check_output(["otool", "-L", executable])
-    #     entries = [line.decode("utf-8").strip() for line in result.splitlines()]
-    #     for entry in entries:
-    #         match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
-    #         if match:
-    #             path = match.group(1)
-    #             # homebrew files are installed in /usr/local/Cellar
-    #             if any(path.startswith(p) for p in PATTERNS_TO_FIX):
-    #                 self.install_name_tool_change(
-    #                     path,
-    #                     f"@executable_path/../Python",
-    #                     executable,
-    #                 )
-    #     self.cmd.chdir(self.project.root)
+    def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
+        """change ref on executable to point to relative dylib"""
+        self.cmd.chdir(self.prefix_bin)
+        executable = self.product.name_ver
+        result = subprocess.check_output(["otool", "-L", executable])
+        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+        for entry in entries:
+            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+            if match:
+                path = match.group(1)
+                # homebrew files are installed in /usr/local/Cellar
+                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+                    self.install_name_tool_change(
+                        path,
+                        f"@executable_path/../Python",
+                        executable,
+                    )
+        self.cmd.chdir(self.project.root)
 
+    def fix_python_exec_for_framework2(self):  # sourcery skip: use-named-expression
+        """change ref on executable to point to relative dylib"""
+        parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
+        self.cmd.chdir(parent_dir)
+        executable = parent_dir / "Python"
+        result = subprocess.check_output(["otool", "-L", executable])
+        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+        for entry in entries:
+            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+            if match:
+                path = match.group(1)
+                # homebrew files are installed in /usr/local/Cellar
+                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+                    self.install_name_tool_change(
+                        path,
+                        f"@executable_path/../../../../Python",
+                        executable,
+                    )
+        self.cmd.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
@@ -1266,6 +1287,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         self.ziplib()
         self.fix_python_dylib_for_ext_resources()
         self.fix_python_exec_for_framework()
+        self.fix_python_exec_for_framework2()
 
 
 class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):

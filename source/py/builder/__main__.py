@@ -32,6 +32,11 @@ subcommands:
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
 from .factory import python_builder_factory, pyjs_builder_factory
+from .ext.relocatable_python import analyze, relocatablize
+# from .ext.relocatable_python import install_extras
+# from .ext.relocatable_python import get_framework
+# from .ext.relocatable_python import fix_broken_signatures, fix_other_things
+
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -130,6 +135,7 @@ class Application(Commander):
     def do_python_framework_ext(self, args):
         """build framework python to embed external"""
         self.ordered_dispatch('python_framework_ext', args)
+        #relocatablize('./targets/build/lib/Python.framework')
 
     @common_options
     def do_python_framework_pkg(self, args):
@@ -191,27 +197,43 @@ class Application(Commander):
     def do_pyjs_framework_ext(self, args):
         """build portable pyjs externals (framework)"""
         self.ordered_dispatch('pyjs_framework_ext', args)
+        import yaml
+        with open('dump.yml', 'w') as f:
+            d = analyze('./targets/build/lib/Python.framework')
+            yaml.safe_dump(d, f, indent=4)
 
     @common_options
     def do_pyjs_framework_pkg(self, args):
         """build portable pyjs package (framework)"""
         self.ordered_dispatch('pyjs_framework_pkg', args)
+        # pprint(analyze('./targets/build/lib/Python.framework'))
 
 
 # ----------------------------------------------------------------------------
 # utility methods
 
+    def do_check(self, args):
+        """check reference utilities"""
+    
     @option("--exec-ref", "-e", type=str, help="back ref for executable or plugin")
     @option("--staticlibs-dir", "-l", type=str, help="static lib directory fir static substitutes")
     @option("--dest-dir", "-d", type=str, help="where target dylib will be copied to with copied dependents")
     @option("target", help="dylib or executable to made relocatable")
-    def do_dep_analyze(self, args):
+    def do_check_dependencies(self, args):
         """analyze dependencies"""
         d = DependencyManager(args.target, args.dest_dir, args.staticlibs_dir, args.exec_ref)
         d.analyze()
         from pprint import pprint
         d.get_deps()
         pprint(d.install_names)
+
+    @option("target", help="external to analyze")
+    def do_check_external(self, args):
+        """analyze external"""
+        import yaml
+        with open('dump.yml', 'w') as f:
+            d = analyze(f'../../externals/{args.target}')
+            yaml.safe_dump(d, f, indent=4)
 
     @common_options
     def do_test(self, args):

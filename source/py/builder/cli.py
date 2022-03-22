@@ -3,6 +3,31 @@
 Provides a declarative argparse-based class to be inherited
 by applications wishing to provide a basic commandline interface.
 
+This is based on my old `argdeclare` code
+    see: http://code.activestate.com/recipes/576935-argdeclare-declarative-interface-to-argparse
+
+
+TODO:
+-----
+
+- make fully recursive! 
+
+like haskell:
+
+    sum :: (Num a) => [a] -> a  
+    sum [] = 0  
+    sum (x:xs) = x + sum' xs  
+
+concept is
+
+    parse [] = 0
+    parse (x:xs) = 
+        if x in structure:
+            structure[x] = options[x]
+        else:
+            structure[x] = dummy[x]
+        structure[x].children.append(xs)
+        parse(xs)
 """
 import argparse
 import sys
@@ -59,6 +84,21 @@ class MetaCommander(type):
         return type.__new__(cls, classname, bases, classdict)
 
 
+
+def add_parser(subparsers, subcmd, name=None):
+    if not name:
+        name = subcmd['name']
+    subparser = subparsers.add_parser(
+        name,
+        help=subcmd['func'].__doc__)
+
+    for args, kwds in subcmd['options']:
+        subparser.add_argument(*args, **kwds)
+    subparser.set_defaults(func=subcmd['func'])
+    return subparser
+
+
+
 class Commander(metaclass=MetaCommander):
     """app: description here
     """
@@ -103,41 +143,49 @@ class Commander(metaclass=MetaCommander):
         for name in sorted(self._argparse_subcmds.keys()): # pylint: disable=E1101
             subcmd = self._argparse_subcmds[name]          # pylint: disable=E1101
             if not levels:
-                subparser = subparsers.add_parser(subcmd['name'],
-                                                  help=subcmd['func'].__doc__)
-                for args, kwds in subcmd['options']:
-                    subparser.add_argument(*args, **kwds)
-                subparser.set_defaults(func=subcmd['func'])
+                subparser = add_parser(subparsers, subcmd)
             else:
-                if levels == 1:
-                    if len(name.split('_')) == 1:
-                        # print(name)
-                        subparser = subparsers.add_parser(subcmd['name'],
-                              help=subcmd['func'].__doc__)
-
-                        if name not in structure:
-                            structure[name] = subparser.add_subparsers(
-                                title=f"{name} subcommands",
-                                description=subcmd['func'].__doc__,
-                                help='additional help',
-                                metavar='',
-                            )
-                        for args, kwds in subcmd['options']:
-                            subparser.add_argument(*args, **kwds)
-                        subparser.set_defaults(func=subcmd['func'])
+                head, *tail = name.split('_')
+                if head and not tail: # i.e head == name
+                    # scenario: single section name and subcmd is given
+                    subparser = add_parser(subparsers, subcmd)
+                    if head not in structure:
+                        structure[head] = subparser.add_subparsers(
+                            title=f"{head} subcommands",
+                            description=subcmd['func'].__doc__,
+                            help='additional help',
+                            metavar='',
+                        )
+                    # else: # head in structure and not tail
+                        # scenario where head was given and now the tail is the same
+                        # as a previous head.
+                        # add_parser(subparsers, subcmd)
+                        # add it but don't overwrite the prior head
+                else: # (x:xs)
+                    if head in structure:
+                        _subparsers = structure[head]
+                        subparser = add_parser(_subparsers, subcmd, name="_".join(tail))
                     else:
-                        head, *tail = name.split('_')
-                        if head in structure:
-                            alt_subparsers = structure[head]
-                            newname = "_".join(tail)
-                            subparser = alt_subparsers.add_parser(newname,
-                                  help=subcmd['func'].__doc__)                            
-                            # subparser = subparsers.add_parser(subcmd['name'],
-                            #       help=subcmd['func'].__doc__)
-                            # print('\t', newname)
-                            for args, kwds in subcmd['options']:
-                                subparser.add_argument(*args, **kwds)
-                            subparser.set_defaults(func=subcmd['func'])
+                        # create an dummy 'head' if it wasn't created manually
+                        subcmd = {
+                            'name': head,
+                            'func': lambda self, args: None,
+                            'options': [],
+                        }
+                        subcmd['func'].__doc__ = f"{head} commands"
+                        subparser = add_parser(subparsers, subcmd, name=head)
+
+                        # add it to structure
+                        structure[head] = subparser.add_subparsers(
+                            title=f"{head} subcommands",
+                            description=subcmd['func'].__doc__,
+                            help='additional help',
+                            metavar='',
+                        )
+
+                        # add tail as a child to it
+                        _subparsers = structure[head]
+                        subparser = add_parser(_subparsers, subcmd, name="_".join(tail))
 
         if len(sys.argv) <= 1:
             options = parser.parse_args(self.default_args)
