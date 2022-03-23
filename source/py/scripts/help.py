@@ -19,7 +19,7 @@ pyjs_targets = {
     "static-ext"        : "portable pyjs externals (static)",
     "framework-pkg"     : "portable package with pyjs externals (framework)",
     "framework-ext"     : "portable pyjs externals (framework)",
-    "reolocatable-pkg"  : "portable package more options (framework)",
+    "relocatable-pkg"   : "portable package with more custom options (framework)",
     "pymx"              : "non-portable alternative python3 externals (min-lib)",
 }
 
@@ -32,6 +32,7 @@ python_targets = {
     "python-framework"      : "minimal framework python build",
     "python-framework-ext"  : "minimal framework python build for externals",
     "python-framework-pkg"  : "minimal framework python build for packages",
+    "python-relocatable"    : "custom relocatable framework python build",    
 }
 
 section("pyjs targets")

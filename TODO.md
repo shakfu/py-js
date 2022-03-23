@@ -2,17 +2,6 @@
 
 ## ENHANCEMENTS
 
-### Build System (builder)
-
-- [ ] make all xcodeprojects externally xcconfig-parametrizable to `builder`:
-
-  ```bash
-  xcodebuild -project py-js.xcodeproj -target py VERSION=3.7 SUFFIX=m
-  ```
-  
-- [x] inject commandline parameters in python build system to enable more granular downstream decisions.
-
-- [ ] add step in bundle-creation to prepopulate site-packages with list of packages
 
 ## BUGS
 

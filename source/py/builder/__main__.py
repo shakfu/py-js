@@ -167,13 +167,37 @@ class Application(Commander):
     def do_python_framework_ext(self, args):
         """build framework python to embed external"""
         self.ordered_dispatch('python_framework_ext', args)
-        #relocatablize('./targets/build/lib/Python.framework')
 
     @common_options
     def do_python_framework_pkg(self, args):
         """build framework python to embed in a package"""
         self.ordered_dispatch('python_framework_pkg', args)
 
+    @relocatable_options
+    def do_python_relocatable(self, args):
+        """build relocatable framework python"""
+        framework_path = get.FrameworkGetter(
+            python_version=args.python_version,
+            os_version=args.os_version,
+            base_url=args.baseurl,
+        ).download_and_extract(destination=args.destination)
+
+        if framework_path:
+            files_relocatablized = relocatablize(framework_path)
+            if args.unsign:
+                fix_broken_signatures(files_relocatablized)
+            short_version = ".".join(args.python_version.split(".")[0:2])
+            install_extras(
+                framework_path,
+                version=short_version,
+                requirements_file=args.pip_requirements,
+                upgrade_pip=args.upgrade_pip,
+                without_pip=args.without_pip
+            )
+            if fix_other_things(framework_path, short_version):
+                print()
+                print("Done!")
+                print("Customized, relocatable framework is at %s" % framework_path)
 
 # ----------------------------------------------------------------------------
 # py-js builder methods
@@ -262,7 +286,7 @@ class Application(Commander):
                 print("Done!")
                 print("Customized, relocatable framework is at %s" % framework_path)
 
-        #pyjs_builder_factory('pyjs_framework_pkg').build()
+        pyjs_builder_factory('pyjs_relocatable_pkg').build()
 
 
 

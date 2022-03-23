@@ -3,23 +3,49 @@
 
 ## v0.1
 
-### Core Features
+### Build System (builder)
 
-- [x] UI -- commandline interface is more intuitive:
+
+- [x] added even more intuitive make frontend to builder:
 
 ```bash
+>>> pyjs targets
+make (default)            : non-portable pyjs externals linked to your system
+make homebrew-pkg         : portable package with pyjs (requires homebrew python)
+make homebrew-ext         : portable pyjs externals (requires homebrew python)
+make shared-pkg           : portable package with pyjs externals (shared)
+make shared-ext           : portable pyjs externals (shared)
+make static-ext           : portable pyjs externals (static)
+make framework-pkg        : portable package with pyjs externals (framework)
+make framework-ext        : portable pyjs externals (framework)
+make relocatable-pkg      : portable package with more custom options (framework)
+make pymx                 : non-portable alternative python3 externals (min-lib)
 
-# before
-$ python3 -m builder pyjs_shared_ext -i -b
-
-# after
-$ python3 -m builder pyjs
--> builds default
-
-$ python3 -m builder pyjs shared_ext -i -b
--> builds pyjs_shared_ext
-
+>>> python targets
+make python-shared        : minimal enable-shared python build
+make python-shared-ext    : minimal enable-shared python build for externals
+make python-shared-pkg    : minimal enable-shared python build for packages
+make python-static        : minimal statically-linked python build
+make python-static-full   : statically-linked python build
+make python-framework     : minimal framework python build
+make python-framework-ext : minimal framework python build for externals
+make python-framework-pkg : minimal framework python build for packages
+make python-relocatable   : custom relocatable framework python build
 ```
+
+- [x] fixed framework-ext and framework-pkg options
+
+- [x] make all xcodeprojects externally xcconfig-parametrizable to `builder`:
+
+  ```bash
+  xcodebuild -project py-js.xcodeproj -target py VERSION=3.7 SUFFIX=m
+  ```
+  
+- [x] inject commandline parameters in python build system to enable more granular downstream decisions.
+
+- [x] add step in bundle-creation to prepopulate site-packages with list of packages
+
+### Core Features
 
 - [x] shift to python-based build system. Bash / Makefile is now deprecated.
 
