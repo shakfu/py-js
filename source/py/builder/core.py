@@ -97,6 +97,7 @@ URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
+
 # ----------------------------------------------------------------------------
 # Utility Functions
 
@@ -409,6 +410,7 @@ class Product:
             'url': str(self.url),
         }
 
+
 class Builder:
     """A Builder know how to build a single product type in a project."""
 
@@ -431,6 +433,10 @@ class Builder:
         return f'<{self.__class__.__name__}>'
 
     __repr__ = __str__
+
+    @property
+    def type(self) -> str:
+        return 
 
     @property
     def prefix(self) -> Path:
@@ -982,7 +988,6 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
     #     self.cmd.remove(self.prefix_resources / "Python.app")
 
 
-
 class SharedPythonBuilder(PythonSrcBuilder):
     """builds python in a shared format."""
 
@@ -1233,13 +1238,15 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in external build format"""
         self.cmd.chdir(self.prefix_lib)
-        dylib_path = (self.prefix_lib) / self.product.dylib
+        dylib_path = self.prefix_lib / self.product.dylib # TODO: change to ldlibrary
         assert dylib_path.exists()
         self.cmd.chmod(self.product.dylib)
+
+        # @loader_path/../Resources/Python.framework/Versions/3.9/Python
         self.install_name_tool_id(
-            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/lib/{self.product.dylib}",
-            self.product.dylib,
-        )
+            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
+            self.project.lib / self.project.python.ldlibrary
+        )        
         self.cmd.chdir(self.project.root)
 
     def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
@@ -1618,8 +1625,8 @@ class FrameworkExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from shared python"""
         if self.product_exists:
-            self.xcodebuild("framework-ext", targets=["py", "pyjs"], preprocessor_flags=["PY_FWK_EXT"])
-
+            self.xcodebuild("framework-ext", targets=["py", "pyjs"])
+                # preprocessor_flags=["PY_FWK_EXT"])
 
 class FrameworkPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal framework built python"""
