@@ -225,14 +225,10 @@ class Application(Commander):
         """build portable pyjs package (shared)"""
         self.ordered_dispatch('pyjs_static_ext_full', args)
 
-    # @common_options
-    # def do_pyjs_framework_ext(self, args):
-    #     """build portable pyjs externals (framework)"""
-    #     self.ordered_dispatch('pyjs_framework_ext', args)
-    #     import yaml
-    #     with open('dump.yml', 'w') as f:
-    #         d = analyze('./targets/build/lib/Python.framework')
-    #         yaml.safe_dump(d, f, indent=4)
+    @common_options
+    def do_pyjs_framework_ext(self, args):
+        """build portable pyjs externals (framework)"""
+        self.ordered_dispatch('pyjs_framework_ext', args)
 
     @relocatable_options
     def do_pyjs_framework_pkg(self, args):
