@@ -73,21 +73,18 @@ No worries, if you need portable relocatable python3 externals for your package 
 
 ### Alternative Quickstart for Self-contained Python3 Externals / Packages
 
-option | name     | type       | format     | size (MB)  
-:--:   | :------- | :--------- | :--------- | :----
-1      | py       | static     | external   | 9.0
-1      | pyjs     | static     | external   | 8.8
-2      | py       | shared     | external   | 16.7
-2      | pyjs     | shared     | external   | 16.5
-3      | py       | shared     | package    | 18.7 [1]
-3      | pyjs     | shared     | package    | 18.7 [1]
+idx  | command          | type       | format     | py size |  pyjs size 
+:--: | :-------         | :--------- | :--------- | :------ | :----------
+1    | make static-ext  | static     | external   | 9.0     | 8.8
+2    | make shared-ext  | shared     | external   | 16.7    | 16.5
+3    | make shared-pkg  | shared     | package    | 18.7[1] | 18.7 [1]
+
 
 [1] size, in this case, is not the individual external but the package size which includes patches, help files and both externals.
 
 This alternative quickstart assumes that you have a recent python3 installation (python.org, homebrew or otherwise).
 
 If you'd rather not compile anything there are self-contained python3 externals which can be included in standalones in the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1).
-
 
 If you dont' mind compiling (and have xcode installed) then it's pretty straightforward to build your own, by picking one of the following options:
 
@@ -118,6 +115,35 @@ Although the three options deliver somewhat different products (see below for de
 With option (3), the externals are linked to, and have been compiled against, a relocatable python installation in the `support` folder.
 
 Depending on your choice above, the python interpreter in each external is either statically compiled or dynamically linked, and in all three cases we have a self-contained and relocatable structure (external or package) without any non-system dependencies. This makes it appropriate for use in Max Packages and Standalones.
+
+Ther are other [build variations](#build-variations) which are are discussed in more detail below. You can also what build options are available via typing `make help` as below:
+
+```bash
+$ make help
+
+>>> pyjs targets
+make (default)            : non-portable pyjs externals linked to your system
+make homebrew-pkg         : portable package with pyjs (requires homebrew python)
+make homebrew-ext         : portable pyjs externals (requires homebrew python)
+make shared-pkg           : portable package with pyjs externals (shared)
+make shared-ext           : portable pyjs externals (shared)
+make static-ext           : portable pyjs externals (static)
+make framework-pkg        : portable package with pyjs externals (framework)
+make framework-ext        : portable pyjs externals (framework)
+make reolocatable-pkg     : portable package more options (framework)
+make pymx                 : non-portable alternative python3 externals (min-lib)
+
+>>> python targets
+make python-shared        : minimal enable-shared python build
+make python-shared-ext    : minimal enable-shared python build for externals
+make python-shared-pkg    : minimal enable-shared python build for packages
+make python-static        : minimal statically-linked python build
+make python-static-full   : statically-linked python build
+make python-framework     : minimal framework python build
+make python-framework-ext : minimal framework python build for externals
+make python-framework-pkg : minimal framework python build for packages
+
+```
 
 ### Using Self-contained Python Externals in a Standalone
 
