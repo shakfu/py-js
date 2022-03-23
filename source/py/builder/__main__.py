@@ -230,8 +230,14 @@ class Application(Commander):
         """build portable pyjs externals (framework)"""
         self.ordered_dispatch('pyjs_framework_ext', args)
 
-    @relocatable_options
+    @common_options
     def do_pyjs_framework_pkg(self, args):
+        """build portable pyjs package (framework)"""
+        self.ordered_dispatch('pyjs_framework_pkg', args)
+
+
+    @relocatable_options
+    def do_pyjs_relocatable_pkg(self, args):
         """build portable pyjs package (framework)"""
         framework_path = get.FrameworkGetter(
             python_version=args.python_version,
@@ -256,40 +262,41 @@ class Application(Commander):
                 print("Done!")
                 print("Customized, relocatable framework is at %s" % framework_path)
 
-        #self.ordered_dispatch('pyjs_framework_pkg', args)
+        #pyjs_builder_factory('pyjs_framework_pkg').build()
+
 
 
 # ----------------------------------------------------------------------------
 # utility methods
 
-    def do_check(self, args):
-        """check reference utilities"""
+    # def do_check(self, args):
+    #     """check reference utilities"""
     
-    @option("--exec-ref", "-e", type=str, help="back ref for executable or plugin")
-    @option("--staticlibs-dir", "-l", type=str, help="static lib directory fir static substitutes")
-    @option("--dest-dir", "-d", type=str, help="where target dylib will be copied to with copied dependents")
-    @option("target", help="dylib or executable to made relocatable")
-    def do_check_dependencies(self, args):
-        """analyze dependencies"""
-        d = DependencyManager(args.target, args.dest_dir, args.staticlibs_dir, args.exec_ref)
-        d.analyze()
-        from pprint import pprint
-        d.get_deps()
-        pprint(d.install_names)
+    # @option("--exec-ref", "-e", type=str, help="back ref for executable or plugin")
+    # @option("--staticlibs-dir", "-l", type=str, help="static lib directory fir static substitutes")
+    # @option("--dest-dir", "-d", type=str, help="where target dylib will be copied to with copied dependents")
+    # @option("target", help="dylib or executable to made relocatable")
+    # def do_check_dependencies(self, args):
+    #     """analyze dependencies"""
+    #     d = DependencyManager(args.target, args.dest_dir, args.staticlibs_dir, args.exec_ref)
+    #     d.analyze()
+    #     from pprint import pprint
+    #     d.get_deps()
+    #     pprint(d.install_names)
 
-    @option("target", help="external to analyze")
-    def do_check_external(self, args):
-        """analyze external"""
-        import yaml
-        with open('dump.yml', 'w') as f:
-            d = analyze(f'../../externals/{args.target}')
-            yaml.safe_dump(d, f, indent=4)
+    # @option("target", help="external to analyze")
+    # def do_check_external(self, args):
+    #     """analyze external"""
+    #     import yaml
+    #     with open('dump.yml', 'w') as f:
+    #         d = analyze(f'../../externals/{args.target}')
+    #         yaml.safe_dump(d, f, indent=4)
 
-    @common_options
-    def do_test(self, args):
-        """interactive testing shell"""
-        from IPython import embed
-        embed(colors="neutral")
+    # @common_options
+    # def do_test(self, args):
+    #     """interactive testing shell"""
+    #     from IPython import embed
+    #     embed(colors="neutral")
 
 
 if __name__ == '__main__':

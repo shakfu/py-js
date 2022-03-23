@@ -81,7 +81,7 @@ all: default
 
 # High-Level
 # -----------------------------------------------------------------------
-.PHONY: default local-sys \
+.PHONY: default help local-sys \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
@@ -93,6 +93,9 @@ all: default
 
 # -----------------------------------------------------------------------
 # python external argets
+
+help:
+	@python3 source/py/scripts/help.py
 
 default: local-sys
 
@@ -122,6 +125,9 @@ framework-pkg: clean-framework-pkg
 
 framework-ext: clean-framework-ext
 	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
+
+reolocatable-pkg: clean-framework-pkg
+	$(call pybuild-targets, "pyjs" "relocatable_pkg")
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh

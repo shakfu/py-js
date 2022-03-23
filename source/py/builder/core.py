@@ -1237,15 +1237,14 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
 
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in external build format"""
-        self.cmd.chdir(self.prefix_lib)
-        dylib_path = self.prefix_lib / self.product.dylib # TODO: change to ldlibrary
+        self.cmd.chdir(self.prefix)
+        dylib_path = self.prefix / 'Python'
         assert dylib_path.exists()
-        self.cmd.chmod(self.product.dylib)
-
-        # @loader_path/../Resources/Python.framework/Versions/3.9/Python
+        #self.cmd.chmod(dylib_path)
         self.install_name_tool_id(
             f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
-            self.project.lib / self.project.python.ldlibrary
+            dylib_path
+            # self.project.lib / self.project.python.ldlibrary
         )        
         self.cmd.chdir(self.project.root)
 
@@ -1328,14 +1327,14 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
 
     def fix_python_dylib_for_pkg(self):
         """change dylib ref to point to loader in package build format"""
-        self.cmd.chdir(self.prefix / 'lib')
-        dylib_path = self.prefix / 'lib' / self.product.dylib
-        assert dylib_path.exists(), f"{dylib_path} does not exist"
-        self.cmd.chmod(self.product.dylib)
+        self.cmd.chdir(self.prefix)
+        dylib_path = self.prefix / 'Python'
+        assert dylib_path.exists()
+        self.cmd.chmod(dylib_path)
         # both of these are equivalent (and both don't work!)
         self.install_name_tool_id(
-            f"@loader_path/../../../../support/{self.product.name_ver}/lib/{self.product.dylib}",
-            self.product.dylib,
+            f"@loader_path/../../../../support" / self.project.python.ldlibrary,
+            dylib_path,
         )
         self.cmd.chdir(self.project.root)
 
@@ -1349,9 +1348,29 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
             dir_to_change = dirs_to_change[0]
             self.install_name_tool_change(
                 dir_to_change,
-                f"@executable_path/../lib/{self.product.dylib}", 
+                f"@executable_path/../Python", 
                 exe
             )
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
+        """change ref on executable to point to relative dylib"""
+        parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
+        self.cmd.chdir(parent_dir)
+        executable = parent_dir / "Python"
+        result = subprocess.check_output(["otool", "-L", executable])
+        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+        for entry in entries:
+            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+            if match:
+                path = match.group(1)
+                # homebrew files are installed in /usr/local/Cellar
+                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+                    self.install_name_tool_change(
+                        path,
+                        f"@executable_path/../../../../Python",
+                        executable,
+                    )
         self.cmd.chdir(self.project.root)
 
     def post_process(self):
@@ -1360,6 +1379,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.ziplib()
         self.fix_python_exe_for_pkg()
         self.fix_python_dylib_for_pkg()
+        self.fix_python_dylib_for_pkg2()
 
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
@@ -1640,10 +1660,8 @@ class FrameworkPkgBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from framework python"""
-        # src = self.project.lib / "Python.framework" / "Versions" / self.product.ver
-        # dst = f"{self.project.support}/{self.product.name_ver}"
         src = self.project.lib / "Python.framework"
-        dst = f"{self.project.support}" / "Python.framework"
+        dst = self.project.support / "Python.framework"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
