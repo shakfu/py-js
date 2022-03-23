@@ -126,7 +126,7 @@ framework-pkg: clean-framework-pkg
 framework-ext: clean-framework-ext
 	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
 
-reolocatable-pkg: clean-framework-pkg
+relocatable-pkg: clean-framework-pkg
 	$(call pybuild-targets, "pyjs" "relocatable_pkg")
 
 pymx:
@@ -158,6 +158,9 @@ python-framework-ext: clean-python-framework-ext
 
 python-framework-pkg: clean-python-framework-pkg
 	$(call pybuild-targets, "python" "framework_pkg" "--install")
+
+python-relocatable: clean-python-framework-pkg
+	$(call pybuild-targets, "python" "relocatable_pkg")
 
 
 # -----------------------------------------------------------------------
