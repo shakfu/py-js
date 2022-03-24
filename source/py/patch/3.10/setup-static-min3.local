@@ -44,7 +44,6 @@ _io -DPy_BUILD_CORE_BUILTIN -I$(srcdir)/Include/internal -I$(srcdir)/Modules/_io
 
 faulthandler faulthandler.c
 _tracemalloc _tracemalloc.c
-_peg_parser _peg_parser.c
 
 # -------------------------------------------------------------------------------
 # OPTIONAL STATIC (can be static or dynamic)
@@ -97,7 +96,7 @@ _posixsubprocess _posixsubprocess.c
 _blake2 _blake2/blake2module.c \
     _blake2/blake2b_impl.c _blake2/blake2s_impl.c
 binascii binascii.c
-parser parsermodule.c
+#parser parsermodule.c
 
 _queue _queuemodule.c
 _md5 md5module.c
@@ -143,6 +142,7 @@ _curses
 _curses_panel
 
 xxlimited
+xxlimited_35
 xxsubtype
 _xxsubinterpreters
 

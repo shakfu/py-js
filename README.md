@@ -73,11 +73,11 @@ No worries, if you need portable relocatable python3 externals for your package 
 
 ### Alternative Quickstart for Self-contained Python3 Externals / Packages
 
-idx  | command          | type       | format     | py size |  pyjs size 
-:--: | :-------         | :--------- | :--------- | :------ | :----------
-1    | make static-ext  | static     | external   | 9.0     | 8.8
-2    | make shared-ext  | shared     | external   | 16.7    | 16.5
-3    | make shared-pkg  | shared     | package    | 18.7[1] | 18.7 [1]
+idx  | command            | type       | format     | py size |  pyjs size 
+:--: | :----------------- | :--------- | :--------- | :------ | :----------
+1    | `make static-ext`  | static     | external   | 9.0     | 8.8
+2    | `make shared-ext`  | shared     | external   | 16.7    | 16.5
+3    | `make shared-pkg`  | shared     | package    | 18.7    | 18.7 [1]
 
 
 [1] size, in this case, is not the individual external but the package size which includes patches, help files and both externals.
@@ -624,7 +624,13 @@ If you need numpy embedded in a portable variation of py-js, then you have a cou
 
 It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this just be aware that it is very large and has not been minimized.
 
-## Sister projects
+## Related projects
+
+- [Python Apple Support](https://github.com/beeware/Python-Apple-support): A meta-package for building a version of Python that can be embedded into a macOS, iOS, tvOS or watchOS project.
+
+- [relocatable-python](https://github.com/gregneagle/relocatable-python): A tool for building standalone relocatable Python.framework bundles
+
+- [python-build-standalone](https://github.com/indygreg/python-build-standalone): Produce redistributable builds of Python
 
 - [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
 

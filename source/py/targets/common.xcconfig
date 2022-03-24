@@ -1,14 +1,28 @@
 #include "../../maxmspsdk.xcconfig"
 
-MAJ_VER = 3.9
-MIN_VER = 10
-VERSION = $(MAJ_VER)
-SEMVER = $(MAJ_VER).$(MIN_VER)
+PY_SHORT_VERSION = 3.9
+
+// -------------------------------------------------------------------------
+// DON'T CHANGE BELOW HERE
+// -------------------------------------------------------------------------
+
+// Don't count on what VERSION is set to here since VERSION is set 
+// dynamically, at the time of commandline compilation (via xcodebuild),
+// to correspond to the version of the python interpreter.
+//
+// If you try to compile from xcode though, xcode will rely on the number here
+// So you can override it at the target level if desired or changing the 
+// value of PY_SHORT_VERSION above to correspond to the version of
+// your python interpreter version.
+//
+// Note that in call cases, commandline compilation will set VERSION
+// and other variables such ABIFLAGS dynamically.
+
+VERSION = $(PY_SHORT_VERSION)
+ABIFLAGS = 
 
 SUPPORT = $(SRCROOT)/../../../../support
-
 PRODUCT_NAME = $(TARGET_NAME)
-
 HEADER_SEARCH_PATHS = $(inherited) $(PY_HEADERS)
 LIBRARY_SEARCH_PATHS = $(inherited) $(PY_LIBS)
 OTHER_LDFLAGS = $(inherited) $(PY_LDFLAGS)
