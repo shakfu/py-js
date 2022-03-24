@@ -3,6 +3,10 @@
 
 ## Build System
 
+- move download and post_processing of `standaone-pkg` and `relocatable-pkg` to python-related classe in `builder/core`
+
+- add beeware downloader.
+
 - create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
 
 - If a patch is not found, default to a standard working path or no patch at all

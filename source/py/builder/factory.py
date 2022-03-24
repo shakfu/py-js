@@ -28,7 +28,8 @@ PYJS_BUILDERS = dict(
     pyjs_shared_pkg = (core.SharedPkgBuilder, ['python_shared_pkg']),
     pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),
     pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
-    pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, [])
+    pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, []),
+    pyjs_standalone_pkg = (core.StandalonePkgBuilder, [])
 )
 
 
