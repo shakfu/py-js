@@ -1729,7 +1729,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
         """clean everything."""
         self.clean_python_pyc(self.prefix)
         self.clean_python_tests(self.python_lib)
-        self.clean_python_site_packages(self.python_lib)
+        # self.clean_python_site_packages(self.python_lib)
 
         for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
             self.cmd.remove(i)
