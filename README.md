@@ -45,7 +45,7 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
 
 1. You should have a modern `python3` installed on your Mac: either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Python versions from 3.7 to 3.10 are tested and known to work.
 
-2. Make sure you have `Xcode` installed and you are on an Intel-based Mac.
+2. Make sure you also have [Xcode](https://xcodereleases.com/) installed and you are on an Intel-based Mac.
 
 3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
@@ -53,13 +53,11 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
     git submodule init && git submodule update 
     ```
 
-4. For the purposes of this quickstart, use a recent python3 (3.8+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
+
+4. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
 
 
-5. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
-
-
-6. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
+5. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
 
     ```bash
     make
