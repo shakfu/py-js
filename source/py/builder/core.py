@@ -761,7 +761,7 @@ class PythonBuilder(Builder):
     def clean_python_site_packages(self, basedir=None):
         """remove python site-packages"""
         if not basedir:
-            self.python_lib
+            basedir = self.python_lib
         self.cmd.remove(basedir / "site-packages")
 
     def remove_packages(self):
@@ -1032,8 +1032,8 @@ class StaticPythonBuilder(PythonSrcBuilder):
         return self.project.lib / self.product.build_dir
 
     def build(self):
-        for dep in self.depends_on:
-            dep.build()
+        # for dep in self.depends_on:
+        #     dep.build()
 
         self.cmd.chdir(self.src_path)
         self.cmd(
@@ -1572,7 +1572,7 @@ class LocalSystemBuilder(PyJsBuilder):
         flags = dict(
             PREFIX = str(self.project.python.prefix),
             VERSION = str(self.project.python.version_short),
-            SUFFIX = str(self.project.python.abiflags),
+            ABIFLAGS = str(self.project.python.abiflags),
             LIBS = str(self.project.python.libs),
         )
         self.xcodebuild("local-sys", targets=["py", "pyjs"], **flags)
@@ -1589,16 +1589,25 @@ class StaticExtBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from statically built python"""
+
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
         if self.product_exists:
-            self.xcodebuild("static-ext", targets=["py", "pyjs"])
+            self.xcodebuild("static-ext", targets=["py", "pyjs"], **flags)
 
 class StaticExtFullBuilder(StaticExtBuilder):
     """pyjs externals from fully-loaded statically built python"""
 
     def build(self):
         """builds externals from statically built python"""
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
         if self.product_exists:
-            self.xcodebuild("static-ext-full", targets=["py", "pyjs"])
+            self.xcodebuild("static-ext-full", targets=["py", "pyjs"], **flags)
 
 class SharedExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
@@ -1612,8 +1621,13 @@ class SharedExtBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from shared python"""
+
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
         if self.product_exists:
-            self.xcodebuild("shared-ext", targets=["py", "pyjs"])
+            self.xcodebuild("shared-ext", targets=["py", "pyjs"], **flags)
 
 class SharedPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal statically built python"""
@@ -1631,8 +1645,13 @@ class SharedPkgBuilder(PyJsBuilder):
         dst = f"{self.project.support}/{self.product.name_ver}"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
+
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
         if self.product_exists:
-            self.xcodebuild("shared-pkg", targets=["py", "pyjs"])
+            self.xcodebuild("shared-pkg", targets=["py", "pyjs"], **flags)
 
 class FrameworkExtBuilder(PyJsBuilder):
     """pyjs externals from minimal framework built python"""
@@ -1646,8 +1665,12 @@ class FrameworkExtBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from shared python"""
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
         if self.product_exists:
-            self.xcodebuild("framework-ext", targets=["py", "pyjs"])
+            self.xcodebuild("framework-ext", targets=["py", "pyjs"], **flags)
                 # preprocessor_flags=["PY_FWK_EXT"])
 
 class FrameworkPkgBuilder(PyJsBuilder):
@@ -1666,8 +1689,12 @@ class FrameworkPkgBuilder(PyJsBuilder):
         dst = self.project.support / "Python.framework"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
         if self.product_exists:
-            self.xcodebuild("framework-pkg", targets=["py", "pyjs"])
+            self.xcodebuild("framework-pkg", targets=["py", "pyjs"], **flags)
 
 class RelocatablePkgBuilder(PyJsBuilder):
     """pyjs externals in a framework package using Greg Neagle's Relocatable Python
@@ -1736,7 +1763,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
         temp_lib_dynload = self.prefix_lib / "lib-dynload"
         temp_os_py = self.prefix_lib / "os.py"
 
-        self.cmd.remove(self.site_packages)
+        # self.cmd.remove(self.site_packages)
+        self.cmd.move(self.site_packages, '/tmp/site-packages')
         self.lib_dynload.rename(temp_lib_dynload)
         self.cmd.copy(self.python_lib / "os.py", temp_os_py)
 
@@ -1747,7 +1775,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
         self.python_lib.mkdir()
         temp_lib_dynload.rename(self.lib_dynload)
         temp_os_py.rename(self.python_lib / "os.py")
-        self.site_packages.mkdir()
+        # self.site_packages.mkdir()
+        self.cmd.move('/tmp/site-packages', self.site_packages)
 
     @property
     def product_exists(self):
@@ -1759,6 +1788,10 @@ class RelocatablePkgBuilder(PyJsBuilder):
     def build(self):
         """builds externals from framework python"""
         self.pre_process()
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
         if self.product_exists:
-            self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"])
+            self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"], **flags)
 

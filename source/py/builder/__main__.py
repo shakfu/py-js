@@ -247,7 +247,7 @@ class Application(Commander):
     @common_options
     def do_pyjs_shared_pkg(self, args):
         """build portable pyjs package (shared)"""
-        self.ordered_dispatch('pyjs_static_ext_full', args)
+        self.ordered_dispatch('pyjs_shared_pkg', args)
 
     @common_options
     def do_pyjs_framework_ext(self, args):
@@ -258,7 +258,6 @@ class Application(Commander):
     def do_pyjs_framework_pkg(self, args):
         """build portable pyjs package (framework)"""
         self.ordered_dispatch('pyjs_framework_pkg', args)
-
 
     @relocatable_options
     def do_pyjs_relocatable_pkg(self, args):

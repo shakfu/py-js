@@ -1,5 +1,15 @@
 # TODO
 
+
+## Build System
+
+- create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
+
+- If a patch is not found, default to a standard working path or no patch at all
+
+- Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
+
+
 ## ENHANCEMENTS
 
 

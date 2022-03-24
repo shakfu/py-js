@@ -2,11 +2,11 @@
 
 BUILD = $(SRCROOT)/../build/lib
 PREFIX = $(SRCROOT)/../build/lib/python-shared
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 PY_LIBS = $(PREFIX)/lib $(BUILD)/bzip2/lib $(BUILD)/openssl/lib $(BUILD)/xz/lib
 
 // pre-patch
-// PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lbz2 -llzma -lz -lintl -liconv
+// PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl -lssl -lbz2 -llzma -lz -lintl -liconv
 
 // post-patch
-PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lbz2 -llzma -lz
+PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl -lssl -lbz2 -llzma -lz

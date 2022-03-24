@@ -1,8 +1,8 @@
 #include "../common.xcconfig"
 
 PREFIX = $(SUPPORT)/python$(VERSION)
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 PY_LIBS = $(PREFIX)
-PY_LDFLAGS = -lpython$(VERSION) -ldl
+PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl
 
 //OTHER_CODE_SIGN_FLAGS = --deep
