@@ -157,7 +157,7 @@ Incidentally, a pre-built standalone that was built using exactly the same steps
 
 Note: it would normally be considered redundant to install two different python3 externals in your project. Nontheless, it's good to demonstrate that they can be used together if required.
 
-As a side note: if there is a need to codesign / notarize the standalone, there are scripts in `py-js/source/py/scripts` to make this a lit easier. Alternatively, you can check out a [sister
+As a side note: if there is a need to codesign / notarize the standalone, there are scripts in `py-js/source/py/scripts` to make this a little easier. Alternatively, you can check out a [sister
 project](https://github.com/shakfu/maxutils)  which also aims to make this less painful.
 
 Please read on for further details about what the py-js externals can do.
