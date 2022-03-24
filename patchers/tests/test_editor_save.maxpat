@@ -137,7 +137,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/world.py",
+					"file" : "",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -147,7 +147,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/world.py",
+						"file" : "",
 						"pythonpath" : ""
 					}
 ,
