@@ -43,21 +43,23 @@ It is suggested to try out the `py` and `pyjs` objects first since they are the 
 
 If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), building them is pretty straightforward:
 
-1. Make sure you have `Xcode` installed and you are on an Intel-based Mac.
+1. You should have a modern `python3` installed on your Mac: either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Python versions from 3.7 to 3.10 are tested and known to work.
 
-2. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
+2. Make sure you have `Xcode` installed and you are on an Intel-based Mac.
+
+3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
     ```bash
     git submodule init && git submodule update 
     ```
 
-3. For the purposes of this quickstart, use a recent python3 (3.8+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
+4. For the purposes of this quickstart, use a recent python3 (3.8+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
 
 
-4. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
+5. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
 
 
-5. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
+6. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
 
     ```bash
     make
@@ -437,6 +439,13 @@ make framework_pkg  | framework    | 16.8     | package   | yes      | yes      
 
 - *isolated*: if yes, then different external types can run concurrently without issue
 
+#### Python Version Compatibility
+
+![py-js testing](./media/python_compatibility.png)
+
+[1] Homebrew only tested on current relase (3.9.10), other versions are expected to work without issues. 
+
+[2] Relocatable python can selected on its own version of python. Only testing python 3.9.10, other versions should work without issues
 
 #### Packages vs Self-contained Externals
 
