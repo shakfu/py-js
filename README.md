@@ -415,13 +415,13 @@ There is generally tradeoff of size vs. portability:
 build command       | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
 :-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
 make                | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
-make brew_ext       | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
-make brew_pkg       | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
-make static_ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
-make shared_ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
-make shared_pkg     | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
-make framework_ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
-make framework_pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
+make brew-ext       | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
+make brew-pkg       | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
+make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
+make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
+make shared-pkg     | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
+make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
+make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
 
 [1] has automatic access to your system python's site-packages
 
