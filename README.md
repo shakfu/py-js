@@ -4,7 +4,7 @@ Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP]
 
 repo - <https://github.com/shakfu/py-js>
 
-![py-js test](./media/screenshot.png)
+[![py-js test](./media/screenshot.png)](patchers/py_test_standalone.maxpat)
 
 
 ## Preface
@@ -226,7 +226,7 @@ py max external
         right outlet             : bang on success 
 ```
 
-![py-js test_py](./media/test_py.png)
+[![py-js test_py](./media/test_py.png)](patchers/py_test_anything.maxpat)
 
 ### `pyjs` external
 
