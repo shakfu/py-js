@@ -1773,8 +1773,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
         temp_lib_dynload = self.prefix_lib / "lib-dynload"
         temp_os_py = self.prefix_lib / "os.py"
 
-        self.cmd.remove(self.site_packages)
-        # self.cmd.move(self.site_packages, '/tmp/site-packages')
+        # self.cmd.remove(self.site_packages)
+        self.cmd.move(self.site_packages, '/tmp/site-packages')
         self.lib_dynload.rename(temp_lib_dynload)
         self.cmd.copy(self.python_lib / "os.py", temp_os_py)
 
@@ -1785,8 +1785,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
         self.python_lib.mkdir()
         temp_lib_dynload.rename(self.lib_dynload)
         temp_os_py.rename(self.python_lib / "os.py")
-        self.site_packages.mkdir()
-        # self.cmd.move('/tmp/site-packages', self.site_packages)
+        # self.site_packages.mkdir()
+        self.cmd.move('/tmp/site-packages', self.site_packages)
 
     @property
     def product_exists(self):
