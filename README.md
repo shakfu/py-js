@@ -363,7 +363,7 @@ Implemented for `py` objects only.
 
 - **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
 
-For `pyjs` objects, code editing is already provided by the js max object.
+For `pyjs` objects, code editing is already provided by the [js](https://docs.cycling74.com/max8/refpages/js) Max object.
 
 #### Scripting
 
