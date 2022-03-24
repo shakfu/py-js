@@ -385,7 +385,7 @@ Implemented for both `py` and `pyjs` objects:
 [py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
 ```
 
-This just means that opened a patch with a `py-js` external then imported `numpy`, used it, then closed your patch and then, in the same Max session, re-opened it or created a new one and imported `numpy` again.
+This just means that the user opened a patch with a `py-js` external that imports `numpy`, then closed the patch and (in the same Max session) re-opened it, or created a new patch importing `numpy` again.
 
 To fix it, just restart Max and use it normally in your patch. Treat each patch as a session and restart Max after each session. It's a pain, but unfortunately a limitation of current python c-extensions.
 
