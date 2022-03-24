@@ -28,6 +28,8 @@ Builder
             SharedPkgBuilder
             FrameworkExtBuilder
             FrameworkPkgBuilder
+            RelocatablePkgBuilder
+            StandalonePkgBuilder
 
 install:
     configure -> reset -> download -> pre_process -> build -> post_process
@@ -1564,6 +1566,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.reset_prefix()
         self.install()
 
+
 class LocalSystemBuilder(PyJsBuilder):
     """Builds externals from local python (non-portable)"""
 
@@ -1576,6 +1579,7 @@ class LocalSystemBuilder(PyJsBuilder):
             LIBS = str(self.project.python.libs),
         )
         self.xcodebuild("local-sys", targets=["py", "pyjs"], **flags)
+
 
 class StaticExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
@@ -1597,6 +1601,7 @@ class StaticExtBuilder(PyJsBuilder):
         if self.product_exists:
             self.xcodebuild("static-ext", targets=["py", "pyjs"], **flags)
 
+
 class StaticExtFullBuilder(StaticExtBuilder):
     """pyjs externals from fully-loaded statically built python"""
 
@@ -1608,6 +1613,7 @@ class StaticExtFullBuilder(StaticExtBuilder):
         )
         if self.product_exists:
             self.xcodebuild("static-ext-full", targets=["py", "pyjs"], **flags)
+
 
 class SharedExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
@@ -1628,6 +1634,7 @@ class SharedExtBuilder(PyJsBuilder):
         )
         if self.product_exists:
             self.xcodebuild("shared-ext", targets=["py", "pyjs"], **flags)
+
 
 class SharedPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal statically built python"""
@@ -1653,6 +1660,7 @@ class SharedPkgBuilder(PyJsBuilder):
         if self.product_exists:
             self.xcodebuild("shared-pkg", targets=["py", "pyjs"], **flags)
 
+
 class FrameworkExtBuilder(PyJsBuilder):
     """pyjs externals from minimal framework built python"""
 
@@ -1672,6 +1680,7 @@ class FrameworkExtBuilder(PyJsBuilder):
         if self.product_exists:
             self.xcodebuild("framework-ext", targets=["py", "pyjs"], **flags)
                 # preprocessor_flags=["PY_FWK_EXT"])
+
 
 class FrameworkPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal framework built python"""
@@ -1696,6 +1705,7 @@ class FrameworkPkgBuilder(PyJsBuilder):
         if self.product_exists:
             self.xcodebuild("framework-pkg", targets=["py", "pyjs"], **flags)
 
+
 class RelocatablePkgBuilder(PyJsBuilder):
     """pyjs externals in a framework package using Greg Neagle's Relocatable Python
 
@@ -1719,7 +1729,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
         """clean everything."""
         self.clean_python_pyc(self.prefix)
         self.clean_python_tests(self.python_lib)
-        # self.clean_python_site_packages(self.python_lib)
+        self.clean_python_site_packages(self.python_lib)
 
         for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
             self.cmd.remove(i)
@@ -1763,8 +1773,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
         temp_lib_dynload = self.prefix_lib / "lib-dynload"
         temp_os_py = self.prefix_lib / "os.py"
 
-        # self.cmd.remove(self.site_packages)
-        self.cmd.move(self.site_packages, '/tmp/site-packages')
+        self.cmd.remove(self.site_packages)
+        # self.cmd.move(self.site_packages, '/tmp/site-packages')
         self.lib_dynload.rename(temp_lib_dynload)
         self.cmd.copy(self.python_lib / "os.py", temp_os_py)
 
@@ -1775,8 +1785,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
         self.python_lib.mkdir()
         temp_lib_dynload.rename(self.lib_dynload)
         temp_os_py.rename(self.python_lib / "os.py")
-        # self.site_packages.mkdir()
-        self.cmd.move('/tmp/site-packages', self.site_packages)
+        self.site_packages.mkdir()
+        # self.cmd.move('/tmp/site-packages', self.site_packages)
 
     @property
     def product_exists(self):
@@ -1794,4 +1804,138 @@ class RelocatablePkgBuilder(PyJsBuilder):
         )
         if self.product_exists:
             self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"], **flags)
+
+
+class StandalonePkgBuilder(PyJsBuilder):
+    """pyjs externals in a framework package using build standalone python project
+    """
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.support / "python" / "install"
+
+    @property
+    def python_lib(self):
+        """python/lib/product.major.minor: python/lib/python3.9"""
+        return self.prefix_lib / self.product.name_ver
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.clean()
+        self.ziplib()
+
+    def clean(self):
+        """clean everything."""
+
+        # remove build, licenses, and json
+        self.cmd.remove(self.prefix.parent / 'build')
+        self.cmd.remove(self.prefix.parent / 'licenses')
+        self.cmd.remove(self.prefix.parent / 'PYTHON.json')
+
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        # self.clean_python_site_packages(self.python_lib)
+
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+            self.cmd.remove(i)
+
+        self.cmd.remove(self.prefix_lib / "pkgconfig")
+        self.cmd.remove(self.prefix / "share")
+        self.cmd.remove(self.prefix_lib / self.static_lib)
+
+        self.remove_packages()
+        self.remove_extensions()
+        self.remove_binaries()
+        self.remove_tkinter()
+
+    def rm_globbed(self, names):
+        """remove all named glob patterns of libraries and files"""
+        for name in names:
+            for f in self.prefix_lib.glob(name):
+                self.cmd.remove(f)
+
+    def rm_bins(self, names):
+        """remove all named binary executables"""
+        for name in names:
+            self.cmd.remove(self.prefix_bin / name)
+
+    def remove_binaries(self):
+        """remove list of non-critical executables"""
+        ver = self.product.ver
+        self.rm_bins(
+            [
+                f"2to3-{ver}",
+                "pip",
+                "pip3",
+                f"pip{ver}",
+                "2to3",
+                "idle3",
+                "pydoc3",
+                "python3",
+                "python3-config",
+                f"idle{ver}",
+                f"easy_install-{ver}",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+                # f'python{ver}{self.suffix}',
+                # f'python{ver}-config',
+            ]
+        )
+
+    def remove_tkinter(self):
+        """remove tkinter-related stuff"""
+        targets = [
+            "Tk.*",
+            "itcl*",
+            "libformw.*",
+            "libmenuw.*",
+            "libpanelw.*",
+            "libncurse*",
+            "libtcl*",   
+            "libtclstub*",
+            "sqlite3*",
+            "libtk*",
+            "tcl*",
+            "tdbc*",
+            "thread*",
+            "tk*",
+        ]
+        self.rm_globbed(targets)
+
+    def ziplib(self):
+        """zip python package in site-packages in .zip archive"""
+        temp_lib_dynload = self.prefix_lib / "lib-dynload"
+        temp_os_py = self.prefix_lib / "os.py"
+
+        self.cmd.remove(self.site_packages)
+        # self.cmd.move(self.site_packages, '/tmp/site-packages')
+        self.cmd.remove(self.lib_dynload)
+        self.cmd.copy(self.python_lib / "os.py", temp_os_py)
+
+        zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
+        shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
+
+        self.cmd.remove(self.python_lib)
+        self.python_lib.mkdir()
+        self.lib_dynload.mkdir()
+        temp_os_py.rename(self.python_lib / "os.py")
+        self.site_packages.mkdir()
+        # self.cmd.move('/tmp/site-packages', self.site_packages)
+
+    @property
+    def product_exists(self):
+        standalone_py = self.project.support / "python"
+        if not standalone_py.exists():
+            self.log.warning("standalone python is not provided: %s", standalone_py)
+        return standalone_py.exists()
+
+    def build(self):
+        """builds externals from framework python"""
+        self.pre_process()
+        flags = dict(
+            VERSION = str(self.project.python.version_short),
+            ABIFLAGS = str(self.project.python.abiflags),
+        )
+        if self.product_exists:
+            self.xcodebuild("standalone-pkg", targets=["py", "pyjs"], **flags)
 

@@ -12,14 +12,14 @@ def section(title):
 
 pyjs_targets = {
     "(default)"         : "non-portable pyjs externals linked to your system",
-    "homebrew-pkg"      : "portable package with pyjs (requires homebrew python)",
+    "homebrew-pkg"      : "portable package w/ pyjs (requires homebrew python)",
     "homebrew-ext "     : "portable pyjs externals (requires homebrew python)",
     "shared-pkg "       : "portable package with pyjs externals (shared)",
     "shared-ext"        : "portable pyjs externals (shared)",
     "static-ext"        : "portable pyjs externals (static)",
     "framework-pkg"     : "portable package with pyjs externals (framework)",
     "framework-ext"     : "portable pyjs externals (framework)",
-    "relocatable-pkg"   : "portable package with more custom options (framework)",
+    "relocatable-pkg"   : "portable package w/ more custom options (framework)",
     "pymx"              : "non-portable alternative python3 externals (min-lib)",
 }
 
