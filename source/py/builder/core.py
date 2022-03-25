@@ -13,8 +13,6 @@ Builder
     OpensslBuilder
     XzBuilder
     PythonBuilder
-        PythonBinaryBuilder
-            RelocatablePythonBuilder
         PythonSrcBuilder
             FrameworkPythonBuilder
             SharedPythonBuilder
@@ -945,37 +943,6 @@ class PythonSrcBuilder(PythonBuilder):
             self.cmd(f"patch -p1 < {self.project.patch}/{self.product.ver}/{patch}")
 
 
-class PythonBinaryBuilder(PythonBuilder):
-    """Generic Python from binary builder."""
-
-    # ------------------------------------------------------------------------
-    # python properties
-
-    # ------------------------------------------------------------------------
-    # src-level operations
-
-    def install(self):
-        """install and build compilation product"""
-        # self.reset()
-        # self.download()
-        self.pre_process()
-        self.build()
-        self.post_process()
-
-    def pre_process(self):
-        """pre-build operations"""
-
-    def build(self):
-        """build operations"""
-
-    def post_process(self):
-        """post-build operations"""
-        self.clean()
-        self.ziplib()
-        # self.fix()
-        # self.sign()
-
-
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BASE)
 
@@ -1404,82 +1371,6 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.fix_python_exe_for_pkg()
         self.fix_python_exec_for_pkg2()
 
-
-class RelocatablePythonBuilder(PythonBinaryBuilder):
-    """Downloads, applies cleaning to Greg Neagle's Relocatable Python
-    """
-
-    @property
-    def prefix(self) -> Path:
-        return self.project.support / "Python.framework" / "Versions" / self.product.ver
-
-    def pre_process(self):
-        """pre-build operations"""
-        self.clean()
-        self.ziplib()
-
-    def clean(self):
-        """clean everything."""
-        self.clean_python_pyc(self.prefix)
-        self.clean_python_tests(self.python_lib)
-        # self.clean_python_site_packages(self.python_lib)
-
-        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
-            self.cmd.remove(i)
-
-        self.cmd.remove(self.prefix_lib / "pkgconfig")
-        self.cmd.remove(self.prefix / "share")
-
-        self.remove_packages()
-        self.remove_extensions()
-        self.remove_binaries()
-        self.remove_tkinter()
-
-    def rm_globbed(self, names):
-        """remove all named glob patterns of libraries and files"""
-        for name in names:
-            for f in self.prefix_lib.glob(name):
-                self.cmd.remove(f)
-
-    def remove_tkinter(self):
-        """remove tkinter-related stuff"""
-        targets = [
-            "Tk.*",
-            "itcl*",
-            "libformw.*",
-            "libmenuw.*",
-            "libpanelw.*",
-            "libncurse*",
-            "libtcl*",
-            "libtclstub*",
-            "sqlite3*",
-            "libtk*",
-            "tcl*",
-            "tdbc*",
-            "thread*",
-            "tk*",
-        ]
-        self.rm_globbed(targets)
-
-    def ziplib(self):
-        """zip python package in site-packages in .zip archive"""
-        temp_lib_dynload = self.prefix_lib / "lib-dynload"
-        temp_os_py = self.prefix_lib / "os.py"
-
-        # self.cmd.remove(self.site_packages)
-        self.cmd.move(self.site_packages, '/tmp/site-packages')
-        self.lib_dynload.rename(temp_lib_dynload)
-        self.cmd.copy(self.python_lib / "os.py", temp_os_py)
-
-        zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
-        shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
-
-        self.cmd.remove(self.python_lib)
-        self.python_lib.mkdir()
-        temp_lib_dynload.rename(self.lib_dynload)
-        temp_os_py.rename(self.python_lib / "os.py")
-        # self.site_packages.mkdir()
-        self.cmd.move('/tmp/site-packages', self.site_packages)
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
 
@@ -1802,7 +1693,86 @@ class FrameworkPkgBuilder(PyJsBuilder):
 
 
 class RelocatablePkgBuilder(PyJsBuilder):
-    """pyjs externals in a package using Greg Neagle's Relocatable Python"""
+    """pyjs externals in a framework package using Greg Neagle's Relocatable Python
+
+    Note: this is the only PyJsBuilder subclass which applies pre_processing and cleaning.
+    That's because, it is assumed that the Python.framework is already downloaded to
+    self.project.support via a previous step.
+
+    Currently this is via Greg Neagle's code in the ext folder.
+    """
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.support / "Python.framework" / "Versions" / self.product.ver
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.clean()
+        self.ziplib()
+
+    def clean(self):
+        """clean everything."""
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        # self.clean_python_site_packages(self.python_lib)
+
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+            self.cmd.remove(i)
+
+        self.cmd.remove(self.prefix_lib / "pkgconfig")
+        self.cmd.remove(self.prefix / "share")
+
+        self.remove_packages()
+        self.remove_extensions()
+        self.remove_binaries()
+        self.remove_tkinter()
+
+    def rm_globbed(self, names):
+        """remove all named glob patterns of libraries and files"""
+        for name in names:
+            for f in self.prefix_lib.glob(name):
+                self.cmd.remove(f)
+
+    def remove_tkinter(self):
+        """remove tkinter-related stuff"""
+        targets = [
+            "Tk.*",
+            "itcl*",
+            "libformw.*",
+            "libmenuw.*",
+            "libpanelw.*",
+            "libncurse*",
+            "libtcl*",   
+            "libtclstub*",
+            "sqlite3*",
+            "libtk*",
+            "tcl*",
+            "tdbc*",
+            "thread*",
+            "tk*",
+        ]
+        self.rm_globbed(targets)
+
+    def ziplib(self):
+        """zip python package in site-packages in .zip archive"""
+        temp_lib_dynload = self.prefix_lib / "lib-dynload"
+        temp_os_py = self.prefix_lib / "os.py"
+
+        # self.cmd.remove(self.site_packages)
+        self.cmd.move(self.site_packages, '/tmp/site-packages')
+        self.lib_dynload.rename(temp_lib_dynload)
+        self.cmd.copy(self.python_lib / "os.py", temp_os_py)
+
+        zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
+        shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
+
+        self.cmd.remove(self.python_lib)
+        self.python_lib.mkdir()
+        temp_lib_dynload.rename(self.lib_dynload)
+        temp_os_py.rename(self.python_lib / "os.py")
+        # self.site_packages.mkdir()
+        self.cmd.move('/tmp/site-packages', self.site_packages)
 
     @property
     def product_exists(self):
