@@ -130,7 +130,6 @@ class Application(Commander):
     def do_python_relocatable(self, args):
         """download relocatable framework python"""
         process_args_for_relocatable_python(args)
-        python_builder_factory('python_relocatable').install()
 
 
 
@@ -148,11 +147,11 @@ class Application(Commander):
 
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
-        pyjs_builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()  # type: ignore
+        pyjs_builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()
 
     def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
-        pyjs_builder_factory('pyjs_homebrew_ext').install_homebrew_ext()  # type: ignore
+        pyjs_builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
 
     @common_options
     def do_pyjs_static_pkg(self, args):
@@ -198,8 +197,8 @@ class Application(Commander):
     def do_pyjs_relocatable_pkg(self, args):
         """build portable pyjs package (framework)"""
         process_args_for_relocatable_python(args)
-        python_builder_factory('python_relocatable').install()
         pyjs_builder_factory('pyjs_relocatable_pkg').build()
+
 
 
 # ----------------------------------------------------------------------------
