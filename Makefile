@@ -129,12 +129,6 @@ framework-ext: clean-framework-ext
 relocatable-pkg: clean-framework-pkg
 	$(call pybuild-targets, "pyjs" "relocatable_pkg")
 
-# standalone-pkg: clean-framework-pkg
-# 	$(call pybuild-targets, "pyjs" "standalone_pkg")
-
-standalone-pkg:
-	$(call pybuild-targets, "pyjs" "standalone_pkg")
-
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
 

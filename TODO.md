@@ -3,7 +3,7 @@
 
 ## Build System
 
-- move download and post_processing of `standaone-pkg` and `relocatable-pkg` to python-related classe in `builder/core`
+- move download and post_processing of `relocatable-pkg` to python-related classe in `builder/core`
 
 - add beeware downloader.
 

@@ -635,11 +635,11 @@ It is also possible to package numpy in a full relocatable external, it's quite 
 
 ## Related projects
 
-- [Python Apple Support](https://github.com/beeware/Python-Apple-support): A meta-package for building a version of Python that can be embedded into a macOS, iOS, tvOS or watchOS project.
+- [relocatable-python](https://github.com/gregneagle/relocatable-python): A tool for building standalone relocatable Python.framework bundles. (used in this project)
 
-- [relocatable-python](https://github.com/gregneagle/relocatable-python): A tool for building standalone relocatable Python.framework bundles
+- [python-build-standalone](https://github.com/indygreg/python-build-standalone): Produce redistributable builds of Python. (Interesting but not used in this project)
 
-- [python-build-standalone](https://github.com/indygreg/python-build-standalone): Produce redistributable builds of Python
+- [Python Apple Support](https://github.com/beeware/Python-Apple-support): A meta-package for building a version of Python that can be embedded into a macOS, iOS, tvOS or watchOS project. (directly inspired static linking approach)
 
 - [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
 
