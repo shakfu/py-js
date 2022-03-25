@@ -1,7 +1,0 @@
-#include "../../common.xcconfig"
-
-PREFIX = /usr/local/opt/python@3.9/Frameworks/Python.framework/Versions/$(VERSION)
-
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)
-PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = -lpython$(VERSION) -ldl

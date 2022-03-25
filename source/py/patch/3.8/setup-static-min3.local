@@ -45,6 +45,7 @@ _io -DPy_BUILD_CORE_BUILTIN -I$(srcdir)/Include/internal -I$(srcdir)/Modules/_io
 faulthandler faulthandler.c
 _tracemalloc _tracemalloc.c
 
+
 # -------------------------------------------------------------------------------
 # OPTIONAL STATIC (can be static or dynamic)
 
@@ -64,6 +65,7 @@ _weakref _weakref.c
 #_testinternalcapi _testinternalcapi.c -I$(srcdir)/Include/internal \
     -DPy_BUILD_CORE_MODULE
 _random _randommodule.c -DPy_BUILD_CORE_MODULE
+
 _elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H \
     -DUSE_PYEXPAT_CAPI _elementtree.c
 _pickle _pickle.c

@@ -2,22 +2,22 @@
 # VARIABLES & CONSTANTS
 
 # constants
-COLOR_BOLD_CYAN="\033[1;36m"
-COLOR_RESET="\033[m"
+COLOR_BOLD_CYAN = "\033[1;36m"
+COLOR_RESET = "\033[m"
 
 # exec
-PYTHON=/usr/local/bin/python3
+PYTHON = python3
 
 # paths
-ROOTDIR:=$(shell pwd)
-SRCDIR:=$(ROOTDIR)/source
-PYDIR:=$(SRCDIR)/py
+ROOTDIR := $(shell pwd)
+SRCDIR := $(ROOTDIR)/source
+PYDIR := $(SRCDIR)/py
 
 # project variables
-NAME=py
-PROJECT=${NAME}.xcodeproj
-TARGETS=py pyjs
-EXTENSION=$(PYDIR)/api.pyx
+NAME = py
+PROJECT = ${NAME}.xcodeproj
+TARGETS = py pyjs
+EXTENSION = $(PYDIR)/api.pyx
 
 MAX_VERSION := "8"
 MAX_DIR := "Max $(MAX_VERSION)"
@@ -39,14 +39,14 @@ section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 # $(call pybuild,name)
 define pybuild-targets
 $(call section,"builder $1 $2 $3 $4")
-@cd $(PYDIR) && $(PYTHON) -m builder $1 $2 $3 $4
+@cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4
 endef
 
 # $(call xbuild,name)
 define xbuild-targets
 $(call section,"build $1")
 @for target in ${TARGETS}; do \
-		xcodebuild -project targets/$1/py-js.xcodeproj -target $$target ; \
+		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target ; \
 	done
 endef
 
@@ -54,7 +54,7 @@ endef
 define xbuild-targets-flags
 $(call section,"build $1 with flags: $2")
 @for target in ${TARGETS}; do \
-		xcodebuild -project targets/$1/py-js.xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
+		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
 	done
 endef
 
@@ -62,13 +62,13 @@ endef
 # $(call xclean,name)
 define xclean-build
 $(call section,"cleaning build artifacts from $1 target")
-@rm -rf $(PYDIR)/targets/$1/build 
+@rm -rf '$(PYDIR)'/targets/'$1'/build 
 endef
 
 # $(call xcleanlib,name)
 define xclean-build
 $(call section,"cleaning build lib from $1 target")
-@rm -rf $(PYDIR)/targets/build/lib/$1 
+@rm -rf '$(PYDIR)'/targets/build/lib/'$1' 
 endef
 
 
@@ -81,7 +81,7 @@ all: default
 
 # High-Level
 # -----------------------------------------------------------------------
-.PHONY: default local-sys \
+.PHONY: default help local-sys \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
@@ -93,6 +93,9 @@ all: default
 
 # -----------------------------------------------------------------------
 # python external argets
+
+help:
+	@python3 source/py/scripts/help.py
 
 default: local-sys
 
@@ -123,6 +126,9 @@ framework-pkg: clean-framework-pkg
 framework-ext: clean-framework-ext
 	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
 
+relocatable-pkg: clean-framework-pkg
+	$(call pybuild-targets, "pyjs" "relocatable_pkg")
+
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
 
@@ -152,6 +158,9 @@ python-framework-ext: clean-python-framework-ext
 
 python-framework-pkg: clean-python-framework-pkg
 	$(call pybuild-targets, "python" "framework_pkg" "--install")
+
+python-relocatable: clean-python-framework-pkg
+	$(call pybuild-targets, "python" "relocatable_pkg")
 
 
 # -----------------------------------------------------------------------

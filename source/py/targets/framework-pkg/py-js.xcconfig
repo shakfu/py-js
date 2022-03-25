@@ -1,6 +1,6 @@
 #include "../common.xcconfig"
 
-PREFIX = $(SUPPORT)/Frameworks/Python.framework/Versions/${VERSION}
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)
+PREFIX = $(SUPPORT)/Python.framework/Versions/$(VERSION)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = -lpython$(VERSION) -ldl
+PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl

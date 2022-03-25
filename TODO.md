@@ -1,18 +1,21 @@
 # TODO
 
+
+## Build System
+
+- move download and post_processing of `relocatable-pkg` to python-related classe in `builder/core`
+
+- add beeware downloader.
+
+- create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
+
+- If a patch is not found, default to a standard working path or no patch at all
+
+- Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
+
+
 ## ENHANCEMENTS
 
-### Build System (builder)
-
-- [ ] make all xcodeprojects externally xcconfig-parametrizable to `builder`:
-
-  ```bash
-  xcodebuild -project py-js.xcodeproj -target py VERSION=3.7 SUFFIX=m
-  ```
-  
-- [x] inject commandline parameters in python build system to enable more granular downstream decisions.
-
-- [ ] add step in bundle-creation to prepopulate site-packages with list of packages
 
 ## BUGS
 

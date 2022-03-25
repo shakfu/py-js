@@ -123,7 +123,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
+						"file" : "",
 						"pythonpath" : ""
 					}
 ,
@@ -229,7 +229,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/VOLE/Users/sa/Documents/Max 8/Packages/py/examples/scripts/hello.py",
+						"file" : "",
 						"pythonpath" : ""
 					}
 ,
