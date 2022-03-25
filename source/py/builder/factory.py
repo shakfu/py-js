@@ -1,4 +1,5 @@
-from . import core 
+from . import core
+from typing import Optional
 
 from .constants import (
     DEFAULT_PYTHON_VERSION, 
@@ -70,7 +71,7 @@ def get_xz_product(xz_version=DEFAULT_XZ_VERSION, **settings):
 # PYTHON BUILDERS
 
 
-def python_builder_factory(name, **settings):
+def python_builder_factory(name, **settings) -> core.PythonBuilder:
 
     py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
@@ -96,7 +97,7 @@ def python_builder_factory(name, **settings):
 # -----------------------------------------------------------------------------
 # PYJS BUILDERS
 
-def pyjs_builder_factory(name, **settings):
+def pyjs_builder_factory(name, **settings) -> core.PyJsBuilder:
 
     py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
@@ -124,7 +125,7 @@ def pyjs_builder_factory(name, **settings):
 # -----------------------------------------------------------------------------
 # GENERIC BUILDERS
 
-def builder_factory(name, **settings):
+def builder_factory(name, **settings) -> Optional[core.Builder]:
     builder = None
     try:
         builder = pyjs_builder_factory(name, **settings)
@@ -146,7 +147,7 @@ def get_static_python_recipe(name,
                              bz2_version=DEFAULT_BZ2_VERSION, 
                              ssl_version=DEFAULT_SSL_VERSION,
                              xz_version=DEFAULT_XZ_VERSION, **settings):
-    return Recipe(
+    return core.Recipe(
         name=name,
         builders=[
             core.StaticPythonBuilder(
