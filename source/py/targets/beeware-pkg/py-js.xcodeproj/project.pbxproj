@@ -15,6 +15,16 @@
 		1239836324A1DC4600ADF7CA /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 1239835E24A1DC4600ADF7CA /* py.c */; };
 		1239836424A1DC4600ADF7CA /* py.h in Headers */ = {isa = PBXBuildFile; fileRef = 1239835F24A1DC4600ADF7CA /* py.h */; };
 		12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12D5454B2463B03000BE010E /* CoreFoundation.framework */; };
+		12E3EBF727ED852900A9893C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12E3EBF327ED84B700A9893C /* SystemConfiguration.framework */; };
+		12E3EBFC27ED857100A9893C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 12E3EBF327ED84B700A9893C /* SystemConfiguration.framework */; };
+		12F5E5DC27ED8C3C00468FF4 /* libxz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5D827ED8C3C00468FF4 /* libxz.a */; };
+		12F5E5DD27ED8C3C00468FF4 /* libxz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5D827ED8C3C00468FF4 /* libxz.a */; };
+		12F5E5DE27ED8C3C00468FF4 /* libPython.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5D927ED8C3C00468FF4 /* libPython.a */; };
+		12F5E5DF27ED8C3C00468FF4 /* libPython.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5D927ED8C3C00468FF4 /* libPython.a */; };
+		12F5E5E027ED8C3C00468FF4 /* libbzip2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5DA27ED8C3C00468FF4 /* libbzip2.a */; };
+		12F5E5E127ED8C3C00468FF4 /* libbzip2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5DA27ED8C3C00468FF4 /* libbzip2.a */; };
+		12F5E5E227ED8C3C00468FF4 /* libOpenSSL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5DB27ED8C3C00468FF4 /* libOpenSSL.a */; };
+		12F5E5E327ED8C3C00468FF4 /* libOpenSSL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 12F5E5DB27ED8C3C00468FF4 /* libOpenSSL.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +37,11 @@
 		1239835F24A1DC4600ADF7CA /* py.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = py.h; path = ../../py.h; sourceTree = "<group>"; };
 		12ADAF1724ACBE7100B47EB9 /* py-js.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "py-js.xcconfig"; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		12E3EBF327ED84B700A9893C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		12F5E5D827ED8C3C00468FF4 /* libxz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxz.a; path = ../build/lib/Python/XZ/libxz.a; sourceTree = "<group>"; };
+		12F5E5D927ED8C3C00468FF4 /* libPython.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPython.a; path = ../build/lib/Python/Python/libPython.a; sourceTree = "<group>"; };
+		12F5E5DA27ED8C3C00468FF4 /* libbzip2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbzip2.a; path = ../build/lib/Python/BZip2/libbzip2.a; sourceTree = "<group>"; };
+		12F5E5DB27ED8C3C00468FF4 /* libOpenSSL.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libOpenSSL.a; path = ../build/lib/Python/OpenSSL/libOpenSSL.a; sourceTree = "<group>"; };
 		2FBBEAE508F335360078DB84 /* py.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = py.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -36,6 +51,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				120266BD24AA15EF007DF876 /* CoreFoundation.framework in Frameworks */,
+				12E3EBFC27ED857100A9893C /* SystemConfiguration.framework in Frameworks */,
+				12F5E5DF27ED8C3C00468FF4 /* libPython.a in Frameworks */,
+				12F5E5E327ED8C3C00468FF4 /* libOpenSSL.a in Frameworks */,
+				12F5E5E127ED8C3C00468FF4 /* libbzip2.a in Frameworks */,
+				12F5E5DD27ED8C3C00468FF4 /* libxz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +64,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				12D5454C2463B03000BE010E /* CoreFoundation.framework in Frameworks */,
+				12E3EBF727ED852900A9893C /* SystemConfiguration.framework in Frameworks */,
+				12F5E5DE27ED8C3C00468FF4 /* libPython.a in Frameworks */,
+				12F5E5E227ED8C3C00468FF4 /* libOpenSSL.a in Frameworks */,
+				12F5E5E027ED8C3C00468FF4 /* libbzip2.a in Frameworks */,
+				12F5E5DC27ED8C3C00468FF4 /* libxz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +95,11 @@
 			isa = PBXGroup;
 			children = (
 				12D5454B2463B03000BE010E /* CoreFoundation.framework */,
+				12E3EBF327ED84B700A9893C /* SystemConfiguration.framework */,
+				12F5E5D927ED8C3C00468FF4 /* libPython.a */,
+				12F5E5DB27ED8C3C00468FF4 /* libOpenSSL.a */,
+				12F5E5DA27ED8C3C00468FF4 /* libbzip2.a */,
+				12F5E5D827ED8C3C00468FF4 /* libxz.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -245,7 +275,13 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)/Python/Python",
+					"$(PROJECT_DIR)/Python/OpenSSL",
+					"$(PROJECT_DIR)/Python/BZip2",
+					"$(PROJECT_DIR)/Python/XZ",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
@@ -275,7 +311,13 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)/Python/Python",
+					"$(PROJECT_DIR)/Python/OpenSSL",
+					"$(PROJECT_DIR)/Python/BZip2",
+					"$(PROJECT_DIR)/Python/XZ",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
@@ -320,7 +362,13 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)/Python/Python",
+					"$(PROJECT_DIR)/Python/OpenSSL",
+					"$(PROJECT_DIR)/Python/BZip2",
+					"$(PROJECT_DIR)/Python/XZ",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
@@ -350,7 +398,13 @@
 					"$(PY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
-				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PY_LIBS)",
+					"$(PROJECT_DIR)/Python/Python",
+					"$(PROJECT_DIR)/Python/OpenSSL",
+					"$(PROJECT_DIR)/Python/BZip2",
+					"$(PROJECT_DIR)/Python/XZ",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
