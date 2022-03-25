@@ -2,22 +2,22 @@
 # VARIABLES & CONSTANTS
 
 # constants
-COLOR_BOLD_CYAN="\033[1;36m"
-COLOR_RESET="\033[m"
+COLOR_BOLD_CYAN = "\033[1;36m"
+COLOR_RESET = "\033[m"
 
 # exec
-PYTHON=/usr/local/bin/python3
+PYTHON = python3
 
 # paths
-ROOTDIR:=$(shell pwd)
-SRCDIR:=$(ROOTDIR)/source
-PYDIR:=$(SRCDIR)/py
+ROOTDIR := $(shell pwd)
+SRCDIR := $(ROOTDIR)/source
+PYDIR := $(SRCDIR)/py
 
 # project variables
-NAME=py
-PROJECT=${NAME}.xcodeproj
-TARGETS=py pyjs
-EXTENSION=$(PYDIR)/api.pyx
+NAME = py
+PROJECT = ${NAME}.xcodeproj
+TARGETS = py pyjs
+EXTENSION = $(PYDIR)/api.pyx
 
 MAX_VERSION := "8"
 MAX_DIR := "Max $(MAX_VERSION)"
