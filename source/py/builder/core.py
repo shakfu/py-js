@@ -1327,12 +1327,13 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.cmd.chmod(dylib_path)
         # both of these are equivalent (and both don't work!)
         self.install_name_tool_id(
-            f"@loader_path/../../../../support" / self.project.python.ldlibrary,
+            "@loader_path/../../../../support" / self.project.python.ldlibrary,
             dylib_path,
         )
+
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
+    def fix_python_exe_for_pkg(self):    # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"""
         self.cmd.chdir(self.prefix_bin)
         exe = self.product.name_ver
@@ -1340,14 +1341,10 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         dirs_to_change = d.analyze_executable()
         if dirs_to_change:
             dir_to_change = dirs_to_change[0]
-            self.install_name_tool_change(
-                dir_to_change,
-                f"@executable_path/../Python", 
-                exe
-            )
+            self.install_name_tool_change(dir_to_change, "@executable_path/../Python", exe)
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
+    def fix_python_exec_for_pkg2(self):    # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1361,19 +1358,18 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
                     self.install_name_tool_change(
-                        path,
-                        f"@executable_path/../../../../Python",
-                        executable,
+                        path, "@executable_path/../../../../Python", executable
                     )
+
         self.cmd.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
         self.clean()
         self.ziplib()
-        self.fix_python_exe_for_pkg()
         self.fix_python_dylib_for_pkg()
-        self.fix_python_dylib_for_pkg2()
+        self.fix_python_exe_for_pkg()
+        self.fix_python_exec_for_pkg2()
 
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
@@ -1584,11 +1580,11 @@ class StaticExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from statically built python"""
 
-        flags = dict(
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-        )
         if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
             self.xcodebuild("static-ext", targets=["py", "pyjs"], **flags)
 
 
@@ -1597,11 +1593,11 @@ class StaticExtFullBuilder(StaticExtBuilder):
 
     def build(self):
         """builds externals from statically built python"""
-        flags = dict(
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-        )
         if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
             self.xcodebuild("static-ext-full", targets=["py", "pyjs"], **flags)
 
 
@@ -1618,11 +1614,11 @@ class SharedExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from shared python"""
 
-        flags = dict(
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-        )
         if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
             self.xcodebuild("shared-ext", targets=["py", "pyjs"], **flags)
 
 
@@ -1643,11 +1639,11 @@ class SharedPkgBuilder(PyJsBuilder):
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
 
-        flags = dict(
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-        )
         if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
             self.xcodebuild("shared-pkg", targets=["py", "pyjs"], **flags)
 
 
@@ -1663,11 +1659,11 @@ class FrameworkExtBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from shared python"""
-        flags = dict(
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-        )
         if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
             self.xcodebuild("framework-ext", targets=["py", "pyjs"], **flags)
                 # preprocessor_flags=["PY_FWK_EXT"])
 
@@ -1688,11 +1684,11 @@ class FrameworkPkgBuilder(PyJsBuilder):
         dst = self.project.support / "Python.framework"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
-        flags = dict(
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-        )
         if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
             self.xcodebuild("framework-pkg", targets=["py", "pyjs"], **flags)
 
 
@@ -1788,10 +1784,10 @@ class RelocatablePkgBuilder(PyJsBuilder):
     def build(self):
         """builds externals from framework python"""
         self.pre_process()
-        flags = dict(
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-        )
         if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
             self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"], **flags)
 
