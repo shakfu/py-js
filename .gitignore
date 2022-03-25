@@ -1,4 +1,5 @@
 # dirs to exclude
+CMakeFiles
 **/project.xcworkspace
 **/xcshareddata
 javascript/node_modules

@@ -28,6 +28,7 @@ PYJS_BUILDERS = dict(
     pyjs_shared_pkg = (core.SharedPkgBuilder, ['python_shared_pkg']),
     pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),
     pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
+    pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, []),
 )
 
 
@@ -137,6 +138,8 @@ def builder_factory(name, **settings):
 
 # -----------------------------------------------------------------------------
 # RECIPES
+
+# this is an example of a recipe which can fixes requirements to versions.
 
 def get_static_python_recipe(name,
                              py_version=DEFAULT_PYTHON_VERSION, 

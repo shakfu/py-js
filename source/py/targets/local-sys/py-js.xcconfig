@@ -2,6 +2,6 @@
 
 PREFIX = /Library/Frameworks/Python.framework/Versions/$(VERSION)
 
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(SUFFIX)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = $(LIBS) -lpython$(VERSION)$(SUFFIX)
+PY_LDFLAGS = $(LIBS) -lpython$(VERSION)$(ABIFLAGS)

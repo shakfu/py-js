@@ -1,8 +1,7 @@
 #include "../common.xcconfig"
 
-VERSION = 3.9
-SUFFIX =
+
 PREFIX = $(SUPPORT)/python$(VERSION)
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(SUFFIX)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = -lpython$(VERSION)$(SUFFIX) -ldl
+PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl

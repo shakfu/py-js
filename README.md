@@ -6,10 +6,9 @@ repo - <https://github.com/shakfu/py-js>
 
 ![py-js test](./media/screenshot.png)
 
-
 ## Preface
 
-This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring a number of different ways of using python3 in max. 
+This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring a number of different ways of using python3 in max.
 
 To this end, a number of python3 externals have been developed for use in a live Max environment:
 
@@ -43,21 +42,21 @@ It is suggested to try out the `py` and `pyjs` objects first since they are the 
 
 If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), building them is pretty straightforward:
 
-1. Make sure you have `Xcode` installed and you are on an Intel-based Mac.
+1. You should have a modern `python3` installed on your Mac: either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Python versions from 3.7 to 3.10 are tested and known to work.
 
-2. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
+2. Make sure you have `Xcode` installed and you are on an Intel-based Mac.
+
+3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
 
     ```bash
     git submodule init && git submodule update 
     ```
 
-3. For the purposes of this quickstart, use a recent python3 (3.8+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
+4. For the purposes of this quickstart, use a recent python3 (3.8+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
 
+5. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
 
-4. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
-
-
-5. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
+6. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
 
     ```bash
     make
@@ -65,7 +64,7 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
 
 Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
 
-Note that the default build converts the `py-js` repo into a Max package by virtue of the symlink to `$HOME/Documents/Max 8/Packages/py-js` and enables the two recently created python3 externals in the `externals` folder (which are linked to your system python3) to be available to your Max environment. 
+Note that the default build converts the `py-js` repo into a Max package by virtue of the symlink to `$HOME/Documents/Max 8/Packages/py-js` and enables the two recently created python3 externals in the `externals` folder (which are linked to your system python3) to be available to your Max environment.
 
 This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
@@ -73,21 +72,17 @@ No worries, if you need portable relocatable python3 externals for your package 
 
 ### Alternative Quickstart for Self-contained Python3 Externals / Packages
 
-option | name     | type       | format     | size (MB)  
-:--:   | :------- | :--------- | :--------- | :----
-1      | py       | static     | external   | 9.0
-1      | pyjs     | static     | external   | 8.8
-2      | py       | shared     | external   | 16.7
-2      | pyjs     | shared     | external   | 16.5
-3      | py       | shared     | package    | 18.7 [1]
-3      | pyjs     | shared     | package    | 18.7 [1]
+idx  | command            | type       | format     | py size |  pyjs size
+:--: | :----------------- | :--------- | :--------- | :------ | :----------
+1    | `make static-ext`  | static     | external   | 9.0     | 8.8
+2    | `make shared-ext`  | shared     | external   | 16.7    | 16.5
+3    | `make shared-pkg`  | shared     | package    | 18.7    | 18.7 [1]
 
 [1] size, in this case, is not the individual external but the package size which includes patches, help files and both externals.
 
 This alternative quickstart assumes that you have a recent python3 installation (python.org, homebrew or otherwise).
 
 If you'd rather not compile anything there are self-contained python3 externals which can be included in standalones in the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1).
-
 
 If you dont' mind compiling (and have xcode installed) then it's pretty straightforward to build your own, by picking one of the following options:
 
@@ -118,6 +113,36 @@ Although the three options deliver somewhat different products (see below for de
 With option (3), the externals are linked to, and have been compiled against, a relocatable python installation in the `support` folder.
 
 Depending on your choice above, the python interpreter in each external is either statically compiled or dynamically linked, and in all three cases we have a self-contained and relocatable structure (external or package) without any non-system dependencies. This makes it appropriate for use in Max Packages and Standalones.
+
+Ther are other [build variations](#build-variations) which are discussed in more detail below. You can also see what build options are available via typing `make help` in the `py-js` project folder:
+
+```bash
+$ make help
+
+>>> pyjs targets
+make (default)            : non-portable pyjs externals linked to your system
+make homebrew-pkg         : portable package with pyjs (requires homebrew python)
+make homebrew-ext         : portable pyjs externals (requires homebrew python)
+make shared-pkg           : portable package with pyjs externals (shared)
+make shared-ext           : portable pyjs externals (shared)
+make static-ext           : portable pyjs externals (static)
+make framework-pkg        : portable package with pyjs externals (framework)
+make framework-ext        : portable pyjs externals (framework)
+make relocatable-pkg      : portable package with more custom options (framework)
+make pymx                 : non-portable alternative python3 externals (min-lib)
+
+>>> python targets
+make python-shared        : minimal enable-shared python build
+make python-shared-ext    : minimal enable-shared python build for externals
+make python-shared-pkg    : minimal enable-shared python build for packages
+make python-static        : minimal statically-linked python build
+make python-static-full   : statically-linked python build
+make python-framework     : minimal framework python build
+make python-framework-ext : minimal framework python build for externals
+make python-framework-pkg : minimal framework python build for packages
+make python-relocatable   : custom relocatable framework python build
+
+```
 
 ### Using Self-contained Python Externals in a Standalone
 
@@ -367,7 +392,6 @@ To fix it, just restart Max and use it normally in your patch. Treat each patch 
 
 - The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
 
-
 ### Current Status of Builders
 
 As of this writing this project uses a combination of a `Makefile` in the project root and a custom python build system which resides in the `py-js/source/py/builder` package. The `Makefile` is a kind of 'frontend' to the more complex python system. The latter can be used directly of course. A view into its many options can be obtained by typing the following:
@@ -378,7 +402,6 @@ python3 -m builder --help
 ```
 
 The python system was developed to handle the complex case of downloading the source code of python (from python.org) and its dependencies from their respective sites and then building custom python binaries with which to reliably compile python3 externals which are portable, relocatable, self-contained, small-in-size, and therefore usable in Max Packages and Standalones.
-
 
 ### Build Variations
 
@@ -411,6 +434,13 @@ make framework_pkg  | framework    | 16.8     | package   | yes      | yes      
 
 - *isolated*: if yes, then different external types can run concurrently without issue
 
+#### Python Version Compatibility
+
+![py-js testing](./media/python_compatibility.png)
+
+[1] Homebrew only tested on current relase (3.9.10), other versions are expected to work without issues.
+
+[2] Relocatable python can selected on its own version of python. Only testing python 3.9.10, other versions should work without issues
 
 #### Packages vs Self-contained Externals
 
@@ -426,9 +456,7 @@ The Max package format is a great way to move a bunch of related patches and ext
 
 5. Better for codesigning / notarizing scenarios since Packages are not sealed bundles like externals.
 
-
 On the other hand, sometimes you just want an external which embeds a python distribution and custom extensions and code:
-
 
 1. Portable: Relocatable, you can move it around and it still works.
 
@@ -441,8 +469,6 @@ On the other hand, sometimes you just want an external which embeds a python dis
 5. Can be codesigned and notarized relatively easily. [1]
 
 [1] If you want to codesign and notarize it for use in your standalone or package, the [codesigning / notarization script](source/py/scripts/notarize.sh) and related [entitlements file](source/py/scripts/entitlements.plist) can be found in the [source/py/scripts](source/py/scripts) folder.
-
-
 
 ### The pymx variation
 
@@ -468,6 +494,56 @@ then type the following  in the root of the project:
 
 ```bash
 make pmx
+```
+
+### The relocatable-python variation
+
+[relocatable-python](https://github.com/gregneagle/relocatable-python) is Greg Neagle's excellent tool for building standalone relocatable Python.framework bundles.
+
+It works so well, that its been included in the `builder` application as an external (embedded dependency).
+
+It can be seen in the `relocatable-pkg` make option which will download a nice default `Python.framework` to the `support` directory used for compiled both `py` and `pyjs` externals:
+
+```bash
+make relocatable-pkg
+```
+
+More options are available if you use the `builder` package directly:
+
+```bash
+$ cd py-js/source/py
+
+     python3 -m builder pyjs relocatable_pkg --help
+usage: __main__.py pyjs relocatable_pkg [-h] [--destination DESTINATION]
+                                        [--baseurl BASEURL]
+                                        [--os-version OS_VERSION]
+                                        [--python-version PYTHON_VERSION]
+                                        [--pip-requirements PIP_REQUIREMENTS]
+                                        [--no-unsign] [--upgrade-pip]
+                                        [--without-pip]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --destination DESTINATION
+                        Directory destination for the Python.framework
+  --baseurl BASEURL     Override the base URL used to download the framework.
+  --os-version OS_VERSION
+                        Override the macOS version of the downloaded pkg.
+                        Current supported versions are "10.6", "10.9", and
+                        "11". Not all Python version and macOS version
+                        combinations are valid.
+  --python-version PYTHON_VERSION
+                        Override the version of the Python framework to be
+                        downloaded. See available versions at
+                        https://www.python.org/downloads/mac-osx/
+  --pip-requirements PIP_REQUIREMENTS
+                        Path to a pip freeze requirements.txt file that
+                        describes extra Python modules to be installed. If not
+                        provided, no modules will be installed.
+  --no-unsign           Do not unsign binaries and libraries after they are
+                        relocatablized.
+  --upgrade-pip         Upgrade pip prior to installing extra python modules.
+  --without-pip         Do not install pip.
 ```
 
 ### Sidenote about building on a Mac
@@ -544,9 +620,15 @@ You can also add your system `site-packages` to the externals pythonpath attribu
 
 If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `bin-homebrew-pkg` build option for example.
 
-It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this just be aware that it is very large and has not been minimized.
+It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this.
 
-## Related Projects
+## Related projects
+
+- [relocatable-python](https://github.com/gregneagle/relocatable-python): A tool for building standalone relocatable Python.framework bundles. (used in this project)
+
+- [python-build-standalone](https://github.com/indygreg/python-build-standalone): Produce redistributable builds of Python. (Interesting but not used in this project)
+
+- [Python Apple Support](https://github.com/beeware/Python-Apple-support): A meta-package for building a version of Python that can be embedded into a macOS, iOS, tvOS or watchOS project. (directly inspired static linking approach)
 
 - [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
 
@@ -562,7 +644,7 @@ Looking around for a python max external I found the following:
 
 - Thomas Grill's [py/pyext – Python scripting objects for Pure Data and Max](https://grrrr.org/research/software/py/) is the most mature Max/Python implementation and when I was starting this project, it seemed very promising but then I read that the 'available Max port is not actively maintained.' I also noted that it was written in C++ and that it needed an additional [c++ flext](http://grrrr.org/ext/flext) layer to compile. I was further dissuaded from diving in as it supported, at the time, only python 2 which seemed difficult to swallow considering Python2 is basically not developed anymore. Ironically, this project has become more active recently, and I finally was persuaded to go back and try to compile it and finally got it running. I found it to be extremely technically impressive work, but it had probably suffered from the burden of having to maintain several moving dependencies (puredata, max, python, flext, c++). The complexity probably put off some possible contributors which have made the maintenance of the project easier for Thomas. In any case, it's an awesome project and it would be great if this project could somehow help py/ext in some way or the other.
 
-- [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with pybind11. This looks like a reasonable effort, but only 9 commits and no further commits for 2 years as of this writing.
+- [max-py](https://github.com/njazz/max-py) -- Embedding Python 2 / 3 in MaxMSP with `pybind11`. This looks like a reasonable effort, but only 9 commits and no further commits for 2 years as of this writing.
 
 - [nt.python_for_max](https://github.com/2bbb/nt.python_for_max) -- Basic implementation of python in max using a fork of Graham Wakefield's old c++ interface. Hasn't really been touched in 3 years.
 
@@ -577,3 +659,5 @@ So it was decided, during a period with less distractions than usual, to try to 
 It's been an education and I have come to understand precisely a quote I remember somewhere about the c language: that it's "like a scalpel". I painfully now understand this to mean that in skilled hands it can do wonders, otherwise you almost always end up killing the patient.
 
 Thanks to Luigi Castelli for his help on Max/Msp questions, to Stefan Behnel for his help with Cython questions, and to Iain Duncan for providing the initial inspiration and for saving me time with some great implementation ideas.
+
+Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing his elegant solution for Python frameworks, [relocatable-python](https://github.com/gregneagle/relocatable-python) project on Github.
