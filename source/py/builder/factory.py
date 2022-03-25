@@ -146,7 +146,7 @@ def get_static_python_recipe(name,
                              bz2_version=DEFAULT_BZ2_VERSION, 
                              ssl_version=DEFAULT_SSL_VERSION,
                              xz_version=DEFAULT_XZ_VERSION, **settings):
-    return Recipe(
+    return core.Recipe(
         name=name,
         builders=[
             core.StaticPythonBuilder(
