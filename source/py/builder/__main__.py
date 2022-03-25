@@ -21,8 +21,6 @@ from .depend import DependencyManager
 from .factory import python_builder_factory, pyjs_builder_factory
 from .ext.relocatable_python import (
     process_args_for_relocatable_python, relocatable_options)
-from .ext.standalone_python import (
-    process_args_for_standalone_python, standalone_options)
 
 
 # ----------------------------------------------------------------------------
@@ -133,10 +131,6 @@ class Application(Commander):
         """download relocatable framework python"""
         process_args_for_relocatable_python(args)
 
-    @standalone_options
-    def do_python_standalone(self, args):
-        """download standalone python instance"""
-        process_args_for_standalone_python(args)
 
 
 # ----------------------------------------------------------------------------
@@ -205,11 +199,6 @@ class Application(Commander):
         process_args_for_relocatable_python(args)
         pyjs_builder_factory('pyjs_relocatable_pkg').build()
 
-    @standalone_options
-    def do_pyjs_standalone_pkg(self, args):
-        """build portable pyjs package (standalone python)"""
-        process_args_for_standalone_python(args)
-        pyjs_builder_factory('pyjs_standalone_pkg').build()
 
 
 # ----------------------------------------------------------------------------
