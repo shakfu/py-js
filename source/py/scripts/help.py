@@ -32,7 +32,7 @@ python_targets = {
     "python-framework"      : "minimal framework python build",
     "python-framework-ext"  : "minimal framework python build for externals",
     "python-framework-pkg"  : "minimal framework python build for packages",
-    "python-relocatable"    : "custom relocatable framework python build",    
+    "python-relocatable"    : "custom relocatable python framework build",    
 }
 
 section("pyjs targets")
