@@ -170,6 +170,8 @@ class Project:
     
     arch = platform.machine()
 
+    HOME = Path(os.getenv("HOME"))
+
     # root in this case is root assumed for build / make / scripts
     # actual project is root.parent.parent (see below)
     # current working directory
@@ -180,7 +182,8 @@ class Project:
     patch = root / "patch"
     targets = root / "targets"
     # build = Path('/tmp/_build_pyjs')
-    build = targets / "build"
+    # build = targets / "build"
+    build = HOME / ".build_pyjs"
     downloads = build / "downloads"
     src = build / "src"
     lib = build / "lib"
@@ -194,7 +197,6 @@ class Project:
     pyjs_external = externals / "pyjs.mxo"
 
     # environmental vars
-    HOME = os.getenv("HOME")
     package_name = "py-js"
     package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
     package_dirs = [
