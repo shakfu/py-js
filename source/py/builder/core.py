@@ -85,7 +85,7 @@ import sysconfig
 from textwrap import dedent
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List
+from typing import List, Dict, Optional
 
 from .depend import DependencyManager, PATTERNS_TO_FIX
 from . import constants
@@ -374,7 +374,7 @@ class Product:
         return f"{self.name.lower()}{self.ver}"
 
     @property
-    def name_archive(self) -> str:
+    def name_archive(self):
         """Archival name of Product-version"""
         # return f"{self.name_version}.tgz"
         if self.url:
@@ -387,14 +387,14 @@ class Product:
         return f"lib{self.name.lower()}{ver}.dylib"
 
     @property
-    def url(self) -> Path:
+    def url(self):
         """Returns url to download product src as a pathlib.Path instance."""
         if self.url_template:
             return Path(self.url_template.format(name=self.name, version=self.version))
         # raise KeyError("url_template not providing in settings")
 
-    def to_dict(self) -> dict:
-        {
+    def to_dict(self) -> Dict:
+        return {
             'name': self.name,
             'version': self.version,
             'build_dir': str(self.build_dir),
@@ -435,10 +435,6 @@ class Builder:
     __repr__ = __str__
 
     @property
-    def type(self) -> str:
-        return 
-
-    @property
     def prefix(self) -> Path:
         """compiled product destination root directory."""
         return self.project.lib / self.product.name.lower()
@@ -464,7 +460,7 @@ class Builder:
         return self.prefix / "Resources"
 
     @property
-    def download_path(self) -> Path:
+    def download_path(self) -> Optional[Path]:
         """Returns path to downloaded product-version archive."""
         if self.product.name_archive:
             return self.project.downloads / self.product.name_archive
@@ -475,7 +471,7 @@ class Builder:
         return self.project.src / self.product.name_version
 
     @property
-    def url(self) -> Path:
+    def url(self) -> Optional[Path]:
         """Returns url to download product as a pathlib.Path instance."""
         return self.product.url
 
@@ -584,7 +580,7 @@ class Builder:
             dep.download()
 
         # download
-        if not self.download_path.exists():
+        if self.download_path and not self.download_path.exists():
             self.project.downloads.mkdir(parents=True, exist_ok=True)
             self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
@@ -1121,7 +1117,7 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exe_for_pkg(self):
+    def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"""
         self.cmd.chdir(self.prefix_bin)
         exe = self.product.name_ver
@@ -1249,7 +1245,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         )        
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework(self):    # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
         executable = self.product.name_ver
@@ -1261,14 +1257,10 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
                 path = match.group(1)
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
-                    self.install_name_tool_change(
-                        path,
-                        f"@executable_path/../Python",
-                        executable,
-                    )
+                    self.install_name_tool_change(path, "@executable_path/../Python", executable)
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework2(self):  # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework2(self):    # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1282,10 +1274,9 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
                     self.install_name_tool_change(
-                        path,
-                        f"@executable_path/../../../../Python",
-                        executable,
+                        path, "@executable_path/../../../../Python", executable
                     )
+
         self.cmd.chdir(self.project.root)
 
     def post_process(self):
@@ -1339,7 +1330,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exe_for_pkg(self):
+    def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"""
         self.cmd.chdir(self.prefix_bin)
         exe = self.product.name_ver
@@ -1643,7 +1634,7 @@ class FrameworkPkgBuilder(PyJsBuilder):
         # src = self.project.lib / "Python.framework" / "Versions" / self.product.ver
         # dst = f"{self.project.support}/{self.product.name_ver}"
         src = self.project.lib / "Python.framework"
-        dst = f"{self.project.support}" / "Python.framework"
+        dst = self.project.support / "Python.framework"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
