@@ -130,6 +130,7 @@ class Application(Commander):
     def do_python_relocatable(self, args):
         """download relocatable framework python"""
         process_args_for_relocatable_python(args)
+        python_builder_factory('python_relocatable').install()
 
 
 
