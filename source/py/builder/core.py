@@ -29,7 +29,6 @@ Builder
             FrameworkExtBuilder
             FrameworkPkgBuilder
             RelocatablePkgBuilder
-            StandalonePkgBuilder
 
 install:
     configure -> reset -> download -> pre_process -> build -> post_process
