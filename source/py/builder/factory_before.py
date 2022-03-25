@@ -76,7 +76,7 @@ def python_builder_factory(name, **settings) -> core.PythonBuilder:
 
     py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
-    ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION)
+    ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
     xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
 
     _builder = PYTHON_BUILDERS[name]
@@ -88,23 +88,17 @@ def python_builder_factory(name, **settings) -> core.PythonBuilder:
             **settings
         )
     else:
-        return _builder(
+        return PYTHON_BUILDERS[name](
             product=core.Product(
                 name="Python",
                 version=py_version,
                 build_dir="-".join(name.split('_')[:2]),
                 url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
-                libs_static=[
-                    f"libpython{'.'.join(py_version.split('.')[:-1])}.a"
-                ],
+                libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
             ),
             depends_on=[
-                core.Bzip2Builder(
-                    product=get_bzip2_product(bz2_version), **settings
-                ),
-                core.OpensslBuilder(
-                    product=get_ssl_product(ssl_version), **settings
-                ),
+                core.Bzip2Builder(product=get_bzip2_product(bz2_version), **settings),
+                core.OpensslBuilder(product=get_ssl_product(ssl_version), **settings),
                 core.XzBuilder(product=get_xz_product(xz_version), **settings),
             ],
             **settings
@@ -118,7 +112,6 @@ def pyjs_builder_factory(name, **settings) -> core.PyJsBuilder:
     py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
 
     _builder, dependencies = PYJS_BUILDERS[name]
-    
     if dependencies:
         return _builder(
             product=core.Product(name='Python', version=py_version),
