@@ -21,7 +21,6 @@ leoenv
 #*.a
 .vscode
 
-__*
 sysbuild
 *.sdf
 *.suo
