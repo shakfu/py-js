@@ -5,6 +5,17 @@ from .relocatablizer import analyze, relocatablize
 
 from ...cli import option, option_group
 
+from sysconfig import get_config_var
+
+
+def get_default_py_version():
+    py_version = get_config_var('py_version_short')
+    latest = ["3.10.4", "3.9.12", "3.7.9", "3.8.9"]
+    for ver in latest:
+        if ver.startswith(py_version):
+            return ver
+
+
 relocatable_options = option_group(
     option("--destination",default="../../support",
         help="Directory destination for the Python.framework",
@@ -17,7 +28,8 @@ relocatable_options = option_group(
         'Current supported versions are "10.6", "10.9", and "11". '
         "Not all Python version and macOS version combinations are valid.",
     ),
-    option("--python-version", default=get.DEFAULT_PYTHON_VERSION,
+    # option("--python-version", default=get.DEFAULT_PYTHON_VERSION,
+    option("--python-version", default=get_default_py_version(),
         help="Override the version of the Python framework to be downloaded. "
         "See available versions at "
         "https://www.python.org/downloads/mac-osx/",
