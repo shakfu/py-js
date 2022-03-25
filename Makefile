@@ -86,9 +86,11 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
 		static-pkg static-ext \
+		relocatable-pkg \
 		python-shared python-shared-pkg python-shared-ext \
 		python-static python-static-full \
-		python-framework python-framework-ext python-framework-pkg
+		python-framework python-framework-ext python-framework-pkg \
+		python-relocatable
 
 
 # -----------------------------------------------------------------------
@@ -160,7 +162,7 @@ python-framework-pkg: clean-python-framework-pkg
 	$(call pybuild-targets, "python" "framework_pkg" "--install")
 
 python-relocatable: clean-python-framework-pkg
-	$(call pybuild-targets, "python" "relocatable_pkg")
+	$(call pybuild-targets, "python" "relocatable")
 
 
 # -----------------------------------------------------------------------

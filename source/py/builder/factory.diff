@@ -1,0 +1,30 @@
+79c79
+<     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION)
+---
+>     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
+91c91
+<         return _builder(
+---
+>         return PYTHON_BUILDERS[name](
+97,99c97
+<                 libs_static=[
+<                     f"libpython{'.'.join(py_version.split('.')[:-1])}.a"
+<                 ],
+---
+>                 libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
+102,107c100,101
+<                 core.Bzip2Builder(
+<                     product=get_bzip2_product(bz2_version), **settings
+<                 ),
+<                 core.OpensslBuilder(
+<                     product=get_ssl_product(ssl_version), **settings
+<                 ),
+---
+>                 core.Bzip2Builder(product=get_bzip2_product(bz2_version), **settings),
+>                 core.OpensslBuilder(product=get_ssl_product(ssl_version), **settings),
+110c104
+<             **settings,
+---
+>             **settings
+121d114
+<     

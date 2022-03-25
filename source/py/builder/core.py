@@ -13,6 +13,8 @@ Builder
     OpensslBuilder
     XzBuilder
     PythonBuilder
+        PythonBinaryBuilder
+            RelocatablePythonBuilder
         PythonSrcBuilder
             FrameworkPythonBuilder
             SharedPythonBuilder
@@ -943,6 +945,37 @@ class PythonSrcBuilder(PythonBuilder):
             self.cmd(f"patch -p1 < {self.project.patch}/{self.product.ver}/{patch}")
 
 
+class PythonBinaryBuilder(PythonBuilder):
+    """Generic Python from binary builder."""
+
+    # ------------------------------------------------------------------------
+    # python properties
+
+    # ------------------------------------------------------------------------
+    # src-level operations
+
+    def install(self):
+        """install and build compilation product"""
+        # self.reset()
+        # self.download()
+        self.pre_process()
+        self.build()
+        self.post_process()
+
+    def pre_process(self):
+        """pre-build operations"""
+
+    def build(self):
+        """build operations"""
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+        # self.fix()
+        # self.sign()
+
+
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BASE)
 
@@ -1372,7 +1405,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.fix_python_exec_for_pkg2()
 
 
-class RelocatablePythonBuilder(PythonBuilder):
+class RelocatablePythonBuilder(PythonBinaryBuilder):
     """Downloads, applies cleaning to Greg Neagle's Relocatable Python
     """
 
