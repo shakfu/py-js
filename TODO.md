@@ -2,17 +2,17 @@
 
 ## Build System
 
-- reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
+- [ ] Reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
 
-- move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
+- [ ] Move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
 
-- add beeware downloader.
+- [ ] Add beeware downloader.
 
-- create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
+- [ ] Create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
 
-- If a patch is not found, default to a standard working path or no patch at all
+- [ ] If a patch is not found, default to a standard working path or no patch at all
 
-- Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
+- [ ] Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
 
 
 ## ENHANCEMENTS
