@@ -4,6 +4,7 @@ CMakeFiles
 **/xcshareddata
 javascript/node_modules
 source/py/dump.yml
+logs
 
 .DS_Store
 __pycache__

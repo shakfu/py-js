@@ -63,12 +63,9 @@ class Application(Commander):
         """generic ordered argument dispatcher"""
         order = ['dump', 'download', 'install', 'build', 'clean', 'ziplib']
         kwdargs = vars(args)
-        print(kwdargs)
         if name.startswith('python'):
-            # print('selecting python-factory')
             factory = python_builder_factory
         else:
-            # print('selecting pyjs-factory')
             factory = pyjs_builder_factory
         builder = factory(name, **kwdargs)
         if args.dump:

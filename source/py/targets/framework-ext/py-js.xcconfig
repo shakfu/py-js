@@ -1,6 +1,6 @@
 #include "../common.xcconfig"
 
-BUILD = $(SRCROOT)/../build/lib
+BUILD = $(HOME)/.build_pyjs/lib
 PREFIX = $(BUILD)/Python.framework/Versions/${VERSION}
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 PY_LIBS = $(PREFIX)/lib
