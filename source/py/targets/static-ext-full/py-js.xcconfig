@@ -1,9 +1,0 @@
-#include "../common.xcconfig"
-
-BUILD = $(SRCROOT)/../build/lib
-PREFIX = $(SRCROOT)/../build/lib/python-static
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
-PY_LIBS = $(PREFIX)/lib $(BUILD)/bzip2/lib $(BUILD)/openssl/lib $(BUILD)/xz/lib /usr/local/Cellar/gettext/0.21/lib
-
-
-PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl -lssl -lcrypto -lbz2 -llzma -lz -lintl -liconv -lsqlite3 -lffi

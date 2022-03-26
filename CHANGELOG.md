@@ -15,6 +15,12 @@
 
 #### Enhancements
 
+- [x] added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
+
+- [x] streamlined `common.xcconfig` so that it refers to `.build_pyjs` centrally
+
+- [x] Dropped 'full' version of `static-ext` as it was redundant after adding `_ssl` and `_hashlib` to `static-ext`
+
 - [x] added even more intuitive make frontend to builder with help (via `make help`)
 
 - [x] make all xcodeprojects externally xcconfig-parametrizable to `builder`:
