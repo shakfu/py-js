@@ -11,4 +11,4 @@ PY_LIBS = $(PREFIX)/lib $(BUILD)/bzip2/lib $(BUILD)/openssl/lib $(BUILD)/xz/lib
 // PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lbz2 -llzma -lz -liconv
 
 // post-patch
-PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl -lssl -lbz2 -llzma -lz
+PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl -lssl -lbz2 -llzma -lz -lcrypto

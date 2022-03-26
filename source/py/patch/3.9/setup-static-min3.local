@@ -118,6 +118,9 @@ pyexpat expat/xmlparse.c \
 
 zlib zlibmodule.c -I$(prefix)/include -lz
 
+_ssl _ssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
+
+_hashlib _hashopenssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
 
 # -------------------------------------------------------------------------------
 # DISABLED

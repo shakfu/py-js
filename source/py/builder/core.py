@@ -1039,6 +1039,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
             --prefix='{self.prefix}' \
+            --with-openssl={self.project.lib / 'openssl'} \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \
