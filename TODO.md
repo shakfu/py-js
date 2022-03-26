@@ -2,6 +2,8 @@
 
 ## Build System
 
+- [ ] check why `py-js.xcconfig` for `homebrew-ext` refers to `support`. May implicitly reply on `homebrew-pkg` preceding it.
+
 - [ ] Reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
 
 - [ ] Move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`

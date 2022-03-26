@@ -1,11 +1,11 @@
 #include "../common.xcconfig"
 
 
-BUILD = $(HOME)/.build_pyjs/lib
-PREFIX = $(BUILD)/python-static
+
+PREFIX = $(PYJS_BUILD_LIB)/python-static
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 
-PY_LIBS = $(PREFIX)/lib $(BUILD)/bzip2/lib $(BUILD)/openssl/lib $(BUILD)/xz/lib
+PY_LIBS = $(PREFIX)/lib $(PYJS_BUILD_LIB)/bzip2/lib $(PYJS_BUILD_LIB)/openssl/lib $(PYJS_BUILD_LIB)/xz/lib
 
 // pre-patch
 // PY_LDFLAGS = -lpython$(VERSION) -ldl -lssl -lbz2 -llzma -lz -liconv

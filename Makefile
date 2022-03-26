@@ -87,7 +87,7 @@ all: default
 		shared-pkg shared-ext \
 		static-pkg static-ext \
 		python-shared python-shared-pkg python-shared-ext \
-		python-static python-static-full \
+		python-static \
 		python-framework python-framework-ext python-framework-pkg
 
 
@@ -146,9 +146,6 @@ python-shared-pkg: clean-python-shared-pkg
 
 python-static: clean-python-static
 	$(call pybuild-targets, "python" "static" "--install")
-
-python-static-full: clean-python-static-full
-	$(call pybuild-targets, "python" "static-full" "--install")
 
 python-framework: clean-python-framework
 	$(call pybuild-targets, "python" "framework" "--install")
@@ -273,7 +270,6 @@ clean-build-lib: clean-python-shared \
 				 clean-python-shared-ext \
 				 clean-python-shared-pkg \
 				 clean-python-static \
-				 clean-python-static-full \
 				 clean-python-framework
 
 
@@ -336,9 +332,6 @@ clean-python-shared-pkg: clean-externals clean-support
 	$(call xcleanlib, "python-shared")
 
 clean-python-static:
-	$(call xcleanlib, "python-static")
-
-clean-python-static-full:
 	$(call xcleanlib, "python-static")
 
 clean-python-framework:

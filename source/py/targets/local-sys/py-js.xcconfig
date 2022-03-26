@@ -1,5 +1,6 @@
 #include "../common.xcconfig"
 
+// This is overriden by the builder from the commandline build
 PREFIX = /Library/Frameworks/Python.framework/Versions/$(VERSION)
 
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)

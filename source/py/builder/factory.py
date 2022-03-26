@@ -9,7 +9,6 @@ from .constants import (
 
 PYTHON_BUILDERS = dict(
     python_static = core.StaticPythonBuilder,
-    python_static_full = core.StaticPythonFullBuilder,
     python_shared = core.SharedPythonBuilder,
     python_shared_ext = core.SharedPythonForExtBuilder,
     python_shared_pkg = core.SharedPythonForPkgBuilder,
@@ -23,7 +22,6 @@ PYJS_BUILDERS = dict(
     pyjs_homebrew_pkg = (core.HomebrewBuilder, []),
     pyjs_homebrew_ext = (core.HomebrewBuilder, []),
     pyjs_static_ext = (core.StaticExtBuilder, ['python_static']),
-    pyjs_static_ext_full = (core.StaticExtFullBuilder, ['python_static_full']),
     pyjs_shared_ext = (core.SharedExtBuilder, ['python_shared_ext']),
     pyjs_shared_pkg = (core.SharedPkgBuilder, ['python_shared_pkg']),
     pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),

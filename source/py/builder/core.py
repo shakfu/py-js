@@ -19,7 +19,6 @@ Builder
                 SharedPythonForExtBuilder
                 SharedPythonForPkgBuilder
             StaticPythonBuilder
-                StaticPythonFullBuilder
         PyJsBuilder
             HomebrewBuilder
             StaticExtBuilder
@@ -184,6 +183,7 @@ class Project:
     # build = Path('/tmp/_build_pyjs')
     # build = targets / "build"
     build = HOME / ".build_pyjs"
+    build_externals = build / 'externals'
     downloads = build / "downloads"
     src = build / "src"
     lib = build / "lib"
@@ -1146,92 +1146,6 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         self.fix_python_dylib_for_pkg()
 
 
-class StaticPythonFullBuilder(StaticPythonBuilder):
-    setup_local = "setup-static-min4.local"
-    patch = "makesetup2.patch"
-
-    def pre_process(self):
-        """pre-build operations"""
-        self.cmd.chdir(self.src_path)
-        self.write_setup_local()
-        self.apply_patch(patch="configure.patch", to_file="configure")
-        self.apply_patch()
-        self.cmd.chdir(self.project.root)
-
-    def post_process(self):
-        """post-build operations"""
-        self.clean()
-        self.ziplib()
-        # self.fix()
-        # self.sign()
-
-    def clean(self):
-        """clean everything."""
-        self.clean_python_pyc(self.prefix)
-        self.clean_python_tests(self.python_lib)
-        self.clean_python_site_packages()
-
-        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
-            self.cmd.remove(i)
-
-        self.cmd.remove(self.prefix_lib / "pkgconfig")
-        self.cmd.remove(self.prefix / "share")
-
-        self.remove_packages()
-        self.remove_extensions()
-        self.remove_binaries()
-
-    def remove_packages(self):
-        """remove list of non-critical packages"""
-        self.rm_libs(
-            [
-                self.project.python.config_ver_platform,
-                "idlelib",
-                "lib2to3",
-                "tkinter",
-                "turtledemo",
-                "turtle.py",
-                # "ctypes",
-                "curses",
-                "ensurepip",
-                "venv",
-            ]
-        )
-
-    def remove_extensions(self):
-        """remove extensions"""
-        self.rm_exts(
-            [
-                "_tkinter",
-                "_codecs_jp",
-                "_codecs_hk",
-                "_codecs_cn",
-                "_codecs_kr",
-                "_codecs_tw",
-                "_codecs_iso2022",
-                "_curses",
-                "_curses_panel",
-            ]
-        )
-
-
-    def remove_binaries(self):
-        """remove list of non-critical executables"""
-        ver = self.product.ver
-        self.rm_bins(
-            [
-                f"2to3-{ver}",
-                f"idle{ver}",
-                f"easy_install-{ver}",
-                f"pip{ver}",
-                f"pyvenv-{ver}",
-                f"pydoc{ver}",
-                # f'python{ver}{self.suffix}',
-                # f'python{ver}-config',
-            ]
-        )
-
-
 class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
     """builds python in a framework format for self-contained externals."""
 
@@ -1561,14 +1475,24 @@ class LocalSystemBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from local system python"""
+        targets = ["py", "pyjs"]
         flags = dict(
             PREFIX = str(self.project.python.prefix),
             VERSION = str(self.project.python.version_short),
             ABIFLAGS = str(self.project.python.abiflags),
             LIBS = str(self.project.python.libs),
         )
-        self.xcodebuild("local-sys", targets=["py", "pyjs"], **flags)
 
+        # if self.settings.deploy:
+        #     flags['DSTROOT'] = str(self.project.build_externals)
+
+        self.xcodebuild("local-sys", targets=targets, **flags)
+
+        # if self.settings.deploy:
+        #     for ext in [f"{t}.mxo" for t in targets]:
+        #         src = self.project.build_externals / ext
+        #         dst = self.project.externals / ext
+        #         self.cmd.copy(src, dst)
 
 class StaticExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
@@ -1589,19 +1513,6 @@ class StaticExtBuilder(PyJsBuilder):
                 ABIFLAGS = str(self.project.python.abiflags),
             )
             self.xcodebuild("static-ext", targets=["py", "pyjs"], **flags)
-
-
-class StaticExtFullBuilder(StaticExtBuilder):
-    """pyjs externals from fully-loaded statically built python"""
-
-    def build(self):
-        """builds externals from statically built python"""
-        if self.product_exists:
-            flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
-            )
-            self.xcodebuild("static-ext-full", targets=["py", "pyjs"], **flags)
 
 
 class SharedExtBuilder(PyJsBuilder):

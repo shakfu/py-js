@@ -27,7 +27,8 @@ from .ext.relocatable_python import (
 # Commandline interface
 
 common_options = option_group(
-    option("--dump", action="store_true", help="dump project and product vars"),
+    option("-p", "--py-version", type=str,
+           help="set required python version to download and build"),
     option("-d",
            "--download",
            action="store_true",
@@ -45,9 +46,12 @@ common_options = option_group(
            "--clean",
            action="store_true",
            help="clean python in build/src"),
-    option("-z", "--ziplib", action="store_true", help="zip python library"),
-    option("-p", "--py-version", type=str,
-           help="set required python version to download and build"),
+    option("-z", 
+            "--ziplib", action="store_true", help="zip python library"),
+    option("--deploy",
+           action="store_true",
+           help="deploy externals via local build directory"),
+    option("--dump", action="store_true", help="dump project and product vars"),
 )
 
 
@@ -72,10 +76,7 @@ class Application(Commander):
             builder.to_yaml()
         for method in order:
             if method in kwdargs and kwdargs[method]:
-                try:
-                    getattr(builder, method)()
-                except AttributeError:
-                    print(builder, 'has no method', method)
+                getattr(builder, method)()
 
 # ----------------------------------------------------------------------------
 # python builder methods
@@ -87,11 +88,6 @@ class Application(Commander):
     def do_python_static(self, args):
         """build static python"""
         self.ordered_dispatch('python_static', args)
-
-    @common_options
-    def do_python_static_full(self, args):
-        """build static python (fully-loaded)"""
-        self.ordered_dispatch('python_static_full', args)
 
     @common_options
     def do_python_shared(self, args):
@@ -138,9 +134,11 @@ class Application(Commander):
         """build pyjs externals"""
         pyjs_builder_factory('pyjs_local_sys').build()
 
+    @common_options
     def do_pyjs_local_sys(self, args):
         """build non-portable pyjs externals"""
         pyjs_builder_factory('pyjs_local_sys').build()
+        # self.ordered_dispatch('pyjs_local_sys', args)
 
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
@@ -159,11 +157,6 @@ class Application(Commander):
     def do_pyjs_static_ext(self, args):
         """build portable pyjs externals (minimal static)"""
         self.ordered_dispatch('pyjs_static_ext', args)
-
-    @common_options
-    def do_pyjs_static_ext_full(self, args):
-        """build portable pyjs externals (fully-loaded static)"""
-        self.ordered_dispatch('pyjs_static_ext_full', args)
 
     # @common_options
     # def do_pyjs_static_pkg(self, args):
