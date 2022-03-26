@@ -1,9 +1,10 @@
 # TODO
 
-
 ## Build System
 
-- move download and post_processing of `relocatable-pkg` to python-related classe in `builder/core`
+- reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
+
+- move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
 
 - add beeware downloader.
 
