@@ -184,9 +184,9 @@ class Project:
     # build = targets / "build"
     build = HOME / ".build_pyjs"
     build_externals = build / 'externals'
-    downloads = build / "downloads"
-    src = build / "src"
-    lib = build / "lib"
+    build_downloads = build / "downloads"
+    build_src = build / "src"
+    build_lib = build / "lib"
 
     # project root here
     pyjs = root.parent.parent
@@ -440,7 +440,7 @@ class Builder:
     @property
     def prefix(self) -> Path:
         """compiled product destination root directory."""
-        return self.project.lib / self.product.name.lower()
+        return self.project.build_lib / self.product.name.lower()
 
     @property
     def prefix_lib(self) -> Path:
@@ -466,12 +466,12 @@ class Builder:
     def download_path(self) -> Optional[Path]:
         """Returns path to downloaded product-version archive."""
         if self.product.name_archive:
-            return self.project.downloads / self.product.name_archive
+            return self.project.build_downloads / self.product.name_archive
 
     @property
     def src_path(self) -> Path:
         """Return product source directory."""
-        return self.project.src / self.product.name_version
+        return self.project.build_src / self.product.name_version
 
     @property
     def url(self) -> Optional[Path]:
@@ -578,22 +578,22 @@ class Builder:
 
         curl and tar are automatically available on mac platforms.
         """
-        self.project.downloads.mkdir(parents=True, exist_ok=True)
+        self.project.build_downloads.mkdir(parents=True, exist_ok=True)
         for dep in self.depends_on:
             dep.download()
 
         # download
         if self.download_path and not self.download_path.exists():
-            self.project.downloads.mkdir(parents=True, exist_ok=True)
+            self.project.build_downloads.mkdir(parents=True, exist_ok=True)
             self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
             assert self.download_path.exists(), f"could not download: {self.download_path}"
 
         # unpack
         if not self.src_path.exists():
-            self.project.src.mkdir(parents=True, exist_ok=True)
+            self.project.build_src.mkdir(parents=True, exist_ok=True)
             self.log.info("unpacking %s", self.src_path)
-            self.cmd(f"tar -xvf '{self.download_path}' --directory '{self.project.src}'")
+            self.cmd(f"tar -xvf '{self.download_path}' --directory '{self.project.build_src}'")
             assert self.src_path.exists(), f"{self.src_path} not created"
 
     def build(self):
@@ -955,11 +955,11 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
 
     @property
     def prefix(self) -> Path:
-        return self.project.lib / "Python.framework" / "Versions" / self.product.ver
+        return self.project.build_lib / "Python.framework" / "Versions" / self.product.ver
 
     def reset(self):
         self.cmd.remove(self.src_path)
-        self.cmd.remove(self.project.lib / "Python.framework")
+        self.cmd.remove(self.project.build_lib / "Python.framework")
 
     def build(self):
         for dep in self.depends_on:
@@ -969,8 +969,8 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         self.cmd(
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
-            --enable-framework='{self.project.lib}' \
-            --with-openssl={self.project.lib / 'openssl'} \
+            --enable-framework='{self.project.build_lib}' \
+            --with-openssl={self.project.build_lib / 'openssl'} \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \
@@ -996,7 +996,7 @@ class SharedPythonBuilder(PythonSrcBuilder):
 
     @property
     def prefix(self) -> Path:
-        return self.project.lib / self.product.build_dir
+        return self.project.build_lib / self.product.build_dir
 
     def build(self):
         for dep in self.depends_on:
@@ -1008,7 +1008,7 @@ class SharedPythonBuilder(PythonSrcBuilder):
         ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
             --prefix='{self.prefix}' \
             --enable-shared \
-            --with-openssl={self.project.lib / 'openssl'} \
+            --with-openssl={self.project.build_lib / 'openssl'} \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \
@@ -1028,7 +1028,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
     @property
     def prefix(self) -> Path:
-        return self.project.lib / self.product.build_dir
+        return self.project.build_lib / self.product.build_dir
 
     def build(self):
         # for dep in self.depends_on:
@@ -1039,7 +1039,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
             --prefix='{self.prefix}' \
-            --with-openssl={self.project.lib / 'openssl'} \
+            --with-openssl={self.project.build_lib / 'openssl'} \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \
@@ -1160,7 +1160,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         self.install_name_tool_id(
             f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
             dylib_path
-            # self.project.lib / self.project.python.ldlibrary
+            # self.project.build_lib / self.project.python.ldlibrary
         )        
         self.cmd.chdir(self.project.root)
 
@@ -1499,7 +1499,7 @@ class StaticExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        static_lib = self.project.lib / 'python-static' / 'lib' / self.project.python.staticlib  # type: ignore
+        static_lib = self.project.build_lib / 'python-static' / 'lib' / self.project.python.staticlib  # type: ignore
         if not static_lib.exists():
             self.log.warning("static python is not built: %s", static_lib)
         return static_lib.exists()
@@ -1520,7 +1520,7 @@ class SharedExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.python.dylib
+        shared_lib = self.project.build_lib / 'python-shared' / 'lib' / self.project.python.dylib
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)
         return shared_lib.exists()
@@ -1541,14 +1541,14 @@ class SharedPkgBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / 'python-shared' / 'lib' / self.project.python.dylib
+        shared_lib = self.project.build_lib / 'python-shared' / 'lib' / self.project.python.dylib
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)
         return shared_lib.exists()
 
     def build(self):
         """builds externals from shared python"""
-        src = self.project.lib / 'python-shared'
+        src = self.project.build_lib / 'python-shared'
         dst = f"{self.project.support}/{self.product.name_ver}"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
@@ -1566,7 +1566,7 @@ class FrameworkExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
+        shared_lib = self.project.build_lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
         if not shared_lib.exists():
             self.log.warning("framework python is not built: %s", shared_lib)
         return shared_lib.exists()
@@ -1587,14 +1587,14 @@ class FrameworkPkgBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
+        shared_lib = self.project.build_lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
         if not shared_lib.exists():
             self.log.warning("framework python is not built: %s", shared_lib)
         return shared_lib.exists()
 
     def build(self):
         """builds externals from framework python"""
-        src = self.project.lib / "Python.framework"
+        src = self.project.build_lib / "Python.framework"
         dst = self.project.support / "Python.framework"
         self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")

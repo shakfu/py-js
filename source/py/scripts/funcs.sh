@@ -39,7 +39,7 @@ function runlog() {
 function runlog_all() {
     for t in $TARGETS
     do
-        runlog logs/$t.log
+        runlog $t
     done
 }
 
@@ -53,7 +53,7 @@ function check_all() {
 function runlog_all_no_brew() {
     for t in $TARGETS_NO_BREW
     do
-        runlog logs/$t.log
+        runlog $t
     done
 }
 
