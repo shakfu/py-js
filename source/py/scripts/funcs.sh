@@ -75,3 +75,8 @@ function check_all_no_brew() {
     done
 }
 
+
+function open_log() {
+    open $LOGDIR
+}
+

@@ -33,4 +33,4 @@ LIBRARY_SEARCH_PATHS = $(inherited) $(PY_LIBS)
 OTHER_LDFLAGS = $(inherited) $(PY_LDFLAGS)
 
 // uncomment here if you to build your externals in $(PYJS_BUILD_ROOT)/externals 
-DSTROOT = $(PYJS_BUILD_ROOT)/externals
+// DSTROOT = $(PYJS_BUILD_ROOT)/externals
