@@ -560,7 +560,7 @@ class Builder:
                 f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
                 f" -target {repr(target)} {x_flags} {p_flags}"
             )
-        self.deploy(targets)
+        #self.deploy(targets)
 
 
 
