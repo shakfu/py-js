@@ -8,12 +8,14 @@ usage:
    python3 scripts/check_success.py logs/xxx.log
 
 """
-
+import os
 import sys
 
 GREEN="\033[1;32m"
 MAGENTA="\033[1;35m"
 RESET="\033[m"
+
+HOME=os.environ['HOME']
 
 def check_success(path: str, requirement:int = 2):
    """check count of xcode successful build message in a log file
@@ -31,7 +33,8 @@ def check_success(path: str, requirement:int = 2):
    else:
       msg = f"{MAGENTA}FAILURE{RESET}"
 
-   print(f"{path:<26} -> {msg}: {count} out of {requirement} builds succeeded")
+   cpath = path.replace(HOME, '~') # remove $HOME prefix and replace with '~'
+   print(f"{cpath:<46} -> {msg}: {count} out of {requirement} builds OK")
 
 
 

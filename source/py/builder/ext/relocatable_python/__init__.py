@@ -50,7 +50,9 @@ relocatable_options = option_group(
 )
 
 
+
 def process_args_for_relocatable_python(args):
+    print(args.python_version)
     framework_path = get.FrameworkGetter(
         python_version=args.python_version,
         os_version=args.os_version,
