@@ -20,6 +20,7 @@ Builder
                 SharedPythonForPkgBuilder
             StaticPythonBuilder
         PyJsBuilder
+            LocalSystemBuilder
             HomebrewBuilder
             StaticExtBuilder
             SharedExtBuilder
@@ -541,6 +542,14 @@ class Builder:
         _cmd = f"install_name_tool -add_rpath '{rpath}' '{target}'"
         self.cmd(_cmd)
 
+    def deploy(self, targets: List[str] = None):
+        """copies externals from the external build dir to the Package directory"""
+        for ext in [f"{t}.mxo" for t in targets]:
+            src = self.project.build_externals / ext
+            dst = self.project.externals / ext
+            if src.exists():
+                self.cmd.copy(src, dst)
+
     def xcodebuild(self, project: str, targets: List[str], *preprocessor_flags, **xcconfig_flags):
         """python wrapper around command-line xcodebuild"""
         x_flags = " ".join([f"{k}={repr(v)}" for k,v in xcconfig_flags.items()]) if xcconfig_flags else ''
@@ -551,6 +560,10 @@ class Builder:
                 f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
                 f" -target {repr(target)} {x_flags} {p_flags}"
             )
+        self.deploy(targets)
+
+
+
 
     # -------------------------------------------------------------------------
     # Core Methods
@@ -1481,9 +1494,6 @@ class LocalSystemBuilder(PyJsBuilder):
             ABIFLAGS = str(self.project.python.abiflags),
             LIBS = str(self.project.python.libs),
         )
-
-        # if self.settings.deploy:
-        #     flags['DSTROOT'] = str(self.project.build_externals)
 
         self.xcodebuild("local-sys", targets=targets, **flags)
 
