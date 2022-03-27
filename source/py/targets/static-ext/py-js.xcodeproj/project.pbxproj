@@ -237,7 +237,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nrm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}.a\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nrm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}${ABIFLAGS}.a\n";
 		};
 		125E0ED325F3DDF7003C4A4A /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -254,7 +254,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "rm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}.a\n";
+			shellScript = "rm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}${ABIFLAGS}.a\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
