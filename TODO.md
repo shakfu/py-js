@@ -2,6 +2,8 @@
 
 ## Build System
 
+- [ ] move logs to `$HOME/.build_pyjs/logs`
+
 - [ ] check why `py-js.xcconfig` for `homebrew-ext` refers to `support`. May implicitly reply on `homebrew-pkg` preceding it.
 
 - [ ] Reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
