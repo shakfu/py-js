@@ -48,9 +48,6 @@ common_options = option_group(
            help="clean python in build/src"),
     option("-z", 
             "--ziplib", action="store_true", help="zip python library"),
-    option("--deploy",
-           action="store_true",
-           help="deploy externals via local build directory"),
     option("--dump", action="store_true", help="dump project and product vars"),
 )
 

@@ -13,6 +13,9 @@ ROOTDIR := $(shell pwd)
 SRCDIR := $(ROOTDIR)/source
 PYDIR := $(SRCDIR)/py
 
+BUILDDIR := $(HOME)/.build_pyjs
+BUILD_EXTERNALS := $(BUILDDIR)/externals
+
 # project variables
 NAME = py
 PROJECT = ${NAME}.xcodeproj
@@ -279,8 +282,9 @@ clean-targets-build:
 
 clean-externals:
 	$(call section,"cleaning externals")
-	@for target in ${TARGETS}; do \
-		rm -rf ${ROOTDIR}/externals/$$target.mxo  ; \
+	@for target in $(TARGETS); do \
+		rm -rf $(ROOTDIR)/externals/$$target.mxo ; \
+		rm -rf $(BUILD_EXTERNALS)/$$target.mxo   ; \
 	done
 
 clean-support:
