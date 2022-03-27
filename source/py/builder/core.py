@@ -22,7 +22,6 @@ Builder
         PyJsBuilder
             HomebrewBuilder
             StaticExtBuilder
-                StaticExtFullBuilder
             SharedExtBuilder
             SharedPkgBuilder
             FrameworkExtBuilder

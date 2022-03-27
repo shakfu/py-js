@@ -72,14 +72,14 @@ _bisect _bisectmodule.c
 _heapq _heapqmodule.c
 _asyncio _asynciomodule.c
 _json -I$(srcdir)/Include/internal -DPy_BUILD_CORE_BUILTIN _json.c
-_statistics _statisticsmodule.c
+
 
 unicodedata unicodedata.c
 
 _uuid _uuidmodule.c
 _opcode _opcode.c
 _multiprocessing _multiprocessing/multiprocessing.c _multiprocessing/semaphore.c
-_posixshmem _multiprocessing/posixshmem.c
+#_posixshmem _multiprocessing/posixshmem.c
 
 
 fcntl fcntlmodule.c
@@ -116,6 +116,9 @@ pyexpat expat/xmlparse.c \
 
 zlib zlibmodule.c -I$(prefix)/include -lz
 
+_ssl _ssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
+
+_hashlib _hashopenssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
 
 # -------------------------------------------------------------------------------
 # DISABLED
