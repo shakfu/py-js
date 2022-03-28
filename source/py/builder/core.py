@@ -171,30 +171,6 @@ class Project:
 
     HOME = Path(os.getenv("HOME"))
 
-    # root in this case is root assumed for build / make / scripts
-    # actual project is root.parent.parent (see below)
-    # current working directory
-    root = Path.cwd()
-
-    # project-build section
-    scripts = root / "scripts"
-    patch = root / "patch"
-    targets = root / "targets"
-    build = HOME / ".build_pyjs"
-    # build = targets / "build"
-    build_externals = build / 'externals'
-    build_downloads = build / "downloads"
-    build_src = build / "src"
-    build_lib = build / "lib"
-
-    # project root here
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-    externals = pyjs / "externals"
-
-    py_external = externals / "py.mxo"
-    pyjs_external = externals / "pyjs.mxo"
-
     # environmental vars
     package_name = "py-js"
     package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
@@ -209,6 +185,38 @@ class Project:
         "media",
         "patchers",
     ]
+
+    is_symlinked = False
+
+    # root in this case is root assumed for build / make / scripts
+    # actual project is root.parent.parent (see below)
+    # current working directory
+    root = Path.cwd()
+
+    # project root here
+    pyjs = root.parent.parent
+    support = pyjs / "support"
+    externals = pyjs / "externals"
+
+    py_external = externals / "py.mxo"
+    pyjs_external = externals / "pyjs.mxo"
+
+    # project-build section
+    scripts = root / "scripts"
+    patch = root / "patch"
+    targets = root / "targets"
+
+    if is_symlinked:
+        build = targets / "build"
+        build_externals = externals
+
+    else: # is copied to {package}
+        build = HOME / ".build_pyjs"
+        build_externals = build / 'externals'
+
+    build_downloads = build / "downloads"
+    build_src = build / "src"
+    build_lib = build / "lib"
 
     # settings
     mac_dep_target = "10.13"

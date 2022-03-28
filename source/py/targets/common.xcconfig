@@ -21,7 +21,6 @@ PY_SHORT_VERSION = 3.9
 VERSION = $(PY_SHORT_VERSION)
 ABIFLAGS = 
 
-
 // PYJS_BUILD_ROOT = $(SRCROOT)/../build
 PYJS_BUILD_ROOT = $(HOME)/.build_pyjs
 
@@ -35,5 +34,7 @@ HEADER_SEARCH_PATHS = $(inherited) $(PY_HEADERS)
 LIBRARY_SEARCH_PATHS = $(inherited) $(PY_LIBS)
 OTHER_LDFLAGS = $(inherited) $(PY_LDFLAGS)
 
-// uncomment here if you to build your externals in $(PYJS_BUILD_ROOT)/externals 
+// The Default is
+// DSTROOT = $(SRCROOT)/../../../externals 
+// uncomment below if you wish to build your externals in $(PYJS_BUILD_ROOT)/externals 
 DSTROOT = $(PYJS_BUILD_ROOT)/externals
