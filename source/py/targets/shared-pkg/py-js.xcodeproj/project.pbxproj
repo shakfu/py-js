@@ -115,7 +115,6 @@
 				120266B924AA15EF007DF876 /* Sources */,
 				120266BC24AA15EF007DF876 /* Frameworks */,
 				120266BF24AA15EF007DF876 /* Rez */,
-				12B1528527F0D8B500CEEE6F /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -135,7 +134,6 @@
 				2FBBEADA08F335360078DB84 /* Sources */,
 				2FBBEADC08F335360078DB84 /* Frameworks */,
 				2FBBEADF08F335360078DB84 /* Rez */,
-				12B1528427F0D8A900CEEE6F /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -205,44 +203,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXRezBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		12B1528427F0D8A900CEEE6F /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "xattr -cr $HOME/Library/Developer/Xcode/DerivedData || echo Clear\nxattr -cr \"$PROJECT_DIR\" || echo Clear\n\n";
-			showEnvVarsInLog = 0;
-		};
-		12B1528527F0D8B500CEEE6F /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "xattr -cr $HOME/Library/Developer/Xcode/DerivedData || echo Clear\nxattr -cr \"$PROJECT_DIR\" || echo Clear\n\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		120266B924AA15EF007DF876 /* Sources */ = {
