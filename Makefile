@@ -169,7 +169,6 @@ python-relocatable: clean-python-framework-pkg
 .PHONY: bz2 ssl xz
 
 bz2:
-	@echo hello
 	$(call pybuild-targets, "dep" "bz2")
 
 ssl:
