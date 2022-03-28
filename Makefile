@@ -66,9 +66,6 @@ endef
 define xclean-target
 $(call section,"cleaning build artifacts from $1 target")
 @rm -rf '$(PYDIR)'/targets/$1/build
-@xattr -cr '$(PYDIR)'/targets/$1
-@xattr -dr com.apple.metadata:_kMDItemUserTags '$(PYDIR)'/targets/$1
-@xattr -dr com.apple.FinderInfo '$(PYDIR)'/targets/$1
 endef
 
 
@@ -268,7 +265,8 @@ duplo:
 		clean-homebrew-pkg clean-homebrew-ext \
 		clean-framework-pkg clean-framework-ext \
 		clean-shared-pkg clean-shared-ext \
-		clean-static-pkg clean-static-ext
+		clean-static-pkg clean-static-ext \
+		clean-relocatable-pkg
 
 reset: clean clean-targets-build
 
@@ -278,7 +276,8 @@ clean-build: clean-local-sys  \
 			 clean-homebrew-pkg clean-homebrew-ext  \
 			 clean-framework-pkg clean-framework-ext \
 			 clean-shared-pkg clean-shared-ext \
-			 clean-static-pkg clean-static-ext
+			 clean-static-pkg clean-static-ext \
+			 clean-relocatable-pkg
 
 clean-build-lib: clean-python-shared \
 				 clean-python-shared-ext \
@@ -289,7 +288,7 @@ clean-build-lib: clean-python-shared \
 
 clean-targets-build:
 	$(call section,"cleaning targets/build directory")
-	@rm -rf ${PYDIR}/targets/build
+	@rm -rf ${PYDIR}/targets/build/src/*
 
 clean-externals:
 	$(call section,"cleaning externals")
@@ -331,6 +330,9 @@ clean-static-pkg: clean-externals clean-support
 
 clean-static-ext: clean-externals
 	$(call xclean-target,"static-ext")
+
+clean-relocatable-pkg: clean-externals
+	$(call xclean-target,"relocatable-pkg")
 
 # -----------------------------------------------------------------------
 # python clean targets
