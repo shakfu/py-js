@@ -7,6 +7,7 @@ from .constants import (
     DEFAULT_XZ_VERSION,
 )
 
+
 PYTHON_BUILDERS = dict(
     python_static = core.StaticPythonBuilder,
     python_shared = core.SharedPythonBuilder,
@@ -28,7 +29,6 @@ PYJS_BUILDERS = dict(
     pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
     pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, []),
 )
-
 
 # -----------------------------------------------------------------------------
 # UTILITY FUNCTIONS
@@ -62,6 +62,23 @@ def get_xz_product(xz_version=DEFAULT_XZ_VERSION, **settings):
         url_template="http://tukaani.org/xz/{name}-{version}.tar.gz",
         libs_static=["libxz.a"],
     )
+
+
+# -----------------------------------------------------------------------------
+# DEPENDENCY BUILDERS
+
+
+def dependency_builder_factory(name, **settings):
+
+    bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
+    ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
+    xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
+
+    return {
+        'bz2': core.Bzip2Builder(product=get_bzip2_product(bz2_version), **settings),
+        'ssl': core.OpensslBuilder(product=get_ssl_product(ssl_version), **settings),
+        'xz' : core.XzBuilder(product=get_xz_product(xz_version), **settings),
+    }[name]
 
 
 # -----------------------------------------------------------------------------
@@ -130,8 +147,11 @@ def builder_factory(name, **settings):
         try:
             builder = python_builder_factory(name, **settings)
         except KeyError:
-            print(f"builder type '{name}' not found in any factory. "
-                  f"Must be one of {PYTHON_BUILDERS.keys()} or {PYJS_BUILDERS.keys()}")
+            try:
+                builder = dependency_builder_factory(name, **settings)
+            except KeyError:
+                print(f"builder type '{name}' not found in any factory.")
+
     return builder
 
 # -----------------------------------------------------------------------------
