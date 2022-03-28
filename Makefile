@@ -236,9 +236,20 @@ compile-extension:
 # -----------------------------------------------------------------------
 .PHONY: test
 
-test:
-	$(call section,"testing planned")
-	echo "remember to test!"
+test: clean
+	$(call section,"running tests")
+	@source source/py/scripts/funcs.sh && runlog_all
+
+check:
+	$(call section,"checking test results")
+	@source source/py/scripts/funcs.sh && check_all
+	@echo
+
+check_logs:
+	$(call section,"checking all test results")
+	@source source/py/scripts/funcs.sh && check_all_logs
+	@echo
+
 
 # Styling
 # -----------------------------------------------------------------------
@@ -274,14 +285,14 @@ duplo:
 		clean-static-pkg clean-static-ext \
 		clean-relocatable-pkg
 
-clean: clean-externals clean-support clean-targets
+clean: clean-externals clean-support clean-targets clean-build
 
 clean-targets: clean-local-sys  \
-			 clean-homebrew-pkg clean-homebrew-ext  \
-			 clean-framework-pkg clean-framework-ext \
-			 clean-shared-pkg clean-shared-ext \
-			 clean-static-pkg clean-static-ext \
-			 clean-relocatable-pkg
+			   clean-homebrew-pkg clean-homebrew-ext  \
+			   clean-framework-pkg clean-framework-ext \
+			   clean-shared-pkg clean-shared-ext \
+			   clean-static-pkg clean-static-ext \
+			   clean-relocatable-pkg
 
 clean-build-lib: clean-python-shared \
 				 clean-python-shared-ext \
@@ -297,6 +308,9 @@ clean-build:
 	$(call section,"cleaning build directory")
 	@rm -rf '${PYDIR}'/targets/build/src/*
 	@rm -rf '${BUILDDIR}'/src/*
+	@rm -rf '${BUILDDIR}'/lib/python-shared
+	@rm -rf '${BUILDDIR}'/lib/python-static
+	@rm -rf '${BUILDDIR}'/lib/Python.framework
 
 clean-externals:
 	$(call section,"cleaning externals")
