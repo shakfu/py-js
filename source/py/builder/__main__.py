@@ -18,7 +18,7 @@ subcommands:
 """
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
-from .factory import python_builder_factory, pyjs_builder_factory
+from .factory import builder_factory
 from .ext.relocatable_python import (
     process_args_for_relocatable_python, relocatable_options)
 
@@ -64,11 +64,7 @@ class Application(Commander):
         """generic ordered argument dispatcher"""
         order = ['dump', 'download', 'install', 'build', 'clean', 'ziplib']
         kwdargs = vars(args)
-        if name.startswith('python'):
-            factory = python_builder_factory
-        else:
-            factory = pyjs_builder_factory
-        builder = factory(name, **kwdargs)
+        builder = builder_factory(name, **kwdargs)
         if args.dump:
             builder.to_yaml()
         for method in order:
@@ -129,21 +125,21 @@ class Application(Commander):
 
     def do_pyjs(self, args):
         """build pyjs externals"""
-        pyjs_builder_factory('pyjs_local_sys').build()
+        builder_factory('pyjs_local_sys').build()
 
     @common_options
     def do_pyjs_local_sys(self, args):
         """build non-portable pyjs externals"""
-        pyjs_builder_factory('pyjs_local_sys').build()
+        builder_factory('pyjs_local_sys').build()
         # self.ordered_dispatch('pyjs_local_sys', args)
 
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
-        pyjs_builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()
+        builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()
 
     def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
-        pyjs_builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
+        builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
 
     @common_options
     def do_pyjs_static_pkg(self, args):
@@ -184,7 +180,27 @@ class Application(Commander):
     def do_pyjs_relocatable_pkg(self, args):
         """build portable pyjs package (framework)"""
         process_args_for_relocatable_python(args)
-        pyjs_builder_factory('pyjs_relocatable_pkg').build()
+        builder_factory('pyjs_relocatable_pkg').build()
+
+
+# ----------------------------------------------------------------------------
+# dependency builder methods
+
+    def do_dep(self, args):
+        """dependency commands"""
+
+    def do_dep_bz2(self, args):
+        """build bzip2 dependency"""
+        builder_factory('bz2').build()
+
+    def do_dep_ssl(self, args):
+        """build openssl dependency"""
+        builder_factory('ssl').build()
+
+    def do_dep_xz(self, args):
+        """build xz dependency"""
+        builder_factory('xz').build()
+
 
 
 

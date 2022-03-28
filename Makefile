@@ -63,15 +63,12 @@ endef
 
 
 # $(call xclean,name)
-define xclean-build
+define xclean-target
 $(call section,"cleaning build artifacts from $1 target")
-@rm -rf '$(PYDIR)'/targets/'$1'/build 
-endef
-
-# $(call xcleanlib,name)
-define xclean-build
-$(call section,"cleaning build lib from $1 target")
-@rm -rf '$(PYDIR)'/targets/build/lib/'$1' 
+@rm -rf '$(PYDIR)'/targets/$1/build
+@xattr -cr '$(PYDIR)'/targets/$1
+@xattr -dr com.apple.metadata:_kMDItemUserTags '$(PYDIR)'/targets/$1
+@xattr -dr com.apple.FinderInfo '$(PYDIR)'/targets/$1
 endef
 
 
@@ -142,10 +139,10 @@ python-shared: clean-python-shared
 	$(call pybuild-targets, "python" "shared" "--install")
 
 python-shared-ext: clean-python-shared-ext
-	$(call pybuild-targets, "python" "shared-ext" "--install")
+	$(call pybuild-targets, "python" "shared_ext" "--install")
 
 python-shared-pkg: clean-python-shared-pkg
-	$(call pybuild-targets, "python" "shared-pkg" "--install")
+	$(call pybuild-targets, "python" "shared_pkg" "--install")
 
 python-static: clean-python-static
 	$(call pybuild-targets, "python" "static" "--install")
@@ -162,6 +159,20 @@ python-framework-pkg: clean-python-framework-pkg
 python-relocatable: clean-python-framework-pkg
 	$(call pybuild-targets, "python" "relocatable_pkg")
 
+# -----------------------------------------------------------------------
+# dependencies
+
+.PHONY: bz2 ssl xz
+
+bz2:
+	@echo hello
+	$(call pybuild-targets, "dep" "bz2")
+
+ssl:
+	$(call pybuild-targets, "dep" "ssl")
+
+xz:
+	$(call pybuild-targets, "dep" "xz")
 
 # -----------------------------------------------------------------------
 # utilities
@@ -283,8 +294,7 @@ clean-targets-build:
 clean-externals:
 	$(call section,"cleaning externals")
 	@for target in $(TARGETS); do \
-		rm -rf $(ROOTDIR)/externals/$$target.mxo ; \
-		rm -rf $(BUILD_EXTERNALS)/$$target.mxo   ; \
+		rm -rf '$(ROOTDIR)'/externals/$$target.mxo ;\
 	done
 
 clean-support:
@@ -296,31 +306,31 @@ clean-xcode: clean-build
 	@find . | grep -E "(project.xcworkspace|xcuserdata)" | xargs rm -rf
 
 clean-local-sys: clean-externals
-	$(call xclean-build,"local-sys")
+	$(call xclean-target,"local-sys")
 
 clean-homebrew-pkg: clean-externals clean-support
-	$(call xclean-build,"homebrew-pkg")
+	$(call xclean-target,"homebrew-pkg")
 
 clean-homebrew-ext: clean-externals
-	$(call xclean-build,"homebrew-ext")
+	$(call xclean-target,"homebrew-ext")
 
 clean-framework-pkg: clean-externals clean-support
-	$(call xclean-build,"framework-pkg")
+	$(call xclean-target,"framework-pkg")
 
 clean-framework-ext: clean-externals
-	$(call xclean-build,"framework-ext")
+	$(call xclean-target,"framework-ext")
 
 clean-shared-pkg: clean-externals clean-support
-	$(call xclean-build,"shared-pkg")
+	$(call xclean-target,"shared-pkg")
 
 clean-shared-ext: clean-externals
-	$(call xclean-build,"shared-ext")
+	$(call xclean-target,"shared-ext")
 
 clean-static-pkg: clean-externals clean-support
-	$(call xclean-build,"static-pkg")
+	$(call xclean-target,"static-pkg")
 
 clean-static-ext: clean-externals
-	$(call xclean-build,"static-ext")
+	$(call xclean-target,"static-ext")
 
 # -----------------------------------------------------------------------
 # python clean targets

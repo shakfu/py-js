@@ -105,7 +105,7 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 def get_var(x): return sysconfig.get_config_var(x)         # type: ignore
 def get_path(x): return Path(sysconfig.get_config_var(x))  # type: ignore
 
-
+quote = lambda s: s.replace(' ', '\\ ')
 # ----------------------------------------------------------------------------
 # Configuration Classes
 
@@ -180,10 +180,9 @@ class Project:
     scripts = root / "scripts"
     patch = root / "patch"
     targets = root / "targets"
-    # build = Path('/tmp/_build_pyjs')
-    # build = targets / "build"
-    build = HOME / ".build_pyjs"
-    build_externals = build / 'externals'
+    # build = HOME / ".build_pyjs"
+    build = targets / "build"
+    # build_externals = build / 'externals'
     build_downloads = build / "downloads"
     build_src = build / "src"
     build_lib = build / "lib"
@@ -655,10 +654,13 @@ class Bzip2Builder(Builder):
     def build(self):
         if not self.product_exists:
             self.cmd.chdir(self.src_path)
+            prefix = quote(str(self.prefix))
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-                    make install PREFIX='{self.prefix}'""")
+                    make install PREFIX='{prefix}'""")
             self.cmd.chdir(self.project.root)
+        else:
+            self.log.info('product built already')
 
 
 class OpensslBuilder(Builder):
@@ -667,15 +669,18 @@ class OpensslBuilder(Builder):
     def build(self):
         if not self.product_exists:
             self.cmd.chdir(self.src_path)
+            prefix = quote(str(self.prefix))
             os.environ['MACOSX_DEPLOYMENT_TARGET'] = self.project.mac_dep_target
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
                     ./config no-shared no-tests \
-                    --prefix='{self.prefix}'""")
+                    --prefix='{prefix}'""")
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
                     make install_sw""")
             self.cmd.chdir(self.project.root)
+        else:
+            self.log.info('product built already')
 
 
 class XzBuilder(Builder):
@@ -684,14 +689,17 @@ class XzBuilder(Builder):
     def build(self):
         if not self.product_exists:
             self.cmd.chdir(self.src_path)
+            prefix = quote(str(self.prefix))
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-                ./configure --disable-shared --enable-static --prefix='{self.prefix}'"""
+                ./configure --disable-shared --enable-static --prefix='{prefix}'"""
             )
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
                     make && make install""")
             self.cmd.chdir(self.project.root)
+        else:
+            self.log.info('product built already')
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (ABSTRACT)
@@ -1487,7 +1495,7 @@ class LocalSystemBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from local system python"""
-        targets = ["py", "pyjs"]
+
         flags = dict(
             PREFIX = str(self.project.python.prefix),
             VERSION = str(self.project.python.version_short),
@@ -1495,13 +1503,8 @@ class LocalSystemBuilder(PyJsBuilder):
             LIBS = str(self.project.python.libs),
         )
 
-        self.xcodebuild("local-sys", targets=targets, **flags)
+        self.xcodebuild("local-sys", targets=["py", "pyjs"], **flags)
 
-        # if self.settings.deploy:
-        #     for ext in [f"{t}.mxo" for t in targets]:
-        #         src = self.project.build_externals / ext
-        #         dst = self.project.externals / ext
-        #         self.cmd.copy(src, dst)
 
 class StaticExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
