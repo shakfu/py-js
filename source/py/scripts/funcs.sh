@@ -1,6 +1,6 @@
 
-BASEDIR="$HOME/.build_pyjs"
-# BASEDIR=.
+# BASEDIR="$HOME/.build_pyjs"
+BASEDIR=.
 
 BASELOGSDIR="$BASEDIR/logs"
 
