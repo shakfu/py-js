@@ -52,9 +52,9 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
     make setup
     ```
 
-The above will get the repo's required git submodules and symlink the repo to `$HOME/Documents/Max 8/Packages/py-js`. 
+    The above will initialize and update the required git submodules and symlink the repo to `$HOME/Documents/Max 8/Packages/py-js` to install it as a Max Package and enable you to test the externals and run the patches.
 
-4. For the purposes of this quickstart, use a recent python3 (3.7+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
+4. For the purposes of this quickstart, we assume you have a recent python3 (3.7+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or otherwise installed on your system.
 
 5. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
 
@@ -116,7 +116,7 @@ With option (3), the externals are linked to, and have been compiled against, a 
 
 Depending on your choice above, the python interpreter in each external is either statically compiled or dynamically linked, and in all three cases we have a self-contained and relocatable structure (external or package) without any non-system dependencies. This makes it appropriate for use in Max Packages and Standalones.
 
-Ther are other [build variations](#build-variations) which are discussed in more detail below. You can also see what build options are available via typing `make help` in the `py-js` project folder:
+Ther are other [build variations](#build-variations) which are discussed in more detail below. You can alway wee which ones are available via typing `make help` in the `py-js` project folder:
 
 ```bash
 $ make help
