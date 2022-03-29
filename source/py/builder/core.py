@@ -186,7 +186,7 @@ class Project:
         "patchers",
     ]
 
-    is_symlinked = False
+    is_symlinked = True
 
     # root in this case is root assumed for build / make / scripts
     # actual project is root.parent.parent (see below)
@@ -569,7 +569,7 @@ class Builder:
                 f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
                 f" -target {repr(target)} {x_flags} {p_flags}"
             )
-        self.deploy(targets)
+        #self.deploy(targets)
 
 
 
