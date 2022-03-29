@@ -71,7 +71,7 @@ endef
 # $(call xclean,name)
 define xcleanlib
 $(call section,"cleaning build product from python build $1")
-@rm -rf '$(PYDIR)'/targets/build/$1
+@rm -rf '$(PYDIR)'/targets/build/lib/$1
 @rm -rf '${BUILDDIR}'/lib/$1
 endef
 
@@ -104,34 +104,34 @@ help:
 default: local-sys
 
 local-sys: clean-local-sys
-	$(call pybuild-targets, "pyjs" "local_sys")
+	$(call pybuild-targets,"pyjs" "local_sys")
 
 homebrew-pkg: clean-homebrew-pkg
-	$(call pybuild-targets, "pyjs" "homebrew_pkg")
+	$(call pybuild-targets,"pyjs" "homebrew_pkg")
 
 homebrew-ext: clean-homebrew-ext
 	$(call pybuild-targets,"pyjs" "homebrew_ext")
 
 shared-pkg: clean-shared-pkg
-	$(call pybuild-targets, "pyjs" "shared_pkg" "--install" "--build")
+	$(call pybuild-targets,"pyjs" "shared_pkg" "--install" "--build")
 
 shared-ext: clean-shared-ext
-	$(call pybuild-targets, "pyjs" "shared_ext" "--install" "--build")
+	$(call pybuild-targets,"pyjs" "shared_ext" "--install" "--build")
 
 static-ext: clean-static-ext
-	$(call pybuild-targets, "pyjs" "static_ext" "--install" "--build")
+	$(call pybuild-targets,"pyjs" "static_ext" "--install" "--build")
 
 static-pkg: clean-static-pkg
-	$(call pybuild-targets, "pyjs" "static_pkg" "--install" "--build")
+	$(call pybuild-targets,"pyjs" "static_pkg" "--install" "--build")
 
 framework-pkg: clean-framework-pkg
-	$(call pybuild-targets, "pyjs" "framework_pkg" "--install" "--build")
+	$(call pybuild-targets,"pyjs" "framework_pkg" "--install" "--build")
 
 framework-ext: clean-framework-ext
-	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
+	$(call pybuild-targets,"pyjs" "framework_ext" "--install" "--build")
 
 relocatable-pkg: clean-framework-pkg
-	$(call pybuild-targets, "pyjs" "relocatable_pkg")
+	$(call pybuild-targets,"pyjs" "relocatable_pkg")
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
@@ -140,28 +140,28 @@ pymx:
 # python targets
 
 python-shared: clean-python-shared
-	$(call pybuild-targets, "python" "shared" "--install")
+	$(call pybuild-targets,"python" "shared" "--install")
 
 python-shared-ext: clean-python-shared-ext
-	$(call pybuild-targets, "python" "shared_ext" "--install")
+	$(call pybuild-targets,"python" "shared_ext" "--install")
 
 python-shared-pkg: clean-python-shared-pkg
-	$(call pybuild-targets, "python" "shared_pkg" "--install")
+	$(call pybuild-targets,"python" "shared_pkg" "--install")
 
 python-static: clean-python-static
-	$(call pybuild-targets, "python" "static" "--install")
+	$(call pybuild-targets,"python" "static" "--install")
 
 python-framework: clean-python-framework
-	$(call pybuild-targets, "python" "framework" "--install")
+	$(call pybuild-targets,"python" "framework" "--install")
 
 python-framework-ext: clean-python-framework-ext
-	$(call pybuild-targets, "python" "framework_ext" "--install")
+	$(call pybuild-targets,"python" "framework_ext" "--install")
 
 python-framework-pkg: clean-python-framework-pkg
-	$(call pybuild-targets, "python" "framework_pkg" "--install")
+	$(call pybuild-targets,"python" "framework_pkg" "--install")
 
 python-relocatable: clean-python-framework-pkg
-	$(call pybuild-targets, "python" "relocatable_pkg")
+	$(call pybuild-targets,"python" "relocatable_pkg")
 
 # -----------------------------------------------------------------------
 # dependencies
@@ -205,22 +205,22 @@ dist:
 
 
 build-shared-pkg: clean-shared-pkg
-	$(call pybuild-targets, "pyjs" "shared_pkg" "--build")
+	$(call pybuild-targets,"pyjs" "shared_pkg" "--build")
 
 build-shared-ext: clean-shared-ext
-	$(call pybuild-targets, "pyjs" "shared_ext" "--build")
+	$(call pybuild-targets,"pyjs" "shared_ext" "--build")
 
 build-static-ext: clean-static-ext
-	$(call pybuild-targets, "pyjs" "static_ext" "--build")
+	$(call pybuild-targets,"pyjs" "static_ext" "--build")
 
 build-static-pkg: clean-static-pkg
-	$(call pybuild-targets, "pyjs" "static_pkg" "--build")
+	$(call pybuild-targets,"pyjs" "static_pkg" "--build")
 
 build-framework-pkg: clean-framework-pkg
-	$(call pybuild-targets, "pyjs" "framework_pkg" "--build")
+	$(call pybuild-targets,"pyjs" "framework_pkg" "--build")
 
 build-framework-ext: clean-framework-ext
-	$(call pybuild-targets, "pyjs" "framework_ext" "--build")
+	$(call pybuild-targets,"pyjs" "framework_ext" "--build")
 
 
 # re-compile only
@@ -362,24 +362,24 @@ clean-relocatable-pkg: clean-externals clean-support
 
 
 clean-python-shared:
-	$(call xcleanlib, "python-shared")
+	$(call xcleanlib,"python-shared")
 
 clean-python-shared-ext:
-	$(call xcleanlib, "python-shared")
+	$(call xcleanlib,"python-shared")
 
 clean-python-shared-pkg: clean-externals clean-support
-	$(call xcleanlib, "python-shared")
+	$(call xcleanlib,"python-shared")
 
 clean-python-static:
-	$(call xcleanlib, "python-static")
+	$(call xcleanlib,"python-static")
 
 clean-python-framework:
-	$(call xcleanlib, "Python.framework")
+	$(call xcleanlib,"Python.framework")
 
 clean-python-framework-ext:
-	$(call xcleanlib, "Python.framework")
+	$(call xcleanlib,"Python.framework")
 
 clean-python-framework-pkg: clean-externals clean-support
-	$(call xcleanlib, "Python.framework")
+	$(call xcleanlib,"Python.framework")
 
 
