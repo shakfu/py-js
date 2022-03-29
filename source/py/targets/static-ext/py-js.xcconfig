@@ -1,7 +1,6 @@
 #include "../common.xcconfig"
 
 
-
 PREFIX = $(PYJS_BUILD_LIB)/python-static
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 

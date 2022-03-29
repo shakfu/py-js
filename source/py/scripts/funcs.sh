@@ -1,6 +1,6 @@
 
-# BASEDIR="$HOME/.build_pyjs"
-BASEDIR=.
+BASEDIR="$HOME/.build_pyjs"
+# BASEDIR=.
 
 BASELOGSDIR="$BASEDIR/logs"
 
@@ -9,6 +9,9 @@ PYTHON_VERSION=`python3 -c 'import platform; print(platform.python_version())'`
 LOGDIR="$BASELOGSDIR/$PYTHON_VERSION"
 
 CHECK="python3 source/py/scripts/check_success.py"
+CHECK_ENTRY="$CHECK --entry"
+CHECK_VERSION="$CHECK --version"
+CHECK_LOGS="$CHECK --logs"
 
 ESCAPED_HOME=$(echo $HOME | sed 's_/_\\/_g')
 
@@ -45,7 +48,7 @@ function runlog() {
     sed -i '' "s/\[m//g" $LOG
     sed -i '' "s/$ESCAPED_HOME/~/g" $LOG
     echo
-    $CHECK $LOG
+    $CHECK --entry $LOG
 }
 
 function runlog_all() {
@@ -58,7 +61,7 @@ function runlog_all() {
 function check_all() {
     for t in $TARGETS
     do
-        $CHECK $LOGDIR/$t.log
+        $CHECK --entry $LOGDIR/$t.log
     done
 }
 
@@ -72,10 +75,13 @@ function runlog_all_no_brew() {
 function check_all_no_brew() {
     for t in $TARGETS_NO_BREW
     do
-        $CHECK $LOGDIR/$t.log
+        $CHECK --entry $LOGDIR/$t.log
     done
 }
 
+function check_all_logs() {
+    $CHECK --logs $BASELOGSDIR
+}
 
 function open_log() {
     open $LOGDIR

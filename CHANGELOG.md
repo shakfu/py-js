@@ -15,6 +15,8 @@
 
 #### Enhancements
 
+- [x] can build dependencies individually now from make
+
 - [x] added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
 
 - [x] streamlined `common.xcconfig` so that it refers to `.build_pyjs` centrally
