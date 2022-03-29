@@ -1,0 +1,16 @@
+#include "../common.xcconfig"
+
+// This can overriden by the builder at the commandline build
+VERSION = 3.9
+ABIFLAGS = 
+PREFIX = /usr/local/opt/python@$(VERSION)/Frameworks/Python.framework/Versions/$(VERSION)
+
+// --------------------------------------------------------------------------------
+
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
+PY_LIBS = $(PREFIX)/lib
+PY_LDFLAGS = $(LIBS) -lpython$(VERSION)$(ABIFLAGS)
+
+PROJECT_HEADERS = $(PY_HEADERS)
+PROJECT_LIBS = $(PY_LIBS)
+PROJECT_LDFLAGS = $(LIBS) -lpython$(VERSION)$(ABIFLAGS)
