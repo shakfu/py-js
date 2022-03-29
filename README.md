@@ -46,17 +46,19 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
 
 2. Make sure you have `Xcode` installed and you are on an Intel-based Mac.
 
-3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) and run the following in the cloned repo to get the required submodules:
+3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) to a path without a space and without possible icloud syncing (i.e don't clone to `$HOME/Documents/Max 8/Packages`) and run the following in the cloned repo:
 
     ```bash
-    git submodule init && git submodule update 
+    make setup
     ```
 
-4. For the purposes of this quickstart, use a recent python3 (3.8+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
+The above will get the repo's required git submodules and symlink the repo to `$HOME/Documents/Max 8/Packages/py-js`. 
+
+4. For the purposes of this quickstart, use a recent python3 (3.7+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or similar source.
 
 5. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
 
-6. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
+6. Then type the following in the root directory of the `py-js` source (other installation options are detailed below).
 
     ```bash
     make
@@ -143,6 +145,14 @@ make python-framework-pkg : minimal framework python build for packages
 make python-relocatable   : custom relocatable framework python build
 
 ```
+
+### Automated Test of Build Variations
+
+If you would like to see which build variations are compatible with your current setup, there's an automated test which attempts to build all build variations and provides a report of build times and success or failures rates:
+
+```bash
+make test
+````
 
 ### Using Self-contained Python Externals in a Standalone
 
