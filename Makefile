@@ -5,27 +5,27 @@
 COLOR_BOLD_CYAN = "\033[1;36m"
 COLOR_RESET = "\033[m"
 
-# exec
+# python executable to use
 PYTHON = python3
 
 # paths
 ROOTDIR := $(shell pwd)
 SRCDIR := $(ROOTDIR)/source
 PYDIR := $(SRCDIR)/py
-
 BUILDDIR := $(HOME)/.build_pyjs
 
 # project variables
 NAME = py
-PROJECT = ${NAME}.xcodeproj
+PROJECT = $(NAME).xcodeproj
 TARGETS = py pyjs
 EXTENSION = $(PYDIR)/api.pyx
 
-MAX_VERSION := "8"
-MAX_DIR := "Max $(MAX_VERSION)"
-PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages
-PKG_DIRS=docs examples externals help init \
-         javascript jsextensions media patchers
+MAX_VERSION := 8
+MAX_DIR := "Max\ $(MAX_VERSION)"
+PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
+PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
+PKG_DIRS = docs examples externals help init \
+           javascript jsextensions media patchers
 
 
 # ifdef MYFLAG
@@ -99,7 +99,7 @@ all: default
 # python external argets
 
 help:
-	@python3 source/py/scripts/help.py
+	@$(PYTHON) source/py/scripts/help.py
 
 default: local-sys
 
@@ -180,9 +180,30 @@ xz:
 # -----------------------------------------------------------------------
 # utilities
 
+.PHONY: setup update-submodules link max-check
+
+
+setup: update-submodules link
+	$(call section,"setup complete")
+
+update-submodules:
+	$(call section,"updating git submodules")
+	@git submodule init && git submodule update
+
+link:
+	$(call section,"symlink to $(PYJS_PACKAGE)")
+	@if ! [ -L "$(PYJS_PACKAGE)" ]; then \
+		ln -s "$(ROOTDIR)" "$(PYJS_PACKAGE)" ; \
+		echo "... symlink created" ; \
+	else \
+		echo "... symlink already exists" ; \
+	fi
+
 max-check:
-	@echo $(PACKAGE)
-	@ls $(PACKAGE)
+	$(call section,"display contents of pyjs package")
+	@echo "$(PYJS_PACKAGE)"
+	@ls "$(PYJS_PACKAGE)"
+
 
 
 # DEPLOYING
