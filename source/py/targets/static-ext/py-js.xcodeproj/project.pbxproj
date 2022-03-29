@@ -23,7 +23,7 @@
 		120266C324AA15EF007DF876 /* pyjs.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pyjs.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 		120266C524AA17B5007DF876 /* pyjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pyjs.c; path = ../../pyjs.c; sourceTree = "<group>"; };
 		121A8C6124A1E58000EC5F99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../../Info.plist; sourceTree = "<group>"; };
-		12357D5F27F12FD9005D52ED /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = "../build/lib/python-static/lib"; sourceTree = "<group>"; };
+		12357D5F27F12FD9005D52ED /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = "../../../../../../../../.build_pyjs/lib/python-static/lib"; sourceTree = "<group>"; };
 		1239835C24A1DC4600ADF7CA /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = api.h; path = ../../api.h; sourceTree = "<group>"; };
 		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
 		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
@@ -237,7 +237,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "xattr -cr $HOME/Library/Developer/Xcode/DerivedData || echo Clear\nxattr -cr \"$PROJECT_DIR\" || echo Clear\n\nrm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}${ABIFLAGS}.a\n";
+			shellScript = "rm \"${BUILT_PRODUCTS_DIR}\"/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}${ABIFLAGS}.a\n\n\n\n\n\n";
 			showEnvVarsInLog = 0;
 		};
 		125E0ED325F3DDF7003C4A4A /* ShellScript */ = {
@@ -255,7 +255,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "xattr -cr $HOME/Library/Developer/Xcode/DerivedData || echo Clear\nxattr -cr \"$PROJECT_DIR\" || echo Clear\n\nrm ${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}${ABIFLAGS}.a\n";
+			shellScript = "rm \"${BUILT_PRODUCTS_DIR}\"/${PRODUCT_NAME}.mxo/Contents/Resources/lib/libpython${VERSION}${ABIFLAGS}.a\n\n\n\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

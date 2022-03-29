@@ -14,7 +14,6 @@ SRCDIR := $(ROOTDIR)/source
 PYDIR := $(SRCDIR)/py
 
 BUILDDIR := $(HOME)/.build_pyjs
-BUILD_EXTERNALS := $(BUILDDIR)/externals
 
 # project variables
 NAME = py
@@ -66,6 +65,14 @@ endef
 define xclean-target
 $(call section,"cleaning build artifacts from $1 target")
 @rm -rf '$(PYDIR)'/targets/$1/build
+endef
+
+
+# $(call xclean,name)
+define xcleanlib
+$(call section,"cleaning build product from python build $1")
+@rm -rf '$(PYDIR)'/targets/build/$1
+@rm -rf '${BUILDDIR}'/lib/$1
 endef
 
 
@@ -162,7 +169,6 @@ python-relocatable: clean-python-framework-pkg
 .PHONY: bz2 ssl xz
 
 bz2:
-	@echo hello
 	$(call pybuild-targets, "dep" "bz2")
 
 ssl:
@@ -230,9 +236,20 @@ compile-extension:
 # -----------------------------------------------------------------------
 .PHONY: test
 
-test:
-	$(call section,"testing planned")
-	echo "remember to test!"
+test: clean
+	$(call section,"running tests")
+	@source source/py/scripts/funcs.sh && runlog_all
+
+check:
+	$(call section,"checking test results")
+	@source source/py/scripts/funcs.sh && check_all
+	@echo
+
+check_logs:
+	$(call section,"checking all test results")
+	@source source/py/scripts/funcs.sh && check_all_logs
+	@echo
+
 
 # Styling
 # -----------------------------------------------------------------------
@@ -260,24 +277,22 @@ duplo:
 
 # Cleaning
 # -----------------------------------------------------------------------
-.PHONY: reset clean clean-build clean-support clean-externals \
-		clean-targets-build clean-local-sys \
+.PHONY: reset clean clean-targets clean-support clean-externals \
+		clean-build clean-local-sys \
 		clean-homebrew-pkg clean-homebrew-ext \
 		clean-framework-pkg clean-framework-ext \
 		clean-shared-pkg clean-shared-ext \
 		clean-static-pkg clean-static-ext \
 		clean-relocatable-pkg
 
-reset: clean clean-targets-build
+clean: clean-externals clean-support clean-targets clean-build
 
-clean: clean-externals clean-build clean-support
-
-clean-build: clean-local-sys  \
-			 clean-homebrew-pkg clean-homebrew-ext  \
-			 clean-framework-pkg clean-framework-ext \
-			 clean-shared-pkg clean-shared-ext \
-			 clean-static-pkg clean-static-ext \
-			 clean-relocatable-pkg
+clean-targets: clean-local-sys  \
+			   clean-homebrew-pkg clean-homebrew-ext  \
+			   clean-framework-pkg clean-framework-ext \
+			   clean-shared-pkg clean-shared-ext \
+			   clean-static-pkg clean-static-ext \
+			   clean-relocatable-pkg
 
 clean-build-lib: clean-python-shared \
 				 clean-python-shared-ext \
@@ -285,15 +300,23 @@ clean-build-lib: clean-python-shared \
 				 clean-python-static \
 				 clean-python-framework
 
+reset: clean clean-build
+	$(call section,"reset build system")
+	@rm -rf '${BUILDDIR}'/logs/*
 
-clean-targets-build:
-	$(call section,"cleaning targets/build directory")
-	@rm -rf ${PYDIR}/targets/build/src/*
+clean-build:
+	$(call section,"cleaning build directory")
+	@rm -rf '${PYDIR}'/targets/build/src/*
+	@rm -rf '${BUILDDIR}'/src/*
+	@rm -rf '${BUILDDIR}'/lib/python-shared
+	@rm -rf '${BUILDDIR}'/lib/python-static
+	@rm -rf '${BUILDDIR}'/lib/Python.framework
 
 clean-externals:
 	$(call section,"cleaning externals")
 	@for target in $(TARGETS); do \
 		rm -rf '$(ROOTDIR)'/externals/$$target.mxo ;\
+		rm -rf '$(BUILDDIR)'/externals/$$target.mxo ;\
 	done
 
 clean-support:
@@ -331,7 +354,7 @@ clean-static-pkg: clean-externals clean-support
 clean-static-ext: clean-externals
 	$(call xclean-target,"static-ext")
 
-clean-relocatable-pkg: clean-externals
+clean-relocatable-pkg: clean-externals clean-support
 	$(call xclean-target,"relocatable-pkg")
 
 # -----------------------------------------------------------------------
@@ -351,12 +374,12 @@ clean-python-static:
 	$(call xcleanlib, "python-static")
 
 clean-python-framework:
-	$(call xcleanlib, "python-framework")
+	$(call xcleanlib, "Python.framework")
 
 clean-python-framework-ext:
-	$(call xcleanlib, "python-framework-ext")
+	$(call xcleanlib, "Python.framework")
 
 clean-python-framework-pkg: clean-externals clean-support
-	$(call xcleanlib, "python-framework-pkg")
+	$(call xcleanlib, "Python.framework")
 
 
