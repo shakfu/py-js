@@ -15,10 +15,15 @@ Builder
     PythonBuilder
         PythonSrcBuilder
             FrameworkPythonBuilder
+                FrameworkPythonForExtBuilder
+                FrameworkPythonForPkgBuilder   
             SharedPythonBuilder
                 SharedPythonForExtBuilder
                 SharedPythonForPkgBuilder
             StaticPythonBuilder
+            VanillaPythonBuilder
+                VanillaPythonForExtBuilder
+                VanillaPythonForPkgBuilder
         PyJsBuilder
             LocalSystemBuilder
             HomebrewBuilder
@@ -28,6 +33,8 @@ Builder
             FrameworkExtBuilder
             FrameworkPkgBuilder
             RelocatablePkgBuilder
+            VanillaExtBuilder
+            VanillaPkgBuilder
 
 install:
     configure -> reset -> download -> pre_process -> build -> post_process
@@ -978,6 +985,66 @@ class PythonSrcBuilder(PythonBuilder):
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BASE)
 
+
+class VanillaPythonBuilder(PythonSrcBuilder):
+    """builds python in a macos framework format without processing."""
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.build_lib / "Python.framework" / "Versions" / self.product.ver
+
+    def reset(self):
+        self.cmd.remove(self.src_path)
+        self.cmd.remove(self.project.build_lib / "Python.framework")
+
+    def install(self):
+        """install and build compilation product"""
+        self.reset()
+        self.download()
+        self.build()
+        self.post_process()
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+
+    def clean(self):
+        """clean everything."""
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        # self.clean_python_site_packages()
+
+        # for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+        #     self.cmd.remove(i)
+
+        # self.cmd.remove(self.prefix_lib / "pkgconfig")
+        # self.cmd.remove(self.prefix / "share")
+
+        # self.remove_packages()
+        # self.remove_extensions()
+        # self.remove_binaries()
+
+
+
+    def build(self):
+        # for dep in self.depends_on:
+        #     dep.build()
+
+        self.cmd.chdir(self.src_path)
+        self.cmd(
+            f"""\
+        ./configure MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
+            --enable-framework='{self.project.build_lib}' \
+            --without-doc-strings
+        """
+        )
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+
+
 class FrameworkPythonBuilder(PythonSrcBuilder):
     """builds python in a macos framework format."""
 
@@ -1317,6 +1384,119 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.fix_python_dylib_for_pkg()
         self.fix_python_exe_for_pkg()
         self.fix_python_exec_for_pkg2()
+
+
+class VanillaPythonForExtBuilder(VanillaPythonBuilder):
+    """builds python in a vanilla framework format for self-contained externals."""
+
+    def fix_python_dylib_for_ext_resources(self):
+        """change dylib ref to point to loader in external build format"""
+        self.cmd.chdir(self.prefix)
+        dylib_path = self.prefix / 'Python'
+        assert dylib_path.exists()
+        #self.cmd.chmod(dylib_path)
+        self.install_name_tool_id(
+            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
+            dylib_path
+            # self.project.build_lib / self.project.python.ldlibrary
+        )        
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_exec_for_framework(self):    # sourcery skip: use-named-expression
+        """change ref on executable to point to relative dylib"""
+        self.cmd.chdir(self.prefix_bin)
+        executable = self.product.name_ver
+        result = subprocess.check_output(["otool", "-L", executable])
+        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+        for entry in entries:
+            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+            if match:
+                path = match.group(1)
+                # homebrew files are installed in /usr/local/Cellar
+                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+                    self.install_name_tool_change(path, "@executable_path/../Python", executable)
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_exec_for_framework2(self):    # sourcery skip: use-named-expression
+        """change ref on executable to point to relative dylib"""
+        parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
+        self.cmd.chdir(parent_dir)
+        executable = parent_dir / "Python"
+        result = subprocess.check_output(["otool", "-L", executable])
+        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+        for entry in entries:
+            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+            if match:
+                path = match.group(1)
+                # homebrew files are installed in /usr/local/Cellar
+                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+                    self.install_name_tool_change(
+                        path, "@executable_path/../../../../Python", executable
+                    )
+
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.fix_python_dylib_for_ext_resources()
+        self.fix_python_exec_for_framework()
+        self.fix_python_exec_for_framework2()
+
+class VanillaPythonForPkgBuilder(VanillaPythonBuilder):
+    """builds python in a vanilla framework format for relocatable max packages."""
+
+    def fix_python_dylib_for_pkg(self):
+        """change dylib ref to point to loader in package build format"""
+        self.cmd.chdir(self.prefix)
+        dylib_path = self.prefix / 'Python'
+        assert dylib_path.exists()
+        self.cmd.chmod(dylib_path)
+        # both of these are equivalent (and both don't work!)
+        self.install_name_tool_id(
+            "@loader_path/../../../../support" / self.project.python.ldlibrary,
+            dylib_path,
+        )
+
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_exe_for_pkg(self):    # sourcery skip: use-named-expression
+        """redirect ref of pythonX to libpythonX.Y.dylib"""
+        self.cmd.chdir(self.prefix_bin)
+        exe = self.product.name_ver
+        d = DependencyManager(exe)
+        dirs_to_change = d.analyze_executable()
+        if dirs_to_change:
+            dir_to_change = dirs_to_change[0]
+            self.install_name_tool_change(dir_to_change, "@executable_path/../Python", exe)
+        self.cmd.chdir(self.project.root)
+
+    def fix_python_exec_for_pkg2(self):    # sourcery skip: use-named-expression
+        """change ref on executable to point to relative dylib"""
+        parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
+        self.cmd.chdir(parent_dir)
+        executable = parent_dir / "Python"
+        result = subprocess.check_output(["otool", "-L", executable])
+        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+        for entry in entries:
+            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+            if match:
+                path = match.group(1)
+                # homebrew files are installed in /usr/local/Cellar
+                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+                    self.install_name_tool_change(
+                        path, "@executable_path/../../../../Python", executable
+                    )
+
+        self.cmd.chdir(self.project.root)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.fix_python_dylib_for_pkg()
+        self.fix_python_exe_for_pkg()
+        self.fix_python_exec_for_pkg2()
+
 
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
@@ -1727,3 +1907,32 @@ class RelocatablePkgBuilder(PyJsBuilder):
             )
             self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"], **flags)
 
+
+class VanillaExtBuilder(FrameworkExtBuilder):
+    """pyjs externals from vanilla framework built python"""
+
+    def build(self):
+        """builds externals"""
+        if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
+            self.xcodebuild("vanilla-ext", targets=["py", "pyjs"], **flags)
+
+
+class VanillaPkgBuilder(FrameworkPkgBuilder):
+    """pyjs externals in a package from vanilla framework built python"""
+
+    def build(self):
+        """builds externals from framework python"""
+        src = self.project.build_lib / "Python.framework"
+        dst = self.project.support / "Python.framework"
+        self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
+        self.cmd(f"cp -af '{src}' '{dst}'")
+        if self.product_exists:
+            flags = dict(
+                VERSION = str(self.project.python.version_short),
+                ABIFLAGS = str(self.project.python.abiflags),
+            )
+            self.xcodebuild("vanilla-pkg", targets=["py", "pyjs"], **flags)

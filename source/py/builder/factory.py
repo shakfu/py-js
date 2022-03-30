@@ -16,6 +16,9 @@ PYTHON_BUILDERS = dict(
     python_framework = core.FrameworkPythonBuilder,
     python_framework_ext = core.FrameworkPythonForExtBuilder,
     python_framework_pkg = core.FrameworkPythonForPkgBuilder,
+    python_vanilla = core.VanillaPythonBuilder,
+    python_vanilla_ext = core.VanillaPythonForExtBuilder,
+    python_vanilla_pkg = core.VanillaPythonForPkgBuilder,
 )
 
 PYJS_BUILDERS = dict(
@@ -28,6 +31,8 @@ PYJS_BUILDERS = dict(
     pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),
     pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
     pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, []),
+    pyjs_vanilla_ext = (core.VanillaExtBuilder, ['python_vanilla_ext']),
+    pyjs_vanilla_pkg = (core.VanillaPkgBuilder, ['python_vanilla_pkg']), 
 )
 
 # -----------------------------------------------------------------------------
@@ -92,21 +97,26 @@ def python_builder_factory(name, **settings):
     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
     xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
 
-    return PYTHON_BUILDERS[name](
-        product=core.Product(
-            name="Python",
-            version=py_version,
-            build_dir="-".join(name.split('_')[:2]),
-            url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
-            libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
-        ),
-        depends_on=[
-            core.Bzip2Builder(product=get_bzip2_product(bz2_version), **settings),
-            core.OpensslBuilder(product=get_ssl_product(ssl_version), **settings),
-            core.XzBuilder(product=get_xz_product(xz_version), **settings),
-        ],
-        **settings
+    _builder = PYTHON_BUILDERS[name]
+
+    _dependencies = [
+        core.Bzip2Builder(product=get_bzip2_product(bz2_version), **settings),
+        core.OpensslBuilder(product=get_ssl_product(ssl_version), **settings),
+        core.XzBuilder(product=get_xz_product(xz_version), **settings),
+    ]
+
+    product = core.Product(
+        name="Python",
+        version=py_version,
+        build_dir="-".join(name.split('_')[:2]),
+        url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
+        libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
     )
+
+    if name.startswith('vanilla'):
+        return _builder(product=product, **settings)
+    else:
+        return _builder(product=product, depends_on=_dependencies, **settings)
 
 # -----------------------------------------------------------------------------
 # PYJS BUILDERS

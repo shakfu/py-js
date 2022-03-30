@@ -117,6 +117,20 @@ class Application(Commander):
         """download relocatable framework python"""
         process_args_for_relocatable_python(args)
 
+    @common_options
+    def do_python_vanilla(self, args):
+        """build vanilla python"""
+        self.ordered_dispatch('python_vanilla', args)
+
+    @common_options
+    def do_python_vanilla_ext(self, args):
+        """build vanilla python to embed external"""
+        self.ordered_dispatch('python_vanilla_ext', args)
+
+    @common_options
+    def do_python_vanilla_pkg(self, args):
+        """build vanilla python to embed in a package"""
+        self.ordered_dispatch('python_vanilla_pkg', args)
 
 
 # ----------------------------------------------------------------------------
@@ -182,6 +196,15 @@ class Application(Commander):
         process_args_for_relocatable_python(args)
         builder_factory('pyjs_relocatable_pkg').build()
 
+    @common_options
+    def do_pyjs_vanilla_ext(self, args):
+        """build portable pyjs externals (vanilla)"""
+        self.ordered_dispatch('pyjs_vanilla_ext', args)
+
+    @common_options
+    def do_pyjs_vanilla_pkg(self, args):
+        """build portable pyjs package (vanilla)"""
+        self.ordered_dispatch('pyjs_vanilla_pkg', args)
 
 # ----------------------------------------------------------------------------
 # dependency builder methods
