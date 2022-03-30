@@ -1,0 +1,7 @@
+#include "../common.xcconfig"
+
+PREFIX = $(PYJS_BUILD_LIB)/Python.framework/Versions/${VERSION}
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
+PY_LIBS = $(PREFIX)/lib
+PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl
+

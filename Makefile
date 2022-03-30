@@ -7,6 +7,7 @@ COLOR_RESET = "\033[m"
 
 # python executable to use
 PYTHON = python3
+# PYTHON = /usr/bin/python3
 
 # paths
 ROOTDIR := $(shell pwd)
@@ -90,9 +91,11 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
 		static-pkg static-ext \
+		vanilla-ext vanilla-pkg \
 		python-shared python-shared-pkg python-shared-ext \
 		python-static \
-		python-framework python-framework-ext python-framework-pkg
+		python-framework python-framework-ext python-framework-pkg \
+		python-vanilla python-vanilla-ext python-vanilla-pkg
 
 
 # -----------------------------------------------------------------------
@@ -133,6 +136,12 @@ framework-ext: clean-framework-ext
 relocatable-pkg: clean-framework-pkg
 	$(call pybuild-targets,"pyjs" "relocatable_pkg")
 
+vanilla-ext: clean
+	$(call pybuild-targets,"pyjs" "vanilla_ext" "--install" "--build")
+
+vanilla-pkg: clean
+	$(call pybuild-targets,"pyjs" "vanilla_pkg" "--install" "--build")
+
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
 
@@ -162,6 +171,15 @@ python-framework-pkg: clean-python-framework-pkg
 
 python-relocatable: clean-python-framework-pkg
 	$(call pybuild-targets,"python" "relocatable_pkg")
+
+python-vanilla: clean-python-framework-ext clean-python-framework-pkg
+	$(call pybuild-targets,"python" "vanilla" "--install")
+
+python-vanilla-ext: clean-python-vanilla-ext
+	$(call pybuild-targets,"python" "vanilla_ext" "--install")
+
+python-vanilla-pkg: clean-python-vanilla-pkg
+	$(call pybuild-targets,"python" "vanilla_pkg" "--install")
 
 # -----------------------------------------------------------------------
 # dependencies
@@ -222,7 +240,8 @@ dist:
 .PHONY: build-homebrew-pkg build-homebrew-ext \
 		build-framework-pkg build-framework-ext \
 		build-shared-pkg build-shared-ext \
-		build-static-pkg build-static-ext
+		build-static-pkg build-static-ext \
+		build-vanilla-ext build-vanilla-pkg
 
 
 build-shared-pkg: clean-shared-pkg
@@ -243,6 +262,11 @@ build-framework-pkg: clean-framework-pkg
 build-framework-ext: clean-framework-ext
 	$(call pybuild-targets,"pyjs" "framework_ext" "--build")
 
+build-vanilla-pkg:
+	$(call pybuild-targets,"pyjs" "vanilla_pkg" "--build")
+
+build-vanilla-ext:
+	$(call pybuild-targets,"pyjs" "vanilla_ext" "--build")
 
 # re-compile only
 # -----------------------------------------------------------------------
@@ -256,6 +280,21 @@ compile-extension:
 # Testing
 # -----------------------------------------------------------------------
 .PHONY: test
+
+# test: clean
+# 	$(call section,"running tests")
+# 	@$(PYTHON) source/py/scripts/utils.py --runlog-all
+
+# check:
+# 	$(call section,"checking test results")
+# 	@$(PYTHON) source/py/scripts/utils.py --check-version-logs
+# 	@echo
+
+# check_logs:
+# 	$(call section,"checking all test results")
+# 	@$(PYTHON) source/py/scripts/utils.py --check-all-logs
+# 	@echo
+
 
 test: clean
 	$(call section,"running tests")
@@ -401,6 +440,15 @@ clean-python-framework-ext:
 	$(call xcleanlib,"Python.framework")
 
 clean-python-framework-pkg: clean-externals clean-support
+	$(call xcleanlib,"Python.framework")
+
+clean-python-vanilla:
+	$(call xcleanlib,"Python.framework")
+
+clean-python-vanilla-ext:
+	$(call xcleanlib,"Python.framework")
+
+clean-python-vanilla-pkg: clean-externals clean-support
 	$(call xcleanlib,"Python.framework")
 
 
