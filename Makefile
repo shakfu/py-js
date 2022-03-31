@@ -292,78 +292,59 @@ test: clean
 	$(call section,"running all tests")
 	$(call call-builder,"test")
 
-test-default: clean
+test-default: clean-products
 	$(call section,"running default test")
 	$(call call-builder,"test" "default")
 
 
-test-homebrew-ext: clean
+test-homebrew-ext: clean-products
 	$(call section,"running homebrew-ext test")
 	$(call call-builder,"test" "homebrew_ext")
 
-test-homebrew-pkg: clean
+test-homebrew-pkg: clean-products
 	$(call section,"running homebrew-pkg test")
 	$(call call-builder,"test" "homebrew_pkg")
 
-test-shared-ext: clean
+test-shared-ext: clean-products
 	$(call section,"running shared-ext test")
 	$(call call-builder,"test" "shared_ext")
 
-test-shared-pkg: clean
+test-shared-pkg: clean-products
 	$(call section,"running shared-pkg test")
 	$(call call-builder,"test" "shared_pkg")
 
-test-framework-ext: clean
+test-framework-ext: clean-products
 	$(call section,"running framework-ext test")
 	$(call call-builder,"test" "framework_ext")
 
-test-framework-pkg: clean
+test-framework-pkg: clean-products
 	$(call section,"running framework-pkg test")
 	$(call call-builder,"test" "framework_pkg")
 
-test-static-ext: clean
+test-static-ext: clean-products
 	$(call section,"running static-ext test")
 	$(call call-builder,"test" "static_ext")
 
-test-static-pkg: clean
+test-static-pkg: clean-products
 	$(call section,"running static-pkg test")
 	$(call call-builder,"test" "static_pkg")
 
-test-vanilla-ext: clean
+test-vanilla-ext: clean-products
 	$(call section,"running vanilla-ext test")
 	$(call call-builder,"test" "vanilla_ext")
 
-test-vanilla-pkg: clean
+test-vanilla-pkg: clean-products
 	$(call section,"running vanilla-pkg test")
 	$(call call-builder,"test" "vanialla_pkg")
-
 
 check:
 	$(call section,"checking test results")
 	$(call call-builder,"logs" "check_current")
-# 	@$(PYTHON) source/py/scripts/utils.py --check-version-logs
-# 	@echo
 
 check_logs:
 	$(call section,"checking all test results")
 	$(call call-builder,"logs" "check_all")
-# 	@$(PYTHON) source/py/scripts/utils.py --check-all-logs
-# 	@echo
 
-
-# test: clean
-# 	$(call section,"running tests")
-# 	@source source/py/scripts/funcs.sh && runlog_all
-
-# check:
-# 	$(call section,"checking test results")
-# 	@source source/py/scripts/funcs.sh && check_all
-# 	@echo
-
-# check_logs:
-# 	$(call section,"checking all test results")
-# 	@source source/py/scripts/funcs.sh && check_all_logs
-# 	@echo
 
 
 # Styling
@@ -418,6 +399,8 @@ clean-build-lib: clean-python-shared \
 reset: clean clean-build
 	$(call section,"reset build system")
 	@rm -rf '${BUILDDIR}'/logs/*
+
+clean-products: clean-support clean-externals clean-build
 
 clean-build:
 	$(call section,"cleaning build directory")
