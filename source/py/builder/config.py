@@ -6,11 +6,131 @@ from pathlib import Path
 
 
 # ----------------------------------------------------------------------------
-# Logging Configuration
+# Logging
 
 DEBUG = False
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
+
+# ----------------------------------------------------------------------------
+# CONSTANTS
+
+HOME = os.environ['HOME']
+
+CURRENT_PYTHON_VERSION = platform.python_version()
+DEFAULT_BZ2_VERSION = "1.0.8"
+DEFAULT_SSL_VERSION = "1.1.1g"
+DEFAULT_XZ_VERSION  = "5.2.5"
+
+# BASEDIR=f"{HOME}/.build_pyjs"
+BASEDIR=Path(__file__).parent.parent.parent.parent
+BASELOGSDIR=f"{BASEDIR}/logs"
+LOGDIR=f"{BASELOGSDIR}/{CURRENT_PYTHON_VERSION}"
+ESCAPED_HOME = HOME.replace("/", "\\/")
+
+# colors
+YELLOW="\033[1;33m"
+BLUE="\033[1;34m"
+GREEN="\033[1;32m"
+MAGENTA="\033[1;35m"
+CYAN="\033[1;36m"
+RESET="\033[m"
+
+
+
+
+
+PYJS_TARGETS = {
+    "default"         : dict(desc="non-portable pyjs externals linked to your system",   lines=210),
+    "homebrew-pkg"    : dict(desc="portable package w/ pyjs (requires homebrew python)", lines=275),
+    "homebrew-ext"    : dict(desc="portable pyjs externals (requires homebrew python)",  lines=278),
+    "shared-pkg"      : dict(desc="portable package with pyjs externals (shared)",       lines=18746),
+    "shared-ext"      : dict(desc="portable pyjs externals (shared)",                    lines=14652),
+    "static-ext"      : dict(desc="portable pyjs externals (static)",                    lines=14064),
+    "framework-pkg"   : dict(desc="portable package with pyjs externals (framework)",    lines=14842),
+    "framework-ext"   : dict(desc="portable pyjs externals (framework)",                 lines=14852),
+    "relocatable-pkg" : dict(desc="portable package w/ more custom options (framework)", lines=409),
+    "vanilla-ext"     : dict(desc="portable pyjs without minimization (framework)"     , lines=18169),  
+    "vanilla-pkg"     : dict(desc="portable package without minimization (framework)",   lines=18244), 
+    # "pymx"          : dict(desc="non-portable alternative python3 externals (min-lib)", lines=210),
+}
+
+PYTHON_TARGETS = {
+    "python-shared"         : "minimal shared python build",
+    "python-shared-ext"     : "minimal shared python build for externals",
+    "python-shared-pkg"     : "minimal shared python build for packages",
+    "python-static"         : "minimal statically-linked python build",
+    "python-framework"      : "minimal framework python build",
+    "python-framework-ext"  : "minimal framework python build for externals",
+    "python-framework-pkg"  : "minimal framework python build for packages",
+    "python-relocatable"    : "custom relocatable python framework build",
+    "python-vanilla"        : "regular framework python",
+}
+
+
+PACKAGES_TO_DEL = [
+    # project.python.config_ver_platform,
+    "config-{ver}-{platform}",
+    "idlelib",
+    "lib2to3",
+    "tkinter",
+    "turtledemo",
+    "turtle.py",
+    "ctypes",
+    "curses",
+    "ensurepip",
+    "venv",
+]
+
+PACKAGES_TO_KEEP = [
+    "asyncio",
+    "collections",
+    "concurrent",
+    # 'ctypes',
+    # 'curses',
+    "dbm",
+    "distutils",
+    "email",
+    "encodings",
+    "html",
+    "http",
+    "importlib",
+    "json",
+    "lib-dynload",
+    "logging",
+    "multiprocessing",
+    "pydoc_data",
+    "sqlite3",
+    "unittest",
+    "urllib",
+    "wsgiref",
+    "xml",
+    "xmlrpc",
+]
+
+EXTENSIONS_TO_DEL = [
+    "_tkinter",
+    "_ctypes",
+    "_multibytecodec",
+    "_codecs_jp",
+    "_codecs_hk",
+    "_codecs_cn",
+    "_codecs_kr",
+    "_codecs_tw",
+    "_codecs_iso2022",
+    "_curses",
+    "_curses_panel",
+]
+
+BINS_TO_DEL = [
+    "2to3-{ver}",
+    "idle{ver}",
+    "easy_install-{ver}",
+    "pip{ver}",
+    "pyvenv-{ver}",
+    "pydoc{ver}",
+]
+
 
 # ----------------------------------------------------------------------------
 # Utility Functions
@@ -83,7 +203,7 @@ class Project:
     
     arch = platform.machine()
 
-    HOME = Path(os.getenv("HOME"))
+    HOME = Path(HOME)
 
     # environmental vars
     package_name = "py-js"

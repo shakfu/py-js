@@ -92,8 +92,7 @@ from textwrap import dedent
 from types import SimpleNamespace
 from typing import Dict, List, Optional
 
-from . import constants
-from .config import LOG_FORMAT, LOG_LEVEL, Project
+from .config import LOG_FORMAT, LOG_LEVEL, CURRENT_PYTHON_VERSION, Project
 from .depend import PATTERNS_TO_FIX, DependencyManager
 from .shell import ShellCmd
 
@@ -460,7 +459,7 @@ class Recipe:
         **settings,
     ):
         self.name = name
-        self.py_version = py_version or constants.DEFAULT_PYTHON_VERSION
+        self.py_version = py_version or CURRENT_PYTHON_VERSION
         self.builders = builders or []
         self.settings = Settings(**settings)
 

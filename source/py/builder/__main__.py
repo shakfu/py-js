@@ -19,7 +19,6 @@ subcommands:
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
 from . import utils
-from .utils import display_help, run_logged_tests, runlog
 from .ext.relocatable_python import (process_args_for_relocatable_python,
                                      relocatable_options)
 from .factory import builder_factory
@@ -232,7 +231,7 @@ class Application(Commander):
 
     def do_help(self, args):
         """display online help"""
-        display_help()
+        utils.display_help()
 
 
 # ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 from . import core
-from .constants import (DEFAULT_BZ2_VERSION, DEFAULT_PYTHON_VERSION,
-                        DEFAULT_SSL_VERSION, DEFAULT_XZ_VERSION)
+from .config import (DEFAULT_BZ2_VERSION, CURRENT_PYTHON_VERSION,
+                     DEFAULT_SSL_VERSION, DEFAULT_XZ_VERSION)
 
 PYTHON_BUILDERS = dict(
     python_static = core.StaticPythonBuilder,
@@ -86,7 +86,7 @@ def dependency_builder_factory(name, **settings):
 
 def python_builder_factory(name, **settings):
 
-    py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
+    py_version = get(settings, 'py_version', CURRENT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
     xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
@@ -117,7 +117,7 @@ def python_builder_factory(name, **settings):
 
 def pyjs_builder_factory(name, **settings):
 
-    py_version = get(settings, 'py_version', DEFAULT_PYTHON_VERSION)
+    py_version = get(settings, 'py_version', CURRENT_PYTHON_VERSION)
     bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
     ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
     xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
@@ -135,7 +135,7 @@ def pyjs_builder_factory(name, **settings):
     else:
         # no dep builder is a local builder therefore default_py_ver
         return _builder(
-            product=core.Product(name='Python', version=DEFAULT_PYTHON_VERSION),
+            product=core.Product(name='Python', version=CURRENT_PYTHON_VERSION),
             **settings
         )
 
@@ -164,7 +164,7 @@ def builder_factory(name, **settings):
 # this is an example of a recipe which can fixes requirements to versions.
 
 def get_static_python_recipe(name,
-                             py_version=DEFAULT_PYTHON_VERSION, 
+                             py_version=CURRENT_PYTHON_VERSION, 
                              bz2_version=DEFAULT_BZ2_VERSION, 
                              ssl_version=DEFAULT_SSL_VERSION,
                              xz_version=DEFAULT_XZ_VERSION, **settings):

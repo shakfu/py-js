@@ -135,7 +135,6 @@ make python-shared        : minimal enable-shared python build
 make python-shared-ext    : minimal enable-shared python build for externals
 make python-shared-pkg    : minimal enable-shared python build for packages
 make python-static        : minimal statically-linked python build
-make python-static-full   : statically-linked python build
 make python-framework     : minimal framework python build
 make python-framework-ext : minimal framework python build for externals
 make python-framework-pkg : minimal framework python build for packages
