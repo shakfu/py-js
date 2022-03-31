@@ -404,14 +404,15 @@ class Builder:
             self.src_path.exists() or self.prefix.exists()
         ), "reset not completed"
 
-    def download(self):
+    def download(self, include_dependencies=True):
         """download src using curl and tar.
 
         curl and tar are automatically available on mac platforms.
         """
         self.project.build_downloads.mkdir(parents=True, exist_ok=True)
-        for dep in self.depends_on:
-            dep.download()
+        if include_dependencies:
+            for dep in self.depends_on:
+                dep.download()
 
         # download
         if self.download_path and not self.download_path.exists():
@@ -830,7 +831,7 @@ class VanillaPythonBuilder(PythonSrcBuilder):
     def install(self):
         """install and build compilation product"""
         self.reset()
-        self.download()
+        self.download(include_dependencies=False)
         self.build()
         self.post_process()
 
