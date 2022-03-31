@@ -4,7 +4,7 @@ Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP]
 
 repo - <https://github.com/shakfu/py-js>
 
-![py-js test](./media/screenshot.png)
+[![py-js test](./media/screenshot.png)](patchers/py_test_standalone.maxpat)
 
 ## Preface
 
@@ -44,21 +44,18 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
 
 1. You should have a modern `python3` installed on your Mac: either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Python versions from 3.7 to 3.10 are tested and known to work.
 
-2. Make sure you have `Xcode` installed and you are on an Intel-based Mac.
+2. Make sure you also have [Xcode](https://xcodereleases.com/) installed and you are on an Intel-based Mac.
 
 3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) to a path without a space and without possible icloud syncing (i.e don't clone to `$HOME/Documents/Max 8/Packages`) and run the following in the cloned repo:
 
     ```bash
     make setup
     ```
-
     The above will initialize and update the required git submodules and symlink the repo to `$HOME/Documents/Max 8/Packages/py-js` to install it as a Max Package and enable you to test the externals and run the patches.
 
-4. For the purposes of this quickstart, we assume you have a recent python3 (3.7+) from [python.org](https://www.python.org), [Homebrew](https://brew.sh), or otherwise installed on your system.
+4. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
 
-5. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
-
-6. Then type the following in the root directory of the `py-js` source (other installation options are detailed below).
+5. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
 
     ```bash
     make
@@ -166,7 +163,7 @@ Incidentally, a pre-built standalone that was built using exactly the same steps
 
 Note: it would normally be considered redundant to install two different python3 externals in your project. Nontheless, it's good to demonstrate that they can be used together if required.
 
-As a side note: if there is a need to codesign / notarize the standalone, there are scripts in `py-js/source/py/scripts` to make this a lit easier. Alternatively, you can check out a [sister
+As a side note: if there is a need to codesign / notarize the standalone, there are scripts in `py-js/source/py/scripts` to make this a little easier. Alternatively, you can check out a [sister
 project](https://github.com/shakfu/maxutils)  which also aims to make this less painful.
 
 Please read on for further details about what the py-js externals can do.
@@ -235,7 +232,7 @@ py max external
         right outlet             : bang on success 
 ```
 
-![py-js test_py](./media/test_py.png)
+[![py-js test_py](./media/test_py.png)](patchers/py_test_anything.maxpat)
 
 ### `pyjs` external
 
@@ -368,11 +365,11 @@ Implemented for `py` objects only.
 
 - **Line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all of the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of entries in a session. Of course, a coll can made to save all commands if required.
 
-- **Experimental Remote Console**. A new method (due to Ian Duncan) of sending code to the `py` node via `udp` has been implemented and allows for send-from-editor and send-from-interactive-console capabilities. The clients are still in their infancy, but this method looks promising since you get syntax highlighting, syntax checking, and other features. It assumes you want to treat your `py` nodes as remotely accessible `server/interpreters-in-max`.
+- **Experimental Remote Console**. A new method (due to [Iain Duncan](https://github.com/iainctduncan)) of sending code to the `py` node via `udp` has been implemented and allows for send-from-editor and send-from-interactive-console capabilities. The clients are still in their infancy, but this method looks promising since you get syntax highlighting, syntax checking, and other features. It assumes you want to treat your `py` nodes as remotely accessible `server/interpreters-in-max`.
 
 - **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
 
-For `pyjs` objects, code editing is already built into the `js` objects.
+For `pyjs` objects, code editing is already provided by the [js](https://docs.cycling74.com/max8/refpages/js) Max object.
 
 #### Scripting
 
@@ -394,7 +391,7 @@ Implemented for both `py` and `pyjs` objects:
 [py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
 ```
 
-This just means that opened a patch with a `py-js` external then imported `numpy`, used it, then closed your patch and then, in the same Max session, re-opened it or created a new one and imported `numpy` again.
+This just means that the user opened a patch with a `py-js` external that imports `numpy`, then closed the patch and (in the same Max session) re-opened it, or created a new patch importing `numpy` again.
 
 To fix it, just restart Max and use it normally in your patch. Treat each patch as a session and restart Max after each session. It's a pain, but unfortunately a limitation of current python c-extensions.
 
@@ -422,13 +419,13 @@ There is generally tradeoff of size vs. portability:
 build command       | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
 :-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
 make                | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
-make brew_ext       | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
-make brew_pkg       | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
-make static_ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
-make shared_ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
-make shared_pkg     | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
-make framework_ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
-make framework_pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
+make brew-ext       | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
+make brew-pkg       | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
+make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
+make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
+make shared-pkg     | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
+make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
+make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
 
 [1] has automatic access to your system python's site-packages
 
