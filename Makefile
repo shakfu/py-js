@@ -226,8 +226,10 @@ max-check:
 
 # DEPLOYING
 # -----------------------------------------------------------------------
-.PHONY: pkg pkg-support dist
+.PHONY: sign dist
 
+# sign:
+# 	$(call call-builder,"utils" "sign" "--dev-id" $(DEV_ID))
 
 dist:
 	$(call section,"preparing for distribution")
