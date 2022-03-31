@@ -55,7 +55,7 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
 
 4. (Optional) Install [cython](https://cython.org) via `pip3 install cython`. It is used for wrapping the max api and it is worth installing it in case you want to play around or extend the wrapped max api.
 
-5. Then type the following in the root directory of the `py-js` source (other installation options are detailed below) and make sure you understand that it will symlink the `py-js` project to your `$HOME/Max 8/Packages` directory:
+5. Type the following in the root directory of the `py-js` source (other installation options are detailed below):
 
     ```bash
     make
