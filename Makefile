@@ -102,7 +102,7 @@ all: default
 # python external argets
 
 help:
-	@$(PYTHON) source/py/scripts/help.py
+	@$(PYTHON) source/py/scripts/utils.py --display-menu
 
 default: local-sys
 
@@ -281,34 +281,34 @@ compile-extension:
 # -----------------------------------------------------------------------
 .PHONY: test
 
-# test: clean
-# 	$(call section,"running tests")
-# 	@$(PYTHON) source/py/scripts/utils.py --runlog-all
-
-# check:
-# 	$(call section,"checking test results")
-# 	@$(PYTHON) source/py/scripts/utils.py --check-version-logs
-# 	@echo
-
-# check_logs:
-# 	$(call section,"checking all test results")
-# 	@$(PYTHON) source/py/scripts/utils.py --check-all-logs
-# 	@echo
-
-
 test: clean
 	$(call section,"running tests")
-	@source source/py/scripts/funcs.sh && runlog_all
+	@$(PYTHON) source/py/scripts/utils.py --runlog-all
 
 check:
 	$(call section,"checking test results")
-	@source source/py/scripts/funcs.sh && check_all
+	@$(PYTHON) source/py/scripts/utils.py --check-version-logs
 	@echo
 
 check_logs:
 	$(call section,"checking all test results")
-	@source source/py/scripts/funcs.sh && check_all_logs
+	@$(PYTHON) source/py/scripts/utils.py --check-all-logs
 	@echo
+
+
+# test: clean
+# 	$(call section,"running tests")
+# 	@source source/py/scripts/funcs.sh && runlog_all
+
+# check:
+# 	$(call section,"checking test results")
+# 	@source source/py/scripts/funcs.sh && check_all
+# 	@echo
+
+# check_logs:
+# 	$(call section,"checking all test results")
+# 	@source source/py/scripts/funcs.sh && check_all_logs
+# 	@echo
 
 
 # Styling
