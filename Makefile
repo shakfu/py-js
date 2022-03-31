@@ -40,7 +40,7 @@ COLOR_RESET = "\033[m"
 section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # $(call pybuild,name)
-define pybuild-targets
+define call-builder
 $(call section,"builder $1 $2 $3 $4")
 @cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4
 endef
@@ -86,7 +86,7 @@ all: default
 
 # High-Level
 # -----------------------------------------------------------------------
-.PHONY: default help local-sys \
+.PHONY: default local-sys \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
@@ -101,46 +101,44 @@ all: default
 # -----------------------------------------------------------------------
 # python external argets
 
-help:
-	@$(PYTHON) source/py/scripts/utils.py --display-menu
 
 default: local-sys
 
 local-sys: clean-local-sys
-	$(call pybuild-targets,"pyjs" "local_sys")
+	$(call call-builder,"pyjs" "local_sys")
 
 homebrew-pkg: clean-homebrew-pkg
-	$(call pybuild-targets,"pyjs" "homebrew_pkg")
+	$(call call-builder,"pyjs" "homebrew_pkg")
 
 homebrew-ext: clean-homebrew-ext
-	$(call pybuild-targets,"pyjs" "homebrew_ext")
+	$(call call-builder,"pyjs" "homebrew_ext")
 
 shared-pkg: clean-shared-pkg
-	$(call pybuild-targets,"pyjs" "shared_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build")
 
 shared-ext: clean-shared-ext
-	$(call pybuild-targets,"pyjs" "shared_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "shared_ext" "--install" "--build")
 
 static-ext: clean-static-ext
-	$(call pybuild-targets,"pyjs" "static_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "static_ext" "--install" "--build")
 
 static-pkg: clean-static-pkg
-	$(call pybuild-targets,"pyjs" "static_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "static_pkg" "--install" "--build")
 
 framework-pkg: clean-framework-pkg
-	$(call pybuild-targets,"pyjs" "framework_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "framework_pkg" "--install" "--build")
 
 framework-ext: clean-framework-ext
-	$(call pybuild-targets,"pyjs" "framework_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "framework_ext" "--install" "--build")
 
 relocatable-pkg: clean-framework-pkg
-	$(call pybuild-targets,"pyjs" "relocatable_pkg")
+	$(call call-builder,"pyjs" "relocatable_pkg")
 
 vanilla-ext: clean
-	$(call pybuild-targets,"pyjs" "vanilla_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "vanilla_ext" "--install" "--build")
 
 vanilla-pkg: clean
-	$(call pybuild-targets,"pyjs" "vanilla_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "vanilla_pkg" "--install" "--build")
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
@@ -149,37 +147,37 @@ pymx:
 # python targets
 
 python-shared: clean-python-shared
-	$(call pybuild-targets,"python" "shared" "--install")
+	$(call call-builder,"python" "shared" "--install")
 
 python-shared-ext: clean-python-shared-ext
-	$(call pybuild-targets,"python" "shared_ext" "--install")
+	$(call call-builder,"python" "shared_ext" "--install")
 
 python-shared-pkg: clean-python-shared-pkg
-	$(call pybuild-targets,"python" "shared_pkg" "--install")
+	$(call call-builder,"python" "shared_pkg" "--install")
 
 python-static: clean-python-static
-	$(call pybuild-targets,"python" "static" "--install")
+	$(call call-builder,"python" "static" "--install")
 
 python-framework: clean-python-framework
-	$(call pybuild-targets,"python" "framework" "--install")
+	$(call call-builder,"python" "framework" "--install")
 
 python-framework-ext: clean-python-framework-ext
-	$(call pybuild-targets,"python" "framework_ext" "--install")
+	$(call call-builder,"python" "framework_ext" "--install")
 
 python-framework-pkg: clean-python-framework-pkg
-	$(call pybuild-targets,"python" "framework_pkg" "--install")
+	$(call call-builder,"python" "framework_pkg" "--install")
 
 python-relocatable: clean-python-framework-pkg
-	$(call pybuild-targets,"python" "relocatable_pkg")
+	$(call call-builder,"python" "relocatable_pkg")
 
 python-vanilla: clean-python-framework-ext clean-python-framework-pkg
-	$(call pybuild-targets,"python" "vanilla" "--install")
+	$(call call-builder,"python" "vanilla" "--install")
 
 python-vanilla-ext: clean-python-vanilla-ext
-	$(call pybuild-targets,"python" "vanilla_ext" "--install")
+	$(call call-builder,"python" "vanilla_ext" "--install")
 
 python-vanilla-pkg: clean-python-vanilla-pkg
-	$(call pybuild-targets,"python" "vanilla_pkg" "--install")
+	$(call call-builder,"python" "vanilla_pkg" "--install")
 
 # -----------------------------------------------------------------------
 # dependencies
@@ -187,19 +185,21 @@ python-vanilla-pkg: clean-python-vanilla-pkg
 .PHONY: bz2 ssl xz
 
 bz2:
-	$(call pybuild-targets, "dep" "bz2")
+	$(call call-builder, "dep" "bz2")
 
 ssl:
-	$(call pybuild-targets, "dep" "ssl")
+	$(call call-builder, "dep" "ssl")
 
 xz:
-	$(call pybuild-targets, "dep" "xz")
+	$(call call-builder, "dep" "xz")
 
 # -----------------------------------------------------------------------
 # utilities
 
-.PHONY: setup update-submodules link max-check
+.PHONY: help setup update-submodules link max-check
 
+help:
+	$(call call-builder,"help")
 
 setup: update-submodules link
 	$(call section,"setup complete")
@@ -245,28 +245,28 @@ dist:
 
 
 build-shared-pkg: clean-shared-pkg
-	$(call pybuild-targets,"pyjs" "shared_pkg" "--build")
+	$(call call-builder,"pyjs" "shared_pkg" "--build")
 
 build-shared-ext: clean-shared-ext
-	$(call pybuild-targets,"pyjs" "shared_ext" "--build")
+	$(call call-builder,"pyjs" "shared_ext" "--build")
 
 build-static-ext: clean-static-ext
-	$(call pybuild-targets,"pyjs" "static_ext" "--build")
+	$(call call-builder,"pyjs" "static_ext" "--build")
 
 build-static-pkg: clean-static-pkg
-	$(call pybuild-targets,"pyjs" "static_pkg" "--build")
+	$(call call-builder,"pyjs" "static_pkg" "--build")
 
 build-framework-pkg: clean-framework-pkg
-	$(call pybuild-targets,"pyjs" "framework_pkg" "--build")
+	$(call call-builder,"pyjs" "framework_pkg" "--build")
 
 build-framework-ext: clean-framework-ext
-	$(call pybuild-targets,"pyjs" "framework_ext" "--build")
+	$(call call-builder,"pyjs" "framework_ext" "--build")
 
 build-vanilla-pkg:
-	$(call pybuild-targets,"pyjs" "vanilla_pkg" "--build")
+	$(call call-builder,"pyjs" "vanilla_pkg" "--build")
 
 build-vanilla-ext:
-	$(call pybuild-targets,"pyjs" "vanilla_ext" "--build")
+	$(call call-builder,"pyjs" "vanilla_ext" "--build")
 
 # re-compile only
 # -----------------------------------------------------------------------
@@ -279,21 +279,74 @@ compile-extension:
 
 # Testing
 # -----------------------------------------------------------------------
-.PHONY: test
+.PHONY: test \
+		test-homebrew-pkg test-homebrew-ext \
+		test-framework-pkg test-framework-ext \
+		test-shared-pkg test-shared-ext \
+		test-static-pkg test-static-ext \
+		test-vanilla-ext test-vanilla-pkg
 
 test: clean
-	$(call section,"running tests")
-	@$(PYTHON) source/py/scripts/utils.py --runlog-all
+	$(call section,"running all tests")
+	$(call call-builder,"test")
+
+test-default: clean
+	$(call section,"running default test")
+	$(call call-builder,"test" "default")
+
+
+test-homebrew-ext: clean
+	$(call section,"running homebrew-ext test")
+	$(call call-builder,"test" "homebrew_ext")
+
+test-homebrew-pkg: clean
+	$(call section,"running homebrew-pkg test")
+	$(call call-builder,"test" "homebrew_pkg")
+
+test-shared-ext: clean
+	$(call section,"running shared-ext test")
+	$(call call-builder,"test" "shared_ext")
+
+test-shared-pkg: clean
+	$(call section,"running shared-pkg test")
+	$(call call-builder,"test" "shared_pkg")
+
+test-framework-ext: clean
+	$(call section,"running framework-ext test")
+	$(call call-builder,"test" "framework_ext")
+
+test-framework-pkg: clean
+	$(call section,"running framework-pkg test")
+	$(call call-builder,"test" "framework_pkg")
+
+test-static-ext: clean
+	$(call section,"running static-ext test")
+	$(call call-builder,"test" "static_ext")
+
+test-static-pkg: clean
+	$(call section,"running static-pkg test")
+	$(call call-builder,"test" "static_pkg")
+
+test-vanilla-ext: clean
+	$(call section,"running vanilla-ext test")
+	$(call call-builder,"test" "vanilla_ext")
+
+test-vanilla-pkg: clean
+	$(call section,"running vanilla-pkg test")
+	$(call call-builder,"test" "vanialla_pkg")
+
 
 check:
 	$(call section,"checking test results")
-	@$(PYTHON) source/py/scripts/utils.py --check-version-logs
-	@echo
+	$(call call-builder,"logs" "check_current")
+# 	@$(PYTHON) source/py/scripts/utils.py --check-version-logs
+# 	@echo
 
 check_logs:
 	$(call section,"checking all test results")
-	@$(PYTHON) source/py/scripts/utils.py --check-all-logs
-	@echo
+	$(call call-builder,"logs" "check_all")
+# 	@$(PYTHON) source/py/scripts/utils.py --check-all-logs
+# 	@echo
 
 
 # test: clean

@@ -15,7 +15,6 @@ import pathlib
 import subprocess
 import sys
 
-
 DEBUG = True
 
 PYTHON_VER = "python{x}.{y}".format(

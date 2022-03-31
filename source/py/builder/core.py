@@ -16,7 +16,7 @@ Builder
         PythonSrcBuilder
             FrameworkPythonBuilder
                 FrameworkPythonForExtBuilder
-                FrameworkPythonForPkgBuilder   
+                FrameworkPythonForPkgBuilder
             SharedPythonBuilder
                 SharedPythonForExtBuilder
                 SharedPythonForPkgBuilder
@@ -84,22 +84,19 @@ clean:
 
 import logging
 import os
-import platform
 import re
 import shutil
 import subprocess
-import sysconfig
-from textwrap import dedent
 from pathlib import Path
+from textwrap import dedent
 from types import SimpleNamespace
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
-from .depend import DependencyManager, PATTERNS_TO_FIX
 from . import constants
+from .config import LOG_FORMAT, LOG_LEVEL, Project
+from .depend import PATTERNS_TO_FIX, DependencyManager
+from .shell import ShellCmd
 
-DEBUG = False
-LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
-LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
@@ -108,217 +105,10 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 # ----------------------------------------------------------------------------
 # Utility Functions
 
-
-def get_var(x): return sysconfig.get_config_var(x)         # type: ignore
-def get_path(x): return Path(sysconfig.get_config_var(x))  # type: ignore
-
-quote = lambda s: s.replace(' ', '\\ ')
-# ----------------------------------------------------------------------------
-# Configuration Classes
-
-class Python:
-    """configuration object to to get info about the python implementation used
-    """
-
-    version = get_var('py_version')
-    version_short = get_var('py_version_short')
-    version_nodot = get_var('py_version_nodot')
-    name = f"python{version_short}"
-    abiflags = get_var('abiflags')
-    arch = platform.machine()
-
-    prefix = get_path('prefix')
-    bindir = get_path('BINDIR')
-    include = get_path('INCLUDEPY')
-    libdir = get_path('LIBDIR')
-    libs = get_path('LIBS')
-    pkgs = get_path('BINLIBDEST')
-
-    mac_dep_target = get_var('MACOSX_DEPLOYMENT_TARGET')
-    staticlib = library = get_var('LIBRARY')
-
-    # can be either: 
-    # in case of framework: Python.framework/Versions/X.Y/Python
-    # in case of shared lib: libpythonX.Ym.dylib
-    ldlibrary = get_path('LDLIBRARY')
-    dylib = f"libpython{version_short}{abiflags}.dylib"
-
-    config_ver_platform = f"config-{version_short}{abiflags}-darwin"
-
-    def to_dict(self) -> dict:
-        return {
-            'version': self.version,
-            'version_short': self.version_short,
-            'version_nodot': self.version_nodot,
-            'name': self.name,
-            'abiflags': self.abiflags,
-            'arch': self.arch,
-            'prefix': str(self.prefix),
-            'bindir': str(self.bindir),
-            'include': str(self.include),
-            'libdir': str(self.libdir),
-            'libs': str(self.libs),
-            'mac_dep_target': self.mac_dep_target,
-            'staticlib': self.staticlib,
-            'ldlibrary': str(self.ldlibrary),
-            'dylib': self.dylib,
-            'config_ver_platform': self.config_ver_platform,
-        }
-
-
-class Project:
-    """A place for all the files, resources, and information required to
-    build one or more software products.
-    """
-
-    name = "py-js"
-    python = Python()
-    
-    arch = platform.machine()
-
-    HOME = Path(os.getenv("HOME"))
-
-    # environmental vars
-    package_name = "py-js"
-    package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
-    package_dirs = [
-        "docs",
-        "examples",
-        "externals",
-        "help",
-        "init",
-        "javascript",
-        "jsextensions",
-        "media",
-        "patchers",
-    ]
-
-    is_symlinked = True
-
-    # root in this case is root assumed for build / make / scripts
-    # actual project is root.parent.parent (see below)
-    # current working directory
-    root = Path.cwd()
-
-    # project root here
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-    externals = pyjs / "externals"
-
-    py_external = externals / "py.mxo"
-    pyjs_external = externals / "pyjs.mxo"
-
-    # project-build section
-    scripts = root / "scripts"
-    patch = root / "patch"
-    targets = root / "targets"
-
-    if is_symlinked:
-        build = targets / "build"
-        build_externals = externals
-
-    else: # is copied to {package}
-        build = HOME / ".build_pyjs"
-        build_externals = build / 'externals'
-
-    build_downloads = build / "downloads"
-    build_src = build / "src"
-    build_lib = build / "lib"
-
-    # settings
-    mac_dep_target = "10.13"
-
-    def to_dict(self) -> dict:
-        return {
-            'name': self.name,
-            'arch': self.arch,
-            'root': str(self.root),
-            'scripts': str(self.scripts),
-            'patch': str(self.patch),
-            'targets': str(self.targets),
-            'build': str(self.build),
-            'downloads': str(self.downloads),
-            'src': str(self.src),
-            'lib': str(self.lib),
-            'pyjs': str(self.pyjs),
-            'support': str(self.support),
-            'externals': str(self.externals),
-            'py_external': str(self.py_external),
-            'pyjs_external': str(self.pyjs_external),
-            'HOME': self.HOME,
-            'package_name': self.package_name,
-            'package': str(self.package),
-            'package_dirs': self.package_dirs,
-            'mac_dep_target': self.mac_dep_target,
-            'python': self.python.to_dict(),
-        }
-
-    def __str__(self):
-        return f"<{self.__class__.__name__}:'{self.name}'>"
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __hash__(self):
-        return hash((self.name, self.python.name, self.mac_dep_target))
-
+quote = lambda s: s.replace(" ", "\\ ")
 
 # ----------------------------------------------------------------------------
 # Utility Classes
-
-
-class ShellCmd:
-    """Provides platform agnostic file/folder handling."""
-
-    def __init__(self, log):
-        self.log = log
-
-    def cmd(self, shellcmd, *args, **kwargs):
-        """Run shell command with args and keywords"""
-        _cmd = shellcmd.format(*args, **kwargs)
-        self.log.info(_cmd)
-        os.system(_cmd)
-
-    __call__ = cmd
-
-    def chdir(self, path):
-        """Change current workding directory to path"""
-        self.log.info("changing working dir to: %s", path)
-        os.chdir(path)
-
-    def chmod(self, path, perm=0o777):
-        """Change permission of file"""
-        self.log.info("change permission of %s to %s", path, perm)
-        os.chmod(path, perm)
-
-    def move(self, src, dst):
-        """Move from src path to dst path."""
-        self.log.info("move path %s to %s", src, dst)
-        shutil.move(src, dst)
-
-    def copy(self, src: Path, dst: Path):
-        """copy file or folders -- tries to be behave like `cp -rf`"""
-        self.log.info("copy %s to %s", src, dst)
-        src, dst = Path(src), Path(dst)
-        if dst.exists():
-            dst = dst / src.name
-        if src.is_dir():
-            shutil.copytree(src, dst)
-        else:
-            shutil.copy2(src, dst)
-
-    def remove(self, path):
-        """Remove file or folder."""
-        if path.is_dir():
-            self.log.info("remove folder: %s", path)
-            shutil.rmtree(path, ignore_errors=(not DEBUG))
-        else:
-            self.log.info("remove file: %s", path)
-            try:
-                # path.unlink(missing_ok=True)
-                path.unlink()
-            except FileNotFoundError:
-                self.log.warning("file not found: %s", path)
 
 
 class Settings(SimpleNamespace):
@@ -393,38 +183,41 @@ class Product:
     @property
     def name_archive(self):
         """Archival name of Product-version"""
-        # return f"{self.name_version}.tgz"
         if self.url:
             return self.url.name
+        return f"{self.name_version}.tgz"
+
 
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        ver = '3.7m' if self.ver == '3.7' else self.ver
+        ver = "3.7m" if self.ver == "3.7" else self.ver
         return f"lib{self.name.lower()}{ver}.dylib"
 
     @property
     def url(self):
         """Returns url to download product src as a pathlib.Path instance."""
         if self.url_template:
-            return Path(self.url_template.format(name=self.name, version=self.version))
+            return Path(
+                self.url_template.format(
+                    name=self.name, version=self.version))
         # raise KeyError("url_template not providing in settings")
 
     def to_dict(self) -> Dict:
         return {
-            'name': self.name,
-            'version': self.version,
-            'build_dir': str(self.build_dir),
-            'libs_static': self.libs_static,
-            'url_template': self.url_template,
-            'settings': str(self.settings),
-            'ver': self.ver,
-            'ver_nodot': self.ver_nodot,
-            'name_version': self.name_version,
-            'name_ver': self.name_ver,
-            'name_archive': self.name_archive,
-            'dylib': self.dylib,
-            'url': str(self.url),
+            "name": self.name,
+            "version": self.version,
+            "build_dir": str(self.build_dir),
+            "libs_static": self.libs_static,
+            "url_template": self.url_template,
+            "settings": str(self.settings),
+            "ver": self.ver,
+            "ver_nodot": self.ver_nodot,
+            "name_version": self.name_version,
+            "name_ver": self.name_ver,
+            "name_archive": self.name_archive,
+            "dylib": self.dylib,
+            "url": str(self.url),
         }
 
 
@@ -446,8 +239,7 @@ class Builder:
         self.cmd = ShellCmd(self.log)
 
     def __str__(self):
-        # return f"<'{self.__class__.__name__}' project='{self.project.name}' product='{self.product.name}'>"
-        return f'<{self.__class__.__name__}>'
+        return f"<{self.__class__.__name__}>"
 
     __repr__ = __str__
 
@@ -512,30 +304,32 @@ class Builder:
         """dump configured vars to dict"""
 
         return {
-            'prefix': str(self.prefix),
-            'prefix_lib': str(self.prefix_lib),
-            'prefix_include': str(self.prefix_include),
-            'prefix_bin': str(self.prefix_bin),
-            'download_path': str(self.download_path),
-            'src_path': str(self.src_path),
-            'url': str(self.url),
-            'product_exists': self.product_exists,
-            'has_static_libs': self.has_static_libs,
-            'project': self.project.to_dict(),
-            'product': self.product.to_dict(),
-            'depends_on': [str(i) for i in self.depends_on],
+            "prefix": str(self.prefix),
+            "prefix_lib": str(self.prefix_lib),
+            "prefix_include": str(self.prefix_include),
+            "prefix_bin": str(self.prefix_bin),
+            "download_path": str(self.download_path),
+            "src_path": str(self.src_path),
+            "url": str(self.url),
+            "product_exists": self.product_exists,
+            "has_static_libs": self.has_static_libs,
+            "project": self.project.to_dict(),
+            "product": self.product.to_dict(),
+            "depends_on": [str(i) for i in self.depends_on],
         }
 
     def to_yaml(self):
         import yaml
-        with open('dump.yml', 'w') as f:
-            f.write(yaml.safe_dump(self.to_dict(), indent=4, default_flow_style=False))
+
+        with open("dump.yml", "w", encoding='utf8') as f:
+            f.write(yaml.safe_dump(
+                self.to_dict(), indent=4, default_flow_style=False))
 
     def to_json(self):
         import json
-        with open('dump.json', 'w') as f:
-            json.dump(self.to_dict(), f, 
-                sort_keys=True, indent=4)
+
+        with open("dump.json", "w", encoding="utf8") as f:
+            json.dump(self.to_dict(), f, sort_keys=True, indent=4)
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
@@ -566,20 +360,28 @@ class Builder:
             if src.exists():
                 self.cmd.copy(src, dst)
 
-    def xcodebuild(self, project: str, targets: List[str], *preprocessor_flags, **xcconfig_flags):
+    def xcodebuild(
+        self, project: str, targets: List[str], *preprocessor_flags, **xcconfig_flags
+    ):
         """python wrapper around command-line xcodebuild"""
-        x_flags = " ".join([f"{k}={repr(v)}" for k,v in xcconfig_flags.items()]) if xcconfig_flags else ''
-        p_flags = "GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {flags}'".format(
-            flags=" ".join([f"{k}=1" for k in preprocessor_flags])) if preprocessor_flags else ''
+        x_flags = (
+            " ".join([f"{k}={repr(v)}" for k, v in xcconfig_flags.items()])
+            if xcconfig_flags
+            else ""
+        )
+        p_flags = (
+            "GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS {flags}'".format(
+                flags=" ".join([f"{k}=1" for k in preprocessor_flags])
+            )
+            if preprocessor_flags
+            else ""
+        )
         for target in targets:
             self.cmd(
                 f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
                 f" -target {repr(target)} {x_flags} {p_flags}"
             )
-        #self.deploy(targets)
-
-
-
+        # self.deploy(targets)
 
     # -------------------------------------------------------------------------
     # Core Methods
@@ -599,7 +401,9 @@ class Builder:
         #         builder.reset()
         self.cmd.remove(self.src_path)
         self.cmd.remove(self.prefix)
-        assert not (self.src_path.exists() or self.prefix.exists()), "reset not completed"
+        assert not (
+            self.src_path.exists() or self.prefix.exists()
+        ), "reset not completed"
 
     def download(self):
         """download src using curl and tar.
@@ -615,13 +419,18 @@ class Builder:
             self.project.build_downloads.mkdir(parents=True, exist_ok=True)
             self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
-            assert self.download_path.exists(), f"could not download: {self.download_path}"
+            assert (
+                self.download_path.exists()
+            ), f"could not download: {self.download_path}"
 
         # unpack
         if not self.src_path.exists():
             self.project.build_src.mkdir(parents=True, exist_ok=True)
             self.log.info("unpacking %s", self.src_path)
-            self.cmd(f"tar -xvf '{self.download_path}' --directory '{self.project.build_src}'")
+            self.cmd(
+                f"tar -xvf '{self.download_path}'"
+                f" --directory '{self.project.build_src}'"
+            )
             assert self.src_path.exists(), f"{self.src_path} not created"
 
     def build(self):
@@ -643,8 +452,13 @@ class Recipe:
     """A platform-specific container for multiple builder-centric projects."""
 
     # type: ignore
-    def __init__(self, name: str, py_version: str = None, builders: List[Builder] = None,  # type: ignore
-                 **settings):
+    def __init__(
+        self,
+        name: str,
+        py_version: str = None,
+        builders: List[Builder] = None,  # type: ignore
+        **settings,
+    ):
         self.name = name
         self.py_version = py_version or constants.DEFAULT_PYTHON_VERSION
         self.builders = builders or []
@@ -661,9 +475,9 @@ class Recipe:
             builder.build()
 
 
-
 # ------------------------------------------------------------------------------------
 # DEPENDENCY BUILDERS
+
 
 class Bzip2Builder(Builder):
     """Bzip2 static library builder"""
@@ -674,10 +488,11 @@ class Bzip2Builder(Builder):
             prefix = quote(str(self.prefix))
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-                    make install PREFIX='{prefix}'""")
+                    make install PREFIX='{prefix}'"""
+            )
             self.cmd.chdir(self.project.root)
         else:
-            self.log.info('product built already')
+            self.log.info("product built already")
 
 
 class OpensslBuilder(Builder):
@@ -687,17 +502,19 @@ class OpensslBuilder(Builder):
         if not self.product_exists:
             self.cmd.chdir(self.src_path)
             prefix = quote(str(self.prefix))
-            os.environ['MACOSX_DEPLOYMENT_TARGET'] = self.project.mac_dep_target
+            os.environ["MACOSX_DEPLOYMENT_TARGET"] = self.project.mac_dep_target
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
                     ./config no-shared no-tests \
-                    --prefix='{prefix}'""")
+                    --prefix='{prefix}'"""
+            )
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
-                    make install_sw""")
+                    make install_sw"""
+            )
             self.cmd.chdir(self.project.root)
         else:
-            self.log.info('product built already')
+            self.log.info("product built already")
 
 
 class XzBuilder(Builder):
@@ -713,13 +530,16 @@ class XzBuilder(Builder):
             )
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
-                    make && make install""")
+                    make && make install"""
+            )
             self.cmd.chdir(self.project.root)
         else:
-            self.log.info('product built already')
+            self.log.info("product built already")
+
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (ABSTRACT)
+
 
 class PythonBuilder(Builder):
     """Generic Python from src builder."""
@@ -854,7 +674,7 @@ class PythonBuilder(Builder):
 
     def write_python_getpip(self):
         """optionally provide latets pip to binary"""
-        with open(f"{self.prefix}/bin/get_pip.sh") as txtfile:
+        with open(f"{self.prefix}/bin/get_pip.sh", encoding="utf8") as txtfile:
             txtfile.write(
                 dedent(
                     f"""
@@ -913,7 +733,9 @@ class PythonBuilder(Builder):
         """redirect ref of dylib to loader in a self-contained external deployment."""
         self.cmd.chdir(self.prefix_lib)
         self.cmd.chmod(self.product.dylib)
-        self.install_name_tool_id(f"@loader_path/{self.product.dylib}", self.product.dylib)
+        self.install_name_tool_id(
+            f"@loader_path/{self.product.dylib}", self.product.dylib
+        )
         self.cmd.chdir(self.project.root)
 
 
@@ -967,17 +789,24 @@ class PythonSrcBuilder(PythonBuilder):
         )
 
     def apply_patch(self, patch=None, to_file=None):
-        """Apply a standard patch from the patch directory (prefixed by major.minor ver)
+        """Apply a standard patch from the patch directory.
 
-        if param `to_file` is given then the patch is applied directly the file (diff method)
-        otherwise: the patch is applied to the directory itself (git method)
+        (prefixed by major.minor ver)
+
+        Patches are stored in their short_version subdirectory.
+        if param `to_file` is given
+            then patch is applied directly to the file (diff method)
+        otherwise:
+            the patch is applied to the directory itself (git method)
         """
         if not any([patch, self.patch]):
             return
         if not patch:
             patch = self.patch
         if to_file:
-            self.cmd(f"patch {to_file} < '{self.project.patch}/{self.product.ver}/{patch}'")
+            self.cmd(
+                f"patch {to_file} < '{self.project.patch}/{self.product.ver}/{patch}'"
+            )
         else:
             self.cmd(f"patch -p1 < '{self.project.patch}/{self.product.ver}/{patch}'")
 
@@ -991,7 +820,9 @@ class VanillaPythonBuilder(PythonSrcBuilder):
 
     @property
     def prefix(self) -> Path:
-        return self.project.build_lib / "Python.framework" / "Versions" / self.product.ver
+        return (
+            self.project.build_lib / "Python.framework" / "Versions" / self.product.ver
+        )
 
     def reset(self):
         self.cmd.remove(self.src_path)
@@ -1024,8 +855,6 @@ class VanillaPythonBuilder(PythonSrcBuilder):
         # self.remove_extensions()
         # self.remove_binaries()
 
-
-
     def build(self):
         # for dep in self.depends_on:
         #     dep.build()
@@ -1041,9 +870,6 @@ class VanillaPythonBuilder(PythonSrcBuilder):
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
 
-    def post_process(self):
-        """post-build operations"""
-
 
 class FrameworkPythonBuilder(PythonSrcBuilder):
     """builds python in a macos framework format."""
@@ -1052,7 +878,9 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
 
     @property
     def prefix(self) -> Path:
-        return self.project.build_lib / "Python.framework" / "Versions" / self.product.ver
+        return (
+            self.project.build_lib / "Python.framework" / "Versions" / self.product.ver
+        )
 
     def reset(self):
         self.cmd.remove(self.src_path)
@@ -1154,6 +982,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (SPECIALIZED)
 
+
 class SharedPythonForExtBuilder(SharedPythonBuilder):
     """builds python in a shared format for self-contained externals."""
 
@@ -1161,8 +990,8 @@ class SharedPythonForExtBuilder(SharedPythonBuilder):
 
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in external build format"""
-        self.cmd.chdir(self.prefix / 'lib')
-        dylib_path = self.prefix / 'lib' / self.product.dylib
+        self.cmd.chdir(self.prefix / "lib")
+        dylib_path = self.prefix / "lib" / self.product.dylib
         assert dylib_path.exists()
         self.cmd.chmod(self.product.dylib)
         self.install_name_tool_id(
@@ -1209,8 +1038,8 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
 
     def fix_python_dylib_for_pkg(self):
         """change dylib ref to point to loader in package build format"""
-        self.cmd.chdir(self.prefix / 'lib')
-        dylib_path = self.prefix / 'lib' / self.product.dylib
+        self.cmd.chdir(self.prefix / "lib")
+        dylib_path = self.prefix / "lib" / self.product.dylib
         assert dylib_path.exists(), f"{dylib_path} does not exist"
         self.cmd.chmod(self.product.dylib)
         # both of these are equivalent (and both don't work!)
@@ -1229,9 +1058,7 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         if dirs_to_change:
             dir_to_change = dirs_to_change[0]
             self.install_name_tool_change(
-                dir_to_change,
-                f"@executable_path/../lib/{self.product.dylib}", 
-                exe
+                dir_to_change, f"@executable_path/../lib/{self.product.dylib}", exe
             )
         self.cmd.chdir(self.project.root)
 
@@ -1251,17 +1078,17 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in external build format"""
         self.cmd.chdir(self.prefix)
-        dylib_path = self.prefix / 'Python'
+        dylib_path = self.prefix / "Python"
         assert dylib_path.exists()
-        #self.cmd.chmod(dylib_path)
+        # self.cmd.chmod(dylib_path)
         self.install_name_tool_id(
             f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
             dylib_path
             # self.project.build_lib / self.project.python.ldlibrary
-        )        
+        )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework(self):    # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
         executable = self.product.name_ver
@@ -1273,10 +1100,12 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
                 path = match.group(1)
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
-                    self.install_name_tool_change(path, "@executable_path/../Python", executable)
+                    self.install_name_tool_change(
+                        path, "@executable_path/../Python", executable
+                    )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework2(self):    # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework2(self):  # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1336,7 +1165,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
     def fix_python_dylib_for_pkg(self):
         """change dylib ref to point to loader in package build format"""
         self.cmd.chdir(self.prefix)
-        dylib_path = self.prefix / 'Python'
+        dylib_path = self.prefix / "Python"
         assert dylib_path.exists()
         self.cmd.chmod(dylib_path)
         # both of these are equivalent (and both don't work!)
@@ -1347,7 +1176,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
 
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exe_for_pkg(self):    # sourcery skip: use-named-expression
+    def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"""
         self.cmd.chdir(self.prefix_bin)
         exe = self.product.name_ver
@@ -1355,10 +1184,12 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         dirs_to_change = d.analyze_executable()
         if dirs_to_change:
             dir_to_change = dirs_to_change[0]
-            self.install_name_tool_change(dir_to_change, "@executable_path/../Python", exe)
+            self.install_name_tool_change(
+                dir_to_change, "@executable_path/../Python", exe
+            )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_pkg2(self):    # sourcery skip: use-named-expression
+    def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1392,17 +1223,17 @@ class VanillaPythonForExtBuilder(VanillaPythonBuilder):
     def fix_python_dylib_for_ext_resources(self):
         """change dylib ref to point to loader in external build format"""
         self.cmd.chdir(self.prefix)
-        dylib_path = self.prefix / 'Python'
+        dylib_path = self.prefix / "Python"
         assert dylib_path.exists()
-        #self.cmd.chmod(dylib_path)
+        # self.cmd.chmod(dylib_path)
         self.install_name_tool_id(
             f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
             dylib_path
             # self.project.build_lib / self.project.python.ldlibrary
-        )        
+        )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework(self):    # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
         executable = self.product.name_ver
@@ -1414,10 +1245,12 @@ class VanillaPythonForExtBuilder(VanillaPythonBuilder):
                 path = match.group(1)
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
-                    self.install_name_tool_change(path, "@executable_path/../Python", executable)
+                    self.install_name_tool_change(
+                        path, "@executable_path/../Python", executable
+                    )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework2(self):    # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework2(self):  # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1443,13 +1276,14 @@ class VanillaPythonForExtBuilder(VanillaPythonBuilder):
         self.fix_python_exec_for_framework()
         self.fix_python_exec_for_framework2()
 
+
 class VanillaPythonForPkgBuilder(VanillaPythonBuilder):
     """builds python in a vanilla framework format for relocatable max packages."""
 
     def fix_python_dylib_for_pkg(self):
         """change dylib ref to point to loader in package build format"""
         self.cmd.chdir(self.prefix)
-        dylib_path = self.prefix / 'Python'
+        dylib_path = self.prefix / "Python"
         assert dylib_path.exists()
         self.cmd.chmod(dylib_path)
         # both of these are equivalent (and both don't work!)
@@ -1460,7 +1294,7 @@ class VanillaPythonForPkgBuilder(VanillaPythonBuilder):
 
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exe_for_pkg(self):    # sourcery skip: use-named-expression
+    def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"""
         self.cmd.chdir(self.prefix_bin)
         exe = self.product.name_ver
@@ -1468,10 +1302,12 @@ class VanillaPythonForPkgBuilder(VanillaPythonBuilder):
         dirs_to_change = d.analyze_executable()
         if dirs_to_change:
             dir_to_change = dirs_to_change[0]
-            self.install_name_tool_change(dir_to_change, "@executable_path/../Python", exe)
+            self.install_name_tool_change(
+                dir_to_change, "@executable_path/../Python", exe
+            )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_pkg2(self):    # sourcery skip: use-named-expression
+    def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1501,6 +1337,7 @@ class VanillaPythonForPkgBuilder(VanillaPythonBuilder):
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
 
+
 class PyJsBuilder(PythonBuilder):
     """pyjs concrete base class"""
 
@@ -1521,6 +1358,7 @@ class PyJsBuilder(PythonBuilder):
 
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (SPECIALIZED)
+
 
 class HomebrewBuilder(PyJsBuilder):
     """homebrew python builder"""
@@ -1646,7 +1484,10 @@ class HomebrewBuilder(PyJsBuilder):
     def install(self):
         """install via symlink"""
         if not self.project.package.exists():
-            self.log.info("package py-js symlink does not exist -- creating at %s", self.project.package)
+            self.log.info(
+                "package py-js symlink does not exist -- creating at %s",
+                self.project.package,
+            )
             self.project.package.symlink_to(self.project.pyjs)
         else:
             self.log.info("package py-js symlink exists -- not creating")
@@ -1687,10 +1528,10 @@ class LocalSystemBuilder(PyJsBuilder):
         """builds externals from local system python"""
 
         flags = dict(
-            PREFIX = str(self.project.python.prefix),
-            VERSION = str(self.project.python.version_short),
-            ABIFLAGS = str(self.project.python.abiflags),
-            LIBS = str(self.project.python.libs),
+            PREFIX=str(self.project.python.prefix),
+            VERSION=str(self.project.python.version_short),
+            ABIFLAGS=str(self.project.python.abiflags),
+            LIBS=str(self.project.python.libs),
         )
 
         self.xcodebuild("local-sys", targets=["py", "pyjs"], **flags)
@@ -1701,7 +1542,10 @@ class StaticExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        static_lib = self.project.build_lib / 'python-static' / 'lib' / self.project.python.staticlib  # type: ignore
+        static_lib = (
+            self.project.build_lib / "python-static"
+                                   / "lib"
+                                   / self.project.python.staticlib)  # type: ignore
         if not static_lib.exists():
             self.log.warning("static python is not built: %s", static_lib)
         return static_lib.exists()
@@ -1711,8 +1555,8 @@ class StaticExtBuilder(PyJsBuilder):
 
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("static-ext", targets=["py", "pyjs"], **flags)
 
@@ -1722,7 +1566,9 @@ class SharedExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.build_lib / 'python-shared' / 'lib' / self.project.python.dylib
+        shared_lib = (
+            self.project.build_lib / "python-shared" / "lib" / self.project.python.dylib
+        )
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)
         return shared_lib.exists()
@@ -1732,8 +1578,8 @@ class SharedExtBuilder(PyJsBuilder):
 
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("shared-ext", targets=["py", "pyjs"], **flags)
 
@@ -1743,22 +1589,24 @@ class SharedPkgBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.build_lib / 'python-shared' / 'lib' / self.project.python.dylib
+        shared_lib = (
+            self.project.build_lib / "python-shared" / "lib" / self.project.python.dylib
+        )
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)
         return shared_lib.exists()
 
     def build(self):
         """builds externals from shared python"""
-        src = self.project.build_lib / 'python-shared'
+        src = self.project.build_lib / "python-shared"
         dst = f"{self.project.support}/{self.product.name_ver}"
-        self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
+        self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
 
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("shared-pkg", targets=["py", "pyjs"], **flags)
 
@@ -1768,7 +1616,13 @@ class FrameworkExtBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.build_lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
+        shared_lib = (
+            self.project.build_lib
+            / "Python.framework"
+            / "Versions"
+            / self.product.ver
+            / "Python"
+        )
         if not shared_lib.exists():
             self.log.warning("framework python is not built: %s", shared_lib)
         return shared_lib.exists()
@@ -1777,11 +1631,11 @@ class FrameworkExtBuilder(PyJsBuilder):
         """builds externals from shared python"""
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("framework-ext", targets=["py", "pyjs"], **flags)
-                # preprocessor_flags=["PY_FWK_EXT"])
+            # preprocessor_flags=["PY_FWK_EXT"])
 
 
 class FrameworkPkgBuilder(PyJsBuilder):
@@ -1789,7 +1643,13 @@ class FrameworkPkgBuilder(PyJsBuilder):
 
     @property
     def product_exists(self):
-        shared_lib = self.project.build_lib / "Python.framework" / "Versions" / self.product.ver / 'Python'
+        shared_lib = (
+            self.project.build_lib
+            / "Python.framework"
+            / "Versions"
+            / self.product.ver
+            / "Python"
+        )
         if not shared_lib.exists():
             self.log.warning("framework python is not built: %s", shared_lib)
         return shared_lib.exists()
@@ -1798,12 +1658,12 @@ class FrameworkPkgBuilder(PyJsBuilder):
         """builds externals from framework python"""
         src = self.project.build_lib / "Python.framework"
         dst = self.project.support / "Python.framework"
-        self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
+        self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("framework-pkg", targets=["py", "pyjs"], **flags)
 
@@ -1859,7 +1719,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
             "libmenuw.*",
             "libpanelw.*",
             "libncurse*",
-            "libtcl*",   
+            "libtcl*",
             "libtclstub*",
             "sqlite3*",
             "libtk*",
@@ -1876,7 +1736,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
         temp_os_py = self.prefix_lib / "os.py"
 
         # self.cmd.remove(self.site_packages)
-        self.cmd.move(self.site_packages, '/tmp/site-packages')
+        self.cmd.move(self.site_packages, "/tmp/site-packages")
         self.lib_dynload.rename(temp_lib_dynload)
         self.cmd.copy(self.python_lib / "os.py", temp_os_py)
 
@@ -1888,7 +1748,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
         temp_lib_dynload.rename(self.lib_dynload)
         temp_os_py.rename(self.python_lib / "os.py")
         # self.site_packages.mkdir()
-        self.cmd.move('/tmp/site-packages', self.site_packages)
+        self.cmd.move("/tmp/site-packages", self.site_packages)
 
     @property
     def product_exists(self):
@@ -1902,8 +1762,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
         self.pre_process()
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"], **flags)
 
@@ -1915,8 +1775,8 @@ class VanillaExtBuilder(FrameworkExtBuilder):
         """builds externals"""
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("vanilla-ext", targets=["py", "pyjs"], **flags)
 
@@ -1928,11 +1788,11 @@ class VanillaPkgBuilder(FrameworkPkgBuilder):
         """builds externals from framework python"""
         src = self.project.build_lib / "Python.framework"
         dst = self.project.support / "Python.framework"
-        self.cmd(f"rm -rf '{dst}'") # try to remove if it exists
+        self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
             flags = dict(
-                VERSION = str(self.project.python.version_short),
-                ABIFLAGS = str(self.project.python.abiflags),
+                VERSION=str(self.project.python.version_short),
+                ABIFLAGS=str(self.project.python.abiflags),
             )
             self.xcodebuild("vanilla-pkg", targets=["py", "pyjs"], **flags)

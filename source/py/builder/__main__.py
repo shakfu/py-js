@@ -18,10 +18,11 @@ subcommands:
 """
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
+from . import utils
+from .utils import display_help, run_logged_tests, runlog
+from .ext.relocatable_python import (process_args_for_relocatable_python,
+                                     relocatable_options)
 from .factory import builder_factory
-from .ext.relocatable_python import (
-    process_args_for_relocatable_python, relocatable_options)
-
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -226,9 +227,74 @@ class Application(Commander):
 
 
 
+# ----------------------------------------------------------------------------
+# help methods
+
+    def do_help(self, args):
+        """display online help"""
+        display_help()
+
+
+# ----------------------------------------------------------------------------
+# test methods
+
+    @option('--without-homebrew', action='store_false', help='exclude homebrew entries')
+    def do_test(self, args):
+        """run all tests"""
+        utils.run_logged_tests(with_homebrew=args.without_homebrew)
+
+    def do_test_default(self, args):
+        """run default test"""
+        utils.runlog('default')
+
+    def do_test_homebrew_ext(self, args):
+        """run homebrew-ext test"""
+        utils.runlog('homebrew-ext')
+
+    def do_test_homebrew_pkg(self, args):
+        """run homebrew-pkg test"""
+        utils.runlog('homebrew-pkg')
+
+    def do_test_framework_ext(self, args):
+        """run framework-ext test"""
+        utils.runlog('framework-ext')
+
+    def do_test_framework_pkg(self, args):
+        """run framework-pkg test"""
+        utils.runlog('framework-pkg')
+
+    def do_test_shared_ext(self, args):
+        """run shared-ext test"""
+        utils.runlog('shared-ext')
+
+    def do_test_shared_pkg(self, args):
+        """run shared-pkg test"""
+        utils.runlog('shared-pkg')
+
+    def do_test_static_ext(self, args):
+        """run static-ext test"""
+        utils.runlog('static-ext')
+
+    def do_test_static_pkg(self, args):
+        """run static-pkg test"""
+        utils.runlog('static-pkg')
+
+    def do_test_vanilla_ext(self, args):
+        """run vanilla-ext test"""
+        utils.runlog('vanilla-ext')
+
+    def do_test_vanilla_pkg(self, args):
+        """run vanilla-pkg test"""
+        utils.runlog('vanilla-pkg')
+
 
 # ----------------------------------------------------------------------------
 # utility methods
+
+
+
+
+
 
     # def do_check(self, args):
     #     """check reference utilities"""
