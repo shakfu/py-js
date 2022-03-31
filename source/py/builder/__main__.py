@@ -1,48 +1,35 @@
 #!/usr/bin/env python3
-"""python3 -m builder
-usage: builder [-h] [-v]  ...
+"""
+usage: python3 -m builder [-h] [-v]  ...
 
-builder: builds the py-js max external and python from source.
+builder: builds python and py-js max externals from source or other methods.
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -v, --version         show program's version number and exit
+  -h, --help     show this help message and exit
+  -v, --version  show program's version number and exit
 
 subcommands:
   valid subcommands
 
-                        additional help
-    dep_analyze         analyze dependencies
-    pyjs_homebrew_ext   build portable pyjs externals (homebrew)
-    pyjs_homebrew_pkg   build portable pyjs package (homebrew)
-    pyjs_homebrew_sys   build non-portable pyjs externals (homebrew)
-    pyjs_shared_ext     build portable pyjs externals (shared)
-    pyjs_shared_pkg     build portable pyjs package (shared)
-    pyjs_static_ext     build portable pyjs externals (static)
-    pyjs_static_ext_full
-                        build portable pyjs externals (fully-loaded static)
-    python_framework    build framework python
-    python_shared       build shared python
-    python_shared_ext   build shared python to embed in external
-    python_shared_pkg   build shared python to embed in package
-    python_static       build static python
-    python_static_full  build static python (fully-loaded)
-    test                interactive testing shell
+                 additional help
+    pyjs         build pyjs externals
+    python       download and build python from src
+
 """
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
-from .factory import python_builder_factory, pyjs_builder_factory
-from .ext.relocatable_python import analyze, relocatablize
-from .ext.relocatable_python import install_extras
-from .ext.relocatable_python import get
-from .ext.relocatable_python import fix_broken_signatures, fix_other_things
-
+from . import utils
+from .utils import display_help, run_logged_tests, runlog
+from .ext.relocatable_python import (process_args_for_relocatable_python,
+                                     relocatable_options)
+from .factory import builder_factory
 
 # ----------------------------------------------------------------------------
 # Commandline interface
 
 common_options = option_group(
-    option("--dump", action="store_true", help="dump project and product vars"),
+    option("-p", "--py-version", type=str,
+           help="set required python version to download and build"),
     option("-d",
            "--download",
            action="store_true",
@@ -60,46 +47,14 @@ common_options = option_group(
            "--clean",
            action="store_true",
            help="clean python in build/src"),
-    option("-z", "--ziplib", action="store_true", help="zip python library"),
-    option("-p", "--py-version", type=str,
-           help="set required python version to download and build"),
+    option("-z", 
+            "--ziplib", action="store_true", help="zip python library"),
+    option("--dump", action="store_true", help="dump project and product vars"),
 )
-
-relocatable_options = option_group(
-    option("--destination",default="../../support",
-        help="Directory destination for the Python.framework",
-    ),
-    option("--baseurl", default=get.DEFAULT_BASEURL,
-        help="Override the base URL used to download the framework.",
-    ),
-    option("--os-version", default=get.DEFAULT_OS_VERSION,
-        help="Override the macOS version of the downloaded pkg. "
-        'Current supported versions are "10.6", "10.9", and "11". '
-        "Not all Python version and macOS version combinations are valid.",
-    ),
-    option("--python-version", default=get.DEFAULT_PYTHON_VERSION,
-        help="Override the version of the Python framework to be downloaded. "
-        "See available versions at "
-        "https://www.python.org/downloads/mac-osx/",
-    ),
-    option("--pip-requirements", default=None,
-        help="Path to a pip freeze requirements.txt file that describes extra "
-        "Python modules to be installed. If not provided, no modules will be installed.",
-    ),
-    option("--no-unsign", dest="unsign", action="store_false",
-        help="Do not unsign binaries and libraries after they are relocatablized."
-    ),
-    option("--upgrade-pip", default=False, action="store_true",
-        help="Upgrade pip prior to installing extra python modules."
-    ),
-    option("--without-pip", default=False, action="store_true",
-        help="Do not install pip."
-    ),)
-
 
 
 class Application(Commander):
-    """builder: builds the py-js max external and python from source."""
+    """builder: builds python and py-js max externals from source or other methods."""
     name = 'builder'
     epilog = ''
     version = '0.1'
@@ -110,22 +65,12 @@ class Application(Commander):
         """generic ordered argument dispatcher"""
         order = ['dump', 'download', 'install', 'build', 'clean', 'ziplib']
         kwdargs = vars(args)
-        print(kwdargs)
-        if name.startswith('python'):
-            # print('selecting python-factory')
-            factory = python_builder_factory
-        else:
-            # print('selecting pyjs-factory')
-            factory = pyjs_builder_factory
-        builder = factory(name, **kwdargs)
+        builder = builder_factory(name, **kwdargs)
         if args.dump:
             builder.to_yaml()
         for method in order:
             if method in kwdargs and kwdargs[method]:
-                try:
-                    getattr(builder, method)()
-                except AttributeError:
-                    print(builder, 'has no method', method)
+                getattr(builder, method)()
 
 # ----------------------------------------------------------------------------
 # python builder methods
@@ -137,11 +82,6 @@ class Application(Commander):
     def do_python_static(self, args):
         """build static python"""
         self.ordered_dispatch('python_static', args)
-
-    @common_options
-    def do_python_static_full(self, args):
-        """build static python (fully-loaded)"""
-        self.ordered_dispatch('python_static_full', args)
 
     @common_options
     def do_python_shared(self, args):
@@ -175,29 +115,24 @@ class Application(Commander):
 
     @relocatable_options
     def do_python_relocatable(self, args):
-        """build relocatable framework python"""
-        framework_path = get.FrameworkGetter(
-            python_version=args.python_version,
-            os_version=args.os_version,
-            base_url=args.baseurl,
-        ).download_and_extract(destination=args.destination)
+        """download relocatable framework python"""
+        process_args_for_relocatable_python(args)
 
-        if framework_path:
-            files_relocatablized = relocatablize(framework_path)
-            if args.unsign:
-                fix_broken_signatures(files_relocatablized)
-            short_version = ".".join(args.python_version.split(".")[0:2])
-            install_extras(
-                framework_path,
-                version=short_version,
-                requirements_file=args.pip_requirements,
-                upgrade_pip=args.upgrade_pip,
-                without_pip=args.without_pip
-            )
-            if fix_other_things(framework_path, short_version):
-                print()
-                print("Done!")
-                print("Customized, relocatable framework is at %s" % framework_path)
+    @common_options
+    def do_python_vanilla(self, args):
+        """build vanilla python"""
+        self.ordered_dispatch('python_vanilla', args)
+
+    @common_options
+    def do_python_vanilla_ext(self, args):
+        """build vanilla python to embed external"""
+        self.ordered_dispatch('python_vanilla_ext', args)
+
+    @common_options
+    def do_python_vanilla_pkg(self, args):
+        """build vanilla python to embed in a package"""
+        self.ordered_dispatch('python_vanilla_pkg', args)
+
 
 # ----------------------------------------------------------------------------
 # py-js builder methods
@@ -205,19 +140,21 @@ class Application(Commander):
 
     def do_pyjs(self, args):
         """build pyjs externals"""
-        pyjs_builder_factory('pyjs_local_sys').build()
+        builder_factory('pyjs_local_sys').build()
 
+    @common_options
     def do_pyjs_local_sys(self, args):
         """build non-portable pyjs externals"""
-        pyjs_builder_factory('pyjs_local_sys').build()
+        builder_factory('pyjs_local_sys').build()
+        # self.ordered_dispatch('pyjs_local_sys', args)
 
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
-        pyjs_builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()
+        builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()
 
     def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
-        pyjs_builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
+        builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
 
     @common_options
     def do_pyjs_static_pkg(self, args):
@@ -228,11 +165,6 @@ class Application(Commander):
     def do_pyjs_static_ext(self, args):
         """build portable pyjs externals (minimal static)"""
         self.ordered_dispatch('pyjs_static_ext', args)
-
-    @common_options
-    def do_pyjs_static_ext_full(self, args):
-        """build portable pyjs externals (fully-loaded static)"""
-        self.ordered_dispatch('pyjs_static_ext_full', args)
 
     # @common_options
     # def do_pyjs_static_pkg(self, args):
@@ -262,35 +194,107 @@ class Application(Commander):
     @relocatable_options
     def do_pyjs_relocatable_pkg(self, args):
         """build portable pyjs package (framework)"""
-        framework_path = get.FrameworkGetter(
-            python_version=args.python_version,
-            os_version=args.os_version,
-            base_url=args.baseurl,
-        ).download_and_extract(destination=args.destination)
+        process_args_for_relocatable_python(args)
+        builder_factory('pyjs_relocatable_pkg').build()
 
-        if framework_path:
-            files_relocatablized = relocatablize(framework_path)
-            if args.unsign:
-                fix_broken_signatures(files_relocatablized)
-            short_version = ".".join(args.python_version.split(".")[0:2])
-            install_extras(
-                framework_path,
-                version=short_version,
-                requirements_file=args.pip_requirements,
-                upgrade_pip=args.upgrade_pip,
-                without_pip=args.without_pip
-            )
-            if fix_other_things(framework_path, short_version):
-                print()
-                print("Done!")
-                print("Customized, relocatable framework is at %s" % framework_path)
+    @common_options
+    def do_pyjs_vanilla_ext(self, args):
+        """build portable pyjs externals (vanilla)"""
+        self.ordered_dispatch('pyjs_vanilla_ext', args)
 
-        pyjs_builder_factory('pyjs_relocatable_pkg').build()
+    @common_options
+    def do_pyjs_vanilla_pkg(self, args):
+        """build portable pyjs package (vanilla)"""
+        self.ordered_dispatch('pyjs_vanilla_pkg', args)
+
+# ----------------------------------------------------------------------------
+# dependency builder methods
+
+    def do_dep(self, args):
+        """dependency commands"""
+
+    def do_dep_bz2(self, args):
+        """build bzip2 dependency"""
+        builder_factory('bz2').build()
+
+    def do_dep_ssl(self, args):
+        """build openssl dependency"""
+        builder_factory('ssl').build()
+
+    def do_dep_xz(self, args):
+        """build xz dependency"""
+        builder_factory('xz').build()
 
 
 
 # ----------------------------------------------------------------------------
+# help methods
+
+    def do_help(self, args):
+        """display online help"""
+        display_help()
+
+
+# ----------------------------------------------------------------------------
+# test methods
+
+    @option('--without-homebrew', action='store_false', help='exclude homebrew entries')
+    def do_test(self, args):
+        """run all tests"""
+        utils.run_logged_tests(with_homebrew=args.without_homebrew)
+
+    def do_test_default(self, args):
+        """run default test"""
+        utils.runlog('default')
+
+    def do_test_homebrew_ext(self, args):
+        """run homebrew-ext test"""
+        utils.runlog('homebrew-ext')
+
+    def do_test_homebrew_pkg(self, args):
+        """run homebrew-pkg test"""
+        utils.runlog('homebrew-pkg')
+
+    def do_test_framework_ext(self, args):
+        """run framework-ext test"""
+        utils.runlog('framework-ext')
+
+    def do_test_framework_pkg(self, args):
+        """run framework-pkg test"""
+        utils.runlog('framework-pkg')
+
+    def do_test_shared_ext(self, args):
+        """run shared-ext test"""
+        utils.runlog('shared-ext')
+
+    def do_test_shared_pkg(self, args):
+        """run shared-pkg test"""
+        utils.runlog('shared-pkg')
+
+    def do_test_static_ext(self, args):
+        """run static-ext test"""
+        utils.runlog('static-ext')
+
+    def do_test_static_pkg(self, args):
+        """run static-pkg test"""
+        utils.runlog('static-pkg')
+
+    def do_test_vanilla_ext(self, args):
+        """run vanilla-ext test"""
+        utils.runlog('vanilla-ext')
+
+    def do_test_vanilla_pkg(self, args):
+        """run vanilla-pkg test"""
+        utils.runlog('vanilla-pkg')
+
+
+# ----------------------------------------------------------------------------
 # utility methods
+
+
+
+
+
 
     # def do_check(self, args):
     #     """check reference utilities"""
