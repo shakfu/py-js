@@ -1,13 +1,10 @@
 # ============================================================================
 # VARIABLES & CONSTANTS
 
-# constants
-COLOR_BOLD_CYAN = "\033[1;36m"
-COLOR_RESET = "\033[m"
 
 # python executable to use
-PYTHON = python3
 # PYTHON = /usr/bin/python3
+PYTHON = python3
 
 # paths
 ROOTDIR := $(shell pwd)
@@ -28,6 +25,9 @@ PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
 PKG_DIRS = docs examples externals help init \
            javascript jsextensions media patchers
 
+# constants
+COLOR_BOLD_CYAN = "\033[1;36m"
+COLOR_RESET = "\033[m"
 
 # ifdef MYFLAG
 # CFLAGS += -DMYFLAG
