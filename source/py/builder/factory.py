@@ -1,12 +1,6 @@
-from . import core 
-
-from .constants import (
-    DEFAULT_PYTHON_VERSION, 
-    DEFAULT_BZ2_VERSION,
-    DEFAULT_SSL_VERSION,
-    DEFAULT_XZ_VERSION,
-)
-
+from . import core
+from .constants import (DEFAULT_BZ2_VERSION, DEFAULT_PYTHON_VERSION,
+                        DEFAULT_SSL_VERSION, DEFAULT_XZ_VERSION)
 
 PYTHON_BUILDERS = dict(
     python_static = core.StaticPythonBuilder,

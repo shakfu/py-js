@@ -1,19 +1,19 @@
 
-import platform
-import subprocess
-import time
 import argparse
 import os
+import platform
+import subprocess
 import sys
+import time
 from pathlib import Path
 
-from tqdm import tqdm
-
+from .ext.tqdm import tqdm
+# from .ext.pbar import ProgressBar
 
 HOME = os.environ['HOME']
 
 # BASEDIR=f"{HOME}/.build_pyjs"
-BASEDIR="."
+BASEDIR=Path(__file__).parent.parent.parent.parent
 
 BASELOGSDIR=f"{BASEDIR}/logs"
 
@@ -21,7 +21,6 @@ PYTHON_VERSION = platform.python_version()
 
 LOGDIR=f"{BASELOGSDIR}/{PYTHON_VERSION}"
 
-#ESCAPED_HOME=$(echo $HOME | sed 's_/_\\/_g')
 ESCAPED_HOME = HOME.replace("/", "\\/")
 
 # colors
@@ -115,7 +114,7 @@ def section(title):
     print(f"{MAGENTA}>>> {title} {RESET}")
 
 
-def display_menu():
+def display_help():
     section("pyjs targets")
 
     for t in PYJS_TARGETS:
@@ -135,6 +134,33 @@ def cleaned(line):
     return line
 
 
+# def runlog(target, requirement=2):
+#     cmd(f'mkdir -p {LOGDIR}')
+#     logfile = f"{LOGDIR}/{target}.log"
+
+#     print()
+#     print(f"running 'make {target}'")
+
+#     successes = 0
+
+#     with open(logfile, 'w') as f:
+#         pb = ProgressBar(N_LINES[target], target)
+#         for line in proc(['make', '-C', str(BASEDIR), target]):
+#             print(cleaned(line), end="", file=f)
+#             if "** BUILD SUCCEEDED **" in line:
+#                 successes += 1
+#             pb.update()
+
+#     if successes == requirement:
+#         msg = f"{GREEN}SUCCESS{RESET}"
+#     else:
+#         msg = f"{MAGENTA}FAILURE{RESET}"
+
+#     # print()
+#     print(f"{target:<15} -> {msg}: {successes} out of {requirement} builds OK")
+#     # print()
+
+
 def runlog(target, requirement=2):
     cmd(f'mkdir -p {LOGDIR}')
     logfile = f"{LOGDIR}/{target}.log"
@@ -146,7 +172,7 @@ def runlog(target, requirement=2):
 
     with open(logfile, 'w') as f:
         t = tqdm(total=N_LINES[target]) # Initialise
-        for line in proc(['make', target]):
+        for line in proc(['make', '-C', str(BASEDIR), target]):
             print(cleaned(line), end="", file=f)
             if "** BUILD SUCCEEDED **" in line:
                 successes += 1
@@ -154,23 +180,27 @@ def runlog(target, requirement=2):
         t.close()
 
     if successes == requirement:
-      msg = f"{GREEN}SUCCESS{RESET}"
+        msg = f"{GREEN}SUCCESS{RESET}"
     else:
-      msg = f"{MAGENTA}FAILURE{RESET}"
+        msg = f"{MAGENTA}FAILURE{RESET}"
 
     # print()
-    print(f"{target:<20} -> {msg}: {successes} out of {requirement} builds OK")
+    print(f"{target:<15} -> {msg}: {successes} out of {requirement} builds OK")
     # print()
 
-def runlog_all(with_homebrew=True):
-    for t in PYJS_TARGETS:
-        if (not with_homebrew and t.startswith('homebrew')):
-            continue
+
+def run_logged_tests(target=None, with_homebrew=True):
+    if target:
         runlog(t)
+    else:
+        for t in PYJS_TARGETS:
+            if (not with_homebrew and t.startswith('homebrew')):
+                continue
+            runlog(t)
 
 
 def open_log_dir():
-    os.system(f"open {LOGDIR}")
+    cmd(f"open {LOGDIR}")
 
 
 def check_success(path: str, requirement: int = 2):
@@ -239,7 +269,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.runlog_all:
-        runlog_all(with_homebrew=args.without_homebrew)
+        run_logged_tests(with_homebrew=args.without_homebrew)
 
     elif args.check_version_logs:
         check_current(with_homebrew=args.without_homebrew)
