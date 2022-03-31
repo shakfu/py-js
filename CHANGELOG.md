@@ -5,35 +5,25 @@
 
 ### Build System (builder)
 
+#### Bugs
 
-- [x] added even more intuitive make frontend to builder:
+- [x] fixed static builds to work with `.build_pyjs`
 
-```bash
->>> pyjs targets
-make (default)            : non-portable pyjs externals linked to your system
-make homebrew-pkg         : portable package with pyjs (requires homebrew python)
-make homebrew-ext         : portable pyjs externals (requires homebrew python)
-make shared-pkg           : portable package with pyjs externals (shared)
-make shared-ext           : portable pyjs externals (shared)
-make static-ext           : portable pyjs externals (static)
-make framework-pkg        : portable package with pyjs externals (framework)
-make framework-ext        : portable pyjs externals (framework)
-make relocatable-pkg      : portable package with more custom options (framework)
-make pymx                 : non-portable alternative python3 externals (min-lib)
+- [x] `_hashlib` and `_ssl` are now built for `static-ext` build.
 
->>> python targets
-make python-shared        : minimal enable-shared python build
-make python-shared-ext    : minimal enable-shared python build for externals
-make python-shared-pkg    : minimal enable-shared python build for packages
-make python-static        : minimal statically-linked python build
-make python-static-full   : statically-linked python build
-make python-framework     : minimal framework python build
-make python-framework-ext : minimal framework python build for externals
-make python-framework-pkg : minimal framework python build for packages
-make python-relocatable   : custom relocatable framework python build
-```
+- [x] fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
 
-- [x] fixed framework-ext and framework-pkg options
+#### Enhancements
+
+- [x] can build dependencies individually now from make
+
+- [x] added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
+
+- [x] streamlined `common.xcconfig` so that it refers to `.build_pyjs` centrally
+
+- [x] Dropped 'full' version of `static-ext` as it was redundant after adding `_ssl` and `_hashlib` to `static-ext`
+
+- [x] added even more intuitive make frontend to builder with help (via `make help`)
 
 - [x] make all xcodeprojects externally xcconfig-parametrizable to `builder`:
 

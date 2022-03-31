@@ -1,13 +1,22 @@
 # TODO
 
-
 ## Build System
 
-- create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
+- [x] move logs to `$HOME/.build_pyjs/logs`
 
-- If a patch is not found, default to a standard working path or no patch at all
+- [ ] check why `py-js.xcconfig` for `homebrew-ext` refers to `support`. May implicitly rely on `homebrew-pkg` preceding it.
 
-- Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
+- [ ] Reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
+
+- [ ] Move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
+
+- [ ] Add beeware downloader.
+
+- [ ] Create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
+
+- [ ] If a patch is not found, default to a standard working path or no patch at all
+
+- [ ] Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
 
 
 ## ENHANCEMENTS

@@ -165,27 +165,27 @@ class Commander(metaclass=MetaCommander):
                     if head in structure:
                         _subparsers = structure[head]
                         subparser = add_parser(_subparsers, subcmd, name="_".join(tail))
-                    else:
-                        # create an dummy 'head' if it wasn't created manually
-                        subcmd = {
-                            'name': head,
-                            'func': lambda self, args: None,
-                            'options': [],
-                        }
-                        subcmd['func'].__doc__ = f"{head} commands"
-                        subparser = add_parser(subparsers, subcmd, name=head)
+                    # else:
+                    #     # create a dummy 'head' if it wasn't created manually
+                    #     subcmd = {
+                    #         'name': head,
+                    #         'func': lambda self, args: None,
+                    #         'options': [],
+                    #     }
+                    #     subcmd['func'].__doc__ = f"{head} commands"
+                    #     subparser = add_parser(subparsers, subcmd, name=head)
 
-                        # add it to structure
-                        structure[head] = subparser.add_subparsers(
-                            title=f"{head} subcommands",
-                            description=subcmd['func'].__doc__,
-                            help='additional help',
-                            metavar='',
-                        )
+                    #     # add it to structure
+                    #     structure[head] = subparser.add_subparsers(
+                    #         title=f"{head} subcommands",
+                    #         description=subcmd['func'].__doc__,
+                    #         help='additional help',
+                    #         metavar='',
+                    #     )
 
-                        # add tail as a child to it
-                        _subparsers = structure[head]
-                        subparser = add_parser(_subparsers, subcmd, name="_".join(tail))
+                    #     # add tail as a child to it
+                    #     _subparsers = structure[head]
+                    #     subparser = add_parser(_subparsers, subcmd, name="_".join(tail))
 
         if len(sys.argv) <= 1:
             options = parser.parse_args(self.default_args)

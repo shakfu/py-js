@@ -1,30 +1,33 @@
 # ============================================================================
 # VARIABLES & CONSTANTS
 
-# constants
-COLOR_BOLD_CYAN="\033[1;36m"
-COLOR_RESET="\033[m"
 
-# exec
-PYTHON=/usr/local/bin/python3
+# python executable to use
+# PYTHON = /usr/bin/python3
+PYTHON = python3
 
 # paths
-ROOTDIR:=$(shell pwd)
-SRCDIR:=$(ROOTDIR)/source
-PYDIR:=$(SRCDIR)/py
+ROOTDIR := $(shell pwd)
+SRCDIR := $(ROOTDIR)/source
+PYDIR := $(SRCDIR)/py
+BUILDDIR := $(HOME)/.build_pyjs
 
 # project variables
-NAME=py
-PROJECT=${NAME}.xcodeproj
-TARGETS=py pyjs
-EXTENSION=$(PYDIR)/api.pyx
+NAME = py
+PROJECT = $(NAME).xcodeproj
+TARGETS = py pyjs
+EXTENSION = $(PYDIR)/api.pyx
 
-MAX_VERSION := "8"
-MAX_DIR := "Max $(MAX_VERSION)"
-PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages
-PKG_DIRS=docs examples externals help init \
-         javascript jsextensions media patchers
+MAX_VERSION := 8
+MAX_DIR := "Max\ $(MAX_VERSION)"
+PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
+PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
+PKG_DIRS = docs examples externals help init \
+           javascript jsextensions media patchers
 
+# constants
+COLOR_BOLD_CYAN = "\033[1;36m"
+COLOR_RESET = "\033[m"
 
 # ifdef MYFLAG
 # CFLAGS += -DMYFLAG
@@ -37,16 +40,16 @@ PKG_DIRS=docs examples externals help init \
 section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # $(call pybuild,name)
-define pybuild-targets
+define call-builder
 $(call section,"builder $1 $2 $3 $4")
-@cd $(PYDIR) && $(PYTHON) -m builder $1 $2 $3 $4
+@cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4
 endef
 
 # $(call xbuild,name)
 define xbuild-targets
 $(call section,"build $1")
 @for target in ${TARGETS}; do \
-		xcodebuild -project targets/$1/py-js.xcodeproj -target $$target ; \
+		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target ; \
 	done
 endef
 
@@ -54,21 +57,23 @@ endef
 define xbuild-targets-flags
 $(call section,"build $1 with flags: $2")
 @for target in ${TARGETS}; do \
-		xcodebuild -project targets/$1/py-js.xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
+		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
 	done
 endef
 
 
 # $(call xclean,name)
-define xclean-build
+define xclean-target
 $(call section,"cleaning build artifacts from $1 target")
-@rm -rf $(PYDIR)/targets/$1/build 
+@rm -rf '$(PYDIR)'/targets/$1/build
 endef
 
-# $(call xcleanlib,name)
-define xclean-build
-$(call section,"cleaning build lib from $1 target")
-@rm -rf $(PYDIR)/targets/build/lib/$1 
+
+# $(call xclean,name)
+define xcleanlib
+$(call section,"cleaning build product from python build $1")
+@rm -rf '$(PYDIR)'/targets/build/lib/$1
+@rm -rf '${BUILDDIR}'/lib/$1
 endef
 
 
@@ -81,53 +86,59 @@ all: default
 
 # High-Level
 # -----------------------------------------------------------------------
-.PHONY: default help local-sys \
+.PHONY: default local-sys \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
 		static-pkg static-ext \
+		vanilla-ext vanilla-pkg \
 		python-shared python-shared-pkg python-shared-ext \
-		python-static python-static-full \
-		python-framework python-framework-ext python-framework-pkg
+		python-static \
+		python-framework python-framework-ext python-framework-pkg \
+		python-vanilla python-vanilla-ext python-vanilla-pkg
 
 
 # -----------------------------------------------------------------------
 # python external argets
 
-help:
-	@python3 source/py/scripts/help.py
 
 default: local-sys
 
 local-sys: clean-local-sys
-	$(call pybuild-targets, "pyjs" "local_sys")
+	$(call call-builder,"pyjs" "local_sys")
 
 homebrew-pkg: clean-homebrew-pkg
-	$(call pybuild-targets, "pyjs" "homebrew_pkg")
+	$(call call-builder,"pyjs" "homebrew_pkg")
 
 homebrew-ext: clean-homebrew-ext
-	$(call pybuild-targets,"pyjs" "homebrew_ext")
+	$(call call-builder,"pyjs" "homebrew_ext")
 
 shared-pkg: clean-shared-pkg
-	$(call pybuild-targets, "pyjs" "shared_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build")
 
 shared-ext: clean-shared-ext
-	$(call pybuild-targets, "pyjs" "shared_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "shared_ext" "--install" "--build")
 
 static-ext: clean-static-ext
-	$(call pybuild-targets, "pyjs" "static_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "static_ext" "--install" "--build")
 
 static-pkg: clean-static-pkg
-	$(call pybuild-targets, "pyjs" "static_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "static_pkg" "--install" "--build")
 
 framework-pkg: clean-framework-pkg
-	$(call pybuild-targets, "pyjs" "framework_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "framework_pkg" "--install" "--build")
 
 framework-ext: clean-framework-ext
-	$(call pybuild-targets, "pyjs" "framework_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "framework_ext" "--install" "--build")
 
 relocatable-pkg: clean-framework-pkg
-	$(call pybuild-targets, "pyjs" "relocatable_pkg")
+	$(call call-builder,"pyjs" "relocatable_pkg")
+
+vanilla-ext: clean
+	$(call call-builder,"pyjs" "vanilla_ext" "--install" "--build")
+
+vanilla-pkg: clean
+	$(call call-builder,"pyjs" "vanilla_pkg" "--install" "--build")
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
@@ -136,39 +147,81 @@ pymx:
 # python targets
 
 python-shared: clean-python-shared
-	$(call pybuild-targets, "python" "shared" "--install")
+	$(call call-builder,"python" "shared" "--install")
 
 python-shared-ext: clean-python-shared-ext
-	$(call pybuild-targets, "python" "shared-ext" "--install")
+	$(call call-builder,"python" "shared_ext" "--install")
 
 python-shared-pkg: clean-python-shared-pkg
-	$(call pybuild-targets, "python" "shared-pkg" "--install")
+	$(call call-builder,"python" "shared_pkg" "--install")
 
 python-static: clean-python-static
-	$(call pybuild-targets, "python" "static" "--install")
-
-python-static-full: clean-python-static-full
-	$(call pybuild-targets, "python" "static-full" "--install")
+	$(call call-builder,"python" "static" "--install")
 
 python-framework: clean-python-framework
-	$(call pybuild-targets, "python" "framework" "--install")
+	$(call call-builder,"python" "framework" "--install")
 
 python-framework-ext: clean-python-framework-ext
-	$(call pybuild-targets, "python" "framework_ext" "--install")
+	$(call call-builder,"python" "framework_ext" "--install")
 
 python-framework-pkg: clean-python-framework-pkg
-	$(call pybuild-targets, "python" "framework_pkg" "--install")
+	$(call call-builder,"python" "framework_pkg" "--install")
 
 python-relocatable: clean-python-framework-pkg
-	$(call pybuild-targets, "python" "relocatable_pkg")
+	$(call call-builder,"python" "relocatable_pkg")
 
+python-vanilla: clean-python-framework-ext clean-python-framework-pkg
+	$(call call-builder,"python" "vanilla" "--install")
+
+python-vanilla-ext: clean-python-vanilla-ext
+	$(call call-builder,"python" "vanilla_ext" "--install")
+
+python-vanilla-pkg: clean-python-vanilla-pkg
+	$(call call-builder,"python" "vanilla_pkg" "--install")
+
+# -----------------------------------------------------------------------
+# dependencies
+
+.PHONY: bz2 ssl xz
+
+bz2:
+	$(call call-builder, "dep" "bz2")
+
+ssl:
+	$(call call-builder, "dep" "ssl")
+
+xz:
+	$(call call-builder, "dep" "xz")
 
 # -----------------------------------------------------------------------
 # utilities
 
+.PHONY: help setup update-submodules link max-check
+
+help:
+	$(call call-builder,"help")
+
+setup: update-submodules link
+	$(call section,"setup complete")
+
+update-submodules:
+	$(call section,"updating git submodules")
+	@git submodule init && git submodule update
+
+link:
+	$(call section,"symlink to $(PYJS_PACKAGE)")
+	@if ! [ -L "$(PYJS_PACKAGE)" ]; then \
+		ln -s "$(ROOTDIR)" "$(PYJS_PACKAGE)" ; \
+		echo "... symlink created" ; \
+	else \
+		echo "... symlink already exists" ; \
+	fi
+
 max-check:
-	@echo $(PACKAGE)
-	@ls $(PACKAGE)
+	$(call section,"display contents of pyjs package")
+	@echo "$(PYJS_PACKAGE)"
+	@ls "$(PYJS_PACKAGE)"
+
 
 
 # DEPLOYING
@@ -187,27 +240,33 @@ dist:
 .PHONY: build-homebrew-pkg build-homebrew-ext \
 		build-framework-pkg build-framework-ext \
 		build-shared-pkg build-shared-ext \
-		build-static-pkg build-static-ext
+		build-static-pkg build-static-ext \
+		build-vanilla-ext build-vanilla-pkg
 
 
 build-shared-pkg: clean-shared-pkg
-	$(call pybuild-targets, "pyjs" "shared_pkg" "--build")
+	$(call call-builder,"pyjs" "shared_pkg" "--build")
 
 build-shared-ext: clean-shared-ext
-	$(call pybuild-targets, "pyjs" "shared_ext" "--build")
+	$(call call-builder,"pyjs" "shared_ext" "--build")
 
 build-static-ext: clean-static-ext
-	$(call pybuild-targets, "pyjs" "static_ext" "--build")
+	$(call call-builder,"pyjs" "static_ext" "--build")
 
 build-static-pkg: clean-static-pkg
-	$(call pybuild-targets, "pyjs" "static_pkg" "--build")
+	$(call call-builder,"pyjs" "static_pkg" "--build")
 
 build-framework-pkg: clean-framework-pkg
-	$(call pybuild-targets, "pyjs" "framework_pkg" "--build")
+	$(call call-builder,"pyjs" "framework_pkg" "--build")
 
 build-framework-ext: clean-framework-ext
-	$(call pybuild-targets, "pyjs" "framework_ext" "--build")
+	$(call call-builder,"pyjs" "framework_ext" "--build")
 
+build-vanilla-pkg:
+	$(call call-builder,"pyjs" "vanilla_pkg" "--build")
+
+build-vanilla-ext:
+	$(call call-builder,"pyjs" "vanilla_ext" "--build")
 
 # re-compile only
 # -----------------------------------------------------------------------
@@ -220,11 +279,90 @@ compile-extension:
 
 # Testing
 # -----------------------------------------------------------------------
-.PHONY: test
+.PHONY: test \
+		test-homebrew-pkg test-homebrew-ext \
+		test-framework-pkg test-framework-ext \
+		test-shared-pkg test-shared-ext \
+		test-static-pkg test-static-ext \
+		test-vanilla-ext test-vanilla-pkg
 
-test:
-	$(call section,"testing planned")
-	echo "remember to test!"
+test: clean
+	$(call section,"running all tests")
+	$(call call-builder,"test")
+
+test-default: clean
+	$(call section,"running default test")
+	$(call call-builder,"test" "default")
+
+
+test-homebrew-ext: clean
+	$(call section,"running homebrew-ext test")
+	$(call call-builder,"test" "homebrew_ext")
+
+test-homebrew-pkg: clean
+	$(call section,"running homebrew-pkg test")
+	$(call call-builder,"test" "homebrew_pkg")
+
+test-shared-ext: clean
+	$(call section,"running shared-ext test")
+	$(call call-builder,"test" "shared_ext")
+
+test-shared-pkg: clean
+	$(call section,"running shared-pkg test")
+	$(call call-builder,"test" "shared_pkg")
+
+test-framework-ext: clean
+	$(call section,"running framework-ext test")
+	$(call call-builder,"test" "framework_ext")
+
+test-framework-pkg: clean
+	$(call section,"running framework-pkg test")
+	$(call call-builder,"test" "framework_pkg")
+
+test-static-ext: clean
+	$(call section,"running static-ext test")
+	$(call call-builder,"test" "static_ext")
+
+test-static-pkg: clean
+	$(call section,"running static-pkg test")
+	$(call call-builder,"test" "static_pkg")
+
+test-vanilla-ext: clean
+	$(call section,"running vanilla-ext test")
+	$(call call-builder,"test" "vanilla_ext")
+
+test-vanilla-pkg: clean
+	$(call section,"running vanilla-pkg test")
+	$(call call-builder,"test" "vanialla_pkg")
+
+
+check:
+	$(call section,"checking test results")
+	$(call call-builder,"logs" "check_current")
+# 	@$(PYTHON) source/py/scripts/utils.py --check-version-logs
+# 	@echo
+
+check_logs:
+	$(call section,"checking all test results")
+	$(call call-builder,"logs" "check_all")
+# 	@$(PYTHON) source/py/scripts/utils.py --check-all-logs
+# 	@echo
+
+
+# test: clean
+# 	$(call section,"running tests")
+# 	@source source/py/scripts/funcs.sh && runlog_all
+
+# check:
+# 	$(call section,"checking test results")
+# 	@source source/py/scripts/funcs.sh && check_all
+# 	@echo
+
+# check_logs:
+# 	$(call section,"checking all test results")
+# 	@source source/py/scripts/funcs.sh && check_all_logs
+# 	@echo
+
 
 # Styling
 # -----------------------------------------------------------------------
@@ -252,39 +390,46 @@ duplo:
 
 # Cleaning
 # -----------------------------------------------------------------------
-.PHONY: reset clean clean-build clean-support clean-externals \
-		clean-targets-build clean-local-sys \
+.PHONY: reset clean clean-targets clean-support clean-externals \
+		clean-build clean-local-sys \
 		clean-homebrew-pkg clean-homebrew-ext \
 		clean-framework-pkg clean-framework-ext \
 		clean-shared-pkg clean-shared-ext \
-		clean-static-pkg clean-static-ext
+		clean-static-pkg clean-static-ext \
+		clean-relocatable-pkg
 
-reset: clean clean-targets-build
+clean: clean-externals clean-support clean-targets clean-build
 
-clean: clean-externals clean-build clean-support
-
-clean-build: clean-local-sys  \
-			 clean-homebrew-pkg clean-homebrew-ext  \
-			 clean-framework-pkg clean-framework-ext \
-			 clean-shared-pkg clean-shared-ext \
-			 clean-static-pkg clean-static-ext
+clean-targets: clean-local-sys  \
+			   clean-homebrew-pkg clean-homebrew-ext  \
+			   clean-framework-pkg clean-framework-ext \
+			   clean-shared-pkg clean-shared-ext \
+			   clean-static-pkg clean-static-ext \
+			   clean-relocatable-pkg
 
 clean-build-lib: clean-python-shared \
 				 clean-python-shared-ext \
 				 clean-python-shared-pkg \
 				 clean-python-static \
-				 clean-python-static-full \
 				 clean-python-framework
 
+reset: clean clean-build
+	$(call section,"reset build system")
+	@rm -rf '${BUILDDIR}'/logs/*
 
-clean-targets-build:
-	$(call section,"cleaning targets/build directory")
-	@rm -rf ${PYDIR}/targets/build
+clean-build:
+	$(call section,"cleaning build directory")
+	@rm -rf '${PYDIR}'/targets/build/src/*
+	@rm -rf '${BUILDDIR}'/src/*
+	@rm -rf '${BUILDDIR}'/lib/python-shared
+	@rm -rf '${BUILDDIR}'/lib/python-static
+	@rm -rf '${BUILDDIR}'/lib/Python.framework
 
 clean-externals:
 	$(call section,"cleaning externals")
-	@for target in ${TARGETS}; do \
-		rm -rf ${ROOTDIR}/externals/$$target.mxo  ; \
+	@for target in $(TARGETS); do \
+		rm -rf '$(ROOTDIR)'/externals/$$target.mxo ;\
+		rm -rf '$(BUILDDIR)'/externals/$$target.mxo ;\
 	done
 
 clean-support:
@@ -296,58 +441,67 @@ clean-xcode: clean-build
 	@find . | grep -E "(project.xcworkspace|xcuserdata)" | xargs rm -rf
 
 clean-local-sys: clean-externals
-	$(call xclean-build,"local-sys")
+	$(call xclean-target,"local-sys")
 
 clean-homebrew-pkg: clean-externals clean-support
-	$(call xclean-build,"homebrew-pkg")
+	$(call xclean-target,"homebrew-pkg")
 
 clean-homebrew-ext: clean-externals
-	$(call xclean-build,"homebrew-ext")
+	$(call xclean-target,"homebrew-ext")
 
 clean-framework-pkg: clean-externals clean-support
-	$(call xclean-build,"framework-pkg")
+	$(call xclean-target,"framework-pkg")
 
 clean-framework-ext: clean-externals
-	$(call xclean-build,"framework-ext")
+	$(call xclean-target,"framework-ext")
 
 clean-shared-pkg: clean-externals clean-support
-	$(call xclean-build,"shared-pkg")
+	$(call xclean-target,"shared-pkg")
 
 clean-shared-ext: clean-externals
-	$(call xclean-build,"shared-ext")
+	$(call xclean-target,"shared-ext")
 
 clean-static-pkg: clean-externals clean-support
-	$(call xclean-build,"static-pkg")
+	$(call xclean-target,"static-pkg")
 
 clean-static-ext: clean-externals
-	$(call xclean-build,"static-ext")
+	$(call xclean-target,"static-ext")
+
+clean-relocatable-pkg: clean-externals clean-support
+	$(call xclean-target,"relocatable-pkg")
 
 # -----------------------------------------------------------------------
 # python clean targets
 
 
 clean-python-shared:
-	$(call xcleanlib, "python-shared")
+	$(call xcleanlib,"python-shared")
 
 clean-python-shared-ext:
-	$(call xcleanlib, "python-shared")
+	$(call xcleanlib,"python-shared")
 
 clean-python-shared-pkg: clean-externals clean-support
-	$(call xcleanlib, "python-shared")
+	$(call xcleanlib,"python-shared")
 
 clean-python-static:
-	$(call xcleanlib, "python-static")
-
-clean-python-static-full:
-	$(call xcleanlib, "python-static")
+	$(call xcleanlib,"python-static")
 
 clean-python-framework:
-	$(call xcleanlib, "python-framework")
+	$(call xcleanlib,"Python.framework")
 
 clean-python-framework-ext:
-	$(call xcleanlib, "python-framework-ext")
+	$(call xcleanlib,"Python.framework")
 
 clean-python-framework-pkg: clean-externals clean-support
-	$(call xcleanlib, "python-framework-pkg")
+	$(call xcleanlib,"Python.framework")
+
+clean-python-vanilla:
+	$(call xcleanlib,"Python.framework")
+
+clean-python-vanilla-ext:
+	$(call xcleanlib,"Python.framework")
+
+clean-python-vanilla-pkg: clean-externals clean-support
+	$(call xcleanlib,"Python.framework")
 
 
