@@ -25,16 +25,8 @@ TARGETS="           \
     framework-pkg   \
     framework-ext   \
     relocatable-pkg \
-"
-
-TARGETS_NO_BREW="   \
-    default         \
-    shared-pkg      \
-    shared-ext      \
-    static-ext      \
-    framework-pkg   \
-    framework-ext   \
-    relocatable-pkg \
+    vanilla-ext     \
+    vanilla-pkg     \
 "
 
 
@@ -60,20 +52,6 @@ function runlog_all() {
 
 function check_all() {
     for t in $TARGETS
-    do
-        $CHECK --entry $LOGDIR/$t.log
-    done
-}
-
-function runlog_all_no_brew() {
-    for t in $TARGETS_NO_BREW
-    do
-        runlog $t
-    done
-}
-
-function check_all_no_brew() {
-    for t in $TARGETS_NO_BREW
     do
         $CHECK --entry $LOGDIR/$t.log
     done

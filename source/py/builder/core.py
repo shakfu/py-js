@@ -1067,7 +1067,7 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
             --enable-framework='{self.project.build_lib}' \
-            --with-openssl={self.project.build_lib / 'openssl'} \
+            --with-openssl='{self.project.build_lib / "openssl"}' \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \
@@ -1105,7 +1105,7 @@ class SharedPythonBuilder(PythonSrcBuilder):
         ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
             --prefix='{self.prefix}' \
             --enable-shared \
-            --with-openssl={self.project.build_lib / 'openssl'} \
+            --with-openssl='{self.project.build_lib / "openssl"}' \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \
@@ -1136,7 +1136,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
             --prefix='{self.prefix}' \
-            --with-openssl={self.project.build_lib / 'openssl'} \
+            --with-openssl='{self.project.build_lib / "openssl"}' \
             --without-doc-strings \
             --enable-ipv6 \
             --without-ensurepip \

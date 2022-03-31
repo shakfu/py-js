@@ -14,8 +14,6 @@ except ImportError:
     progress_bar = lambda x: x
 
 
-
-
 HOME = os.environ['HOME']
 
 # BASEDIR=f"{HOME}/.build_pyjs"
@@ -41,10 +39,10 @@ RESET="\033[m"
 
 
 PYJS_TARGETS = {
-    "(default)"         : "non-portable pyjs externals linked to your system",
+    "default"           : "non-portable pyjs externals linked to your system",
     "homebrew-pkg"      : "portable package w/ pyjs (requires homebrew python)",
-    "homebrew-ext "     : "portable pyjs externals (requires homebrew python)",
-    "shared-pkg "       : "portable package with pyjs externals (shared)",
+    "homebrew-ext"      : "portable pyjs externals (requires homebrew python)",
+    "shared-pkg"        : "portable package with pyjs externals (shared)",
     "shared-ext"        : "portable pyjs externals (shared)",
     "static-ext"        : "portable pyjs externals (static)",
     "framework-pkg"     : "portable package with pyjs externals (framework)",
@@ -64,9 +62,57 @@ PYTHON_TARGETS = {
     "python-relocatable"    : "custom relocatable python framework build",    
 }
 
+N_LINES = {
+    "default"          : 210,
+    "homebrew-pkg"     : 275,
+    "homebrew-ext"     : 278,
+    "shared-pkg "      : 18746,
+    "shared-ext"       : 14652,
+    "static-ext"       : 14064,
+    "framework-pkg"    : 14842,
+    "framework-ext"    : 14852,
+    "relocatable-pkg"  : 409,
+    "vanilla-ext"      : 18169,
+    "vanilla-ext"      : 18244,
+}
 
 def cmd(shellcmd):
     os.system(shellcmd)
+
+def run(shellcmd):
+    return subprocess.run(
+        shellcmd.split(), 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.STDOUT,
+        text=True
+    )
+
+
+def proc(shellcmd):
+    """iterate over a subprocess command
+
+    >>> for line in proc('ls'):
+    ...:    print(line, end="")
+
+    """
+    _proc = subprocess.Popen(
+        shellcmd.split(), 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.STDOUT, 
+        text=True)
+
+    code = None
+
+    while True:
+        line = _proc.stdout.readline()
+        code = _proc.poll()
+        if line == '':
+            if code != None:
+                break
+            else:
+                continue
+        yield line
+
 
 def section(title):
     print(f"{MAGENTA}>>> {title} {RESET}")
@@ -118,27 +164,29 @@ def runlog(target):
     print()
 
 
-def check_success_from_string(string: str, requirement: int = 2) -> (str, int):
-    """check count of xcode successful build message in a log file
-    """
-    successes = 0
 
-    lines = string.splitlines()
-    for line in lines:
-      if "** BUILD SUCCEEDED **" in line:
-         successes += 1
-
-    return string, successes
 
 
 def check_success(path: str, requirement: int = 2):
-    """check count of xcode successful build message in a log file
-    """
-    with open(path) as f:
-        text = f.read()
-    
-    _, successes = check_success_from_string(text, requirement)
-    return successes
+   """check count of xcode successful build message in a log file
+
+   """
+   successes = 0
+
+   with open(path) as f:
+      lines = f.readlines()
+   for line in lines:
+      if "** BUILD SUCCEEDED **" in line:
+         successes += 1
+
+   if successes == requirement:
+      msg = f"{GREEN}SUCCESS{RESET}"
+   else:
+      msg = f"{MAGENTA}FAILURE{RESET}"
+
+   cpath = str(path).replace(HOME, '~') # remove $HOME prefix and replace with '~'
+   print(f"{cpath:<46} -> {msg}: {successes} out of {requirement} builds OK")
+   return successes
 
 
 def check_version(path: str, requirement: int = 2):
@@ -158,6 +206,8 @@ def check_logs(path: str, requirement: int = 2):
     logs_folder = Path(path)
     for version_folder in logs_folder.iterdir():
       check_version(version_folder, requirement)
+
+
 
 def runlog_all(with_homebrew=True):
     for t in PYJS_TARGETS:
