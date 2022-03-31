@@ -7,11 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-try:
-    from tqdm import tqdm
-    progress_bar = tqdm
-except ImportError:
-    progress_bar = lambda x: x
+from tqdm import tqdm
 
 
 HOME = os.environ['HOME']
@@ -66,7 +62,7 @@ N_LINES = {
     "default"          : 210,
     "homebrew-pkg"     : 275,
     "homebrew-ext"     : 278,
-    "shared-pkg "      : 18746,
+    "shared-pkg"       : 18746,
     "shared-ext"       : 14652,
     "static-ext"       : 14064,
     "framework-pkg"    : 14842,
@@ -75,6 +71,7 @@ N_LINES = {
     "vanilla-ext"      : 18169,
     "vanilla-ext"      : 18244,
 }
+
 
 def cmd(shellcmd):
     os.system(shellcmd)
@@ -88,15 +85,15 @@ def run(shellcmd):
     )
 
 
-def proc(shellcmd):
+def proc(arglist):
     """iterate over a subprocess command
 
-    >>> for line in proc('ls'):
+    >>> for line in proc(['ls']):
     ...:    print(line, end="")
 
     """
     _proc = subprocess.Popen(
-        shellcmd.split(), 
+        arglist, 
         stdout=subprocess.PIPE, 
         stderr=subprocess.STDOUT, 
         text=True)
@@ -131,40 +128,49 @@ def display_menu():
         print(f"{CYAN}make{RESET} {GREEN}{t:<20}{RESET} : {PYTHON_TARGETS[t]}")
 
 
-def runlog(target):
+def cleaned(line):
+    line = line.replace("\\[1;36m", "")
+    line = line.replace("\\[m", "")
+    line = line.replace(HOME, "~")
+    return line
+
+
+def runlog(target, requirement=2):
     cmd(f'mkdir -p {LOGDIR}')
     logfile = f"{LOGDIR}/{target}.log"
 
     print()
     print(f"running 'make {target}'")
 
-    # t0 = time.time()
-    completed_process = subprocess.run(['make', target], capture_output=True, text=True)
-
-    log = completed_process.stdout
-    log = log.replace("\\[1;36m", "")
-    log = log.replace("\\[m", "")
-    log = log.replace(HOME, "~")
+    successes = 0
 
     with open(logfile, 'w') as f:
-        f.write(log)
-
-    log, successes = check_success(logfile)
-    with open(logfile, 'w') as f:
-        f.write(log)
+        t = tqdm(total=N_LINES[target]) # Initialise
+        for line in proc(['make', target]):
+            print(cleaned(line), end="", file=f)
+            if "** BUILD SUCCEEDED **" in line:
+                successes += 1
+            t.update(1)
+        t.close()
 
     if successes == requirement:
       msg = f"{GREEN}SUCCESS{RESET}"
     else:
       msg = f"{MAGENTA}FAILURE{RESET}"
 
-    cpath = str(path).replace(HOME, '~') # remove $HOME prefix and replace with '~'
-    print(f"{cpath:<46} -> {msg}: {successes} out of {requirement} builds OK")
+    # print()
+    print(f"{target:<20} -> {msg}: {successes} out of {requirement} builds OK")
+    # print()
 
-    print()
+def runlog_all(with_homebrew=True):
+    for t in PYJS_TARGETS:
+        if (not with_homebrew and t.startswith('homebrew')):
+            continue
+        runlog(t)
 
 
-
+def open_log_dir():
+    os.system(f"open {LOGDIR}")
 
 
 def check_success(path: str, requirement: int = 2):
@@ -208,26 +214,17 @@ def check_logs(path: str, requirement: int = 2):
       check_version(version_folder, requirement)
 
 
-
-def runlog_all(with_homebrew=True):
-    for t in PYJS_TARGETS:
+def check_current(with_homebrew=True):
+    logdir = Path(LOGDIR)
+    for t in logdir.iterdir():
         if (not with_homebrew and t.startswith('homebrew')):
             continue
-        runlog(t)
-
-def check_all(with_homebrew=True):
-    for t in PYJS_TARGETS:
-        if (not with_homebrew and t.startswith('homebrew')):
-            continue
-        check_success(f"{LOGDIR}/{t}.log")
+        check_success(t)
 
 
-def check_all_logs():
+def check_all():
     check_logs(BASELOGSDIR)
 
-
-def open_log_dir():
-    os.system(f"open {LOGDIR}")
 
 
 if __name__ == '__main__':
@@ -245,10 +242,10 @@ if __name__ == '__main__':
         runlog_all(with_homebrew=args.without_homebrew)
 
     elif args.check_version_logs:
-        check_all(with_homebrew=args.without_homebrew)
+        check_current(with_homebrew=args.without_homebrew)
 
     elif args.check_all_logs:
-        check_all_logs()
+        check_all()
 
     elif args.open_logs:
         open_log_dir()
