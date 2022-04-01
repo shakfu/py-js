@@ -2,7 +2,23 @@
 
 ## Build System
 
-- [x] move logs to `$HOME/.build_pyjs/logs`
+- [ ] external products which are built in full test runs should be stored in some organizaed way
+
+  ```text
+
+    build/
+      lib/
+      externals/
+        x86_64/
+          3.9.12/
+            shared-pkg/
+            shared-ext/
+          3.10.3/
+        arm64/
+          3.10.3/
+            static-ext
+  ```
+
 
 - [ ] check why `py-js.xcconfig` for `homebrew-ext` refers to `support`. May implicitly rely on `homebrew-pkg` preceding it.
 

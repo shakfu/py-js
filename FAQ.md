@@ -10,31 +10,34 @@ This project is macOS x86_64 (intel) compatible currently.
 
 ### What about compatibility with Apple Silicon?
 
-There is an `M1` branch for the project under-development to provide this compatability and shift the build project's build system to cmake.
+The main branch has just converted to the lastest `max-base-sdk` and there will be ongoing work on converting the current build system to be Apple Silicon compatible and to provide options to users one how they want to build their python externals (native vs fat, full vs minimal, portable vs non-portable, etc.)
+
+There is also an `M1` branch for the project under-development to provide this compatability and shift the build project's build system to cmake. This mostly a learning subproject, but it is unlikely that that the current python `builder` system will be dropped for a pure cmake-based solution. 
 
 ### What about compatibility with Windows?
 
-There's no particular reason why this project doesn't work in windows except that I don't develop in windows any longer. Feel free to send pull requests to project though.
+There's no particular reason why this project doesn't work in windows except that I don't develop in windows any longer. Feel free to send pull requests to help make this happen.
+
 
 ### Does it only work with Homebrew python?
 
-It works by default with [Homebrew](https://brew.sh) installed python but it can also work with python compiled from source as well.
+It used to work by default with [Homebrew](https://brew.sh) installed python but current versions don't require Homebrew python, python3 installed from python.org works, and even Apple installed system python3 has been tested to work on the default build and some but not all of the other build variants.
 
-There is no instrinsic reason why it shouldn't work with other python3 installations on your system.
+Basically, there is no instrinsic reason why it shouldn't work with other python3 installations on your system.
 
 
 ## Implementation
 
 ### Does it embed python into the external or is the external connecting to the local python installation?
 
-The default build creates a lightweight external linked to your local homebrew python3; another variation embeds python3 into an external linked to python3 which resides in a Max package; and another variation embeds python into the external itself without an dependencies. There are other ways as well. The project [README](https://github.com/shakfu/py-js) gives an overview of the differences between the different approaches.
+The default build creates a lightweight external linked to your local python3; another variant embeds python3 into an external linked to python3 which resides in a Max package; and another embeds python into the external itself without an dependencies. There are other ways as well. The project [README](https://github.com/shakfu/py-js) gives an overview of differences between approaches.
 
 
 ## Logging
 
 ### Every time I open a patch there is a some debug information in the console. Should I be concerned?
 
-It looks like someone left @debug=on in this patch and it further may have cached some paths to related on the build system in the patch. You should be able to switch it off by setting @debug=off.
+It looks like someone left @debug=on in this patch and it further may have cached some paths to related on the build system in the patch. You should be able to switch it off by setting @debug=off. If they still remain, open the `.maxpat` in question in an editor (it's a JSON file) and remove the cached paths.
 
 
 ## Extensibility
