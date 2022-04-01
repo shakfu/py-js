@@ -283,6 +283,13 @@ class Builder:
         """Returns url to download product as a pathlib.Path instance."""
         return self.product.url
 
+    @property
+    def default_env_vars(self):
+        """Returns a dict of default environ settings"""
+        return {
+            'MACOSX_DEPLOYMENT_TARGET': self.project.mac_dep_target
+        }
+
     # -------------------------------------------------------------------------
     # Core functions
 
@@ -329,6 +336,35 @@ class Builder:
 
         with open("dump.json", "w", encoding="utf8") as f:
             json.dump(self.to_dict(), f, sort_keys=True, indent=4)
+
+    def configure(self, *options, **kwargs):
+        """generate ./configure instructions"""
+        _kwargs = {}
+        _options = [opt.replace('_', '-') for opt in options]
+        _env = {}
+
+        if self.default_env_vars:
+            _env.update(self.default_env_vars)
+
+        if '_env' in kwargs:
+            _env = kwargs.pop('_env', {})
+
+        if _env:
+            prefix = " ".join(f'{k}={v}' for k,v in _env.items())
+        else:
+            prefix = ""
+
+        for key in kwargs:
+            _key = key.replace('_','-')
+            _kwargs[_key] = kwargs[key]
+
+        self.cmd(
+            '{prefix} ./configure {options} {kwargs}'.format(
+                prefix=prefix,
+                options=" ".join(f'--{opt}' for opt in _options), 
+                kwargs=" ".join(f"--{k}='{v}'" for k,v in _kwargs.items())
+            )
+        )
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
@@ -484,6 +520,7 @@ class Bzip2Builder(Builder):
 
     def build(self):
         if not self.product_exists:
+            self.download()
             self.cmd.chdir(self.src_path)
             prefix = quote(str(self.prefix))
             self.cmd(
@@ -500,6 +537,7 @@ class OpensslBuilder(Builder):
 
     def build(self):
         if not self.product_exists:
+            self.download()
             self.cmd.chdir(self.src_path)
             prefix = quote(str(self.prefix))
             os.environ["MACOSX_DEPLOYMENT_TARGET"] = self.project.mac_dep_target
@@ -520,10 +558,16 @@ class OpensslBuilder(Builder):
 class XzBuilder(Builder):
     """Xz static library builder"""
 
+    @property
+    def product_exists(self):
+        return self.prefix.exists()
+
     def build(self):
         if not self.product_exists:
+            self.download()
             self.cmd.chdir(self.src_path)
             prefix = quote(str(self.prefix))
+            # self.configure('disable_shared', 'enable_static', prefix=prefix)
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
                 ./configure --disable-shared --enable-static --prefix='{prefix}'"""
@@ -749,14 +793,14 @@ class PythonSrcBuilder(PythonBuilder):
 
     # ------------------------------------------------------------------------
     # src-level operations
-    def configure(self):
-        """configures overrides to defaults from commandline"""
-        if self.settings.py_version:
-            self.product.version = self.settings.py_version
+    # def configure(self):
+    #     """configures overrides to defaults from commandline"""
+    #     if self.settings.py_version:
+    #         self.product.version = self.settings.py_version
 
     def install(self):
         """install and build compilation product"""
-        self.configure()
+        # self.configure()
         self.reset()
         self.download()
         self.pre_process()
@@ -860,6 +904,9 @@ class VanillaPythonBuilder(PythonSrcBuilder):
         #     dep.build()
 
         self.cmd.chdir(self.src_path)
+        # self.configure('without_doc_strings',
+        #     enable_framework=repr(self.project.build_lib),
+        # )
         self.cmd(
             f"""\
         ./configure MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \

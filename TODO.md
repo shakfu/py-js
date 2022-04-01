@@ -2,6 +2,8 @@
 
 ## Build System
 
+- [ ] make a function to genrate './configure --...' instructions.
+
 - [ ] external products which are built in full test runs should be stored in some organizaed way
 
   ```text

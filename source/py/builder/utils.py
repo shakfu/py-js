@@ -89,7 +89,9 @@ def runlog(target, requirement=2):
     successes = 0
 
     with open(logfile, 'w') as f:
-        t = tqdm(total=PYJS_TARGETS[target]['lines']) # Initialise
+        
+        t = tqdm(total=PYJS_TARGETS[target]['lines'], desc=target)
+
         for line in proc(['make', '-C', str(BASEDIR), target]):
             print(cleaned(line), file=f)
             if "** BUILD SUCCEEDED **" in line:
@@ -102,7 +104,7 @@ def runlog(target, requirement=2):
     else:
         msg = f"{MAGENTA}FAILURE{RESET}"
 
-    print(f" \u2514-> {msg}: {successes} out of {requirement} builds OK")
+    print(f"  \u2514-> {msg}: {successes} out of {requirement} builds OK")
     print()
     # print(f"{target:<15} -> {msg}: {successes} out of {requirement} builds OK")
 
