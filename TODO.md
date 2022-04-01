@@ -2,7 +2,7 @@
 
 ## Build System
 
-- [ ] add `-configuration` to Builder.xcodebuild function in `builder.core`
+- [ ] add `-configuration` and `-arch` to Builder.xcodebuild function in `builder.core`
 
 - [ ] update and include testing framework [max-test](https://github.com/Cycling74/max-test)
 
