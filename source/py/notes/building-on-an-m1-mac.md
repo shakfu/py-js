@@ -1,0 +1,34 @@
+# Building py-js python3 externals on an M1 Mac
+
+
+## Dev Notes
+
+- current main branch works after shift to `max-base-sdk`
+- build variation tested successfully so far: `framework-ext`
+
+### What I did
+
+- used `framework-ext`
+- Changed `configure` of `FrameworkPythonBuilder` to include
+ --with-universal-archs=universal2
+ but did **NOT**  include `--enable-universalsdk`
+
+- The Python.framework was consequently built as a native framework
+
+- After trying to run in xcode, there were some linking errors.
+
+- Had to change the `py-js.xcconfig` of `framework-ext` or the configuration in XCODE such that 
+
+```text
+
+// added $(PYJS_BUILD_LIB) to FRAMEWORK_SEARCH_PATH
+// Did this directly via xcode but I suppose you can 
+// add it to `py-js.xcconfig` as follows:
+
+FRAMEWORK_SEARCH_PATH = $(inherited) $(PYJS_BUILD_LIB)
+```
+
+- Changed the target architecture to `arm64`
+
+
+
