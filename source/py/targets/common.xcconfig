@@ -1,6 +1,8 @@
 #include "../../maxmspsdk.xcconfig"
 
+PY_VERSION = 3.9.12
 PY_SHORT_VERSION = 3.9
+PROJECT_FOLDER_NAME =
 
 // -------------------------------------------------------------------------
 // DON'T CHANGE BELOW HERE
@@ -38,3 +40,5 @@ OTHER_LDFLAGS = $(inherited) $(PY_LDFLAGS)
 // DSTROOT = $(SRCROOT)/../../../externals 
 // Uncomment below if you wish to build your externals in $(PYJS_BUILD_ROOT)/externals 
 // DSTROOT = $(PYJS_BUILD_ROOT)/externals
+// OR
+// DSTROOT = $(PYJS_BUILD_ROOT)/externals/$(PY_VERSION)/$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)

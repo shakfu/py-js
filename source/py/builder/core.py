@@ -399,6 +399,15 @@ class Builder:
         self, project: str, targets: List[str], *preprocessor_flags, **xcconfig_flags
     ):
         """python wrapper around command-line xcodebuild"""
+
+        # defaults
+        # xcconfig_flags['PY_VERSION'] = self.project.python.version
+        # xcconfig_flags['PROJECT_FOLDER_NAME'] = project
+        # xcconfig_flags['DSTROOT'] = (
+        #     '$(PYJS_BUILD_ROOT)/externals/$(PY_VERSION)/'
+        #     '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)/$CONFIGURATION'
+        # )
+
         x_flags = (
             " ".join([f"{k}={repr(v)}" for k, v in xcconfig_flags.items()])
             if xcconfig_flags
@@ -414,6 +423,7 @@ class Builder:
         for target in targets:
             self.cmd(
                 f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
+                 # " -configuration Deployment"
                 f" -target {repr(target)} {x_flags} {p_flags}"
             )
         # self.deploy(targets)
