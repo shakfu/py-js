@@ -2,6 +2,10 @@
 
 ## Build System
 
+- [ ] add `-configuration` to Builder.xcodebuild function in `builder.core`
+
+- [ ] update and include testing framework [max-test](https://github.com/Cycling74/max-test)
+
 - [ ] make a function to genrate './configure --...' instructions.
 
 - [ ] external products which are built in full test runs should be stored in some organizaed way

@@ -48,7 +48,7 @@ PYJS_TARGETS = {
     "shared-ext"      : dict(desc="portable pyjs externals (shared)",                    lines=14195),
     "static-ext"      : dict(desc="portable pyjs externals (static)",                    lines=14064),
     "framework-pkg"   : dict(desc="portable package with pyjs externals (framework)",    lines=14383),
-    "framework-ext"   : dict(desc="portable pyjs externals (framework)",                 lines=14396),
+    "framework-ext"   : dict(desc="portable pyjs externals (framework)",                 lines=18203),
     "relocatable-pkg" : dict(desc="portable package w/ more custom options (framework)", lines=414),
     "vanilla-ext"     : dict(desc="portable pyjs without minimization (framework)"     , lines=14353),  
     "vanilla-pkg"     : dict(desc="portable package without minimization (framework)",   lines=14340), 
