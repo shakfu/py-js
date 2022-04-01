@@ -383,13 +383,13 @@ duplo:
 
 clean: clean-externals clean-support clean-targets clean-build
 
-clean-targets: clean-local-sys  \
-			   clean-homebrew-pkg clean-homebrew-ext  \
-			   clean-framework-pkg clean-framework-ext \
-			   clean-shared-pkg clean-shared-ext \
-			   clean-static-pkg clean-static-ext \
-			   clean-relocatable-pkg
-
+@clean-targets: clean-local-sys  \
+			    clean-homebrew-pkg clean-homebrew-ext  \
+			    clean-framework-pkg clean-framework-ext \
+			    clean-shared-pkg clean-shared-ext \
+			    clean-static-pkg clean-static-ext \
+			    clean-relocatable-pkg
+ 
 clean-build-lib: clean-python-shared \
 				 clean-python-shared-ext \
 				 clean-python-shared-pkg \

@@ -15,9 +15,7 @@ from .config import (
     CYAN, GREEN, MAGENTA, RESET,
 )
 
-
 from .ext.tqdm import tqdm
-# from .ext.pbar import ProgressBar
 
 
 def cmd(shellcmd):
@@ -76,38 +74,10 @@ def display_help():
 
 
 def cleaned(line):
-    line = line.replace("\\[1;36m", "")
-    line = line.replace("\\[m", "")
+    line = line.replace("[1;36m", "")
+    line = line.replace("[m", "")
     line = line.replace(HOME, "~")
-    return line
-
-
-# def runlog(target, requirement=2):
-#     cmd(f'mkdir -p {LOGDIR}')
-#     logfile = f"{LOGDIR}/{target}.log"
-
-#     print()
-#     print(f"running 'make {target}'")
-
-#     successes = 0
-
-#     with open(logfile, 'w') as f:
-#         pb = ProgressBar(N_LINES[target], target)
-#         for line in proc(['make', '-C', str(BASEDIR), target]):
-#             print(cleaned(line), end="", file=f)
-#             if "** BUILD SUCCEEDED **" in line:
-#                 successes += 1
-#             pb.update()
-
-#     if successes == requirement:
-#         msg = f"{GREEN}SUCCESS{RESET}"
-#     else:
-#         msg = f"{MAGENTA}FAILURE{RESET}"
-
-#     # print()
-#     print(f"{target:<15} -> {msg}: {successes} out of {requirement} builds OK")
-#     # print()
-
+    return line.strip()
 
 def runlog(target, requirement=2):
     cmd(f'mkdir -p {LOGDIR}')
@@ -121,7 +91,7 @@ def runlog(target, requirement=2):
     with open(logfile, 'w') as f:
         t = tqdm(total=PYJS_TARGETS[target]['lines']) # Initialise
         for line in proc(['make', '-C', str(BASEDIR), target]):
-            print(cleaned(line), end="", file=f)
+            print(cleaned(line), file=f)
             if "** BUILD SUCCEEDED **" in line:
                 successes += 1
             t.update(1)
@@ -132,9 +102,9 @@ def runlog(target, requirement=2):
     else:
         msg = f"{MAGENTA}FAILURE{RESET}"
 
-    # print()
-    print(f"{target:<15} -> {msg}: {successes} out of {requirement} builds OK")
-    # print()
+    print(f" \u2514-> {msg}: {successes} out of {requirement} builds OK")
+    print()
+    # print(f"{target:<15} -> {msg}: {successes} out of {requirement} builds OK")
 
 
 def run_logged_tests(target=None, with_homebrew=True):
