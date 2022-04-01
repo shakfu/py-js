@@ -5,15 +5,9 @@
 
 ### Build System (builder)
 
-#### Bugs
-
-- [x] fixed static builds to work with `.build_pyjs`
-
-- [x] `_hashlib` and `_ssl` are now built for `static-ext` build.
-
-- [x] fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
-
 #### Enhancements
+
+- [x] build system is now based on `max-sdk-base` with all tests passing.
 
 - [x] can build dependencies individually now from make
 
@@ -34,6 +28,15 @@
 - [x] inject commandline parameters in python build system to enable more granular downstream decisions.
 
 - [x] add step in bundle-creation to prepopulate site-packages with list of packages
+
+#### Bugs
+
+- [x] fixed static builds to work with `.build_pyjs`
+
+- [x] `_hashlib` and `_ssl` are now built for `static-ext` build.
+
+- [x] fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
+
 
 ### Core Features
 

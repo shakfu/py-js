@@ -30,7 +30,7 @@ A significant time of this project has been devoted to developing and refining d
 
 Please note that all of the externals currently only work on MacOS x86_64 and were written when the [max-sdk](https://github.com/Cycling74/max-sdk) did yet fully transition to using cmake.
 
-There's a branch, `m1`, which contains ongoing efforts to obtain Apple Silicon compatibility for the current python3 externals and also incorporate the new cmake-based build infrastructure (released as part of the Mac 8.2 SDK update) into the build system.
+The main branch has now switched to using `max-sdk-base`, but Apple Silicon compatibility is still under development. There's also an experimental `m1` branch which contains ongoing efforts to obtain Apple Silicon compatibility for the current python3 externals and also incorporate the new cmake-based build infrastructure (released as part of the Mac 8.2 SDK update) into the build system.
 
 For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
