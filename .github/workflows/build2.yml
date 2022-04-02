@@ -5,42 +5,43 @@ on:
 
 jobs:
   build:
+    name: build py-js variants on macos-10.15 using python ${{ matrix.python-version }}
     runs-on: macos-10.15
     strategy:
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10']
-    name: build py-js variants on macos-10.15 using python ${{ matrix.python-version }} 
 
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'recursive'
-        fetch-depth: '0'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+          fetch-depth: '0'
 
-    - name: setup python
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Display Python version
-      run: python3 --version
+      - name: Display Python version
+        run: python3 --version
 
-    - name: build_default
-      run: make
+      - name: build_default
+        run: make
 
-    - name: build_shared_pkg
-      run: make shared-pkg
+      - name: build_shared_pkg
+        run: make shared-pkg
 
-    - name: build_shared_ext
-      run: make shared-ext
+      - name: build_shared_ext
+        run: make shared-ext
 
-    - name: build_static_ext
-      run: make static-ext
+      - name: build_static_ext
+        run: make static-ext
 
-    - name: build_framework_pkg
-      run: make framework-pkg
+      - name: build_framework_pkg
+        run: make framework-pkg
 
-    - name: build_framework_ext
-      run: make framework-ext
+      - name: build_framework_ext
+        run: make framework-ext
 
-    - name: build_relocatable_pkg
-      run:  make relocatable-pkg
+      - name: build_relocatable_pkg
+        run:  make relocatable-pkg
