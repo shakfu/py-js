@@ -21,6 +21,7 @@ Builder
                 SharedPythonForExtBuilder
                 SharedPythonForPkgBuilder
             StaticPythonBuilder
+                StaticLightPythonBuilder
             VanillaPythonBuilder
                 VanillaPythonForExtBuilder
                 VanillaPythonForPkgBuilder
@@ -104,7 +105,7 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 # ----------------------------------------------------------------------------
 # Utility Functions
 
-quote = lambda s: s.replace(" ", "\\ ")
+quote = lambda p: repr(str(p))
 
 # ----------------------------------------------------------------------------
 # Utility Classes
@@ -185,7 +186,6 @@ class Product:
         if self.url:
             return self.url.name
         return f"{self.name_version}.tgz"
-
 
     @property
     def dylib(self) -> str:
@@ -345,9 +345,6 @@ class Builder:
 
         if self.default_env_vars:
             _env.update(self.default_env_vars)
-
-        if '_env' in kwargs:
-            _env = kwargs.pop('_env', {})
 
         if _env:
             prefix = " ".join(f'{k}={v}' for k,v in _env.items())
@@ -576,11 +573,10 @@ class XzBuilder(Builder):
         if not self.product_exists:
             self.download()
             self.cmd.chdir(self.src_path)
-            prefix = quote(str(self.prefix))
-            # self.configure('disable_shared', 'enable_static', prefix=prefix)
-            self.cmd(
-                f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-                ./configure --disable-shared --enable-static --prefix='{prefix}'"""
+            self.configure(
+                'disable_shared', 
+                'enable_static', 
+                prefix=quote(str(self.prefix)),
             )
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
@@ -897,32 +893,12 @@ class VanillaPythonBuilder(PythonSrcBuilder):
         """clean everything."""
         self.clean_python_pyc(self.prefix)
         self.clean_python_tests(self.python_lib)
-        # self.clean_python_site_packages()
-
-        # for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
-        #     self.cmd.remove(i)
-
-        # self.cmd.remove(self.prefix_lib / "pkgconfig")
-        # self.cmd.remove(self.prefix / "share")
-
-        # self.remove_packages()
-        # self.remove_extensions()
-        # self.remove_binaries()
 
     def build(self):
-        # for dep in self.depends_on:
-        #     dep.build()
-
         self.cmd.chdir(self.src_path)
-        # self.configure('without_doc_strings',
-        #     enable_framework=repr(self.project.build_lib),
-        # )
-        self.cmd(
-            f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
-            --enable-framework='{self.project.build_lib}' \
-            --without-doc-strings
-        """
+        self.configure(
+            'without_doc_strings',
+            enable_framework=quote(self.project.build_lib),
         )
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
@@ -947,19 +923,18 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         for dep in self.depends_on:
             dep.build()
 
+        
         self.cmd.chdir(self.src_path)
-        self.cmd(
-            f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
-            --enable-framework='{self.project.build_lib}' \
-            --with-openssl='{self.project.build_lib / "openssl"}' \
-            --without-doc-strings \
-            --enable-ipv6 \
-            --without-ensurepip \
-            --with-lto \
-            --enable-optimizations
-        """
+        self.configure(
+            'enable_ipv6',
+            'enable_optimizations',
+            'with_lto',
+            'without_doc_strings',
+            'without_ensurepip',
+            enable_framework=quote(self.project.build_lib),
+            with_openssl=quote(self.project.build_lib / 'openssl')
         )
+
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
 
@@ -984,21 +959,19 @@ class SharedPythonBuilder(PythonSrcBuilder):
         for dep in self.depends_on:
             dep.build()
 
+        quote = lambda p: repr(str(p))
         self.cmd.chdir(self.src_path)
-        self.cmd(
-            f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-            --prefix='{self.prefix}' \
-            --enable-shared \
-            --with-openssl='{self.project.build_lib / "openssl"}' \
-            --without-doc-strings \
-            --enable-ipv6 \
-            --without-ensurepip \
-            --with-lto \
-            --enable-optimizations \
-            ac_cv_lib_intl_textdomain=no
-        """
+        self.configure(
+            'enable_ipv6',
+            'enable_optimizations',
+            'enable_shared',
+            'with_lto',
+            'without_doc_strings',
+            'without_ensurepip',
+            prefix=quote(self.prefix),
+            with_openssl=quote(self.project.build_lib / 'openssl')
         )
+
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
 
@@ -1016,25 +989,42 @@ class StaticPythonBuilder(PythonSrcBuilder):
         # for dep in self.depends_on:
         #     dep.build()
 
+        quote = lambda p: repr(str(p))
         self.cmd.chdir(self.src_path)
-        self.cmd(
-            f"""\
-        ./configure MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-            --prefix='{self.prefix}' \
-            --with-openssl='{self.project.build_lib / "openssl"}' \
-            --without-doc-strings \
-            --enable-ipv6 \
-            --without-ensurepip \
-            --with-lto \
-            --enable-optimizations
-        """
+
+        self.configure(
+            'enable_ipv6',
+            'enable_optimizations',
+            'with_lto',
+            'without_doc_strings',
+            'without_ensurepip',
+            prefix=quote(self.prefix),
+            with_openssl=quote(self.project.build_lib / 'openssl')
         )
+
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.root)
 
     def remove_extensions(self):
         """remove extensions: not implemented"""
 
+
+
+class StaticLightPythonBuilder(StaticPythonBuilder):
+    """builds python in a static format."""
+
+    def build(self):
+        quote = lambda p: repr(str(p))
+        self.cmd.chdir(self.src_path)
+
+        self.configure(self,
+            'enable_ipv6',
+            'enable_optimizations',
+            'with_lto',
+            'without_doc_strings',
+            'without_ensurepip',
+            prefix=quote(self.prefix),
+        )
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (SPECIALIZED)
