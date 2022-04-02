@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    name: Minimal workflow to build default external
+    name: Minimal workflow to build or test the building of build variants
     runs-on: macos-10.15
 
     steps:
@@ -16,3 +16,21 @@ jobs:
 
     - name: build_default
       run: make
+
+    - name: build_shared_pkg
+      run: make shared-pkg
+
+    - name: build_shared_ext
+      run: make shared-ext
+
+    - name: build_static_ext
+      run: make static-ext
+
+    - name: build_framework_pkg
+      run: make framework-pkg
+
+    - name: build_framework_ext
+      run: make framework-ext
+
+    - name: build_relocatable_pkg
+      run:  make relocatable-pkg
