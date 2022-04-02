@@ -150,7 +150,7 @@ def fix_python_dylib_for_ext_resources(self):
     )
     self.cmd.chdir(self.project.root)
 
-# VanillaPythonForPkgBuilder
+# (9) VanillaPythonForPkgBuilder: framework-pkg
 def fix_python_dylib_for_pkg(self):
     """change dylib ref to point to loader in package build format"""
     self.cmd.chdir(self.prefix)
