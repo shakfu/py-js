@@ -71,6 +71,7 @@ def display_help():
 
     for t in PYTHON_TARGETS:
         print(f"{CYAN}make{RESET} {GREEN}{t:<20}{RESET} : {PYTHON_TARGETS[t]}")
+    print()
 
 
 def cleaned(line):

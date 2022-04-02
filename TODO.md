@@ -2,11 +2,12 @@
 
 ## Build System
 
+
 - [ ] add `-configuration` and `-arch` to Builder.xcodebuild function in `builder.core`
 
 - [ ] update and include testing framework [max-test](https://github.com/Cycling74/max-test)
 
-- [ ] make a function to genrate './configure --...' instructions.
+- [ ] make a function to generate './configure --...' instructions.
 
 - [ ] external products which are built in full test runs should be stored in some organizaed way
 
@@ -18,6 +19,8 @@
         x86_64/
           3.9.12/
             shared-pkg/
+              Development
+              Deployment
             shared-ext/
           3.10.3/
         arm64/
@@ -70,7 +73,9 @@
 
 - [ ] add more api wrappers. (PAUSED PENDING JUPYTER WORK)
 
-### Attributes & Infrastructure
+### Documentation, Attributes & Infrastructure
+
+- [ ] split `.maxhelp` files into tabs for more information.
 
 - [ ] add script to install python packages and then remove the cache and `_vendor` libraries of the installer which are large.
 
