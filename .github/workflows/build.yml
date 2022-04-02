@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    name: Minimal workflow to build or test the building of build variants
+    name: macos-10.15 across variants
     runs-on: macos-10.15
 
     steps:
