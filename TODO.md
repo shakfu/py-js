@@ -2,12 +2,15 @@
 
 ## Build System
 
+- [ ] creating smallest possible python3 external. This most likely entails:
+  
+  - removing openssl as a dependency
+  - shrinking the python lib further
+  - setting `-configuration` as `Deployment` 
 
 - [ ] add `-configuration` and `-arch` to Builder.xcodebuild function in `builder.core`
 
 - [ ] update and include testing framework [max-test](https://github.com/Cycling74/max-test)
-
-- [ ] make a function to generate './configure --...' instructions.
 
 - [ ] external products which are built in full test runs should be stored in some organizaed way
 

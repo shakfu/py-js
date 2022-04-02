@@ -149,3 +149,49 @@ def fix_python_dylib_for_ext_resources(self):
         self.product.dylib,
     )
     self.cmd.chdir(self.project.root)
+
+# VanillaPythonForPkgBuilder
+def fix_python_dylib_for_pkg(self):
+    """change dylib ref to point to loader in package build format"""
+    self.cmd.chdir(self.prefix)
+    dylib_path = self.prefix / "Python"
+    assert dylib_path.exists()
+    self.cmd.chmod(dylib_path)
+    # both of these are equivalent (and both don't work!)
+    self.install_name_tool_id(
+        "@loader_path/../../../../support" / self.project.python.ldlibrary,
+        dylib_path,
+    )
+
+    self.cmd.chdir(self.project.root)
+
+def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
+    """redirect ref of pythonX to libpythonX.Y.dylib"""
+    self.cmd.chdir(self.prefix_bin)
+    exe = self.product.name_ver
+    d = DependencyManager(exe)
+    dirs_to_change = d.analyze_executable()
+    if dirs_to_change:
+        dir_to_change = dirs_to_change[0]
+        self.install_name_tool_change(
+            dir_to_change, "@executable_path/../Python", exe
+        )
+    self.cmd.chdir(self.project.root)
+
+def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
+    """change ref on executable to point to relative dylib"""
+    parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
+    self.cmd.chdir(parent_dir)
+    executable = parent_dir / "Python"
+    result = subprocess.check_output(["otool", "-L", executable])
+    entries = [line.decode("utf-8").strip() for line in result.splitlines()]
+    for entry in entries:
+        match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
+        if match:
+            path = match.group(1)
+            # homebrew files are installed in /usr/local/Cellar
+            if any(path.startswith(p) for p in PATTERNS_TO_FIX):
+                self.install_name_tool_change(
+                    path, "@executable_path/../../../../Python", executable
+                )
+
