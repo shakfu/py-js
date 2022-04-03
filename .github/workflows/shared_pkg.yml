@@ -47,5 +47,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ github.event.repository.name }}-${{ jobs.build.name }}-${{ steps.short-sha.outputs.sha }}
+        name: ${{ github.event.repository.name }}-${{ github.job.name }}-${{ steps.short-sha.outputs.sha }}
         path: ${{ github.event.repository.name }}
