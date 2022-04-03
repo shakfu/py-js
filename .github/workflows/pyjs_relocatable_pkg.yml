@@ -38,6 +38,14 @@ jobs:
           source/py/targets/build/lib/xz
         key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
+    - name: setup python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: display python version
+      run: python3 --version
+
     - name: Build externals
       run: make ${{ env.variant }}
 
