@@ -1544,7 +1544,7 @@ class HomebrewBuilder(PyJsBuilder):
         # self.reset_prefix()
         self.remove_externals()
         self.xcodebuild("homebrew-sys", targets=["py", "pyjs"])
-        self.install()
+        # self.install()
 
     def install_homebrew_pkg(self):
         """build externals into package use local homebrew python (portable)"""
@@ -1553,7 +1553,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.fix_python_dylib_for_pkg()
         self.fix_python_exec()
         self.xcodebuild("homebrew-pkg", targets=["py", "pyjs"])
-        self.install()
+        # self.install()
 
     def install_homebrew_ext(self):
         """build external into self-contained external using local homebrew python (portable)"""
@@ -1565,7 +1565,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.cp_python_to_ext_resources(self.project.pyjs_external)
         self.xcodebuild("homebrew-ext", targets=["py", "pyjs"])
         self.reset_prefix()
-        self.install()
+        # self.install()
 
 
 class LocalSystemBuilder(PyJsBuilder):
