@@ -24,7 +24,7 @@ jobs:
           cache-name: pyjs-cache-1
         with:
           path: source/py/targets/build/downloads
-          key: ${{ ${{ env.cache-name }}-hashFiles('source/py/resources/pyjs-dependencies.txt') }}
+          key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
       - name: setup python
         uses: actions/setup-python@v3
