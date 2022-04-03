@@ -1,4 +1,4 @@
-name: Build2
+name: test_macos_x86_python
 
 on:
   workflow_dispatch:
