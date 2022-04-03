@@ -39,30 +39,30 @@ jobs:
         run: python3 --version
 
       - name: build_default
-        run: make
+        run: make catalog-default
 
       - name: build_homebrew_ext
         continue-on-error: true
-        run: make homebrew-ext
+        run: make catalog-homebrew-ext
 
       - name: build_homebrew_pkg
         continue-on-error: true
-        run: make homebrew-pkg
+        run: make catalog-homebrew-pkg
 
       - name: build_shared_pkg
-        run: make shared-pkg
+        run: make catalog-shared-pkg
 
       - name: build_shared_ext
-        run: make shared-ext
+        run: make catalog-shared-ext
 
       - name: build_static_ext
-        run: make static-ext
+        run: make catalog-static-ext
 
       - name: build_framework_pkg
-        run: make framework-pkg
+        run: make catalog-framework-pkg
 
       - name: build_framework_ext
-        run: make framework-ext
+        run: make fcatalog-ramework-ext
 
       - name: build_relocatable_pkg
-        run:  make relocatable-pkg
+        run:  make catalog-relocatable-pkg

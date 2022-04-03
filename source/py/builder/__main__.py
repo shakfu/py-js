@@ -49,8 +49,8 @@ common_options = option_group(
     option("-z", 
             "--ziplib", action="store_true", help="zip python library"),
     option("--dump", action="store_true", help="dump project and product vars"),
+    option("--catalog", action="store_true", help="store catalog of externals in build/externals"),
 )
-
 
 class Application(Commander):
     """builder: builds python and py-js max externals from source or other methods."""
@@ -139,21 +139,21 @@ class Application(Commander):
 
     def do_pyjs(self, args):
         """build pyjs externals"""
-        builder_factory('pyjs_local_sys').build()
 
     @common_options
     def do_pyjs_local_sys(self, args):
         """build non-portable pyjs externals"""
-        builder_factory('pyjs_local_sys').build()
-        # self.ordered_dispatch('pyjs_local_sys', args)
-
+        builder_factory('pyjs_local_sys', **vars(args)).build()
+ 
+    @common_options
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
-        builder_factory('pyjs_homebrew_pkg').install_homebrew_pkg()
+        builder_factory('pyjs_homebrew_pkg', **vars(args)).install_homebrew_pkg()
 
+    @common_options
     def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
-        builder_factory('pyjs_homebrew_ext').install_homebrew_ext()
+        builder_factory('pyjs_homebrew_ext', **vars(args)).install_homebrew_ext()
 
     @common_options
     def do_pyjs_static_pkg(self, args):

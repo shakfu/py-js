@@ -144,6 +144,7 @@ def pyjs_builder_factory(name, **settings):
 # GENERIC BUILDERS
 
 def builder_factory(name, **settings):
+    print(settings)
     builder = None
     try:
         builder = pyjs_builder_factory(name, **settings)
