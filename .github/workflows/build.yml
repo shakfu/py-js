@@ -5,8 +5,8 @@ on:
 
 jobs:
   build:
-    name: macos-latest across variants
-    runs-on: macos-latest
+    name: variants on macos-11
+    runs-on: macos-11
     # name: macos-10.15 across variants
     # runs-on: macos-10.15
 
