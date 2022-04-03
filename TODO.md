@@ -2,6 +2,23 @@
 
 ## Build System
 
+
+- [ ] Github Actions: Change workflows to
+
+
+```text
+
+<name>: <output-artifacts>
+
+test_x86: logs
+
+test_arm: logs
+
+test_matrix: logs
+
+
+```
+
 - [ ] creating smallest possible python3 external. This most likely entails:
   
   - removing openssl as a dependency
