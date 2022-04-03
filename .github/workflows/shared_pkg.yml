@@ -5,7 +5,7 @@ on:
 
 env:
   variant: shared-pkg
-  artifact-label: pkg-darwin-x86-py3.9
+  artifact-label: darwin-x86-py3.9
 
 jobs:
   build:
@@ -28,7 +28,11 @@ jobs:
       env:
         cache-name: pyjs-cache-1
       with:
-        path: source/py/targets/build/downloads
+        path: |
+          source/py/targets/build/downloads
+          source/py/targets/build/lib/bzip2
+          source/py/targets/build/lib/openssl
+          source/py/targets/build/lib/xz
         key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
     - name: Build externals

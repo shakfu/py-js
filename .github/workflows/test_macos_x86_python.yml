@@ -23,7 +23,11 @@ jobs:
         env:
           cache-name: pyjs-cache-1
         with:
-          path: source/py/targets/build/downloads
+          path: |
+            source/py/targets/build/downloads
+            source/py/targets/build/lib/bzip2
+            source/py/targets/build/lib/openssl
+            source/py/targets/build/lib/xz
           key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
       - name: setup python
