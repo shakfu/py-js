@@ -397,10 +397,11 @@ class Builder:
     ):
         """python wrapper around command-line xcodebuild"""
 
-            xcconfig_flags['PY_VERSION'] = self.project.python.version
-            xcconfig_flags['PY_SHORT_VERSION'] = self.project.python.version_short
-            xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
-            xcconfig_flags['PROJECT_FOLDER_NAME'] = project
+        # defaults
+        xcconfig_flags['PY_VERSION'] = self.project.python.version
+        xcconfig_flags['PY_SHORT_VERSION'] = self.project.python.version_short
+        xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
+        xcconfig_flags['PROJECT_FOLDER_NAME'] = project
 
         # TODO: this will break relocatable-pkg
         # if self.settings.catalog:
