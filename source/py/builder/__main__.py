@@ -194,7 +194,7 @@ class Application(Commander):
     def do_pyjs_relocatable_pkg(self, args):
         """build portable pyjs package (framework)"""
         process_args_for_relocatable_python(args)
-        builder_factory('pyjs_relocatable_pkg').build()
+        builder_factory('pyjs_relocatable_pkg', **vars(args)).build()
 
     @common_options
     def do_pyjs_vanilla_ext(self, args):
