@@ -397,13 +397,18 @@ class Builder:
     ):
         """python wrapper around command-line xcodebuild"""
 
-        if self.settings.catalog:
             xcconfig_flags['PY_VERSION'] = self.project.python.version
+            xcconfig_flags['PY_SHORT_VERSION'] = self.project.python.version_short
+            xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
             xcconfig_flags['PROJECT_FOLDER_NAME'] = project
-            xcconfig_flags['DSTROOT'] = (
-                '$(SRCROOT)/../../../../externals/$(PY_VERSION)/'
-                '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)'
-            )
+
+        # TODO: this will break relocatable-pkg
+        # if self.settings.catalog:
+
+            # xcconfig_flags['DSTROOT'] = (
+            #     '$(SRCROOT)/../../../../externals/$(PY_VERSION)/'
+            #     '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)'
+            # )
 
             # xcconfig_flags['DSTROOT'] = (
             #     '$(PYJS_BUILD_ROOT)/externals/$(PY_VERSION)/'
@@ -1581,8 +1586,6 @@ class LocalSystemBuilder(PyJsBuilder):
 
         flags = dict(
             PREFIX=str(self.project.python.prefix),
-            VERSION=str(self.project.python.version_short),
-            ABIFLAGS=str(self.project.python.abiflags),
             LIBS=str(self.project.python.libs),
         )
 
@@ -1606,10 +1609,6 @@ class StaticExtBuilder(PyJsBuilder):
         """builds externals from statically built python"""
 
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("static-ext", targets=["py", "pyjs"], **flags)
 
 
@@ -1629,10 +1628,6 @@ class SharedExtBuilder(PyJsBuilder):
         """builds externals from shared python"""
 
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("shared-ext", targets=["py", "pyjs"], **flags)
 
 
@@ -1656,10 +1651,6 @@ class SharedPkgBuilder(PyJsBuilder):
         self.cmd(f"cp -af '{src}' '{dst}'")
 
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("shared-pkg", targets=["py", "pyjs"], **flags)
 
 
@@ -1682,10 +1673,6 @@ class FrameworkExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from shared python"""
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("framework-ext", targets=["py", "pyjs"], **flags)
             # preprocessor_flags=["PY_FWK_EXT"])
 
@@ -1713,10 +1700,6 @@ class FrameworkPkgBuilder(PyJsBuilder):
         self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("framework-pkg", targets=["py", "pyjs"], **flags)
 
 
@@ -1813,10 +1796,6 @@ class RelocatablePkgBuilder(PyJsBuilder):
         """builds externals from framework python"""
         self.pre_process()
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"], **flags)
 
 
@@ -1826,10 +1805,6 @@ class VanillaExtBuilder(FrameworkExtBuilder):
     def build(self):
         """builds externals"""
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("vanilla-ext", targets=["py", "pyjs"], **flags)
 
 
@@ -1843,8 +1818,4 @@ class VanillaPkgBuilder(FrameworkPkgBuilder):
         self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
-            flags = dict(
-                VERSION=str(self.project.python.version_short),
-                ABIFLAGS=str(self.project.python.abiflags),
-            )
             self.xcodebuild("vanilla-pkg", targets=["py", "pyjs"], **flags)
