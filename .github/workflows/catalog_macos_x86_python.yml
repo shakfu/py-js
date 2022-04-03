@@ -64,9 +64,6 @@ jobs:
       - name: build_framework_ext
         run: make catalog-framework-ext
 
-      - name: build_relocatable_pkg
-        run:  make catalog-relocatable-pkg
-
       - name: package externals
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
