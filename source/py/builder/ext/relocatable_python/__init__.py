@@ -10,7 +10,7 @@ from sysconfig import get_config_var
 
 def get_default_py_version():
     py_version = get_config_var('py_version_short')
-    latest = ["3.10.4", "3.9.12", "3.7.9", "3.8.9"]
+    latest = ["3.7.9", "3.8.9", "3.9.12", "3.10.4"]
     for ver in latest:
         if ver.startswith(py_version):
             return ver

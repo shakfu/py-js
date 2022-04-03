@@ -1,15 +1,18 @@
-name: pyjs-shared-pkg
+name: pyjs-framework-ext
 
 on:
   workflow_dispatch:
 
 env:
-  variant: shared-pkg
-  artifact-label: darwin-x86-py3.9
+  variant: framework-ext
+  arch: darwin-x86
 
 jobs:
   build:
     runs-on: macos-10.15
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
     - uses: actions/checkout@v2
@@ -63,5 +66,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ github.event.repository.name }}-${{ env.variant }}-${{ env.artifact-label }}-${{ steps.short-sha.outputs.sha }}
+        name: ${{ github.event.repository.name }}-${{ env.variant }}-${{ env.arch }}-${{ matrix.python-version }}-${{ steps.short-sha.outputs.sha }}
         path: ${{ github.event.repository.name }}
