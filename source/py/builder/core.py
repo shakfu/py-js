@@ -1610,7 +1610,7 @@ class StaticExtBuilder(PyJsBuilder):
         """builds externals from statically built python"""
 
         if self.product_exists:
-            self.xcodebuild("static-ext", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("static-ext", targets=["py", "pyjs"])
 
 
 class SharedExtBuilder(PyJsBuilder):
@@ -1629,7 +1629,7 @@ class SharedExtBuilder(PyJsBuilder):
         """builds externals from shared python"""
 
         if self.product_exists:
-            self.xcodebuild("shared-ext", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("shared-ext", targets=["py", "pyjs"])
 
 
 class SharedPkgBuilder(PyJsBuilder):
@@ -1652,7 +1652,7 @@ class SharedPkgBuilder(PyJsBuilder):
         self.cmd(f"cp -af '{src}' '{dst}'")
 
         if self.product_exists:
-            self.xcodebuild("shared-pkg", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("shared-pkg", targets=["py", "pyjs"])
 
 
 class FrameworkExtBuilder(PyJsBuilder):
@@ -1674,7 +1674,7 @@ class FrameworkExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from shared python"""
         if self.product_exists:
-            self.xcodebuild("framework-ext", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("framework-ext", targets=["py", "pyjs"])
             # preprocessor_flags=["PY_FWK_EXT"])
 
 
@@ -1701,7 +1701,7 @@ class FrameworkPkgBuilder(PyJsBuilder):
         self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
-            self.xcodebuild("framework-pkg", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("framework-pkg", targets=["py", "pyjs"])
 
 
 class RelocatablePkgBuilder(PyJsBuilder):
@@ -1797,7 +1797,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
         """builds externals from framework python"""
         self.pre_process()
         if self.product_exists:
-            self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"])
 
 
 class VanillaExtBuilder(FrameworkExtBuilder):
@@ -1806,7 +1806,7 @@ class VanillaExtBuilder(FrameworkExtBuilder):
     def build(self):
         """builds externals"""
         if self.product_exists:
-            self.xcodebuild("vanilla-ext", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("vanilla-ext", targets=["py", "pyjs"])
 
 
 class VanillaPkgBuilder(FrameworkPkgBuilder):
@@ -1819,4 +1819,4 @@ class VanillaPkgBuilder(FrameworkPkgBuilder):
         self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
-            self.xcodebuild("vanilla-pkg", targets=["py", "pyjs"], **flags)
+            self.xcodebuild("vanilla-pkg", targets=["py", "pyjs"])

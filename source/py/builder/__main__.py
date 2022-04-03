@@ -49,7 +49,6 @@ common_options = option_group(
     option("-z", 
             "--ziplib", action="store_true", help="zip python library"),
     option("--dump", action="store_true", help="dump project and product vars"),
-    option("--catalog", action="store_true", help="store catalog of externals in build/externals"),
 )
 
 class Application(Commander):
