@@ -401,9 +401,14 @@ class Builder:
             xcconfig_flags['PY_VERSION'] = self.project.python.version
             xcconfig_flags['PROJECT_FOLDER_NAME'] = project
             xcconfig_flags['DSTROOT'] = (
-                '$(PYJS_BUILD_ROOT)/externals/$(PY_VERSION)/'
-                '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)/$CONFIGURATION'
+                '$(SRCROOT)/../../../externals/$(PY_VERSION)/'
+                '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)'
             )
+
+            # xcconfig_flags['DSTROOT'] = (
+            #     '$(PYJS_BUILD_ROOT)/externals/$(PY_VERSION)/'
+            #     '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)/$CONFIGURATION'
+            # )
 
         x_flags = (
             " ".join([f"{k}={repr(v)}" for k, v in xcconfig_flags.items()])
