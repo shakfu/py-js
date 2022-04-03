@@ -41,14 +41,6 @@ jobs:
       - name: build_default
         run: make catalog-default
 
-      - name: build_homebrew_ext
-        continue-on-error: true
-        run: make catalog-homebrew-ext
-
-      - name: build_homebrew_pkg
-        continue-on-error: true
-        run: make catalog-homebrew-pkg
-
       - name: build_shared_pkg
         run: make catalog-shared-pkg
 

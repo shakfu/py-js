@@ -401,7 +401,7 @@ class Builder:
             xcconfig_flags['PY_VERSION'] = self.project.python.version
             xcconfig_flags['PROJECT_FOLDER_NAME'] = project
             xcconfig_flags['DSTROOT'] = (
-                '$(SRCROOT)/../../../externals/$(PY_VERSION)/'
+                '$(SRCROOT)/../../../../externals/$(PY_VERSION)/'
                 '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)'
             )
 
