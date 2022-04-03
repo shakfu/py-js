@@ -1,4 +1,4 @@
-name: Shared-PKG
+name: pyjs-shared-pkg
 
 on:
   workflow_dispatch:
