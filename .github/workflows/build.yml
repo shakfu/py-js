@@ -5,8 +5,10 @@ on:
 
 jobs:
   build:
-    name: macos-10.15 across variants
-    runs-on: macos-10.15
+    name: macos-latest across variants
+    runs-on: macos-latest
+    # name: macos-10.15 across variants
+    # runs-on: macos-10.15
 
     steps:
     - uses: actions/checkout@v2
