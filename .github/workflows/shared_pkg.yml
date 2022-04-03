@@ -3,9 +3,12 @@ name: Shared-PKG
 on:
   workflow_dispatch:
 
+env:
+  variant: shared-pkg
+  artifact-label: pkg-darwin-x86-py3.9
+
 jobs:
   build:
-    name: shared-pkg-macos-10.15
     runs-on: macos-10.15
 
     steps:
@@ -19,10 +22,19 @@ jobs:
       with:
         length: 7
 
-    - name: build_shared_pkg
-      run: make shared-pkg
+    - name: cache downloads
+      id: cache-downloads
+      uses: actions/cache@v3
+      env:
+        cache-name: pyjs-cache-1
+      with:
+        path: source/py/targets/build/downloads
+        key: ${{ ${{ env.cache-name }}-hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
-    - name: package_external
+    - name: Build externals
+      run: make ${{ variant }}
+
+    - name: Package externals
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_SHA: ${{ github.sha }}
@@ -47,5 +59,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ github.event.repository.name }}-${{ github.job.name }}-${{ steps.short-sha.outputs.sha }}
+        name: ${{ github.event.repository.name }}-${{ variant }}-${{ artifact-label }}-${{ steps.short-sha.outputs.sha }}
         path: ${{ github.event.repository.name }}

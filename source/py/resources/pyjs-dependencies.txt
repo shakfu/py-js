@@ -1,0 +1,9 @@
+# place common python3 dependencies here
+# used for actions/cache@v3 in github workflows
+# this file is hashed and used as a key 
+# if anything changes in this file, included comments,
+# the cache will be reset
+bzip2-1.0.8.tar.gz
+openssl-1.1.1n.tar.gz
+xz-5.2.5.tar.gz
+
