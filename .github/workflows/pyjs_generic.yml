@@ -15,8 +15,6 @@ on:
           - shared-pkg
           - static-ext
           - relocatable-pkg
-          - vanilla-ext
-          - vanilla-pkg
       py_version:
         type: choice
         description: Please select a python version

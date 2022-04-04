@@ -51,8 +51,6 @@ PYJS_TARGETS = {
     "framework-pkg"   : dict(desc="portable package with pyjs externals (framework)",    lines=14383),
     "framework-ext"   : dict(desc="portable pyjs externals (framework)",                 lines=18203),
     "relocatable-pkg" : dict(desc="portable package w/ more custom options (framework)", lines=414),
-    "vanilla-ext"     : dict(desc="portable pyjs without minimization (framework)"     , lines=14353),  
-    "vanilla-pkg"     : dict(desc="portable package without minimization (framework)",   lines=14340), 
     # "pymx"          : dict(desc="non-portable alternative python3 externals (min-lib)", lines=210),
 }
 
@@ -65,7 +63,6 @@ PYTHON_TARGETS = {
     "python-framework-ext"  : "minimal framework python build for externals",
     "python-framework-pkg"  : "minimal framework python build for packages",
     "python-relocatable"    : "custom relocatable python framework build",
-    "python-vanilla"        : "regular framework python",
 }
 
 

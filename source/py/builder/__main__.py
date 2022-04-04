@@ -117,21 +117,6 @@ class Application(Commander):
         """download relocatable framework python"""
         process_args_for_relocatable_python(args)
 
-    @common_options
-    def do_python_vanilla(self, args):
-        """build vanilla python"""
-        self.ordered_dispatch('python_vanilla', args)
-
-    @common_options
-    def do_python_vanilla_ext(self, args):
-        """build vanilla python to embed external"""
-        self.ordered_dispatch('python_vanilla_ext', args)
-
-    @common_options
-    def do_python_vanilla_pkg(self, args):
-        """build vanilla python to embed in a package"""
-        self.ordered_dispatch('python_vanilla_pkg', args)
-
 
 # ----------------------------------------------------------------------------
 # py-js builder methods
@@ -195,16 +180,6 @@ class Application(Commander):
         """build portable pyjs package (framework)"""
         process_args_for_relocatable_python(args)
         builder_factory('pyjs_relocatable_pkg', **vars(args)).build()
-
-    @common_options
-    def do_pyjs_vanilla_ext(self, args):
-        """build portable pyjs externals (vanilla)"""
-        self.ordered_dispatch('pyjs_vanilla_ext', args)
-
-    @common_options
-    def do_pyjs_vanilla_pkg(self, args):
-        """build portable pyjs package (vanilla)"""
-        self.ordered_dispatch('pyjs_vanilla_pkg', args)
 
 # ----------------------------------------------------------------------------
 # dependency builder methods
@@ -277,14 +252,6 @@ class Application(Commander):
     def do_test_static_pkg(self, args):
         """run static-pkg test"""
         utils.runlog('static-pkg')
-
-    def do_test_vanilla_ext(self, args):
-        """run vanilla-ext test"""
-        utils.runlog('vanilla-ext')
-
-    def do_test_vanilla_pkg(self, args):
-        """run vanilla-pkg test"""
-        utils.runlog('vanilla-pkg')
 
 
 # ----------------------------------------------------------------------------

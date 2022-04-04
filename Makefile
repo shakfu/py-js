@@ -91,11 +91,9 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
 		static-pkg static-ext \
-		vanilla-ext vanilla-pkg \
 		python-shared python-shared-pkg python-shared-ext \
 		python-static \
-		python-framework python-framework-ext python-framework-pkg \
-		python-vanilla python-vanilla-ext python-vanilla-pkg
+		python-framework python-framework-ext python-framework-pkg
 
 
 # -----------------------------------------------------------------------
@@ -134,12 +132,6 @@ framework-ext: clean-framework-ext
 relocatable-pkg: clean-framework-pkg
 	$(call call-builder,"pyjs" "relocatable_pkg")
 
-vanilla-ext: clean
-	$(call call-builder,"pyjs" "vanilla_ext" "--install" "--build")
-
-vanilla-pkg: clean
-	$(call call-builder,"pyjs" "vanilla_pkg" "--install" "--build")
-
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
 
@@ -170,14 +162,6 @@ python-framework-pkg: clean-python-framework-pkg
 python-relocatable: clean-python-framework-pkg
 	$(call call-builder,"python" "relocatable_pkg")
 
-python-vanilla: clean-python-framework-ext clean-python-framework-pkg
-	$(call call-builder,"python" "vanilla" "--install")
-
-python-vanilla-ext: clean-python-vanilla-ext
-	$(call call-builder,"python" "vanilla_ext" "--install")
-
-python-vanilla-pkg: clean-python-vanilla-pkg
-	$(call call-builder,"python" "vanilla_pkg" "--install")
 
 # -----------------------------------------------------------------------
 # dependencies
@@ -245,8 +229,7 @@ dist:
 .PHONY: build-homebrew-pkg build-homebrew-ext \
 		build-framework-pkg build-framework-ext \
 		build-shared-pkg build-shared-ext \
-		build-static-pkg build-static-ext \
-		build-vanilla-ext build-vanilla-pkg
+		build-static-pkg build-static-ext
 
 
 build-shared-pkg: clean-shared-pkg
@@ -267,11 +250,6 @@ build-framework-pkg: clean-framework-pkg
 build-framework-ext: clean-framework-ext
 	$(call call-builder,"pyjs" "framework_ext" "--build")
 
-build-vanilla-pkg:
-	$(call call-builder,"pyjs" "vanilla_pkg" "--build")
-
-build-vanilla-ext:
-	$(call call-builder,"pyjs" "vanilla_ext" "--build")
 
 # re-compile only
 # -----------------------------------------------------------------------
@@ -288,8 +266,7 @@ compile-extension:
 		test-homebrew-pkg test-homebrew-ext \
 		test-framework-pkg test-framework-ext \
 		test-shared-pkg test-shared-ext \
-		test-static-pkg test-static-ext \
-		test-vanilla-ext test-vanilla-pkg
+		test-static-pkg test-static-ext
 
 test: clean
 	$(call section,"running all tests")
@@ -331,14 +308,6 @@ test-static-ext: clean-products
 test-static-pkg: clean-products
 	$(call section,"running static-pkg test")
 	$(call call-builder,"test" "static_pkg")
-
-test-vanilla-ext: clean-products
-	$(call section,"running vanilla-ext test")
-	$(call call-builder,"test" "vanilla_ext")
-
-test-vanilla-pkg: clean-products
-	$(call section,"running vanilla-pkg test")
-	$(call call-builder,"test" "vanialla_pkg")
 
 check:
 	$(call section,"checking test results")
@@ -481,15 +450,6 @@ clean-python-framework-ext:
 	$(call xcleanlib,"Python.framework")
 
 clean-python-framework-pkg: clean-externals clean-support
-	$(call xcleanlib,"Python.framework")
-
-clean-python-vanilla:
-	$(call xcleanlib,"Python.framework")
-
-clean-python-vanilla-ext:
-	$(call xcleanlib,"Python.framework")
-
-clean-python-vanilla-pkg: clean-externals clean-support
 	$(call xcleanlib,"Python.framework")
 
 

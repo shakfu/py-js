@@ -10,9 +10,6 @@ PYTHON_BUILDERS = dict(
     python_framework = core.FrameworkPythonBuilder,
     python_framework_ext = core.FrameworkPythonForExtBuilder,
     python_framework_pkg = core.FrameworkPythonForPkgBuilder,
-    python_vanilla = core.VanillaPythonBuilder,
-    python_vanilla_ext = core.VanillaPythonForExtBuilder,
-    python_vanilla_pkg = core.VanillaPythonForPkgBuilder,
 )
 
 PYJS_BUILDERS = dict(
@@ -25,8 +22,6 @@ PYJS_BUILDERS = dict(
     pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),
     pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
     pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, []),
-    pyjs_vanilla_ext = (core.VanillaExtBuilder, ['python_vanilla_ext']),
-    pyjs_vanilla_pkg = (core.VanillaPkgBuilder, ['python_vanilla_pkg']), 
 )
 
 # -----------------------------------------------------------------------------
@@ -107,10 +102,7 @@ def python_builder_factory(name, **settings):
         libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
     )
 
-    if name.startswith('vanilla'):
-        return _builder(product=product, **settings)
-    else:
-        return _builder(product=product, depends_on=_dependencies, **settings)
+    return _builder(product=product, depends_on=_dependencies, **settings)
 
 # -----------------------------------------------------------------------------
 # PYJS BUILDERS

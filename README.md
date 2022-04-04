@@ -221,8 +221,6 @@ make static-ext           : portable pyjs externals (static)
 make framework-pkg        : portable package with pyjs externals (framework)
 make framework-ext        : portable pyjs externals (framework)
 make relocatable-pkg      : portable package w/ more custom options (framework)
-make vanilla-ext          : portable pyjs without minimization (framework)
-make vanilla-pkg          : portable package without minimization (framework)
 
 >>> python targets
 make python-shared        : minimal shared python build
@@ -233,7 +231,6 @@ make python-framework     : minimal framework python build
 make python-framework-ext : minimal framework python build for externals
 make python-framework-pkg : minimal framework python build for packages
 make python-relocatable   : custom relocatable python framework build
-make python-vanilla       : regular framework python
 ```
 
 ### Automated Test of Build Variations
