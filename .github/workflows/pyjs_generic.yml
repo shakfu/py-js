@@ -88,7 +88,7 @@ jobs:
       with:
         product-path: "externals/py.mxo"
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-        appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
+        appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
 
     - name: Staple externals
       uses: devbotsxyz/xcode-staple@v1
