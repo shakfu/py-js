@@ -238,8 +238,9 @@ class Project:
 
     # resources
     resources = root / "resources"
-    entitlements = root / "entitlements"
+    entitlements = resources / "entitlements"
     addons = resources / "addons"
+    patch = resources / "patch"
 
     # project-build section
     scripts = root / "scripts"
