@@ -78,6 +78,8 @@ jobs:
       run: make ${{ github.event.inputs.variant }}
 
     - name: Sign externals
+      env:
+        DEV_ID: ${{ secrets.DEV_ID }}
       run: make sign
 
     - name: Package externals
