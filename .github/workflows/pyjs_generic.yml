@@ -104,9 +104,9 @@ jobs:
         if [ -d jsextensions ]; then cp -r jsextensions $PACKAGE_NAME; fi
         if [ -d patchers ]; then cp -r patchers $PACKAGE_NAME; fi
         if [ -d support ]; then cp -af support $PACKAGE_NAME; fi
-        ditto -ck --rsrc --sequesterRsrc $PACKAGE_NAME archive.zip
+        ditto -ck --rsrc --sequesterRsrc $PACKAGE_NAME ${PACKAGE_NAME}.zip
         rm -rf $PACKAGE_NAME && mkdir -p $PACKAGE_NAME
-        mv archive.zip $PACKAGE_NAME/
+        mv ${PACKAGE_NAME}.zip $PACKAGE_NAME/
 
     - uses: actions/upload-artifact@v3
       with:
