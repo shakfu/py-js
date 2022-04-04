@@ -1,4 +1,4 @@
-name: pyjs-generic
+name: pyjs-builder
 
 on:
   workflow_dispatch:
@@ -17,6 +17,16 @@ on:
           - relocatable-pkg
           - vanilla-ext
           - vanilla-pkg
+      py_version:
+        type: choice
+        description: Please select a python version
+        default: '3.9'
+        required: true
+        options: 
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10'
 
 env:
   arch: darwin-x86
@@ -24,9 +34,6 @@ env:
 jobs:
   build:
     runs-on: macos-10.15
-    # strategy:
-    #   matrix:
-    #     python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
 
@@ -53,13 +60,13 @@ jobs:
           source/py/targets/build/lib/xz
         key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
-    # - name: Setup python
-    #   uses: actions/setup-python@v3
-    #   with:
-    #     python-version: ${{ matrix.python-version }}
+    - name: Setup python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ github.event.inputs.py_version }}
 
-    # - name: Display python version
-    #   run: python3 --version
+    - name: Display python version
+      run: python3 --version
 
     - name: Import development certificate
       uses: apple-actions/import-codesign-certs@v1
@@ -127,5 +134,5 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ matrix.python-version }}-${{ steps.short-sha.outputs.sha }}
+        name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
         path: ${{ github.event.repository.name }}
