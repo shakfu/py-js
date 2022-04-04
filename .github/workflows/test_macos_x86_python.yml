@@ -1,4 +1,4 @@
-name: test_macos_x86_python
+name: test-macos-x86-python
 
 on:
   workflow_dispatch:
