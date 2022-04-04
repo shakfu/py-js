@@ -403,19 +403,6 @@ class Builder:
         xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
         xcconfig_flags['PROJECT_FOLDER_NAME'] = project
 
-        # TODO: this will break relocatable-pkg
-        # if self.settings.catalog:
-
-            # xcconfig_flags['DSTROOT'] = (
-            #     '$(SRCROOT)/../../../../externals/$(PY_VERSION)/'
-            #     '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)'
-            # )
-
-            # xcconfig_flags['DSTROOT'] = (
-            #     '$(PYJS_BUILD_ROOT)/externals/$(PY_VERSION)/'
-            #     '$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)/$CONFIGURATION'
-            # )
-
         x_flags = (
             " ".join([f"{k}={repr(v)}" for k, v in xcconfig_flags.items()])
             if xcconfig_flags

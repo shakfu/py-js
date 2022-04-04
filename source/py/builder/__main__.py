@@ -19,6 +19,7 @@ subcommands:
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
 from . import utils
+from .sign import sign_externals_folder
 from .ext.relocatable_python import (process_args_for_relocatable_python,
                                      relocatable_options)
 from .factory import builder_factory
@@ -289,7 +290,9 @@ class Application(Commander):
 # ----------------------------------------------------------------------------
 # utility methods
 
-
+    def do_sign(self, args):
+        """sign externals folder recursively"""
+        sign_externals_folder()
 
 
 

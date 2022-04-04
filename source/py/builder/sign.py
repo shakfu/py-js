@@ -163,5 +163,21 @@ class CodesignExternal:
             app.process()
 
 
+
+def sign_externals_folder():
+    root = pathlib.Path(__file__).parent.parent.parent.parent
+    externals_folder = pathlib.Path(root / 'externals')
+    entitlements = pathlib.Path(root / 'source/py/resources/entitlements/entitlements.plist')
+    dev_id = os.environ['DEV_ID']
+    assert externals_folder.exists()
+    assert entitlements.exists()
+    assert dev_id, "dev_id not set in env"
+    externals = list(externals_folder.glob('*.mxo'))
+    assert len(externals) > 0, "no externals to sign"
+    for ext in externals:
+        signer = CodesignExternal(ext, dev_id=dev_id, entitlements=entitlements)
+        signer.process()
+
+
 if __name__ == "__main__":
     CodesignExternal.cmdline()

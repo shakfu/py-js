@@ -222,6 +222,9 @@ max-check:
 	@echo "$(PYJS_PACKAGE)"
 	@ls "$(PYJS_PACKAGE)"
 
+sign:
+	$(call section,"sign externals")
+	$(call call-builder,"sign")
 
 
 # DEPLOYING
@@ -277,54 +280,6 @@ build-vanilla-ext:
 compile-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
-
-# CATALOG BUILDS
-# -----------------------------------------------------------------------
-.PHONY: catalog atalog-default \
-		catalog-homebrew-pkg catalog-homebrew-ext \
-		catalog-framework-pkg catalog-framework-ext \
-		catalog-shared-pkg catalog-shared-ext \
-		catalog-static-pkg catalog-static-ext \
-		catalog-vanilla-ext catalog-vanilla-pkg
-
-catalog: clean
-	$(call section,"creating build catalogs")
-
-catalog-default: clean-local-sys
-	$(call call-builder,"pyjs" "local_sys" "--catalog")
-
-catalog-homebrew-pkg: clean-homebrew-pkg
-	$(call call-builder,"pyjs" "homebrew_pkg" "--catalog")
-
-catalog-homebrew-ext: clean-homebrew-ext
-	$(call call-builder,"pyjs" "homebrew_ext" "--catalog")
-
-catalog-shared-pkg: clean-shared-pkg
-	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build" "--catalog")
-
-catalog-shared-ext: clean-shared-ext
-	$(call call-builder,"pyjs" "shared_ext" "--install" "--build" "--catalog")
-
-catalog-static-ext: clean-static-ext
-	$(call call-builder,"pyjs" "static_ext" "--install" "--build" "--catalog")
-
-catalog-static-pkg: clean-static-pkg
-	$(call call-builder,"pyjs" "static_pkg" "--install" "--build" "--catalog")
-
-catalog-framework-pkg: clean-framework-pkg
-	$(call call-builder,"pyjs" "framework_pkg" "--install" "--build" "--catalog")
-
-catalog-framework-ext: clean-framework-ext
-	$(call call-builder,"pyjs" "framework_ext" "--install" "--build" "--catalog")
-
-catalog-relocatable-pkg: clean-framework-pkg
-	$(call call-builder,"pyjs" "relocatable_pkg" "--catalog")
-
-# vanilla-ext: clean
-# 	$(call call-builder,"pyjs" "vanilla_ext" "--install" "--build" "--catalog")
-
-# vanilla-pkg: clean
-# 	$(call call-builder,"pyjs" "vanilla_pkg" "--install" "--build" "--catalog")
 
 
 # Testing
