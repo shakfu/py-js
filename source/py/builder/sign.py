@@ -153,7 +153,7 @@ class CodesignExternal:
         """commandline interface to class."""
         parser = argparse.ArgumentParser(description=cls.__doc__)
         option = parser.add_argument
-        option("path", type=str, help="a folder containing binaries to shrink")
+        option("path", type=str, help="a folder containing binaries to sign")
         option("--dev-id", "-i", help="Developer ID")
         option("--entitlements", "-e", default="entitlements.plist", help="path to entitlements.plist")
         option("--dry-run", "-d", action="store_true", help="run without actual changes.")

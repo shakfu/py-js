@@ -1,6 +1,19 @@
 # Github Workflows 
 
 
+## How to Delete
+
+- There is no obvious way to 'delete' a workflow, just to disable it.
+
+- To make a workflow 'disappear':
+
+	1. make sure it has > 0 residual runs
+	2. disable it
+	3. run the script `rm_disabled_workflow_runs.sh` in `scripts`
+	4. remove the `<workflow>.yml` file from `.github/workflows`
+
+
+
 ## Useful Articles
 
 - [How to automatically sign macOS apps using GitHub Actions](https://localazy.com/blog/how-to-automatically-sign-macos-apps-using-github-actions)
@@ -21,15 +34,17 @@
 
 ### Codesigning & Notarization
 
-- [Import Code-Signing Certificates](https://github.com/marketplace/actions/import-code-signing-certificates): GitHub Action to import Apple Code-signing Certificates and Keys
 
-- [xcode-notarization](https://github.com/marketplace/actions/xcode-notarization)
+
+- [Import Code-Signing Certificates](https://github.com/marketplace/actions/import-code-signing-certificates): GitHub Action to import Apple Code-signing Certificates and Keys
 
 - [xcode-notarize](https://github.com/marketplace/actions/xcode-notarize)
 
 - [xcode-staple](https://github.com/marketplace/actions/xcode-staple)
 
 - [xcode-archive](https://github.com/marketplace/actions/xcode-archive)
+
+- [complete example](https://github.com/devbotsxyz/example-macos-rings)
 
 ### Caching
 
@@ -58,3 +73,4 @@ registering problem matchers for error output.
 - [xcodegen GitHub Action](https://github.com/marketplace/actions/xcodegen):
 
 - [Setup xcodegen GitHub Action](https://github.com/marketplace/actions/setup-xcodegen)
+

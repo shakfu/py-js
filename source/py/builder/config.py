@@ -236,9 +236,13 @@ class Project:
     py_external = externals / "py.mxo"
     pyjs_external = externals / "pyjs.mxo"
 
+    # resources
+    resources = root / "resources"
+    entitlements = root / "entitlements"
+    addons = resources / "addons"
+
     # project-build section
     scripts = root / "scripts"
-    patch = root / "patch"
     targets = root / "targets"
 
     if is_symlinked:

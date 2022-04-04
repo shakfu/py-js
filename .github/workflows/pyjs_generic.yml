@@ -29,6 +29,7 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
+      
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
@@ -39,7 +40,7 @@ jobs:
       with:
         length: 7
 
-    - name: cache downloads
+    - name: Cache downloads
       id: cache-downloads
       uses: actions/cache@v3
       env:
@@ -52,13 +53,20 @@ jobs:
           source/py/targets/build/lib/xz
         key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
-    - name: setup python
+    - name: Setup python
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: display python version
+    - name: Display python version
       run: python3 --version
+
+    - name: Import development certificate
+        uses: devbotsxyz/import-signing-certificate@main
+        with:
+          certificate-data: ${{ secrets.MACOS_DEV_CERTIFICATE }}
+          certificate-passphrase: ${{ secrets.MACOS_DEV_PWD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PWD }}
 
     - name: Build externals
       run: make ${{ github.event.inputs.variant }}
