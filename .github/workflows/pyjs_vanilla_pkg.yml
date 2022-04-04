@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  variant: vannilla-pkg
+  variant: vanilla-pkg
   arch: darwin-x86
 
 jobs:
