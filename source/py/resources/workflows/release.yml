@@ -79,7 +79,7 @@ jobs:
         if exist support cp -r support %PACKAGE_NAME%
         if exist tests cp -r tests %PACKAGE_NAME%
         
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-${{ matrix.config }}
         path: ${{ github.event.repository.name }}
@@ -107,7 +107,7 @@ jobs:
     - name: zip
       run: zip -r ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip ${{ github.event.repository.name }}
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-zipped-release
         path: ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip

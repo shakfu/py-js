@@ -77,16 +77,19 @@ jobs:
         if [ -e icon.png ]; then cp icon.png $PACKAGE_NAME; fi
         if [ -d docs ]; then cp -r docs $PACKAGE_NAME; fi
         if [ -d examples ]; then cp -r examples $PACKAGE_NAME; fi
-        if [ -d externals ]; then cp -a externals $PACKAGE_NAME; fi
+        if [ -d externals ]; then cp -af externals $PACKAGE_NAME; fi
         if [ -d extras ]; then cp -r extras $PACKAGE_NAME; fi
         if [ -d help ]; then cp -r help $PACKAGE_NAME; fi
         if [ -d init ]; then cp -r init $PACKAGE_NAME; fi
         if [ -d javascript ]; then cp -r init $PACKAGE_NAME; fi
         if [ -d jsextensions ]; then cp -r jsextensions $PACKAGE_NAME; fi
         if [ -d patchers ]; then cp -r patchers $PACKAGE_NAME; fi
-        if [ -d support ]; then cp -a support $PACKAGE_NAME; fi
+        if [ -d support ]; then cp -af support $PACKAGE_NAME; fi
+        zip -r ${PACKAGE_NAME}.zip $PACKAGE_NAME
+        rm -rf $PACKAGE_NAME && mkdir -p $PACKAGE_NAME
+        mv ${PACKAGE_NAME}.zip $PACKAGE_NAME/
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ matrix.python-version }}-${{ steps.short-sha.outputs.sha }}
         path: ${{ github.event.repository.name }}

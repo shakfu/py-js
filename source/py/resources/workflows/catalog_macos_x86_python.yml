@@ -79,7 +79,7 @@ jobs:
           if [ -d patchers ]; then cp -r patchers $PACKAGE_NAME; fi
           if [ -d support ]; then cp -a support $PACKAGE_NAME; fi
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.event.repository.name }}-${{ matrix.python_version }}-${{ steps.short-sha.outputs.sha }}
           path: ${{ github.event.repository.name }}
