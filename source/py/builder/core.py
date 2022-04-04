@@ -40,11 +40,6 @@ Builder
 install:
     configure -> reset -> download -> pre_process -> build -> post_process
 
-
-configure:
-    if settings.py_version:
-        product.version = settings.py_version
-
 reset:
     cmd.remove(src_path)
     cmd.remove(project.lib / "Python.framework")
@@ -1568,6 +1563,7 @@ class HomebrewBuilder(PyJsBuilder):
 
 class LocalSystemBuilder(PyJsBuilder):
     """Builds externals from local python (non-portable)"""
+    NAME = "local-sys"
 
     def build(self):
         """builds externals from local system python"""
@@ -1577,11 +1573,12 @@ class LocalSystemBuilder(PyJsBuilder):
             LIBS=str(self.project.python.libs),
         )
 
-        self.xcodebuild("local-sys", targets=["py", "pyjs"], **flags)
+        self.xcodebuild(self.NAME, targets=["py", "pyjs"], **flags)
 
 
 class StaticExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
+    NAME = "static-ext"
 
     @property
     def product_exists(self):
@@ -1597,11 +1594,12 @@ class StaticExtBuilder(PyJsBuilder):
         """builds externals from statically built python"""
 
         if self.product_exists:
-            self.xcodebuild("static-ext", targets=["py", "pyjs"])
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
 
 
 class SharedExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
+    NAME = "shared-ext"
 
     @property
     def product_exists(self):
@@ -1616,11 +1614,12 @@ class SharedExtBuilder(PyJsBuilder):
         """builds externals from shared python"""
 
         if self.product_exists:
-            self.xcodebuild("shared-ext", targets=["py", "pyjs"])
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
 
 
 class SharedPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal statically built python"""
+    NAME = "shared-pkg"
 
     @property
     def product_exists(self):
@@ -1639,11 +1638,12 @@ class SharedPkgBuilder(PyJsBuilder):
         self.cmd(f"cp -af '{src}' '{dst}'")
 
         if self.product_exists:
-            self.xcodebuild("shared-pkg", targets=["py", "pyjs"])
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
 
 
 class FrameworkExtBuilder(PyJsBuilder):
     """pyjs externals from minimal framework built python"""
+    NAME = "framework-ext"
 
     @property
     def product_exists(self):
@@ -1661,12 +1661,12 @@ class FrameworkExtBuilder(PyJsBuilder):
     def build(self):
         """builds externals from shared python"""
         if self.product_exists:
-            self.xcodebuild("framework-ext", targets=["py", "pyjs"])
-            # preprocessor_flags=["PY_FWK_EXT"])
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
 
 
 class FrameworkPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal framework built python"""
+    NAME = "framework-pkg"
 
     @property
     def product_exists(self):
@@ -1688,7 +1688,7 @@ class FrameworkPkgBuilder(PyJsBuilder):
         self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
         self.cmd(f"cp -af '{src}' '{dst}'")
         if self.product_exists:
-            self.xcodebuild("framework-pkg", targets=["py", "pyjs"])
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
 
 
 class RelocatablePkgBuilder(PyJsBuilder):
@@ -1700,6 +1700,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
 
     Currently this is via Greg Neagle's code in the ext folder.
     """
+    NAME = "relocatable-pkg"
 
     @property
     def prefix(self) -> Path:
@@ -1784,26 +1785,15 @@ class RelocatablePkgBuilder(PyJsBuilder):
         """builds externals from framework python"""
         self.pre_process()
         if self.product_exists:
-            self.xcodebuild("relocatable-pkg", targets=["py", "pyjs"])
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
 
 
 class VanillaExtBuilder(FrameworkExtBuilder):
     """pyjs externals from vanilla framework built python"""
-
-    def build(self):
-        """builds externals"""
-        if self.product_exists:
-            self.xcodebuild("vanilla-ext", targets=["py", "pyjs"])
+    NAME = "vanilla-ext"
 
 
 class VanillaPkgBuilder(FrameworkPkgBuilder):
     """pyjs externals in a package from vanilla framework built python"""
+    NAME = "vanilla-pkg"
 
-    def build(self):
-        """builds externals from framework python"""
-        src = self.project.build_lib / "Python.framework"
-        dst = self.project.support / "Python.framework"
-        self.cmd(f"rm -rf '{dst}'")  # try to remove if it exists
-        self.cmd(f"cp -af '{src}' '{dst}'")
-        if self.product_exists:
-            self.xcodebuild("vanilla-pkg", targets=["py", "pyjs"])
