@@ -88,5 +88,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ github.event.repository.name }}-${{ env.variant }}-${{ env.arch }}-${{ matrix.python-version }}-${{ steps.short-sha.outputs.sha }}
+        name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ matrix.python-version }}-${{ steps.short-sha.outputs.sha }}
         path: ${{ github.event.repository.name }}
