@@ -2,22 +2,21 @@ name: pyjs-generic
 
 on:
   workflow_dispatch:
-
-inputs:
-  variant:
-    type: choice
-    description: Please select a build variant
-    default: shared-pkg
-    required: true
-    options: 
-      - framework-ext
-      - framework-pkg
-      - shared-ext
-      - shared-pkg
-      - static-ext
-      - relocatable-pkg
-      - vanilla-ext
-      - vanilla-pkg
+    inputs:
+      variant:
+        type: choice
+        description: Please select a build variant
+        default: shared-pkg
+        required: true
+        options: 
+          - framework-ext
+          - framework-pkg
+          - shared-ext
+          - shared-pkg
+          - static-ext
+          - relocatable-pkg
+          - vanilla-ext
+          - vanilla-pkg
 
 env:
   arch: darwin-x86
