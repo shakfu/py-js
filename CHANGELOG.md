@@ -7,6 +7,10 @@
 
 #### Enhancements
 
+- [x] if python_version for relocatable is given as major.minor only, then it should still work. Currently requires full major.minor.patch version.
+
+- [x] Move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
+
 - [x] make a function to generate './configure --...' instructions.
 
 - [x] as a consequence of shifting to `max-sdk-base` was able to build on m1 mac `framework-ext` variations after a few tweaks which are detailed in the dev notes section.

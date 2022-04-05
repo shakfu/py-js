@@ -7,13 +7,26 @@ from ...cli import option, option_group
 
 from sysconfig import get_config_var
 
+AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.12", "3.10.4"]
 
-def get_default_py_version():
-    py_version = get_config_var('py_version_short')
-    latest = ["3.7.9", "3.8.9", "3.9.12", "3.10.4"]
-    for ver in latest:
-        if ver.startswith(py_version):
-            return ver
+def get_default_py_version(version: str = None):
+    _short_version = None
+    if version:
+        parts = version.split(".")
+        if len(parts) == 2:
+            _short_version = version
+        else:
+            _short_version = ".".join(parts[:2])
+    else:
+        _short_version = get_config_var("py_version_short")
+
+    if _short_version:
+        for ver in AVAILABLE_VERSIONS:
+            if ver.startswith(_short_version):
+                return ver
+
+    print('version not found, selecting latest available version')
+    return AVAILABLE_VERSIONS[-1]
 
 
 relocatable_options = option_group(
@@ -53,28 +66,27 @@ relocatable_options = option_group(
 )
 
 
-
-def process_args_for_relocatable_python(args):
-    print(args.python_version)
+def download_relocatable_to(directory, settings):
+    py_version = get_default_py_version(settings.python_version)
+    py_short_version = ".".join(py_version.split(".")[0:2])
     framework_path = get.FrameworkGetter(
-        python_version=args.python_version,
-        os_version=args.os_version,
-        base_url=args.baseurl,
-    ).download_and_extract(destination=args.destination)
+        python_version=py_version,
+        os_version=settings.os_version,
+        base_url=settings.baseurl,
+        ).download_and_extract(destination=directory)
 
     if framework_path:
         files_relocatablized = relocatablize(framework_path)
-        if args.unsign:
-            fix_broken_signatures(files_relocatablized)
-        short_version = ".".join(args.python_version.split(".")[0:2])
+        fix_broken_signatures(files_relocatablized)
+        
         install_extras(
             framework_path,
-            version=short_version,
-            requirements_file=args.pip_requirements,
-            upgrade_pip=args.upgrade_pip,
-            without_pip=args.without_pip
+            version=py_short_version,
+            requirements_file=settings.pip_requirements,
+            upgrade_pip=settings.upgrade_pip,
+            without_pip=settings.without_pip
         )
-        if fix_other_things(framework_path, short_version):
+        if fix_other_things(framework_path, py_short_version):
             print()
             print("Done!")
             print("Customized, relocatable framework is at %s" % framework_path)

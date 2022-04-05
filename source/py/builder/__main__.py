@@ -19,8 +19,7 @@ subcommands:
 from . import utils
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
-from .ext.relocatable_python import (process_args_for_relocatable_python,
-                                     relocatable_options)
+from .ext.relocatable_python import relocatable_options
 from .factory import builder_factory
 from .sign import sign_externals_folder
 
@@ -28,7 +27,7 @@ from .sign import sign_externals_folder
 # Commandline interface
 
 common_options = option_group(
-    option("-p", "--py-version", type=str,
+    option("-p", "--python-version", type=str,
            help="set required python version to download and build"),
     option("-d",
            "--download",
@@ -52,6 +51,8 @@ common_options = option_group(
     option("--dump", action="store_true", help="dump project and product vars"),
     option("--release", action="store_true", help="set configuration to release"),
 )
+
+# combined_options = common_options + relocatable_options
 
 class Application(Commander):
     """builder: builds python and py-js max externals from source or other methods."""
@@ -113,11 +114,14 @@ class Application(Commander):
         """build framework python to embed in a package"""
         self.ordered_dispatch('python_framework_pkg', args)
 
+    @option("--dump", action="store_true", 
+        help="dump project and product vars")
+    @option("-i", "--install", action="store_true",
+           help="install python to build/lib")
     @relocatable_options
     def do_python_relocatable(self, args):
         """download relocatable framework python"""
-        process_args_for_relocatable_python(args)
-
+        self.ordered_dispatch('python_relocatable', args)
 
 # ----------------------------------------------------------------------------
 # py-js builder methods
@@ -176,11 +180,16 @@ class Application(Commander):
         """build portable pyjs package (framework)"""
         self.ordered_dispatch('pyjs_framework_pkg', args)
 
+    @option("--dump", action="store_true", 
+        help="dump project and product vars")
+    @option("-i", "--install", action="store_true",
+           help="install python to build/lib")
+    @option("-b", "--build", action="store_true",
+           help="build python")
     @relocatable_options
     def do_pyjs_relocatable_pkg(self, args):
         """build portable pyjs package (framework)"""
-        process_args_for_relocatable_python(args)
-        builder_factory('pyjs_relocatable_pkg', **vars(args)).build()
+        self.ordered_dispatch('pyjs_relocatable_pkg', args)
 
 # ----------------------------------------------------------------------------
 # dependency builder methods

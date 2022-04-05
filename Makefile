@@ -130,7 +130,10 @@ framework-ext: clean-framework-ext
 	$(call call-builder,"pyjs" "framework_ext" "--install" "--build")
 
 relocatable-pkg: clean-framework-pkg
-	$(call call-builder,"pyjs" "relocatable_pkg")
+	$(call call-builder,"pyjs" "relocatable_pkg" "--install" "--build")
+
+relocatable-pkg-nopip: clean-framework-pkg
+	$(call call-builder,"pyjs" "relocatable_pkg" "--install" "--build" "--without-pip")
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
@@ -162,7 +165,7 @@ release-framework-ext: clean-framework-ext
 	$(call call-builder,"pyjs" "framework_ext" "--install" "--build" "--release")
 
 release-relocatable-pkg: clean-framework-pkg
-	$(call call-builder,"pyjs" "relocatable_pkg" "--release")
+	$(call call-builder,"pyjs" "relocatable_pkg" "--install" "--build" "--release")
 
 
 # -----------------------------------------------------------------------
@@ -190,7 +193,10 @@ python-framework-pkg: clean-python-framework-pkg
 	$(call call-builder,"python" "framework_pkg" "--install")
 
 python-relocatable: clean-python-framework-pkg
-	$(call call-builder,"python" "relocatable_pkg")
+	$(call call-builder,"python" "relocatable" "--install")
+
+# python-relocatable: clean-python-framework-pkg
+# 	$(call call-builder,"python" "relocatable_pkg")
 
 
 # -----------------------------------------------------------------------
@@ -280,6 +286,8 @@ build-framework-pkg: clean-framework-pkg
 build-framework-ext: clean-framework-ext
 	$(call call-builder,"pyjs" "framework_ext" "--build")
 
+build-relocatable-pkg: clean-externals
+	$(call call-builder,"pyjs" "relocatable_pkg" "--build")
 
 # re-compile only
 # -----------------------------------------------------------------------

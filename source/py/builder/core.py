@@ -21,6 +21,7 @@ Builder
                 SharedPythonForExtBuilder
                 SharedPythonForPkgBuilder
             StaticPythonBuilder
+            RelocatablePythonBuilder
         PyJsBuilder
             LocalSystemBuilder
             HomebrewBuilder
@@ -85,6 +86,7 @@ from typing import Dict, List, Optional
 from .config import CURRENT_PYTHON_VERSION, LOG_FORMAT, LOG_LEVEL, Project
 from .depend import PATTERNS_TO_FIX, DependencyManager
 from .shell import ShellCmd
+from .ext.relocatable_python import download_relocatable_to
 
 URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
@@ -387,9 +389,15 @@ class Builder:
         """python wrapper around command-line xcodebuild"""
 
         # defaults
-        xcconfig_flags['PY_VERSION'] = self.project.python.version
-        xcconfig_flags['PY_SHORT_VERSION'] = self.project.python.version_short
-        xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
+        if not 'PY_VERSION' in xcconfig_flags:
+            xcconfig_flags['PY_VERSION'] = self.project.python.version
+
+        if not 'PY_SHORT_VERSION' in xcconfig_flags:
+            xcconfig_flags['PY_SHORT_VERSION'] = self.project.python.version_short
+
+        if not 'ABIFLAGS' in xcconfig_flags:
+            xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
+
         xcconfig_flags['PROJECT_FOLDER_NAME'] = project
 
         if self.settings.release:
@@ -791,8 +799,8 @@ class PythonSrcBuilder(PythonBuilder):
     # src-level operations
     # def configure(self):
     #     """configures overrides to defaults from commandline"""
-    #     if self.settings.py_version:
-    #         self.product.version = self.settings.py_version
+    #     if self.settings.python_version:
+    #         self.product.version = self.settings.python_version
 
     def install(self):
         """install and build compilation product"""
@@ -955,6 +963,116 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
     def remove_extensions(self):
         """remove extensions: not implemented"""
+
+
+# ------------------------------------------------------------------------------------
+# PYTHON BUILDERS (BINARY)
+
+
+class RelocatablePythonBuilder(PythonBuilder):
+    """pyjs externals in a framework package using Greg Neagle's Relocatable Python
+
+    Note: this is the only PyJsBuilder subclass which applies pre_processing and cleaning.
+    That's because, it is assumed that the Python.framework is already downloaded to
+    self.project.support via a previous step.
+
+    Currently this is via Greg Neagle's code in the ext folder.
+    """
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.support / "Python.framework" / "Versions" / self.product.ver
+
+    def install(self):
+        """install and build compilation product"""
+        self.reset()
+        self.configure()
+        self.download()
+        self.post_process()
+
+    def configure(self):
+        """configures overrides to defaults from commandline"""
+        if self.settings.python_version != self.product.version:
+            self.product.version = self.settings.python_version
+
+    def reset(self):
+        """remove framework in suppor directory"""
+        framework = self.project.support / "Python.framework"
+        self.cmd.remove(framework)
+        assert not framework.exists(), "reset not completed"
+
+    def download(self):
+        """download relocatable python"""
+        download_relocatable_to(self.project.support, self.settings)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+
+    def clean(self):
+        """clean everything."""
+        self.clean_python_pyc(self.prefix)
+        self.clean_python_tests(self.python_lib)
+        # self.clean_python_site_packages(self.python_lib)
+
+        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+            self.cmd.remove(i)
+
+        self.cmd.remove(self.prefix_lib / "pkgconfig")
+        self.cmd.remove(self.prefix / "share")
+
+        self.remove_packages()
+        self.remove_extensions()
+        self.remove_binaries()
+        self.remove_tkinter()
+
+    def rm_globbed(self, names):
+        """remove all named glob patterns of libraries and files"""
+        for name in names:
+            for f in self.prefix_lib.glob(name):
+                self.cmd.remove(f)
+
+    def remove_tkinter(self):
+        """remove tkinter-related stuff"""
+        targets = [
+            "Tk.*",
+            "itcl*",
+            "libformw.*",
+            "libmenuw.*",
+            "libpanelw.*",
+            "libncurse*",
+            "libtcl*",
+            "libtclstub*",
+            "sqlite3*",
+            "libtk*",
+            "tcl*",
+            "tdbc*",
+            "thread*",
+            "tk*",
+        ]
+        self.rm_globbed(targets)
+
+    def ziplib(self):
+        """zip python package in site-packages in .zip archive"""
+        temp_lib_dynload = self.prefix_lib / "lib-dynload"
+        temp_os_py = self.prefix_lib / "os.py"
+
+        # self.cmd.remove(self.site_packages)
+        self.cmd.move(self.site_packages, "/tmp/site-packages")
+        self.lib_dynload.rename(temp_lib_dynload)
+        self.cmd.copy(self.python_lib / "os.py", temp_os_py)
+
+        zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
+        shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
+
+        self.cmd.remove(self.python_lib)
+        self.python_lib.mkdir()
+        temp_lib_dynload.rename(self.lib_dynload)
+        temp_os_py.rename(self.python_lib / "os.py")
+        # self.site_packages.mkdir()
+        self.cmd.move("/tmp/site-packages", self.site_packages)
+
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (SPECIALIZED)
@@ -1192,6 +1310,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.fix_python_dylib_for_pkg()
         self.fix_python_exe_for_pkg()
         self.fix_python_exec_for_pkg2()
+
 
 
 # ------------------------------------------------------------------------------------
@@ -1512,87 +1631,13 @@ class FrameworkPkgBuilder(PyJsBuilder):
 
 
 class RelocatablePkgBuilder(PyJsBuilder):
-    """pyjs externals in a framework package using Greg Neagle's Relocatable Python
-
-    Note: this is the only PyJsBuilder subclass which applies pre_processing and cleaning.
-    That's because, it is assumed that the Python.framework is already downloaded to
-    self.project.support via a previous step.
-
-    Currently this is via Greg Neagle's code in the ext folder.
-    """
+    """External builder related to Relocatable Python"""
     NAME = "relocatable-pkg"
 
-    @property
-    def prefix(self) -> Path:
-        return self.project.support / "Python.framework" / "Versions" / self.product.ver
-
-    def pre_process(self):
-        """pre-build operations"""
-        self.clean()
-        self.ziplib()
-
-    def clean(self):
-        """clean everything."""
-        self.clean_python_pyc(self.prefix)
-        self.clean_python_tests(self.python_lib)
-        # self.clean_python_site_packages(self.python_lib)
-
-        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
-            self.cmd.remove(i)
-
-        self.cmd.remove(self.prefix_lib / "pkgconfig")
-        self.cmd.remove(self.prefix / "share")
-
-        self.remove_packages()
-        self.remove_extensions()
-        self.remove_binaries()
-        self.remove_tkinter()
-
-    def rm_globbed(self, names):
-        """remove all named glob patterns of libraries and files"""
-        for name in names:
-            for f in self.prefix_lib.glob(name):
-                self.cmd.remove(f)
-
-    def remove_tkinter(self):
-        """remove tkinter-related stuff"""
-        targets = [
-            "Tk.*",
-            "itcl*",
-            "libformw.*",
-            "libmenuw.*",
-            "libpanelw.*",
-            "libncurse*",
-            "libtcl*",
-            "libtclstub*",
-            "sqlite3*",
-            "libtk*",
-            "tcl*",
-            "tdbc*",
-            "thread*",
-            "tk*",
-        ]
-        self.rm_globbed(targets)
-
-    def ziplib(self):
-        """zip python package in site-packages in .zip archive"""
-        temp_lib_dynload = self.prefix_lib / "lib-dynload"
-        temp_os_py = self.prefix_lib / "os.py"
-
-        # self.cmd.remove(self.site_packages)
-        self.cmd.move(self.site_packages, "/tmp/site-packages")
-        self.lib_dynload.rename(temp_lib_dynload)
-        self.cmd.copy(self.python_lib / "os.py", temp_os_py)
-
-        zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
-        shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
-
-        self.cmd.remove(self.python_lib)
-        self.python_lib.mkdir()
-        temp_lib_dynload.rename(self.lib_dynload)
-        temp_os_py.rename(self.python_lib / "os.py")
-        # self.site_packages.mkdir()
-        self.cmd.move("/tmp/site-packages", self.site_packages)
+    # def install(self):
+    #     for builder in self.depends_on:
+    #         builder.settings.update(self.settings)
+    #         builder.install()
 
     @property
     def product_exists(self):
@@ -1603,7 +1648,17 @@ class RelocatablePkgBuilder(PyJsBuilder):
 
     def build(self):
         """builds externals from framework python"""
-        self.pre_process()
+
         if self.product_exists:
-            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
+            py = (self.project.support / "Python.framework" / "Versions" 
+                 / "Current" / "bin" / "python3")
+            get = lambda x: subprocess.check_output([
+                py, "-c", f"import sysconfig; print(sysconfig.get_config_var('{x}'))"]
+                , text=True).strip()
+
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"], 
+                PY_VERSION = get('py_version'),
+                PY_SHORT_VERSION = get('py_version_short'),
+                ABIFLAGS = get('abiflags'),
+            )
 

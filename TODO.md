@@ -14,7 +14,7 @@
 
 - [ ] update and include testing framework [max-test](https://github.com/Cycling74/max-test)
 
-- [ ] external products which are built in full test runs should be stored in some organizaed way
+- [ ] external products which are built in full test runs should be stored in some organized way
 
   ```text
 
@@ -37,8 +37,6 @@
 - [ ] check why `py-js.xcconfig` for `homebrew-ext` refers to `support`. May implicitly rely on `homebrew-pkg` preceding it.
 
 - [ ] Reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
-
-- [ ] Move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
 
 - [ ] Add beeware downloader.
 

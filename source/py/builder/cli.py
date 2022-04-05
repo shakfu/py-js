@@ -31,6 +31,7 @@ concept is
 """
 import argparse
 import sys
+import inspect
 
 # ------------------------------------------------------------------------------
 # Generic utility functions and classes for commandline ops
@@ -46,15 +47,29 @@ def option(*args, **kwds):
         else:
             func.options = [_option]
         return func
-
     return _decorator
+
+
+# class option:
+#     def __init__(self, *args, **kwargs):
+#         self.args = args
+#         self.kwargs = kwargs
+#     def __call__(self, func):
+#         _option = (self.args, self.kwargs)
+#         if hasattr(func, 'options'):
+#             func.options.append(_option)
+#         else:
+#             func.options = [_option]
+#         return func
+
+
 
 
 # arg decorator
 arg = option
 
 
-# combines option decorators
+#combines option decorators
 def option_group(*options):
     """Collection of options to simplify common options reuse."""
     def _decorator(func):
@@ -63,6 +78,23 @@ def option_group(*options):
         return func
 
     return _decorator
+
+
+# class option_group:
+#     def __init__(self, *options):
+#         self.options = options
+#     def __add__(self, other):
+#         to_tuple = lambda d: tuple((k, d[k]) for k in sorted(d.keys()))
+#         combined_set = \
+#             set((opt.args, to_tuple(opt.kwargs)) for opt in self.options).union(
+#             set((opt.args, to_tuple(opt.kwargs)) for opt in other.options))
+#         combined_options = tuple(
+#             option(*args, **dict(items)) for args, items in combined_set)
+#         return option_group(* combined_options)
+#     def __call__(self, func):
+#         for opt in self.options:
+#             func = opt(func)
+#         return func
 
 
 class MetaCommander(type):

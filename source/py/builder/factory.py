@@ -10,6 +10,7 @@ PYTHON_BUILDERS = dict(
     python_framework = core.FrameworkPythonBuilder,
     python_framework_ext = core.FrameworkPythonForExtBuilder,
     python_framework_pkg = core.FrameworkPythonForPkgBuilder,
+    python_relocatable = core.RelocatablePythonBuilder,
 )
 
 PYJS_BUILDERS = dict(
@@ -21,7 +22,7 @@ PYJS_BUILDERS = dict(
     pyjs_shared_pkg = (core.SharedPkgBuilder, ['python_shared_pkg']),
     pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),
     pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
-    pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, []),
+    pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, ['python_relocatable']),
 )
 
 # -----------------------------------------------------------------------------
@@ -101,8 +102,10 @@ def python_builder_factory(name, **settings):
         url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
         libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
     )
-
-    return _builder(product=product, depends_on=_dependencies, **settings)
+    if isinstance(_builder, core.RelocatablePythonBuilder):
+        return _builder(product=product, **settings)
+    else:
+        return _builder(product=product, depends_on=_dependencies, **settings)
 
 # -----------------------------------------------------------------------------
 # PYJS BUILDERS
@@ -136,7 +139,7 @@ def pyjs_builder_factory(name, **settings):
 # GENERIC BUILDERS
 
 def builder_factory(name, **settings):
-    print(settings)
+    # print(settings)
     builder = None
     try:
         builder = pyjs_builder_factory(name, **settings)
