@@ -150,7 +150,7 @@ def fix_python_dylib_for_ext_resources(self):
     )
     self.cmd.chdir(self.project.root)
 
-# (9) VanillaPythonForPkgBuilder: framework-pkg
+# (9) FrameworkPythonForPkgBuilder
 def fix_python_dylib_for_pkg(self):
     """change dylib ref to point to loader in package build format"""
     self.cmd.chdir(self.prefix)
@@ -165,6 +165,7 @@ def fix_python_dylib_for_pkg(self):
 
     self.cmd.chdir(self.project.root)
 
+# (10) SharedPythonForPkgBuilder / FrameworkPythonForPkgBuilder
 def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
     """redirect ref of pythonX to libpythonX.Y.dylib"""
     self.cmd.chdir(self.prefix_bin)
@@ -178,6 +179,7 @@ def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
         )
     self.cmd.chdir(self.project.root)
 
+# (11) FrameworkPythonForPkgBuilder
 def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
     """change ref on executable to point to relative dylib"""
     parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
@@ -194,4 +196,3 @@ def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
                 self.install_name_tool_change(
                     path, "@executable_path/../../../../Python", executable
                 )
-

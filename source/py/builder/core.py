@@ -1,4 +1,4 @@
-"""builder: a builder of py-js max externals
+"""builder: a builder of py-js max externals.
 
 A pure python builder without any dependencies except the standard library.
 
@@ -85,8 +85,8 @@ from typing import Dict, List, Optional
 
 from .config import CURRENT_PYTHON_VERSION, LOG_FORMAT, LOG_LEVEL, Project
 from .depend import PATTERNS_TO_FIX, DependencyManager
-from .shell import ShellCmd
 from .ext.relocatable_python import download_relocatable_to
+from .shell import ShellCmd
 
 URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
@@ -188,9 +188,7 @@ class Product:
     def url(self):
         """Returns url to download product src as a pathlib.Path instance."""
         if self.url_template:
-            return Path(
-                self.url_template.format(
-                    name=self.name, version=self.version))
+            return Path(self.url_template.format(name=self.name, version=self.version))
         # raise KeyError("url_template not providing in settings")
 
     def to_dict(self) -> Dict:
@@ -277,9 +275,7 @@ class Builder:
     @property
     def default_env_vars(self):
         """Returns a dict of default environ settings"""
-        return {
-            'MACOSX_DEPLOYMENT_TARGET': self.project.mac_dep_target
-        }
+        return {"MACOSX_DEPLOYMENT_TARGET": self.project.mac_dep_target}
 
     # -------------------------------------------------------------------------
     # Core functions
@@ -318,9 +314,8 @@ class Builder:
     def to_yaml(self):
         import yaml
 
-        with open("dump.yml", "w", encoding='utf8') as f:
-            f.write(yaml.safe_dump(
-                self.to_dict(), indent=4, default_flow_style=False))
+        with open("dump.yml", "w", encoding="utf8") as f:
+            f.write(yaml.safe_dump(self.to_dict(), indent=4, default_flow_style=False))
 
     def to_json(self):
         import json
@@ -331,26 +326,26 @@ class Builder:
     def configure(self, *options, **kwargs):
         """generate ./configure instructions"""
         _kwargs = {}
-        _options = [opt.replace('_', '-') for opt in options]
+        _options = [opt.replace("_", "-") for opt in options]
         _env = {}
 
         if self.default_env_vars:
             _env.update(self.default_env_vars)
 
         if _env:
-            prefix = " ".join(f'{k}={v}' for k,v in _env.items())
+            prefix = " ".join(f"{k}={v}" for k, v in _env.items())
         else:
             prefix = ""
 
         for key in kwargs:
-            _key = key.replace('_','-')
+            _key = key.replace("_", "-")
             _kwargs[_key] = kwargs[key]
 
         self.cmd(
-            '{prefix} ./configure {options} {kwargs}'.format(
+            "{prefix} ./configure {options} {kwargs}".format(
                 prefix=prefix,
-                options=" ".join(f'--{opt}' for opt in _options), 
-                kwargs=" ".join(f"--{k}='{v}'" for k,v in _kwargs.items())
+                options=" ".join(f"--{opt}" for opt in _options),
+                kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items()),
             )
         )
 
@@ -389,16 +384,16 @@ class Builder:
         """python wrapper around command-line xcodebuild"""
 
         # defaults
-        if not 'PY_VERSION' in xcconfig_flags:
-            xcconfig_flags['PY_VERSION'] = self.project.python.version
+        if not "PY_VERSION" in xcconfig_flags:
+            xcconfig_flags["PY_VERSION"] = self.project.python.version
 
-        if not 'PY_SHORT_VERSION' in xcconfig_flags:
-            xcconfig_flags['PY_SHORT_VERSION'] = self.project.python.version_short
+        if not "PY_SHORT_VERSION" in xcconfig_flags:
+            xcconfig_flags["PY_SHORT_VERSION"] = self.project.python.version_short
 
-        if not 'ABIFLAGS' in xcconfig_flags:
-            xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
+        if not "ABIFLAGS" in xcconfig_flags:
+            xcconfig_flags["ABIFLAGS"] = str(self.project.python.abiflags)
 
-        xcconfig_flags['PROJECT_FOLDER_NAME'] = project
+        xcconfig_flags["PROJECT_FOLDER_NAME"] = project
 
         if self.settings.release:
             configuration = "Deployment"
@@ -572,8 +567,8 @@ class XzBuilder(Builder):
             self.download()
             self.cmd.chdir(self.src_path)
             self.configure(
-                'disable_shared', 
-                'enable_static', 
+                "disable_shared",
+                "enable_static",
                 prefix=quote(self.prefix),
             )
             self.cmd(
@@ -882,16 +877,15 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         for dep in self.depends_on:
             dep.build()
 
-        
         self.cmd.chdir(self.src_path)
         self.configure(
-            'enable_ipv6',
-            'enable_optimizations',
-            'with_lto',
-            'without_doc_strings',
-            'without_ensurepip',
+            "enable_ipv6",
+            "enable_optimizations",
+            "with_lto",
+            "without_doc_strings",
+            "without_ensurepip",
             enable_framework=quote(self.project.build_lib),
-            with_openssl=quote(self.project.build_lib / 'openssl')
+            with_openssl=quote(self.project.build_lib / "openssl"),
         )
 
         self.cmd("make altinstall")
@@ -920,14 +914,14 @@ class SharedPythonBuilder(PythonSrcBuilder):
 
         self.cmd.chdir(self.src_path)
         self.configure(
-            'enable_ipv6',
-            'enable_optimizations',
-            'enable_shared',
-            'with_lto',
-            'without_doc_strings',
-            'without_ensurepip',
+            "enable_ipv6",
+            "enable_optimizations",
+            "enable_shared",
+            "with_lto",
+            "without_doc_strings",
+            "without_ensurepip",
             prefix=quote(self.prefix),
-            with_openssl=quote(self.project.build_lib / 'openssl')
+            with_openssl=quote(self.project.build_lib / "openssl"),
         )
 
         self.cmd("make altinstall")
@@ -949,13 +943,13 @@ class StaticPythonBuilder(PythonSrcBuilder):
         kwargs = dict(prefix=quote(self.prefix))
 
         self.configure(
-            'enable_ipv6',
-            'enable_optimizations',
-            'with_lto',
-            'without_doc_strings',
-            'without_ensurepip',
+            "enable_ipv6",
+            "enable_optimizations",
+            "with_lto",
+            "without_doc_strings",
+            "without_ensurepip",
             prefix=quote(self.prefix),
-            with_openssl=quote(self.project.build_lib / 'openssl'),
+            with_openssl=quote(self.project.build_lib / "openssl"),
         )
 
         self.cmd("make altinstall")
@@ -1312,7 +1306,6 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.fix_python_exec_for_pkg2()
 
 
-
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
 
@@ -1502,6 +1495,7 @@ class HomebrewBuilder(PyJsBuilder):
 
 class LocalSystemBuilder(PyJsBuilder):
     """Builds externals from local python (non-portable)"""
+
     NAME = "local-sys"
 
     def build(self):
@@ -1517,14 +1511,17 @@ class LocalSystemBuilder(PyJsBuilder):
 
 class StaticExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
+
     NAME = "static-ext"
 
     @property
     def product_exists(self):
         static_lib = (
-            self.project.build_lib / "python-static"
-                                   / "lib"
-                                   / self.project.python.staticlib)  # type: ignore
+            self.project.build_lib
+            / "python-static"
+            / "lib"
+            / self.project.python.staticlib
+        )  # type: ignore
         if not static_lib.exists():
             self.log.warning("static python is not built: %s", static_lib)
         return static_lib.exists()
@@ -1538,6 +1535,7 @@ class StaticExtBuilder(PyJsBuilder):
 
 class SharedExtBuilder(PyJsBuilder):
     """pyjs externals from minimal statically built python"""
+
     NAME = "shared-ext"
 
     @property
@@ -1558,6 +1556,7 @@ class SharedExtBuilder(PyJsBuilder):
 
 class SharedPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal statically built python"""
+
     NAME = "shared-pkg"
 
     @property
@@ -1582,6 +1581,7 @@ class SharedPkgBuilder(PyJsBuilder):
 
 class FrameworkExtBuilder(PyJsBuilder):
     """pyjs externals from minimal framework built python"""
+
     NAME = "framework-ext"
 
     @property
@@ -1605,6 +1605,7 @@ class FrameworkExtBuilder(PyJsBuilder):
 
 class FrameworkPkgBuilder(PyJsBuilder):
     """pyjs externals in a package from minimal framework built python"""
+
     NAME = "framework-pkg"
 
     @property
@@ -1632,12 +1633,8 @@ class FrameworkPkgBuilder(PyJsBuilder):
 
 class RelocatablePkgBuilder(PyJsBuilder):
     """External builder related to Relocatable Python"""
-    NAME = "relocatable-pkg"
 
-    # def install(self):
-    #     for builder in self.depends_on:
-    #         builder.settings.update(self.settings)
-    #         builder.install()
+    NAME = "relocatable-pkg"
 
     @property
     def product_exists(self):
@@ -1650,15 +1647,23 @@ class RelocatablePkgBuilder(PyJsBuilder):
         """builds externals from framework python"""
 
         if self.product_exists:
-            py = (self.project.support / "Python.framework" / "Versions" 
-                 / "Current" / "bin" / "python3")
-            get = lambda x: subprocess.check_output([
-                py, "-c", f"import sysconfig; print(sysconfig.get_config_var('{x}'))"]
-                , text=True).strip()
-
-            self.xcodebuild(self.NAME, targets=["py", "pyjs"], 
-                PY_VERSION = get('py_version'),
-                PY_SHORT_VERSION = get('py_version_short'),
-                ABIFLAGS = get('abiflags'),
+            py = (
+                self.project.support
+                / "Python.framework"
+                / "Versions"
+                / "Current"
+                / "bin"
+                / "python3"
             )
+            get = lambda x: subprocess.check_output(
+                [py, "-c", f"import sysconfig; print(sysconfig.get_config_var('{x}'))"],
+                text=True,
+            ).strip()
 
+            self.xcodebuild(
+                self.NAME,
+                targets=["py", "pyjs"],
+                PY_VERSION=get("py_version"),
+                PY_SHORT_VERSION=get("py_version_short"),
+                ABIFLAGS=get("abiflags"),
+            )
