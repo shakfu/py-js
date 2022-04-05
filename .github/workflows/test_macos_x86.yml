@@ -30,37 +30,28 @@ jobs:
         key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
     - name: build_default
-      continue-on-error: true
       run: make
 
     - name: build_homebrew_ext
-      continue-on-error: true
       run: make homebrew-ext
 
     - name: build_homebrew_pkg
-      continue-on-error: true
       run: make homebrew-pkg
 
     - name: build_shared_pkg
-      continue-on-error: true
       run: make shared-pkg
 
     - name: build_shared_ext
-      continue-on-error: true
       run: make shared-ext
 
     - name: build_static_ext
-      continue-on-error: true
       run: make static-ext
 
     - name: build_framework_pkg
-      continue-on-error: true
       run: make framework-pkg
 
     - name: build_framework_ext
-      continue-on-error: true
       run: make framework-ext
 
     - name: build_relocatable_pkg
-      continue-on-error: true
       run:  make relocatable-pkg

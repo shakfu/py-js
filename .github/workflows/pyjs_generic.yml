@@ -15,8 +15,6 @@ on:
           - shared-pkg
           - static-ext
           - relocatable-pkg
-          - homebrew-ext
-          - homebrew-pkg
       py_version:
         type: choice
         description: Please select a python version

@@ -33,8 +33,8 @@ jobs:
         submodules: 'recursive'
         fetch-depth: '0'
 
-    - run: python source/py/scripts/set_py_ver.py
-    - run: echo ${{ env.PY_VERSION }}
+    # - run: python source/py/scripts/set_py_ver.py
+    # - run: echo ${{ env.PY_VERSION }}
 
     - uses: benjlevesque/short-sha@v1.2
       id: short-sha
