@@ -1,5 +1,5 @@
 from . import core
-from .config import (DEFAULT_BZ2_VERSION, CURRENT_PYTHON_VERSION,
+from .config import (CURRENT_PYTHON_VERSION, DEFAULT_BZ2_VERSION,
                      DEFAULT_SSL_VERSION, DEFAULT_XZ_VERSION)
 
 PYTHON_BUILDERS = dict(

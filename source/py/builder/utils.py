@@ -7,14 +7,9 @@ import sys
 import time
 from pathlib import Path
 
-from .config import (
-    HOME, 
-    PYJS_TARGETS, PYTHON_TARGETS, 
-    CURRENT_PYTHON_VERSION,
-    BASEDIR, BASELOGSDIR, LOGDIR,
-    CYAN, GREEN, MAGENTA, RESET,
-)
-
+from .config import (BASEDIR, BASELOGSDIR, CURRENT_PYTHON_VERSION, CYAN, GREEN,
+                     HOME, LOGDIR, MAGENTA, PYJS_TARGETS, PYTHON_TARGETS,
+                     RESET)
 from .ext.tqdm import tqdm
 
 

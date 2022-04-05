@@ -16,13 +16,13 @@ subcommands:
     python       download and build python from src
 
 """
+from . import utils
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
-from . import utils
-from .sign import sign_externals_folder
 from .ext.relocatable_python import (process_args_for_relocatable_python,
                                      relocatable_options)
 from .factory import builder_factory
+from .sign import sign_externals_folder
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -50,6 +50,7 @@ common_options = option_group(
     option("-z", 
             "--ziplib", action="store_true", help="zip python library"),
     option("--dump", action="store_true", help="dump project and product vars"),
+    option("--release", action="store_true", help="set configuration to release"),
 )
 
 class Application(Commander):

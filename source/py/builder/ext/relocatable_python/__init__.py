@@ -47,6 +47,9 @@ relocatable_options = option_group(
     option("--without-pip", default=False, action="store_true",
         help="Do not install pip."
     ),
+    option("--release", action="store_true", 
+        help="set configuration to release"
+    ),
 )
 
 

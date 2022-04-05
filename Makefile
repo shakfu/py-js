@@ -97,7 +97,7 @@ all: default
 
 
 # -----------------------------------------------------------------------
-# python external argets
+# python3 external argets
 
 
 default: local-sys
@@ -134,6 +134,36 @@ relocatable-pkg: clean-framework-pkg
 
 pymx:
 	@bash source/projects/pymx/build_pymx.sh
+
+# -----------------------------------------------------------------------
+# release external targets
+
+.PHONY: release-framework-pkg release-framework-ext \
+		release-shared-pkg release-shared-ext \
+		release-static-ext release-static-pkg \
+		release-relocatable-pkg
+
+release-shared-pkg: clean-shared-pkg
+	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build" "--release")
+
+release-shared-ext: clean-shared-ext
+	$(call call-builder,"pyjs" "shared_ext" "--install" "--build" "--release")
+
+release-static-ext: clean-static-ext
+	$(call call-builder,"pyjs" "static_ext" "--install" "--build" "--release")
+
+release-static-pkg: clean-static-pkg
+	$(call call-builder,"pyjs" "static_pkg" "--install" "--build" "--release")
+
+release-framework-pkg: clean-framework-pkg
+	$(call call-builder,"pyjs" "framework_pkg" "--install" "--build" "--release")
+
+release-framework-ext: clean-framework-ext
+	$(call call-builder,"pyjs" "framework_ext" "--install" "--build" "--release")
+
+release-relocatable-pkg: clean-framework-pkg
+	$(call call-builder,"pyjs" "relocatable_pkg" "--release")
+
 
 # -----------------------------------------------------------------------
 # python targets

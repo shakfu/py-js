@@ -21,7 +21,6 @@ Builder
                 SharedPythonForExtBuilder
                 SharedPythonForPkgBuilder
             StaticPythonBuilder
-                StaticLightPythonBuilder
         PyJsBuilder
             LocalSystemBuilder
             HomebrewBuilder
@@ -83,7 +82,7 @@ from textwrap import dedent
 from types import SimpleNamespace
 from typing import Dict, List, Optional
 
-from .config import LOG_FORMAT, LOG_LEVEL, CURRENT_PYTHON_VERSION, Project
+from .config import CURRENT_PYTHON_VERSION, LOG_FORMAT, LOG_LEVEL, Project
 from .depend import PATTERNS_TO_FIX, DependencyManager
 from .shell import ShellCmd
 
@@ -393,6 +392,11 @@ class Builder:
         xcconfig_flags['ABIFLAGS'] = str(self.project.python.abiflags)
         xcconfig_flags['PROJECT_FOLDER_NAME'] = project
 
+        if self.settings.release:
+            configuration = "Deployment"
+        else:
+            configuration = "Development"
+
         x_flags = (
             " ".join([f"{k}={repr(v)}" for k, v in xcconfig_flags.items()])
             if xcconfig_flags
@@ -408,7 +412,7 @@ class Builder:
         for target in targets:
             self.cmd(
                 f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
-                 # " -configuration Deployment"
+                f" -configuration {configuration}"
                 f" -target {repr(target)} {x_flags} {p_flags}"
             )
         # self.deploy(targets)
@@ -517,10 +521,9 @@ class Bzip2Builder(Builder):
         if not self.product_exists:
             self.download()
             self.cmd.chdir(self.src_path)
-            prefix = quote(str(self.prefix))
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
-                    make install PREFIX='{prefix}'"""
+                    make install PREFIX={quote(self.prefix)}"""
             )
             self.cmd.chdir(self.project.root)
         else:
@@ -534,12 +537,11 @@ class OpensslBuilder(Builder):
         if not self.product_exists:
             self.download()
             self.cmd.chdir(self.src_path)
-            prefix = quote(str(self.prefix))
             os.environ["MACOSX_DEPLOYMENT_TARGET"] = self.project.mac_dep_target
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
                     ./config no-shared no-tests \
-                    --prefix='{prefix}'"""
+                    --prefix={quote(self.prefix)}"""
             )
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
@@ -564,7 +566,7 @@ class XzBuilder(Builder):
             self.configure(
                 'disable_shared', 
                 'enable_static', 
-                prefix=quote(str(self.prefix)),
+                prefix=quote(self.prefix),
             )
             self.cmd(
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
@@ -908,7 +910,6 @@ class SharedPythonBuilder(PythonSrcBuilder):
         for dep in self.depends_on:
             dep.build()
 
-        quote = lambda p: repr(str(p))
         self.cmd.chdir(self.src_path)
         self.configure(
             'enable_ipv6',
@@ -935,11 +936,9 @@ class StaticPythonBuilder(PythonSrcBuilder):
         return self.project.build_lib / self.product.build_dir
 
     def build(self):
-        # for dep in self.depends_on:
-        #     dep.build()
-
-        quote = lambda p: repr(str(p))
         self.cmd.chdir(self.src_path)
+
+        kwargs = dict(prefix=quote(self.prefix))
 
         self.configure(
             'enable_ipv6',
@@ -948,7 +947,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
             'without_doc_strings',
             'without_ensurepip',
             prefix=quote(self.prefix),
-            with_openssl=quote(self.project.build_lib / 'openssl')
+            with_openssl=quote(self.project.build_lib / 'openssl'),
         )
 
         self.cmd("make altinstall")
@@ -956,24 +955,6 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
     def remove_extensions(self):
         """remove extensions: not implemented"""
-
-
-
-class StaticLightPythonBuilder(StaticPythonBuilder):
-    """builds python in a static format."""
-
-    def build(self):
-        quote = lambda p: repr(str(p))
-        self.cmd.chdir(self.src_path)
-
-        self.configure(self,
-            'enable_ipv6',
-            'enable_optimizations',
-            'with_lto',
-            'without_doc_strings',
-            'without_ensurepip',
-            prefix=quote(self.prefix),
-        )
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (SPECIALIZED)

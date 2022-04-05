@@ -1,9 +1,8 @@
-import os
 import logging
+import os
 import platform
 import sysconfig
 from pathlib import Path
-
 
 # ----------------------------------------------------------------------------
 # Logging
