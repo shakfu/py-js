@@ -17,7 +17,7 @@ name     | sdk        | lang   | description
 py       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
 pyjs     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
 mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
-pymx     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
+[pymx](https://github.com/shakfu/min.pymx)     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 zpy      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. They are largely differentiated in the ways that this is done and in packaging choices which serve different deployment requirements for your patch, package or standalone.
@@ -28,7 +28,7 @@ For a sense of relative maturity, about 80% of development time to-date has gone
 
 A significant time of this project has been devoted to developing and refining different ways of packaging and deploying the externals.
 
-At the time of this writing, and since the recent switch of the main branch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base) submodule dependency, we believe that the project is quite close to being compatible with Apple Silicon-based machines. Indeed a recent test did result in a successful compilation and usage test result.
+At the time of this writing, and since the recent switch of the main branch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base) submodule dependency, we believe that the project is quite close to being compatible with Apple Silicon-based machines. Indeed a recent test did produce a successful compilation and usage test result.
 
 Nonetheless, until further testing has been achieved across all build variants, we still maintain that all of the externals currently only work on MacOS x86_64 machines.
 

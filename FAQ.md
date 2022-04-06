@@ -9,9 +9,7 @@ This project is macOS x86_64 (intel) compatible currently.
 
 ### What about compatibility with Apple Silicon?
 
-The main branch has just converted to the lastest `max-base-sdk` and there will be ongoing work on converting the current build system to be Apple Silicon compatible and to provide options to users one how they want to build their python externals (native vs fat, full vs minimal, portable vs non-portable, etc.)
-
-There is also an `M1` branch for the project under-development to provide this compatability and shift the build project's build system to cmake. This mostly a learning subproject, but it is unlikely that that the current python `builder` system will be dropped for a pure cmake-based solution.
+The main branch has just converted to the lastest `max-base-sdk` and there will be ongoing work on converting the current build system to be Apple Silicon compatible and to provide options to users one how they want to build their python externals. Recent recents have been promising.
 
 ### What about compatibility with Windows?
 
