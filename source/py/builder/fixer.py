@@ -58,6 +58,21 @@ class Fixer:
             dylib
         )
 
+    def fix_dylib_for_shared_ext(self, dylib, short_ver, is_homebrew=False):
+        """install to dylib @rpath of @loader' to dylib in a shared-ext
+
+        used in: 
+            SharedPythonForExtBuilder(SharedPythonBuilder): dylib-ext (resources)
+            HomebrewBuilder(PyJsBuilder): ext (resources)
+        """
+        sep = "" if is_homebrew else "lib/"
+        self.cmd.chmod(dylib)
+        self.install_name_tool_id(
+            (f"@loader_path/../Resources/{sep}python{short_ver}/"
+             f"libpython{short_ver}.dylib"),
+            dylib
+        )
+
     def fix_dylib_for_framework_pkg(self, dylib, short_ver):
         """install to dylib @rpath of @loader' to dylib in a framework-pkg
 
@@ -70,21 +85,6 @@ class Fixer:
             f"Versions/{short_ver}/Python"), 
             dylib
         )
-
-    def fix_dylib_for_shared_ext(self, dylib, short_ver, is_homebrew=False):
-        """install to dylib @rpath of @loader' to dylib in a shared-ext
-
-        used in: 
-            SharedPythonForExtBuilder(SharedPythonBuilder): dylib-ext (resources)
-            HomebrewBuilder(PyJsBuilder): ext (resources)
-        """
-        sep = "" if is_homebrew else "lib/"
-        self.cmd.chmod(dylib)
-        self.install_name_tool_id(
-            (f"@loader_path/../Resources/{sep}python{short_ver}/"
-            f"libpython{short_ver}.dylib"),
-            dylib
-        )
     
     def fix_dylib_for_framework_ext(self, dylib, short_ver):
         """install to dylib @rpath of @loader' to dylib in a framework-ext
@@ -94,13 +94,13 @@ class Fixer:
         """
         self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            f"@loader_path/../Python.framework/Versions/{short_ver}/Python",
+            f"@loader_path/../Resources/Python.framework/Versions/{short_ver}/Python",
             dylib
         )
 
 ## -----------------------------------------------------------------------
 
-    def fix_shared_exe_for_pkg(self, executable, short_ver, is_homebrew=False):
+    def fix_exe_for_shared_pkg(self, executable, short_ver, is_homebrew=False):
         # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"
 
@@ -118,7 +118,7 @@ class Fixer:
                 executable
             )
 
-    def fix_framework_execs_for_ext_or_pkg(self, py_exec, app_exec):
+    def fix_execs_for_framework_ext_or_pkg(self, py_exec, app_exec):
         # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"
 

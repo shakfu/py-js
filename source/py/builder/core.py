@@ -888,6 +888,27 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
     #     super().clean() # call superclass clean method
     #     self.cmd.remove(self.prefix_resources / "Python.app")
 
+    def fix_execs_for_framework_ext_or_pkg(self, py_exec, app_exec):
+        # sourcery skip: use-named-expression
+        """redirect ref of pythonX to libpythonX.Y.dylib"
+
+        used in:
+            FrameworkPythonForExtBuilder
+            FrameworkPythonForPkgBuilder
+        """
+        fixes = [
+            (py_exec, "@executable_path/../Python"),
+            (app_exec, "@executable_path/../../../../Python"),
+        ]
+        for exe, backref in fixes:
+            dirs = DependencyManager(exe).analyze_executable()
+            if dirs:
+                dir_to_change = dirs[0]
+                self.install_name_tool_change(
+                    dir_to_change,
+                    backref,
+                    exe
+                )
 
 class SharedPythonBuilder(PythonSrcBuilder):
     """builds python in a shared format."""
@@ -1067,23 +1088,35 @@ class SharedPythonForExtBuilder(SharedPythonBuilder):
 
     setup_local = "setup-shared.local"
 
-    def fix_python_dylib_for_ext_resources(self):
-        """change dylib ref to point to loader in external build format"""
-        self.cmd.chdir(self.prefix / "lib")
-        dylib_path = self.prefix / "lib" / self.product.dylib
-        assert dylib_path.exists()
-        self.cmd.chmod(self.product.dylib)
+    def fix_dylib_for_shared_ext(self, dylib):
+        """install to dylib @rpath of @loader' to dylib in a shared-ext
+        """
+        self.cmd.chmod(dylib)
         self.install_name_tool_id(
             f"@loader_path/../Resources/lib/{self.product.dylib}",
-            self.product.dylib,
+            dylib
         )
-        self.cmd.chdir(self.project.root)
+
+    # def fix_python_dylib_for_ext_resources(self):
+    #     """change dylib ref to point to loader in external build format"""
+    #     self.cmd.chdir(self.prefix / "lib")
+    #     dylib_path = self.prefix / "lib" / self.product.dylib
+    #     assert dylib_path.exists()
+    #     self.cmd.chmod(self.product.dylib)
+    #     self.install_name_tool_id(
+    #         f"@loader_path/../Resources/lib/{self.product.dylib}",
+    #         self.product.dylib,
+    #     )
+    #     self.cmd.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
         self.clean()
         self.ziplib()
-        self.fix_python_dylib_for_ext_resources()
+        self.fix_dylib_for_shared_ext(
+            dylib = self.prefix_lib / self.product.dylib,
+        )
+        # self.fix_python_dylib_for_ext_resources()
 
 
 class SharedPythonForPkgBuilder(SharedPythonBuilder):
@@ -1115,38 +1148,39 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
             ]
         )
 
-    def fix_python_dylib_for_pkg(self):
-        """change dylib ref to point to loader in package build format"""
-        self.cmd.chdir(self.prefix / "lib")
-        dylib_path = self.prefix / "lib" / self.product.dylib
-        assert dylib_path.exists(), f"{dylib_path} does not exist"
-        self.cmd.chmod(self.product.dylib)
-        # both of these are equivalent (and both don't work!)
+    def fix_dylib_for_shared_pkg(self, dylib):
+        """install to dylib @rpath of @loader' to dylib in a shared-pkg
+        """
+        self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            f"@loader_path/../../../../support/{self.product.name_ver}/lib/{self.product.dylib}",
-            self.product.dylib,
+            ("@loader_path/../../../../support/"
+             f"{self.product.name_ver}/lib/{self.product.dylib}"),
+            dylib
         )
-        self.cmd.chdir(self.project.root)
 
-    def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
-        """redirect ref of pythonX to libpythonX.Y.dylib"""
-        self.cmd.chdir(self.prefix_bin)
-        exe = self.product.name_ver
-        d = DependencyManager(exe)
-        dirs_to_change = d.analyze_executable()
-        if dirs_to_change:
-            dir_to_change = dirs_to_change[0]
+    def fix_exe_for_shared_pkg(self, executable):
+        # sourcery skip: use-named-expression
+        """redirect ref of pythonX to libpythonX.Y.dylib"
+        """
+        dirs = DependencyManager(executable).analyze_executable()
+        if dirs:
+            dir_to_change = dirs[0]
             self.install_name_tool_change(
-                dir_to_change, f"@executable_path/../lib/{self.product.dylib}", exe
+                dir_to_change,
+                f"@executable_path/../lib/{self.product.dylib}",
+                executable
             )
-        self.cmd.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
         self.clean()
         self.ziplib()
-        self.fix_python_exe_for_pkg()
-        self.fix_python_dylib_for_pkg()
+        self.fix_dylib_for_shared_pkg(
+            dylib=self.prefix / "lib" / self.product.dylib,
+        )
+        self.fix_exe_for_shared_pkg(
+            executable=self.prefix_bin / self.product.name_ver
+        )
 
 
 class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
@@ -1154,62 +1188,26 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
 
     setup_local = "setup-shared.local"
 
-    def fix_python_dylib_for_ext_resources(self):
-        """change dylib ref to point to loader in external build format"""
-        self.cmd.chdir(self.prefix)
-        dylib_path = self.prefix / "Python"
-        assert dylib_path.exists()
-        # self.cmd.chmod(dylib_path)
+
+    def fix_dylib_for_framework_ext(self, dylib):
+        """install to dylib @rpath of @loader' to dylib in a framework-ext
+        """
+        self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
-            dylib_path
-            # self.project.build_lib / self.project.python.ldlibrary
+            f"@loader_path/../Resources/{self.project.python.ldlibrary}",
+            dylib
         )
-        self.cmd.chdir(self.project.root)
-
-    def fix_python_exec_for_framework(self):    # sourcery skip: use-named-expression
-        """change ref on executable to point to relative dylib"""
-        self.cmd.chdir(self.prefix_bin)
-        executable = self.product.name_ver
-        result = subprocess.check_output(["otool", "-L", executable])
-        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
-        for entry in entries:
-            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
-            if match:
-                path = match[1]
-                # homebrew files are installed in /usr/local/Cellar
-                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
-                    self.install_name_tool_change(
-                        path, "@executable_path/../Python", executable
-                    )
-        self.cmd.chdir(self.project.root)
-
-    def fix_python_exec_for_framework2(self):    # sourcery skip: use-named-expression
-        """change ref on executable to point to relative dylib"""
-        parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
-        self.cmd.chdir(parent_dir)
-        executable = parent_dir / "Python"
-        result = subprocess.check_output(["otool", "-L", executable])
-        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
-        for entry in entries:
-            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
-            if match:
-                path = match[1]
-                # homebrew files are installed in /usr/local/Cellar
-                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
-                    self.install_name_tool_change(
-                        path, "@executable_path/../../../../Python", executable
-                    )
-
-        self.cmd.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
         self.clean()
         self.ziplib()
-        self.fix_python_dylib_for_ext_resources()
-        self.fix_python_exec_for_framework()
-        self.fix_python_exec_for_framework2()
+        self.fix_dylib_for_framework_ext(self.prefix / "Python")
+        self.fix_execs_for_framework_ext_or_pkg(
+            py_exec = self.prefix_bin / self.product.name_ver,
+            app_exec = (self.prefix_resources / "Python.app" / 
+                "Contents" / "MacOS" / "Python")
+        )
 
 
 class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
@@ -1241,60 +1239,25 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
             ]
         )
 
-    def fix_python_dylib_for_pkg(self):
-        """change dylib ref to point to loader in package build format"""
-        self.cmd.chdir(self.prefix)
-        dylib_path = self.prefix / "Python"
-        assert dylib_path.exists()
-        self.cmd.chmod(dylib_path)
-        # both of these are equivalent (and both don't work!)
+    def fix_dylib_for_framework_pkg(self, dylib):
+        """install to dylib @rpath of @loader' to dylib in a framework-pkg
+        """
+        self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            "@loader_path/../../../../support" / self.project.python.ldlibrary,
-            dylib_path,
+            f"@loader_path/../../../../support/{self.project.python.ldlibrary}",
+            dylib
         )
-
-        self.cmd.chdir(self.project.root)
-
-    def fix_python_exe_for_pkg(self):  # sourcery skip: use-named-expression
-        """redirect ref of pythonX to libpythonX.Y.dylib"""
-        self.cmd.chdir(self.prefix_bin)
-        exe = self.product.name_ver
-        d = DependencyManager(exe)
-        dirs_to_change = d.analyze_executable()
-        if dirs_to_change:
-            dir_to_change = dirs_to_change[0]
-            self.install_name_tool_change(
-                dir_to_change, "@executable_path/../Python", exe
-            )
-        self.cmd.chdir(self.project.root)
-
-    def fix_python_exec_for_pkg2(self):    # sourcery skip: use-named-expression
-        """change ref on executable to point to relative dylib"""
-        parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
-        self.cmd.chdir(parent_dir)
-        executable = parent_dir / "Python"
-        result = subprocess.check_output(["otool", "-L", executable])
-        entries = [line.decode("utf-8").strip() for line in result.splitlines()]
-        for entry in entries:
-            match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
-            if match:
-                path = match[1]
-                # homebrew files are installed in /usr/local/Cellar
-                if any(path.startswith(p) for p in PATTERNS_TO_FIX):
-                    self.install_name_tool_change(
-                        path, "@executable_path/../../../../Python", executable
-                    )
-
-        self.cmd.chdir(self.project.root)
 
     def post_process(self):
         """post-build operations"""
         self.clean()
         self.ziplib()
-        self.fix_python_dylib_for_pkg()
-        self.fix_python_exe_for_pkg()
-        self.fix_python_exec_for_pkg2()
-
+        self.fix_dylib_for_framework_pkg(self.prefix / "Python")
+        self.fix_execs_for_framework_ext_or_pkg(
+            py_exec = self.prefix_bin / self.product.name_ver,
+            app_exec = (self.prefix_resources / "Python.app" / 
+                "Contents" / "MacOS" / "Python")
+        )
 
 # ------------------------------------------------------------------------------------
 # PYJS EXTERNAL BUILDERS (ABSTRACT)
