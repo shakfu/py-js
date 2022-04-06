@@ -1097,18 +1097,6 @@ class SharedPythonForExtBuilder(SharedPythonBuilder):
             dylib
         )
 
-    # def fix_python_dylib_for_ext_resources(self):
-    #     """change dylib ref to point to loader in external build format"""
-    #     self.cmd.chdir(self.prefix / "lib")
-    #     dylib_path = self.prefix / "lib" / self.product.dylib
-    #     assert dylib_path.exists()
-    #     self.cmd.chmod(self.product.dylib)
-    #     self.install_name_tool_id(
-    #         f"@loader_path/../Resources/lib/{self.product.dylib}",
-    #         self.product.dylib,
-    #     )
-    #     self.cmd.chdir(self.project.root)
-
     def post_process(self):
         """post-build operations"""
         self.clean()

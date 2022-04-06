@@ -17,7 +17,6 @@ jobs:
           - framework-pkg
           - framework-ext
           - relocatable-pkg
-
     steps:
       - uses: actions/checkout@v3
         with:
