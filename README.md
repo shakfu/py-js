@@ -28,7 +28,7 @@ For a sense of relative maturity, about 80% of development time to-date has gone
 
 A significant time of this project has been devoted to developing and refining different ways of packaging and deploying the externals.
 
-At the time of this writing, and since the recent switch of the main branch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base) submodule dependency, we believe that the project is quite close to being compatible with Apple Silicon-based machines. Indeed a recent test did result in a successful compilation and usage test result. 
+At the time of this writing, and since the recent switch of the main branch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base) submodule dependency, we believe that the project is quite close to being compatible with Apple Silicon-based machines. Indeed a recent test did result in a successful compilation and usage test result.
 
 Nonetheless, until further testing has been achieved across all build variants, we still maintain that all of the externals currently only work on MacOS x86_64 machines.
 
@@ -126,7 +126,6 @@ pyjs max external (jsextension)
 
 ```
 
-
 ## Quickstart
 
 As mentioned earlier, the `py` and `pyjs` objects are the most mature and best documented of the collection. Happily, there is also no need to compile them as a [release (0.1)](https://github.com/shakfu/py-js/releases/tag/0.1) has just been made with both externals being fully codesigned and notarized.
@@ -142,6 +141,7 @@ If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/r
     ```bash
     make setup
     ```
+
     The above will initialize and update the required git submodules and symlink the repo to `$HOME/Documents/Max 8/Packages/py-js` to install it as a Max Package and enable you to test the externals and run the patches.
 
     [?] It is possible to install `py-js` directly into `$HOME/Documents/Max 8/Packages`, but it is more involved, involving a different configuration, and not recommended for the purposes of this quickstart.
@@ -250,7 +250,6 @@ If you want to test or retest one individual variation, just prefix `test-` to t
 make test-shared-pkg
 ```
 
-
 ### Using Self-contained Python Externals in a Standalone
 
 If you have downloaded the [0.1 Release](https://github.com/shakfu/py-js/releases/tag/0.1) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
@@ -271,7 +270,6 @@ project](https://github.com/shakfu/maxutils)  which also aims to make this less 
 Please read on for further details about what the py-js externals can do.
 
 Have fun!
-
 
 ## Overview
 
@@ -583,7 +581,6 @@ brew install clang-format
 ```
 
 The style used in this project is specified in the `.clang-format` file.
-
 
 ## Related projects
 

@@ -174,9 +174,7 @@ class Product:
     @property
     def name_archive(self):
         """Archival name of Product-version"""
-        if self.url:
-            return self.url.name
-        return f"{self.name_version}.tgz"
+        return self.url.name if self.url else f"{self.name_version}.tgz"
 
     @property
     def dylib(self) -> str:
@@ -332,11 +330,7 @@ class Builder:
         if self.default_env_vars:
             _env.update(self.default_env_vars)
 
-        if _env:
-            prefix = " ".join(f"{k}={v}" for k, v in _env.items())
-        else:
-            prefix = ""
-
+        prefix = " ".join(f"{k}={v}" for k, v in _env.items()) if _env else ""
         for key in kwargs:
             _key = key.replace("_", "-")
             _kwargs[_key] = kwargs[key]
@@ -368,7 +362,7 @@ class Builder:
         _cmd = f"install_name_tool -add_rpath '{rpath}' '{target}'"
         self.cmd(_cmd)
 
-    def deploy(self, targets: List[str] = None):
+    def deploy(self, targets: List[str] = None):  # type: ignore
         """copies externals from the external build dir to the package/externals directory"""
         for ext in [f"{t}.mxo" for t in targets]:
             src = self.project.build_externals / ext
@@ -384,22 +378,18 @@ class Builder:
         """python wrapper around command-line xcodebuild"""
 
         # defaults
-        if not "PY_VERSION" in xcconfig_flags:
+        if "PY_VERSION" not in xcconfig_flags:
             xcconfig_flags["PY_VERSION"] = self.project.python.version
 
-        if not "PY_SHORT_VERSION" in xcconfig_flags:
+        if "PY_SHORT_VERSION" not in xcconfig_flags:
             xcconfig_flags["PY_SHORT_VERSION"] = self.project.python.version_short
 
-        if not "ABIFLAGS" in xcconfig_flags:
+        if "ABIFLAGS" not in xcconfig_flags:
             xcconfig_flags["ABIFLAGS"] = str(self.project.python.abiflags)
 
         xcconfig_flags["PROJECT_FOLDER_NAME"] = project
 
-        if self.settings.release:
-            configuration = "Deployment"
-        else:
-            configuration = "Development"
-
+        configuration = "Deployment" if self.settings.release else "Development"
         x_flags = (
             " ".join([f"{k}={repr(v)}" for k, v in xcconfig_flags.items()])
             if xcconfig_flags
@@ -493,7 +483,7 @@ class Recipe:
     def __init__(
         self,
         name: str,
-        py_version: str = None,
+        py_version: str = None,  # type: ignore
         builders: List[Builder] = None,  # type: ignore
         **settings,
     ):
@@ -1177,7 +1167,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework(self):  # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework(self):    # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
         executable = self.product.name_ver
@@ -1186,7 +1176,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         for entry in entries:
             match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
             if match:
-                path = match.group(1)
+                path = match[1]
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
                     self.install_name_tool_change(
@@ -1194,7 +1184,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
                     )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_framework2(self):  # sourcery skip: use-named-expression
+    def fix_python_exec_for_framework2(self):    # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1204,7 +1194,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         for entry in entries:
             match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
             if match:
-                path = match.group(1)
+                path = match[1]
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
                     self.install_name_tool_change(
@@ -1278,7 +1268,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
             )
         self.cmd.chdir(self.project.root)
 
-    def fix_python_exec_for_pkg2(self):  # sourcery skip: use-named-expression
+    def fix_python_exec_for_pkg2(self):    # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         parent_dir = self.prefix_resources / "Python.app" / "Contents" / "MacOS"
         self.cmd.chdir(parent_dir)
@@ -1288,7 +1278,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         for entry in entries:
             match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
             if match:
-                path = match.group(1)
+                path = match[1]
                 # homebrew files are installed in /usr/local/Cellar
                 if any(path.startswith(p) for p in PATTERNS_TO_FIX):
                     self.install_name_tool_change(
@@ -1362,7 +1352,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.remove_packages()
         self.remove_extensions()
 
-    def fix_python_exec(self):  # sourcery skip: use-named-expression
+    def fix_python_exec(self):    # sourcery skip: use-named-expression
         """change ref on executable to point to relative dylib"""
         self.cmd.chdir(self.prefix_bin)
         executable = self.product.name_ver
@@ -1371,7 +1361,7 @@ class HomebrewBuilder(PyJsBuilder):
         for entry in entries:
             match = re.match(r"\s*(\S+)\s*\(compatibility version .+\)$", entry)
             if match:
-                path = match.group(1)
+                path = match[1]
                 # homebrew files are installed in /usr/local/Cellar
                 if path.startswith("/usr/local/Cellar/python"):
                     self.install_name_tool_change(
@@ -1520,7 +1510,7 @@ class StaticExtBuilder(PyJsBuilder):
             self.project.build_lib
             / "python-static"
             / "lib"
-            / self.project.python.staticlib
+            / self.project.python.staticlib  # type: ignore
         )  # type: ignore
         if not static_lib.exists():
             self.log.warning("static python is not built: %s", static_lib)
