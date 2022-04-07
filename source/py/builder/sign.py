@@ -30,10 +30,10 @@ logging.basicConfig(
 
 class CodesignExternal:
     """Recursively codesign an external."""
-
+    SUFFIX_PATTERN = '*.mxo'
     FILE_PATTERNS = {PYTHON_VER: 'runtime'}
     FILE_EXTENSIONS = ['.so', '.dylib']
-    FOLDER_EXTENSIONS = ['.framework', '.mxo', '.bundle']
+    FOLDER_EXTENSIONS = ['.framework', '.mxo', '.bundle', '.app']
 
     def __init__(self, path: str, dev_id: str = None, 
                  entitlements: str = None, dry_run: bool = False):
@@ -43,6 +43,7 @@ class CodesignExternal:
         self.dry_run = dry_run
         self.targets_runtimes = set()
         self.targets_internals = set()
+        self.targets_apps = set()
         self.log = logging.getLogger(self.__class__.__name__)
         self._cmd_codesign = [
             "codesign",
@@ -107,7 +108,10 @@ class CodesignExternal:
                         continue
                     if path.suffix in self.FOLDER_EXTENSIONS:
                         self.log.debug("added bundle: %s", path)
-                        self.targets_internals.add(path)
+                        if path.suffix == '.app':
+                            self.targets_apps.add(path)
+                        else:
+                            self.targets_internals.add(path)
 
     def sign_internal_binary(self, path: pathlib.Path):
         """sign internal binaries"""
@@ -141,6 +145,12 @@ class CodesignExternal:
             if not self.dry_run:
                 self.sign_internal_binary(path)
 
+        for path in self.targets_apps:
+            macos_path = path / 'Contents' / 'MacOS'
+            for exe in macos_path.iterdir():
+                if not self.dry_run:
+                    self.sign_internal_binary(path)
+
         if not self.dry_run:
             for path in self.targets_runtimes:
                 self.sign_runtime(path)
@@ -163,38 +173,37 @@ class CodesignExternal:
             app.process()
 
 
+class CodesignFramework(CodesignExternal):
+    """Recursively codesign a framework."""
 
-def sign_externals_folder():
+    SUFFIX_PATTERN = '*.framework'
+
+
+
+
+def sign_folder(folder='externals'):
+    _class = {
+        'externals': CodesignExternal,
+        'support': CodesignFramework,
+    }[folder]
     root = pathlib.Path(__file__).parent.parent.parent.parent
-    externals_folder = pathlib.Path(root / 'externals')
+    target_folder = pathlib.Path(root / folder)
     entitlements = pathlib.Path(root / 'source/py/resources/entitlements/entitlements.plist')
     dev_id = os.environ['DEV_ID']
-    assert externals_folder.exists()
+    assert target_folder.exists()
     assert entitlements.exists()
     assert dev_id, "dev_id not set in env"
-    externals = list(externals_folder.glob('*.mxo'))
-    assert len(externals) > 0, "no externals to sign"
-    for ext in externals:
-        signer = CodesignExternal(ext, dev_id=dev_id, entitlements=entitlements)
+    targets = list(target_folder.glob(_class.SUFFIX_PATTERN))
+    assert len(targets) > 0, "no targets to sign"
+    for target in targets:
+        signer = _class(target, dev_id=dev_id, entitlements=entitlements)
         signer.process()
 
-def sign_support_folder():
-    root = pathlib.Path(__file__).parent.parent.parent.parent
-    support_folder = pathlib.Path(root / 'support')
-    entitlements = pathlib.Path(root / 'source/py/resources/entitlements/entitlements.plist')
-    dev_id = os.environ['DEV_ID']
-    assert support_folder.exists()
-    assert entitlements.exists()
-    assert dev_id, "dev_id not set in env"
-    frameworks = list(support_folder.glob('*.framework'))
-    assert len(frameworks) > 0, "no frameworks to sign"
-    for fwk in frameworks:
-        signer = CodesignExternal(fwk, dev_id=dev_id, entitlements=entitlements)
-        signer.process()
+
 
 def sign_all():
-    sign_externals_folder()
-    sign_support_folder()
+    sign_folder('externals')
+    sign_folder('support')
 
 
 if __name__ == "__main__":
