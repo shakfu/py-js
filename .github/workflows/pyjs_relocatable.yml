@@ -1,4 +1,4 @@
-name: pyjs-relocatable-pkg-builder
+name: pyjs-relocatable
 
 on:
   workflow_dispatch:
@@ -74,6 +74,13 @@ jobs:
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
 
+    - name: Notarize framework
+      uses: devbotsxyz/xcode-notarize@v1
+      with:
+        product-path: "support/Python.framework"
+        appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
+        appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
+
     - name: Staple externals
       uses: devbotsxyz/xcode-staple@v1
       with:
@@ -84,7 +91,12 @@ jobs:
       with:
         product-path: "externals/pyjs.mxo"
 
-    - name: Package externals
+    - name: Staple framework
+      uses: devbotsxyz/xcode-staple@v1
+      with:
+        product-path: "support/Python.framework"
+
+    - name: Create Max package
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_SHA: ${{ github.sha }}
@@ -98,14 +110,14 @@ jobs:
         if [ -e icon.png ]; then cp icon.png $PACKAGE_NAME; fi
         if [ -d docs ]; then cp -r docs $PACKAGE_NAME; fi
         if [ -d examples ]; then cp -r examples $PACKAGE_NAME; fi
-        if [ -d externals ]; then cp -af externals $PACKAGE_NAME; fi
+        if [ -d externals ]; then ditto externals $PACKAGE_NAME; fi
         if [ -d extras ]; then cp -r extras $PACKAGE_NAME; fi
         if [ -d help ]; then cp -r help $PACKAGE_NAME; fi
         if [ -d init ]; then cp -r init $PACKAGE_NAME; fi
         if [ -d javascript ]; then cp -r init $PACKAGE_NAME; fi
         if [ -d jsextensions ]; then cp -r jsextensions $PACKAGE_NAME; fi
         if [ -d patchers ]; then cp -r patchers $PACKAGE_NAME; fi
-        if [ -d support ]; then cp -af support $PACKAGE_NAME; fi
+        if [ -d support ]; then ditto support $PACKAGE_NAME; fi
         ditto -V -ck --keepParent $PACKAGE_NAME ${PACKAGE_NAME}.zip
         rm -rf $PACKAGE_NAME && mkdir -p $PACKAGE_NAME
         mv ${PACKAGE_NAME}.zip $PACKAGE_NAME/
