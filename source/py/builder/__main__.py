@@ -21,7 +21,7 @@ from .cli import Commander, option, option_group
 from .depend import DependencyManager
 from .ext.relocatable_python import relocatable_options
 from .factory import builder_factory
-from .sign import sign_externals_folder
+from .sign import sign_all
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -279,9 +279,8 @@ class Application(Commander):
 # utility methods
 
     def do_sign(self, args):
-        """sign externals folder recursively"""
-        sign_externals_folder()
-
+        """sign all required folders recursively"""
+        sign_all()
 
 
 

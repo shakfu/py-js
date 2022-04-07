@@ -178,6 +178,24 @@ def sign_externals_folder():
         signer = CodesignExternal(ext, dev_id=dev_id, entitlements=entitlements)
         signer.process()
 
+def sign_support_folder():
+    root = pathlib.Path(__file__).parent.parent.parent.parent
+    support_folder = pathlib.Path(root / 'support')
+    entitlements = pathlib.Path(root / 'source/py/resources/entitlements/entitlements.plist')
+    dev_id = os.environ['DEV_ID']
+    assert support_folder.exists()
+    assert entitlements.exists()
+    assert dev_id, "dev_id not set in env"
+    frameworks = list(support_folder.glob('*.framework'))
+    assert len(frameworks) > 0, "no frameworks to sign"
+    for fwk in frameworks:
+        signer = CodesignExternal(fwk, dev_id=dev_id, entitlements=entitlements)
+        signer.process()
+
+def sign_all():
+    sign_externals_folder()
+    sign_support_folder()
+
 
 if __name__ == "__main__":
     CodesignExternal.cmdline()

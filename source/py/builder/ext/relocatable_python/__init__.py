@@ -51,6 +51,9 @@ relocatable_options = option_group(
         help="Path to a pip freeze requirements.txt file that describes extra "
         "Python modules to be installed. If not provided, no modules will be installed.",
     ),
+    option("--pip-modules", default=None,
+        help="list of extra Python modules to be installed.",
+    ),
     option("--no-unsign", dest="unsign", action="store_false",
         help="Do not unsign binaries and libraries after they are relocatablized."
     ),
@@ -79,9 +82,11 @@ def download_relocatable_to(directory, settings):
         files_relocatablized = relocatablize(framework_path)
         fix_broken_signatures(files_relocatablized)
         
+
         install_extras(
             framework_path,
             version=py_short_version,
+            pip_modules=settings.pip_modules,
             requirements_file=settings.pip_requirements,
             upgrade_pip=settings.upgrade_pip,
             without_pip=settings.without_pip

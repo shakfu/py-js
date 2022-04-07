@@ -73,10 +73,23 @@ def install_requirements(requirements_file, framework_path, version):
     print("Installing modules from %s..." % requirements_file)
     subprocess.check_call(cmd)
 
+def install_modules(pip_modules, framework_path, version):
+    """Use pip to install a Python pkg into framework_path"""
+    python_path = os.path.join(
+        framework_path, "Versions", version, "bin/python" + version
+    )
+    if not os.path.exists(python_path):
+        print("No python at %s" % python_path, file=sys.stderr)
+        return
+    cmd = [python_path, "-s", "-m", "pip", "install"] + pip_modules.split()
+    print("Installing modules: %s..." % pip_modules)
+    subprocess.check_call(cmd)
+
 
 def install_extras(
     framework_path,
     version="2.7",
+    pip_modules=None,
     requirements_file=None,
     upgrade_pip=False,
     without_pip=False,
@@ -104,6 +117,9 @@ def install_extras(
         install("wheel", framework_path, version)
         if upgrade_pip:
             upgrade_pip_install(framework_path, version)
+        if pip_modules:
+            print()
+            install_modules(pip_modules, framework_path, version)
         if requirements_file:
             print()
             install_requirements(requirements_file, framework_path, version)
