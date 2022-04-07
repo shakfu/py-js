@@ -3,7 +3,6 @@ from .config import (CURRENT_PYTHON_VERSION, DEFAULT_BZ2_VERSION,
                      DEFAULT_SSL_VERSION, DEFAULT_XZ_VERSION)
 
 PYTHON_BUILDERS = dict(
-    python_static = core.StaticPythonBuilder,
     python_shared = core.SharedPythonBuilder,
     python_shared_ext = core.SharedPythonForExtBuilder,
     python_shared_pkg = core.SharedPythonForPkgBuilder,
@@ -11,18 +10,21 @@ PYTHON_BUILDERS = dict(
     python_framework_ext = core.FrameworkPythonForExtBuilder,
     python_framework_pkg = core.FrameworkPythonForPkgBuilder,
     python_relocatable = core.RelocatablePythonBuilder,
+    python_static = core.StaticPythonBuilder,
+    python_static_tiny = core.TinyStaticPythonBuilder,
 )
 
 PYJS_BUILDERS = dict(
     pyjs_local_sys = (core.LocalSystemBuilder, []),
     pyjs_homebrew_pkg = (core.HomebrewBuilder, []),
     pyjs_homebrew_ext = (core.HomebrewBuilder, []),
-    pyjs_static_ext = (core.StaticExtBuilder, ['python_static']),
     pyjs_shared_ext = (core.SharedExtBuilder, ['python_shared_ext']),
     pyjs_shared_pkg = (core.SharedPkgBuilder, ['python_shared_pkg']),
     pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),
     pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
     pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, ['python_relocatable']),
+    pyjs_static_ext = (core.StaticExtBuilder, ['python_static']),
+    pyjs_static_tiny_ext = (core.StaticExtBuilder, ['python_static_tiny']),
 )
 
 # -----------------------------------------------------------------------------

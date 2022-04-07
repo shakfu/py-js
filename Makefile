@@ -135,8 +135,10 @@ relocatable-pkg: clean-framework-pkg
 relocatable-pkg-nopip: clean-framework-pkg
 	$(call call-builder,"pyjs" "relocatable_pkg" "--install" "--build" "--without-pip")
 
-pymx:
-	@bash source/projects/pymx/build_pymx.sh
+static-tiny-ext: clean-externals
+	$(call call-builder,"pyjs" "static_tiny_ext" "--install" "--build" "--release")
+
+
 
 # -----------------------------------------------------------------------
 # release external targets
@@ -197,6 +199,9 @@ python-relocatable: clean-python-framework-pkg
 
 # python-relocatable: clean-python-framework-pkg
 # 	$(call call-builder,"python" "relocatable_pkg")
+
+python-static-tiny:
+	$(call call-builder,"python" "static_tiny" "--install")
 
 
 # -----------------------------------------------------------------------
@@ -288,6 +293,10 @@ build-framework-ext: clean-framework-ext
 
 build-relocatable-pkg: clean-externals
 	$(call call-builder,"pyjs" "relocatable_pkg" "--build")
+
+build-static-tiny-ext: clean-static-ext
+	$(call call-builder,"pyjs" "static_tiny_ext" "--build" "--release")
+
 
 # re-compile only
 # -----------------------------------------------------------------------

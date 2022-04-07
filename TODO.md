@@ -2,13 +2,9 @@
 
 ## Build System
 
-- [ ] Github actions: sign and notarize Python.frameworks which are used in Max Packages.
+- [ ] `min-setup.local` patch system needs to be organized and automated and linked to modules so that options lead to proper removal of extensions and modules with clear dependencies.
 
-- [ ] creating smallest possible python3 external. This most likely entails:
-  
-  - removing openssl as a dependency
-  - shrinking the python lib further
-  - setting `-configuration` as `Deployment` 
+- [ ] Github actions: sign and notarize Python.frameworks which are used in Max Packages.
 
 - [ ] add `-configuration` and `-arch` to Builder.xcodebuild function in `builder.core`
 

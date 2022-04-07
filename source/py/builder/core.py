@@ -966,6 +966,149 @@ class StaticPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions: not implemented"""
 
+class TinyStaticPythonBuilder(PythonSrcBuilder):
+    """builds python in a static format."""
+
+    setup_local = "setup-static-min6.local"
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.build_lib / self.product.build_dir
+
+    def rm_exts(self, names):
+        """remove all named extensions"""
+        for name in names:
+            self.cmd.remove(
+                self.python_lib
+                / "lib-dynload"
+                / f"{name}.cpython-{self.product.ver_nodot}-darwin.so"
+            )
+
+    def remove_extensions(self):
+        """remove extensions"""
+        print('INSIDE')
+        self.rm_exts(
+            [
+                "_blake2",
+                "_csv",
+                "_elementtree",
+                "_json",
+                "_multiprocessing"
+                "_pickle",
+                "_zoneinfo",
+                "pyexpat",
+                "unicodedata",
+            ]
+        )
+
+    def remove_encodings(self):
+        """remove all uneeded encodings"""
+        keep = [
+            "__init__.py",
+            "aliases.py",
+            "ascii.py",
+            "latin_1.py",
+            "utf_8.py",
+        ]
+        encodings = self.python_lib / 'encodings'
+        for f in encodings.iterdir():
+            if f.name in keep:
+                continue
+            else:
+                self.cmd.remove(f)
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.remove_encodings()
+        self.rm_libs(
+            [
+                self.project.python.config_ver_platform,
+                "argparse.py",
+                "cgi.py",
+                "ctypes",
+                "curses",
+                "dbm",
+                "difflib.py",
+                "distutils",
+                "email",
+                "ensurepip",
+                "html",
+                # "http",
+                "idlelib",
+                "lib2to3",
+                "mailbox",
+                "mailbox.py"
+                "multiprocessing",
+                "optparse.py",
+                "pickletools.py",
+                "pydoc.py",
+                "pydoc_data",
+                "sqlite3",
+                "ssl.py",
+                "sunau",
+                "tkinter",
+                "turtle.py",
+                "turtledemo",
+                "urllib",
+                "venv",
+                "wsgiref",
+                "xml",
+                "zoneinfo",
+                # "inspect.py", # required by pdb
+                # "logging",  # required by asyncio
+            ]
+        )
+
+
+
+    def install(self):
+        """install and build compilation product"""
+        # self.configure()
+        self.reset()
+        self.download()
+        self.pre_process()
+        self.build()
+        self.post_process()
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        self.ziplib()
+
+
+    def remove_binaries(self):
+        """remove list of non-critical executables"""
+        ver = self.product.ver
+        self.rm_bins(
+            [
+                f"2to3-{ver}",
+                f"idle{ver}",
+                f"easy_install-{ver}",
+                f"pip{ver}",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+                # f'python{ver}{self.suffix}',
+                # f'python{ver}-config',
+            ]
+        )
+
+    def build(self):
+        self.cmd.chdir(self.src_path)
+
+        kwargs = dict(prefix=quote(self.prefix))
+
+        self.configure(
+            "enable_ipv6",
+            "enable_optimizations",
+            "with_lto",
+            "without_doc_strings",
+            "without_ensurepip",
+            prefix=quote(self.prefix),
+            # with_openssl=quote(self.project.build_lib / "openssl"),
+        )
+
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.root)
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BINARY)

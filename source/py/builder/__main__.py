@@ -123,6 +123,12 @@ class Application(Commander):
         """download relocatable framework python"""
         self.ordered_dispatch('python_relocatable', args)
 
+    @common_options
+    def do_python_static_tiny(self, args):
+        """build tiny static python"""
+        self.ordered_dispatch('python_static_tiny', args)
+
+
 # ----------------------------------------------------------------------------
 # py-js builder methods
 
@@ -190,6 +196,11 @@ class Application(Commander):
     def do_pyjs_relocatable_pkg(self, args):
         """build portable pyjs package (framework)"""
         self.ordered_dispatch('pyjs_relocatable_pkg', args)
+
+    @common_options
+    def do_pyjs_static_tiny_ext(self, args):
+        """build portable pyjs externals (tiny static)"""
+        self.ordered_dispatch('pyjs_static_tiny_ext', args)
 
 # ----------------------------------------------------------------------------
 # dependency builder methods
