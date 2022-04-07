@@ -74,13 +74,12 @@ jobs:
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
 
-    - name: Notarize framework
-      uses: devbotsxyz/xcode-notarize@v1
-      with:
-        product-path: "support/Python.framework"
-        appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-        appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
-        primary-bundle-id: 'org.me.pyfwk'
+    # - name: Notarize framework
+    #   uses: devbotsxyz/xcode-notarize@v1
+    #   with:
+    #     product-path: "support/Python.framework"
+    #     appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
+    #     appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
 
     - name: Staple externals
       uses: devbotsxyz/xcode-staple@v1
@@ -92,10 +91,10 @@ jobs:
       with:
         product-path: "externals/pyjs.mxo"
 
-    - name: Staple framework
-      uses: devbotsxyz/xcode-staple@v1
-      with:
-        product-path: "support/Python.framework"
+    # - name: Staple framework
+    #   uses: devbotsxyz/xcode-staple@v1
+    #   with:
+    #     product-path: "support/Python.framework"
 
     - name: Create Max package
       env:
