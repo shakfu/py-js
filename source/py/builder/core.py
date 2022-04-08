@@ -518,7 +518,7 @@ class Bzip2Builder(Builder):
                 f"""MACOSX_DEPLOYMENT_TARGET={self.project.mac_dep_target} \
                     make install PREFIX={quote(self.prefix)}"""
             )
-            self.cmd.chdir(self.project.root)
+            self.cmd.chdir(self.project.pydir)
         else:
             self.log.info("product built already")
 
@@ -540,7 +540,7 @@ class OpensslBuilder(Builder):
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
                     make install_sw"""
             )
-            self.cmd.chdir(self.project.root)
+            self.cmd.chdir(self.project.pydir)
         else:
             self.log.info("product built already")
 
@@ -565,7 +565,7 @@ class XzBuilder(Builder):
                 f"""MACOSX_DEPLOYMENT_TARGET='{self.project.mac_dep_target}' \
                     make && make install"""
             )
-            self.cmd.chdir(self.project.root)
+            self.cmd.chdir(self.project.pydir)
         else:
             self.log.info("product built already")
 
@@ -760,7 +760,7 @@ class PythonBuilder(Builder):
             f"@loader_path/../../../../support/{self.product.name}/lib/{self.product.dylib}",
             self.product.dylib,
         )
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
     def fix_python_dylib_for_ext(self):
         """redirect ref of dylib to loader in a self-contained external deployment."""
@@ -769,7 +769,7 @@ class PythonBuilder(Builder):
         self.install_name_tool_id(
             f"@loader_path/{self.product.dylib}", self.product.dylib
         )
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
 
 class PythonSrcBuilder(PythonBuilder):
@@ -801,7 +801,7 @@ class PythonSrcBuilder(PythonBuilder):
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
         self.apply_patch(patch="configure.patch", to_file="configure")
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
     def post_process(self):
         """post-build operations"""
@@ -879,7 +879,7 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         )
 
         self.cmd("make altinstall")
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
     # PYTHONBUG: Python.framework/Versions/3.9/Resources/Python.app
     #            is linked to executable in the frameowork
@@ -933,7 +933,7 @@ class SharedPythonBuilder(PythonSrcBuilder):
         )
 
         self.cmd("make altinstall")
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
 
 class StaticPythonBuilder(PythonSrcBuilder):
@@ -961,7 +961,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
         )
 
         self.cmd("make altinstall")
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
     def remove_extensions(self):
         """remove extensions: not implemented"""
@@ -1108,7 +1108,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
         )
 
         self.cmd("make altinstall")
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BINARY)
@@ -1255,7 +1255,7 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
         self.apply_patch(patch="configure.patch", to_file="configure")
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
     def remove_packages(self):
         """remove list of non-critical packages"""
@@ -1342,7 +1342,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
         self.apply_patch(patch="configure.patch", to_file="configure")
-        self.cmd.chdir(self.project.root)
+        self.cmd.chdir(self.project.pydir)
 
     def remove_packages(self):
         """remove list of non-critical packages"""
@@ -1527,7 +1527,7 @@ class HomebrewBuilder(PyJsBuilder):
                 "package py-js symlink does not exist -- creating at %s",
                 self.project.package,
             )
-            self.project.package.symlink_to(self.project.pyjs)
+            self.project.package.symlink_to(self.project.root)
         else:
             self.log.info("package py-js symlink exists -- not creating")
 

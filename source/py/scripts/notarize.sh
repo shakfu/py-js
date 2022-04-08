@@ -10,6 +10,8 @@
 # notarize.sh staple
 
 TARGETS="py pyjs"
+EXT=.mxo
+
 DEV_ID="${DEV_ID:-Jane Dow}"
 APP_PASS="${APP_PASS:-xxxx-xxxx-xxxx-xxxx}"
 APPLE_ID="${APPLE_ID:-jane.dow@icloud.com}"
@@ -22,11 +24,12 @@ ENTITLEMENTS="entitlements.plist"
 BUNDLE_ID="org.me.py"
 
 
+
 codesign_only() {
 	for TARGET in $TARGETS
 	do
 		# set local vars
-		EXTERNAL="${TARGET}.mxo"
+		EXTERNAL="${TARGET}${EXT}"
 		ARCHIVE=${EXTERNAL}.zip
 
 		echo "codesigning ${EXTERNAL}"
@@ -44,7 +47,7 @@ notarize_only() {
 	for TARGET in $TARGETS
 	do
 		# set local vars
-		EXTERNAL="${TARGET}.mxo"
+		EXTERNAL="${TARGET}${EXT}"
 		ARCHIVE=${EXTERNAL}.zip
 
 		echo "creating archive: ${ARCHIVE}"
@@ -64,7 +67,7 @@ codesign_notarize_all() {
 	for TARGET in $TARGETS
 	do
 		# set local vars
-		EXTERNAL="${TARGET}.mxo"
+		EXTERNAL="${TARGET}${EXT}"
 		ARCHIVE=${EXTERNAL}.zip
 
 		echo "codesigning ${EXTERNAL}"
@@ -89,13 +92,48 @@ codesign_notarize_all() {
 	done
 }
 
+# $1: srcfolder
+# $2: <name> of volname and <name>.dmg
+create_dmg() {
+	hdiutil create -volname "$2" \
+		-srcfolder $1 \
+		-ov \
+		-format UDZO \
+		${2}.dmg
+}
 
+codesign_dmg() {
+	codesign --sign "${AUTHORITY}" \
+		--deep \
+		--force \
+		--verify \
+		--verbose \
+		--options runtime \
+		$1
+}
 
-staple_zip() {
+verify_dmg() {
+	codesign --verify --verbose $1
+}
+
+notarize_dmg() {
+	xcrun altool --notarize-app \
+		--file $1 \
+		-t osx \
+		-u "${APPLE_ID}" \
+		-p "${APP_PASS}" \
+		-primary-bundle-id "${BUNDLE_ID}"
+}
+
+staple_dmg() {
+	xcrun stapler staple -v $1
+}
+
+cleanup_staple_all() {
 	for TARGET in $TARGETS
 	do
 		# set local vars
-		EXTERNAL="${TARGET}.mxo"
+		EXTERNAL="${TARGET}${EXT}"
 		ARCHIVE=${EXTERNAL}.zip
 
 		echo "removing archive: ${ARCHIVE}"
@@ -104,9 +142,10 @@ staple_zip() {
 		echo "stapling signed external: ${EXTERNAL}"
 		xcrun stapler staple -v ${EXTERNAL}
 
-		ditto -c -k --keepParent ${EXTERNAL} ${ARCHIVE}
+		# ditto -c -k --keepParent ${EXTERNAL} ${ARCHIVE}
 	done
 }
+
 
 check_status() {
 	xcrun altool --notarization-info ${REQUEST_UUID} \
@@ -115,19 +154,14 @@ check_status() {
 
 }
 
-check_notarize() {
-    codesign -vvvv -R="notarized" --check-notarization $1
-}
 
+# if [ "$1" == "sign_notarize" ]; then
+# 	echo "codesigning and notarizing externals."
+# 	codesign_notarize_all
 
-
-if [ "$1" == "sign_notarize" ]; then
-	echo "codesigning and notarizing externals."
-	codesign_notarize_all
-
-elif [ "$1" == "staple" ]; then
-	echo "stapling signed externals."
-	cleanup_staple_all
-else
-	exit
-fi
+# elif [ "$1" == "staple" ]; then
+# 	echo "stapling signed externals."
+# 	cleanup_staple_all
+# else
+# 	exit
+# fi

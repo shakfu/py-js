@@ -21,7 +21,7 @@ from .cli import Commander, option, option_group
 from .depend import DependencyManager
 from .ext.relocatable_python import relocatable_options
 from .factory import builder_factory
-from .sign import sign_all
+from .sign import sign_all, package, package_as_dmg
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -282,7 +282,13 @@ class Application(Commander):
         """sign all required folders recursively"""
         sign_all()
 
+    def do_package(self, args):
+        """package project"""
+        package()
 
+    def do_dmg(self, args):
+        """package project as .dmg"""
+        package_as_dmg()
 
     # def do_check(self, args):
     #     """check reference utilities"""

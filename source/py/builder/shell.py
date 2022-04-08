@@ -29,6 +29,11 @@ class ShellCmd:
         self.log.info("change permission of %s to %s", path, perm)
         os.chmod(path, perm)
 
+    def makedirs(self, path, mode=511, exist_ok=False):
+        """Recursive directory creation function"""
+        self.log.info("making directory: %s", path)
+        os.makedirs(path, mode, exist_ok)
+
     def move(self, src, dst):
         """Move from src path to dst path."""
         self.log.info("move path %s to %s", src, dst)

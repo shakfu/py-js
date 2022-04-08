@@ -251,6 +251,13 @@ sign:
 	$(call section,"sign externals")
 	$(call call-builder,"sign")
 
+package:
+	$(call section,"make package")
+	$(call call-builder,"package")
+
+dmg:
+	$(call section,"make package as dmg")
+	$(call call-builder,"dmg")
 
 # DEPLOYING
 # -----------------------------------------------------------------------

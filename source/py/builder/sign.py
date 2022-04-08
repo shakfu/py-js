@@ -6,6 +6,38 @@ and signs all of the internal binaries which fit the given pattern
 
 Note: you can reduce the logging verbosity by making DEBUG=False
 
+
+Steps to sign a Max package with a externals in the 'externals' folder
+depending on a framework or two in the 'support' folder:
+
+1. codesign externals [<name>.mxo, ...] in 'externals' folder
+
+builder.sign_folder('externals')
+
+2. codesign frameworks or libraries [<name>.framework | python<ver> | ...]
+
+builder.sign_folder('support')
+
+3. create package as folder then convert to .dmg
+
+    - create $package folder
+    - copy or use ditto to put everything into $package
+    - covert folder into .dmg
+
+builder.package_as_dmg()
+
+    - defaults to project name
+
+
+4. notarize $package.dmg
+
+builder.notarize_dmg()
+
+
+5. staple $package.dmg
+
+builder.staple_dmg()
+
 """
 
 import argparse
@@ -14,12 +46,13 @@ import os
 import pathlib
 import subprocess
 import sys
+from pathlib import Path
+
+from .config import Project
+from .shell import ShellCmd
+
 
 DEBUG = True
-
-PYTHON_VER = "python{x}.{y}".format(
-    x=sys.version_info.major, 
-    y=sys.version_info.minor)
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -30,13 +63,13 @@ logging.basicConfig(
 
 class CodesignExternal:
     """Recursively codesign an external."""
-    SUFFIX_PATTERN = '*.mxo'
-    FILE_PATTERNS = {PYTHON_VER: 'runtime'}
+    FILE_PATTERNS = {Project.python.version_short: 'runtime'}
     FILE_EXTENSIONS = ['.so', '.dylib']
     FOLDER_EXTENSIONS = ['.framework', '.mxo', '.bundle', '.app']
 
     def __init__(self, path: str, dev_id: str = None, 
                  entitlements: str = None, dry_run: bool = False):
+        print(path)
         self.path = path
         self.authority = f"Developer ID Application: {dev_id}"
         self.entitlements = entitlements
@@ -45,6 +78,7 @@ class CodesignExternal:
         self.targets_internals = set()
         self.targets_apps = set()
         self.log = logging.getLogger(self.__class__.__name__)
+        # self.cmd = ShellCmd(self.log)
         self._cmd_codesign = [
             "codesign",
             "--sign", repr(self.authority),
@@ -150,6 +184,7 @@ class CodesignExternal:
             for exe in macos_path.iterdir():
                 if not self.dry_run:
                     self.sign_internal_binary(path)
+            self.sign_runtime(path)
 
         if not self.dry_run:
             for path in self.targets_runtimes:
@@ -173,31 +208,60 @@ class CodesignExternal:
             app.process()
 
 
-class CodesignFramework(CodesignExternal):
-    """Recursively codesign a framework."""
-
-    SUFFIX_PATTERN = '*.framework'
-
-
-
-
 def sign_folder(folder='externals'):
-    _class = {
-        'externals': CodesignExternal,
-        'support': CodesignFramework,
-    }[folder]
+    dev_id = os.environ['DEV_ID']
+    assert dev_id, "environment var DEV_ID not set"
     root = pathlib.Path(__file__).parent.parent.parent.parent
     target_folder = pathlib.Path(root / folder)
-    entitlements = pathlib.Path(root / 'source/py/resources/entitlements/entitlements.plist')
-    dev_id = os.environ['DEV_ID']
+    entitlements = pathlib.Path(root / 'source/py/resources/entitlements/entitlements.plist')    
     assert target_folder.exists()
     assert entitlements.exists()
-    assert dev_id, "dev_id not set in env"
-    targets = list(target_folder.glob(_class.SUFFIX_PATTERN))
+    targets = list(target_folder.iterdir())
     assert len(targets) > 0, "no targets to sign"
     for target in targets:
-        signer = _class(target, dev_id=dev_id, entitlements=entitlements)
-        signer.process()
+        if target.suffix in CodesignExternal.FOLDER_EXTENSIONS:
+            signer = CodesignExternal(target, dev_id=dev_id, entitlements=entitlements)
+            signer.process()
+
+
+def package(package_name=Project.package_name):
+    log = logging.getLogger('packager')
+    cmd = ShellCmd(log)
+    PACKAGE = Project.root / 'PACKAGE'
+    # print(PACKAGE.absolute())
+    targets = [
+        "package-info.json",
+        "package-info.json.in",
+        "icon.png",
+    ] + Project.package_dirs
+
+    destination = PACKAGE / package_name
+    cmd.makedirs(destination)
+    for target in targets:
+        p = Project.root / target
+        if p.exists():
+            if p.name in ['externals', 'support']:
+                dst = destination / p.name
+                cmd(f'ditto {p} {dst}')
+            else:
+                cmd.copy(p, destination)
+    for f in Project.root.glob('*.md'):
+        cmd.copy(f, PACKAGE)
+
+    return PACKAGE
+
+
+def package_as_dmg(package_name=Project.package_name):
+    log = logging.getLogger('dmg_packager')
+    cmd = ShellCmd(log)
+    srcfolder = package(package_name)
+    name = package_name.replace('-','')
+    dmgname = Project.root / f"{name}-{Project.python.tag}"
+    cmd(f"hdiutil create -volname {name.upper()} " 
+        f"-srcfolder {srcfolder} -ov "
+        f"-format UDZO {dmgname}.dmg"
+    )
+    cmd.remove(srcfolder)
 
 
 

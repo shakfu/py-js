@@ -151,6 +151,8 @@ class Python:
     abiflags = get_var('abiflags')
     arch = platform.machine()
 
+    tag = f"macOS-{arch}-py{version}"
+
     prefix = get_path('prefix')
     bindir = get_path('BINDIR')
     include = get_path('INCLUDEPY')
@@ -203,18 +205,20 @@ class Project:
     HOME = Path(HOME)
 
     # environmental vars
-    package_name = "py-js"
+    package_name = name
     package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
     package_dirs = [
         "docs",
         "examples",
         "externals",
+        "extras",
         "help",
         "init",
         "javascript",
         "jsextensions",
         "media",
         "patchers",
+        "support",
     ]
 
     is_symlinked = True
@@ -222,25 +226,25 @@ class Project:
     # root in this case is root assumed for build / make / scripts
     # actual project is root.parent.parent (see below)
     # current working directory
-    root = Path.cwd()
+    pydir = Path.cwd()
 
     # project root here
-    pyjs = root.parent.parent
-    support = pyjs / "support"
-    externals = pyjs / "externals"
+    root = pydir.parent.parent
+    support = root / "support"
+    externals = root / "externals"
 
     py_external = externals / "py.mxo"
     pyjs_external = externals / "pyjs.mxo"
 
     # resources
-    resources = root / "resources"
+    resources = pydir / "resources"
     entitlements = resources / "entitlements"
     addons = resources / "addons"
     patch = resources / "patch"
 
     # project-build section
-    scripts = root / "scripts"
-    targets = root / "targets"
+    scripts = pydir / "scripts"
+    targets = pydir / "targets"
 
     if is_symlinked:
         build = targets / "build"
@@ -262,12 +266,13 @@ class Project:
             'name': self.name,
             'arch': self.arch,
             'root': str(self.root),
+            'pydir': str(self.pydir),
             'scripts': str(self.scripts),
             'patch': str(self.patch),
             'targets': str(self.targets),
             'build': str(self.build),
             'downloads': str(self.build_downloads),
-            'src': str(self.build_src),
+            'build_src': str(self.build_src),
             'lib': str(self.build_lib),
             'pyjs': str(self.pyjs),
             'support': str(self.support),
