@@ -64,8 +64,6 @@ jobs:
       run: make dmg
 
     - name: Sign .dmg
-      env:
-        PRODUCT_DMG: 
       run: |
         codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
           --deep    \
@@ -85,7 +83,7 @@ jobs:
     - name: Staple externals
       uses: devbotsxyz/xcode-staple@v1
       with:
-        product-path: "${{ github.event.repository.name }}.dmg"
+        product-path: "${{ env.PRODUCT_DMG }}"
 
     - uses: actions/upload-artifact@v3
       with:
