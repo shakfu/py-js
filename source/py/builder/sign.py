@@ -258,7 +258,7 @@ def package_as_dmg(package_name=Project.package_name):
     # name = package_name.replace('-','')
     # dmgname = Project.root / f"{name}-{Project.python.tag}"
     dmgname = Project.root / package_name
-    if srcfolder.exits():
+    if srcfolder.exists():
         cmd(f"hdiutil create -volname {package_name.upper()} " 
             f"-srcfolder {srcfolder} -ov "
             f"-format UDZO {dmgname}.dmg"
