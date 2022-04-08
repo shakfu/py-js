@@ -260,7 +260,7 @@ def package_as_dmg(package_name=Project.package_name):
     dmgname = Project.root / package_name
     if srcfolder.exists():
         cmd(f"hdiutil create -volname {package_name.upper()} " 
-            f"-srcfolder {srcfolder} -ov "
+            f"-srcfolder {srcfolder} -ov -fs HFS+ "
             f"-format UDZO {dmgname}.dmg"
         )
         # cmd.remove(srcfolder)
