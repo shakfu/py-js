@@ -263,12 +263,13 @@ def package_as_dmg(package_name=Project.package_name):
             f"-srcfolder {srcfolder} -ov -fs HFS+ "
             f"-format UDZO {dmg}"
         )
-        assert dmgname.exists()
+        assert dmg.exists()
         cmd.remove(srcfolder)
 
     env_file = os.getenv('GITHUB_ENV')
-    with open(env_file, "a") as fopen:
-        fopen.write(f"PRODUCT_DMG={dmg}")
+    if env_file:
+        with open(env_file, "a") as fopen:
+            fopen.write(f"PRODUCT_DMG={dmg}")
 
 
 
