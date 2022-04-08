@@ -82,6 +82,7 @@ jobs:
         product-path: "${{ env.PRODUCT_DMG }}"
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
+        primary-bundle-id: org.me.py-dmg
 
     - name: Staple externals
       uses: devbotsxyz/xcode-staple@v1
