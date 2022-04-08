@@ -61,9 +61,15 @@ jobs:
       run: make sign
 
     - name: Create package, convert it to a .dmg and sign it
-      env:
-        DEV_ID: ${{ secrets.DEV_ID }}
-      run: make dmg
+      run: |
+        make dmg
+        codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
+          --deep    \
+          --force   \ 
+          --verify  \
+          --verbose \
+          --options runtime \
+          "${{ github.event.repository.name }}.dmg"
 
     - name: Notarize dmg
       uses: devbotsxyz/xcode-notarize@v1
