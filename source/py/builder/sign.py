@@ -228,7 +228,8 @@ def package(package_name=Project.package_name):
     log = logging.getLogger('packager')
     cmd = ShellCmd(log)
     PACKAGE = Project.root / 'PACKAGE'
-    # print(PACKAGE.absolute())
+    if PACKAGE.exists():
+        cmd.remove(PACKAGE)
     targets = [
         "package-info.json",
         "package-info.json.in",
@@ -257,14 +258,14 @@ def package_as_dmg(package_name=Project.package_name):
     cmd = ShellCmd(log)
     # name = package_name.replace('-','')
     # dmgname = Project.root / f"{name}-{Project.python.tag}"
-    dmgname = Project.root / package_name
+    dmgname = Project.root / f"package_name.dmg"
     if srcfolder.exists():
         cmd(f"hdiutil create -volname {package_name.upper()} " 
             f"-srcfolder {srcfolder} -ov -fs HFS+ "
-            f"-format UDZO {dmgname}.dmg"
+            f"-format UDZO {dmgname}"
         )
-        # cmd.remove(srcfolder)
-    assert dmgname.exists()
+        assert dmgname.exists()
+        cmd.remove(srcfolder)
 
 
 

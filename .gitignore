@@ -15,6 +15,7 @@ __pycache__
 *.mxo
 *.mxe
 *.mxe64
+*.dmg
 support/*
 externals/*
 source/py/scripts/archive/*
