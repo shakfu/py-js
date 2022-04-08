@@ -257,14 +257,19 @@ def package_as_dmg(package_name=Project.package_name):
     cmd = ShellCmd(log)
     # name = package_name.replace('-','')
     # dmgname = Project.root / f"{name}-{Project.python.tag}"
-    dmgname = Project.root / f"{package_name}.dmg"
+    dmg = Project.root / f"{package_name}.dmg"
     if srcfolder.exists():
         cmd(f"hdiutil create -volname {package_name.upper()} " 
             f"-srcfolder {srcfolder} -ov -fs HFS+ "
-            f"-format UDZO {dmgname}"
+            f"-format UDZO {dmg}"
         )
         assert dmgname.exists()
         cmd.remove(srcfolder)
+
+    env_file = os.getenv('GITHUB_ENV')
+    with open(env_file, "a") as fopen:
+        fopen.write(f"PRODUCT_DMG={dmg}")
+
 
 
 def sign_all():

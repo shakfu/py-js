@@ -60,21 +60,25 @@ jobs:
         DEV_ID: ${{ secrets.DEV_ID }}
       run: make sign
 
-    - name: Create package, convert it to a .dmg and sign it
+    - name: Create package, convert it to a .dmg
+      run: make dmg
+
+    - name: Sign .dmg
+      env:
+        PRODUCT_DMG: 
       run: |
-        make dmg
         codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
           --deep    \
           --force   \ 
           --verify  \
           --verbose \
           --options runtime \
-          "${{ github.event.repository.name }}.dmg"
+          "${{ env.PRODUCT_DMG }}"
 
     - name: Notarize dmg
       uses: devbotsxyz/xcode-notarize@v1
       with:
-        product-path: "${{ github.event.repository.name }}.dmg"
+        product-path: "${{ env.PRODUCT_DMG }}"
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
 
@@ -86,4 +90,4 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ github.event.repository.name }}-relocatable-pkg-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
-        path: "${{ github.event.repository.name }}.dmg"
+        path: "${{ env.PRODUCT_DMG }}"
