@@ -263,7 +263,7 @@ def package_as_dmg(package_name=Project.package_name):
         f"-srcfolder {srcfolder} -ov "
         f"-format UDZO {dmg_name}.dmg"
     )
-    cmd.remove(srcfolder)
+    # cmd.remove(srcfolder)
 
 
 
