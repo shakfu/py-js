@@ -252,18 +252,19 @@ def package(package_name=Project.package_name):
 
 
 def package_as_dmg(package_name=Project.package_name):
+    srcfolder = package(package_name)
     log = logging.getLogger('dmg_packager')
     cmd = ShellCmd(log)
-    srcfolder = package(package_name)
     # name = package_name.replace('-','')
     # dmgname = Project.root / f"{name}-{Project.python.tag}"
-    name = package_name
-    dmg_name = Project.root / package_name
-    cmd(f"hdiutil create -volname {name.upper()} " 
-        f"-srcfolder {srcfolder} -ov "
-        f"-format UDZO {dmg_name}.dmg"
-    )
-    # cmd.remove(srcfolder)
+    dmgname = Project.root / package_name
+    if srcfolder.exits():
+        cmd(f"hdiutil create -volname {package_name.upper()} " 
+            f"-srcfolder {srcfolder} -ov "
+            f"-format UDZO {dmgname}.dmg"
+        )
+        # cmd.remove(srcfolder)
+    assert dmgname.exists()
 
 
 

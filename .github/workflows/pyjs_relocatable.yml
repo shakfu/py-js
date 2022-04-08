@@ -63,27 +63,27 @@ jobs:
     - name: Create package, convert it to a .dmg and sign it
       run: |
         make dmg
-        codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
-          --deep    \
-          --force   \ 
-          --verify  \
-          --verbose \
-          --options runtime \
-          "${{ github.event.repository.name }}.dmg"
+    #     codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
+    #       --deep    \
+    #       --force   \ 
+    #       --verify  \
+    #       --verbose \
+    #       --options runtime \
+    #       "${{ github.event.repository.name }}.dmg"
 
-    - name: Notarize dmg
-      uses: devbotsxyz/xcode-notarize@v1
-      with:
-        product-path: "${{ github.event.repository.name }}.dmg"
-        appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-        appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
+    # - name: Notarize dmg
+    #   uses: devbotsxyz/xcode-notarize@v1
+    #   with:
+    #     product-path: "${{ github.event.repository.name }}.dmg"
+    #     appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
+    #     appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
 
-    - name: Staple externals
-      uses: devbotsxyz/xcode-staple@v1
-      with:
-        product-path: "${{ github.event.repository.name }}.dmg"
+    # - name: Staple externals
+    #   uses: devbotsxyz/xcode-staple@v1
+    #   with:
+    #     product-path: "${{ github.event.repository.name }}.dmg"
 
-    - uses: actions/upload-artifact@v3
-      with:
-        name: ${{ github.event.repository.name }}-relocatable-pkg-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
-        path: "${{ github.event.repository.name }}.dmg"
+    # - uses: actions/upload-artifact@v3
+    #   with:
+    #     name: ${{ github.event.repository.name }}-relocatable-pkg-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
+    #     path: "${{ github.event.repository.name }}.dmg"
