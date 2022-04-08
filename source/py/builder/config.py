@@ -246,6 +246,8 @@ class Project:
     scripts = pydir / "scripts"
     targets = pydir / "targets"
 
+    dmg = root / f"{name}.dmg"
+
     if is_symlinked:
         build = targets / "build"
         build_externals = externals

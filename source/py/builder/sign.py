@@ -22,7 +22,7 @@ builder.sign_folder('support')
 
     - create $package folder
     - copy or use ditto to put everything into $package
-    - covert folder into .dmg
+    - convert folder into .dmg
 
 builder.package_as_dmg()
 
@@ -63,7 +63,11 @@ logging.basicConfig(
 
 class CodesignExternal:
     """Recursively codesign an external."""
-    FILE_PATTERNS = {Project.python.version_short: 'runtime'}
+    FILE_PATTERNS = {
+        Project.python.version_short: 'runtime',
+        Project.python.name: 'runtime',
+        'python3': 'runtime',
+    }
     FILE_EXTENSIONS = ['.so', '.dylib']
     FOLDER_EXTENSIONS = ['.framework', '.mxo', '.bundle', '.app']
 
@@ -260,7 +264,7 @@ def package_as_dmg(package_name=Project.package_name):
     dmg = Project.root / f"{package_name}.dmg"
     if srcfolder.exists():
         cmd(f"hdiutil create -volname {package_name.upper()} " 
-            f"-srcfolder {srcfolder} -ov -fs HFS+ "
+            f"-srcfolder {srcfolder} -ov "
             f"-format UDZO {dmg}"
         )
         assert dmg.exists()
@@ -270,6 +274,31 @@ def package_as_dmg(package_name=Project.package_name):
     if env_file:
         with open(env_file, "a") as fopen:
             fopen.write(f"PRODUCT_DMG={dmg}")
+
+def sign_dmg(dmg=None):
+    log = logging.getLogger('dmg_packager')
+    cmd = ShellCmd(log)
+    dev_id = os.environ['DEV_ID']
+    product_dmg = os.getenv('PRODUCT_DMG')
+    if dmg:
+        product_dmg = dmg
+    else:
+        product_dmg = Project.dmg
+    assert product_dmg, "PRODUCT_DMG or dmg path not set"
+    assert dev_id, "environment var DEV_ID not set"
+    cmd(f'codesign --sign "Developer ID Application: {dev_id}" '
+        f'--deep --force --verbose --options runtime {product_dmg}')
+
+def notarize_dmg():
+    """
+    xcrun altool --notarize-app \
+        --file $1 \
+        -t osx \
+        -u "${APPLE_ID}" \
+        -p "${APP_PASS}" \
+        -primary-bundle-id "${BUNDLE_ID}"
+    """
+
 
 
 

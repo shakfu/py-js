@@ -95,18 +95,18 @@ codesign_notarize_all() {
 # $1: srcfolder
 # $2: <name> of volname and <name>.dmg
 create_dmg() {
-	hdiutil create -volname "$2" \
+	name=${1%.*}
+	hdiutil create -volname "${name}" \
 		-srcfolder $1 \
 		-ov \
 		-format UDZO \
-		${2}.dmg
+		${name}.dmg
 }
 
 codesign_dmg() {
 	codesign --sign "${AUTHORITY}" \
 		--deep \
 		--force \
-		--verify \
 		--verbose \
 		--options runtime \
 		$1

@@ -5,7 +5,7 @@ CMakeFiles
 javascript/node_modules
 source/py/dump.yml
 logs
-
+env.sh
 .DS_Store
 __pycache__
 .pytest_cache

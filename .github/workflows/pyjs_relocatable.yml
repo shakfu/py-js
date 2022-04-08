@@ -15,11 +15,12 @@ on:
           - '3.10'      
       pip_modules:
         type: string
-        description: provide packages to install
-        required: true
+        description: provide packages to install (optional)
+        required: false
 
 env:
   arch: darwin-x86
+  DEV_ID: ${{ secrets.DEV_ID }}
 
 jobs:
   build:
@@ -51,27 +52,29 @@ jobs:
         p12-file-base64: ${{ secrets.MACOS_DEV_CERTIFICATE }}
         p12-password: ${{ secrets.MACOS_DEV_PWD }}
 
-    - name: Build externals
+    - name: Build externals with extra modules
       working-directory: ./source/py
+      if: github.event.inputs.pip_modules != ''
       run: python3 -m builder pyjs relocatable_pkg --pip-modules="${{ github.event.inputs.pip_modules }}" --install --build
 
+    - name: Build externals
+      working-directory: ./source/py
+      if: github.event.inputs.pip_modules == ''
+      run: python3 -m builder pyjs relocatable_pkg --install --build
+
     - name: Sign externals and any frameworks in support folder
-      env:
-        DEV_ID: ${{ secrets.DEV_ID }}
       run: make sign
 
     - name: Create package, convert it to a .dmg
       run: make dmg
 
-    - name: Sign .dmg
-      run: |
-        codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
-          --deep    \
-          --force   \ 
-          --verify  \
-          --verbose \
-          --options runtime \
-          "${{ env.PRODUCT_DMG }}"
+    - name: Sign .dmg        
+      run: make sign-dmg
+
+    # - name: Sign .dmg
+    #   run: |
+    #     codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
+    #       --deep --force --verbose --options runtime "${{ env.PRODUCT_DMG }}"
 
     - name: Notarize dmg
       uses: devbotsxyz/xcode-notarize@v1

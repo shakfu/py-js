@@ -92,7 +92,7 @@ all: default
 		shared-pkg shared-ext \
 		static-pkg static-ext \
 		python-shared python-shared-pkg python-shared-ext \
-		python-static \
+		python-static static-tiny-ext tiny \
 		python-framework python-framework-ext python-framework-pkg
 
 
@@ -138,6 +138,7 @@ relocatable-pkg-nopip: clean-framework-pkg
 static-tiny-ext: clean-externals
 	$(call call-builder,"pyjs" "static_tiny_ext" "--install" "--build" "--release")
 
+tiny: static-tiny-ext
 
 
 # -----------------------------------------------------------------------
@@ -250,6 +251,10 @@ max-check:
 sign:
 	$(call section,"sign externals")
 	$(call call-builder,"sign")
+
+sign-dmg:
+	$(call section,"sign dmg")
+	$(call call-builder,"sign" "dmg")
 
 package:
 	$(call section,"make package")
