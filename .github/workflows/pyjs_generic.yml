@@ -12,7 +12,6 @@ on:
           - framework-ext
           - framework-pkg
           - shared-ext
-          # - shared-pkg
           - static-ext
           - relocatable-pkg
       py_version:

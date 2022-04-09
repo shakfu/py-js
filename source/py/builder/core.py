@@ -1316,7 +1316,7 @@ class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
         """install to dylib @rpath of @loader' to dylib in a framework-ext"""
         self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            f"@loader_path/../Resources/{self.project.python.ldlibrary}", dylib
+            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python", dylib
         )
 
     def post_process(self):
@@ -1365,7 +1365,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
         """install to dylib @rpath of @loader' to dylib in a framework-pkg"""
         self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            f"@loader_path/../../../../support/{self.project.python.ldlibrary}", dylib
+            f"@loader_path/../../../../support/Python.framework/Versions/{self.product.ver}/Python", dylib
         )
 
     def post_process(self):
