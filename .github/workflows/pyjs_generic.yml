@@ -28,6 +28,7 @@ on:
 
 env:
   arch: darwin-x86
+  DEV_ID: ${{ secrets.DEV_ID }}
 
 jobs:
   build:
