@@ -8,6 +8,8 @@
 #### Enhancements
 
 
+- [x] removed `shared-pkg` till further notice or until I recreate it as a custom `.framework`, since its not working for Apple's notarization algorithm which only recognizes `.frameworks`.
+
 - [x] created smallest possible python3 external: self-contained python3 external yet (6.2MB) for StaticTinyExt.
 
   This entailed:

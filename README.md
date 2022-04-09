@@ -164,19 +164,19 @@ No worries, if you need portable relocatable python3 externals for your package 
 
 ### Alternative Quickstart for Self-contained Python3 Externals / Packages
 
-idx  | command            | type       | format     | py size |  pyjs size
-:--: | :----------------- | :--------- | :--------- | :------ | :----------
-1    | `make static-ext`  | static     | external   | 9.0     | 8.8
-2    | `make shared-ext`  | shared     | external   | 16.7    | 16.5
-3    | `make shared-pkg`  | shared     | package    | 18.7    | 18.7 [1]
+idx  | command               | type       | format     | py size |  pyjs size
+:--: | :-------------------- | :--------- | :--------- | :------ | :----------
+1    | `make static-ext`     | static     | external   | 9.0     | 8.8
+2    | `make shared-ext`     | shared     | external   | 16.7    | 16.5
+3    | `make framework-pkg`  | framework  | package    | 22.8    | 22.8 [1]
 
-[1] size, in this case, is not the individual external but the package size which includes patches, help files and both externals.
+[1] size, in this case, is not the individual external but uncompressed size of the package which includes patches, help files and both externals.
 
 This alternative quickstart assumes that you have a recent python3 installation (python.org, homebrew or otherwise).
 
 If you'd rather not compile anything there are self-contained python3 externals which can be included in standalones in the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1).
 
-If you dont' mind compiling (and have xcode installed) then it's pretty straightforward to build your own, by picking one of the following options:
+If you don't mind compiling (and have xcode installed) then it's pretty straightforward to build your own by picking one of the following options:
 
 1. To build statically-compiled self-contained python3 externals:
 
@@ -193,7 +193,7 @@ If you dont' mind compiling (and have xcode installed) then it's pretty straight
 3. To build python3 externals in a package, linked to a python installation in its `support` folder
 
     ```bash
-    make shared-pkg
+    make framework-pkg
     ```
 
 With all three options, a python3 source distribution (matching your own python3 version) is automatically downloaded from [python.org](https://www.python.org) with dependencies, and then compiled into a static or shared version of python3 which is then used to compile the externals.
