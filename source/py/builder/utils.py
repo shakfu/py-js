@@ -88,9 +88,8 @@ def runlog(target, requirement=2):
     with open(logfile, 'w') as f:
         
         # t = tqdm(total=PYJS_TARGETS[target]['lines'], desc=target)
-        t = tqdm(total=PYJS_TARGETS[target]['lines'], desc=target)
-
         progressbar = ProgressBar(PYJS_TARGETS[target]['lines'], target)
+
         for line in proc(['make', '-C', str(BASEDIR), target]):
             print(cleaned(line), file=f)
             if "** BUILD SUCCEEDED **" in line:

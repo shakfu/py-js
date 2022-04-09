@@ -75,7 +75,8 @@ class ProgressBar(object):
             else:
                 self.state = current_value
         if self.state > self.max_value:
-            raise ValueError("state >= max_value")
+            # raise ValueError("state >= max_value")
+            return
         current_time = time()
         time_since_last_update = current_time - self.time_last_update
         if self.state == self.max_value:
