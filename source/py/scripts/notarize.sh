@@ -15,7 +15,7 @@ EXT=.mxo
 DEV_ID="${DEV_ID:-Jane Dow}"
 APP_PASS="${APP_PASS:-xxxx-xxxx-xxxx-xxxx}"
 APPLE_ID="${APPLE_ID:-jane.dow@icloud.com}"
-REQUEST_UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+REQUEST_UUID="${REQUEST_UUID:-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}"
 
 
 # NO NEED TO CHANGE ANYTHING BELOW HERE

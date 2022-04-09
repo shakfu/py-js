@@ -63,6 +63,7 @@ logging.basicConfig(
 )
 
 
+
 class CodesignExternal:
     """Recursively codesign an external."""
     FILE_PATTERNS = {
@@ -71,17 +72,17 @@ class CodesignExternal:
         'python3': 'runtime',
     }
     FILE_EXTENSIONS = ['.so', '.dylib']
-    FOLDER_EXTENSIONS = ['.framework', '.mxo', '.bundle', '.app']
+    FOLDER_EXTENSIONS = ['.mxo', '.framework', '.app', '.bundle']
 
     def __init__(self, path: str, dev_id: str = None, 
                  entitlements: str = None, dry_run: bool = False):
-        print(path)
         self.path = path
         self.authority = f"Developer ID Application: {dev_id}"
         self.entitlements = entitlements
         self.dry_run = dry_run
         self.targets_runtimes = set()
         self.targets_internals = set()
+        self.targets_frameworks = set()
         self.targets_apps = set()
         self.log = logging.getLogger(self.__class__.__name__)
         # self.cmd = ShellCmd(self.log)
@@ -120,10 +121,15 @@ class CodesignExternal:
         else:
             return False
 
+    def section(self, *args):
+        """display section"""
+        print()
+        print('-'*79)
+        print(*args)
+
     def collect(self):
         """build up a list of target binaries"""
         for root, folders, files in os.walk(self.path):
-            print(root, folders, files)
             for fname in files:
                 path = pathlib.Path(root) / fname
                 for pattern in self.FILE_PATTERNS:
@@ -149,7 +155,9 @@ class CodesignExternal:
                         continue
                     if path.suffix in self.FOLDER_EXTENSIONS:
                         self.log.debug("added bundle: %s", path)
-                        if path.suffix == '.app':
+                        if path.suffix == '.framework':
+                            self.targets_frameworks.add(path)
+                        elif path.suffix == '.app':
                             self.targets_apps.add(path)
                         else:
                             self.targets_internals.add(path)
@@ -177,27 +185,71 @@ class CodesignExternal:
         # ])
 
     def process(self):
-        """main process to recursive remove unneeded arch."""
+        """main process to recursive sign."""
 
+        self.section("PROCESSING:", self.path)
+
+        self.section('COLLECTING...')
         if not self.targets_internals:
             self.collect()
 
+        self.section('SIGNING INTERNAL TARGETS')
         for path in self.targets_internals:
-            if not self.dry_run:
-                self.sign_internal_binary(path)
+            self.sign_internal_binary(path)
 
+        self.section('SIGNING APPS')
         for path in self.targets_apps:
             macos_path = path / 'Contents' / 'MacOS'
             for exe in macos_path.iterdir():
-                if not self.dry_run:
-                    self.sign_internal_binary(path)
+                self.sign_internal_binary(exe)
             self.sign_runtime(path)
 
-        if not self.dry_run:
-            for path in self.targets_runtimes:
-                self.sign_runtime(path)
-            # sign main runtime
-            self.sign_runtime()
+        self.section('SIGNING OTHER RUNTIMES')
+        for path in self.targets_runtimes:
+            self.sign_runtime(path)
+
+        self.section('SIGNING FRAMEWORKS')
+        for path in self.targets_frameworks:
+            self.sign_internal_binary(path)
+
+        self.section('SIGNING MAIN RUNTIME')
+        self.sign_runtime()
+        self.log.info("DONE!")
+
+
+    def process_dry_run(self):
+        """main process to recursive sign."""
+        right = lambda x: str(x).lstrip(str(self.path))
+
+        self.section("PROCESSING:", self.path)
+
+        self.section('COLLECTING...')
+        if not self.targets_internals:
+            self.collect()
+
+        self.section('SIGNING INTERNAL TARGETS')
+        for path in self.targets_internals:
+            print('internal target:', right(path))
+
+        self.section('SIGNING APPS')
+        for path in self.targets_apps:
+            print("APP:", right(path))
+            macos_path = path / 'Contents' / 'MacOS'
+            for exe in macos_path.iterdir():
+                print('app.internal_target:', right(exe))
+            print('sign app.runtime:', right(path))
+
+        self.section('SIGNING OTHER RUNTIMES')
+        for path in self.targets_runtimes:
+            print('sign other.runtime:', right(path))
+
+        self.section('SIGNING FRAMEWORKS')
+        for path in self.targets_frameworks:
+            print('sign framework:', right(path))
+        
+        self.section('SIGNING MAIN')
+        # sign main runtime
+        print('sign main.runtime:', self.path)
         self.log.info("DONE!")
 
     @classmethod
@@ -212,22 +264,25 @@ class CodesignExternal:
         args = parser.parse_args()
         if args.path:
             app = cls(args.path, args.dev_id, args.entitlements, args.dry_run)
-            app.process()
-
+            if args.dry_run:
+                app.process_dry_run()
+            else:
+                app.process()
 
 
 def match_suffix(target):
     return target.suffix in CodesignExternal.FOLDER_EXTENSIONS
 
-def match_pattern(target):
+def match_python_shared(target):
+    """FIXME: shared-pkg does not notarize!!"""
     match = re.match(r'python3.\d{1,2}', target.name)
     if match:
         return match.group(0) == target.name
     else:
         return False
 
-def sign_folder(folder='externals'):
-    matchers = [match_suffix, match_pattern]
+def sign_folder(folder='externals', dry_run=False):
+    matchers = [match_suffix, match_python_shared]
     dev_id = os.environ['DEV_ID']
     assert dev_id, "environment var DEV_ID not set"
     root = pathlib.Path(__file__).parent.parent.parent.parent
@@ -239,9 +294,12 @@ def sign_folder(folder='externals'):
     assert len(targets) > 0, "no targets to sign"
     for target in targets:
         if any(match(target) for match in matchers):
-        # if target.suffix in CodesignExternal.FOLDER_EXTENSIONS or target.name.startswith('python'):
-            signer = CodesignExternal(target, dev_id=dev_id, entitlements=entitlements)
-            signer.process()
+        # if target.suffix in CodesignExternal.FOLDER_EXTENSIONS:
+            signer = CodesignExternal(target, dev_id=dev_id, entitlements=entitlements, dry_run=dry_run)
+            if signer.dry_run:
+                signer.process_dry_run()
+            else:
+                signer.process()
 
 
 def package(package_name=Project.package_name):
@@ -318,9 +376,9 @@ def notarize_dmg():
 
 
 
-def sign_all():
-    sign_folder('externals')
-    sign_folder('support')
+def sign_all(dry_run=False):
+    sign_folder('externals', dry_run)
+    sign_folder('support', dry_run)
 
 
 if __name__ == "__main__":

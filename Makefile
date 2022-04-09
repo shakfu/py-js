@@ -252,6 +252,10 @@ sign:
 	$(call section,"sign externals")
 	$(call call-builder,"sign")
 
+sign-dry:
+	$(call section,"sign externals")
+	$(call call-builder,"sign" "--dry-run")
+
 sign-dmg:
 	$(call section,"sign dmg")
 	$(call call-builder,"sign" "dmg")

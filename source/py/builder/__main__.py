@@ -278,9 +278,10 @@ class Application(Commander):
 # ----------------------------------------------------------------------------
 # utility methods
 
+    @option("--dry-run", "-d", action="store_true", help="run without actual changes.")
     def do_sign(self, args):
         """sign all required folders recursively"""
-        sign_all()
+        sign_all(args.dry_run)
 
     def do_sign_dmg(self, args):
         """sign dmg"""
