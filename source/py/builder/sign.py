@@ -44,9 +44,11 @@ import argparse
 import logging
 import os
 import pathlib
+import re
 import subprocess
 import sys
 from pathlib import Path
+
 
 from .config import Project
 from .shell import ShellCmd
@@ -121,6 +123,7 @@ class CodesignExternal:
     def collect(self):
         """build up a list of target binaries"""
         for root, folders, files in os.walk(self.path):
+            print(root, folders, files)
             for fname in files:
                 path = pathlib.Path(root) / fname
                 for pattern in self.FILE_PATTERNS:
@@ -212,7 +215,19 @@ class CodesignExternal:
             app.process()
 
 
+
+def match_suffix(target):
+    return target.suffix in CodesignExternal.FOLDER_EXTENSIONS
+
+def match_pattern(target):
+    match = re.match(r'python3.\d{1,2}', target.name)
+    if match:
+        return match.group(0) == target.name
+    else:
+        return False
+
 def sign_folder(folder='externals'):
+    matchers = [match_suffix, match_pattern]
     dev_id = os.environ['DEV_ID']
     assert dev_id, "environment var DEV_ID not set"
     root = pathlib.Path(__file__).parent.parent.parent.parent
@@ -223,7 +238,8 @@ def sign_folder(folder='externals'):
     targets = list(target_folder.iterdir())
     assert len(targets) > 0, "no targets to sign"
     for target in targets:
-        if target.suffix in CodesignExternal.FOLDER_EXTENSIONS:
+        if any(match(target) for match in matchers):
+        # if target.suffix in CodesignExternal.FOLDER_EXTENSIONS or target.name.startswith('python'):
             signer = CodesignExternal(target, dev_id=dev_id, entitlements=entitlements)
             signer.process()
 

@@ -10,7 +10,8 @@ from pathlib import Path
 from .config import (BASEDIR, BASELOGSDIR, CURRENT_PYTHON_VERSION, CYAN, GREEN,
                      HOME, LOGDIR, MAGENTA, PYJS_TARGETS, PYTHON_TARGETS,
                      RESET)
-from .ext.tqdm import tqdm
+# from .ext.tqdm import tqdm
+from .ext.pbar import ProgressBar
 
 
 def cmd(shellcmd):
@@ -86,14 +87,17 @@ def runlog(target, requirement=2):
 
     with open(logfile, 'w') as f:
         
+        # t = tqdm(total=PYJS_TARGETS[target]['lines'], desc=target)
         t = tqdm(total=PYJS_TARGETS[target]['lines'], desc=target)
 
+        progressbar = ProgressBar(PYJS_TARGETS[target]['lines'], target)
         for line in proc(['make', '-C', str(BASEDIR), target]):
             print(cleaned(line), file=f)
             if "** BUILD SUCCEEDED **" in line:
                 successes += 1
-            t.update(1)
-        t.close()
+            # t.update(1)
+            progressbar.update()
+        # t.close()
 
     if successes == requirement:
         msg = f"{GREEN}SUCCESS{RESET}"

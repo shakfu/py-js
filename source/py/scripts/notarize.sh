@@ -154,6 +154,10 @@ check_status() {
 
 }
 
+check_dmg() {
+	spctl -a -t open --context context:primary-signature -v $1
+}
+
 
 # if [ "$1" == "sign_notarize" ]; then
 # 	echo "codesigning and notarizing externals."

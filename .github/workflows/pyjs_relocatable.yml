@@ -71,11 +71,6 @@ jobs:
     - name: Sign .dmg        
       run: make sign-dmg
 
-    # - name: Sign .dmg
-    #   run: |
-    #     codesign --sign "Developer ID Application: ${{ secrets.DEV_ID }}" \
-    #       --deep --force --verbose --options runtime "${{ env.PRODUCT_DMG }}"
-
     - name: Notarize dmg
       uses: devbotsxyz/xcode-notarize@v1
       with:
@@ -84,7 +79,7 @@ jobs:
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
         primary-bundle-id: org.me.py-dmg
 
-    - name: Staple externals
+    - name: Staple dmg
       uses: devbotsxyz/xcode-staple@v1
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
