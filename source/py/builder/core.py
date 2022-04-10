@@ -354,6 +354,10 @@ class Builder:
         if "ABIFLAGS" not in xcconfig_flags:
             xcconfig_flags["ABIFLAGS"] = str(self.project.python.abiflags)
 
+        if "ARCHS" not in xcconfig_flags:
+            xcconfig_flags["ARCHS"] = "$(NATIVE_ARCH)"
+            xcconfig_flags["ONLY_ACTIVE_ARCH"] = "NO"
+
         xcconfig_flags["PROJECT_FOLDER_NAME"] = project
 
         configuration = "Deployment" if self.settings.release else "Development"
