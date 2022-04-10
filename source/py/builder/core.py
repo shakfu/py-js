@@ -1175,8 +1175,8 @@ class RelocatablePythonBuilder(PythonBuilder):
                 f"pyvenv-{ver}",
                 f"pydoc{ver}",
                 f"pydoc3",
-                f"python3",
-                f"python3-config",
+                # f"python3",
+                # f"python3-config",
             ]
         )
 
