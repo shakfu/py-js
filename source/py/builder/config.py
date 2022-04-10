@@ -14,54 +14,63 @@ LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 # ----------------------------------------------------------------------------
 # CONSTANTS
 
-HOME = os.environ['HOME']
+HOME = os.environ["HOME"]
 
 CURRENT_PYTHON_VERSION = platform.python_version()
 DEFAULT_BZ2_VERSION = "1.0.8"
-#DEFAULT_SSL_VERSION = "1.1.1g"
+# DEFAULT_SSL_VERSION = "1.1.1g"
 DEFAULT_SSL_VERSION = "1.1.1n"
-DEFAULT_XZ_VERSION  = "5.2.5"
+DEFAULT_XZ_VERSION = "5.2.5"
 
 # BASEDIR=f"{HOME}/.build_pyjs"
-BASEDIR=Path(__file__).parent.parent.parent.parent
-BASELOGSDIR=f"{BASEDIR}/logs"
-LOGDIR=f"{BASELOGSDIR}/{CURRENT_PYTHON_VERSION}"
+BASEDIR = Path(__file__).parent.parent.parent.parent
+BASELOGSDIR = f"{BASEDIR}/logs"
+LOGDIR = f"{BASELOGSDIR}/{CURRENT_PYTHON_VERSION}"
 ESCAPED_HOME = HOME.replace("/", "\\/")
 
 # colors
-YELLOW="\033[1;33m"
-BLUE="\033[1;34m"
-GREEN="\033[1;32m"
-MAGENTA="\033[1;35m"
-CYAN="\033[1;36m"
-RESET="\033[m"
-
-
-
+YELLOW = "\033[1;33m"
+BLUE = "\033[1;34m"
+GREEN = "\033[1;32m"
+MAGENTA = "\033[1;35m"
+CYAN = "\033[1;36m"
+RESET = "\033[m"
 
 
 PYJS_TARGETS = {
-    "default"         : dict(desc="non-portable pyjs externals linked to your system",   lines=210),
-    "homebrew-pkg"    : dict(desc="portable package w/ pyjs (requires homebrew python)", lines=275),
-    "homebrew-ext"    : dict(desc="portable pyjs externals (requires homebrew python)",  lines=278),
-    "shared-pkg"      : dict(desc="portable package with pyjs externals (shared)",       lines=17992),
-    "shared-ext"      : dict(desc="portable pyjs externals (shared)",                    lines=14195),
-    "static-ext"      : dict(desc="portable pyjs externals (static)",                    lines=14064),
-    "framework-pkg"   : dict(desc="portable package with pyjs externals (framework)",    lines=14383),
-    "framework-ext"   : dict(desc="portable pyjs externals (framework)",                 lines=18203),
-    "relocatable-pkg" : dict(desc="portable package w/ more custom options (framework)", lines=414),
+    "default": dict(
+        desc="non-portable pyjs externals linked to your system", lines=210
+    ),
+    "homebrew-pkg": dict(
+        desc="portable package w/ pyjs (requires homebrew python)", lines=275
+    ),
+    "homebrew-ext": dict(
+        desc="portable pyjs externals (requires homebrew python)", lines=278
+    ),
+    "shared-pkg": dict(
+        desc="portable package with pyjs externals (shared)", lines=17992
+    ),
+    "shared-ext": dict(desc="portable pyjs externals (shared)", lines=14195),
+    "static-ext": dict(desc="portable pyjs externals (static)", lines=14064),
+    "framework-pkg": dict(
+        desc="portable package with pyjs externals (framework)", lines=14383
+    ),
+    "framework-ext": dict(desc="portable pyjs externals (framework)", lines=18203),
+    "relocatable-pkg": dict(
+        desc="portable package w/ more custom options (framework)", lines=414
+    ),
     # "pymx"          : dict(desc="non-portable alternative python3 externals (min-lib)", lines=210),
 }
 
 PYTHON_TARGETS = {
-    "python-shared"         : "minimal shared python build",
-    "python-shared-ext"     : "minimal shared python build for externals",
-    "python-shared-pkg"     : "minimal shared python build for packages",
-    "python-static"         : "minimal statically-linked python build",
-    "python-framework"      : "minimal framework python build",
-    "python-framework-ext"  : "minimal framework python build for externals",
-    "python-framework-pkg"  : "minimal framework python build for packages",
-    "python-relocatable"    : "custom relocatable python framework build",
+    "python-shared": "minimal shared python build",
+    "python-shared-ext": "minimal shared python build for externals",
+    "python-shared-pkg": "minimal shared python build for packages",
+    "python-static": "minimal statically-linked python build",
+    "python-framework": "minimal framework python build",
+    "python-framework-ext": "minimal framework python build for externals",
+    "python-framework-pkg": "minimal framework python build for packages",
+    "python-relocatable": "custom relocatable python framework build",
 }
 
 
@@ -133,62 +142,66 @@ BINS_TO_DEL = [
 # Utility Functions
 
 
-def get_var(x): return sysconfig.get_config_var(x)         # type: ignore
-def get_path(x): return Path(sysconfig.get_config_var(x))  # type: ignore
+def get_var(x):
+    return sysconfig.get_config_var(x)  # type: ignore
+
+
+def get_path(x):
+    return Path(sysconfig.get_config_var(x))  # type: ignore
 
 
 # ----------------------------------------------------------------------------
 # Configuration Classes
 
-class Python:
-    """configuration object to to get info about the python implementation used
-    """
 
-    version = get_var('py_version')
-    version_short = get_var('py_version_short')
-    version_nodot = get_var('py_version_nodot')
+class Python:
+    """configuration object to to get info about the python implementation used"""
+
+    version = get_var("py_version")
+    version_short = get_var("py_version_short")
+    version_nodot = get_var("py_version_nodot")
     name = f"python{version_short}"
-    abiflags = get_var('abiflags')
+    abiflags = get_var("abiflags")
     arch = platform.machine()
 
     tag = f"macOS-{arch}-py{version}"
 
-    prefix = get_path('prefix')
-    bindir = get_path('BINDIR')
-    include = get_path('INCLUDEPY')
-    libdir = get_path('LIBDIR')
-    libs = get_path('LIBS')
-    pkgs = get_path('BINLIBDEST')
+    prefix = get_path("prefix")
+    bindir = get_path("BINDIR")
+    include = get_path("INCLUDEPY")
+    libdir = get_path("LIBDIR")
+    libs = get_path("LIBS")
+    pkgs = get_path("BINLIBDEST")
 
-    mac_dep_target = get_var('MACOSX_DEPLOYMENT_TARGET')
-    staticlib = library = get_var('LIBRARY')
+    mac_dep_target = get_var("MACOSX_DEPLOYMENT_TARGET")
+    staticlib = library = get_var("LIBRARY")
 
-    # can be either: 
+    # can be either:
     # in case of framework: Python.framework/Versions/X.Y/Python
     # in case of shared lib: libpythonX.Ym.dylib
-    ldlibrary = get_path('LDLIBRARY')
+    ldlibrary = get_path("LDLIBRARY")
     dylib = f"libpython{version_short}{abiflags}.dylib"
 
     config_ver_platform = f"config-{version_short}{abiflags}-darwin"
 
     def to_dict(self) -> dict:
         return {
-            'version': self.version,
-            'version_short': self.version_short,
-            'version_nodot': self.version_nodot,
-            'name': self.name,
-            'abiflags': self.abiflags,
-            'arch': self.arch,
-            'prefix': str(self.prefix),
-            'bindir': str(self.bindir),
-            'include': str(self.include),
-            'libdir': str(self.libdir),
-            'libs': str(self.libs),
-            'mac_dep_target': self.mac_dep_target,
-            'staticlib': self.staticlib,
-            'ldlibrary': str(self.ldlibrary),
-            'dylib': self.dylib,
-            'config_ver_platform': self.config_ver_platform,
+            "version": self.version,
+            "version_short": self.version_short,
+            "version_nodot": self.version_nodot,
+            "name": self.name,
+            "abiflags": self.abiflags,
+            "arch": self.arch,
+            "prefix": str(self.prefix),
+            "bindir": str(self.bindir),
+            "include": str(self.include),
+            "libdir": str(self.libdir),
+            "libs": str(self.libs),
+            "mac_dep_target": self.mac_dep_target,
+            "staticlib": self.staticlib,
+            "ldlibrary": str(self.ldlibrary),
+            "dylib": self.dylib,
+            "config_ver_platform": self.config_ver_platform,
         }
 
 
@@ -199,7 +212,7 @@ class Project:
 
     name = "py-js"
     python = Python()
-    
+
     arch = platform.machine()
 
     HOME = Path(HOME)
@@ -252,9 +265,9 @@ class Project:
         build = targets / "build"
         build_externals = externals
 
-    else: # is copied to {package}
+    else:  # is copied to {package}
         build = HOME / ".build_pyjs"
-        build_externals = build / 'externals'
+        build_externals = build / "externals"
 
     build_downloads = build / "downloads"
     build_src = build / "src"
@@ -265,28 +278,28 @@ class Project:
 
     def to_dict(self) -> dict:
         return {
-            'name': self.name,
-            'arch': self.arch,
-            'root': str(self.root),
-            'pydir': str(self.pydir),
-            'scripts': str(self.scripts),
-            'patch': str(self.patch),
-            'targets': str(self.targets),
-            'build': str(self.build),
-            'downloads': str(self.build_downloads),
-            'build_src': str(self.build_src),
-            'lib': str(self.build_lib),
-            'pyjs': str(self.pyjs),
-            'support': str(self.support),
-            'externals': str(self.externals),
-            'py_external': str(self.py_external),
-            'pyjs_external': str(self.pyjs_external),
-            'HOME': self.HOME,
-            'package_name': self.package_name,
-            'package': str(self.package),
-            'package_dirs': self.package_dirs,
-            'mac_dep_target': self.mac_dep_target,
-            'python': self.python.to_dict(),
+            "name": self.name,
+            "arch": self.arch,
+            "root": str(self.root),
+            "pydir": str(self.pydir),
+            "scripts": str(self.scripts),
+            "patch": str(self.patch),
+            "targets": str(self.targets),
+            "build": str(self.build),
+            "downloads": str(self.build_downloads),
+            "build_src": str(self.build_src),
+            "lib": str(self.build_lib),
+            "pyjs": str(self.pyjs),
+            "support": str(self.support),
+            "externals": str(self.externals),
+            "py_external": str(self.py_external),
+            "pyjs_external": str(self.pyjs_external),
+            "HOME": self.HOME,
+            "package_name": self.package_name,
+            "package": str(self.package),
+            "package_dirs": self.package_dirs,
+            "mac_dep_target": self.mac_dep_target,
+            "python": self.python.to_dict(),
         }
 
     def __str__(self):

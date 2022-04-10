@@ -1,30 +1,34 @@
 from . import core
-from .config import (CURRENT_PYTHON_VERSION, DEFAULT_BZ2_VERSION,
-                     DEFAULT_SSL_VERSION, DEFAULT_XZ_VERSION)
+from .config import (
+    CURRENT_PYTHON_VERSION,
+    DEFAULT_BZ2_VERSION,
+    DEFAULT_SSL_VERSION,
+    DEFAULT_XZ_VERSION,
+)
 
 PYTHON_BUILDERS = dict(
-    python_shared = core.SharedPythonBuilder,
-    python_shared_ext = core.SharedPythonForExtBuilder,
-    python_shared_pkg = core.SharedPythonForPkgBuilder,
-    python_framework = core.FrameworkPythonBuilder,
-    python_framework_ext = core.FrameworkPythonForExtBuilder,
-    python_framework_pkg = core.FrameworkPythonForPkgBuilder,
-    python_relocatable = core.RelocatablePythonBuilder,
-    python_static = core.StaticPythonBuilder,
-    python_static_tiny = core.TinyStaticPythonBuilder,
+    python_shared=core.SharedPythonBuilder,
+    python_shared_ext=core.SharedPythonForExtBuilder,
+    python_shared_pkg=core.SharedPythonForPkgBuilder,
+    python_framework=core.FrameworkPythonBuilder,
+    python_framework_ext=core.FrameworkPythonForExtBuilder,
+    python_framework_pkg=core.FrameworkPythonForPkgBuilder,
+    python_relocatable=core.RelocatablePythonBuilder,
+    python_static=core.StaticPythonBuilder,
+    python_static_tiny=core.TinyStaticPythonBuilder,
 )
 
 PYJS_BUILDERS = dict(
-    pyjs_local_sys = (core.LocalSystemBuilder, []),
-    pyjs_homebrew_ext = (core.HomebrewExtBuilder, []),
-    pyjs_homebrew_pkg = (core.HomebrewPkgBuilder, []),
-    pyjs_shared_ext = (core.SharedExtBuilder, ['python_shared_ext']),
-    pyjs_shared_pkg = (core.SharedPkgBuilder, ['python_shared_pkg']),
-    pyjs_framework_ext = (core.FrameworkExtBuilder, ['python_framework_ext']),
-    pyjs_framework_pkg = (core.FrameworkPkgBuilder, ['python_framework_pkg']),
-    pyjs_relocatable_pkg = (core.RelocatablePkgBuilder, ['python_relocatable']),
-    pyjs_static_ext = (core.StaticExtBuilder, ['python_static']),
-    pyjs_static_tiny_ext = (core.StaticExtBuilder, ['python_static_tiny']),
+    pyjs_local_sys=(core.LocalSystemBuilder, []),
+    pyjs_homebrew_ext=(core.HomebrewExtBuilder, []),
+    pyjs_homebrew_pkg=(core.HomebrewPkgBuilder, []),
+    pyjs_shared_ext=(core.SharedExtBuilder, ["python_shared_ext"]),
+    pyjs_shared_pkg=(core.SharedPkgBuilder, ["python_shared_pkg"]),
+    pyjs_framework_ext=(core.FrameworkExtBuilder, ["python_framework_ext"]),
+    pyjs_framework_pkg=(core.FrameworkPkgBuilder, ["python_framework_pkg"]),
+    pyjs_relocatable_pkg=(core.RelocatablePkgBuilder, ["python_relocatable"]),
+    pyjs_static_ext=(core.StaticExtBuilder, ["python_static"]),
+    pyjs_static_tiny_ext=(core.StaticExtBuilder, ["python_static_tiny"]),
 )
 
 # -----------------------------------------------------------------------------
@@ -36,13 +40,15 @@ get = lambda d, k, default: d[k] if (k in d and d[k]) else default
 # -----------------------------------------------------------------------------
 # DEPENDENCY PRODUCTS
 
+
 def get_bzip2_product(bz2_version=DEFAULT_BZ2_VERSION, **settings):
     return core.Product(
         name="bzip2",
         version=bz2_version,
         url_template="https://sourceware.org/pub/bzip2/{name}-{version}.tar.gz",
         libs_static=["libbz2.a"],
-    )   
+    )
+
 
 def get_ssl_product(ssl_version=DEFAULT_SSL_VERSION, **settings):
     return core.Product(
@@ -51,6 +57,7 @@ def get_ssl_product(ssl_version=DEFAULT_SSL_VERSION, **settings):
         url_template="https://www.openssl.org/source/{name}-{version}.tar.gz",
         libs_static=["libssl.a", "libcrypto.a"],
     )
+
 
 def get_xz_product(xz_version=DEFAULT_XZ_VERSION, **settings):
     return core.Product(
@@ -67,14 +74,14 @@ def get_xz_product(xz_version=DEFAULT_XZ_VERSION, **settings):
 
 def dependency_builder_factory(name, **settings):
 
-    bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
-    ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
-    xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
+    bz2_version = get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
+    ssl_version = get(settings, "ssl_version", DEFAULT_SSL_VERSION)
+    xz_version = get(settings, "xz_version", DEFAULT_XZ_VERSION)
 
     return {
-        'bz2': core.Bzip2Builder(product=get_bzip2_product(bz2_version), **settings),
-        'ssl': core.OpensslBuilder(product=get_ssl_product(ssl_version), **settings),
-        'xz' : core.XzBuilder(product=get_xz_product(xz_version), **settings),
+        "bz2": core.Bzip2Builder(product=get_bzip2_product(bz2_version), **settings),
+        "ssl": core.OpensslBuilder(product=get_ssl_product(ssl_version), **settings),
+        "xz": core.XzBuilder(product=get_xz_product(xz_version), **settings),
     }[name]
 
 
@@ -84,10 +91,10 @@ def dependency_builder_factory(name, **settings):
 
 def python_builder_factory(name, **settings):
 
-    py_version = get(settings, 'py_version', CURRENT_PYTHON_VERSION)
-    bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
-    ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
-    xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
+    py_version = get(settings, "py_version", CURRENT_PYTHON_VERSION)
+    bz2_version = get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
+    ssl_version = get(settings, "ssl_version", DEFAULT_SSL_VERSION)
+    xz_version = get(settings, "xz_version", DEFAULT_XZ_VERSION)
 
     _builder = PYTHON_BUILDERS[name]
 
@@ -100,7 +107,7 @@ def python_builder_factory(name, **settings):
     product = core.Product(
         name="Python",
         version=py_version,
-        build_dir="-".join(name.split('_')[:2]),
+        build_dir="-".join(name.split("_")[:2]),
         url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
         libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
     )
@@ -109,36 +116,38 @@ def python_builder_factory(name, **settings):
     else:
         return _builder(product=product, depends_on=_dependencies, **settings)
 
+
 # -----------------------------------------------------------------------------
 # PYJS BUILDERS
 
+
 def pyjs_builder_factory(name, **settings):
 
-    py_version = get(settings, 'py_version', CURRENT_PYTHON_VERSION)
-    bz2_version = get(settings, 'bz2_version', DEFAULT_BZ2_VERSION)
-    ssl_version = get(settings, 'ssl_version', DEFAULT_SSL_VERSION) 
-    xz_version = get(settings, 'xz_version', DEFAULT_XZ_VERSION)
+    py_version = get(settings, "py_version", CURRENT_PYTHON_VERSION)
+    bz2_version = get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
+    ssl_version = get(settings, "ssl_version", DEFAULT_SSL_VERSION)
+    xz_version = get(settings, "xz_version", DEFAULT_XZ_VERSION)
 
     _builder, dependencies = PYJS_BUILDERS[name]
     if dependencies:
         return _builder(
-            product=core.Product(name='Python', version=py_version),
+            product=core.Product(name="Python", version=py_version),
             depends_on=[
-                python_builder_factory(name, **settings)
-                for name in dependencies
+                python_builder_factory(name, **settings) for name in dependencies
             ],
-            **settings
+            **settings,
         )
     else:
         # no dep builder is a local builder therefore default_py_ver
         return _builder(
-            product=core.Product(name='Python', version=CURRENT_PYTHON_VERSION),
-            **settings
+            product=core.Product(name="Python", version=CURRENT_PYTHON_VERSION),
+            **settings,
         )
 
 
 # -----------------------------------------------------------------------------
 # GENERIC BUILDERS
+
 
 def builder_factory(name, **settings):
     # print(settings)
@@ -156,16 +165,21 @@ def builder_factory(name, **settings):
 
     return builder
 
+
 # -----------------------------------------------------------------------------
 # RECIPES
 
 # this is an example of a recipe which can fixes requirements to versions.
 
-def get_static_python_recipe(name,
-                             py_version=CURRENT_PYTHON_VERSION, 
-                             bz2_version=DEFAULT_BZ2_VERSION, 
-                             ssl_version=DEFAULT_SSL_VERSION,
-                             xz_version=DEFAULT_XZ_VERSION, **settings):
+
+def get_static_python_recipe(
+    name,
+    py_version=CURRENT_PYTHON_VERSION,
+    bz2_version=DEFAULT_BZ2_VERSION,
+    ssl_version=DEFAULT_SSL_VERSION,
+    xz_version=DEFAULT_XZ_VERSION,
+    **settings,
+):
     return core.Recipe(
         name=name,
         builders=[
@@ -178,10 +192,14 @@ def get_static_python_recipe(name,
                     libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
                 ),
                 depends_on=[
-                    core.Bzip2Builder(product=get_bzip2_product(bz2_version, **settings)),
-                    core.OpensslBuilder(product=get_ssl_product(ssl_version, **settings)),
+                    core.Bzip2Builder(
+                        product=get_bzip2_product(bz2_version, **settings)
+                    ),
+                    core.OpensslBuilder(
+                        product=get_ssl_product(ssl_version, **settings)
+                    ),
                     core.XzBuilder(product=get_xz_product(xz_version, **settings)),
-                ]
+                ],
             )
-        ]
+        ],
     )

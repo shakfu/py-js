@@ -2,8 +2,6 @@
 
 ## Build System
 
-- [ ] Github actions: convert build actions to use .dmg for  Max Packages so that Python.frameworks are notarized (since they can't be notarized alone) Self-contained externals are usable now and don't have this issue.
-
 - [ ] refactor builder.sign - builder.package to class
 
 - [ ] `min-setup.local` patch system needs to be organized and automated and linked to modules so that options lead to proper removal of extensions and modules with clear dependencies.

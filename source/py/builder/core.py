@@ -24,10 +24,12 @@ Builder
             RelocatablePythonBuilder
         PyJsBuilder
             LocalSystemBuilder
-            HomebrewBuilder
+            HomebrewExtBuilder
+            HomebrewPkgBuilder            
             StaticExtBuilder
+            StaticPkgBuilder (not implemented, useless)
             SharedExtBuilder
-            SharedPkgBuilder
+            SharedPkgBuilder (not used)
             FrameworkExtBuilder
             FrameworkPkgBuilder
             RelocatablePkgBuilder
@@ -35,42 +37,6 @@ Builder
 install:
     configure -> reset -> download -> pre_process -> build -> post_process
 
-reset:
-    cmd.remove(src_path)
-    cmd.remove(project.lib / "Python.framework")
-
-    or
-    cmd.remove(prefix)
-
-
-pre_process:
-    write_setup_local()
-    apply_patch(patch="configure.patch", to_file="configure")
-
-build:
-    for builder in depends_on:
-        builder.build
-
-post_process:
-    clean
-    ziplib
-    fix
-    sign
-
-clean:
-    clean_python_pyc(prefix)
-    clean_python_tests(python_lib)
-    clean_python_site_packages()
-
-    for i in (python_lib / "distutils" / "command").glob("*.exe"):
-        cmd.remove(i)
-
-    cmd.remove(prefix_lib / "pkgconfig")
-    cmd.remove(prefix / "share")
-
-    remove_packages()
-    remove_extensions()
-    remove_binaries()
 """
 
 import logging
@@ -78,6 +44,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from textwrap import dedent
 from types import SimpleNamespace
@@ -762,19 +729,21 @@ class PythonBuilder(Builder):
             ),
             dylib,
         )
-    
+
     def fix_dylib_for_framework_pkg(self, dylib):
         """install to dylib @rpath of @loader' to dylib in a framework-pkg"""
         self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            f"@loader_path/../../../../support/Python.framework/Versions/{self.product.ver}/Python", dylib
+            f"@loader_path/../../../../support/Python.framework/Versions/{self.product.ver}/Python",
+            dylib,
         )
 
     def fix_dylib_for_framework_ext(self, dylib):
         """install to dylib @rpath of @loader' to dylib in a framework-ext"""
         self.cmd.chmod(dylib)
         self.install_name_tool_id(
-            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python", dylib
+            f"@loader_path/../Resources/Python.framework/Versions/{self.product.ver}/Python",
+            dylib,
         )
 
     def fix_dylib_for_shared_ext(self, dylib):
@@ -985,6 +954,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions: not implemented"""
 
+
 class TinyStaticPythonBuilder(PythonSrcBuilder):
     """builds python in a static format."""
 
@@ -1005,15 +975,14 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
 
     def remove_extensions(self):
         """remove extensions"""
-        print('INSIDE')
+        print("INSIDE")
         self.rm_exts(
             [
                 "_blake2",
                 "_csv",
                 "_elementtree",
                 "_json",
-                "_multiprocessing"
-                "_pickle",
+                "_multiprocessing" "_pickle",
                 "_zoneinfo",
                 "pyexpat",
                 "unicodedata",
@@ -1029,7 +998,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
             "latin_1.py",
             "utf_8.py",
         ]
-        encodings = self.python_lib / 'encodings'
+        encodings = self.python_lib / "encodings"
         for f in encodings.iterdir():
             if f.name in keep:
                 continue
@@ -1056,8 +1025,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
                 "idlelib",
                 "lib2to3",
                 "mailbox",
-                "mailbox.py"
-                "multiprocessing",
+                "mailbox.py" "multiprocessing",
                 "optparse.py",
                 "pickletools.py",
                 "pydoc.py",
@@ -1078,8 +1046,6 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
             ]
         )
 
-
-
     def install(self):
         """install and build compilation product"""
         # self.configure()
@@ -1093,7 +1059,6 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
         """post-build operations"""
         self.clean()
         self.ziplib()
-
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
@@ -1129,13 +1094,13 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.pydir)
 
+
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BINARY)
 
 
 class RelocatablePythonBuilder(PythonBuilder):
-    """pyjs externals in a framework package using Greg Neagle's Relocatable Python
-    """
+    """pyjs externals in a framework package using Greg Neagle's Relocatable Python"""
 
     @property
     def prefix(self) -> Path:
@@ -1168,12 +1133,22 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.clean()
         self.ziplib()
 
+    def temp_remove_site_packages(self):
+        tmp_dir = tempfile.mkdtemp()
+        self.cmd.move(self.site_packages, tmp_dir)
+        return tmp_dir
+
+    def restore_site_packages(self, tmp_dir):
+        tmp_dir = Path(tmp_dir)
+        self.cmd.move(tmp_dir / 'site-packages', self.site_packages)
+
     def clean(self):
         """clean everything."""
         self.clean_python_pyc(self.prefix)
+        tmp_dir = self.temp_remove_site_packages()
         self.clean_python_tests(self.python_lib)
         # self.clean_python_site_packages(self.python_lib)
-
+        self.restore_site_packages(tmp_dir)
         for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
             self.cmd.remove(i)
 
@@ -1404,8 +1379,7 @@ class HomebrewExtBuilder(PyJsBuilder):
         self.remove_extensions()
 
     def fix_exe_for_shared_ext_or_pkg(self, executable):
-        """redirect ref of pythonX to libpythonX.Y.dylib"
-        """
+        """redirect ref of pythonX to libpythonX.Y.dylib" """
         dirs = DependencyManager(executable).analyze_executable()
         if dirs:
             dir_to_change = dirs[0]
@@ -1477,14 +1451,12 @@ class HomebrewExtBuilder(PyJsBuilder):
         """build external into self-contained external using local homebrew python (portable)"""
         self.reset_prefix()
         self.copy_python()
-        self.fix_exe_for_shared_ext_or_pkg(
-            self.prefix_bin / self.product.name_ver)
+        self.fix_exe_for_shared_ext_or_pkg(self.prefix_bin / self.product.name_ver)
         self.fix_dylib_for_shared_ext(self.prefix / self.product.dylib)
         self.cp_python_to_ext_resources(self.project.py_external)
         self.cp_python_to_ext_resources(self.project.pyjs_external)
         self.xcodebuild(self.NAME, targets=["py", "pyjs"])
         self.reset_prefix()
-
 
 
 class HomebrewPkgBuilder(PyJsBuilder):
@@ -1498,8 +1470,12 @@ class HomebrewPkgBuilder(PyJsBuilder):
 
     @property
     def prefix(self):
-        return (self.project.support / "Python.framework" / 
-                "Versions" / f"{self.project.python.version_short}")
+        return (
+            self.project.support
+            / "Python.framework"
+            / "Versions"
+            / f"{self.project.python.version_short}"
+        )
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
@@ -1516,8 +1492,8 @@ class HomebrewPkgBuilder(PyJsBuilder):
                 f"pyvenv-{ver}",
                 f"pydoc{ver}",
                 f"pydoc3",
-                f'python3',
-                f'python3-config',
+                f"python3",
+                f"python3-config",
             ]
         )
 
@@ -1546,7 +1522,6 @@ class HomebrewPkgBuilder(PyJsBuilder):
             ),
         )
         self.xcodebuild(self.NAME, targets=["py", "pyjs"])
-
 
 
 class LocalSystemBuilder(PyJsBuilder):
