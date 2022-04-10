@@ -145,12 +145,12 @@ class Application(Commander):
     @common_options
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
-        builder_factory('pyjs_homebrew_pkg', **vars(args)).install_homebrew_pkg()
+        builder_factory('pyjs_homebrew_pkg', **vars(args)).install()
 
     @common_options
     def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
-        builder_factory('pyjs_homebrew_ext', **vars(args)).install_homebrew_ext()
+        builder_factory('pyjs_homebrew_ext', **vars(args)).install()
 
     @common_options
     def do_pyjs_static_pkg(self, args):

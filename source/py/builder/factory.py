@@ -16,7 +16,7 @@ PYTHON_BUILDERS = dict(
 
 PYJS_BUILDERS = dict(
     pyjs_local_sys = (core.LocalSystemBuilder, []),
-    pyjs_homebrew_ext = (core.HomebrewBuilder, []),
+    pyjs_homebrew_ext = (core.HomebrewExtBuilder, []),
     pyjs_homebrew_pkg = (core.HomebrewPkgBuilder, []),
     pyjs_shared_ext = (core.SharedExtBuilder, ['python_shared_ext']),
     pyjs_shared_pkg = (core.SharedPkgBuilder, ['python_shared_pkg']),

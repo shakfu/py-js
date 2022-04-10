@@ -1375,12 +1375,13 @@ class PyJsBuilder(PythonBuilder):
 # PYJS EXTERNAL BUILDERS (SPECIALIZED)
 
 
-class HomebrewBuilder(PyJsBuilder):
+class HomebrewExtBuilder(PyJsBuilder):
     """homebrew python builder"""
 
     suffix = ""
     setup_local: str = ""
     patch: str = ""
+    NAME = "homebrew-ext"
 
     def cp_pkgs(self, pkgs):
         """copy package dirs from homebrew python lib to target python lib"""
@@ -1403,12 +1404,7 @@ class HomebrewBuilder(PyJsBuilder):
         self.remove_extensions()
 
     def fix_exe_for_shared_ext_or_pkg(self, executable):
-        # sourcery skip: use-named-expression
         """redirect ref of pythonX to libpythonX.Y.dylib"
-
-        used in:
-            SharedPythonForPkgBuilder(SharedPythonBuilder): exe-pkg
-            HomebrewBuilder
         """
         dirs = DependencyManager(executable).analyze_executable()
         if dirs:
@@ -1416,14 +1412,6 @@ class HomebrewBuilder(PyJsBuilder):
             self.install_name_tool_change(
                 dir_to_change, f"@executable_path/../{self.product.dylib}", executable
             )
-
-    def fix_dylib_for_shared_pkg(self, dylib):
-        """install to dylib @rpath of @loader' to dylib in a shared-pkg"""
-        self.cmd.chmod(dylib)
-        self.install_name_tool_id(
-            f"@loader_path/../../../../support/{self.product.name_ver}/{self.product.dylib}",
-            dylib,
-        )
 
     def fix_dylib_for_shared_ext(self, dylib):
         """install to dylib @rpath of @loader' to dylib in a shared-ext"""
@@ -1486,47 +1474,16 @@ class HomebrewBuilder(PyJsBuilder):
         self.ziplib()
 
     def install(self):
-        """install via symlink"""
-        if not self.project.package.exists():
-            self.log.info(
-                "package py-js symlink does not exist -- creating at %s",
-                self.project.package,
-            )
-            self.project.package.symlink_to(self.project.root)
-        else:
-            self.log.info("package py-js symlink exists -- not creating")
-
-    def install_homebrew_sys(self):
-        """build externals use local homebrew python (non-portable)"""
-        # self.reset_prefix()
-        self.remove_externals()
-        self.xcodebuild("homebrew-sys", targets=["py", "pyjs"])
-        # self.install()
-
-    def install_homebrew_pkg(self):
-        """build externals into package use local homebrew python (portable)"""
-        self.reset_prefix()
-        self.copy_python()
-        self.fix_dylib_for_shared_pkg(self.prefix / self.product.dylib)
-        # self.fix_python_exec()
-        self.fix_exe_for_shared_ext_or_pkg(self.prefix_bin / self.product.name_ver)
-        self.xcodebuild("homebrew-pkg", targets=["py", "pyjs"])
-
-        # self.install()
-
-    def install_homebrew_ext(self):
         """build external into self-contained external using local homebrew python (portable)"""
         self.reset_prefix()
         self.copy_python()
-        # self.fix_python_exec()
         self.fix_exe_for_shared_ext_or_pkg(
             self.prefix_bin / self.product.name_ver)
         self.fix_dylib_for_shared_ext(self.prefix / self.product.dylib)
         self.cp_python_to_ext_resources(self.project.py_external)
         self.cp_python_to_ext_resources(self.project.pyjs_external)
-        self.xcodebuild("homebrew-ext", targets=["py", "pyjs"])
+        self.xcodebuild(self.NAME, targets=["py", "pyjs"])
         self.reset_prefix()
-        # self.install()
 
 
 
@@ -1575,7 +1532,7 @@ class HomebrewPkgBuilder(PyJsBuilder):
         """remove framework in support"""
         self.cmd.remove(self.project.support / "Python.framework")
 
-    def install_homebrew_pkg(self):
+    def install(self):
         """build externals into package use local homebrew python (portable)"""
         self.reset()
         self.copy_python()
