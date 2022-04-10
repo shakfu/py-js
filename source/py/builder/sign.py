@@ -121,6 +121,10 @@ class CodesignExternal:
         else:
             return False
 
+    def verify(self, path):
+        """verifies codesign of path"""
+        self.cmd(f'codesign --verify --verbose {path}')
+
     def section(self, *args):
         """display section"""
         print()
@@ -214,6 +218,11 @@ class CodesignExternal:
 
         self.section('SIGNING MAIN RUNTIME')
         self.sign_runtime()
+
+        self.section('VERIFYING SIGNATURE')
+        self.verify(self.path)
+
+        print()
         self.log.info("DONE!")
 
 

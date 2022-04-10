@@ -268,6 +268,11 @@ dmg:
 	$(call section,"make package as dmg")
 	$(call call-builder,"dmg")
 
+make fix-framework:
+	$(call section,"fix framework in support")
+	$(call call-builder,"fix" "framework")
+
+
 # DEPLOYING
 # -----------------------------------------------------------------------
 .PHONY: sign dist

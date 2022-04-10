@@ -19,9 +19,10 @@ subcommands:
 from . import utils
 from .cli import Commander, option, option_group
 from .depend import DependencyManager
-from .ext.relocatable_python import relocatable_options
+from .ext.relocatable_python import relocatable_options, fix_framework
 from .factory import builder_factory
 from .sign import sign_all, package, package_as_dmg, sign_dmg
+from .config import Project
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -294,6 +295,18 @@ class Application(Commander):
     def do_dmg(self, args):
         """package project as .dmg"""
         package_as_dmg()
+
+# ----------------------------------------------------------------------------
+# utility methods
+
+    def do_fix(self, args):
+        """fix references and things"""
+        package()
+
+    @option("--path", "-p", default=f"{Project.support}/Python.framework", help="fix framework in support dir")
+    def do_fix_framework(self, args):
+        """package project as .dmg"""
+        fix_framework(args.path)
 
     # def do_check(self, args):
     #     """check reference utilities"""

@@ -4,6 +4,7 @@ from .install import install_extras
 from .relocatablizer import analyze, relocatablize
 
 from ...cli import option, option_group
+from ...config import Project
 
 from sysconfig import get_config_var
 
@@ -68,11 +69,16 @@ relocatable_options = option_group(
     ),
 )
 
+def fix_framework(path):
+    relocatablize(path)
+    fix_other_things(path, Project.python.version_short)
+
 
 def download_relocatable_to(directory, settings):
     py_version = get_default_py_version(settings.python_version)
     py_short_version = ".".join(py_version.split(".")[0:2])
     framework_path = get.FrameworkGetter(
+        download_path=Project.build_downloads,
         python_version=py_version,
         os_version=settings.os_version,
         base_url=settings.baseurl,

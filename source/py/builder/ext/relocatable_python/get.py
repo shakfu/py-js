@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import pathlib
 
 CURL = "/usr/bin/curl"
 DITTO = "/usr/bin/ditto"
@@ -39,21 +40,25 @@ class FrameworkGetter(object):
 
     def __init__(
         self,
+        download_path,
         python_version=DEFAULT_PYTHON_VERSION,
         os_version=DEFAULT_OS_VERSION,
         base_url=DEFAULT_BASEURL,
+        
     ):
+        self.download_path = pathlib.Path(download_path)
         self.python_version = python_version
         self.os_version = os_version
         self.base_url = base_url
         self.destination = ""
 
+
     def __del__(self):
         """Clean up"""
         if self.expanded_path:
             shutil.rmtree(self.expanded_path)
-        if self.downloaded_pkg_path:
-            os.unlink(self.downloaded_pkg_path)
+        # if self.downloaded_pkg_path:
+        #     os.unlink(self.downloaded_pkg_path)
 
     def download(self):
         """Downloads a macOS installer pkg from python.org.
@@ -70,12 +75,17 @@ class FrameworkGetter(object):
             self.python_version,
             self.os_version,
         )
-        (file_handle, destination_path) = tempfile.mkstemp()
-        os.close(file_handle)
-        cmd = [CURL, "-o", destination_path, url]
-        print("Downloading %s..." % url)
-        subprocess.check_call(cmd)
-        self.downloaded_pkg_path = destination_path
+
+        pkg = pathlib.Path(url).name
+        destination_path = self.download_path / pkg
+
+        if pkg not in list(f.name for f in self.download_path.iterdir()):
+            cmd = [CURL, "-o", destination_path, url]
+            print("Downloading %s..." % url)
+            subprocess.check_call(cmd)
+        else:
+            print(f"Using cached pkg: {pkg}")
+        self.downloaded_pkg_path = str(destination_path)
 
     def expand(self):
         """Uses pkgutil to expand our downloaded pkg. Returns a path to the
