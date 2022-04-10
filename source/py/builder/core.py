@@ -1160,6 +1160,26 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.remove_binaries()
         self.remove_tkinter()
 
+    def remove_binaries(self):
+        """remove list of non-critical executables"""
+        ver = self.project.python.version_short
+        self.rm_bins(
+            [
+                f"2to3-{ver}",
+                f"2to3",
+                f"idle{ver}",
+                f"idle3",
+                f"easy_install-{ver}",
+                f"pip{ver}",
+                # f"pip3",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+                f"pydoc3",
+                f"python3",
+                f"python3-config",
+            ]
+        )
+
     def rm_globbed(self, names):
         """remove all named glob patterns of libraries and files"""
         for name in names:
