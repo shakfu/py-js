@@ -25,7 +25,7 @@
 		1239835D24A1DC4600ADF7CA /* api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = api.c; path = ../../api.c; sourceTree = "<group>"; };
 		1239835E24A1DC4600ADF7CA /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../py.c; sourceTree = "<group>"; };
 		1239835F24A1DC4600ADF7CA /* py.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = py.h; path = ../../py.h; sourceTree = "<group>"; };
-		12ADAF1424ACBD8A00B47EB9 /* py-js.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "py-js.xcconfig"; sourceTree = "<group>"; };
+		12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "py-js.xcconfig"; sourceTree = "<group>"; };
 		12D5454B2463B03000BE010E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		2FBBEAE508F335360078DB84 /* py.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = py.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -58,7 +58,7 @@
 				120266C524AA17B5007DF876 /* pyjs.c */,
 				1239835D24A1DC4600ADF7CA /* api.c */,
 				1239835C24A1DC4600ADF7CA /* api.h */,
-				12ADAF1424ACBD8A00B47EB9 /* py-js.xcconfig */,
+				12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */,
 				121A8C6124A1E58000EC5F99 /* Info.plist */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 				12D5454A2463B03000BE010E /* Frameworks */,
@@ -241,7 +241,7 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
@@ -266,7 +266,7 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
@@ -278,14 +278,14 @@
 		};
 		2FBBEAD008F335010078DB84 /* Development */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 12ADAF1424ACBD8A00B47EB9 /* py-js.xcconfig */;
+			baseConfigurationReference = 12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
 			};
 			name = Development;
 		};
 		2FBBEAD108F335010078DB84 /* Deployment */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 12ADAF1424ACBD8A00B47EB9 /* py-js.xcconfig */;
+			baseConfigurationReference = 12ADAF1224ACBCD400B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
 			};
 			name = Deployment;
@@ -306,7 +306,7 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
@@ -331,7 +331,7 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
 					"$(PY_LDFLAGS)",
