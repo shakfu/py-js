@@ -1498,7 +1498,8 @@ class HomebrewPkgBuilder(PyJsBuilder):
 
     @property
     def prefix(self):
-        return self.project.support / "Python.framework" / "Versions" / f"{self.project.python.version_short}"
+        return (self.project.support / "Python.framework" / 
+                "Versions" / f"{self.project.python.version_short}")
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
