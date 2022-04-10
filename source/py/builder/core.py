@@ -1130,6 +1130,7 @@ class RelocatablePythonBuilder(PythonBuilder):
 
     def download(self):
         """download relocatable python"""
+        self.project.build_downloads.mkdir(parents=True,  exist_ok=True)
         download_relocatable_to(self.project.support, self.settings)
 
     def post_process(self):
@@ -1163,6 +1164,42 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.remove_extensions()
         self.remove_binaries()
         self.remove_tkinter()
+
+    def remove_extensions(self):
+        """remove extensions"""
+        self.rm_exts(
+            [
+                "_tkinter",
+                # "_ctypes",
+                "_multibytecodec",
+                "_codecs_jp",
+                "_codecs_hk",
+                "_codecs_cn",
+                "_codecs_kr",
+                "_codecs_tw",
+                "_codecs_iso2022",
+                "_curses",
+                "_curses_panel",
+            ]
+        )
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+
+        self.rm_libs(
+            [
+                self.project.python.config_ver_platform,
+                "idlelib",
+                "lib2to3",
+                "tkinter",
+                "turtledemo",
+                "turtle.py",
+                # "ctypes",
+                "curses",
+                "ensurepip",
+                "venv",
+            ]
+        )
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
