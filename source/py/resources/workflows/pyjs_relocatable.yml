@@ -15,11 +15,12 @@ on:
           - '3.10'      
       pip_modules:
         type: string
-        description: provide packages to install
-        required: true
+        description: provide packages to install (optional)
+        required: false
 
 env:
   arch: darwin-x86
+  DEV_ID: ${{ secrets.DEV_ID }}
 
 jobs:
   build:
@@ -51,78 +52,39 @@ jobs:
         p12-file-base64: ${{ secrets.MACOS_DEV_CERTIFICATE }}
         p12-password: ${{ secrets.MACOS_DEV_PWD }}
 
-    - name: Build externals
+    - name: Build externals with extra modules
       working-directory: ./source/py
+      if: github.event.inputs.pip_modules != ''
       run: python3 -m builder pyjs relocatable_pkg --pip-modules="${{ github.event.inputs.pip_modules }}" --install --build
 
-    - name: Sign externals and support folder
-      env:
-        DEV_ID: ${{ secrets.DEV_ID }}
+    - name: Build externals
+      working-directory: ./source/py
+      if: github.event.inputs.pip_modules == ''
+      run: python3 -m builder pyjs relocatable_pkg --install --build
+
+    - name: Sign externals and any frameworks in support folder
       run: make sign
 
-    - name: Notarize externals
+    - name: Create package, convert it to a .dmg
+      run: make dmg
+
+    - name: Sign .dmg        
+      run: make sign-dmg
+
+    - name: Notarize dmg
       uses: devbotsxyz/xcode-notarize@v1
       with:
-        product-path: "externals/py.mxo"
+        product-path: "${{ env.PRODUCT_DMG }}"
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
+        primary-bundle-id: org.me.py-dmg
 
-    - name: Notarize externals
-      uses: devbotsxyz/xcode-notarize@v1
-      with:
-        product-path: "externals/pyjs.mxo"
-        appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-        appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
-
-    # - name: Notarize framework
-    #   uses: devbotsxyz/xcode-notarize@v1
-    #   with:
-    #     product-path: "support/Python.framework"
-    #     appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-    #     appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
-
-    - name: Staple externals
+    - name: Staple dmg
       uses: devbotsxyz/xcode-staple@v1
       with:
-        product-path: "externals/py.mxo"
-
-    - name: Staple externals
-      uses: devbotsxyz/xcode-staple@v1
-      with:
-        product-path: "externals/pyjs.mxo"
-
-    # - name: Staple framework
-    #   uses: devbotsxyz/xcode-staple@v1
-    #   with:
-    #     product-path: "support/Python.framework"
-
-    - name: Create Max package
-      env:
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        GITHUB_SHA: ${{ github.sha }}
-      run: |
-        PACKAGE_NAME=`echo $GITHUB_REPOSITORY | sed 's/.*\///g'`
-        PACKAGE_REV=`echo $GITHUB_SHA | sed -e 's/^[[:alnum:]]\{7\}/&-/g' | sed 's/-.*//'`
-        mkdir -p $PACKAGE_NAME
-        if [ -e package-info.json ]; then cp package-info.json $PACKAGE_NAME; fi
-        if [ -e package-info.json.in ]; then cp package-info.json.in $PACKAGE_NAME; fi
-        for f in *.md; do [ -e "$f" ] && cp "$f" $PACKAGE_NAME ; done
-        if [ -e icon.png ]; then cp icon.png $PACKAGE_NAME; fi
-        if [ -d docs ]; then cp -r docs $PACKAGE_NAME; fi
-        if [ -d examples ]; then cp -r examples $PACKAGE_NAME; fi
-        if [ -d externals ]; then ditto externals $PACKAGE_NAME; fi
-        if [ -d extras ]; then cp -r extras $PACKAGE_NAME; fi
-        if [ -d help ]; then cp -r help $PACKAGE_NAME; fi
-        if [ -d init ]; then cp -r init $PACKAGE_NAME; fi
-        if [ -d javascript ]; then cp -r init $PACKAGE_NAME; fi
-        if [ -d jsextensions ]; then cp -r jsextensions $PACKAGE_NAME; fi
-        if [ -d patchers ]; then cp -r patchers $PACKAGE_NAME; fi
-        if [ -d support ]; then ditto support $PACKAGE_NAME; fi
-        ditto -V -ck --keepParent $PACKAGE_NAME ${PACKAGE_NAME}.zip
-        rm -rf $PACKAGE_NAME && mkdir -p $PACKAGE_NAME
-        mv ${PACKAGE_NAME}.zip $PACKAGE_NAME/
+        product-path: "${{ env.PRODUCT_DMG }}"
 
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ github.event.repository.name }}-relocatable-pkg-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
-        path: ${{ github.event.repository.name }}
+        path: "${{ env.PRODUCT_DMG }}"

@@ -101,3 +101,10 @@ jobs:
       with:
         name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
         path: "${{ env.PRODUCT_DMG }}"
+
+
+    # - uses: ncipollo/release-action@v1.7.1
+    #   with:
+    #     artifacts: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}.zip
+    #     body: "PyJS Max Package"
+    #     token: ${{ secrets.GITHUB_TOKEN }}
