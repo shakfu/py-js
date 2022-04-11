@@ -1,0 +1,20 @@
+name: pyjs-homebrew
+
+on:
+  workflow_dispatch:
+
+env:
+  arch: darwin-x86
+
+jobs:
+  build:
+    runs-on: macos-10.15
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+        fetch-depth: '0'
+
+    - name: Build externals
+      run: make
