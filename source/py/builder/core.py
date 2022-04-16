@@ -786,15 +786,6 @@ class PythonSrcBuilder(PythonBuilder):
 
     setup_local: str = ""
     patch: str = ""
-    # ------------------------------------------------------------------------
-    # python properties
-
-    # ------------------------------------------------------------------------
-    # src-level operations
-    # def configure(self):
-    #     """configures overrides to defaults from commandline"""
-    #     if self.settings.python_version:
-    #         self.product.version = self.settings.python_version
 
     def install(self):
         """install and build compilation product"""
@@ -899,6 +890,7 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
     #     self.cmd.remove(self.prefix_resources / "Python.app")
 
 
+
 class SharedPythonBuilder(PythonSrcBuilder):
     """builds python in a shared format."""
 
@@ -957,6 +949,83 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
     def remove_extensions(self):
         """remove extensions: not implemented"""
+
+
+class BeewarePythonBuilder(StaticPythonBuilder):
+    """builds python in a macos static format."""
+
+    setup_local = "setup.beeware"
+
+    def pre_process(self):
+        """pre-build operations"""
+        self.cmd.chdir(self.src_path)
+        self.write_setup_local()
+        self.apply_patch(patch="beeware.patch")
+        self.apply_patch(patch="configure.patch", to_file="configure")
+        self.cmd.chdir(self.project.pydir)
+
+    def remove_extensions(self):
+        """remove extensions"""
+        self.rm_exts(
+            [
+                "_codecs_cn",
+                "_codecs_hk",
+                "_codecs_iso2022",
+                "_codecs_jp",
+                "_codecs_kr",
+                "_codecs_tw",
+                "_crypt",
+                "_curses",
+                "_curses_panel",
+                "_dbm",
+                "_gdbm",
+                "_multibytecodec",
+                "_posixshmem",
+                "_tkinter",
+                "_xxsubinterpreters",
+                "_zoneinfo",
+                "audioop",
+                "fcntl",
+                "grp",
+                "nis",
+                "readline",
+                "resource",
+                "termios",
+                "xxlimited",
+                "xxlimited_35",
+            ]
+        )
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+
+        self.rm_libs(
+            [
+                self.project.python.config_ver_platform,
+                "idlelib",
+                "lib2to3",
+                "tkinter",
+                "turtledemo",
+                "turtle.py",
+                "curses",
+                "ensurepip",
+                "venv",
+            ]
+        )
+
+    def remove_binaries(self):
+        """remove list of non-critical executables"""
+        ver = self.product.ver
+        self.rm_bins(
+            [
+                f"2to3-{ver}",
+                f"idle{ver}",
+                f"easy_install-{ver}",
+                f"pip{ver}",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+            ]
+        )
 
 
 class TinyStaticPythonBuilder(PythonSrcBuilder):
@@ -1759,3 +1828,28 @@ class RelocatablePkgBuilder(PyJsBuilder):
                 PY_SHORT_VERSION=get("py_version_short"),
                 ABIFLAGS=get("abiflags"),
             )
+
+
+class BeewareExtBuilder(PyJsBuilder):
+    """pyjs externals from minimal statically built python"""
+
+    NAME = "beeware-ext"
+
+    @property
+    def product_exists(self):
+        static_lib = (
+            self.project.build_lib
+            / "python-beeware"
+            / "lib"
+            / self.project.python.staticlib  # type: ignore
+        )  # type: ignore
+        if not static_lib.exists():
+            self.log.warning("static python is not built: %s", static_lib)
+        return static_lib.exists()
+
+    def build(self):
+        """builds externals from statically built python"""
+
+        if self.product_exists:
+            self.xcodebuild(self.NAME, targets=["py", "pyjs"])
+

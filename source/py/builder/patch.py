@@ -126,6 +126,7 @@ core = [
         '_io/textio.c',
         '_io/stringio.c']),
     ('core', 'faulthandler',  1, 1, ['faulthandler.c']),
+    ('core', 'zipimport', 1, 1,  ['-DPy_BUILD_CORE', 'zipimport.c']),
     ('core', '_tracemalloc',  1, 1, ['_tracemalloc.c']),
     ('core', '_peg_parser',  1, 1, ['_peg_parser.c']), # removed in 3.10
     ('core', '_symtable',   1, 1, ['symtablemodule.c']),
@@ -338,18 +339,21 @@ optional = [
 
 ]
 
-xs = []
-for i in core:
-    e = Module(*i)
-    xs.append(e)
-
-for i in optional:
-    e = Module(*i)
-    xs.append(e)
-
 class PythonSetup:
     def __init__(self, modules):
         self.modules = modules
+
+    @classmethod
+    def from_tuples(cls, core, optional):
+        xs = []
+        for i in core:
+            e = Module(*i)
+            xs.append(e)
+
+        for i in optional:
+            e = Module(*i)
+            xs.append(e)
+        return cls(xs)
 
     def display(self):
         for m in self.modules:
@@ -364,9 +368,9 @@ class PythonSetup:
             for m in self.modules:
                 writer.writerow(m.as_tuple())
 
-p = PythonSetup(modules = xs)
+p = PythonSetup.from_tuples(core, optional)
 p.display()
-p.to_csv()
+# p.to_csv()´
 
 
 

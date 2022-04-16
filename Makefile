@@ -140,6 +140,9 @@ static-tiny-ext: clean-externals
 
 tiny: static-tiny-ext
 
+beeware-ext: clean-externals
+	$(call call-builder,"pyjs" "beeware_ext" "--install" "--build" "--release")
+
 
 # -----------------------------------------------------------------------
 # release external targets
@@ -203,6 +206,9 @@ python-relocatable: clean-python-framework-pkg
 
 python-static-tiny:
 	$(call call-builder,"python" "static_tiny" "--install")
+
+python-beeware:
+	$(call call-builder,"python" "beeware" "--install")
 
 
 # -----------------------------------------------------------------------
@@ -317,6 +323,10 @@ build-relocatable-pkg: clean-externals
 
 build-static-tiny-ext: clean-static-ext
 	$(call call-builder,"pyjs" "static_tiny_ext" "--build" "--release")
+
+build-beeware-ext: clean-static-ext
+	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
+
 
 
 # re-compile only

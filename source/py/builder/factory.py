@@ -16,6 +16,7 @@ PYTHON_BUILDERS = dict(
     python_relocatable=core.RelocatablePythonBuilder,
     python_static=core.StaticPythonBuilder,
     python_static_tiny=core.TinyStaticPythonBuilder,
+    python_beeware=core.BeewarePythonBuilder,
 )
 
 PYJS_BUILDERS = dict(
@@ -29,6 +30,7 @@ PYJS_BUILDERS = dict(
     pyjs_relocatable_pkg=(core.RelocatablePkgBuilder, ["python_relocatable"]),
     pyjs_static_ext=(core.StaticExtBuilder, ["python_static"]),
     pyjs_static_tiny_ext=(core.StaticExtBuilder, ["python_static_tiny"]),
+    pyjs_beeware_ext=(core.BeewareExtBuilder, ["python_beeware"]),
 )
 
 # -----------------------------------------------------------------------------

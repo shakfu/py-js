@@ -122,6 +122,11 @@ class Application(Commander):
         """build tiny static python"""
         self.ordered_dispatch("python_static_tiny", args)
 
+    @common_options
+    def do_python_beeware(self, args):
+        """build beeware python framework"""
+        self.ordered_dispatch("python_beeware", args)
+
     # ----------------------------------------------------------------------------
     # py-js builder methods
 
@@ -190,6 +195,11 @@ class Application(Commander):
     def do_pyjs_static_tiny_ext(self, args):
         """build portable pyjs externals (tiny static)"""
         self.ordered_dispatch("pyjs_static_tiny_ext", args)
+
+    @common_options
+    def do_pyjs_beeware_ext(self, args):
+        """build portable pyjs externals (beeware ext)"""
+        self.ordered_dispatch("pyjs_beeware_ext", args)
 
     # ----------------------------------------------------------------------------
     # dependency builder methods
