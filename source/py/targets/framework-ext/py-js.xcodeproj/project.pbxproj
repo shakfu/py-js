@@ -325,6 +325,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 12ADAF1124ACBBDB00B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCH_NATIVE)";
 			};
 			name = Development;
 		};
@@ -332,6 +333,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 12ADAF1124ACBBDB00B47EB9 /* py-js.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCH_NATIVE)";
 			};
 			name = Deployment;
 		};

@@ -10,6 +10,11 @@ from sysconfig import get_config_var
 
 AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.12", "3.10.4"]
 
+if Project.python.arch == 'arm64':
+    DEFAULT_OS_VERSION = '11'
+else:
+    DEFAULT_OS_VERSION = get.DEFAULT_OS_VERSION
+
 def get_default_py_version(version: str = None):
     _short_version = None
     if version:
@@ -37,7 +42,7 @@ relocatable_options = option_group(
     option("--baseurl", default=get.DEFAULT_BASEURL,
         help="Override the base URL used to download the framework.",
     ),
-    option("--os-version", default=get.DEFAULT_OS_VERSION,
+    option("--os-version", default=DEFAULT_OS_VERSION,
         help="Override the macOS version of the downloaded pkg. "
         'Current supported versions are "10.6", "10.9", and "11". '
         "Not all Python version and macOS version combinations are valid.",

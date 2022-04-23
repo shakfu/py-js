@@ -868,14 +868,21 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
             dep.build()
 
         self.cmd.chdir(self.src_path)
+
+        kwargs = dict(
+            enable_framework=quote(self.project.build_lib),
+            with_openssl=quote(self.project.build_lib / "openssl"),
+        )
+        if self.project.python.arch == 'arm64':
+            kwargs['with_universal_archs'] = 'universal2'
+
         self.configure(
             "enable_ipv6",
             "enable_optimizations",
             "with_lto",
             "without_doc_strings",
             "without_ensurepip",
-            enable_framework=quote(self.project.build_lib),
-            with_openssl=quote(self.project.build_lib / "openssl"),
+            **kwargs,
         )
 
         self.cmd("make altinstall")

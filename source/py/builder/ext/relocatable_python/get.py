@@ -23,14 +23,14 @@ import subprocess
 import sys
 import tempfile
 import pathlib
+import platform
 
 CURL = "/usr/bin/curl"
 DITTO = "/usr/bin/ditto"
 PKGUTIL = "/usr/sbin/pkgutil"
 DEFAULT_BASEURL = "https://www.python.org/ftp/python/%s/python-%s-macosx%s.pkg"
-DEFAULT_PYTHON_VERSION = "3.9.10"
+DEFAULT_PYTHON_VERSION = "3.9.12"
 DEFAULT_OS_VERSION = "10.9"
-
 
 class FrameworkGetter(object):
     """Handles getting the Python.org pkg and extracting the framework"""
@@ -44,13 +44,14 @@ class FrameworkGetter(object):
         python_version=DEFAULT_PYTHON_VERSION,
         os_version=DEFAULT_OS_VERSION,
         base_url=DEFAULT_BASEURL,
-        
+        thin_framework=True,
     ):
         self.download_path = pathlib.Path(download_path)
         self.python_version = python_version
         self.os_version = os_version
         self.base_url = base_url
         self.destination = ""
+        self.thin_framework = thin_framework
 
 
     def __del__(self):
@@ -105,7 +106,10 @@ class FrameworkGetter(object):
         payload = os.path.join(
             self.expanded_path, "Python_Framework.pkg/Payload"
         )
-        cmd = [DITTO, "-xz", payload, self.destination]
+        if self.thin_framework:
+            cmd = [DITTO, "--arch", platform.machine(), "-xz", payload, self.destination]
+        else:
+            cmd = [DITTO, "-xz", payload, self.destination]
         print("Extracting %s to %s..." % (payload, self.destination))
         subprocess.check_call(cmd)
 

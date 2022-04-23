@@ -9,3 +9,4 @@ PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl
 // same value as below set in build settings > run path settings
 // somehow not picking it up from here?!
 //LD_RUNPATH_SEARCH_PATHS = @loader_path/../../../../support/Python.framework
+//FRAMEWORK_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes" "$(SUPPORT)"

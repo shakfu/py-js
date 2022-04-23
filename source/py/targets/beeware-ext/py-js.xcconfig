@@ -7,3 +7,5 @@ PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
 PY_LIBS = $(PREFIX)/lib $(PYJS_BUILD_LIB)/bzip2/lib $(PYJS_BUILD_LIB)/openssl/lib $(PYJS_BUILD_LIB)/xz/lib
 
 PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl -lssl -lbz2 -llzma -lz -lcrypto -lffi -lsqlite3
+
+//FRAMEWORK_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes" "$(PYJS_BUILD_LIB)"

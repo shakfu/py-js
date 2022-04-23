@@ -6,3 +6,5 @@ PY_LIBS = $(PREFIX)
 PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl
 
 //OTHER_CODE_SIGN_FLAGS = --deep
+
+//FRAMEWORK_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes" "$(PYJS_BUILD_LIB)"
