@@ -2,6 +2,8 @@
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
 
+Currently build only 'natively' on macOS `x86_64`and macOS `arm64`
+
 repo - <https://github.com/shakfu/py-js>
 
 [![py-js test](./media/screenshot.png)](patchers/py_test_standalone.maxpat)
@@ -28,7 +30,7 @@ For a sense of relative maturity, about 80% of development time to-date has gone
 
 A significant time of this project has been devoted to developing and refining different ways of packaging and deploying the externals.
 
-At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no current or future plans to produce 'fat' or universal externals which serve both architectures. Also Note that codesigned and notarized `arm64`-based externals are still not available for download. This will ne addressed in the next release.
+At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no current or future plans to produce 'fat' or universal externals which serve both architectures. Note that codesigned and notarized `arm64`-based externals are still not available for download. This will be addressed in the next release.
 
 For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
