@@ -1234,7 +1234,6 @@ handle_output:
     // success cleanup
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
-    py_log(x, "END %s", s->s_name);
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
     return;
