@@ -91,13 +91,11 @@ void py_init_builtins(t_py* x)
         goto error;
 
     Py_XDECREF(p_name);
-    // Py_XDECREF(builtins);
     return;
 
 error:
     py_handle_error(x, "could not update object namespace with object name");
     Py_XDECREF(p_name);
-    // Py_XDECREF(builtins);
 }
 
 
