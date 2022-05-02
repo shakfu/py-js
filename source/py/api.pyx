@@ -21,9 +21,9 @@ from libc.string cimport strcpy, strlen
 cimport api_max as mx # api is a cython keyword!
 cimport api_py as px
 
-#import numpy
-#import numpy as np
-
+# import numpy as np
+# cimport numpy as np
+# np.import_array()
 
 DEF MAX_CHARS = 32767
 DEF PY_MAX_ATOMS = 128
@@ -93,6 +93,10 @@ cdef class Atom:
             elif self.is_float(i):
                 _res.append(self.get_float(i))
         return _res
+
+    # def to_np_array(self):
+    #     return np.array(self.to_list(), dtype=np.float64)
+
 
     def display(self):
         for i in range(self.size):

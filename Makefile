@@ -331,12 +331,13 @@ build-beeware-ext: clean-static-ext
 
 # re-compile only
 # -----------------------------------------------------------------------
-.PHONY: compile-extension \
+.PHONY: compile-extension api
 
 compile-extension:
 	$(call section,"generate c code from cython extension")
 	@cython -3 ${EXTENSION}
 
+api: compile-extension
 
 # Testing
 # -----------------------------------------------------------------------
