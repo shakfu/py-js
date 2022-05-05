@@ -103,8 +103,8 @@ void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
 void py_init_osx_set_home_framework_ext(void);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
+void py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 t_hashtab* get_global_registry(void);
-// void py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
