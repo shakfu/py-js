@@ -24,9 +24,9 @@
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
-#define _CONCAT(a,b) a##b
-#define CONCAT(a,b) _CONCAT(a,b)
-#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(.,PY_MINOR_VERSION))
+#define _CONCAT(a, b) a##b
+#define CONCAT(a, b) _CONCAT(a, b)
+#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(., PY_MINOR_VERSION))
 #define PY_VER STR(_PY_VER)
 // PY_VERSION is already defined as Major.Minor.Patch by patchlevel.h
 
@@ -52,10 +52,11 @@ typedef struct _py {
     PyObject* p_globals;    /* per object 'globals' python namespace */
 
     /* infrastructure objects */
-    t_patcher* p_patcher;       /* to send msgs to objects */
-    t_box* p_box;               /* the ui box of the py instance? */
-    void* p_clock;              /* a clock in case of scheduled ops */
-    t_atomarray* p_sched_atoms; /* atomarray for scheduled python function call */
+    t_patcher* p_patcher; /* to send msgs to objects */
+    t_box* p_box;         /* the ui box of the py instance? */
+    void* p_clock;        /* a clock in case of scheduled ops */
+    t_atomarray*
+        p_sched_atoms; /* atomarray for scheduled python function call */
 
     /* text editor attrs */
     t_object* p_code_editor;
@@ -108,12 +109,12 @@ t_hashtab* get_global_registry(void);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
-void py_handle_float_output(t_py* x, PyObject* pval);
-void py_handle_long_output(t_py* x, PyObject* pval);
-void py_handle_string_output(t_py* x, PyObject* pval);
-void py_handle_list_output(t_py* x, PyObject* pval);
-void py_handle_dict_output(t_py* x, PyObject* pval);
-void py_handle_output(t_py* x, PyObject* pval);
+t_max_err py_handle_float_output(t_py* x, PyObject* pval);
+t_max_err py_handle_long_output(t_py* x, PyObject* pval);
+t_max_err py_handle_string_output(t_py* x, PyObject* pval);
+t_max_err py_handle_list_output(t_py* x, PyObject* pval);
+t_max_err py_handle_dict_output(t_py* x, PyObject* pval);
+t_max_err py_handle_output(t_py* x, PyObject* pval);
 
 /* core python methods */
 t_max_err py_import(t_py* x, t_symbol* s);

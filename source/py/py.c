@@ -99,9 +99,7 @@ error:
 }
 
 
-t_hashtab* get_global_registry(void) { 
-    return py_global_registry; 
-}
+t_hashtab* get_global_registry(void) { return py_global_registry; }
 
 
 void py_locate_path_from_symbol(t_py* x, t_symbol* s)
@@ -381,10 +379,11 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
-void py_init_osx_set_home_static_ext(void) {
+void py_init_osx_set_home_static_ext(void)
+{
     // sets python_home to <bundle>/Resources folder
 
-    wchar_t *python_home;
+    wchar_t* python_home;
 
     CFURLRef resources_url;
     CFURLRef resources_abs_url;
@@ -394,8 +393,10 @@ void py_init_osx_set_home_static_ext(void) {
     // Look for a bundle using its using global bundle ref
     resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
     resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-    resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
-    resources_path = CFStringGetCStringPtr(resources_str, kCFStringEncodingUTF8);
+    resources_str = CFURLCopyFileSystemPath(resources_abs_url,
+                                            kCFURLPOSIXPathStyle);
+    resources_path = CFStringGetCStringPtr(resources_str,
+                                           kCFStringEncodingUTF8);
 
     python_home = Py_DecodeLocale(resources_path, NULL);
 
@@ -415,10 +416,11 @@ void py_init_osx_set_home_static_ext(void) {
 
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
-void py_init_osx_set_home_shared_pkg(void) {
+void py_init_osx_set_home_shared_pkg(void)
+{
     // sets python_home to <package>/support/pythonX.Y folder
 
-    wchar_t *python_home;
+    wchar_t* python_home;
 
     CFURLRef bundle_url;
     CFURLRef bundle_abs_url;
@@ -438,12 +440,17 @@ void py_init_osx_set_home_shared_pkg(void) {
     bundle_abs_url = CFURLCopyAbsoluteURL(bundle_url);
     bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
     bundle_path = CFStringGetCStringPtr(bundle_str, kCFStringEncodingUTF8);
-    
-    // get the absolute path of the <package>/support/pythonX.Y directory in a package
-    externals_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundle_abs_url);
-    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, externals_url);
-    relative_path_str = CFStringCreateWithCString(kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
-    py_home_url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, package_url, relative_path_str, FALSE);
+
+    // get the absolute path of the <package>/support/pythonX.Y directory in a
+    // package
+    externals_url = CFURLCreateCopyDeletingLastPathComponent(
+        kCFAllocatorDefault, bundle_abs_url);
+    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault,
+                                                           externals_url);
+    relative_path_str = CFStringCreateWithCString(
+        kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
+    py_home_url = CFURLCreateCopyAppendingPathComponent(
+        kCFAllocatorDefault, package_url, relative_path_str, FALSE);
     py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
     py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
 
@@ -474,13 +481,13 @@ void py_init_osx_set_home_shared_pkg(void) {
 
 void py_init(t_py* x)
 {
-    #if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
     py_init_osx_set_home_static_ext();
-    #endif
+#endif
 
-    #if defined(__APPLE__) && defined(PY_SHARED_PKG)
+#if defined(__APPLE__) && defined(PY_SHARED_PKG)
     py_init_osx_set_home_shared_pkg();
-    #endif
+#endif
 
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
@@ -532,9 +539,8 @@ void py_free(t_py* x)
     // }
 
     // crashes if one attempts to free.
-    // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-    // CFRelease(py_global_bundle);
-    // #endif
+    // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
+    // defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif
 
     Py_XDECREF(x->p_globals);
     // python objects cleanup
@@ -548,7 +554,6 @@ void py_free(t_py* x)
         // PyMem_RawFree(program);
         Py_FinalizeEx();
     }
-
 }
 
 /*--------------------------------------------------------------------------*/
@@ -593,8 +598,7 @@ void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     if ((argv + 0)->a_type != A_FLOAT) {
-        py_error(
-            x, "1st arg of sched needs to be a float time in ms");
+        py_error(x, "1st arg of sched needs to be a float time in ms");
         goto error;
     }
 
@@ -685,7 +689,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
 }
 
 
-void py_handle_float_output(t_py* x, PyObject* pfloat)
+t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
 {
     if (pfloat == NULL) {
         goto error;
@@ -702,16 +706,17 @@ void py_handle_float_output(t_py* x, PyObject* pfloat)
         outlet_bang(x->p_outlet_right);
     }
     Py_XDECREF(pfloat);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_handle_float_output failed");
     Py_XDECREF(pfloat);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_handle_long_output(t_py* x, PyObject* plong)
+t_max_err py_handle_long_output(t_py* x, PyObject* plong)
 {
     if (plong == NULL) {
         goto error;
@@ -728,16 +733,17 @@ void py_handle_long_output(t_py* x, PyObject* plong)
     }
 
     Py_XDECREF(plong);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_handle_long_output failed");
     Py_XDECREF(plong);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_handle_string_output(t_py* x, PyObject* pstring)
+t_max_err py_handle_string_output(t_py* x, PyObject* pstring)
 {
     if (pstring == NULL) {
         goto error;
@@ -753,16 +759,17 @@ void py_handle_string_output(t_py* x, PyObject* pstring)
     }
 
     Py_XDECREF(pstring);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_handle_string_output failed");
     Py_XDECREF(pstring);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_handle_list_output(t_py* x, PyObject* plist)
+t_max_err py_handle_list_output(t_py* x, PyObject* plist)
 {
     if (plist == NULL) {
         goto error;
@@ -824,17 +831,6 @@ void py_handle_list_output(t_py* x, PyObject* plist)
                 i++;
             }
 
-            // if (PyNumber_Check(item)) {
-            //     float float_item = PyFloat_AsDouble(item);
-            //     if (float_item == -1.0) {
-            //         if (PyErr_Occurred())
-            //             goto error;
-            //     }
-            //     atom_setfloat(atoms + i, float_item);
-            //     py_log(x, "%d float: %f\n", i, float_item);
-            //     i++;
-            // }
-
             if (PyUnicode_Check(item)) {
                 const char* unicode_item = PyUnicode_AsUTF8(item);
                 if (unicode_item == NULL) {
@@ -858,16 +854,17 @@ void py_handle_list_output(t_py* x, PyObject* plist)
     }
 
     Py_XDECREF(plist);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_handle_list_output failed");
     Py_XDECREF(plist);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_handle_dict_output(t_py* x, PyObject* pdict)
+t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 {
     PyObject* pfun_co = NULL;
     PyObject* pfun = NULL;
@@ -913,7 +910,7 @@ void py_handle_dict_output(t_py* x, PyObject* pdict)
             py_handle_list_output(x, pval); // this decrefs pval
             Py_XDECREF(pfun_co);
             outlet_bang(x->p_outlet_right);
-            return;
+            return MAX_ERR_NONE;
         } else {
             py_error(x, "expected list output got something else");
             goto error;
@@ -926,49 +923,45 @@ error:
     Py_XDECREF(pval);
     // fail bang
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_handle_output(t_py* x, PyObject* pval)
+t_max_err py_handle_output(t_py* x, PyObject* pval)
 {
     if (pval == NULL) {
         py_error(x, "cannot handle NULL value");
-        return;
+        return MAX_ERR_GENERIC;
     }
 
     if (PyFloat_Check(pval)) {
-        py_handle_float_output(x, pval);
-        return;
+        return py_handle_float_output(x, pval);
     }
 
     else if (PyLong_Check(pval)) {
-        py_handle_long_output(x, pval);
-        return;
+        return py_handle_long_output(x, pval);
     }
 
     else if (PyUnicode_Check(pval)) {
-        py_handle_string_output(x, pval);
-        return;
+        return py_handle_string_output(x, pval);
     }
 
     else if (PySequence_Check(pval) && !PyBytes_Check(pval)
              && !PyByteArray_Check(pval)) {
-        py_handle_list_output(x, pval);
-        return;
+        return py_handle_list_output(x, pval);
     }
 
     else if (PyDict_Check(pval)) {
-        py_handle_dict_output(x, pval);
-        return;
+        return py_handle_dict_output(x, pval);
     }
 
     else if (pval == Py_None) {
-        return;
+        return MAX_ERR_GENERIC;
     }
 
     else {
         py_error(x, "cannot handle his type of value");
-        return;
+        return MAX_ERR_GENERIC;
     }
 }
 
@@ -1231,7 +1224,6 @@ t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
     goto handle_output; // this is redundant but safer in case code is added
 
 handle_output:
-
     py_handle_output(x, pval);
     // success cleanup
     Py_XDECREF(py_callable);
@@ -1241,7 +1233,6 @@ handle_output:
     return MAX_ERR_NONE;
 
 error:
-
     py_handle_error(x, "anything %s", s->s_name);
     // cleanup
     Py_XDECREF(py_callable);
@@ -1317,7 +1308,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     int is_eval = 1;
 
     t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
-                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+                                 OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         py_log(x, ">>> %s", text);
     } else {
@@ -1717,7 +1708,8 @@ void py_run(t_py* x)
         // is empty string
         goto error;
 
-    pval = PyRun_String(*(x->p_code), Py_file_input, x->p_globals, x->p_globals);
+    pval = PyRun_String(*(x->p_code), Py_file_input, x->p_globals,
+                        x->p_globals);
     if (pval == NULL) {
         goto error;
     }
@@ -1741,7 +1733,7 @@ error:
 //     // see: https://cycling74.com/forums/text-editor-without-dirty-bit
 //     py_log(x, "okclose: called");
 //     *result = 3; // don't put up a dialog
-// } 
+// }
 
 
 long py_edsave(t_py* x, char** text, long size)
@@ -1754,7 +1746,7 @@ long py_edsave(t_py* x, char** text, long size)
     if (x->p_run_on_save) {
 
         py_log(x, "run-on-save activated");
-        
+
         pval = PyRun_String(*text, Py_file_input, x->p_globals, x->p_globals);
         if (pval == NULL) {
             py_error(x, "py_edsave: pval == NULL");
@@ -1775,7 +1767,6 @@ error:
     py_log(x, "py_edsave: returning 1");
     return 1;
 }
-
 
 
 void py_load(t_py* x, t_symbol* s)

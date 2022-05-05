@@ -15,9 +15,9 @@
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
-#define _CONCAT(a,b) a##b
-#define CONCAT(a,b) _CONCAT(a,b)
-#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(.,PY_MINOR_VERSION))
+#define _CONCAT(a, b) a##b
+#define CONCAT(a, b) _CONCAT(a, b)
+#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(., PY_MINOR_VERSION))
 #define PY_VER STR(_PY_VER)
 
 typedef struct _pyjs {
@@ -43,9 +43,12 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_import(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
-t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                    t_atom* rv);
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                            t_atom* rv);
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
+                    t_atom* rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
@@ -74,12 +77,13 @@ void ext_main(void* module_ref)
                   (long)sizeof(t_pyjs), 0L /* leave NULL!! */, A_GIMME, 0);
 
     // methods
-    class_addmethod(c, (method)pyjs_import,   "import",   A_SYM, 0);
-    class_addmethod(c, (method)pyjs_eval,     "eval",     A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_exec,     "exec",     A_SYM, 0);
+    class_addmethod(c, (method)pyjs_import, "import", A_SYM, 0);
+    class_addmethod(c, (method)pyjs_eval, "eval", A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_exec, "exec", A_SYM, 0);
     class_addmethod(c, (method)pyjs_execfile, "execfile", A_SYM, 0);
-    class_addmethod(c, (method)pyjs_code,     "code",     A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_code, "code", A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK,
+                    0);
 
     // attributes
     CLASS_ATTR_SYM(c, "name", 0, t_pyjs, p_name);
@@ -101,7 +105,6 @@ void ext_main(void* module_ref)
     GetModuleFileName(moduleRef, (LPCH)external_path, sizeof(external_path));
     post("external path: %s", external_path);
 #endif
-
 }
 
 void pyjs_free(t_pyjs* x)
@@ -110,9 +113,8 @@ void pyjs_free(t_pyjs* x)
     pyjs_log(x, "will be deleted");
 
     // crashes if one attempts to free.
-    // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-    // CFRelease(py_global_bundle);
-    // #endif
+    // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
+    // defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif
 
     pyjs_global_obj_count--;
     if (pyjs_global_obj_count == 0) {
@@ -182,10 +184,11 @@ error:
 }
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
-void py_init_osx_set_home_static_ext(void) {
+void py_init_osx_set_home_static_ext(void)
+{
     // sets python_home to <bundle>/Resources folder
 
-    wchar_t *python_home;
+    wchar_t* python_home;
 
     CFURLRef resources_url;
     CFURLRef resources_abs_url;
@@ -195,8 +198,10 @@ void py_init_osx_set_home_static_ext(void) {
     // Look for a bundle using its using global bundle ref
     resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
     resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-    resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
-    resources_path = CFStringGetCStringPtr(resources_str, kCFStringEncodingUTF8);
+    resources_str = CFURLCopyFileSystemPath(resources_abs_url,
+                                            kCFURLPOSIXPathStyle);
+    resources_path = CFStringGetCStringPtr(resources_str,
+                                           kCFStringEncodingUTF8);
 
     python_home = Py_DecodeLocale(resources_path, NULL);
 
@@ -216,10 +221,11 @@ void py_init_osx_set_home_static_ext(void) {
 
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
-void py_init_osx_set_home_shared_pkg(void) {
+void py_init_osx_set_home_shared_pkg(void)
+{
     // sets python_home to <package>/support/pythonX.Y folder
 
-    wchar_t *python_home;
+    wchar_t* python_home;
 
     CFURLRef bundle_url;
     CFURLRef bundle_abs_url;
@@ -239,12 +245,17 @@ void py_init_osx_set_home_shared_pkg(void) {
     bundle_abs_url = CFURLCopyAbsoluteURL(bundle_url);
     bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
     bundle_path = CFStringGetCStringPtr(bundle_str, kCFStringEncodingUTF8);
-    
-    // get the absolute path of the <package>/support/pythonX.Y directory in a package
-    externals_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundle_abs_url);
-    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, externals_url);
-    relative_path_str = CFStringCreateWithCString(kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
-    py_home_url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, package_url, relative_path_str, FALSE);
+
+    // get the absolute path of the <package>/support/pythonX.Y directory in a
+    // package
+    externals_url = CFURLCreateCopyDeletingLastPathComponent(
+        kCFAllocatorDefault, bundle_abs_url);
+    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault,
+                                                           externals_url);
+    relative_path_str = CFStringCreateWithCString(
+        kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
+    py_home_url = CFURLCreateCopyAppendingPathComponent(
+        kCFAllocatorDefault, package_url, relative_path_str, FALSE);
     py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
     py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
 
@@ -275,13 +286,13 @@ void py_init_osx_set_home_shared_pkg(void) {
 
 void pyjs_init(t_pyjs* x)
 {
-    #if defined(__APPLE__) && defined(PY_STATIC_EXT)
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
     py_init_osx_set_home_static_ext();
-    #endif
+#endif
 
-    #if defined(__APPLE__) && defined(PY_SHARED_PKG)
+#if defined(__APPLE__) && defined(PY_SHARED_PKG)
     py_init_osx_set_home_shared_pkg();
-    #endif
+#endif
 
     Py_Initialize();
 
@@ -733,7 +744,7 @@ t_max_err pyjs_import(t_pyjs* x, t_symbol* s)
 
     if (s != gensym("")) {
         x_module = PyImport_ImportModule(s->s_name);
-        
+
         if (x_module == NULL) {
             goto error;
         }
@@ -741,7 +752,7 @@ t_max_err pyjs_import(t_pyjs* x, t_symbol* s)
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
         pyjs_log(x, "imported: %s", s->s_name);
         return MAX_ERR_NONE;
-    }    
+    }
 
 error:
     pyjs_handle_error(x, "import %s", s->s_name);
@@ -876,7 +887,8 @@ t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
         goto error;
 
     atom_setsym(atoms, gensym(unicode_result));
-    atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
+    atom_setobj(rv,
+                object_new(gensym("nobox"), gensym("atomarray"), 1, atoms));
 
     Py_XDECREF(pval);
     Py_XDECREF(json_module);
