@@ -1030,7 +1030,8 @@ error:
 
 /*--------------------------------------------------------------------------*/
 // CORE
-void py_import(t_py* x, t_symbol* s)
+
+t_max_err py_import(t_py* x, t_symbol* s)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1048,16 +1049,17 @@ void py_import(t_py* x, t_symbol* s)
         outlet_bang(x->p_outlet_right);
         py_log(x, "imported: %s", s->s_name);
     }
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "import %s", s->s_name);
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1071,16 +1073,17 @@ void py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     if (pval != NULL) {
         py_handle_output(x, pval);
         PyGILState_Release(gstate);
-        return;
+        return MAX_ERR_NONE;
     } else {
         py_handle_error(x, "eval %s", py_argv);
         PyGILState_Release(gstate);
         outlet_bang(x->p_outlet_middle);
+        return MAX_ERR_GENERIC;
     }
 }
 
 
-void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1102,17 +1105,18 @@ void py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     outlet_bang(x->p_outlet_right);
     py_log(x, "exec %s", py_argv);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "exec %s", py_argv);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_execfile(t_py* x, t_symbol* s)
+t_max_err py_execfile(t_py* x, t_symbol* s)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1152,7 +1156,7 @@ void py_execfile(t_py* x, t_symbol* s)
     Py_DECREF(pval);
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "execfile");
@@ -1164,7 +1168,7 @@ error:
 /*--------------------------------------------------------------------------*/
 // EXTRA
 
-void py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1234,7 +1238,7 @@ handle_output:
     Py_XDECREF(py_argslist);
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
-    return;
+    return MAX_ERR_NONE;
 
 error:
 
@@ -1245,10 +1249,11 @@ error:
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1292,17 +1297,18 @@ void py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // Py_XDECREF(list); // causes a crash
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_right);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "assign %s", s->s_name);
     Py_XDECREF(list);
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
@@ -1345,23 +1351,24 @@ void py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
         py_handle_output(x, pval);
         PyGILState_Release(gstate);
     }
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "python code evaluation failed");
     // fail bang
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    py_eval_text(x, argc, argv, 0);
+    return py_eval_text(x, argc, argv, 0);
 }
 
 
-void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     t_atom atoms[PY_MAX_ATOMS];
 
@@ -1398,11 +1405,11 @@ void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         }
     }
 
-    py_eval_text(x, argc, atoms, 1);
+    return py_eval_text(x, argc, atoms, 1);
 }
 
 
-void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1472,7 +1479,7 @@ void py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
         Py_XDECREF(pstr);
         PyGILState_Release(gstate);
         outlet_bang(x->p_outlet_right);
-        return;
+        return MAX_ERR_NONE;
     } else {
         goto error;
     }
@@ -1485,6 +1492,7 @@ error:
     // fail bang
     PyGILState_Release(gstate);
     outlet_bang(x->p_outlet_middle);
+    return MAX_ERR_GENERIC;
 }
 
 /*--------------------------------------------------------------------------*/
