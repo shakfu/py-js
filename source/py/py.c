@@ -1302,6 +1302,106 @@ error:
 }
 
 
+// void py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
+// {
+//     PyGILState_STATE gstate = PyGILState_Ensure();
+
+//     long textsize = 0;
+//     char* text = NULL;
+//     int is_eval = 1;
+
+//     t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
+//                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+//     if (err == MAX_ERR_NONE && textsize && text) {
+//         py_log(x, ">>> %s", text);
+//     } else {
+//         goto error;
+//     }
+
+//     PyObject* co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+
+//     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+//         PyErr_Clear();
+//         co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+//         is_eval = 0;
+//     }
+
+//     if (co == NULL) { // can be eval-co or exec-co or NULL here
+//         goto error;
+//     }
+//     sysmem_freeptr(text);
+
+//     PyObject* pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+//     if (pval == NULL) {
+//         goto error;
+//     }
+//     Py_DECREF(co);
+
+//     if (!is_eval) {
+//         // bang for exec-type op
+//         PyGILState_Release(gstate);
+//         outlet_bang(x->p_outlet_right);
+//     } else {
+//         py_handle_output(x, pval);
+//         PyGILState_Release(gstate);
+//     }
+//     return;
+
+// error:
+//     py_handle_error(x, "python code evaluation failed");
+//     // fail bang
+//     PyGILState_Release(gstate);
+//     outlet_bang(x->p_outlet_middle);
+// }
+
+
+// void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
+// {
+//     py_eval_text(x, argc, argv, 0);
+// }
+
+
+// void py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
+// {
+//     t_atom atoms[PY_MAX_ATOMS];
+
+//     if (s == gensym("")) {
+//         return;
+//     }
+
+//     // set '=' as shorthand for assign method
+//     if (s == gensym("=")) {
+//         py_assign(x, gensym(""), argc, argv);
+//         return;
+//     }
+
+//     // set symbol as first atom in new atoms array
+//     atom_setsym(atoms, s);
+
+//     for (int i = 0; i < argc; i++) {
+//         switch ((argv + i)->a_type) {
+//         case A_FLOAT: {
+//             atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
+//             break;
+//         }
+//         case A_LONG: {
+//             atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
+//             break;
+//         }
+//         case A_SYM: {
+//             atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
+//             break;
+//         }
+//         default:
+//             py_log(x, "cannot process unknown type");
+//             break;
+//         }
+//     }
+
+//     py_eval_text(x, argc, atoms, 1);
+// }
+
+
 void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -1343,11 +1443,12 @@ void py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     if (!is_eval) {
         // bang for exec-type op
+        PyGILState_Release(gstate);
         outlet_bang(x->p_outlet_right);
     } else {
         py_handle_output(x, pval);
+        PyGILState_Release(gstate);
     }
-    PyGILState_Release(gstate);
     return;
 
 error:

@@ -11,6 +11,7 @@ ROOTDIR := $(shell pwd)
 SRCDIR := $(ROOTDIR)/source
 PYDIR := $(SRCDIR)/py
 BUILDDIR := $(HOME)/.build_pyjs
+CFLOW := ${PYDIR}/resources/cflow
 
 # project variables
 NAME = py
@@ -24,6 +25,7 @@ PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
 PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
 PKG_DIRS = docs examples externals help init \
            javascript jsextensions media patchers
+
 
 # constants
 COLOR_BOLD_CYAN = "\033[1;36m"
@@ -400,7 +402,7 @@ check_logs:
 
 # Styling
 # -----------------------------------------------------------------------
-.PHONY: style clang-format duplo
+.PHONY: style clang-format duplo cflow
 
 style: clang-format
 
@@ -416,10 +418,13 @@ lizard:
 
 duplo:
 	$(call section,"checking code duplication")
-	#@find . -type f \( -iname "*.c" -o -iname "*.h" \) > files.lst
 	@find . -type f \( -iname "py.c" \) > files.lst
 	@duplo files.lst duplicates.txt
-	@rm files.lst
+	@rm -f files.lst
+
+cflow:
+	@cflow2dot -x $(CFLOW)/ignore.txt -i source/py/py.c -f pdf -o $(CFLOW)/py_cflow
+	@rm -f $(CFLOW)/*.dot
 
 
 # Cleaning

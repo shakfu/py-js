@@ -1,0 +1,13 @@
+py_init_osx_set_home_static_ext
+py_init_osx_set_home_shared_pkg
+CFURLCreateCopyAppendingPathComponent
+CFStringCreateWithCString
+CFURLCreateCopyDeletingLastPathComponent
+CFBundleCopyBundleURL
+Py_SetPythonHome
+CFRelease
+Py_DecodeLocale
+CFStringGetCStringPtr
+CFURLCopyFileSystemPath
+CFURLCopyAbsoluteURL
+CFBundleCopyResourcesDirectoryURL

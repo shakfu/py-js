@@ -2,7 +2,7 @@
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
 
-Currently build only 'natively' on macOS `x86_64`and macOS `arm64`
+Currently builds only 'natively' on macOS `x86_64`and macOS `arm64`
 
 repo - <https://github.com/shakfu/py-js>
 

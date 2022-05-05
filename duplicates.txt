@@ -1,0 +1,184 @@
+./source/py/py.c(62)
+./source/py/py.c(48)
+    va_list va;
+    va_start(va, fmt);
+    vsprintf(msg, fmt, va);
+    va_end(va);
+
+./source/py/py.c(1662)
+./source/py/py.c(1651)
+        if (msg_sym == NULL) { 
+            goto error;
+        argc = argc - 1;
+        argv = argv + 1;
+        break;
+
+./source/py/py.c(1293)
+./source/py/py.c(1235)
+    PyGILState_Release(gstate);
+    outlet_bang(x->p_outlet_right);
+    return;
+error:
+
+./source/py/py.c(1368)
+./source/py/py.c(1310)
+    long textsize = 0;
+    char* text = NULL;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
+    t_max_err err;
+    int is_eval = 1;
+
+./source/py/py.c(466)
+./source/py/py.c(408)
+    if (python_home == NULL) {
+        error("unable to set python_home");
+        return;
+    Py_SetPythonHome(python_home);
+#endif
+
+./source/py/py.c(1235)
+./source/py/py.c(1153)
+    PyGILState_Release(gstate);
+    outlet_bang(x->p_outlet_right);
+    return;
+error:
+
+./source/py/py.c(1263)
+./source/py/py.c(1180)
+    if (argv->a_type != A_SYM) {
+        py_error(x, "first atom must be a symbol!");
+        goto error;
+    } else {
+
+./source/py/py.c(1412)
+./source/py/py.c(1321)
+    } else {
+        goto error;
+    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+        is_eval = 0;
+    if (co == NULL) { 
+        goto error;
+    sysmem_freeptr(text);
+    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    Py_DECREF(co);
+    if (!is_eval) {
+        PyGILState_Release(gstate);
+        outlet_bang(x->p_outlet_right);
+    } else {
+        py_handle_output(x, pval);
+        PyGILState_Release(gstate);
+    return;
+error:
+
+./source/py/py.c(1293)
+./source/py/py.c(1153)
+    PyGILState_Release(gstate);
+    outlet_bang(x->p_outlet_right);
+    return;
+error:
+
+./source/py/py.c(1455)
+./source/py/py.c(1307)
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    long textsize = 0;
+    char* text = NULL;
+
+./source/py/py.c(1669)
+./source/py/py.c(1400)
+        break;
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
+
+./source/py/py.c(1400)
+./source/py/py.c(1017)
+            break;
+        default:
+            py_log(x, "cannot process unknown type");
+            break;
+
+./source/py/py.c(1767)
+./source/py/py.c(1293)
+    PyGILState_Release(gstate);
+    outlet_bang(x->p_outlet_right);
+    return;
+error:
+
+./source/py/py.c(663)
+./source/py/py.c(60)
+        char msg[PY_MAX_ERR_CHAR];
+        va_list va;
+        va_start(va, fmt);
+        vsprintf(msg, fmt, va);
+        va_end(va);
+
+./source/py/py.c(1767)
+./source/py/py.c(1235)
+    PyGILState_Release(gstate);
+    outlet_bang(x->p_outlet_right);
+    return;
+error:
+
+./source/py/py.c(665)
+./source/py/py.c(48)
+        va_list va;
+        va_start(va, fmt);
+        vsprintf(msg, fmt, va);
+        va_end(va);
+
+./source/py/py.c(1766)
+./source/py/py.c(1152)
+    Py_DECREF(pval);
+    PyGILState_Release(gstate);
+    outlet_bang(x->p_outlet_right);
+    return;
+error:
+
+./source/py/py.c(1669)
+./source/py/py.c(1017)
+        break;
+    default:
+        py_log(x, "cannot process unknown type");
+        break;
+
+./source/py/py.c(1761)
+./source/py/py.c(1097)
+    if (pval == NULL) {
+        goto error;
+    Py_DECREF(pval);
+    PyGILState_Release(gstate);
+    outlet_bang(x->p_outlet_right);
+
+./source/py/py.c(1511)
+./source/py/py.c(748)
+            if (unicode_result == NULL) {
+                goto error;
+            outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
+            outlet_bang(x->p_outlet_right);
+
+./source/py/py.c(1690)
+./source/py/py.c(629)
+    return;
+error:
+    py_error(x, "send failed");
+    return;
+
+Configuration:
+  Number of files: 1
+  Minimal block size: 4
+  Minimal characters in line: 3
+  Ignore preprocessor directives: 0
+  Ignore same filenames: 0
+
+Results:
+  Lines of code: 1082
+  Duplicate lines of code: 109
+  Total 21 duplicate block(s) found.
+

@@ -28,7 +28,7 @@
 #define CONCAT(a,b) _CONCAT(a,b)
 #define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(.,PY_MINOR_VERSION))
 #define PY_VER STR(_PY_VER)
-// PY_VERSION is already defined Major.Minor.Patch by patchlevel.h
+// PY_VERSION is already defined as Major.Minor.Patch by patchlevel.h
 
 /*--------------------------------------------------------------------------*/
 // GLOBALS
@@ -104,6 +104,7 @@ void py_init_osx_set_home_shared_pkg(void);
 void py_init_osx_set_home_framework_ext(void);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 t_hashtab* get_global_registry(void);
+// void py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);
