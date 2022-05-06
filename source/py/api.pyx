@@ -256,20 +256,21 @@ cdef class PyExternal:
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
     cdef success(self):
-        mx.outlet_bang(<void*>self.obj.p_outlet_right)
+        px.py_bang_success(self.obj)
 
     cdef fail(self):
-        mx.outlet_bang(<void*>self.obj.p_outlet_middle)
+        px.py_bang_failure(self.obj)
 
     cdef out_sym(self, str arg):
-        mx.outlet_anything(<void*>self.obj.p_outlet_left, 
+        mx.outlet_anything(<void*>px.get_outlet(self.obj),
             mx.gensym(arg.encode('utf-8')), 0, NULL)
 
     cdef out_float(self, float arg):
-        mx.outlet_float(<void*>self.obj.p_outlet_left, <double>arg)
+        mx.outlet_float(<void*>px.get_outlet(self.obj), <double>arg)
+
 
     cdef out_int(self, int arg):
-        mx.outlet_int(<void*>self.obj.p_outlet_left, <long>arg)
+        mx.outlet_int(<void*>px.get_outlet(self.obj), <long>arg)
 
     cdef out_list(self, list arg):
         """note: not recursive...(yet) still cannot deal with list in list"""
@@ -290,7 +291,7 @@ cdef class PyExternal:
             else:
                 continue
 
-        mx.outlet_list(<void*>self.obj.p_outlet_left, mx.gensym("list"),
+        mx.outlet_list(<void*>px.get_outlet(self.obj), mx.gensym("list"),
             argc, argv)
 
     cdef out_dict(self, dict arg):
@@ -314,7 +315,6 @@ cdef class PyExternal:
         elif isinstance(arg, dict): self.out_dict(<dict>arg)
         else:
             return
-
 
 def test_atom():
     ext = PyExternal()

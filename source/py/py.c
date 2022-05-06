@@ -35,9 +35,57 @@ static char* py_global_external_path[MAX_PATH_CHARS];
 // static wchar_t* program;
 
 /*--------------------------------------------------------------------------*/
+struct t_py {
+    /* object header */
+    t_object p_ob;
+
+    /* object attributes */
+    t_symbol* p_name;       /*!< unique object name */
+
+    /* python-related */
+    t_symbol* p_pythonpath; /*!< path to python directory */
+    t_bool p_debug;         /*!< bool to switch per-object debug state */
+    PyObject* p_globals;    /*!< per object 'globals' python namespace */
+
+    /* infrastructure objects */
+    t_patcher* p_patcher;   /*!< to send msgs to objects */
+    t_box* p_box;           /*!< the ui box of the py instance? */
+    void* p_clock;          /*!< a clock in case of scheduled ops */
+    t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
+
+    /* text editor attrs */
+    t_object* p_code_editor; /*!< code editor object */
+    char** p_code;           /*!< handle to code buffer for code editor */
+    long p_code_size;        /*!< length of code buffer */
+    t_fourcc p_code_filetype; /*!< filetype four char code of 'TEXT' */
+    t_fourcc p_code_outtype;  /*!< savetype four char code of 'TEXT' */
+    char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
+    char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
+    short p_code_path;        /*!< short code for max file system */
+    t_bool p_run_on_save;     /*!< evaluate or run code on save option */
+
+    t_symbol* p_code_filepath; /*!< default python filepath to load into
+                                  the code editor and object 'globals'
+                                  namespace */
+    t_bool p_autoload;         /*!< bool to autoload of p_code_filepath  */
+
+    /* outlet creation */
+    void* p_outlet_right;      /*!< right outlet to bang success */
+    void* p_outlet_middle;     /*!< middle outleet to bang error */
+    void* p_outlet_left;       /*!< left outleet for msg output  */
+
+};
+
+/*--------------------------------------------------------------------------*/
 // HELPERS
 
- void py_log(t_py* x, char* fmt, ...)
+
+void* get_outlet(t_py* x)
+{
+    return (void*)x->p_outlet_left;
+}
+
+void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
         char msg[PY_MAX_LOG_CHAR];
@@ -569,13 +617,24 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 
 /*--------------------------------------------------------------------------*/
-// TESTING
+// Side-Effects
 
 void py_bang(t_py* x)
 {
     // just a passthrough: bang out the left outlet
     outlet_bang(x->p_outlet_left);
 }
+
+void py_bang_success(t_py* x)
+{
+    outlet_bang(x->p_outlet_right);
+}
+
+void py_bang_failure(t_py* x)
+{
+    outlet_bang(x->p_outlet_middle);
+}
+
 
 void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -649,7 +708,7 @@ void py_task(t_py* x)
     }
     post("%lx instance is executing at time %.2f", x, time);
     py_call(x, gensym(""), argc, argv);
-    outlet_bang(x->p_outlet_right);
+    py_bang_success(x);
 }
 
 
@@ -700,7 +759,7 @@ t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
         }
 
         outlet_float(x->p_outlet_left, float_result);
-        outlet_bang(x->p_outlet_right);
+        py_bang_success(x);
     }
     Py_XDECREF(pfloat);
     return MAX_ERR_NONE;
@@ -708,7 +767,7 @@ t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
 error:
     py_handle_error(x, "py_handle_float_output failed");
     Py_XDECREF(pfloat);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -726,7 +785,7 @@ t_max_err py_handle_long_output(t_py* x, PyObject* plong)
                 goto error;
         }
         outlet_int(x->p_outlet_left, long_result);
-        outlet_bang(x->p_outlet_right);
+        py_bang_success(x);
     }
 
     Py_XDECREF(plong);
@@ -735,7 +794,7 @@ t_max_err py_handle_long_output(t_py* x, PyObject* plong)
 error:
     py_handle_error(x, "py_handle_long_output failed");
     Py_XDECREF(plong);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -752,7 +811,7 @@ t_max_err py_handle_string_output(t_py* x, PyObject* pstring)
             goto error;
         }
         outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
-        outlet_bang(x->p_outlet_right);
+        py_bang_success(x);
     }
 
     Py_XDECREF(pstring);
@@ -761,7 +820,7 @@ t_max_err py_handle_string_output(t_py* x, PyObject* pstring)
 error:
     py_handle_error(x, "py_handle_string_output failed");
     Py_XDECREF(pstring);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -841,7 +900,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
         }
 
         outlet_list(x->p_outlet_left, NULL, i, atoms);
-        outlet_bang(x->p_outlet_right);
+        py_bang_success(x);
         py_log(x, "end iter op: %d", i);
 
         if (is_dynamic) {
@@ -856,7 +915,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
 error:
     py_handle_error(x, "py_handle_list_output failed");
     Py_XDECREF(plist);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -906,7 +965,7 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
         if (PyList_Check(pval)) {           // expecting a python list
             py_handle_list_output(x, pval); // this decrefs pval
             Py_XDECREF(pfun_co);
-            outlet_bang(x->p_outlet_right);
+            py_bang_success(x);
             return MAX_ERR_NONE;
         } else {
             py_error(x, "expected list output got something else");
@@ -919,7 +978,7 @@ error:
     Py_XDECREF(pfun_co);
     Py_XDECREF(pval);
     // fail bang
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -1036,7 +1095,7 @@ t_max_err py_import(t_py* x, t_symbol* s)
         }
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
         PyGILState_Release(gstate);
-        outlet_bang(x->p_outlet_right);
+        py_bang_success(x);
         py_log(x, "imported: %s", s->s_name);
     }
     return MAX_ERR_NONE;
@@ -1044,7 +1103,7 @@ t_max_err py_import(t_py* x, t_symbol* s)
 error:
     py_handle_error(x, "import %s", s->s_name);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -1067,7 +1126,7 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     } else {
         py_handle_error(x, "eval %s", py_argv);
         PyGILState_Release(gstate);
-        outlet_bang(x->p_outlet_middle);
+        py_bang_failure(x);;
         return MAX_ERR_GENERIC;
     }
 }
@@ -1093,7 +1152,7 @@ t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     Py_DECREF(pval);
     PyGILState_Release(gstate);
 
-    outlet_bang(x->p_outlet_right);
+    py_bang_success(x);
     py_log(x, "exec %s", py_argv);
     return MAX_ERR_NONE;
 
@@ -1101,7 +1160,7 @@ error:
     py_handle_error(x, "exec %s", py_argv);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -1145,14 +1204,14 @@ t_max_err py_execfile(t_py* x, t_symbol* s)
     fclose(fhandle);
     Py_DECREF(pval);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_right);
+    py_bang_success(x);
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "execfile");
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1226,7 +1285,7 @@ handle_output:
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_right);
+    py_bang_success(x);
     return MAX_ERR_NONE;
 
 error:
@@ -1236,7 +1295,7 @@ error:
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -1284,14 +1343,14 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
     // Py_XDECREF(list); // causes a crash
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_right);
+    py_bang_success(x);
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "assign %s", s->s_name);
     Py_XDECREF(list);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -1334,7 +1393,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     if (!is_eval) {
         // bang for exec-type op
         PyGILState_Release(gstate);
-        outlet_bang(x->p_outlet_right);
+        py_bang_success(x);
     } else {
         py_handle_output(x, pval);
         PyGILState_Release(gstate);
@@ -1345,7 +1404,7 @@ error:
     py_handle_error(x, "python code evaluation failed");
     // fail bang
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -1361,13 +1420,13 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_atom atoms[PY_MAX_ATOMS];
 
     if (s == gensym("")) {
-        return;
+        return MAX_ERR_GENERIC; 
     }
 
     // set '=' as shorthand for assign method
     if (s == gensym("=")) {
         py_assign(x, gensym(""), argc, argv);
-        return;
+        return MAX_ERR_NONE;
     }
 
     // set symbol as first atom in new atoms array
@@ -1459,14 +1518,14 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
                 goto error;
             }
             outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
-            outlet_bang(x->p_outlet_right);
+            py_bang_success(x);
             Py_XDECREF(pval);
         }
 
         Py_XDECREF(pipe_pre);
         Py_XDECREF(pstr);
         PyGILState_Release(gstate);
-        outlet_bang(x->p_outlet_right);
+        py_bang_success(x);
         return MAX_ERR_NONE;
     } else {
         goto error;
@@ -1479,7 +1538,7 @@ error:
     Py_XDECREF(pval);
     // fail bang
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
     return MAX_ERR_GENERIC;
 }
 
@@ -1714,14 +1773,14 @@ void py_run(t_py* x)
     // success cleanup
     Py_DECREF(pval);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_right);
+    py_bang_success(x);
     return;
 
 error:
     py_handle_error(x, "run x->p_code failed");
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    outlet_bang(x->p_outlet_middle);
+    py_bang_failure(x);;
 }
 
 
