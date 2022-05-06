@@ -24,6 +24,9 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+/* common imports */
+#include "py_common.h"
+
 /*--------------------------------------------------------------------------*/
 /* Constants */
 

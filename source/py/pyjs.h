@@ -12,10 +12,8 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-#include <CoreFoundation/CoreFoundation.h>
-#include <libgen.h>
-#endif
+/* common imports */
+#include "py_common.h"
 
 /*--------------------------------------------------------------------------*/
 /* Constants */
