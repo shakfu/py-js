@@ -14,7 +14,8 @@
 
 
 /*--------------------------------------------------------------------------*/
-// INCLUDES
+/* Includes */
+
 /* max api */
 #include "ext.h"
 #include "ext_obex.h"
@@ -22,15 +23,16 @@
 /* python */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+
 /*--------------------------------------------------------------------------*/
-// CONSTANTS
+/* Constants */
 
 #define PY_MAX_ATOMS 128
 #define PY_MAX_LOG_CHAR 500 // high number during development
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 /*--------------------------------------------------------------------------*/
-// MACROS
+/* Macros */
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
@@ -41,31 +43,25 @@
 // PY_VERSION is already defined as Major.Minor.Patch by patchlevel.h
 
 /*--------------------------------------------------------------------------*/
-// GLOBALS
+/* Globals */
 
 t_class* py_class;                    // global pointer to object class
 static int py_global_obj_count;       // when 0 then free interpreter
 static t_hashtab* py_global_registry; // global object lookups
+
 /*--------------------------------------------------------------------------*/
-// OBJECT TYPES
+/* Datastructures */
 
 typedef struct t_py t_py;
 
 /*--------------------------------------------------------------------------*/
-// FUNCTION TYPES
-/*--------------------------------------------------------------------------*/
-// ENUMS
-/*--------------------------------------------------------------------------*/
-// MACROS
-/*--------------------------------------------------------------------------*/
-// METHODS
-
-/* object creation and destruction */
+/* Object creation and destruction Methods */
 void* py_new(t_symbol* s, long argc, t_atom* argv);
 void py_free(t_py* x);
 void py_init(t_py* x);
 
-/* helpers */
+/*--------------------------------------------------------------------------*/
+/* Helpers */
 
 /**
  * A basic logging function
@@ -87,13 +83,17 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 t_hashtab* get_global_registry(void);
 t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 
-/* side-effect helpers */
+/*--------------------------------------------------------------------------*/
+/* Side-effect helpers */
+
 void py_bang(t_py* x);
 void py_bang_success(t_py* x);
 void py_bang_failure(t_py* x);
 void* get_outlet(t_py* x);
 
-/* common handlers */
+/*--------------------------------------------------------------------------*/
+/* Common handlers */
+
 void py_handle_error(t_py* x, char* fmt, ...);
 t_max_err py_handle_float_output(t_py* x, PyObject* pval);
 t_max_err py_handle_long_output(t_py* x, PyObject* pval);
@@ -102,34 +102,46 @@ t_max_err py_handle_list_output(t_py* x, PyObject* pval);
 t_max_err py_handle_dict_output(t_py* x, PyObject* pval);
 t_max_err py_handle_output(t_py* x, PyObject* pval);
 
-/* core python methods */
+/*--------------------------------------------------------------------------*/
+/* Core Python Methods */
+
 t_max_err py_import(t_py* x, t_symbol* s);
 t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_execfile(t_py* x, t_symbol* s);
 
-/* extra python methods */
+/*--------------------------------------------------------------------------*/
+/* Extra Python Methods */
+
 t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
-/* informational */
+/*--------------------------------------------------------------------------*/
+/* Informations Methods */
+
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
 void py_appendtodict(t_py* x, t_dictionary* dict);
 
-/* testing */
+/*--------------------------------------------------------------------------*/
+/* Time-based Methods */
+
 void py_task(t_py* x);
 void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
-/* interobject communications */
+/*--------------------------------------------------------------------------*/
+/* Interobject Methods */
+
 void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_scan(t_py* x);
 long py_scan_callback(t_py* x, t_object* obj);
 
-/* code editor */
+/*--------------------------------------------------------------------------*/
+/* Code editor Methods */
+
 void py_read(t_py* x, t_symbol* s);
 void py_load(t_py* x, t_symbol* s); // read(f) -> execfile(f)
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);

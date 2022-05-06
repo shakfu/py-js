@@ -1,9 +1,10 @@
-
 /* pyjs.h */
 
 #ifndef PYJS_H
 #define PYJS_H
-                                                                                                                                            
+
+/*--------------------------------------------------------------------------*/
+/* Includes */                                                                           
 
 #include "ext.h"
 #include "ext_obex.h"
@@ -16,9 +17,15 @@
 #include <libgen.h>
 #endif
 
+/*--------------------------------------------------------------------------*/
+/* Constants */
+
 #define PY_MAX_ATOMS 128
 #define PY_MAX_LOG_CHAR 500 // high number during development
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
+
+/*--------------------------------------------------------------------------*/
+/* Macros */
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
@@ -27,7 +34,13 @@
 #define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(., PY_MINOR_VERSION))
 #define PY_VER STR(_PY_VER)
 
+/*--------------------------------------------------------------------------*/
+/* Datastructures */
+
 typedef struct t_pyjs t_pyjs;
+
+/*--------------------------------------------------------------------------*/
+/* Methods */
 
 void* pyjs_new(t_symbol* s, long argc, t_atom* argv);
 void pyjs_free(t_pyjs* x);

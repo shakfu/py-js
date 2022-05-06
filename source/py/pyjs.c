@@ -1,4 +1,10 @@
+/*--------------------------------------------------------------------------*/
+/* Includes */
+
 #include "pyjs.h"
+
+/*--------------------------------------------------------------------------*/
+/* Datastructures */
 
 struct t_pyjs {
     /* object header */
@@ -11,7 +17,9 @@ struct t_pyjs {
     t_bool p_debug;            /*!< bool to switch per-object debug state */
 };
 
-/* globals */
+/*--------------------------------------------------------------------------*/
+/* Globals */
+
 static t_class* pyjs_class;
 static int pyjs_global_obj_count; /*!< when 0 then free interpreter */
 
@@ -24,25 +32,28 @@ CFBundleRef py_global_bundle;
 static char* external_path[MAX_PATH_CHARS];
 #endif
 
+/*--------------------------------------------------------------------------*/
+/* External main */
+
 void ext_main(void* module_ref)
 {
     t_class* c;
 
     c = class_new("pyjs", (method)pyjs_new, (method)pyjs_free,
-                  (long)sizeof(t_pyjs), 0L /* leave NULL!! */, A_GIMME, 0);
+                  (long)sizeof(t_pyjs), 0L /* leave NULL!! */,    A_GIMME, 0);
 
     /* methods */
-    class_addmethod(c, (method)pyjs_import, "import", A_SYM, 0);
-    class_addmethod(c, (method)pyjs_eval, "eval", A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_exec, "exec", A_SYM, 0);
-    class_addmethod(c, (method)pyjs_execfile, "execfile", A_SYM, 0);
-    class_addmethod(c, (method)pyjs_code, "code", A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_import,       "import",       A_SYM, 0);
+    class_addmethod(c, (method)pyjs_eval,         "eval",         A_GIMMEBACK, 0);
+    class_addmethod(c, (method)pyjs_exec,         "exec",         A_SYM, 0);
+    class_addmethod(c, (method)pyjs_execfile,     "execfile",     A_SYM, 0);
+    class_addmethod(c, (method)pyjs_code,         "code",         A_GIMMEBACK, 0);
     class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK, 0);
 
     /* attributes */
-    CLASS_ATTR_SYM(c, "name", 0, t_pyjs, p_name);
-    CLASS_ATTR_CHAR(c, "debug", 0, t_pyjs, p_debug);
-    CLASS_ATTR_SYM(c, "file", 0, t_pyjs, p_code_filepath);
+    CLASS_ATTR_SYM(c, "name",       0, t_pyjs, p_name);
+    CLASS_ATTR_CHAR(c, "debug",     0, t_pyjs, p_debug);
+    CLASS_ATTR_SYM(c, "file",       0, t_pyjs, p_code_filepath);
     CLASS_ATTR_SYM(c, "pythonpath", 0, t_pyjs, p_pythonpath);
 
     /* activate for javascript wrapping */
@@ -61,20 +72,8 @@ void ext_main(void* module_ref)
 #endif
 }
 
-void pyjs_free(t_pyjs* x)
-{
-    Py_XDECREF(x->p_globals);
-    pyjs_log(x, "will be deleted");
-
-    /* crashes if one attempts to free.
-     * #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
-     * defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif
-     */
-    pyjs_global_obj_count--;
-    if (pyjs_global_obj_count == 0) {
-        Py_FinalizeEx();
-    }
-}
+/*--------------------------------------------------------------------------*/
+/* Object init and freeing */
 
 
 void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
@@ -103,6 +102,22 @@ void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
         pyjs_init(x);
     }
     return (x);
+}
+
+
+void pyjs_free(t_pyjs* x)
+{
+    Py_XDECREF(x->p_globals);
+    pyjs_log(x, "will be deleted");
+
+    /* crashes if one attempts to free.
+     * #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
+     * defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif
+     */
+    pyjs_global_obj_count--;
+    if (pyjs_global_obj_count == 0) {
+        Py_FinalizeEx();
+    }
 }
 
 
@@ -258,6 +273,9 @@ void pyjs_init(t_pyjs* x)
     pyjs_global_obj_count++;
 }
 
+/*--------------------------------------------------------------------------*/
+/* Helpers */
+
 
 void pyjs_log(t_pyjs* x, char* fmt, ...)
 {
@@ -327,8 +345,8 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
 }
 
 
-// ---------------------------------------------------------------------------
-// Handlers
+/*--------------------------------------------------------------------------*/
+/* Handlers */
 
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
 {
@@ -358,6 +376,8 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
         error("[pyjs %s] %s: %s", x->p_name->s_name, msg, pvalue_str);
     }
 }
+
+
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv)
 {
     t_atom atom_result[1];
@@ -385,6 +405,8 @@ error:
     Py_XDECREF(pfloat);
     return MAX_ERR_GENERIC;
 }
+
+
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv)
 {
     t_atom atom_result[1];
@@ -412,6 +434,8 @@ error:
     Py_XDECREF(plong);
     return MAX_ERR_GENERIC;
 }
+
+
 t_max_err pyjs_handle_string_output(t_pyjs* x, PyObject* pstring, t_atom* rv)
 {
     t_atom atom_result[PY_MAX_ATOMS];
@@ -438,6 +462,8 @@ error:
     Py_XDECREF(pstring);
     return MAX_ERR_GENERIC;
 }
+
+
 t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
 {
     if (plist == NULL) {
@@ -543,6 +569,8 @@ error:
     Py_XDECREF(plist);
     return MAX_ERR_GENERIC;
 }
+
+
 t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv)
 {
     PyObject* pfun_co = NULL;
@@ -601,6 +629,7 @@ error:
     return MAX_ERR_GENERIC;
 }
 
+
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
 {
     if (pval == NULL) {
@@ -638,6 +667,10 @@ t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
         return MAX_ERR_GENERIC;
     }
 }
+
+/*--------------------------------------------------------------------------*/
+/* Core Methods */
+
 t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
                     t_atom* rv)
 {

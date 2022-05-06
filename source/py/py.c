@@ -1,7 +1,7 @@
-// py.c
+/* py.c */
 
 /*--------------------------------------------------------------------------*/
-// INCLUDES
+/* Includes */
 
 /* py external api */
 #include "py.h"
@@ -17,7 +17,7 @@
 
 
 /*--------------------------------------------------------------------------*/
-// GLOBALS
+/* Globals */
 
 t_class* py_class; // global pointer to object class
 
@@ -33,54 +33,53 @@ CFBundleRef py_global_bundle;
 static char* py_global_external_path[MAX_PATH_CHARS];
 #endif
 
-// static wchar_t* program;
-
 /*--------------------------------------------------------------------------*/
-// Datastructure
+/* Datastructures */
+
 
 struct t_py {
     /* object header */
-    t_object p_ob;          /*!< object header */
+    t_object p_ob;              /*!< object header */
 
     /* object attributes */
-    t_symbol* p_name;       /*!< unique object name */
+    t_symbol* p_name;           /*!< unique object name */
 
     /* python-related */
-    t_symbol* p_pythonpath; /*!< path to python directory */
-    t_bool p_debug;         /*!< bool to switch per-object debug state */
-    PyObject* p_globals;    /*!< per object 'globals' python namespace */
+    t_symbol* p_pythonpath;     /*!< path to python directory */
+    t_bool p_debug;             /*!< bool to switch per-object debug state */
+    PyObject* p_globals;        /*!< per object 'globals' python namespace */
 
     /* infrastructure objects */
-    t_patcher* p_patcher;   /*!< to send msgs to objects */
-    t_box* p_box;           /*!< the ui box of the py instance? */
-    void* p_clock;          /*!< a clock in case of scheduled ops */
+    t_patcher* p_patcher;       /*!< to send msgs to objects */
+    t_box* p_box;               /*!< the ui box of the py instance? */
+    void* p_clock;              /*!< a clock in case of scheduled ops */
     t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
 
     /* text editor attrs */
-    t_object* p_code_editor; /*!< code editor object */
-    char** p_code;           /*!< handle to code buffer for code editor */
-    long p_code_size;        /*!< length of code buffer */
-    t_fourcc p_code_filetype; /*!< filetype four char code of 'TEXT' */
-    t_fourcc p_code_outtype;  /*!< savetype four char code of 'TEXT' */
+    t_object* p_code_editor;    /*!< code editor object */
+    char** p_code;              /*!< handle to code buffer for code editor */
+    long p_code_size;           /*!< length of code buffer */
+    t_fourcc p_code_filetype;   /*!< filetype four char code of 'TEXT' */
+    t_fourcc p_code_outtype;    /*!< savetype four char code of 'TEXT' */
     char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
     char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
-    short p_code_path;        /*!< short code for max file system */
-    t_bool p_run_on_save;     /*!< evaluate or run code on save option */
+    short p_code_path;          /*!< short code for max file system */
+    t_bool p_run_on_save;       /*!< evaluate or run code on save option */
 
-    t_symbol* p_code_filepath; /*!< default python filepath to load into
+    t_symbol* p_code_filepath;  /*!< default python filepath to load into
                                   the code editor and object 'globals'
                                   namespace */
-    t_bool p_autoload;         /*!< bool to autoload of p_code_filepath  */
+    t_bool p_autoload;          /*!< bool to autoload of p_code_filepath  */
 
     /* outlet creation */
-    void* p_outlet_right;      /*!< right outlet to bang success */
-    void* p_outlet_middle;     /*!< middle outleet to bang error */
-    void* p_outlet_left;       /*!< left outleet for msg output  */
+    void* p_outlet_right;       /*!< right outlet to bang success */
+    void* p_outlet_middle;      /*!< middle outleet to bang error */
+    void* p_outlet_left;        /*!< left outleet for msg output  */
 
 };
 
 /*--------------------------------------------------------------------------*/
-// HELPERS
+/* Helpers */
 
 
 void* get_outlet(t_py* x)
@@ -197,7 +196,8 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
 
 
 /*--------------------------------------------------------------------------*/
-// INIT & FREE
+/* External main */
+
 
 void ext_main(void* module_ref)
 {
@@ -316,6 +316,9 @@ void ext_main(void* module_ref)
     post("external path: %s", py_global_external_path);
 #endif
 }
+
+/*--------------------------------------------------------------------------*/
+/* Object new, init and free */
 
 
 void* py_new(t_symbol* s, long argc, t_atom* argv)
@@ -605,7 +608,8 @@ void py_free(t_py* x)
 }
 
 /*--------------------------------------------------------------------------*/
-// DOCUMENTATION
+/* Documentation */
+
 
 void py_assist(t_py* x, void* b, long m, long a, char* s)
 {
@@ -620,7 +624,7 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 
 /*--------------------------------------------------------------------------*/
-// Side-Effects
+/* Side-effects */
 
 void py_bang(t_py* x)
 {
@@ -638,6 +642,8 @@ void py_bang_failure(t_py* x)
     outlet_bang(x->p_outlet_middle);
 }
 
+/*--------------------------------------------------------------------------*/
+/* Time-based */
 
 void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -716,7 +722,8 @@ void py_task(t_py* x)
 
 
 /*--------------------------------------------------------------------------*/
-// COMMON HANDLERS
+/* Handlers */
+
 
 void py_handle_error(t_py* x, char* fmt, ...)
 {
@@ -1025,7 +1032,8 @@ t_max_err py_handle_output(t_py* x, PyObject* pval)
 }
 
 /*--------------------------------------------------------------------------*/
-// TRANSLATORS
+/* Translators */
+
 
 PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
 {
@@ -1081,7 +1089,8 @@ error:
 }
 
 /*--------------------------------------------------------------------------*/
-// CORE
+/* Core Methods */
+
 
 t_max_err py_import(t_py* x, t_symbol* s)
 {
@@ -1219,7 +1228,8 @@ error:
 }
 
 /*--------------------------------------------------------------------------*/
-// EXTRA
+/* Extra Methods */
+
 
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -1547,7 +1557,8 @@ error:
 }
 
 /*--------------------------------------------------------------------------*/
-// INTEROBJECT
+/* Interobject Methods */
+
 
 void py_scan(t_py* x)
 {
@@ -1706,7 +1717,8 @@ error:
 }
 
 /*--------------------------------------------------------------------------*/
-// EDITOR
+/* Code-editor Methods */
+
 
 void py_dblclick(t_py* x)
 {
