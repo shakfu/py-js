@@ -155,11 +155,11 @@ error:
 void pyjs_init(t_pyjs* x)
 {
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
-    py_init_osx_set_home_static_ext();
+    py_init_osx_set_home_static_ext(); /* in py_common.h */
 #endif
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
-    py_init_osx_set_home_shared_pkg();
+    py_init_osx_set_home_shared_pkg(); /* in py_common.h */
 #endif
 
     Py_Initialize();
@@ -452,8 +452,6 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
         atom_setobj(
             rv,
             object_new(gensym("nobox"), gensym("atomarray"), (long)i, atoms));
-        // atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1,
-        // atoms));
         pyjs_log(x, "end iter op: %d", i);
         if (is_dynamic) {
             pyjs_log(x, "restoring to static atom array");
