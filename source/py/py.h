@@ -1,7 +1,9 @@
+/* py.h */
+
 #ifndef PY_H
 #define PY_H
 
-/* py.h */
+
 
 /** \file py.h
     \brief Documentation of header file.
@@ -48,46 +50,6 @@ static t_hashtab* py_global_registry; // global object lookups
 // OBJECT TYPES
 
 typedef struct t_py t_py;
-// typedef struct _py {
-//     /* object header */
-//     t_object p_ob;
-
-//     /* object attributes */
-//     t_symbol* p_name;       /*!< unique object name */
-
-//     /* python-related */
-//     t_symbol* p_pythonpath; /*!< path to python directory */
-//     t_bool p_debug;         /*!< bool to switch per-object debug state */
-//     PyObject* p_globals;    /*!< per object 'globals' python namespace */
-
-//     /* infrastructure objects */
-//     t_patcher* p_patcher;   /*!< to send msgs to objects */
-//     t_box* p_box;           /*!< the ui box of the py instance? */
-//     void* p_clock;          /*!< a clock in case of scheduled ops */
-//     t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
-
-//     /* text editor attrs */
-//     t_object* p_code_editor; /*!< code editor object */
-//     char** p_code;           /*!< handle to code buffer for code editor */
-//     long p_code_size;        /*!< length of code buffer */
-//     t_fourcc p_code_filetype; /*!< filetype four char code of 'TEXT' */
-//     t_fourcc p_code_outtype;  /*!< savetype four char code of 'TEXT' */
-//     char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
-//     char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
-//     short p_code_path;        /*!< short code for max file system */
-//     t_bool p_run_on_save;     /*!< evaluate or run code on save option */
-
-//     t_symbol* p_code_filepath; /*!< default python filepath to load into
-//                                   the code editor and object 'globals'
-//                                   namespace */
-//     t_bool p_autoload;         /*!< bool to autoload of p_code_filepath  */
-
-//     /* outlet creation */
-//     void* p_outlet_right;      /*!< right outlet to bang success */
-//     void* p_outlet_middle;     /*!< middle outleet to bang error */
-//     void* p_outlet_left;       /*!< left outleet for msg output  */
-
-// } t_py;
 
 /*--------------------------------------------------------------------------*/
 // FUNCTION TYPES

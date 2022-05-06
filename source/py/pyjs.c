@@ -1,64 +1,19 @@
-#include "ext.h"
-#include "ext_obex.h"
+#include "pyjs.h"
 
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-#include <CoreFoundation/CoreFoundation.h>
-#include <libgen.h>
-#endif
-
-#define PY_MAX_ATOMS 128
-#define PY_MAX_LOG_CHAR 500 // high number during development
-#define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-#define _CONCAT(a, b) a##b
-#define CONCAT(a, b) _CONCAT(a, b)
-#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(., PY_MINOR_VERSION))
-#define PY_VER STR(_PY_VER)
-
-typedef struct _pyjs {
+struct t_pyjs {
     /* object header */
-    t_object p_ob;
+    t_object p_ob;             /*!< object header */
     /* python-related */
-    PyObject* p_globals;       /* per object 'globals' python namespace */
-    t_symbol* p_name;          /* unique object name */
-    t_symbol* p_pythonpath;    /* path to python directory */
-    t_symbol* p_code_filepath; /* python filepath */
-    t_bool p_debug;            /* bool to switch per-object debug state */
-} t_pyjs;
-
-
-void* pyjs_new(t_symbol* s, long argc, t_atom* argv);
-void pyjs_free(t_pyjs* x);
-void pyjs_init(t_pyjs* x);
-void pyjs_init_builtins(t_pyjs* x);
-void pyjs_log(t_pyjs* x, char* fmt, ...);
-void pyjs_error(t_pyjs* x, char* fmt, ...);
-void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
-void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_import(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                    t_atom* rv);
-t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                            t_atom* rv);
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                    t_atom* rv);
-t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
-t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
-t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
-t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv);
-t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv);
-
+    PyObject* p_globals;       /*!< per object 'globals' python namespace */
+    t_symbol* p_name;          /*!< unique object name */
+    t_symbol* p_pythonpath;    /*!< path to python directory */
+    t_symbol* p_code_filepath; /*!< python filepath */
+    t_bool p_debug;            /*!< bool to switch per-object debug state */
+};
 
 /* globals */
 static t_class* pyjs_class;
-static int pyjs_global_obj_count; // when 0 then free interpreter
+static int pyjs_global_obj_count; /*!< when 0 then free interpreter */
 
 #if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
 CFBundleRef py_global_bundle;
@@ -76,32 +31,31 @@ void ext_main(void* module_ref)
     c = class_new("pyjs", (method)pyjs_new, (method)pyjs_free,
                   (long)sizeof(t_pyjs), 0L /* leave NULL!! */, A_GIMME, 0);
 
-    // methods
+    /* methods */
     class_addmethod(c, (method)pyjs_import, "import", A_SYM, 0);
     class_addmethod(c, (method)pyjs_eval, "eval", A_GIMMEBACK, 0);
     class_addmethod(c, (method)pyjs_exec, "exec", A_SYM, 0);
     class_addmethod(c, (method)pyjs_execfile, "execfile", A_SYM, 0);
     class_addmethod(c, (method)pyjs_code, "code", A_GIMMEBACK, 0);
-    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK,
-                    0);
+    class_addmethod(c, (method)pyjs_eval_to_json, "eval_to_json", A_GIMMEBACK, 0);
 
-    // attributes
+    /* attributes */
     CLASS_ATTR_SYM(c, "name", 0, t_pyjs, p_name);
     CLASS_ATTR_CHAR(c, "debug", 0, t_pyjs, p_debug);
     CLASS_ATTR_SYM(c, "file", 0, t_pyjs, p_code_filepath);
     CLASS_ATTR_SYM(c, "pythonpath", 0, t_pyjs, p_pythonpath);
 
-    // activate for javascript wrapping
+    /* activate for javascript wrapping */
     c->c_flags = CLASS_FLAG_POLYGLOT;
     class_register(CLASS_NOBOX, c);
     pyjs_class = c;
 
 #if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-    // set global bundle ref for macos case
+    /* set global bundle ref for macos case */
     py_global_bundle = module_ref;
 #endif
 #if defined(_WIN64) && defined(PY_STATIC_EXT)
-    // set external_path for win64 case
+    /* set external_path for win64 case */
     GetModuleFileName(moduleRef, (LPCH)external_path, sizeof(external_path));
     post("external path: %s", external_path);
 #endif
@@ -112,10 +66,10 @@ void pyjs_free(t_pyjs* x)
     Py_XDECREF(x->p_globals);
     pyjs_log(x, "will be deleted");
 
-    // crashes if one attempts to free.
-    // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
-    // defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif
-
+    /* crashes if one attempts to free.
+     * #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
+     * defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif
+     */
     pyjs_global_obj_count--;
     if (pyjs_global_obj_count == 0) {
         Py_FinalizeEx();
@@ -127,26 +81,25 @@ void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_pyjs* x = NULL;
 
-    // object instantiation, NEW STYLE
+    /* object instantiation, NEW STYLE */
     if ((x = (t_pyjs*)object_alloc(pyjs_class))) {
-        // Initialize values
+        /* Initialize values */
 
         if (pyjs_global_obj_count == 0) {
-            // first py obj is called '__main__'
+            /* first py obj is called '__main__' */
             x->p_name = gensym("__main__");
         } else {
             x->p_name = symbol_unique();
         }
-        // x->p_name = symbol_unique();
 
         x->p_pythonpath = gensym("");
         x->p_debug = 1;
         x->p_code_filepath = gensym("");
 
-        // process @arg attributes
+        /* process @arg attributes */
         attr_args_process(x, argc, argv);
 
-        // python init
+        /* python init */
         pyjs_init(x);
     }
     return (x);
@@ -186,7 +139,7 @@ error:
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
 void py_init_osx_set_home_static_ext(void)
 {
-    // sets python_home to <bundle>/Resources folder
+    /* sets python_home to <bundle>/Resources folder */
 
     wchar_t* python_home;
 
@@ -223,7 +176,7 @@ void py_init_osx_set_home_static_ext(void)
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
 void py_init_osx_set_home_shared_pkg(void)
 {
-    // sets python_home to <package>/support/pythonX.Y folder
+    /* sets python_home to <package>/support/pythonX.Y folder */
 
     wchar_t* python_home;
 
@@ -240,7 +193,7 @@ void py_init_osx_set_home_shared_pkg(void)
     CFStringRef py_home_str;
     const char* py_home_path;
 
-    // get self bundle path
+    /* get self bundle path */
     bundle_url = CFBundleCopyBundleURL(py_global_bundle);
     bundle_abs_url = CFURLCopyAbsoluteURL(bundle_url);
     bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
@@ -296,12 +249,12 @@ void pyjs_init(t_pyjs* x)
 
     Py_Initialize();
 
-    // python init
-    PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
-    x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
-    pyjs_init_builtins(x); // does this have to be a separate function?
+    /* python init */
+    PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); /* borrowed reference */
+    x->p_globals = PyModule_GetDict(main_mod); /* borrowed reference */
+    pyjs_init_builtins(x); /* does this have to be a separate function? */
 
-    // increment global object counter
+    /* increment global object counter */
     pyjs_global_obj_count++;
 }
 
@@ -342,20 +295,20 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
     short p_code_path;
     t_max_err err;
 
-    if (s == gensym("")) { // if no arg supplied ask for file
+    if (s == gensym("")) { /* if no arg supplied ask for file */
         p_code_filename[0] = 0;
 
         if (open_dialog(p_code_filename, &p_code_path, &p_code_outtype,
                         &p_code_filetype, 1))
-            // non-zero: cancelled
+            /* non-zero: cancelled */
             return;
 
     } else {
-        // must copy symbol before calling locatefile_extended
+        /* must copy symbol before calling locatefile_extended */
         strncpy_zero(p_code_filename, s->s_name, MAX_PATH_CHARS);
         if (locatefile_extended(p_code_filename, &p_code_path, &p_code_outtype,
                                 &p_code_filetype, 1)) {
-            // nozero: not found
+            /* nozero: not found */
             pyjs_error(x, "can't find file %s", s->s_name);
             return;
         } else {
@@ -368,8 +321,7 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
             }
         }
 
-        // success
-        // set attribute from pathname symbol
+        /* sucess: set attribute from pathname symbol */
         x->p_code_filepath = gensym(p_code_pathname);
     }
 }
@@ -382,7 +334,7 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
 {
     if (PyErr_Occurred()) {
 
-        // build custom msg
+        /* build custom msg */
         char msg[PY_MAX_ERR_CHAR];
 
         va_list va;

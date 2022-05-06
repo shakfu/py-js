@@ -9,6 +9,7 @@
 /* max/msp api */
 #include "api.h"
 
+/* conditional includes */
 #if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
 #include <CoreFoundation/CoreFoundation.h>
 #include <libgen.h>
@@ -35,9 +36,11 @@ static char* py_global_external_path[MAX_PATH_CHARS];
 // static wchar_t* program;
 
 /*--------------------------------------------------------------------------*/
+// Datastructure
+
 struct t_py {
     /* object header */
-    t_object p_ob;
+    t_object p_ob;          /*!< object header */
 
     /* object attributes */
     t_symbol* p_name;       /*!< unique object name */
