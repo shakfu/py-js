@@ -1214,7 +1214,8 @@ error:
     py_handle_error(x, "execfile");
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
+    return MAX_ERR_GENERIC;
 }
 
 /*--------------------------------------------------------------------------*/
