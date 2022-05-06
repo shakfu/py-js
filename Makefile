@@ -402,7 +402,10 @@ check_logs:
 
 # Styling
 # -----------------------------------------------------------------------
-.PHONY: style clang-format duplo cflow
+.PHONY: docs style clang-format duplo cflow
+
+docs:
+	@doxygen
 
 style: clang-format
 

@@ -3,6 +3,14 @@
 
 /* py.h */
 
+/** \file py.h
+    \brief Documentation of header file.
+    
+    Details.
+*/
+
+
+
 /*--------------------------------------------------------------------------*/
 // INCLUDES
 /* max api */
@@ -44,41 +52,39 @@ typedef struct _py {
     t_object p_ob;
 
     /* object attributes */
-    t_symbol* p_name; /* unique object name */
+    t_symbol* p_name;       /*!< unique object name */
 
     /* python-related */
-    t_symbol* p_pythonpath; /* path to python directory */
-    t_bool p_debug;         /* bool to switch per-object debug state */
-    PyObject* p_globals;    /* per object 'globals' python namespace */
+    t_symbol* p_pythonpath; /*!< path to python directory */
+    t_bool p_debug;         /*!< bool to switch per-object debug state */
+    PyObject* p_globals;    /*!< per object 'globals' python namespace */
 
     /* infrastructure objects */
-    t_patcher* p_patcher; /* to send msgs to objects */
-    t_box* p_box;         /* the ui box of the py instance? */
-    void* p_clock;        /* a clock in case of scheduled ops */
-    t_atomarray*
-        p_sched_atoms; /* atomarray for scheduled python function call */
+    t_patcher* p_patcher;   /*!< to send msgs to objects */
+    t_box* p_box;           /*!< the ui box of the py instance? */
+    void* p_clock;          /*!< a clock in case of scheduled ops */
+    t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
 
     /* text editor attrs */
-    t_object* p_code_editor;
-    char** p_code;
-    long p_code_size;
+    t_object* p_code_editor; /*!< code editor object */
+    char** p_code;           /*!< handle to code buffer for code editor */
+    long p_code_size;        /*!< length of code buffer */
+    t_fourcc p_code_filetype; /*!< filetype four char code of 'TEXT' */
+    t_fourcc p_code_outtype;  /*!< savetype four char code of 'TEXT' */
+    char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
+    char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
+    short p_code_path;        /*!< short code for max file system */
+    t_bool p_run_on_save;     /*!< evaluate or run code on save option */
 
-    t_fourcc p_code_filetype; // = FOUR_CHAR_CODE('TEXT')
-    t_fourcc p_code_outtype;  // = FOUR_CHAR_CODE('TEXT')
-    char p_code_filename[MAX_PATH_CHARS];
-    char p_code_pathname[MAX_PATH_CHARS];
-    short p_code_path;
-    t_bool p_run_on_save;
-
-    t_symbol* p_code_filepath; /* default python filepath to load into
+    t_symbol* p_code_filepath; /*!< default python filepath to load into
                                   the code editor and object 'globals'
                                   namespace */
-    t_bool p_autoload;         /* bool to autoload of p_code_filepath  */
+    t_bool p_autoload;         /*!< bool to autoload of p_code_filepath  */
 
     /* outlet creation */
-    void* p_outlet_right;  // right outlet to bang success
-    void* p_outlet_middle; // middle outleet to bang error
-    void* p_outlet_left;   // left outleet for msg output
+    void* p_outlet_right;      /*!< right outlet to bang success */
+    void* p_outlet_middle;     /*!< middle outleet to bang error */
+    void* p_outlet_left;       /*!< left outleet for msg output  */
 
 } t_py;
 
@@ -97,15 +103,26 @@ void py_free(t_py* x);
 void py_init(t_py* x);
 
 /* helpers */
+
+/**
+ * A basic logging function
+ * 
+ * This log function is a variadic function which includes a switch
+ * which can be switched on and off for for increased logging verbosity.
+ * 
+ * WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is too low
+ * long log or err messages will cause Max to crash
+ */
 void py_log(t_py* x, char* fmt, ...);
+
 void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
 void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
 void py_init_osx_set_home_framework_ext(void);
 void py_locate_path_from_symbol(t_py* x, t_symbol* s);
-t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 t_hashtab* get_global_registry(void);
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 
 /* common handlers */
 void py_handle_error(t_py* x, char* fmt, ...);

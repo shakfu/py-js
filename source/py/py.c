@@ -37,10 +37,7 @@ static char* py_global_external_path[MAX_PATH_CHARS];
 /*--------------------------------------------------------------------------*/
 // HELPERS
 
-// WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is too low
-// long log or err messages will crash
-
-void py_log(t_py* x, char* fmt, ...)
+ void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
         char msg[PY_MAX_LOG_CHAR];
