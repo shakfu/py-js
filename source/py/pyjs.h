@@ -12,8 +12,11 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-/* common imports */
-#include "py_common.h"
+/* conditional includes */
+#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
+#include <CoreFoundation/CoreFoundation.h>
+#include <libgen.h>
+#endif
 
 /*--------------------------------------------------------------------------*/
 /* Constants */
@@ -51,12 +54,9 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_import(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);
-t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                    t_atom* rv);
-t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                            t_atom* rv);
-t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
-                    t_atom* rv);
+t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
+t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
+t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv, t_atom* rv);
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv);
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv);
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv);
