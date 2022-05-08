@@ -75,12 +75,32 @@ struct t_py {
 /*--------------------------------------------------------------------------*/
 /* Helpers */
 
-
+/**
+ * @brief Get the outlet object
+ * 
+ * @param x pointer to object struct
+ * @return void*
+ * 
+ * Returns a reference to the main object outlet
+ */
 void* get_outlet(t_py* x)
 {
     return (void*)x->p_outlet_left;
 }
 
+/**
+ * @brief Post msg to Max console.
+ *
+ * @param x pointer to object struct
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ *
+ * This log function is a variadic function which does not `post` its message
+ * if the object struct member `x->p_debug` is 0.
+ *
+ * WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is less than
+ * the length of the log or err message, Max will crash.
+ */
 void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
@@ -95,7 +115,13 @@ void py_log(t_py* x, char* fmt, ...)
     }
 }
 
-
+/**
+ * @brief Post error message to Max console.
+ *
+ * @param x pointer to object struct
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ */
 void py_error(t_py* x, char* fmt, ...)
 {
     char msg[PY_MAX_ERR_CHAR];
@@ -108,7 +134,14 @@ void py_error(t_py* x, char* fmt, ...)
     error("[py %s]: %s", x->p_name->s_name, msg);
 }
 
-
+/**
+ * @brief Initialize python builtins
+ * 
+ * @param x pointer to object struct
+ * 
+ * Collects python builtin initialization steps. Meant to be called in 
+ * `py_init` which itself should be called inside `py_new`. 
+ */
 void py_init_builtins(t_py* x)
 {
     PyObject* p_name = NULL;
@@ -140,9 +173,26 @@ error:
 }
 
 
-t_hashtab* get_global_registry(void) { return py_global_registry; }
+/**
+ * @brief Get the global registry object
+ * 
+ * @return t_hashtab* 
+ */
+t_hashtab* get_global_registry(void)
+{
+    return py_global_registry;
+}
 
-
+/**
+ * @brief Searches the Max filesystem context for a file given by a symbol
+ *
+ * @param x
+ * @param s
+ * @return t_max_err
+ *
+ * If successful, this function will set `x->p_code_filepath` with
+ * the Max readable path of the found file.
+ */
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
 {
     t_max_err ret = NULL;
@@ -185,6 +235,12 @@ finally:
     return ret;
 }
 
+/**
+ * @brief Update the dict with the filepath and autoload option.
+ *
+ * @param x pointer to object struct
+ * @param dict
+ */
 void py_appendtodict(t_py* x, t_dictionary* dict)
 {
     if (dict) {
@@ -197,7 +253,15 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
 /*--------------------------------------------------------------------------*/
 /* External main */
 
-
+/**
+ * @brief Main external function / entrypoint. 
+ * 
+ * @param module_ref 
+ * 
+ * The sole parameter `module_ref` can be used to obtain a reference
+ * to the bundle itself.
+ * 
+ */
 void ext_main(void* module_ref)
 {
     t_class* c;
@@ -319,7 +383,14 @@ void ext_main(void* module_ref)
 /*--------------------------------------------------------------------------*/
 /* Object new, init and free */
 
-
+/**
+ * @brief Create new external object with optional arguments.
+ * 
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return void* 
+ */
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_py* x = NULL;
@@ -430,6 +501,10 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
+/**
+ * @brief OSX specific method to set python_home in case of static ext external.
+ * 
+ */
 void py_init_osx_set_home_static_ext(void)
 {
     // sets python_home to <bundle>/Resources folder
@@ -467,6 +542,10 @@ void py_init_osx_set_home_static_ext(void)
 
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
+/**
+ * @brief OSX specific method to set python_home in case of shared pkg external.
+ *
+ */
 void py_init_osx_set_home_shared_pkg(void)
 {
     // sets python_home to <package>/support/pythonX.Y folder
@@ -529,7 +608,11 @@ void py_init_osx_set_home_shared_pkg(void)
 }
 #endif
 
-
+/**
+ * @brief main init function called within body of `py_new`
+ * 
+ * @param x 
+ */
 void py_init(t_py* x)
 {
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
@@ -566,7 +649,11 @@ void py_init(t_py* x)
     }
 }
 
-
+/**
+ * @brief Free object memory when deleted.
+ * 
+ * @param x pointer to object struct.
+ */
 void py_free(t_py* x)
 {
     // code editor cleanup
@@ -610,7 +697,15 @@ void py_free(t_py* x)
 /*--------------------------------------------------------------------------*/
 /* Documentation */
 
-
+/**
+ * @brief Sets tool tips for external object inlets.
+ * 
+ * @param x 
+ * @param b 
+ * @param m 
+ * @param a 
+ * @param s 
+ */
 void py_assist(t_py* x, void* b, long m, long a, char* s)
 {
     if (m == ASSIST_INLET) { // inlet
@@ -620,7 +715,11 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
     }
 }
 
-
+/**
+ * @brief Output global object count.
+ *
+ * @param x pointer to object struct.
+ */
 void py_count(t_py* x)
 {
     outlet_int(x->p_outlet_left, py_global_obj_count);
@@ -629,17 +728,32 @@ void py_count(t_py* x)
 /*--------------------------------------------------------------------------*/
 /* Side-effects */
 
+/**
+ * @brief Output bang from left outlet.
+ *
+ * @param x pointer to object struct.
+ */
 void py_bang(t_py* x)
 {
     // just a passthrough: bang out the left outlet
     outlet_bang(x->p_outlet_left);
 }
 
+/**
+ * @brief Output bang from right outlet.
+ *
+ * @param x pointer to object struct.
+ */
 void py_bang_success(t_py* x)
 {
     outlet_bang(x->p_outlet_right);
 }
 
+/**
+ * @brief Output bang from middle outlet.
+ *
+ * @param x pointer to object struct.
+ */
 void py_bang_failure(t_py* x)
 {
     outlet_bang(x->p_outlet_middle);
@@ -648,6 +762,15 @@ void py_bang_failure(t_py* x)
 /*--------------------------------------------------------------------------*/
 /* Time-based */
 
+/**
+ * @brief Schedule a python function call
+ * 
+ * @param x pointer to object struct
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
 t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     t_max_err ret = NULL;
@@ -712,6 +835,12 @@ finally:
     return ret;
 }
 
+/** 
+ * @brief Wraps a scheduled python function call.
+ * 
+ * @param x pointer to object struct
+ * @return t_max_err error code
+ */
 t_max_err py_task(t_py* x)
 {
     double time;
@@ -735,7 +864,13 @@ t_max_err py_task(t_py* x)
 /*--------------------------------------------------------------------------*/
 /* Handlers */
 
-
+/**
+ * @brief Generic python error handler
+ * 
+ * @param x pointer to object struct
+ * @param fmt format string
+ * @param ... other args
+ */
 void py_handle_error(t_py* x, char* fmt, ...)
 {
     if (PyErr_Occurred()) {
@@ -765,7 +900,13 @@ void py_handle_error(t_py* x, char* fmt, ...)
     }
 }
 
-
+/**
+ * @brief Handler to output python float as max float
+ * 
+ * @param x pointer to object struct
+ * @param pfloat python float
+ * @return t_max_err error code
+ */
 t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
 {
     if (pfloat == NULL) {
@@ -792,7 +933,13 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Handler to output python long as max int
+ *
+ * @param x pointer to object struct
+ * @param plong python long
+ * @return t_max_err error code
+ */
 t_max_err py_handle_long_output(t_py* x, PyObject* plong)
 {
     if (plong == NULL) {
@@ -819,7 +966,13 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Handler to output python string as max symbol
+ *
+ * @param x pointer to object struct
+ * @param pstring python string
+ * @return t_max_err error code
+ */
 t_max_err py_handle_string_output(t_py* x, PyObject* pstring)
 {
     if (pstring == NULL) {
@@ -845,7 +998,13 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Handler to output python list as max list
+ *
+ * @param x pointer to object struct
+ * @param pstring python list
+ * @return t_max_err error code
+ */
 t_max_err py_handle_list_output(t_py* x, PyObject* plist)
 {
     if (plist == NULL) {
@@ -940,7 +1099,13 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Handler to output python dict as max list
+ *
+ * @param x pointer to object struct
+ * @param pstring python dict
+ * @return t_max_err error code
+ */
 t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 {
     PyObject* pfun_co = NULL;
@@ -1003,7 +1168,13 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Generic handler to output arbitrarily-typed python object as max object
+ *
+ * @param x pointer to object struct
+ * @param pstring python object
+ * @return t_max_err error code
+ */
 t_max_err py_handle_output(t_py* x, PyObject* pval)
 {
     if (pval == NULL) {
@@ -1045,7 +1216,15 @@ t_max_err py_handle_output(t_py* x, PyObject* pval)
 /*--------------------------------------------------------------------------*/
 /* Translators */
 
-
+/**
+ * @brief Translates atom vector to python list
+ * 
+ * @param x pointer to object struct
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param start_from index of vector to start from
+ * @return PyObject* python list
+ */
 PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
 {
 
@@ -1102,7 +1281,13 @@ error:
 /*--------------------------------------------------------------------------*/
 /* Core Methods */
 
-
+/**
+ * @brief Import a python module
+ * 
+ * @param x pointer to object structure
+ * @param s symbol of module to be imported
+ * @return t_max_err error code
+ */
 t_max_err py_import(t_py* x, t_symbol* s)
 {
     PyGILState_STATE gstate;
@@ -1130,7 +1315,15 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Evaluate a max symbol as a python expression
+ * 
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
 t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -1154,7 +1347,15 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
-
+/**
+ * @brief Execute a max symbol as a line of python code
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
 t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -1187,7 +1388,13 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Execute contents of a file (obtained from symbol) as python code
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @return t_max_err error code
+ */
 t_max_err py_execfile(t_py* x, t_symbol* s)
 {
     PyGILState_STATE gstate;
@@ -1245,7 +1452,15 @@ error:
 /*--------------------------------------------------------------------------*/
 /* Extra Methods */
 
-
+/**
+ * @brief Converts a Max list to call a python function with arguments
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -1327,7 +1542,19 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Converts an atom list to a python assignment
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ * 
+ * The first item of the Max list must be a symbol. This is converted into a python variable
+ * and the rest of the list is assignment to this variable in the object's python
+ * namespace.
+ */
 t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -1383,7 +1610,15 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief A helper function to evaluate Max text as a Python expression.
+ *
+ * @param x pointer to object structure
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param offset offset of atom vector from which to evaluate
+ * @return t_max_err error code
+ */
 t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -1437,13 +1672,29 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Converts all of the atom to text and evaluate as python code.
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_eval_text(x, argc, argv, 0);
 }
 
-
+/**
+ * @brief Anything method converting all of the atom to text and evaluate as python code.
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     t_atom atoms[PY_MAX_ATOMS];
@@ -1484,7 +1735,15 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     return py_eval_text(x, argc, atoms, 1);
 }
 
-
+/**
+ * @brief Create a function python pipeline from a Max list
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -1574,7 +1833,11 @@ error:
 /*--------------------------------------------------------------------------*/
 /* Interobject Methods */
 
-
+/**
+ * @brief Scan object registry and populate object IDs.
+ * 
+ * @param x 
+ */
 void py_scan(t_py* x)
 {
     long result = 0;
@@ -1596,7 +1859,13 @@ void py_scan(t_py* x)
     }
 }
 
-
+/**
+ * @brief A help function used by scan to scan registry and retrieve object IDs.
+ * 
+ * @param x 
+ * @param box 
+ * @return long 
+ */
 long py_scan_callback(t_py* x, t_object* box)
 {
     t_rect jr;
@@ -1629,8 +1898,16 @@ long py_scan_callback(t_py* x, t_object* box)
     return 0;
 }
 
-
-void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
+/**
+ * @brief Send a named object an arbitrary message.
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
+t_max_err py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     t_object* obj = NULL;
     char* obj_name = NULL;
@@ -1724,17 +2001,22 @@ void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     // success
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_error(x, "send failed");
-    return;
+    return MAX_ERR_GENERIC;
 }
 
 /*--------------------------------------------------------------------------*/
 /* Code-editor Methods */
 
-
+/**
+ * @brief Event of double-clicking on external object launches code-editor UI
+ * 
+ * @param x pointer to object structure
+ * 
+ */
 void py_dblclick(t_py* x)
 {
     if (x->p_code_editor)
@@ -1749,13 +2031,25 @@ void py_dblclick(t_py* x)
     }
 }
 
-
+/**
+ * @brief Read text file into code-editor.
+ * 
+ * @param x pointer to object structure
+ * @param s path to text file
+ */
 void py_read(t_py* x, t_symbol* s)
 {
     defer((t_object*)x, (method)py_doread, s, 0, NULL);
 }
 
-
+/**
+ * @brief Read function callback
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ */
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     t_max_err err;
@@ -1771,7 +2065,13 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
-
+/**
+ * @brief Event function to preserve text in buffer after editor is closed
+ * 
+ * @param x pointer to object structure
+ * @param text text to be saved to buffer
+ * @param size size of text to be saved to buffer
+ */
 void py_edclose(t_py* x, char** text, long size)
 {
     if (x->p_code)
@@ -1783,7 +2083,11 @@ void py_edclose(t_py* x, char** text, long size)
     x->p_code_editor = NULL;
 }
 
-
+/**
+ * @brief Run python code stored in editor buffer
+ * 
+ * @param x pointer to object structure
+ */
 void py_run(t_py* x)
 {
     PyGILState_STATE gstate;
@@ -1822,8 +2126,15 @@ error:
 //     *result = 3; // don't put up a dialog
 // }
 
-
-long py_edsave(t_py* x, char** text, long size)
+/**
+ * @brief Provides run-code-on-save functionality to code-editor
+ *
+ * @param x pointer to object structure
+ * @param text text to be run and saved
+ * @param size size of text to be run and saved
+ * @return t_max_err error code
+ */
+t_max_err py_edsave(t_py* x, char** text, long size)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1845,17 +2156,22 @@ long py_edsave(t_py* x, char** text, long size)
     }
     PyGILState_Release(gstate);
     py_log(x, "py_edsave: returning 0");
-    return 0;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_edsave with (possible) execution failed");
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
     py_log(x, "py_edsave: returning 1");
-    return 1;
+    return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief Combo function of `py_read <path> -> py_execfile <path>`
+ *
+ * @param x pointer to object structure
+ * @param s path as symbol
+ */
 void py_load(t_py* x, t_symbol* s)
 {
     py_read(x, s);

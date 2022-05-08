@@ -68,17 +68,7 @@ void py_init(t_py* x);
 /*--------------------------------------------------------------------------*/
 /* Helpers */
 
-/**
- * A basic logging function
- * 
- * This log function is a variadic function which includes a switch
- * which can be switched on and off for for increased logging verbosity.
- * 
- * WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is too low
- * long log or err messages will cause Max to crash
- */
 void py_log(t_py* x, char* fmt, ...);
-
 void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
 void py_init_osx_set_home_static_ext(void);
@@ -140,7 +130,7 @@ t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /*--------------------------------------------------------------------------*/
 /* Interobject Methods */
 
-void py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_scan(t_py* x);
 long py_scan_callback(t_py* x, t_object* obj);
 
@@ -153,7 +143,7 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_dblclick(t_py* x);
 void py_run(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
-long py_edsave(t_py* x, char** text, long size);
+t_max_err py_edsave(t_py* x, char** text, long size);
 // void py_okclose(t_py* x, char *s, short *result);
 
 #endif // PY_H
