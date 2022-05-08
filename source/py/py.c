@@ -143,9 +143,9 @@ error:
 t_hashtab* get_global_registry(void) { return py_global_registry; }
 
 
-void py_locate_path_from_symbol(t_py* x, t_symbol* s)
+t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
 {
-    t_max_err err;
+    t_max_err ret = NULL;
 
     if (s == gensym("")) { // if no arg supplied ask for file
         x->p_code_filename[0] = 0;
@@ -153,7 +153,8 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s)
         if (open_dialog(x->p_code_filename, &x->p_code_path,
                         &x->p_code_outtype, &x->p_code_filetype, 1))
             // non-zero: cancelled
-            return;
+            ret = MAX_ERR_GENERIC;
+            goto finally;
 
     } else {
         // must copy symbol before calling locatefile_extended
@@ -162,23 +163,27 @@ void py_locate_path_from_symbol(t_py* x, t_symbol* s)
                                 &x->p_code_outtype, &x->p_code_filetype, 1)) {
             // nozero: not found
             py_error(x, "can't find file %s", s->s_name);
-            return;
+            ret = MAX_ERR_GENERIC;
+            goto finally;
         } else {
             x->p_code_pathname[0] = 0;
-            err = path_toabsolutesystempath(x->p_code_path, x->p_code_filename,
+            ret = path_toabsolutesystempath(x->p_code_path, x->p_code_filename,
                                             x->p_code_pathname);
-            if (err != MAX_ERR_NONE) {
+            if (ret != MAX_ERR_NONE) {
                 py_error(x, "can't convert %s to absolutepath", s->s_name);
-                return;
+                goto finally;
             }
         }
 
         // success
         // set attribute from pathname symbol
         x->p_code_filepath = gensym(x->p_code_pathname);
+        assert(ret == MAX_ERR_NONE);
     }
-}
 
+finally:
+    return ret;
+}
 
 void py_appendtodict(t_py* x, t_dictionary* dict)
 {
@@ -616,7 +621,10 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
 }
 
 
-void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
+void py_count(t_py* x)
+{
+    outlet_int(x->p_outlet_left, py_global_obj_count);
+}
 
 /*--------------------------------------------------------------------------*/
 /* Side-effects */
@@ -640,8 +648,10 @@ void py_bang_failure(t_py* x)
 /*--------------------------------------------------------------------------*/
 /* Time-based */
 
-void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
+    t_max_err ret = NULL;
+
     // schedule a python call
     // [sched <time> func arg1 arg2 ... argN]
     float time = 0.0;
@@ -670,7 +680,7 @@ void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // atom after the name of the time
     if ((argv + 1)->a_type != A_SYM) {
-        py_error(x, "2nd arg of sched needs to be the name of the callable");
+        py_error(x, "2nd elem of sched atom needs to be the name of the callable");
         goto error;
     }
 
@@ -687,17 +697,22 @@ void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     x->p_sched_atoms = atomarray_new(argc, argv);
     if (x->p_sched_atoms == NULL) {
+        py_error(x, "atom not scheduled");
         goto error;
     }
     clock_fdelay(x->p_clock, time);
-    return;
+    ret = MAX_ERR_NONE;
+    goto finally;
 
 error:
     py_error(x, "send failed");
-    return;
+    ret = MAX_ERR_GENERIC;
+
+finally:
+    return ret;
 }
 
-void py_task(t_py* x)
+t_max_err py_task(t_py* x)
 {
     double time;
     long argc = 0;
@@ -707,12 +722,13 @@ void py_task(t_py* x)
     // also scheduler_gettime(&time);
     t_max_err err = atomarray_getatoms(x->p_sched_atoms, &argc, &argv);
     if (err != MAX_ERR_NONE) {
-        py_error(x, "atomarry arg initialization failed");
-        return;
+        py_error(x, "atomarray arg initialization failed");
+        return MAX_ERR_GENERIC;
     }
-    post("%lx instance is executing at time %.2f", x, time);
+    py_log(x, "%lx instance is executing at time %.2f", x, time);
     py_call(x, gensym(""), argc, argv);
     py_bang_success(x);
+    return MAX_ERR_NONE;
 }
 
 
@@ -1182,7 +1198,11 @@ t_max_err py_execfile(t_py* x, t_symbol* s)
 
     if (s != gensym("")) {
         // set x->p_code_filepath
-        py_locate_path_from_symbol(x, s);
+        t_max_err err = py_locate_path_from_symbol(x, s);
+        if (err != MAX_ERR_NONE) {
+            py_error(x, "could not locate path from symbol");
+            goto error;
+        }
     }
 
     if (s == gensym("") || x->p_code_filepath == gensym("")) {
@@ -1270,7 +1290,6 @@ t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    // pval = PyObject_Call(py_callable, py_args, NULL);
     pval = PyObject_CallObject(py_callable, py_args);
     if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
         if (pval == NULL) {
@@ -1345,12 +1364,13 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // finally, assign list to varname in object namespace
     py_log(x, "setting %s to list in namespace", varname);
+    // following does not steal ref to list
     int res = PyDict_SetItemString(x->p_globals, varname, list);
     if (res != 0) {
         py_error(x, "assign varname to list failed");
         goto error;
     }
-    // Py_XDECREF(list); // causes a crash
+    // Py_XDECREF(list); // causes a crash (because it still exists?)
     PyGILState_Release(gstate);
     py_bang_success(x);
     return MAX_ERR_NONE;

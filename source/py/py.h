@@ -4,11 +4,11 @@
 #define PY_H
 
 
-
 /** \file py.h
-    \brief Documentation of header file.
+    \brief Documentation of py external header interface.
     
-    Details.
+    This is the main header file for the `py` external. Note that the external
+    structure is not directly exposed at the header level.
 */
 
 
@@ -84,8 +84,8 @@ void py_init_builtins(t_py* x);
 void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
 void py_init_osx_set_home_framework_ext(void);
-void py_locate_path_from_symbol(t_py* x, t_symbol* s);
 t_hashtab* get_global_registry(void);
+t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
 t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 
 /*--------------------------------------------------------------------------*/
@@ -134,8 +134,8 @@ void py_appendtodict(t_py* x, t_dictionary* dict);
 /*--------------------------------------------------------------------------*/
 /* Time-based Methods */
 
-void py_task(t_py* x);
-void py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_task(t_py* x);
+t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /*--------------------------------------------------------------------------*/
 /* Interobject Methods */

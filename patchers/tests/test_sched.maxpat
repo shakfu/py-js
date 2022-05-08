@@ -46,7 +46,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 86.0, 153.0, 63.0, 22.0 ],
-					"text" : "call fun 10"
+					"text" : "call fun 20"
 				}
 
 			}
