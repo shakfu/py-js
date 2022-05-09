@@ -46,6 +46,8 @@ struct t_py {
     /* infrastructure objects */
     t_patcher* p_patcher;       /*!< to send msgs to objects */
     t_box* p_box;               /*!< the ui box of the py instance? */
+
+    /* time-based ops */
     void* p_clock;              /*!< a clock in case of scheduled ops */
     t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
 
