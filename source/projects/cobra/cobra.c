@@ -1,5 +1,5 @@
 /**
-	@file cobra - an ITM-based python evaluator
+    @file cobra - an ITM-based python evaluator
 */
 
 #include "ext.h"
@@ -23,26 +23,23 @@ static t_hashtab* py_global_registry = NULL; // global object lookups
 // datastructure
 typedef struct cobra
 {
-	t_object c_obj;
+    t_object c_obj;
 
-    t_symbol* c_name;           /*!< unique object name */
-
+    t_symbol* c_name;           /*!< unique python object name */
     t_symbol* c_pythonpath;     /*!< path to python directory */
     t_bool c_debug;             /*!< bool to switch per-object debug state */
     PyObject* c_globals;        /*!< per object 'globals' python namespace */
+    PyObject* c_func;           /*!< python nullary function to be called in a task */
 
-    t_patcher* c_patcher;       /*!< to send msgs to objects */
-    t_box* c_box;               /*!< the ui box of the py instance? */
+    void *c_clock;
+    t_object *c_timeobj;
+    t_object *c_quantize;
+    
+    void *c_proxy;
+    long c_inletnum;
 
-	void *c_clock;
-	t_object *c_timeobj;
-	t_object *c_quantize;
-	
-	void *c_proxy;
-	long c_inletnum;
-
-	void *c_outlet;
-	void *c_outlet2;
+    void *c_outlet;
+    void *c_outlet2;
 
 } t_cobra;
 
@@ -76,80 +73,65 @@ static t_class *s_cobra_class = NULL;
 
 void ext_main(void *r)
 {
-	t_class *c = class_new(	"cobra", (method)cobra_new, (method)cobra_free, sizeof(t_cobra), (method)0L, A_GIMME, 0);
+    t_class *c = class_new( "cobra", (method)cobra_new, (method)cobra_free, sizeof(t_cobra), (method)0L, A_GIMME, 0);
 
-	class_addmethod(c, (method)cobra_bang,		"bang",			0);
-	class_addmethod(c, (method)cobra_stop,		"stop",			0);
-	class_addmethod(c, (method)cobra_int,		"int",			A_LONG, 0);
-	class_addmethod(c, (method)cobra_float,		"float",		A_FLOAT, 0);
-	class_addmethod(c, (method)cobra_list,		"list",			A_GIMME, 0);
-	class_addmethod(c, (method)cobra_anything,	"anything",		A_GIMME, 0);
+    class_addmethod(c, (method)cobra_bang,      "bang",         0);
+    class_addmethod(c, (method)cobra_stop,      "stop",         0);
+    class_addmethod(c, (method)cobra_int,       "int",          A_LONG, 0);
+    class_addmethod(c, (method)cobra_float,     "float",        A_FLOAT, 0);
+    class_addmethod(c, (method)cobra_list,      "list",         A_GIMME, 0);
+    class_addmethod(c, (method)cobra_anything,  "anything",     A_GIMME, 0);
 
-	class_addmethod(c, (method)cobra_assist,	"assist",		A_CANT, 0);
-	class_addmethod(c, (method)cobra_inletinfo,	"inletinfo",	A_CANT, 0);
+    class_addmethod(c, (method)cobra_assist,    "assist",       A_CANT, 0);
+    class_addmethod(c, (method)cobra_inletinfo, "inletinfo",    A_CANT, 0);
 
-    class_addmethod(c, (method)cobra_import,    "import",     	A_SYM,  0);
-    class_addmethod(c, (method)cobra_eval,      "eval",       	A_GIMME, 0);
+    class_addmethod(c, (method)cobra_import,    "import",       A_SYM,  0);
+    class_addmethod(c, (method)cobra_eval,      "eval",         A_GIMME, 0);
 
-	class_time_addattr(c, "delaytime", "Delay Time", TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK | TIME_FLAGS_TRANSPORT);
-	class_time_addattr(c, "quantize", "Quantization", TIME_FLAGS_TICKSONLY);
+    class_time_addattr(c, "delaytime", "Delay Time", TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK | TIME_FLAGS_TRANSPORT);
+    class_time_addattr(c, "quantize", "Quantization", TIME_FLAGS_TICKSONLY);
 
-	class_register(CLASS_BOX, c);
+    class_register(CLASS_BOX, c);
 
-	s_cobra_class = c;
+    s_cobra_class = c;
 }
 
 // initial optional arg is delay time
 
 void *cobra_new(t_symbol *s, long argc, t_atom *argv)
 {
-	t_cobra *x = (t_cobra *)object_alloc(s_cobra_class);
-	long attrstart = attr_args_offset(argc, argv);
-	t_atom a;
+    t_cobra *x = (t_cobra *)object_alloc(s_cobra_class);
+    long attrstart = attr_args_offset(argc, argv);
+    t_atom a;
 
-	x->c_inletnum = 0;
-	x->c_proxy = proxy_new(x, 1, &x->c_inletnum);
-	x->c_outlet2 = bangout(x);
-	x->c_outlet = bangout(x);
+    x->c_inletnum = 0;
+    x->c_proxy = proxy_new(x, 1, &x->c_inletnum);
+    x->c_outlet2 = bangout(x);
+    x->c_outlet = bangout(x);
 
-	x->c_timeobj = (t_object *) time_new((t_object *)x, gensym("delaytime"), (method)cobra_tick, TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK);
-	x->c_quantize = (t_object *) time_new((t_object *)x, gensym("quantize"), NULL, TIME_FLAGS_TICKSONLY);
-	x->c_clock = clock_new((t_object *)x, (method)cobra_clocktick);
+    x->c_timeobj = (t_object *) time_new((t_object *)x, gensym("delaytime"), (method)cobra_tick, TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK);
+    x->c_quantize = (t_object *) time_new((t_object *)x, gensym("quantize"), NULL, TIME_FLAGS_TICKSONLY);
+    x->c_clock = clock_new((t_object *)x, (method)cobra_clocktick);
 
     x->c_name = symbol_unique();
- 	x->c_pythonpath = gensym("");
-    x->c_patcher = NULL;
-    x->c_box = NULL;
+    x->c_pythonpath = gensym("");
+    x->c_func = NULL;
  
-	if (attrstart && argv)
-		time_setvalue(x->c_timeobj, NULL, 1, argv);
-	else {
-		atom_setfloat(&a, 0.);
-		time_setvalue(x->c_timeobj, NULL, 1, &a);
-	}
-	atom_setfloat(&a,0);
-	time_setvalue(x->c_quantize, NULL, 1, &a);
-
-	attr_args_process(x, argc, argv);
-
-    object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->c_patcher);
-    if (x->c_patcher == NULL)
-        error("patcher object not created.");
-
-    object_obex_lookup(x, gensym("#B"), (t_box**)&x->c_box);
-    if (x->c_box == NULL)
-        error("patcher object not created.");
-
-    // create scripting name
-    t_max_err err = jbox_set_varname(x->c_box, x->c_name);
-    if (err != MAX_ERR_NONE) {
-        error("could not set scripting name");
+    if (attrstart && argv)
+        time_setvalue(x->c_timeobj, NULL, 1, argv);
+    else {
+        atom_setfloat(&a, 0.);
+        time_setvalue(x->c_timeobj, NULL, 1, &a);
     }
+    atom_setfloat(&a,0);
+    time_setvalue(x->c_quantize, NULL, 1, &a);
+
+    attr_args_process(x, argc, argv);
 
     // cobra python init
     cobra_init(x);
 
-	return x;
+    return x;
 }
 
 void cobra_init(t_cobra* x)
@@ -185,10 +167,10 @@ void cobra_init(t_cobra* x)
 
 void cobra_free(t_cobra *x)
 {
-	freeobject(x->c_timeobj);
-	freeobject(x->c_quantize);
-	freeobject((t_object *) x->c_proxy);
-	freeobject((t_object *)x->c_clock);
+    freeobject(x->c_timeobj);
+    freeobject(x->c_quantize);
+    freeobject((t_object *) x->c_proxy);
+    freeobject((t_object *)x->c_clock);
 
     Py_XDECREF(x->c_globals);
     // python objects cleanup
@@ -202,80 +184,100 @@ void cobra_free(t_cobra *x)
 
 void cobra_assist(t_cobra *x, void *b, long m, long a, char *s)
 {
-	if (m == ASSIST_INLET) {	// Inlets
-		switch (a) {
-		case 0: sprintf(s, "bang Gets Delayed, stop Cancels"); break;
-		case 1: sprintf(s, "Set Delay Time"); break;
-		}
-	}
-	else {						// Outlets
-		switch (a) {
-		case 0: sprintf(s, "Delayed bang"); break;
-		case 1: sprintf(s, "Another Delayed bang"); break;
-		}
-	}
+    if (m == ASSIST_INLET) {    // Inlets
+        switch (a) {
+        case 0: sprintf(s, "bang Gets Delayed, stop Cancels"); break;
+        case 1: sprintf(s, "Set Delay Time"); break;
+        }
+    }
+    else {                      // Outlets
+        switch (a) {
+        case 0: sprintf(s, "Delayed bang"); break;
+        case 1: sprintf(s, "Another Delayed bang"); break;
+        }
+    }
 }
 
 void cobra_inletinfo(t_cobra *x, void *b, long a, char *t)
 {
-	if (a)
-		*t = 1;
+    if (a)
+        *t = 1;
 }
 
 void cobra_int(t_cobra *x, long n)
 {
-	cobra_float(x, n);
+    cobra_float(x, n);
 }
 
 void cobra_float(t_cobra *x, double f)
 {
-	t_atom a;
+    t_atom a;
 
-	atom_setfloat(&a, f);
-	time_setvalue(x->c_timeobj, NULL, 1, &a);
+    atom_setfloat(&a, f);
+    time_setvalue(x->c_timeobj, NULL, 1, &a);
 
-	if (proxy_getinlet((t_object *)x) == 0)
-		cobra_bang(x);
+    if (proxy_getinlet((t_object *)x) == 0)
+        cobra_bang(x);
 }
 
 void cobra_list(t_cobra *x, t_symbol *s, long argc, t_atom *argv)
 {
-	cobra_anything(x, NULL, argc, argv);
+    cobra_anything(x, NULL, argc, argv);
 }
 
 void cobra_anything(t_cobra *x, t_symbol *msg, long argc, t_atom *argv)
 {
-	time_setvalue(x->c_timeobj, msg, argc, argv);
+    time_setvalue(x->c_timeobj, msg, argc, argv);
 
-	if (proxy_getinlet((t_object *)x) == 0)
-		cobra_bang(x);
+    if (proxy_getinlet((t_object *)x) == 0)
+        cobra_bang(x);
 }
 
+// void cobra_tick(t_cobra *x)
+// {
+//     outlet_bang(x->c_outlet);
+// }
 void cobra_tick(t_cobra *x)
 {
-	outlet_bang(x->c_outlet);
+    if (x->c_func != NULL) {
+        PyObject* pval = PyObject_CallObject(x->c_func, NULL);
+        if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
+            if (pval == NULL) {
+                error("unable to apply callable(*args)");
+                return;
+            }
+            cobra_handle_output(x, pval);
+            // success cleanup
+            Py_XDECREF(x->c_func);
+            outlet_bang(x->c_outlet);
+            return;
+        }
+        PyErr_Clear();
+        return;
+    }
+    outlet_bang(x->c_outlet);
 }
 
 void cobra_bang(t_cobra *x)
 {
-	double ms, tix;
+    double ms, tix;
 
-	time_schedule(x->c_timeobj, x->c_quantize);
+    time_schedule(x->c_timeobj, x->c_quantize);
 
-	tix = time_getticks(x->c_timeobj);
-	ms = itm_tickstoms(time_getitm(x->c_timeobj), tix);
-	clock_fdelay(x->c_clock, ms);
+    tix = time_getticks(x->c_timeobj);
+    ms = itm_tickstoms(time_getitm(x->c_timeobj), tix);
+    clock_fdelay(x->c_clock, ms);
 }
 
 void cobra_clocktick(t_cobra *x)
 {
-	outlet_bang(x->c_outlet2);
+    outlet_bang(x->c_outlet2);
 }
 
 void cobra_stop(t_cobra *x)
 {
-	time_stop(x->c_timeobj);
-	clock_unset(x->c_clock);
+    time_stop(x->c_timeobj);
+    clock_unset(x->c_clock);
 }
 
 void cobra_handle_error(t_cobra* x, char* fmt, ...)
@@ -545,23 +547,28 @@ t_max_err cobra_handle_output(t_cobra* x, PyObject* pval)
     }
 
     if (PyFloat_Check(pval)) {
+        post("float handled");
         return cobra_handle_float_output(x, pval);
     }
 
     else if (PyLong_Check(pval)) {
+        post("long handled");
         return cobra_handle_long_output(x, pval);
     }
 
     else if (PyUnicode_Check(pval)) {
+        post("string handled");
         return cobra_handle_string_output(x, pval);
     }
 
     else if (PySequence_Check(pval) && !PyBytes_Check(pval)
              && !PyByteArray_Check(pval)) {
+        post("list handled");
         return cobra_handle_list_output(x, pval);
     }
 
     else if (PyDict_Check(pval)) {
+        post("dict handled");
         return cobra_handle_dict_output(x, pval);
     }
 
@@ -603,6 +610,28 @@ error:
 }
 
 
+// t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
+// {
+//     PyGILState_STATE gstate;
+//     gstate = PyGILState_Ensure();
+
+//     char* py_argv = atom_getsym(argv)->s_name;
+//     post("%s %s", s->s_name, py_argv);
+
+//     PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->c_globals, x->c_globals);
+
+//     if (pval != NULL) {
+//         cobra_handle_output(x, pval);
+//         PyGILState_Release(gstate);
+//         return MAX_ERR_NONE;
+//     } else {
+//         cobra_handle_error(x, "eval %s", py_argv);
+//         PyGILState_Release(gstate);
+//         return MAX_ERR_GENERIC;
+//     }
+// }
+
+
 t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -611,10 +640,9 @@ t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
     char* py_argv = atom_getsym(argv)->s_name;
     post("%s %s", s->s_name, py_argv);
 
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->c_globals, x->c_globals);
+    x->c_func = PyRun_String(py_argv, Py_eval_input, x->c_globals, x->c_globals);
 
-    if (pval != NULL) {
-        cobra_handle_output(x, pval);
+    if (x->c_func != NULL) {
         PyGILState_Release(gstate);
         return MAX_ERR_NONE;
     } else {
@@ -623,4 +651,3 @@ t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
         return MAX_ERR_GENERIC;
     }
 }
-
