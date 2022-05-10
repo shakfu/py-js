@@ -197,7 +197,7 @@ t_hashtab* get_global_registry(void)
  */
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
 {
-    t_max_err ret = NULL;
+    t_max_err ret = 0;
 
     if (s == gensym("")) { // if no arg supplied ask for file
         x->p_code_filename[0] = 0;
@@ -775,7 +775,7 @@ void py_bang_failure(t_py* x)
  */
 t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    t_max_err ret = NULL;
+    t_max_err ret = 0;
 
     // schedule a python call
     // [sched <time> func arg1 arg2 ... argN]
@@ -1004,7 +1004,7 @@ error:
  * @brief Handler to output python list as max list
  *
  * @param x pointer to object struct
- * @param pstring python list
+ * @param plist python list
  * @return t_max_err error code
  */
 t_max_err py_handle_list_output(t_py* x, PyObject* plist)
@@ -1105,7 +1105,7 @@ error:
  * @brief Handler to output python dict as max list
  *
  * @param x pointer to object struct
- * @param pstring python dict
+ * @param pdict python dict
  * @return t_max_err error code
  */
 t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
@@ -1174,7 +1174,7 @@ error:
  * @brief Generic handler to output arbitrarily-typed python object as max object
  *
  * @param x pointer to object struct
- * @param pstring python object
+ * @param pval python object
  * @return t_max_err error code
  */
 t_max_err py_handle_output(t_py* x, PyObject* pval)
@@ -1914,7 +1914,7 @@ t_max_err py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_object* obj = NULL;
     char* obj_name = NULL;
     t_symbol* msg_sym = NULL;
-    t_max_err err = NULL;
+    t_max_err err = 0;
 
     if (argc < 2) {
         py_error(x, "need at least 2 args to send msg");

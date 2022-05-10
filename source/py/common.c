@@ -30,11 +30,11 @@ static void emit_outlet_message(PyObject* value, void* x_outlet);
 void py_log(char* fmt, ...);
 void py_error(char* fmt, ...);
 void py_handle_error(char* fmt, ...);
-void py_handle_float_output(PyObject* pfloat, void* x_outlet);
-void py_handle_long_output(PyObject* plong, void* x_outlet);
-void py_handle_string_output(PyObject* pstring, void* x_outlet);
-void py_handle_list_output(PyObject* plist, void* x_outlet);
-void py_handle_output(PyObject* pval, void* x_outlet);
+t_max_err py_handle_float_output(void* outlet, PyObject* pfloat);
+t_max_err py_handle_long_output(void* outlet, PyObject* plong);
+t_max_err py_handle_string_output(void* outlet, PyObject* pstring);
+t_max_err py_handle_list_output(void* outlet, PyObject* plist);
+t_max_err py_handle_output(void* outlet, PyObject* pval);
 PyObject* py_atoms_to_list(long argc, t_atom* argv, int start_from);
 
 // ---------------------------------------------------------------------------------------
@@ -154,6 +154,12 @@ static void emit_outlet_message(PyObject* value, void* x_outlet)
 
 // ---------------------------------------------------------------------------------------
 
+/**
+ * @brief A basic logging function
+ * 
+ * @param fmt 
+ * @param ... 
+ */
 void py_log(char* fmt, ...)
 {
     char msg[PY_MAX_LOG_CHAR];
@@ -167,7 +173,12 @@ void py_log(char* fmt, ...)
 
 }
 
-
+/**
+ * @brief A basic error logging function
+ * 
+ * @param fmt 
+ * @param ... 
+ */
 void py_error(char* fmt, ...)
 {
     char msg[PY_MAX_ERR_CHAR];
@@ -181,6 +192,12 @@ void py_error(char* fmt, ...)
 }
 
 
+/**
+ * @brief Generic python error handler
+ * 
+ * @param fmt format string
+ * @param ... other args
+ */
 void py_handle_error(char* fmt, ...)
 {
     if (PyErr_Occurred()) {
@@ -206,12 +223,19 @@ void py_handle_error(char* fmt, ...)
 
         Py_XDECREF(ptraceback);
 
-        error("%s: %s", msg, pvalue_str);
+        py_error("[py] %s: %s", msg, pvalue_str);
     }
 }
 
 
-void py_handle_float_output(PyObject* pfloat, void* x_outlet)
+/**
+ * @brief Handler to output python float as max float
+ * 
+ * @param outlet object outlet
+ * @param pfloat python float
+ * @return t_max_err error code
+ */
+t_max_err py_handle_float_output(void* outlet, PyObject* pfloat)
 {
     if (pfloat == NULL) {
         goto error;
@@ -223,18 +247,27 @@ void py_handle_float_output(PyObject* pfloat, void* x_outlet)
             if (PyErr_Occurred())
                 goto error;
         }
-        outlet_float(x_outlet, float_result);
+
+        outlet_float(outlet, float_result);
     }
     Py_XDECREF(pfloat);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error("py_handle_float_output failed");
     Py_XDECREF(pfloat);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_handle_long_output(PyObject* plong, void* x_outlet)
+/**
+ * @brief Handler to output python long as max int
+ *
+ * @param outlet object outlet
+ * @param plong python long
+ * @return t_max_err error code
+ */
+t_max_err py_handle_long_output(void* outlet, PyObject* plong)
 {
     if (plong == NULL) {
         goto error;
@@ -246,19 +279,26 @@ void py_handle_long_output(PyObject* plong, void* x_outlet)
             if (PyErr_Occurred())
                 goto error;
         }
-        outlet_int(x_outlet, long_result);
+        outlet_int(outlet, long_result);
     }
 
     Py_XDECREF(plong);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error("py_handle_long_output failed");
     Py_XDECREF(plong);
+    return MAX_ERR_GENERIC;
 }
 
-
-void py_handle_string_output(PyObject* pstring, void* x_outlet)
+/**
+ * @brief Handler to output python string as max symbol
+ *
+ * @param outlet object outlet
+ * @param pstring python string
+ * @return t_max_err error code
+ */
+t_max_err py_handle_string_output(void* outlet, PyObject* pstring)
 {
     if (pstring == NULL) {
         goto error;
@@ -269,19 +309,26 @@ void py_handle_string_output(PyObject* pstring, void* x_outlet)
         if (unicode_result == NULL) {
             goto error;
         }
-        outlet_anything(x_outlet, gensym(unicode_result), 0, NIL);
+        outlet_anything(outlet, gensym(unicode_result), 0, NIL);
     }
 
     Py_XDECREF(pstring);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error("py_handle_string_output failed");
     Py_XDECREF(pstring);
+    return MAX_ERR_GENERIC;
 }
 
-
-void py_handle_list_output(PyObject* plist, void* x_outlet)
+/**
+ * @brief Handler to output python list as max list
+ *
+ * @param outlet object outlet
+ * @param plist python list
+ * @return t_max_err error code
+ */
+t_max_err py_handle_list_output(void* outlet, PyObject* plist)
 {
     if (plist == NULL) {
         goto error;
@@ -355,7 +402,7 @@ void py_handle_list_output(PyObject* plist, void* x_outlet)
             Py_DECREF(item);
         }
 
-        outlet_list(x_outlet, NULL, i, atoms);
+        outlet_list(outlet, NULL, i, atoms);
         py_log("end iter op: %d", i);
 
         if (is_dynamic) {
@@ -365,51 +412,56 @@ void py_handle_list_output(PyObject* plist, void* x_outlet)
     }
 
     Py_XDECREF(plist);
-    return;
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error("py_handle_list_output failed");
     Py_XDECREF(plist);
+    return MAX_ERR_GENERIC;
 }
 
 
-void py_handle_output(PyObject* pval, void* x_outlet)
+/**
+ * @brief Generic handler to output python object as max object
+ *
+ * @param outlet object outlet
+ * @param pval python object
+ * @return t_max_err error code
+ */
+t_max_err py_handle_output(void* outlet, PyObject* pval)
 {
     if (pval == NULL) {
         py_error("cannot handle NULL value");
-        return;
+        return MAX_ERR_GENERIC;
     }
 
     if (PyFloat_Check(pval)) {
-        py_handle_float_output(pval, x_outlet);
-        return;
+        return py_handle_float_output(outlet, pval);
     }
 
     else if (PyLong_Check(pval)) {
-        py_handle_long_output(pval, x_outlet);
-        return;
+        return py_handle_long_output(outlet, pval);
     }
 
     else if (PyUnicode_Check(pval)) {
-        py_handle_string_output(pval, x_outlet);
-        return;
+        return py_handle_string_output(outlet, pval);
     }
 
     else if (PySequence_Check(pval) && !PyBytes_Check(pval)
              && !PyByteArray_Check(pval)) {
-        py_handle_list_output(pval, x_outlet);
-        return;
+        return py_handle_list_output(outlet, pval);
     }
 
     else if (pval == Py_None) {
-        return;
+        return MAX_ERR_GENERIC;
     }
 
     else {
         py_error("cannot handle his type of value");
-        return;
+        return MAX_ERR_GENERIC;
     }
 }
+
 
 /*--------------------------------------------------------------------------*/
 // TRANSLATORS
@@ -466,203 +518,3 @@ error:
     py_error("atom to list conversion failed");
     return NULL;
 }
-
-// -------------------------------------------------------------------------------------------
-// Get PYTHONHOME from .mxo bundle
-
-
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG) || defined(PY_FWK_EXT))
-#include <CoreFoundation/CoreFoundation.h>
-#include <libgen.h>
-#endif
-
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG) || defined(PY_FWK_EXT))
-CFBundleRef py_global_bundle;
-#endif
-
-#if defined(_WIN64) && defined(PY_STATIC_EXT)
-static char* py_global_external_path[MAX_PATH_CHARS];
-#endif
-
-
-
-
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
-void py_init_osx_set_home_static_ext(void) {
-    // sets python_home to <bundle>/Resources folder
-
-    wchar_t *python_home;
-
-    CFURLRef resources_url;
-    CFURLRef resources_abs_url;
-    CFStringRef resources_str;
-    const char* resources_path;
-
-    // Look for a bundle using its using global bundle ref
-    resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
-    resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-    resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
-    resources_path = CFStringGetCStringPtr(resources_str, kCFStringEncodingUTF8);
-
-    python_home = Py_DecodeLocale(resources_path, NULL);
-
-    CFRelease(resources_str);
-    CFRelease(resources_abs_url);
-    CFRelease(resources_url);
-
-    post("py resources_path: %s", resources_path);
-
-    if (python_home == NULL) {
-        error("unable to set python_home");
-        return;
-    }
-    Py_SetPythonHome(python_home);
-}
-#endif
-
-
-
-// NOT USED OR NECESSARY (HERE for archive)
-#if defined(__APPLE__) && defined(PY_FWK_EXT)
-void py_init_osx_set_home_framework_ext(void) {
-
-    const char* relative_path = "Python.framework";
-
-    wchar_t *python_home;
-
-    CFURLRef resources_url;
-    CFURLRef resources_abs_url;
-    CFStringRef resources_str;
-    CFStringRef relative_path_str;
-    CFURLRef py_home_url;
-    CFStringRef py_home_str;
-    const char* py_home_path;
-
-    // Look for a bundle using its using global bundle ref
-    resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
-    resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-    resources_str = CFURLCopyFileSystemPath(resources_abs_url, kCFURLPOSIXPathStyle);
-
-    relative_path_str = CFStringCreateWithCString(kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
-    py_home_url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, resources_str, relative_path_str, FALSE);
-    py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
-    py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
-
-    python_home = Py_DecodeLocale(resources_path, NULL);
-
-    CFRelease(resources_str);
-    CFRelease(resources_abs_url);
-    CFRelease(resources_url);
-
-    CFRelease(py_home_str);
-    CFRelease(py_home_url);
-    CFRelease(relative_path_str);
-
-    post("py home path: %s", py_home_path);
-
-    if (python_home == NULL) {
-        error("unable to set python_home");
-        return;
-    }
-    Py_SetPythonHome(python_home);
-}
-#endif
-
-
-
-#if defined(__APPLE__) && defined(PY_SHARED_PKG)
-void py_init_osx_set_home_shared_pkg(void) {
-    // sets python_home to <package>/support/pythonX.Y folder
-
-    wchar_t *python_home;
-
-    CFURLRef bundle_url;
-    CFURLRef bundle_abs_url;
-    CFStringRef bundle_str;
-    const char* bundle_path;
-
-    const char* relative_path = "support/python" PY_VER;
-    CFStringRef relative_path_str;
-    CFURLRef externals_url;
-    CFURLRef package_url;
-    CFURLRef py_home_url;
-    CFStringRef py_home_str;
-    const char* py_home_path;
-
-    // get self bundle path
-    bundle_url = CFBundleCopyBundleURL(py_global_bundle);
-    bundle_abs_url = CFURLCopyAbsoluteURL(bundle_url);
-    bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
-    bundle_path = CFStringGetCStringPtr(bundle_str, kCFStringEncodingUTF8);
-    
-    // get the absolute path of the <package>/support/pythonX.Y directory in a package
-    externals_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundle_abs_url);
-    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, externals_url);
-    relative_path_str = CFStringCreateWithCString(kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
-    py_home_url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, package_url, relative_path_str, FALSE);
-    py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
-    py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
-
-    CFRelease(bundle_str);
-    CFRelease(bundle_abs_url);
-    CFRelease(bundle_url);
-
-    CFRelease(py_home_str);
-    CFRelease(py_home_url);
-    CFRelease(relative_path_str);
-    CFRelease(package_url);
-    CFRelease(externals_url);
-
-    post("py bundle_path: %s", bundle_path);
-
-    post("py home path: %s", py_home_path);
-
-    python_home = Py_DecodeLocale(py_home_path, NULL);
-
-    if (python_home == NULL) {
-        error("unable to set python_home");
-        return;
-    }
-    Py_SetPythonHome(python_home);
-}
-#endif
-
-
-void py_init(t_py* x)
-{
-    #if defined(__APPLE__) && defined(PY_STATIC_EXT)
-    py_init_osx_set_home_static_ext();
-    #endif
-
-    #if defined(__APPLE__) && defined(PY_FWK_EXT)
-    py_init_osx_set_home_framework_ext();
-    #endif
-
-    #if defined(__APPLE__) && defined(PY_SHARED_PKG)
-    py_init_osx_set_home_shared_pkg();
-    #endif
-
-    // ..
-}
-
-void ext_main(void* module_ref)
-{ // example
-    t_class* c;
-
-    // ...
-
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG) || defined(PY_FWK_EXT))
-    // set global bundle ref for macos case
-    py_global_bundle = module_ref;
-#endif
-#if defined(_WIN64) && defined(PY_STATIC_EXT)
-    // set external_path for win64 case
-    GetModuleFileName(moduleRef, (LPCH)py_global_external_path,
-                      sizeof(py_global_external_path));
-    post("external path: %s", py_global_external_path);
-#endif
-
-}
-
-
-
