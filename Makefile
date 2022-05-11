@@ -466,6 +466,7 @@ clean-products: clean-support clean-externals clean-build
 
 clean-build:
 	$(call section,"cleaning build directory")
+	@rm -rf '${ROOTDIR}'/build
 	@rm -rf '${PYDIR}'/targets/build/src/*
 	@rm -rf '${BUILDDIR}'/src/*
 	@rm -rf '${BUILDDIR}'/lib/python-shared
