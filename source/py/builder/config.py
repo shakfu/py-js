@@ -289,7 +289,6 @@ class Project:
             "downloads": str(self.build_downloads),
             "build_src": str(self.build_src),
             "lib": str(self.build_lib),
-            "pyjs": str(self.pyjs),
             "support": str(self.support),
             "externals": str(self.externals),
             "py_external": str(self.py_external),

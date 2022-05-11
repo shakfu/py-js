@@ -6,5 +6,8 @@ env_file = os.getenv('GITHUB_ENV')
 
 python_version = platform.python_version()
 
-with open(env_file, "a") as fopen:
-    fopen.write(f"PY_VERSION={python_version}")
+if env_file:
+    with open(env_file, "a") as fopen:
+        fopen.write(f"PY_VERSION={python_version}")
+else:
+    raise KeyError("'GITHUB_ENV' env var not set")

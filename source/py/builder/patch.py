@@ -81,13 +81,14 @@ def split(s, category):
 class Module:
     def __init__(self, category: str, name: str,
             is_enabled: bool = True, is_static: bool = False,
-            included_in: int = 0, excluded_in: int = 0,
-            steps: List[str] = None):
+            included_in: int = 0, excluded_in: int = 0, steps: List[str] = None):
         self.category = category
         self.name = name
         self.is_enabled = is_enabled
         self.is_static = is_static
-        self.steps = steps
+        self.included_in = included_in
+        self.excluded_in = excluded_in
+        self.steps = steps or []
 
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.name}'>"

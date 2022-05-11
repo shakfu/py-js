@@ -46,7 +46,3 @@ def get_python_libs(destination_dir: str, version: str = '3.9'):
     cmd(f"tar -xvf '{tarfile}' --directory '{destination_dir}'")
     cmd(f"rm -f '{tarfile}'")
     print('DONE.')
-
-
-
-

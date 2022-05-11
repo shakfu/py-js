@@ -1,15 +1,10 @@
-import argparse
 import os
-import platform
 import subprocess
-import sys
-import time
 from pathlib import Path
 
 from .config import (
     BASEDIR,
     BASELOGSDIR,
-    CURRENT_PYTHON_VERSION,
     CYAN,
     GREEN,
     HOME,
@@ -51,10 +46,10 @@ def proc(arglist):
         line = _proc.stdout.readline()
         code = _proc.poll()
         if line == "":
-            if code != None:
-                break
-            else:
+            if code is None:
                 continue
+            else:
+                break
         yield line
 
 
@@ -94,16 +89,13 @@ def runlog(target, requirement=2):
 
     with open(logfile, "w") as f:
 
-        # t = tqdm(total=PYJS_TARGETS[target]['lines'], desc=target)
         progressbar = ProgressBar(PYJS_TARGETS[target]["lines"], target)
 
         for line in proc(["make", "-C", str(BASEDIR), target]):
             print(cleaned(line), file=f)
             if "** BUILD SUCCEEDED **" in line:
                 successes += 1
-            # t.update(1)
             progressbar.update()
-        # t.close()
 
     if successes == requirement:
         msg = f"{GREEN}SUCCESS{RESET}"
@@ -112,12 +104,11 @@ def runlog(target, requirement=2):
 
     print(f"  \u2514-> {msg}: {successes} out of {requirement} builds OK")
     print()
-    # print(f"{target:<15} -> {msg}: {successes} out of {requirement} builds OK")
 
 
 def run_logged_tests(target=None, with_homebrew=True):
     if target:
-        runlog(t)
+        runlog(target)
     else:
         for t in PYJS_TARGETS:
             if not with_homebrew and t.startswith("homebrew"):
@@ -131,49 +122,37 @@ def open_log_dir():
 
 def check_success(path: str, requirement: int = 2):
     """check count of xcode successful build message in a log file"""
-    successes = 0
-
     with open(path) as f:
         lines = f.readlines()
-    for line in lines:
-        if "** BUILD SUCCEEDED **" in line:
-            successes += 1
-
+    successes = sum("** BUILD SUCCEEDED **" in line for line in lines)
     if successes == requirement:
         msg = f"{GREEN}SUCCESS{RESET}"
     else:
         msg = f"{MAGENTA}FAILURE{RESET}"
 
-    cpath = str(path).replace(HOME, "~")  # remove $HOME prefix and replace with '~'
+    cpath = path.replace(HOME, "~")
     print(f"{cpath:<46} -> {msg}: {successes} out of {requirement} builds OK")
     return successes
 
 
 def check_version(path: str, requirement: int = 2):
-    n_entries = 0
-    total_successes = 0
     version_folder = Path(path)
     print()
-    for log in version_folder.iterdir():
-        # print(log)
-        n_entries += 1
-        total_successes += check_success(log, requirement)
-    # print(f"{version_folder.name:<6}: {GREEN}{total_successes}{RESET} out of {n_entries * 2} builds OK")
-    # return total_successes, n_entries
-
+    total_successes = sum(check_success(str(log), requirement) for log in version_folder.iterdir())
+    # print(f"{version_folder.name:<6}: {GREEN}{total_successes}{RESET} out of {requirement * 2} builds OK")
 
 def check_logs(path: str, requirement: int = 2):
     logs_folder = Path(path)
     for version_folder in logs_folder.iterdir():
-        check_version(version_folder, requirement)
+        check_version(str(version_folder), requirement)
 
 
 def check_current(with_homebrew=True):
     logdir = Path(LOGDIR)
     for t in logdir.iterdir():
-        if not with_homebrew and t.startswith("homebrew"):
+        if not with_homebrew and str(t).startswith("homebrew"):
             continue
-        check_success(t)
+        check_success(str(t))
 
 
 def check_all():

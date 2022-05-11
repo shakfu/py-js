@@ -1,5 +1,8 @@
 /**
     @file cobra - an ITM-based python evaluator
+
+    Experiment to defer the evaluation of a python function
+    via the ITM-based sequencing.
 */
 
 #include "ext.h"
@@ -86,7 +89,7 @@ void ext_main(void *r)
     class_addmethod(c, (method)cobra_inletinfo, "inletinfo",    A_CANT, 0);
 
     class_addmethod(c, (method)cobra_import,    "import",       A_SYM,  0);
-    class_addmethod(c, (method)cobra_eval,      "eval",         A_GIMME, 0);
+    class_addmethod(c, (method)cobra_defer,      "defer",       A_GIMME, 0);
 
     class_time_addattr(c, "delaytime", "Delay Time", TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK | TIME_FLAGS_TRANSPORT);
     class_time_addattr(c, "quantize", "Quantization", TIME_FLAGS_TICKSONLY);
@@ -609,30 +612,7 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
-// t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     PyGILState_STATE gstate;
-//     gstate = PyGILState_Ensure();
-
-//     char* py_argv = atom_getsym(argv)->s_name;
-//     post("%s %s", s->s_name, py_argv);
-
-//     PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->c_globals, x->c_globals);
-
-//     if (pval != NULL) {
-//         cobra_handle_output(x, pval);
-//         PyGILState_Release(gstate);
-//         return MAX_ERR_NONE;
-//     } else {
-//         cobra_handle_error(x, "eval %s", py_argv);
-//         PyGILState_Release(gstate);
-//         return MAX_ERR_GENERIC;
-//     }
-// }
-
-
-t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err cobra_defer(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -646,7 +626,7 @@ t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
         PyGILState_Release(gstate);
         return MAX_ERR_NONE;
     } else {
-        cobra_handle_error(x, "eval %s", py_argv);
+        cobra_handle_error(x, "defer py func %s", py_argv);
         PyGILState_Release(gstate);
         return MAX_ERR_GENERIC;
     }

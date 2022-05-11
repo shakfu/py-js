@@ -27,15 +27,13 @@ static void PyObject_to_atom(PyObject* value, t_atom* atom);
 static void new_list_from_sequence(PyObject* seq, int* argc, t_atom** argv);
 static void emit_outlet_message(PyObject* value, void* x_outlet);
 
-void py_log(char* fmt, ...);
-void py_error(char* fmt, ...);
-void py_handle_error(char* fmt, ...);
-t_max_err py_handle_float_output(void* outlet, PyObject* pfloat);
-t_max_err py_handle_long_output(void* outlet, PyObject* plong);
-t_max_err py_handle_string_output(void* outlet, PyObject* pstring);
-t_max_err py_handle_list_output(void* outlet, PyObject* plist);
-t_max_err py_handle_output(void* outlet, PyObject* pval);
-PyObject* py_atoms_to_list(long argc, t_atom* argv, int start_from);
+static void py_handle_error(char* fmt, ...);
+static t_max_err py_float_output(void* outlet, PyObject* pfloat);
+static t_max_err py_long_output(void* outlet, PyObject* plong);
+static t_max_err py_string_output(void* outlet, PyObject* pstring);
+static t_max_err py_list_output(void* outlet, PyObject* plist);
+static t_max_err py_output(void* outlet, PyObject* pval);
+static PyObject* py_atoms_to_list(long argc, t_atom* argv, int start_from);
 
 // ---------------------------------------------------------------------------------------
 
@@ -155,44 +153,6 @@ static void emit_outlet_message(PyObject* value, void* x_outlet)
 // ---------------------------------------------------------------------------------------
 
 /**
- * @brief A basic logging function
- * 
- * @param fmt 
- * @param ... 
- */
-void py_log(char* fmt, ...)
-{
-    char msg[PY_MAX_LOG_CHAR];
-
-    va_list va;
-    va_start(va, fmt);
-    vsprintf(msg, fmt, va);
-    va_end(va);
-
-    post("%s", msg);
-
-}
-
-/**
- * @brief A basic error logging function
- * 
- * @param fmt 
- * @param ... 
- */
-void py_error(char* fmt, ...)
-{
-    char msg[PY_MAX_ERR_CHAR];
-
-    va_list va;
-    va_start(va, fmt);
-    vsprintf(msg, fmt, va);
-    va_end(va);
-
-    error("%s", msg);
-}
-
-
-/**
  * @brief Generic python error handler
  * 
  * @param fmt format string
@@ -223,19 +183,19 @@ void py_handle_error(char* fmt, ...)
 
         Py_XDECREF(ptraceback);
 
-        py_error("[py] %s: %s", msg, pvalue_str);
+        error("[py] %s: %s", msg, pvalue_str);
     }
 }
 
 
 /**
- * @brief Handler to output python float as max float
+ * @brief Outputs python float as max float
  * 
  * @param outlet object outlet
  * @param pfloat python float
  * @return t_max_err error code
  */
-t_max_err py_handle_float_output(void* outlet, PyObject* pfloat)
+t_max_err py_float_output(void* outlet, PyObject* pfloat)
 {
     if (pfloat == NULL) {
         goto error;
@@ -254,20 +214,20 @@ t_max_err py_handle_float_output(void* outlet, PyObject* pfloat)
     return MAX_ERR_NONE;
 
 error:
-    py_handle_error("py_handle_float_output failed");
+    py_handle_error("py_float_output failed");
     Py_XDECREF(pfloat);
     return MAX_ERR_GENERIC;
 }
 
 
 /**
- * @brief Handler to output python long as max int
+ * @brief Outputs python long as max int
  *
  * @param outlet object outlet
  * @param plong python long
  * @return t_max_err error code
  */
-t_max_err py_handle_long_output(void* outlet, PyObject* plong)
+t_max_err py_long_output(void* outlet, PyObject* plong)
 {
     if (plong == NULL) {
         goto error;
@@ -286,19 +246,19 @@ t_max_err py_handle_long_output(void* outlet, PyObject* plong)
     return MAX_ERR_NONE;
 
 error:
-    py_handle_error("py_handle_long_output failed");
+    py_handle_error("py_long_output failed");
     Py_XDECREF(plong);
     return MAX_ERR_GENERIC;
 }
 
 /**
- * @brief Handler to output python string as max symbol
+ * @brief Outputs python string as max symbol
  *
  * @param outlet object outlet
  * @param pstring python string
  * @return t_max_err error code
  */
-t_max_err py_handle_string_output(void* outlet, PyObject* pstring)
+t_max_err py_string_output(void* outlet, PyObject* pstring)
 {
     if (pstring == NULL) {
         goto error;
@@ -316,19 +276,19 @@ t_max_err py_handle_string_output(void* outlet, PyObject* pstring)
     return MAX_ERR_NONE;
 
 error:
-    py_handle_error("py_handle_string_output failed");
+    py_handle_error("py_string_output failed");
     Py_XDECREF(pstring);
     return MAX_ERR_GENERIC;
 }
 
 /**
- * @brief Handler to output python list as max list
+ * @brief Outputs python list as max list
  *
  * @param outlet object outlet
  * @param plist python list
  * @return t_max_err error code
  */
-t_max_err py_handle_list_output(void* outlet, PyObject* plist)
+t_max_err py_list_output(void* outlet, PyObject* plist)
 {
     if (plist == NULL) {
         goto error;
@@ -345,15 +305,15 @@ t_max_err py_handle_list_output(void* outlet, PyObject* plist)
         int is_dynamic = 0;
 
         Py_ssize_t seq_size = PySequence_Length(plist);
-        py_log("seq_size: %d", seq_size);
+        post("seq_size: %d", seq_size);
 
         if (seq_size == 0) {
-            py_error("cannot convert py list of length 0 to atoms");
+            error("cannot convert py list of length 0 to atoms");
             goto error;
         }
 
         if (seq_size > PY_MAX_ATOMS) {
-            py_log("dynamically increasing size of atom array");
+            post("dynamically increasing size of atom array");
             atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
                                        seq_size + 1);
             is_dynamic = 1;
@@ -365,7 +325,7 @@ t_max_err py_handle_list_output(void* outlet, PyObject* plist)
         if ((iter = PyObject_GetIter(plist)) == NULL) {
             goto error;
         }
-        py_log("seq_size2: %d", seq_size);
+        post("seq_size2: %d", seq_size);
 
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
@@ -375,7 +335,7 @@ t_max_err py_handle_list_output(void* outlet, PyObject* plist)
                         goto error;
                 }
                 atom_setlong(atoms + i, long_item);
-                py_log("%d long: %ld\n", i, long_item);
+                post("%d long: %ld\n", i, long_item);
                 i++;
             }
 
@@ -386,7 +346,7 @@ t_max_err py_handle_list_output(void* outlet, PyObject* plist)
                         goto error;
                 }
                 atom_setfloat(atoms + i, float_item);
-                py_log("%d float: %f\n", i, float_item);
+                post("%d float: %f\n", i, float_item);
                 i++;
             }
 
@@ -396,17 +356,17 @@ t_max_err py_handle_list_output(void* outlet, PyObject* plist)
                     goto error;
                 }
                 atom_setsym(atoms + i, gensym(unicode_item));
-                py_log("%d unicode: %s\n", i, unicode_item);
+                post("%d unicode: %s\n", i, unicode_item);
                 i++;
             }
             Py_DECREF(item);
         }
 
         outlet_list(outlet, NULL, i, atoms);
-        py_log("end iter op: %d", i);
+        post("end iter op: %d", i);
 
         if (is_dynamic) {
-            py_log("restoring to static atom array");
+            post("restoring to static atom array");
             atom_dynamic_end(atoms_static, atoms);
         }
     }
@@ -422,34 +382,34 @@ error:
 
 
 /**
- * @brief Generic handler to output python object as max object
+ * @brief Output python object as max object
  *
  * @param outlet object outlet
  * @param pval python object
  * @return t_max_err error code
  */
-t_max_err py_handle_output(void* outlet, PyObject* pval)
+t_max_err py_output(void* outlet, PyObject* pval)
 {
     if (pval == NULL) {
-        py_error("cannot handle NULL value");
+        error("cannot handle NULL value");
         return MAX_ERR_GENERIC;
     }
 
     if (PyFloat_Check(pval)) {
-        return py_handle_float_output(outlet, pval);
+        return py_float_output(outlet, pval);
     }
 
     else if (PyLong_Check(pval)) {
-        return py_handle_long_output(outlet, pval);
+        return py_long_output(outlet, pval);
     }
 
     else if (PyUnicode_Check(pval)) {
-        return py_handle_string_output(outlet, pval);
+        return py_string_output(outlet, pval);
     }
 
     else if (PySequence_Check(pval) && !PyBytes_Check(pval)
              && !PyByteArray_Check(pval)) {
-        return py_handle_list_output(outlet, pval);
+        return py_list_output(outlet, pval);
     }
 
     else if (pval == Py_None) {
@@ -457,7 +417,7 @@ t_max_err py_handle_output(void* outlet, PyObject* pval)
     }
 
     else {
-        py_error("cannot handle his type of value");
+        error("cannot handle his type of value");
         return MAX_ERR_GENERIC;
     }
 }
@@ -472,7 +432,7 @@ PyObject* py_atoms_to_list(long argc, t_atom* argv, int start_from)
     PyObject* plist = NULL; // python list
 
     if ((plist = PyList_New(0)) == NULL) {
-        py_error("could not create an empty python list");
+        error("could not create an empty python list");
         goto error;
     }
 
@@ -508,13 +468,14 @@ PyObject* py_atoms_to_list(long argc, t_atom* argv, int start_from)
             break;
         }
         default:
-            py_log("cannot process unknown type");
+            post("cannot process unknown type");
             break;
         }
     }
     return plist;
 
 error:
-    py_error("atom to list conversion failed");
+    error("atom to list conversion failed");
     return NULL;
 }
+

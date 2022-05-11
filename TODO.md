@@ -29,22 +29,19 @@
             static-ext
   ```
 
-
 - [ ] check why `py-js.xcconfig` for `homebrew-ext` refers to `support`. May implicitly rely on `homebrew-pkg` preceding it.
 
 - [ ] Reorganize patch system and clean it up. Perhaps even convert it such that it is generated from python builder
 
 - [ ] Add beeware downloader.
 
-- [ ] Create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations 
+- [ ] Create `local-pkg`, `local-ext`, analog to `homebrew-pkg`, `homebrew-ext` but for python.org installations.
 
 - [ ] If a patch is not found, default to a standard working path or no patch at all
 
 - [ ] Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
 
-
 ## ENHANCEMENTS
-
 
 ## BUGS
 
@@ -91,4 +88,4 @@
 
 ### Future Experiments
 
-- [ ] Try to integrate an ipython shell somehow
+- [ ] Try to integrate an ipython shell somehow (via node.js seems to be most promising)
