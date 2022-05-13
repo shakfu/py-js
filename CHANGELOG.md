@@ -1,17 +1,18 @@
-
 # CHANGELOG
 
 ## v0.1.1
 
 ### Core
 
-- [x] added preliminary doxygen docs for `py.c`
-
-- [x] added doxygen for code documentation generation
-
 - [x] normalized functions signatures between `py.c` and `pyjs.c` so they are return errors instead of being void functions
 
 - [x] refactored `py_code` and `py_anything` to `py_eval_text`
+
+### Documention
+
+- [x] added preliminary doxygen docs for `py.c`
+
+- [x] added doxygen for code documentation generation
 
 
 ## v0.1
