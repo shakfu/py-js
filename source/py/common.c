@@ -1,5 +1,4 @@
 /*
-==> CURRENTLY UNUSED in any code
 
 General functions for conversion between Max atoms and PyObjects
 
@@ -44,6 +43,12 @@ static void py_output_single(void* outlet, PyObject* pval);
 // ---------------------------------------------------------------------------------------
 // HELPERS
 
+/**
+ * @brief      Variadic logging function with verbosity switch
+ *
+ * @param      fmt        The string to be outputed
+ * @param      ...        Other arguments
+ */
 static void py_log(char* fmt, ...)
 {
     if (PY_DEBUG) {
@@ -58,6 +63,12 @@ static void py_log(char* fmt, ...)
     }
 }
 
+/**
+ * @brief      Variadic error function
+ *
+ * @param      fmt        The string to be outputed
+ * @param      ...        Other arguments
+ */
 static void py_error(char* fmt, ...)
 {
     char msg[PY_MAX_ERR_CHAR];
@@ -67,13 +78,20 @@ static void py_error(char* fmt, ...)
     vsprintf(msg, fmt, va);
     va_end(va);
 
-    error("[py]: %s", msg);
+    error("[py error]: %s", msg);
 }
 
 
 // ---------------------------------------------------------------------------------------
 // TRANSLATORS
 
+/**
+ * @brief      Converts max atom to python object
+ *
+ * @param      atom  The atom
+ *
+ * @return     python object (int, float, string)
+ */
 static PyObject* py_atom_to_py_object(t_atom* atom)
 {
     py_log("py_atom_to_py_object start");
@@ -102,6 +120,15 @@ static PyObject* py_atom_to_py_object(t_atom* atom)
     }
 }
 
+
+/**
+ * @brief      Converts an atom list to a Python list
+ *
+ * @param[in]  argc  The length of the atom list
+ * @param      argv  The Max atom list
+ *
+ * @return     Python list
+ */
 static PyObject* py_atom_list_to_py_list0(int argc, t_atom* argv)
 {
     py_log("py_atom_list_to_py_list0 start");
@@ -116,6 +143,15 @@ static PyObject* py_atom_list_to_py_list0(int argc, t_atom* argv)
 }
 
 
+/**
+ * @brief      Converts an atom list to a Python list with offset
+ *
+ * @param[in]  argc  The length of the atom list
+ * @param      argv  The Max atom list
+ * @param[in]  start_from  The offset value
+ *
+ * @return     Python list
+ */
 static PyObject* py_atom_list_to_py_list(long argc, t_atom* argv, int start_from)
 {
 
@@ -170,7 +206,12 @@ error:
 }
 
 
-
+/**
+ * @brief      Converts a python object to a max atom 
+ *
+ * @param      value  Python value
+ * @param[out] atom   Max atom
+ */
 static void py_object_to_atom(PyObject* value, t_atom* atom)
 {
     if (value == Py_True)
@@ -187,10 +228,16 @@ static void py_object_to_atom(PyObject* value, t_atom* atom)
         atom_setsym(atom, gensym("error"));
 }
 
+
+/**
+ * @brief      Populates in-place an empty atom list with the contents of a python list 
+ *
+ * @param      seq   The sequence
+ * @param      argc  The count of arguments
+ * @param[out] argv  The arguments array
+ */
 static void py_list_to_atom_list(PyObject* seq, int* argc, t_atom** argv)
 {
-    py_log("py_list_to_atom_list start");
-
     Py_ssize_t len = 0;
     Py_ssize_t i;
 
@@ -205,6 +252,13 @@ static void py_list_to_atom_list(PyObject* seq, int* argc, t_atom** argv)
     *argc = (int)len;
 }
 
+
+/**
+ * @brief      { function_description }
+ *
+ * @param      pval    Python value
+ * @param      outlet  The outlet
+ */
 static void py_output_single(PyObject* pval, void* outlet)
 {
     py_log("py_output_single start");
@@ -312,7 +366,7 @@ error:
 
 
 /**
- * @brief Outputs python long as max int
+ * @brief Outputs to outlet python long as max int
  *
  * @param outlet object outlet
  * @param plong python long
@@ -343,7 +397,7 @@ error:
 }
 
 /**
- * @brief Outputs python string as max symbol
+ * @brief Outputs to outlet python string as max symbol
  *
  * @param outlet object outlet
  * @param pstring python string
@@ -372,8 +426,9 @@ error:
     return MAX_ERR_GENERIC;
 }
 
+
 /**
- * @brief Outputs python list as max list
+ * @brief Outputs to outlet python list as max list
  *
  * @param outlet object outlet
  * @param plist python list
@@ -473,7 +528,7 @@ error:
 
 
 /**
- * @brief Output python object as max object
+ * @brief Output to outlet python object as max object
  *
  * @param outlet object outlet
  * @param pval python object

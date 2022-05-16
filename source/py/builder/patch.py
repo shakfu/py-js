@@ -22,7 +22,10 @@ class Module:
         m = self
         return (m.name, m.category) + m.levels + tuple(m.vers.values())
 
-modules = dict(
+# ----------------------------------------------------------------------------
+# Module Configuration
+
+MODULES = dict(
     # object name          Module definition                       0=disabled, 1=static, 2=shared
     posix                = Module('posix',             'core',     levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['-DPy_BUILD_CORE_BUILTIN', '-I$(srcdir)/Include/internal', 'posixmodule.c']),
     errno                = Module('errno',             'core',     levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['errnomodule.c']),
@@ -47,14 +50,14 @@ modules = dict(
     _tracemalloc         = Module('_tracemalloc',      'core',     levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_tracemalloc.c']),
     _peg_parser          = Module('_peg_parser',       'core',     levels=(1, 1, 1, 1), vers={'3.7': 0, '3.8': 0, '3.9': 1, '3.10': 1}, elems=['_peg_parser.c']),
     _symtable            = Module('_symtable',         'core',     levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['symtablemodule.c']),
-    readline             = Module('readline',          'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['readline.c', '-lreadline', '-ltermcap']),
+    readline             = Module('readline',          'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['readline.c', '-lreadline', '-ltermcap']),
     array                = Module('array',             'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['-DPy_BUILD_CORE_MODULE', 'arraymodule.c']),
     cmath                = Module('cmath',             'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['cmathmodule.c', '_math.c', '-DPy_BUILD_CORE_MODULE']),
     math                 = Module('math',              'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['mathmodule.c', '_math.c', '-DPy_BUILD_CORE_MODULE']),
     _contextvars         = Module('_contextvars',      'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_contextvarsmodule.c']),
     _struct              = Module('_struct',           'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['-DPy_BUILD_CORE_MODULE', '_struct.c']),
-    _testcapi            = Module('_testcapi',         'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_testcapimodule.c']),
-    _testinternalcapi    = Module('_testinternalcapi', 'optional', levels=(1, 1, 1, 1), vers={'3.7': 0, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_testinternalcapi.c', '-I$(srcdir)/Include/internal', '-DPy_BUILD_CORE_MODULE']),
+    _testcapi            = Module('_testcapi',         'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_testcapimodule.c']),
+    _testinternalcapi    = Module('_testinternalcapi', 'optional', levels=(0, 0, 0, 0), vers={'3.7': 0, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_testinternalcapi.c', '-I$(srcdir)/Include/internal', '-DPy_BUILD_CORE_MODULE']),
     _random              = Module('_random',           'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_randommodule.c', '-DPy_BUILD_CORE_MODULE']),
     _elementtree         = Module('_elementtree',      'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['-I$(srcdir)/Modules/expat', '-DHAVE_EXPAT_CONFIG_H', '-DUSE_PYEXPAT_CAPI', '_elementtree.c']),
     _pickle              = Module('_pickle',           'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['-DPy_BUILD_CORE_MODULE', '_pickle.c']),
@@ -71,7 +74,7 @@ modules = dict(
     _multiprocessing     = Module('_multiprocessing',  'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_multiprocessing/multiprocessing.c', '_multiprocessing/semaphore.c']),
     _posixshmem          = Module('_posixshmem',       'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_multiprocessing/posixshmem.c']),
     fcntl                = Module('fcntl',             'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['fcntlmodule.c']),
-    spwd                 = Module('spwd',              'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['spwdmodule.c']),
+    spwd                 = Module('spwd',              'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['spwdmodule.c']),
     grp                  = Module('grp',               'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['grpmodule.c']),
     select               = Module('select',            'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['selectmodule.c']),
     mmap                 = Module('mmap',              'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['mmapmodule.c']),
@@ -82,7 +85,7 @@ modules = dict(
     _ssl                 = Module('_ssl',              'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_ssl.c', '-I$(OPENSSL)/include', '-L$(OPENSSL)/lib', '-l:libssl.a', '-Wl,--exclude-libs,libssl.a', '-l:libcrypto.a', '-Wl,--exclude-libs,libcrypto.a']),
     _hashlib             = Module('_hashlib',          'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_hashopenssl.c.c', '-I$(OPENSSL)/include', '-L$(OPENSSL)/lib', '-l:libcrypto.a', '-Wl,--exclude-libs,libcrypto.a']),
     _crypt               = Module('_crypt',            'optional', levels=(1, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_cryptmodule.c', '-lcrypt']),
-    nis                  = Module('nis',               'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['nismodule.c', '-lnsl']),
+    nis                  = Module('nis',               'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['nismodule.c', '-lnsl']),
     termios              = Module('termios',           'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['termios.c']),
     resource             = Module('resource',          'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['resource.c']),
     _posixsubprocess     = Module('_posixsubprocess',  'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['-DPy_BUILD_CORE_BUILTIN', '_posixsubprocess.c']),
@@ -94,10 +97,11 @@ modules = dict(
     _sha3                = Module('_sha3',             'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_sha3/sha3module.c']),
     _blake2              = Module('_blake2',           'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_blake2/blake2module.c', '_blake2/blake2b_impl.c', '_blake2/blake2s_impl.c']),
     syslog               = Module('syslog',            'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['syslogmodule.c']),
-    _curses              = Module('_curses',           'optional', levels=(1, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_cursesmodule.c', '-lcurses', '-ltermcap', '-DPy_BUILD_CORE_MODULE']),
-    _curses_panel        = Module('_curses_panel',     'optional', levels=(1, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_curses_panel.c', '-lpanel', '-lncurses']),
-    _dbm                 = Module('_dbm',              'optional', levels=(1, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_dbmmodule.c', '-lndbm']),
-    _gdbm                = Module('_gdbm',             'optional', levels=(1, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_gdbmmodule.c', '-I/usr/local/include', '-L/usr/local/lib', '-lgdbm']),
+    _curses              = Module('_curses',           'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_cursesmodule.c', '-lcurses', '-ltermcap', '-DPy_BUILD_CORE_MODULE']),
+    _curses_panel        = Module('_curses_panel',     'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_curses_panel.c', '-lpanel', '-lncurses']),
+    _dbm                 = Module('_dbm',              'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_dbmmodule.c', '-lndbm']),
+    _gdbm                = Module('_gdbm',             'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_gdbmmodule.c', '-I/usr/local/include', '-L/usr/local/lib', '-lgdbm']),
+    _scproxy             = Module('_scproxy',          'optional', levels=(0, 0, 0, 0), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_scproxy.c', '-framework', 'SystemConfiguration', '-framework', 'CoreFoundation']),
     binascii             = Module('binascii',          'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['binascii.c']),
     parser               = Module('parser',            'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 0}, elems=['parser.c']),
     _lsprof              = Module('_lsprof',           'optional', levels=(1, 1, 1, 1), vers={'3.7': 1, '3.8': 1, '3.9': 1, '3.10': 1}, elems=['_lsprof.o', 'rotatingtree.c']),
@@ -113,9 +117,13 @@ modules = dict(
 
 )
 
+# ----------------------------------------------------------------------------
+# Setup Management 
+
+
 class PythonSetup:
     def __init__(self):
-        self.modules = modules
+        self.modules = MODULES
 
     @property
     def py_version_short(self):
@@ -149,49 +157,59 @@ class PythonSetup:
             version = self.py_version_short
         return self.filter(lambda m: m.vers[version] and m.levels[level] in [0, 1,2])
 
-    def render(self, level: int, version: str = None, static_ssl=False):
+    def render(self, level: int, version: str = None, setup_path: str = 'setup.local', 
+               static_ssl=False):
         setup = self.get_setup(level, version)
         core = self.get_core(setup)
         optional = self.get_optional(setup)
         disabled, static, shared = self.get_config(level, optional)
-        with open('setup.local', 'w') as f:
-            println = lambda *s: print(*s, file=f)
-            println("# VARS")
-            println("# " + "-"*77)
-            println("DESTLIB=$(LIBDEST)")
-            println("DESTLIB=$(LIBDEST)")
-            println("MACHDESTLIB=$(BINLIBDEST)")
-            println("DESTPATH=")
-            println("SITEPATH=")
-            println("TESTPATH=")
-            println("COREPYTHONPATH=$(DESTPATH)$(SITEPATH)$(TESTPATH)")
-            println("PYTHONPATH=$(COREPYTHONPATH)")
+        with open(setup_path, 'w') as f:
+            writeln = lambda *s: print(*s, file=f)
+            writeln("# VARS")
+            writeln("# " + "-"*77)
+            writeln("DESTLIB=$(LIBDEST)")
+            writeln("DESTLIB=$(LIBDEST)")
+            writeln("MACHDESTLIB=$(BINLIBDEST)")
+            writeln("DESTPATH=")
+            writeln("SITEPATH=")
+            writeln("TESTPATH=")
+            writeln("COREPYTHONPATH=$(DESTPATH)$(SITEPATH)$(TESTPATH)")
+            writeln("PYTHONPATH=$(COREPYTHONPATH)")
             if static_ssl:
-                println("OPENSSL=/path/to/openssl/directory")
-            println()
-            println("# CORE MODULES")
-            println("# " + "-"*77)
-            for m in core:
-                println(m, " ".join(core[m].elems))
-            println()
-            println("# OPTIONAL STATIC")
-            println("# " + "-"*77)
-            println("*static*")
-            for m in static:
-                println(m, " ".join(static[m].elems))
+                writeln("OPENSSL=/path/to/openssl/directory")
+            writeln()
+            writeln("# CORE MODULES")
+            writeln("# " + "-"*77)
+            for module in core:
+                writeln(module, " ".join(core[module].elems))
+            if static:
+                writeln()
+                writeln("# OPTIONAL STATIC")
+                writeln("# " + "-"*77)
+                writeln("*static*")
+                for module in static:
+                    writeln(module, " ".join(static[module].elems))
             if shared:
-                println()
-                println("# OPTIONAL SHARED")
-                println("# " + "-"*77)
-                println("*shared*")
-                for m in shared:
-                    println(m, " ".join(shared[m].elems))
-            println()
-            println("# OPTIONAL DISABLED")
-            println("# " + "-"*77)
-            println("*disabled*")
-            for m in disabled:
-                println(m)
+                writeln()
+                writeln("# OPTIONAL SHARED")
+                writeln("# " + "-"*77)
+                writeln("*shared*")
+                for module in shared:
+                    writeln(module, " ".join(shared[module].elems))
+            if disabled:
+                writeln()
+                writeln("# OPTIONAL DISABLED")
+                writeln("# " + "-"*77)
+                writeln("*disabled*")
+                for module in disabled:
+                    writeln(module)
 
-p = PythonSetup()
+if __name__ == '__main__':
+    p = PythonSetup()
+    levels = range(4)
+    versions = ['3.7', '3.8', '3.9', '3.10']
+    for i in versions:
+        for j in range(4):
+            name = f'setup-{i}-{j}.local'
+            p.render(level=j, version=i, setup_path=f'setups/{name}')
 
