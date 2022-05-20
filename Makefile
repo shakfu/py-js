@@ -443,7 +443,7 @@ cmake:
 		clean-static-pkg clean-static-ext \
 		clean-relocatable-pkg
 
-clean: clean-externals clean-support clean-targets clean-build
+clean: clean-externals clean-support clean-targets clean-build clean-docs
 
 @clean-targets: clean-local-sys  \
 			    clean-homebrew-pkg clean-homebrew-ext  \
@@ -480,9 +480,13 @@ clean-externals:
 		rm -rf '$(BUILDDIR)'/externals/$$target.mxo ;\
 	done
 
+clean-docs:
+	$(call section,"cleaning docs directory")
+	@rm -rf $(PYDIR)/docs
+
 clean-support:
 	$(call section,"cleaning support directory")
-	@rm -rf ${ROOTDIR}/support/*
+	@rm -rf $(ROOTDIR)/support/*
 
 clean-xcode: clean-build
 	$(call section,"cleaning xcode detritus")
