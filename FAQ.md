@@ -9,15 +9,15 @@ This project is macOS x86_64 (intel) compatible currently.
 
 ### What about compatibility with Apple Silicon?
 
-The main branch has just converted to the lastest `max-base-sdk` and there will be ongoing work on converting the current build system to be Apple Silicon compatible and to provide options to users one how they want to build their python externals. Recent recents have been promising.
+The main branch has just converted to the lastest `max-base-sdk` and it is now compatible with Apple Silicon machines.
 
 ### What about compatibility with Windows?
 
-There's no particular reason why this project doesn't work in windows except that I don't develop in windows any longer. Feel free to send pull requests to help make this happen.
+There's no particular reason why this project shouldn't work in windows except that I don't develop in windows any longer. Feel free to send pull requests to help make this happen.
 
 ### Does it only work with Homebrew python?
 
-It used to work by default with [Homebrew](https://brew.sh) installed python but current versions don't require Homebrew python, python3 installed from python.org works, and even Apple installed system python3 has been tested to work on the default build and some but not all of the other build variants.
+It used to work by default with [Homebrew](https://brew.sh) installed python but current versions don't require Homebrew python. Python3 installed from python.org works as expected, and even Apple installed system python3 has been tested to work on the default build and some but not all of the other build variants.
 
 Basically, there is no instrinsic reason why it shouldn't work with other python3 installations on your system.
 
@@ -26,6 +26,15 @@ Basically, there is no instrinsic reason why it shouldn't work with other python
 ### Does it embed python into the external or is the external connecting to the local python installation?
 
 The default build creates a lightweight external linked to your local python3; another variant embeds python3 into an external linked to python3 which resides in a Max package; and another embeds python into the external itself without an dependencies. There are other ways as well. The project [README](https://github.com/shakfu/py-js) gives an overview of differences between approaches.
+
+## Installation
+
+### Can I install two different python3 externals the same project?
+
+Python3 external types which are not 'isolated' (see the [build variations](README.md#build-variations) section) cannot be loaded at the same time. So for example, if you build a `framework-ext`, `py.mxo` and `pyjs.mxo` will not work together in the same patch, but if you built a `framework-pkg` variations of the same two externals they should work fine without issues.
+
+Of course, it would normally be considered redundant to install two different python3 externals in your project.
+
 
 ## Logging
 

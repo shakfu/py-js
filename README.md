@@ -30,15 +30,15 @@ For a sense of relative maturity, about 80% of development time to-date has gone
 
 A significant time of this project has been devoted to developing and refining different ways of packaging and deploying the externals.
 
-At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no current or future plans to produce 'fat' or universal externals which serve both architectures. Note that codesigned and notarized `arm64`-based externals are still not available for download. This will be addressed in the next release.
-
-For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you try the cython wrapped `api` module which operates on the c-level of the Max SDK).
+At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no current or future plans to produce 'fat' or universal externals which serve both architectures. Codesigned and notarized `x86_64`-based and `arm64`-based python3 externals are provided in the [releases](https://github.com/shakfu/py-js/releases) section and available for download.
 
 This README will mostly cover the first two externals (`py.mxo` and `pyjs.mxo`) and their many build variations. If you are interested in the others, please look into the `py-js/source/projects` section and please do ask questions or make suggestions via the project issue tracker.
 
+For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
+
 ## Cheatsheets for features in py and pyjs
 
-Here's are a couple of cheatsheets to give you a sense of the feature differences between the two core python3 max externals:
+Here are a couple of cheatsheets to give you a sense of the feature differences between the two core python3 max externals:
 
 ### `py` external
 
@@ -128,13 +128,13 @@ pyjs max external (jsextension)
 
 ## Quickstart
 
-As mentioned earlier, the `py` and `pyjs` objects are the most mature and best documented of the collection. Happily, there is also no need to compile them as a [release (0.1)](https://github.com/shakfu/py-js/releases/tag/0.1) has just been made with both externals being fully codesigned and notarized.
+As mentioned earlier, the `py` and `pyjs` objects are the most mature and best documented of the collection. Happily, there is also no need to compile them as they available from the [releases](https://github.com/shakfu/py-js/releases) section with examples of both externals being fully codesigned and notarized.
 
-If you'd rather not download the [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1), building them is pretty straightforward:
+If you'd rather build them yourself then the process is pretty straightforward:
 
 1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.7 to 3.10 are tested and known to work.
 
-2. Make sure you also have [Xcode](https://xcodereleases.com/) installed and that you are on an Intel-based Mac.
+2. Make sure you also have [Xcode](https://xcodereleases.com/) installed.
 
 3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) to a path without a space and without possible icloud syncing (i.e don't clone to `$HOME/Documents/Max 8/Packages`) [?] and run the following in the cloned repo:
 
@@ -170,13 +170,13 @@ idx  | command               | type       | format     | py size |  pyjs size
 2    | `make shared-ext`     | shared     | external   | 16.7    | 16.5
 3    | `make framework-pkg`  | framework  | package    | 22.8    | 22.8 [1]
 
-[1] size, in this case, is not the individual external but uncompressed size of the package which includes patches, help files and both externals.
+[1] size, in this case, is not the individual external but uncompressed size of the package which includes patches, help files and both externals, and can vary by python version used to compile the external.
 
 This alternative quickstart assumes that you have a recent python3 installation (python.org, homebrew or otherwise).
 
-If you'd rather not compile anything there are self-contained python3 externals which can be included in standalones in the recent [0.1 release](https://github.com/shakfu/py-js/releases/tag/0.1).
+Again, if you'd rather not compile anything there are self-contained python3 externals which can be included in standalones in the [releases](https://github.com/shakfu/py-js/releases) section.
 
-If you don't mind compiling (and have xcode installed) then it's pretty straightforward to build your own by picking one of the following options:
+If you don't mind compiling (and have xcode installed) then pick one of the following options:
 
 1. To build statically-compiled self-contained python3 externals:
 
@@ -202,11 +202,11 @@ At the end of this process you should find two externals in the `py-js/externals
 
 Although the three options deliver somewhat different products (see below for details), with options (1) and (2) the external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder and also has a `site-packages` directory for your own code.
 
-With option (3), the externals are linked to, and have been compiled against, a relocatable python installation in the `support` folder.
+With option (3), the externals are linked to, and have been compiled against, a relocatable python3 installation in the `support` folder.
 
 Depending on your choice above, the python interpreter in each external is either statically compiled or dynamically linked, and in all three cases we have a self-contained and relocatable structure (external or package) without any non-system dependencies. This makes it appropriate for use in Max Packages and Standalones.
 
-Ther are other [build variations](#build-variations) which are discussed in more detail below. You can alway see which ones are available via typing `make help` in the `py-js` project folder:
+There are other [build variations](#build-variations) which are discussed in more detail below. You can always see which ones are available via typing `make help` in the `py-js` project folder:
 
 ```bash
 $ make help
@@ -252,20 +252,35 @@ make test-shared-pkg
 
 ### Using Self-contained Python Externals in a Standalone
 
-If you have downloaded the [0.1 Release](https://github.com/shakfu/py-js/releases/tag/0.1) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
+If you have downloaded any pre-build externals from [releases](https://github.com/shakfu/py-js/releases) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
 
-As a first step, test whether the two externals work ok in a standalone: first build `py-js/patchers/py_test_standalone.maxpat` as a standalone application using Max then open it: you should see that the `py` external is working fine, yet the `pyjs` part of the test gives an error.
+As a side note: to release externals in a standalone they must be codesigned and notarized. To this end, there are scripts in `py-js/source/py/scripts` to make this a little easier.
 
-Dependending on your build choice, this may be may or may be fixable. Python3 external types which are not 'isolated' (see the [build variations](#build-variations) section) cannot be loaded at the same time. So for example, if you build a `shared-ext` `py.mxo` and `pyjs.mxo`, they will not work together in the same patch, but if you built a `shared-pkg` variations of the same two externals they should work fine without issues.
+### py.mxo
 
-No to fix a sometime recurrent issue where the standalone build algorithm doesn't pick up `pyjs.mxo`: If you look inside the built standalone bundle, `py_test_standalone.app`, you find that the `py.mxo` external has been copied into the `py_test_standalone.app/Contents/Resources/C74/externals` folder but not `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually by copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `py_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work (subject to the caveats above). Incidentally, If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatly appreciated.
+If you included `py.mxo` as an external in your standalone, then you should have no issue as Max will install it automatically during its build-as-standalone process.
+
+You can test if it works without issues by building either of these two example patcher documents, included in `py-js/patchers`, as a max standalone:
+
+1. `py_test_standalone_info_py.maxpat`
+
+2. `py_test_standalone_only_py.maxpat`
+
+Open the resulting standalone and test that the `py` object works as expected.
 
 To demonstrate the above, a pre-built standalone that was built using exactly the same steps as above is in the releases section: `py_test_standalone_demo.zip`.
 
-Note: it would normally be considered redundant to install two different python3 externals in your project. Nontheless, it's good to demonstrate that they can be used together if required.
+### pyjs.mxo
 
-As a side note: if there is a need to codesign / notarize the standalone, there are scripts in `py-js/source/py/scripts` to make this a little easier. Alternatively, you can check out a [sister
-project](https://github.com/shakfu/maxutils)  which also aims to make this less painful.
+If you included `pyjs.mxo` as an external in your standalone, then you it may be a litte more involved: 
+
+You can test first if it works without issues by building the following patcher, included in `py-js/patchers`, as a max standalone:
+
+- `pyjs_test_standalone_only_pyjs.maxpat`
+
+Open the resulting standalone and test that the `pyjs` object works as expected. If it doesn't then try the following workaround:
+
+To fix a sometimes recurrent issue where the standalone build algorithm doesn't pick up `pyjs.mxo`: if you look inside the built standalone bundle, `pyjs_test_standalone.app/Contents/Resources/C74/externals` you will not find `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `pyjs_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatly appreciated.
 
 Please read on for further details about what the py-js externals can do.
 
@@ -434,7 +449,7 @@ make brew-ext       | hybrid  [3]  | 13.6     | external  | no       | yes      
 make brew-pkg       | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
 make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
 make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
-make shared-pkg     | shared       | 18.7     | package   | yes      | yes      | yes      | yes      |
+make shared-pkg     | shared       | 18.7     | package   | yes      | no [4]   | yes      | yes      |
 make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
 make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
 
@@ -443,6 +458,8 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 [2] current static external implementation does not work with numpy due to symbol access issues.
 
 [3] *hybrid* means that the source system was a `framework` and the destination system is `shared`.
+
+[4] the shared-pkg variant does build a compliant 'Framework-type' bundle and hence cannot be notarized.
 
 - *pip*: the build allows or provides for pip installation
 

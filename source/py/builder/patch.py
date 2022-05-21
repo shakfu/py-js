@@ -28,18 +28,14 @@ class StaticPythonBuilder(PythonSrcBuilder):
 class BeewarePythonBuilder(StaticPythonBuilder):
     setup_local = "setup.beeware"
 
-
 class TinyStaticPythonBuilder(PythonSrcBuilder):
     setup_local = "setup-static-min6.local"
-
 
 class SharedPythonForExtBuilder(SharedPythonBuilder):
     setup_local = "setup-shared.local"
 
-
 class SharedPythonForPkgBuilder(SharedPythonBuilder):
     setup_local = "setup-shared.local"
-
 
 class FrameworkPythonForExtBuilder(FrameworkPythonBuilder):
     setup_local = "setup-shared.local"
