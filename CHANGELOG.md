@@ -2,17 +2,27 @@
 
 ## v0.1.1
 
+
+### Patchers
+
+- added example `pyjs_overview.maxpat` patch
+
+- added `pyjs_repl.maxpat` bpatcher
+
+
 ### Core
 
-- [x] normalized functions signatures between `py.c` and `pyjs.c` so they are return errors instead of being void functions
+- normalized functions signatures between `py.c` and `pyjs.c` so they return Max errors instead of being void functions
 
-- [x] refactored `py_code` and `py_anything` to `py_eval_text`
+- refactored `py_code` and `py_anything` to `py_eval_text`
 
 ### Documention
 
-- [x] added preliminary doxygen docs for `py.c`
+- added doxygen docs to `pyjs.c`
 
-- [x] added doxygen for code documentation generation
+- added doxygen docs for `py.c`
+
+- added doxygen for code documentation generation
 
 
 ## v0.1
@@ -21,13 +31,13 @@
 
 #### Enhancements
 
-- [x] Apple Silicon Comptability: externals now build as native `arm64` on Apple Silicon machines. Universal binaries are not currently supported.
+- Apple Silicon Comptability: externals now build as native `arm64` on Apple Silicon machines. Universal binaries are not currently supported.
 
-- [x] Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
+- Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
 
-- [x] removed `shared-pkg` till further notice or until I recreate it as a custom `.framework`, since its not working for Apple's notarization algorithm which only recognizes `.frameworks`.
+- removed `shared-pkg` till further notice or until I recreate it as a custom `.framework`, since its not working for Apple's notarization algorithm which only recognizes `.frameworks`.
 
-- [x] created smallest possible python3 external: self-contained python3 external yet (6.2MB) for StaticTinyExt.
+- created smallest possible python3 external: self-contained python3 external yet (6.2MB) for StaticTinyExt.
 
   This entailed:
   
@@ -35,70 +45,70 @@
   - shrinking the python lib further
   - setting `-configuration` as `Deployment` 
 
-- [x] if python_version for relocatable is given as major.minor only, then it should still work. Currently requires full major.minor.patch version.
+- if python_version for relocatable is given as major.minor only, then it should still work. Currently requires full major.minor.patch version.
 
-- [x] Move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
+- Move download and post_processing of `relocatable-pkg` to python-related class in `builder/core`
 
-- [x] make a function to generate './configure --...' instructions.
+- make a function to generate './configure --...' instructions.
 
-- [x] as a consequence of shifting to `max-sdk-base` was able to build on m1 mac `framework-ext` variations after a few tweaks which are detailed in the dev notes section.
+- as a consequence of shifting to `max-sdk-base` was able to build on m1 mac `framework-ext` variations after a few tweaks which are detailed in the dev notes section.
 
-- [x] build system is now based on `max-sdk-base` with all tests passing.
+- build system is now based on `max-sdk-base` with all tests passing.
 
-- [x] can build dependencies individually now from make
+- can build dependencies individually now from make
 
-- [x] added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
+- added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
 
-- [x] streamlined `common.xcconfig` so that it refers to `.build_pyjs` centrally
+- streamlined `common.xcconfig` so that it refers to `.build_pyjs` centrally
 
-- [x] Dropped 'full' version of `static-ext` as it was redundant after adding `_ssl` and `_hashlib` to `static-ext`
+- Dropped 'full' version of `static-ext` as it was redundant after adding `_ssl` and `_hashlib` to `static-ext`
 
-- [x] added even more intuitive make frontend to builder with help (via `make help`)
+- added even more intuitive make frontend to builder with help (via `make help`)
 
-- [x] make all xcodeprojects externally xcconfig-parametrizable to `builder`:
+- make all xcodeprojects externally xcconfig-parametrizable to `builder`:
 
   ```bash
   xcodebuild -project py-js.xcodeproj -target py VERSION=3.7 SUFFIX=m
   ```
   
-- [x] inject commandline parameters in python build system to enable more granular downstream decisions.
+- inject commandline parameters in python build system to enable more granular downstream decisions.
 
-- [x] add step in bundle-creation to prepopulate site-packages with list of packages
+- add step in bundle-creation to prepopulate site-packages with list of packages
 
 #### Bugs
 
-- [x] fixed static builds to work with `.build_pyjs`
+- fixed static builds to work with `.build_pyjs`
 
-- [x] `_hashlib` and `_ssl` are now built for `static-ext` build.
+- `_hashlib` and `_ssl` are now built for `static-ext` build.
 
-- [x] fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
+- fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
 
 
 ### Core Features
 
-- [x] shift to python-based build system. Bash / Makefile is now deprecated.
+- shift to python-based build system. Bash / Makefile is now deprecated.
 
-- [x] create a pkg distribution built from python src which retains pip for easily installing python packages
+- create a pkg distribution built from python src which retains pip for easily installing python packages
 
-- [x] create FAQ
+- create FAQ
 
-- [x] shrunk external + numpy to 30MB
+- shrunk external + numpy to 30MB
 
-- [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
+- investigate static linking of numpy and python (see notes): not viable due to project size constraints.
 
-- [x] --enable-optimizations at configure
+- --enable-optimizations at configure
 
-- [x] replacing 'cp -rf' with pure python self.copy
+- replacing 'cp -rf' with pure python self.copy
 
-- [x] remove dependency on libintl via patching `configure` for both static and shared
+- remove dependency on libintl via patching `configure` for both static and shared
 
-- [x] copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
+- copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
 
-- [x] fix references (still pointing to compiled locations) ??
+- fix references (still pointing to compiled locations) ??
 
-- [x] fix problem with `--enable-shared` builds where pythonhome is not found, and sys.prefix defaults to what is hardcoded at compilation time.
+- fix problem with `--enable-shared` builds where pythonhome is not found, and sys.prefix defaults to what is hardcoded at compilation time.
 
-- [x] codesigning / notarization solved.
+- codesigning / notarization solved.
 
 ## Pre-release0
 
@@ -164,120 +174,120 @@
 
 #### Core
 
-- [x] pyjs in-function calls to code did not work well as strings (conversion to array fixed it)
+- pyjs in-function calls to code did not work well as strings (conversion to array fixed it)
 
-- [x] no-return ops in`pyjs` such as `exec` and `import` somehow make javascript assume an error has occured.
+- no-return ops in`pyjs` such as `exec` and `import` somehow make javascript assume an error has occured.
 
-- [x] Convert `py` into a `jsextension` class
+- Convert `py` into a `jsextension` class
 
-- [x] create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
+- create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
 
-- [x] add `autoload` attribute to trigger autoload (`load` msg) of code editor code
+- add `autoload` attribute to trigger autoload (`load` msg) of code editor code
 
-- [x] for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
+- for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
 
-- [x] branch `embed-pkg`, embeds a local python install with a zipped stdlib in `support` already successfully tested embedding the python distro in the external itself.
+- branch `embed-pkg`, embeds a local python install with a zipped stdlib in `support` already successfully tested embedding the python distro in the external itself.
 
-- [x] made it possible to get the py object's name from any module in its namespace!
+- made it possible to get the py object's name from any module in its namespace!
 
-- [x] enhance `py_exec` method to create a single string from argv so it can import easily
+- enhance `py_exec` method to create a single string from argv so it can import easily
 
-- [x] enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
+- enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
 
-- [x] Refactor 'py_eval' to make it more consistent with the others
+- Refactor 'py_eval' to make it more consistent with the others
 
-- [x] Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
+- Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
 
-- [x] Each py object has its own python 'globals' namespace and responds to the following
+- Each py object has its own python 'globals' namespace and responds to the following
       msgs
-  - [x] `import <module>`: adds module to the namespace
-    - [x] `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
-    - [x] `exec <statement>`: executes statement into the namespace (can modify ns)
-    - [x] `execfile <file.py>`: executes python file into the namespace (can modify ns)
-    - [x] `run <file.py>`: executes python file into the namespace (can modify ns)
+  - `import <module>`: adds module to the namespace
+    - `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
+    - `exec <statement>`: executes statement into the namespace (can modify ns)
+    - `execfile <file.py>`: executes python file into the namespace (can modify ns)
+    - `run <file.py>`: executes python file into the namespace (can modify ns)
 
-- [x] Add right inlet bang after eval op ends
+- Add right inlet bang after eval op ends
 
-- [x] add third (middle) outlet which bangs on an error
+- add third (middle) outlet which bangs on an error
 
 #### Extra
 
-- [x] check whether setting a normal attr name, can also set scripting name
+- check whether setting a normal attr name, can also set scripting name
 
-- [x] Implement 'send' msg, which sends typed messages to (script) named objects (see: <https://cycling74.com/forums/error-handling-with-object_method_typed>)
+- Implement 'send' msg, which sends typed messages to (script) named objects (see: <https://cycling74.com/forums/error-handling-with-object_method_typed>)
 
-- [x] Add `call (anything)` method to call python callables in a namespace
+- Add `call (anything)` method to call python callables in a namespace
 
 #### Code Editor (Usability)
 
-- [x] Edit default with text editor
+- Edit default with text editor
 
-- [x] Add text edit object
-  - [x] enable code to be run from editor
+- Add text edit object
+  - enable code to be run from editor
 
 #### Line REPL (Usability)
 
-- [x] Add line repl
-  - [x] Add up-arrow last line recall (great for 'random.random()')
+- Add line repl
+  - Add up-arrow last line recall (great for 'random.random()')
 
 #### Extensibility
 
-- [x] Create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
+- Create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
 
-- [x] Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
+- Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
 
-- [x] Add bpatcher line repl
+- Add bpatcher line repl
 
-- [x] add python scripts to 'examples/scripts'
+- add python scripts to 'examples/scripts'
 
-- [x] Add cythonized access to max c-api..?
+- Add cythonized access to max c-api..?
 
-- [x] Extensible by embedded cython based python extensions which can call a library of wrapped max_api functions in python code. There is a proof of concept of the python code in the namsepace calling the max api `post` function successfully.
+- Extensible by embedded cython based python extensions which can call a library of wrapped max_api functions in python code. There is a proof of concept of the python code in the namsepace calling the max api `post` function successfully.
 
-- [x] Exposing of good portion of the max api to cython scripting
+- Exposing of good portion of the max api to cython scripting
 
 #### Architectural
 
-- [x] Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
+- Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
 
 #### Documentation
 
-- [x] Add .maxref.xml to docs
+- Add .maxref.xml to docs
 
 #### Code Quality
 
-- [x] refactor error handling code (if possible)
+- refactor error handling code (if possible)
 
-- [x] Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
+- Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
 
-- [x] Refactor into functions
+- Refactor into functions
 
 #### Testing
 
-- [x] pytest testing harness
+- pytest testing harness
 
-- [x] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
+- convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
 
-- [x] make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
+- make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
 
 ### Bug Fixes
 
-- [x] pick up default homebrew installed python details by querying /usr/local/opt/python/libexec/bin/python
+- pick up default homebrew installed python details by querying /usr/local/opt/python/libexec/bin/python
 
-- [x] fixed 'send' which did not have enough error checking and was crashing frequently
+- fixed 'send' which did not have enough error checking and was crashing frequently
 
-- [x] fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
+- fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
 
-- [x] globex remains after all objects are freed. solution: `PyXDECREF x->p_globals` on `py_free`
+- globex remains after all objects are freed. solution: `PyXDECREF x->p_globals` on `py_free`
 
-- [x] space in `eval` without quotes will cause a crash!
+- space in `eval` without quotes will cause a crash!
 
-- [x] space in path causes "sprintf" type debugging in execfile to crash max!
+- space in path causes "sprintf" type debugging in execfile to crash max!
 
-- [x] codesigning errors are due to Package being developed in Documents/... which causes issues. If it's a non icloud exposed folder it works ok.
+- codesigning errors are due to Package being developed in Documents/... which causes issues. If it's a non icloud exposed folder it works ok.
 
-- [x] make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
+- make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
 
-- [x] `import` statement in eval causes a segmentation fault. see: <https://docs.python.org/3/c-api/intro.html> exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
+- `import` statement in eval causes a segmentation fault. see: <https://docs.python.org/3/c-api/intro.html> exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
-- [x] do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
+- do not give attr has same name as method (the import saga) as this will crash. fix by making them different.

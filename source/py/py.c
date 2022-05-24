@@ -188,8 +188,8 @@ t_hashtab* get_global_registry(void)
 /**
  * @brief Searches the Max filesystem context for a file given by a symbol
  *
- * @param x
- * @param s
+ * @param x pointer to object struct
+ * @param s symbol to be searched
  * @return t_max_err
  *
  * If successful, this function will set `x->p_code_filepath` with
@@ -1321,7 +1321,7 @@ error:
  * @brief Evaluate a max symbol as a python expression
  * 
  * @param x pointer to object structure
- * @param s symbol
+ * @param s symbol of object to be evaluated
  * @param argc atom argument count
  * @param argv atom argument vector
  * @return t_max_err error code

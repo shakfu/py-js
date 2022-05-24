@@ -3,6 +3,18 @@
 #ifndef PYJS_H
 #define PYJS_H
 
+
+
+/** \file pyjs.h
+    \brief Documentation of pyjs external header interface.
+    
+    This is the main header file for the `pyjs` external.
+    
+    Note that the external structure is not directly 
+    exposed at the header level.
+*/
+
+
 /*--------------------------------------------------------------------------*/
 /* Includes */                                                                           
 

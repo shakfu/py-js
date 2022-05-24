@@ -5,11 +5,7 @@
 
 ### Is this macOS only?
 
-This project is macOS x86_64 (intel) compatible currently.
-
-### What about compatibility with Apple Silicon?
-
-The main branch has just converted to the lastest `max-base-sdk` and it is now compatible with Apple Silicon machines.
+This project is currently only macOS x86_64 (Intel) or arm64 (Apple silicon) compatible.
 
 ### What about compatibility with Windows?
 
@@ -17,9 +13,9 @@ There's no particular reason why this project shouldn't work in windows except t
 
 ### Does it only work with Homebrew python?
 
-It used to work by default with [Homebrew](https://brew.sh) installed python but current versions don't require Homebrew python. Python3 installed from python.org works as expected, and even Apple installed system python3 has been tested to work on the default build and some but not all of the other build variants.
+It used to work, by default, with [Homebrew](https://brew.sh) installed python but current versions don't require Homebrew python. Python3 installed from python.org works as expected, and even Apple installed system python3 has been tested to work on the default build and some but not all of the other build variants.
 
-Basically, there is no instrinsic reason why it shouldn't work with other python3 installations on your system.
+Basically, there is no intrinsic reason why it shouldn't work with python3 on your system if the python3 version >= 3.7
 
 ## Implementation
 
@@ -41,6 +37,8 @@ Of course, it would normally be considered redundant to install two different py
 ### Every time I open a patch there is a some debug information in the console. Should I be concerned?
 
 It looks like someone left @debug=on in this patch and it further may have cached some paths to related on the build system in the patch. You should be able to switch it off by setting @debug=off. If they still remain, open the `.maxpat` in question in an editor (it's a JSON file) and remove the cached paths.
+
+You can also go to the external c file itself and hardcode DEBUG=0 if you want to switch logging off completely.
 
 ## Extensibility
 

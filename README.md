@@ -2,7 +2,7 @@
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
 
-Currently builds only 'natively' on macOS `x86_64`and macOS `arm64`
+Currently builds 'natively' on macOS `x86_64`and macOS `arm64`.
 
 repo - <https://github.com/shakfu/py-js>
 
@@ -36,9 +36,9 @@ This README will mostly cover the first two externals (`py.mxo` and `pyjs.mxo`) 
 
 For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
-## Cheatsheets for features in py and pyjs
+## Cheatsheets for py and pyjs
 
-Here are a couple of cheatsheets to give you a sense of the feature differences between the two core python3 max externals:
+The following will give you a sense of the feature differences between the two core python3 max externals:
 
 ### `py` external
 
@@ -128,9 +128,9 @@ pyjs max external (jsextension)
 
 ## Quickstart
 
-As mentioned earlier, the `py` and `pyjs` objects are the most mature and best documented of the collection. Happily, there is also no need to compile them as they available from the [releases](https://github.com/shakfu/py-js/releases) section with examples of both externals being fully codesigned and notarized.
+As mentioned earlier, the `py` and `pyjs` objects are the most mature and best documented of the collection. Happily, there is also no need to compile them as they are available for download, fully codesigned and notarized, from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-If you'd rather build them yourself then the process is pretty straightforward:
+If you'd rather build them yourself then the process is straightforward:
 
 1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.7 to 3.10 are tested and known to work.
 
@@ -144,7 +144,7 @@ If you'd rather build them yourself then the process is pretty straightforward:
 
     The above will initialize and update the required git submodules and symlink the repo to `$HOME/Documents/Max 8/Packages/py-js` to install it as a Max Package and enable you to test the externals and run the patches.
 
-    [?] It is possible to install `py-js` directly into `$HOME/Documents/Max 8/Packages`, but it is more involved, involving a different configuration, and not recommended for the purposes of this quickstart.
+    [?] It is possible to install `py-js` directly into `$HOME/Documents/Max 8/Packages`, but it is requires moving the place of compilation to a location in your filesystem which is not exposed to errors due to icloud syncing or spaces in the path. This split is possible, but it is not recommended for the purposes of this quickstart.
 
 4. (Optional) Install [cython](https://cython.org) via `pip3 install cython`, which is used for wrapping the max api and worth installing in case you want to play around or extend the max api wrapper (which it is written in cython).
 
@@ -276,11 +276,11 @@ If you included `pyjs.mxo` as an external in your standalone, then you it may be
 
 You can test first if it works without issues by building the following patcher, included in `py-js/patchers`, as a max standalone:
 
-- `pyjs_test_standalone_only_pyjs.maxpat`
+- `py_test_standalone_only_pyjs.maxpat`
 
 Open the resulting standalone and test that the `pyjs` object works as expected. If it doesn't then try the following workaround:
 
-To fix a sometimes recurrent issue where the standalone build algorithm doesn't pick up `pyjs.mxo`: if you look inside the built standalone bundle, `pyjs_test_standalone.app/Contents/Resources/C74/externals` you will not find `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `pyjs_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatly appreciated.
+To fix a sometimes recurrent issue where the standalone build algorithm doesn't pick up `pyjs.mxo`: if you look inside the built standalone bundle, `py_test_standalone_only_pyjs.app/Contents/Resources/C74/externals` you may not find `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `pyjs_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatly appreciated.
 
 Please read on for further details about what the py-js externals can do.
 

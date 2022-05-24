@@ -75,7 +75,14 @@ void ext_main(void* module_ref)
 /*--------------------------------------------------------------------------*/
 /* Object init and freeing */
 
-
+/**
+ * @brief Create new external object with optional arguments.
+ * 
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return void*
+ */
 void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_pyjs* x = NULL;
@@ -104,7 +111,11 @@ void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
     return (x);
 }
 
-
+/**
+ * @brief Free object memory when object is deleted.
+ * 
+ * @param x pointer to object struct.
+ */
 void pyjs_free(t_pyjs* x)
 {
     Py_XDECREF(x->p_globals);
@@ -120,7 +131,14 @@ void pyjs_free(t_pyjs* x)
     }
 }
 
-
+/**
+ * @brief Initialize python builtins
+ * 
+ * @param x pointer to object struct
+ * 
+ * Collects python builtin initialization steps. Meant to be called in 
+ * `pyjs_init` which itself should be called inside `pyjs_new`. 
+ */
 void pyjs_init_builtins(t_pyjs* x)
 {
     PyObject* p_name = NULL;
@@ -253,7 +271,11 @@ void py_init_osx_set_home_shared_pkg(void)
 }
 #endif
 
-
+/**
+ * @brief main init function called within body of `pyjs_new`
+ * 
+ * @param x 
+ */
 void pyjs_init(t_pyjs* x)
 {
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
@@ -278,7 +300,19 @@ void pyjs_init(t_pyjs* x)
 /*--------------------------------------------------------------------------*/
 /* Helpers */
 
-
+/**
+ * @brief Post msg to Max console.
+ *
+ * @param x pointer to object struct
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ *
+ * This log function is a variadic function which doesn'y `post` its msg
+ * if the object struct member `x->p_debug` is 0.
+ *
+ * WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is less than
+ * the length of the log or err message, Max will crash.
+ */
 void pyjs_log(t_pyjs* x, char* fmt, ...)
 {
     if (x->p_debug) {
@@ -293,7 +327,13 @@ void pyjs_log(t_pyjs* x, char* fmt, ...)
     }
 }
 
-
+/**
+ * @brief Post error message to Max console.
+ *
+ * @param x pointer to object struct
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ */
 void pyjs_error(t_pyjs* x, char* fmt, ...)
 {
     char msg[PY_MAX_ERR_CHAR];
@@ -306,6 +346,17 @@ void pyjs_error(t_pyjs* x, char* fmt, ...)
     error("[pyjs %s]: %s", x->p_name->s_name, msg);
 }
 
+/**
+ * @brief Searches the Max filesystem context for a file given by a symbol
+ *
+ * @param x pointer to object struct
+ * @param s symbol to be search
+ * 
+ * @return t_max_err
+ *
+ * If successful, this function will set `x->p_code_filepath` with
+ * the Max readable path of the found file.
+ */
 void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
 {
     t_fourcc p_code_filetype = FOUR_CHAR_CODE('TEXT');
@@ -350,6 +401,13 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
 /*--------------------------------------------------------------------------*/
 /* Handlers */
 
+/**
+ * @brief Generic python error handler
+ * 
+ * @param x pointer to object struct
+ * @param fmt format string
+ * @param ... other args
+ */
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
 {
     if (PyErr_Occurred()) {
@@ -380,6 +438,15 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
 }
 
 
+/**
+ * @brief      Handler to output python float as max float
+ *
+ * @param      x       pointer to object struct
+ * @param      pfloat  python float object
+ * @param[out] rv      atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv)
 {
     t_atom atom_result[1];
@@ -408,7 +475,15 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Handler to output python long as max int
+ *
+ * @param      x      pointer to object struct
+ * @param      plong  python long object
+ * @param      rv     atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv)
 {
     t_atom atom_result[1];
@@ -437,7 +512,15 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Handler to output python string as max symbol
+ *
+ * @param      x        pointer to object struct
+ * @param      pstring  python string object
+ * @param      rv       atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_handle_string_output(t_pyjs* x, PyObject* pstring, t_atom* rv)
 {
     t_atom atom_result[PY_MAX_ATOMS];
@@ -465,7 +548,15 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Handler to output python list as max list
+ *
+ * @param      x      pointer to object struct
+ * @param      plist  python list object
+ * @param      rv     atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
 {
     if (plist == NULL) {
@@ -570,7 +661,15 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Handler to output python dict as max list
+ *
+ * @param      x      pointer to object struct
+ * @param      pdict  python dict object
+ * @param      rv     atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_handle_dict_output(t_pyjs* x, PyObject* pdict, t_atom* rv)
 {
     PyObject* pfun_co = NULL;
@@ -629,7 +728,15 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Generic handler to output arbitrarily-typed python object as max object
+ *
+ * @param      x     pointer to object struct
+ * @param      pval  python value object
+ * @param      rv    atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
 {
     if (pval == NULL) {
@@ -671,6 +778,17 @@ t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
 /*--------------------------------------------------------------------------*/
 /* Core Methods */
 
+/**
+ * @brief      Converts atom vector to text and evaluate as python code
+ *
+ * @param      x     pointer to object struct
+ * @param      s     symbol
+ * @param[in]  argc  atom argument count
+ * @param      argv  atom argument vector
+ * @param      rv    atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_code(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
                     t_atom* rv)
 {
@@ -722,7 +840,14 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Import a python module
+ *
+ * @param      x     pointer to object struct
+ * @param      s     symbol of module to be imported
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_import(t_pyjs* x, t_symbol* s)
 {
     PyObject* x_module = NULL;
@@ -745,6 +870,17 @@ error:
 }
 
 
+/**
+ * @brief      Evaluate a max symbol as a python expression
+ *
+ * @param      x     pointer to object struct
+ * @param      s     symbol of object to be evaluated
+ * @param[in]  argc  atom argument count
+ * @param      argv  atom argument vector
+ * @param      rv    atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
                     t_atom* rv)
 {
@@ -763,7 +899,14 @@ t_max_err pyjs_eval(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
     }
 }
 
-
+/**
+ * @brief      Execute contents of a file (obtained from symbol) as python code
+ *
+ * @param      x     pointer to object struct
+ * @param      s     symbol of the file to executed.
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s)
 {
     PyObject* pval = NULL;
@@ -807,7 +950,14 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Execute a max symbol as a line of python code
+ *
+ * @param      x     pointer to object struct
+ * @param      s     symbol of the object to executed
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s)
 {
     PyObject* pval = NULL;
@@ -834,7 +984,17 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Evaluates atom as python code and returns result as json
+ *
+ * @param      x     pointer to object struct
+ * @param      s     symbol of object to be evaluated
+ * @param[in]  argc  The count of arguments
+ * @param      argv  The arguments array
+ * @param      rv    atom vector to populate in-place
+ *
+ * @return     The t_max_err error.
+ */
 t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
                             t_atom* rv)
 {

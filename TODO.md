@@ -2,6 +2,13 @@
 
 ## Build System
 
+- [ ] add shrink standalone step to scripts
+
+  1. remove `<app>/Contents/Resources/C7/extensions/max/maxclang.mxo`
+
+  2. lipo --arch x86_64 or otherwise
+
+
 - [ ] refactor builder.sign - builder.package to class
 
 - [ ] `min-setup.local` patch system needs to be organized and automated and linked to modules so that options lead to proper removal of extensions and modules with clear dependencies.
