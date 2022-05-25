@@ -81,8 +81,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 221.0, 207.0, 50.0, 22.0 ],
-					"text" : "bang"
+					"patching_rect" : [ 104.0, 207.0, 167.0, 22.0 ],
+					"text" : "0123456789abcdefABCDEF"
 				}
 
 			}
