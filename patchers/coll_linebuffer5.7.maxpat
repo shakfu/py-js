@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 4,
+			"minor" : 3,
+			"revision" : 1,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -12,7 +12,7 @@
 		"classnamespace" : "box",
 		"rect" : [ 75.0, 97.0, 542.0, 729.0 ],
 		"bglocked" : 0,
-		"openinpresentation" : 0,
+		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
 		"default_fontface" : 0,
 		"default_fontname" : "Arial",
@@ -97,7 +97,7 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 485.0, 690.0, 24.0, 24.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 442.0, 172.0, 22.0, 22.0 ]
+					"presentation_rect" : [ 279.0, 1.0, 22.0, 22.0 ]
 				}
 
 			}
@@ -112,7 +112,7 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 451.25, 690.0, 24.0, 24.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 467.25, 172.0, 22.0, 22.0 ]
+					"presentation_rect" : [ 304.25, 1.0, 22.0, 22.0 ]
 				}
 
 			}
@@ -174,7 +174,7 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 200.833333333333485, 194.0, 50.0, 21.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 164.0, 198.0, 50.0, 21.0 ],
+					"presentation_rect" : [ 1.0, 26.0, 50.0, 21.0 ],
 					"text" : "reset",
 					"texton" : "reset"
 				}
@@ -337,7 +337,7 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 294.999999999999773, 453.0, 69.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 164.0, 172.0, 55.0, 22.0 ],
+					"presentation_rect" : [ 1.0, 1.0, 55.0, 22.0 ],
 					"textjustification" : 1
 				}
 
@@ -394,7 +394,7 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 133.333333333333485, 120.0, 222.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 218.0, 172.0, 222.0, 22.0 ],
+					"presentation_rect" : [ 55.0, 1.0, 222.0, 22.0 ],
 					"rounded" : 0.0,
 					"tabmode" : 0
 				}
@@ -409,25 +409,30 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 200.833333333333485, 690.0, 227.666666666666288, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 218.0, 198.0, 271.0, 22.0 ]
+					"presentation_rect" : [ 55.0, 26.0, 271.0, 22.0 ]
 				}
 
 			}
 , 			{
 				"box" : 				{
+					"autoload" : 0,
+					"file" : "",
 					"id" : "obj-25",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
-					"outlettype" : [ "", "", "" ],
+					"outlettype" : [ "", "bang", "bang" ],
 					"patching_rect" : [ 446.0, 643.0, 29.5, 22.0 ],
 					"saved_object_attributes" : 					{
+						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
-						"pythonpath" : ""
+						"pythonpath" : "",
+						"run_on_save" : 0
 					}
 ,
-					"text" : "py"
+					"text" : "py",
+					"varname" : "__main__"
 				}
 
 			}

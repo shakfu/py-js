@@ -69,7 +69,7 @@ t_max_err cobra_handle_list_output(t_cobra* x, PyObject* plist);
 t_max_err cobra_handle_dict_output(t_cobra* x, PyObject* pdict);
 t_max_err cobra_handle_output(t_cobra* x, PyObject* pval);
 t_max_err cobra_import(t_cobra* x, t_symbol* s);
-t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err cobra_defer(t_cobra* x, t_symbol* s, long argc, t_atom* argv);
 
 
 static t_class *s_cobra_class = NULL;

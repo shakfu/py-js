@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 404.0, 170.0, 622.0, 402.0 ],
+		"rect" : [ 87.0, 104.0, 640.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -40,70 +40,11 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-24",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 123.0, 146.0, 113.0, 22.0 ],
-					"text" : "eval sys.executable"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-22",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 243.0, 146.0, 117.0, 22.0 ],
-					"text" : "eval sys.exec_prefix"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-18",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 366.0, 146.0, 85.0, 22.0 ],
-					"text" : "eval sys.prefix"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-16",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 457.0, 146.0, 63.0, 22.0 ],
-					"text" : "import sys"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-10",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 17.0, 52.0, 231.0, 20.0 ],
-					"text" : "Tests single [py] external in a standalone."
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"id" : "obj-20",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 17.0, 90.0, 67.0, 22.0 ],
+					"patching_rect" : [ 535.5, 46.0, 67.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"allwindowsactive" : 0,
 						"appicon_mac" : "",
@@ -134,11 +75,106 @@
 					"fontface" : 1,
 					"fontsize" : 16.0,
 					"id" : "obj-19",
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 17.0, 20.0, 185.0, 24.0 ],
-					"text" : "standalone test py"
+					"patching_rect" : [ 102.0, 46.0, 122.0, 42.0 ],
+					"text" : "standalone test py",
+					"textjustification" : 1
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 1,
+					"fontsize" : 16.0,
+					"id" : "obj-18",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 372.5, 46.0, 122.0, 42.0 ],
+					"text" : "standalone test pyjs",
+					"textjustification" : 1
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-16",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"patching_rect" : [ 372.5, 193.0, 31.0, 22.0 ],
+					"text" : "t s b"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-15",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 384.5, 281.0, 29.5, 22.0 ],
+					"text" : "set"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-12",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 372.5, 146.0, 49.0, 22.0 ],
+					"text" : "py x*10"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-13",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 461.5, 146.0, 44.0, 22.0 ],
+					"text" : "py x=3"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-11",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 384.5, 325.0, 96.0, 22.0 ],
+					"text" : "30"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-6",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 461.5, 237.0, 141.0, 22.0 ],
+					"saved_object_attributes" : 					{
+						"filename" : "test_pyjs.js",
+						"parameter_enable" : 0
+					}
+,
+					"text" : "js @filename test_pyjs.js",
+					"varname" : "bob"
 				}
 
 			}
@@ -149,7 +185,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
-					"patching_rect" : [ 17.0, 177.0, 29.5, 22.0 ],
+					"patching_rect" : [ 102.0, 189.0, 29.5, 22.0 ],
 					"text" : "t l b"
 				}
 
@@ -161,7 +197,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 27.5, 288.0, 33.5, 22.0 ],
+					"patching_rect" : [ 112.5, 277.0, 29.5, 22.0 ],
 					"text" : "set"
 				}
 
@@ -171,10 +207,10 @@
 					"id" : "obj-9",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
-					"numoutlets" : 3,
-					"outlettype" : [ "bang", "bang", "bang" ],
-					"patching_rect" : [ 502.0, 52.0, 42.0, 22.0 ],
-					"text" : "t b b b"
+					"numoutlets" : 4,
+					"outlettype" : [ "bang", "bang", "bang", "bang" ],
+					"patching_rect" : [ 249.0, 52.0, 52.0, 22.0 ],
+					"text" : "t b b b b"
 				}
 
 			}
@@ -185,7 +221,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 502.0, 20.0, 58.0, 22.0 ],
+					"patching_rect" : [ 249.0, 20.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -197,7 +233,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 146.0, 96.0, 22.0 ],
+					"patching_rect" : [ 102.0, 142.0, 92.0, 22.0 ],
 					"text" : "eval os.__file__"
 				}
 
@@ -205,12 +241,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-5",
+					"linecount" : 5,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 27.5, 336.0, 517.5, 22.0 ],
-					"text" : "/Users/sa/Downloads/projects/py-js/source/py/targets/build/lib/python-shared"
+					"patching_rect" : [ 112.5, 325.0, 116.5, 76.0 ],
+					"text" : "/Users/sa/Downloads/projects/py-js/externals/py.mxo/Contents/Resources/lib/python39.zip/os.py"
 				}
 
 			}
@@ -221,7 +258,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 526.0, 146.0, 58.0, 22.0 ],
+					"patching_rect" : [ 210.0, 142.0, 58.0, 22.0 ],
 					"text" : "import os"
 				}
 
@@ -235,7 +272,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "bang", "bang" ],
-					"patching_rect" : [ 526.0, 241.0, 75.0, 22.0 ],
+					"patching_rect" : [ 210.0, 237.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
@@ -258,7 +295,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 554.0, 281.0, 24.0, 24.0 ]
+					"patching_rect" : [ 238.0, 277.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -271,7 +308,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 582.0, 281.0, 24.0, 24.0 ]
+					"patching_rect" : [ 266.0, 277.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -299,8 +336,35 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"midpoints" : [ 466.5, 228.0, 535.5, 228.0 ],
+					"destination" : [ "obj-16", 0 ],
+					"source" : [ "obj-12", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-6", 0 ],
+					"source" : [ "obj-13", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-11", 0 ],
+					"source" : [ "obj-15", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-15", 0 ],
+					"source" : [ "obj-16", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-6", 0 ],
 					"source" : [ "obj-16", 0 ]
 				}
 
@@ -308,15 +372,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
-					"midpoints" : [ 375.5, 228.0, 535.5, 228.0 ],
-					"source" : [ "obj-18", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"midpoints" : [ 26.5, 228.0, 535.5, 228.0 ],
 					"source" : [ "obj-2", 0 ]
 				}
 
@@ -325,22 +380,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-4", 0 ],
 					"source" : [ "obj-2", 1 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"midpoints" : [ 252.5, 228.0, 535.5, 228.0 ],
-					"source" : [ "obj-22", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"midpoints" : [ 132.5, 228.0, 535.5, 228.0 ],
-					"source" : [ "obj-24", 0 ]
 				}
 
 			}
@@ -360,6 +399,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-11", 1 ],
+					"source" : [ "obj-6", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-2", 0 ],
 					"source" : [ "obj-7", 0 ]
 				}
@@ -374,15 +420,22 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-16", 0 ],
-					"source" : [ "obj-9", 1 ]
+					"destination" : [ "obj-12", 0 ],
+					"source" : [ "obj-9", 2 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-13", 0 ],
+					"source" : [ "obj-9", 3 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-3", 0 ],
-					"source" : [ "obj-9", 2 ]
+					"source" : [ "obj-9", 1 ]
 				}
 
 			}
@@ -397,6 +450,13 @@
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"
+			}
+, 			{
+				"name" : "test_pyjs.js",
+				"bootpath" : "~/Downloads/projects/py-js/javascript",
+				"patcherrelativepath" : "../javascript",
+				"type" : "TEXT",
+				"implicit" : 1
 			}
  ],
 		"autosave" : 0
