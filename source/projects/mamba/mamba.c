@@ -7,13 +7,16 @@
 #include "ext.h"
 #include "ext_obex.h"
 
+// INCLUDE THIS
+#define PY_IMPLEMENTATION // <-- activate the implementation
 #include "py.h"
+
 
 
 typedef struct mamba
 {
     t_object c_obj;
-    t_py* py;
+    t_py* py;           // <-- this is the key opaque type and instance
     void *c_outlet;
 
 } t_mamba;
@@ -44,7 +47,7 @@ void ext_main(void *r)
     s_mamba_class = c;
 }
 
-// initial optional arg is delay time
+
 
 void *mamba_new(t_symbol *s, long argc, t_atom *argv)
 {
@@ -52,8 +55,7 @@ void *mamba_new(t_symbol *s, long argc, t_atom *argv)
 
     x->c_outlet = bangout(x);
 
-    x->py = malloc(sizeof (t_py));
-    py_init(x->py);
+    x->py = py_init(); // This is all that is need to init the `py` obj
  
     attr_args_process(x, argc, argv);
 
@@ -63,7 +65,7 @@ void *mamba_new(t_symbol *s, long argc, t_atom *argv)
 
 void mamba_free(t_mamba *x)
 {
-    py_free(x->py);
+    py_free(x->py); // must be called in the free metho to cleanup python.
 }
 
 
@@ -72,9 +74,10 @@ void mamba_bang(t_mamba *x)
     outlet_bang(x->c_outlet);
 }
 
+
 t_max_err mamba_import(t_mamba* x, t_symbol* s)
 {
-    return py_import(x->py, s);
+    return py_import(x->py, s); // returns t_max_err 
 }
 
 

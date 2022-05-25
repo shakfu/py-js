@@ -2,6 +2,9 @@
 
 ## v0.1.1
 
+### Variants
+
+- added the `mamba` project, a single header python3 library for max externals which provides the `t_py` python type which is supposed to be nested inside another external.
 
 ### Patchers
 

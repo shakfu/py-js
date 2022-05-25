@@ -19,8 +19,13 @@ name     | sdk        | lang   | description
 py       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
 pyjs     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
 mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
-[pymx](https://github.com/shakfu/min.pymx)     | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
+pymx [1] | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 zpy      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
+cobra    | max-sdk    | c      | python3 external providing deferred syncronized python function execution
+mamba    | max-sdk    | c      | single-header python3 library for max externals for nesting python3 objects in other externals
+
+
+[1] Has been moved to its own github project:[mxpy](https://github.com/shakfu/min.pymx)
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. They are mostly differentiated in the ways that this is done and in the choice of packaging to serve different deployment requirements for your patch, package or standalone.
 
@@ -32,7 +37,11 @@ A significant time of this project has been devoted to developing and refining d
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no current or future plans to produce 'fat' or universal externals which serve both architectures. Codesigned and notarized `x86_64`-based and `arm64`-based python3 externals are provided in the [releases](https://github.com/shakfu/py-js/releases) section and available for download.
 
-This README will mostly cover the first two externals (`py.mxo` and `pyjs.mxo`) and their many build variations. If you are interested in the others, please look into the `py-js/source/projects` section and please do ask questions or make suggestions via the project issue tracker.
+This README will mostly cover the first two externals (`py.mxo` and `pyjs.mxo`) and their many build variations. If you are interested in the others, please look into the `py-js/source/projects` section and please do ask questions or make suggestions via the project issue tracker. Such externals can be generally built using the following:
+
+```bash
+make cmake
+```
 
 For some of the less developed externals and experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
