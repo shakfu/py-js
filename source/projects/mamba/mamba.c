@@ -1,16 +1,14 @@
 /**
     @file mamba - an experimental attempt to modularize the python object
 
-    The idea is that it can be included as a header and then used.
+    The idea is that it can be included as a header and then used in any external context.
 */
 
 #include "ext.h"
 #include "ext_obex.h"
 
-// INCLUDE THIS
 #define PY_IMPLEMENTATION // <-- activate the implementation
-#include "py.h"
-
+#include "py.h"           // <-- include this
 
 
 typedef struct mamba
@@ -30,6 +28,8 @@ void mamba_free(t_mamba *x);
 void mamba_bang(t_mamba *x);
 t_max_err mamba_import(t_mamba* x, t_symbol* s);
 t_max_err mamba_eval(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err mamba_exec(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err mamba_execfile(t_mamba* x, t_symbol* s);
 
 
 static t_class *s_mamba_class = NULL;
@@ -38,15 +38,16 @@ void ext_main(void *r)
 {
     t_class *c = class_new( "mamba", (method)mamba_new, (method)mamba_free, sizeof(t_mamba), (method)0L, A_GIMME, 0);
 
-    class_addmethod(c, (method)mamba_bang,      "bang",              0);
-    class_addmethod(c, (method)mamba_import,    "import",   A_SYM,   0);
-    class_addmethod(c, (method)mamba_eval,      "eval",     A_GIMME, 0);
+    class_addmethod(c, (method)mamba_bang,      "bang",                 0);
+    class_addmethod(c, (method)mamba_import,    "import",   A_SYM,      0);
+    class_addmethod(c, (method)mamba_eval,      "eval",     A_GIMME,    0);
+    class_addmethod(c, (method)mamba_exec,      "exec",     A_GIMME,    0);
+    class_addmethod(c, (method)mamba_execfile,  "execfile", A_DEFSYM,   0);
 
     class_register(CLASS_BOX, c);
 
     s_mamba_class = c;
 }
-
 
 
 void *mamba_new(t_symbol *s, long argc, t_atom *argv)
@@ -84,5 +85,17 @@ t_max_err mamba_import(t_mamba* x, t_symbol* s)
 t_max_err mamba_eval(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_eval(x->py, s, argc, argv, x->c_outlet);
+}
+
+
+t_max_err mamba_exec(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_exec(x->py, s, argc, argv);
+}
+
+
+t_max_err mamba_execfile(t_mamba* x, t_symbol* s)
+{
+    return py_execfile(x->py, s);
 }
 

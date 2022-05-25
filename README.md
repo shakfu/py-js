@@ -21,11 +21,11 @@ pyjs     | max-sdk    | c      | js-friendly -- written as a Max javascript-exte
 mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 pymx [1] | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 zpy      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
-cobra    | max-sdk    | c      | python3 external providing deferred and syncronized function execution
-mamba    | max-sdk    | c      | single-header python3 library to nest a python3 interpreter in any max external
+cobra    | max-sdk    | c      | python3 external providing deferred and clocked function execution
+mamba    | max-sdk    | c      | single-header library to nest a python3 interpreter in any external
 
 
-[1] Has been moved to its own github project:[mxpy](https://github.com/shakfu/min.pymx)
+[1] pymx been moved to its own [github project](https://github.com/shakfu/min.pymx)
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. They are mostly differentiated in the ways that this is done and in the choice of packaging to serve different deployment requirements for your patch, package or standalone.
 

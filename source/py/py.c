@@ -931,7 +931,7 @@ t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
 error:
     py_handle_error(x, "py_handle_float_output failed");
     Py_XDECREF(pfloat);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -964,7 +964,7 @@ t_max_err py_handle_long_output(t_py* x, PyObject* plong)
 error:
     py_handle_error(x, "py_handle_long_output failed");
     Py_XDECREF(plong);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -996,7 +996,7 @@ t_max_err py_handle_string_output(t_py* x, PyObject* pstring)
 error:
     py_handle_error(x, "py_handle_string_output failed");
     Py_XDECREF(pstring);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1097,7 +1097,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
 error:
     py_handle_error(x, "py_handle_list_output failed");
     Py_XDECREF(plist);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1166,7 +1166,7 @@ error:
     Py_XDECREF(pfun_co);
     Py_XDECREF(pval);
     // fail bang
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1313,7 +1313,7 @@ t_max_err py_import(t_py* x, t_symbol* s)
 error:
     py_handle_error(x, "import %s", s->s_name);
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1344,7 +1344,7 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     } else {
         py_handle_error(x, "eval %s", py_argv);
         PyGILState_Release(gstate);
-        py_bang_failure(x);;
+        py_bang_failure(x);
         return MAX_ERR_GENERIC;
     }
 }
@@ -1386,7 +1386,7 @@ error:
     py_handle_error(x, "exec %s", py_argv);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1540,7 +1540,7 @@ error:
     Py_XDECREF(py_argslist);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1608,7 +1608,7 @@ error:
     py_handle_error(x, "assign %s", s->s_name);
     Py_XDECREF(list);
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1670,7 +1670,7 @@ error:
     py_handle_error(x, "python code evaluation failed");
     // fail bang
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -1828,7 +1828,7 @@ error:
     Py_XDECREF(pval);
     // fail bang
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
 
@@ -2117,7 +2117,7 @@ error:
     py_handle_error(x, "run x->p_code failed");
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    py_bang_failure(x);;
+    py_bang_failure(x);
 }
 
 
