@@ -15,6 +15,12 @@ towards possible refactoring.
 #define PY_DEBUG 1
 
 // ---------------------------------------------------------------------------------------
+// Globals
+
+// static int py_global_obj_count = 0; // when 0 then free interpreter
+
+ 
+// ---------------------------------------------------------------------------------------
 // Datastructure
 
 // struct t_py
@@ -109,6 +115,7 @@ void py_free(t_py* x)
     Py_FinalizeEx();
     free(x);    
 }
+
 
 // ---------------------------------------------------------------------------------------
 // TYPE HANDLERS

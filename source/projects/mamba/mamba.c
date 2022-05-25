@@ -1,7 +1,7 @@
 /**
     @file mamba - an experimental attempt to modularize the python object
 
-    The idea is that it can be included as a header and then used
+    The idea is that it can be included as a header and then used.
 */
 
 #include "ext.h"

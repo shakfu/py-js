@@ -25,17 +25,10 @@ typedef struct _py
 void py_init(t_py* x);
 void py_free(t_py *x);
 
-// void py_log(char* fmt, ...);
-// void py_error(char* fmt, ...);
-// void py_handle_error(char* fmt, ...);
-
-// t_max_err py_float_output(void* outlet, PyObject* pfloat);
-// t_max_err py_long_output(void* outlet, PyObject* plong);
-// t_max_err py_string_output(void* outlet, PyObject* pstring);
-// t_max_err py_list_output(void* outlet, PyObject* plist);
-// t_max_err py_output(void* outlet, PyObject* pval);
-
 t_max_err py_import(t_py* x, t_symbol* s);
 t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+
+// ---------------------------------------------------------------------------------------
+// End Header
 
 #endif // PY_H
