@@ -14,7 +14,7 @@
 typedef struct mamba
 {
     t_object c_obj;
-    t_py* py;           // <-- this is the key opaque type and instance
+    t_py* py;             // <-- this is the key opaque type and instance
     void *c_outlet;
 
 } t_mamba;
@@ -36,7 +36,10 @@ static t_class *s_mamba_class = NULL;
 
 void ext_main(void *r)
 {
-    t_class *c = class_new( "mamba", (method)mamba_new, (method)mamba_free, sizeof(t_mamba), (method)0L, A_GIMME, 0);
+    t_class *c = class_new("mamba", 
+        (method)mamba_new, (method)mamba_free, 
+        sizeof(t_mamba), (method)0L, 
+        A_GIMME, 0);
 
     class_addmethod(c, (method)mamba_bang,      "bang",                 0);
     class_addmethod(c, (method)mamba_import,    "import",   A_SYM,      0);
@@ -58,8 +61,6 @@ void *mamba_new(t_symbol *s, long argc, t_atom *argv)
 
     x->py = py_init(); // This is all that is need to init the `py` obj
  
-    attr_args_process(x, argc, argv);
-
     return x;
 }
 
