@@ -75,9 +75,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 #ifdef PY_IMPLEMENTATION
 
 /*
-
-Minimal python3 services for Max objects.
-
+    py.h -- single-header library providing minimal python3 services for Max externals.
 */
 
 #define PY_MAX_ATOMS 128
@@ -1184,14 +1182,15 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
         goto error;
     }
 
-    pipe_pre = PyRun_String("def __py_maxmsp_pipe(arg):\n"
-                            "\targs = arg.split()\n"
-                            "\tval = eval(args[0])\n"
-                            "\tfuncs = [eval(f) for f in args[1:]]\n"
-                            "\tfor f in funcs:\n"
-                            "\t\tval = f(val)\n"
-                            "\treturn val\n",
-                            Py_single_input, x->p_globals, x->p_globals);
+    pipe_pre = PyRun_String(
+        "def __py_maxmsp_pipe(arg):\n"
+        "\targs = arg.split()\n"
+        "\tval = eval(args[0], locals(), globals())\n"
+        "\tfuncs = [eval(f, locals(), globals()) for f in args[1:]]\n"
+        "\tfor f in funcs:\n"
+        "\t\tval = f(val)\n"
+        "\treturn val\n",
+        Py_single_input, x->p_globals, x->p_globals);
 
     if (pipe_pre == NULL) {
         py_error(x, "pipe func is NULL");

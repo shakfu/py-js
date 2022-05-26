@@ -3,14 +3,14 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 5,
+			"minor" : 3,
+			"revision" : 1,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 360.0, 79.0, 842.0, 755.0 ],
+		"rect" : [ 246.0, 84.0, 847.0, 755.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -141,6 +141,7 @@
 					"enablevscroll" : 0,
 					"id" : "obj-86",
 					"lockeddragscroll" : 0,
+					"lockedsize" : 0,
 					"maxclass" : "bpatcher",
 					"name" : "py_repl.maxpat",
 					"numinlets" : 2,
@@ -765,7 +766,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
-					"outlettype" : [ "", "", "" ],
+					"outlettype" : [ "", "bang", "bang" ],
 					"patching_rect" : [ 176.0, 268.0, 90.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_linecount" : 3,
@@ -774,7 +775,8 @@
 						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
-						"pythonpath" : ""
+						"pythonpath" : "",
+						"run_on_save" : 0
 					}
 ,
 					"text" : "py @name bob",
@@ -1816,15 +1818,15 @@
 			}
  ],
 		"dependency_cache" : [ 			{
+				"name" : "py.mxo",
+				"type" : "iLaX"
+			}
+, 			{
 				"name" : "py_repl.maxpat",
-				"bootpath" : "~/Downloads/src/py/patchers",
+				"bootpath" : "~/Downloads/projects/py-js/patchers",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
-			}
-, 			{
-				"name" : "py.mxo",
-				"type" : "iLaX"
 			}
  ],
 		"autosave" : 0
