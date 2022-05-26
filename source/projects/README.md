@@ -8,7 +8,7 @@ All of these projects can be built using cmake:
 make cmake
 ```
 
-The projects currently into two groups:
+The projects currently fall into two groups:
 
 
 ## A. Implementation and Packaging Experiments

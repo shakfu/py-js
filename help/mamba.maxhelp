@@ -40,6 +40,18 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-5",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 148.0, 79.0, 29.5, 22.0 ],
+					"text" : "1+1"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-13",
 					"maxclass" : "message",
 					"numinlets" : 2,
@@ -154,7 +166,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 139.0, 262.0, 167.0, 22.0 ],
-					"text" : "100"
+					"text" : "2"
 				}
 
 			}
@@ -229,6 +241,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-6", 0 ],
 					"source" : [ "obj-4", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-6", 0 ],
+					"source" : [ "obj-5", 0 ]
 				}
 
 			}

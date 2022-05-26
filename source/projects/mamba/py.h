@@ -52,6 +52,13 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_execfile(t_py* x, t_symbol* s);
 
+// extra methods
+t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+
 
 #ifdef __cplusplus
 }
@@ -111,6 +118,11 @@ t_max_err py_handle_string_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_list_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_dict_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_output(t_py* x, void* outlet, PyObject* pval);
+
+PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from);
+
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset, void* outlet);
+
 
 // ---------------------------------------------------------------------------------------
 // HELPERS
@@ -623,8 +635,6 @@ t_max_err py_handle_output(t_py* x, void* outlet, PyObject* pval)
 // ---------------------------------------------------------------------------------------
 // CORE METHODS
 
-/*--------------------------------------------------------------------------*/
-/* Core Methods */
 
 /**
  * @brief Import a python module
@@ -789,6 +799,453 @@ error:
     return MAX_ERR_GENERIC;
 }
 
+// ---------------------------------------------------------------------------------------
+// EXTRA METHODS HELPERS
+
+/**
+ * @brief Translates atom vector to python list
+ * 
+ * @param x pointer to object struct
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param start_from index of vector to start from
+ * @return PyObject* python list
+ */
+PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
+{
+
+    PyObject* plist = NULL; // python list
+
+    if ((plist = PyList_New(0)) == NULL) {
+        py_error(x, "could not create an empty python list");
+        goto error;
+    }
+
+    for (int i = start_from; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            double c_float = atom_getfloat(argv + i);
+            PyObject* p_float = PyFloat_FromDouble(c_float);
+            if (p_float == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_float);
+            Py_DECREF(p_float);
+            break;
+        }
+        case A_LONG: {
+            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_DECREF(p_long);
+            break;
+        }
+        case A_SYM: {
+            PyObject* p_str = PyUnicode_FromString(
+                atom_getsym(argv + i)->s_name);
+            if (p_str == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_str);
+            Py_DECREF(p_str);
+            break;
+        }
+        default:
+            py_log(x, "cannot process unknown type");
+            break;
+        }
+    }
+    return plist;
+
+error:
+    py_error(x, "atom to list conversion failed");
+    return NULL;
+}
+
+
+/**
+ * @brief A helper function to evaluate Max text as a Python expression.
+ *
+ * @param x pointer to object structure
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param offset offset of atom vector from which to evaluate
+ * @param outlet object outlet
+ * 
+ * @return t_max_err error code
+ */
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset, void* outlet)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    long textsize = 0;
+    char* text = NULL;
+    int is_eval = 1;
+
+    t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
+                                 OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        py_log(x, ">>> %s", text);
+    } else {
+        goto error;
+    }
+
+    PyObject* co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+        is_eval = 0;
+    }
+
+    if (co == NULL) { // can be eval-co or exec-co or NULL here
+        goto error;
+    }
+    sysmem_freeptr(text);
+
+    PyObject* pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(co);
+
+    if (!is_eval) {
+        // bang for exec-type op
+        PyGILState_Release(gstate);
+    } else {
+        py_handle_output(x, outlet, pval);
+    }
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, "python code evaluation failed");
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
+
+// ---------------------------------------------------------------------------------------
+// EXTRA METHODS
+
+/**
+ * @brief Converts a Max list to call a python function with arguments
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param outlet object outlet
+ * 
+ * @return t_max_err error code
+ */
+t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    char* callable_name = NULL;
+    PyObject* py_argslist = NULL;
+    PyObject* pval = NULL;
+    PyObject* py_callable = NULL;
+    // python list
+    PyObject* py_args = NULL; // python tuple
+
+    // first atom in argv must be a symbol
+    if (argv->a_type != A_SYM) {
+        py_error(x, "first atom must be a symbol!");
+        goto error;
+
+    } else {
+        callable_name = atom_getsym(argv)->s_name;
+        py_log(x, "callable_name: %s", callable_name);
+    }
+
+    py_callable = PyRun_String(callable_name, Py_eval_input, x->p_globals,
+                               x->p_globals);
+    if (py_callable == NULL) {
+        py_error(x, "could not evaluate %s", callable_name);
+        goto error;
+    }
+
+    py_argslist = py_atoms_to_list(x, argc, argv, 1);
+    if (py_argslist == NULL) {
+        py_error(x, "atom to py list conversion failed");
+        goto error;
+    }
+
+    py_log(x, "length of argc:%ld list: %d", argc, PyList_Size(py_argslist));
+
+    // convert py_args to tuple
+    py_args = PyList_AsTuple(py_argslist);
+    if (py_args == NULL) {
+        py_error(x, "unable to convert args list to tuple");
+        goto error;
+    }
+
+    pval = PyObject_CallObject(py_callable, py_args);
+    if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
+        if (pval == NULL) {
+            py_error(x, "unable to apply callable(*args)");
+            goto error;
+        }
+        goto handle_output;
+    }
+    PyErr_Clear();
+
+    pval = PyObject_CallFunctionObjArgs(py_callable, py_argslist, NULL);
+    if (pval == NULL) {
+        py_error(x, "could not retrieve result of callable(list)");
+        goto error;
+    }
+    goto handle_output; // this is redundant but safer in case code is added
+
+handle_output:
+    py_handle_output(x, outlet, pval);
+    // success cleanup
+    Py_XDECREF(py_callable);
+    Py_XDECREF(py_argslist);
+    PyGILState_Release(gstate);
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, "method %s", s->s_name);
+    // cleanup
+    Py_XDECREF(py_callable);
+    Py_XDECREF(py_argslist);
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
+/**
+ * @brief Converts an atom list to a python assignment
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ * 
+ * The first item of the Max list must be a symbol. This is converted into a python variable
+ * and the rest of the list is assignment to this variable in the object's python
+ * namespace.
+ */
+t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    char* varname = NULL;
+    PyObject* list = NULL;
+
+    if (s != gensym(""))
+        py_log(x, "s: %s", s->s_name);
+
+    // first atom in argv must be a symbol
+    if (argv->a_type != A_SYM) {
+        py_error(x, "first atom must be a symbol!");
+        goto error;
+
+    } else {
+        varname = atom_getsym(argv)->s_name;
+        py_log(x, "varname: %s", varname);
+    }
+
+    list = py_atoms_to_list(x, argc, argv, 1);
+    if (list == NULL) {
+        py_error(x, "atom to py list conversion failed");
+        goto error;
+    }
+
+    if (PyList_Size(list) != argc - 1) {
+        py_error(x, "PyList_Size(list) != argc - 1");
+        goto error;
+    } else {
+        py_log(x, "length of list: %d", PyList_Size(list));
+    }
+
+    // finally, assign list to varname in object namespace
+    py_log(x, "setting %s to list in namespace", varname);
+    // following does not steal ref to list
+    int res = PyDict_SetItemString(x->p_globals, varname, list);
+    if (res != 0) {
+        py_error(x, "assign varname to list failed");
+        goto error;
+    }
+    PyGILState_Release(gstate);
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, "assign %s", s->s_name);
+    Py_XDECREF(list);
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
+
+/**
+ * @brief Converts all of the atom to text and evaluate as python code.
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param outlet object outlet
+ * 
+ * @return t_max_err error code
+ */
+t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_eval_text(x, argc, argv, 0, outlet);
+}
+
+
+/**
+ * @brief Anything method converting all of the atom to text and evaluate as python code.
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param outlet object outlet
+ * 
+ * @return t_max_err error code
+ */
+t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    t_atom atoms[PY_MAX_ATOMS];
+
+    if (s == gensym("")) {
+        return MAX_ERR_GENERIC; 
+    }
+
+    // set '=' as shorthand for assign method
+    if (s == gensym("=")) {
+        py_assign(x, gensym(""), argc, argv);
+        return MAX_ERR_NONE;
+    }
+
+    // set symbol as first atom in new atoms array
+    atom_setsym(atoms, s);
+
+    for (int i = 0; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
+            break;
+        }
+        case A_LONG: {
+            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
+            break;
+        }
+        case A_SYM: {
+            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
+            break;
+        }
+        default:
+            py_log(x, "cannot process unknown type");
+            break;
+        }
+    }
+
+    return py_eval_text(x, argc, atoms, 1, outlet);
+}
+
+/**
+ * @brief Create a function python pipeline from a Max list
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param outlet object outlet
+ * 
+ * @return t_max_err error code
+ */
+t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    long textsize = 0;
+    char* text = NULL;
+    t_max_err err;
+    PyObject* pipe_pre = NULL;
+    PyObject* pipe_fun = NULL;
+    PyObject* pval = NULL;
+    PyObject* pstr = NULL;
+
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err != MAX_ERR_NONE || !textsize || !text) {
+        py_error(x, "atom -> text conversion failed");
+        goto error;
+    }
+
+    pipe_pre = PyRun_String("def __py_maxmsp_pipe(arg):\n"
+                            "\targs = arg.split()\n"
+                            "\tval = eval(args[0])\n"
+                            "\tfuncs = [eval(f) for f in args[1:]]\n"
+                            "\tfor f in funcs:\n"
+                            "\t\tval = f(val)\n"
+                            "\treturn val\n",
+                            Py_single_input, x->p_globals, x->p_globals);
+
+    if (pipe_pre == NULL) {
+        py_error(x, "pipe func is NULL");
+        goto error;
+    }
+
+    pstr = PyUnicode_FromString(text);
+    if (pstr == NULL) {
+        py_error(x, "cstr -> pyunicode conversion failed");
+        goto error;
+    }
+
+    sysmem_freeptr(text);
+
+    pipe_fun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_pipe");
+    if (pipe_fun == NULL) {
+        py_error(x, "retrieving pipe func from globals failed");
+        goto error;
+    }
+
+    pval = PyObject_CallFunctionObjArgs(pipe_fun, pstr, NULL);
+
+    if (pval != NULL) {
+
+        if (!PyUnicode_Check(pval)) {
+            py_handle_output(x, outlet, pval); // this decrefs pval
+        } else {
+            // special case strings, which will cause crash if handled
+            // out of this methods's scope. (huge PITA to debug!)
+            const char* unicode_result = PyUnicode_AsUTF8(pval);
+            if (unicode_result == NULL) {
+                goto error;
+            }
+            outlet_anything(outlet, gensym(unicode_result), 0, NIL);
+            Py_XDECREF(pval);
+        }
+
+        Py_XDECREF(pipe_pre);
+        Py_XDECREF(pstr);
+        PyGILState_Release(gstate);
+        return MAX_ERR_NONE;
+    } else {
+        goto error;
+    }
+
+error:
+    py_handle_error(x, "pipe failed");
+    Py_XDECREF(pipe_pre);
+    Py_XDECREF(pstr);
+    Py_XDECREF(pval);
+    // fail bang
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
 
 #endif
 

@@ -24,12 +24,21 @@ typedef struct mamba
 void *mamba_new(t_symbol *s, long argc, t_atom *argv);
 void mamba_free(t_mamba *x);
 
-// methods
+// generic methods
 void mamba_bang(t_mamba *x);
+
+// core py methods
 t_max_err mamba_import(t_mamba* x, t_symbol* s);
 t_max_err mamba_eval(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err mamba_exec(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err mamba_execfile(t_mamba* x, t_symbol* s);
+
+// extra py methods
+t_max_err mamba_call(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err mamba_assign(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
 
 static t_class *s_mamba_class = NULL;
@@ -41,11 +50,18 @@ void ext_main(void *r)
         sizeof(t_mamba), (method)0L, 
         A_GIMME, 0);
 
-    class_addmethod(c, (method)mamba_bang,      "bang",                 0);
-    class_addmethod(c, (method)mamba_import,    "import",   A_SYM,      0);
-    class_addmethod(c, (method)mamba_eval,      "eval",     A_GIMME,    0);
-    class_addmethod(c, (method)mamba_exec,      "exec",     A_GIMME,    0);
-    class_addmethod(c, (method)mamba_execfile,  "execfile", A_DEFSYM,   0);
+    class_addmethod(c, (method)mamba_bang,      "bang",                   0);
+    
+    class_addmethod(c, (method)mamba_import,    "import",     A_SYM,      0);
+    class_addmethod(c, (method)mamba_eval,      "eval",       A_GIMME,    0);
+    class_addmethod(c, (method)mamba_exec,      "exec",       A_GIMME,    0);
+    class_addmethod(c, (method)mamba_execfile,  "execfile",   A_DEFSYM,   0);
+
+    class_addmethod(c, (method)mamba_assign,    "assign",     A_GIMME,    0);
+    class_addmethod(c, (method)mamba_call,      "call",       A_GIMME,    0);
+    class_addmethod(c, (method)mamba_code,      "code",       A_GIMME,    0);
+    class_addmethod(c, (method)mamba_pipe,      "pipe",       A_GIMME,    0);
+    class_addmethod(c, (method)mamba_anything,  "anything",   A_GIMME,    0);
 
     class_register(CLASS_BOX, c);
 
@@ -99,4 +115,36 @@ t_max_err mamba_execfile(t_mamba* x, t_symbol* s)
 {
     return py_execfile(x->py, s);
 }
+
+
+t_max_err mamba_call(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_call(x->py, s, argc, argv, x->c_outlet);
+}
+
+
+t_max_err mamba_assign(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_assign(x->py, s, argc, argv);
+}
+
+
+t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_code(x->py, s, argc, argv, x->c_outlet);
+}
+
+
+t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_anything(x->py, s, argc, argv, x->c_outlet);
+}
+
+
+t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_pipe(x->py, s, argc, argv, x->c_outlet);
+}
+
+
 
