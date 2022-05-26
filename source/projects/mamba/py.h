@@ -72,7 +72,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 // ---------------------------------------------------------------------------------------
 // IMPLEMENTATION
 
-#ifdef PY_IMPLEMENTATION
+//#ifdef PY_IMPLEMENTATION
 
 /*
     py.h -- single-header library providing minimal python3 services for Max externals.
@@ -1246,7 +1246,7 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-#endif
+//#endif
 
 // ---------------------------------------------------------------------------------------
 // END IMPLEMENTATION
