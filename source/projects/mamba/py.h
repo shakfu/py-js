@@ -342,11 +342,9 @@ t_max_err py_handle_float_output(t_py* x, void* outlet, PyObject* pfloat)
 
     if (PyFloat_Check(pfloat)) {
         float float_result = (float)PyFloat_AsDouble(pfloat);
-        if (float_result == -1.0) {
-            if (PyErr_Occurred())
-                goto error;
+        if (float_result == -1.0 && PyErr_Occurred()) {
+            goto error;
         }
-
         outlet_float(outlet, float_result);
     }
     Py_XDECREF(pfloat);
@@ -373,9 +371,8 @@ t_max_err py_handle_long_output(t_py* x, void* outlet, PyObject* plong)
 
     if (PyLong_Check(plong)) {
         long long_result = PyLong_AsLong(plong);
-        if (long_result == -1) {
-            if (PyErr_Occurred())
-                goto error;
+        if (long_result == -1 && PyErr_Occurred()) {
+            goto error;
         }
         outlet_int(outlet, long_result);
     }
@@ -468,9 +465,8 @@ t_max_err py_handle_list_output(t_py* x, void* outlet, PyObject* plist)
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
-                if (long_item == -1) {
-                    if (PyErr_Occurred())
-                        goto error;
+                if (long_item == -1 && PyErr_Occurred()) {
+                    goto error;
                 }
                 atom_setlong(atoms + i, long_item);
                 py_log(x, "%d long: %ld\n", i, long_item);
@@ -479,9 +475,8 @@ t_max_err py_handle_list_output(t_py* x, void* outlet, PyObject* plist)
 
             if (PyFloat_Check(item)) {
                 float float_item = PyFloat_AsDouble(item);
-                if (float_item == -1.0) {
-                    if (PyErr_Occurred())
-                        goto error;
+                if (float_item == -1.0 && PyErr_Occurred()) {
+                    goto error;
                 }
                 atom_setfloat(atoms + i, float_item);
                 py_log(x, "%d float: %f\n", i, float_item);

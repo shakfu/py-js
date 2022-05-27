@@ -8,8 +8,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "python-shell": "^3.0.0"
-  }
+    "python-shell": "^3.0.1"
+  },
+  "description": ""
 }

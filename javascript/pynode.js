@@ -10,6 +10,11 @@ const maxAPI = require("max-api");
 //Max.post(`Loaded the ${path.basename(__filename)} script`);
 
 
+PythonShell.runString('x=1+1;print(x)', null, function (err) {
+  if (err) throw err;
+  console.log('python execution finished');
+});
+
 let options = {
   mode: 'text',
   pythonPath: '/usr/local/bin/python3',
@@ -19,7 +24,9 @@ let options = {
 };
 
 
-let pyshell = new PythonShell('hello.py');
+// let pyshell = new PythonShell('hello.py');
+
+let pyshell = new PythonShell('test_pynode.py');
 
 //import {PythonShell} from 'python-shell';
 // let pyshell = new PythonShell('pipeline.py');
@@ -59,14 +66,15 @@ const handlers = {
 	}
 }
 
-maxAPI.addHandlers(handlers);
 
 // Use the 'addHandler' function to register a function for a particular message
-//Max.addHandler("bang", () => {
-//	Max.post("Who you think you bangin'?");
-//});
+maxAPI.addHandler("bang", () => {
+	maxAPI.post("Who you think you bangin'?");
+});
 
 // Use the 'outlet' function to send messages out of node.script's outlet
-//Max.addHandler("echo", (msg) => {
-//	Max.outlet(msg);
-//});
+maxAPI.addHandler("echo", (msg) => {
+	maxAPI.outlet(msg);
+});
+
+maxAPI.addHandlers(handlers);
