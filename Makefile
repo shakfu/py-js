@@ -10,6 +10,7 @@ PYTHON = python3
 ROOTDIR := $(shell pwd)
 SRCDIR := $(ROOTDIR)/source
 PYDIR := $(SRCDIR)/py
+SCRIPTS := $(PYDIR)/scripts
 BUILDDIR := $(HOME)/.build_pyjs
 CFLOW := ${PYDIR}/resources/cflow
 
@@ -19,6 +20,7 @@ PROJECT = $(NAME).xcodeproj
 TARGETS = py pyjs
 EXTENSION = $(PYDIR)/api.pyx
 
+MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSION := 8
 MAX_DIR := "Max\ $(MAX_VERSION)"
 PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
@@ -343,7 +345,7 @@ api: compile-extension
 
 # Testing
 # -----------------------------------------------------------------------
-.PHONY: test \
+.PHONY: test maxtest \
 		test-homebrew-pkg test-homebrew-ext \
 		test-framework-pkg test-framework-ext \
 		test-shared-pkg test-shared-ext \
@@ -398,6 +400,9 @@ check_logs:
 	$(call section,"checking all test results")
 	$(call call-builder,"logs" "check_all")
 
+maxtests:
+	$(call section,"running all .maxtests results")
+	@cd $(SCRIPTS)/ruby; ruby test.rb $(MAX_APP)
 
 
 # Styling

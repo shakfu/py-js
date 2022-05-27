@@ -4,7 +4,7 @@
     This library is supposed to enable nested py objects in a given
     Max external. This library is in the public domain.
 
-    The latest code can be found in https : // github.com/shakfu/py-js
+    The latest code can be found in [py-js](https://github.com/shakfu/py-js)
 
     If PY_IMPLEMENTATION isdefined before including the header,
     it will activate the implementation, otherwise the implementation
@@ -43,8 +43,8 @@ extern "C" {
 typedef struct t_py t_py;
 
 // init / free methods
-t_py * py_init(void);
-void py_free(t_py *x);
+t_py* py_init(void);
+void py_free(t_py* x);
 
 // core methods
 t_max_err py_import(t_py* x, t_symbol* s);
@@ -56,7 +56,8 @@ t_max_err py_execfile(t_py* x, t_symbol* s);
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv,
+                      void* outlet);
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
 
@@ -75,7 +76,8 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 //#ifdef PY_IMPLEMENTATION
 
 /*
-    py.h -- single-header library providing minimal python3 services for Max externals.
+    py.h -- single-header library providing minimal python3 services for Max
+   externals.
 */
 
 #define PY_MAX_ATOMS 128
@@ -85,6 +87,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
 // ---------------------------------------------------------------------------------------
 // Datastructure
+// clang-format off
 
 struct t_py
 {
@@ -100,7 +103,7 @@ struct t_py
     PyObject* p_globals;                    /*!< per object 'globals' python namespace */
 };
 
-
+// clang-format on
 // ---------------------------------------------------------------------------------------
 // Forward Declarations not in header
 
@@ -109,17 +112,17 @@ void py_error(t_py* x, char* fmt, ...);
 void py_handle_error(t_py* x, char* fmt, ...);
 
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
-
 t_max_err py_handle_float_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_long_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_string_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_list_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_dict_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_output(t_py* x, void* outlet, PyObject* pval);
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset,
+                       void* outlet);
 
 PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from);
 
-t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset, void* outlet);
 
 
 // ---------------------------------------------------------------------------------------
@@ -179,11 +182,11 @@ void py_error(t_py* x, char* fmt, ...)
  *
  * @return t_py*  pointer to object structure
  */
-t_py * py_init(void)
+t_py* py_init(void)
 {
     // t_py *x = calloc(1, sizeof *x);
     // t_py *x = calloc(1, sizeof (struct t_py));
-    t_py *x = malloc(sizeof (struct t_py));
+    t_py* x = malloc(sizeof(struct t_py));
 
     x->p_name = symbol_unique();
     x->p_pythonpath = gensym("");
@@ -224,14 +227,12 @@ void py_free(t_py* x)
     py_log(x, "deleting object %s", x->p_name->s_name);
     Py_XDECREF(x->p_globals);
     Py_FinalizeEx();
-    free(x);    
+    free(x);
 }
 
 
 // ---------------------------------------------------------------------------------------
 // HELPERS
-
-
 
 
 /**
@@ -255,7 +256,7 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
                         &x->p_code_outtype, &x->p_code_filetype, 1))
             // non-zero: cancelled
             ret = MAX_ERR_GENERIC;
-            goto finally;
+        goto finally;
 
     } else {
         // must copy symbol before calling locatefile_extended
@@ -292,7 +293,7 @@ finally:
 
 /**
  * @brief Generic python error handler
- * 
+ *
  * @param x pointer to object struct
  * @param fmt format string
  * @param ... other args
@@ -329,7 +330,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
 
 /**
  * @brief Handler to output python float as max float
- * 
+ *
  * @param x pointer to object struct
  * @param pfloat python float
  * @return t_max_err error code
@@ -562,7 +563,7 @@ t_max_err py_handle_dict_output(t_py* x, void* outlet, PyObject* pdict)
             goto error;
         }
 
-        if (PyList_Check(pval)) {           // expecting a python list
+        if (PyList_Check(pval)) {                   // expecting a python list
             py_handle_list_output(x, outlet, pval); // this decrefs pval
             Py_XDECREF(pfun_co);
             return MAX_ERR_NONE;
@@ -580,7 +581,8 @@ error:
 }
 
 /**
- * @brief Generic handler to output arbitrarily-typed python object as max object
+ * @brief Generic handler to output arbitrarily-typed python object as max
+ * object
  *
  * @param x pointer to object struct
  * @param pval python object
@@ -631,7 +633,7 @@ t_max_err py_handle_output(t_py* x, void* outlet, PyObject* pval)
 
 /**
  * @brief Import a python module
- * 
+ *
  * @param x pointer to object structure
  * @param s symbol of module to be imported
  * @return t_max_err error code
@@ -663,13 +665,13 @@ error:
 
 /**
  * @brief Evaluate a max symbol as a python expression
- * 
+ *
  * @param x pointer to object structure
  * @param s symbol of object to be evaluated
  * @param argc atom argument count
  * @param argv atom argument vector
  * @param outlet object outlet
- * 
+ *
  * @return t_max_err error code
  */
 t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
@@ -797,7 +799,7 @@ error:
 
 /**
  * @brief Translates atom vector to python list
- * 
+ *
  * @param x pointer to object struct
  * @param argc atom argument count
  * @param argv atom argument vector
@@ -866,10 +868,11 @@ error:
  * @param argv atom argument vector
  * @param offset offset of atom vector from which to evaluate
  * @param outlet object outlet
- * 
+ *
  * @return t_max_err error code
  */
-t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset, void* outlet)
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset,
+                       void* outlet)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
@@ -930,7 +933,7 @@ error:
  * @param argc atom argument count
  * @param argv atom argument vector
  * @param outlet object outlet
- * 
+ *
  * @return t_max_err error code
  */
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
@@ -1020,10 +1023,10 @@ error:
  * @param argc atom argument count
  * @param argv atom argument vector
  * @return t_max_err error code
- * 
- * The first item of the Max list must be a symbol. This is converted into a python variable
- * and the rest of the list is assignment to this variable in the object's python
- * namespace.
+ *
+ * The first item of the Max list must be a symbol. This is converted into a
+ * python variable and the rest of the list is assignment to this variable in
+ * the object's python namespace.
  */
 t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -1086,7 +1089,7 @@ error:
  * @param argc atom argument count
  * @param argv atom argument vector
  * @param outlet object outlet
- * 
+ *
  * @return t_max_err error code
  */
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
@@ -1096,22 +1099,24 @@ t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
 
 
 /**
- * @brief Anything method converting all of the atom to text and evaluate as python code.
+ * @brief Anything method converting all of the atom to text and evaluate as
+ * python code.
  *
  * @param x pointer to object structure
  * @param s symbol
  * @param argc atom argument count
  * @param argv atom argument vector
  * @param outlet object outlet
- * 
+ *
  * @return t_max_err error code
  */
-t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv,
+                      void* outlet)
 {
     t_atom atoms[PY_MAX_ATOMS];
 
     if (s == gensym("")) {
-        return MAX_ERR_GENERIC; 
+        return MAX_ERR_GENERIC;
     }
 
     // set '=' as shorthand for assign method
@@ -1154,7 +1159,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outle
  * @param argc atom argument count
  * @param argv atom argument vector
  * @param outlet object outlet
- * 
+ *
  * @return t_max_err error code
  */
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
@@ -1236,7 +1241,6 @@ error:
     Py_XDECREF(pipe_pre);
     Py_XDECREF(pstr);
     Py_XDECREF(pval);
-    // fail bang
     PyGILState_Release(gstate);
     return MAX_ERR_GENERIC;
 }

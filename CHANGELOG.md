@@ -4,13 +4,13 @@
 
 ### Variants
 
-- added the `mamba` project, a single header python3 library for max externals which provides the `t_py` python type which is supposed to be nested inside another external.
+- Added the `mamba` project: a single header python3 library for max externals which provides the `t_py` max type providings max-friendly python3 interpreter methods.  The idea is that an object from this type be instanciated and nested inside any another external.
 
 ### Patchers
 
-- added example `pyjs_overview.maxpat` patch
+- Added example `pyjs_overview.maxpat` patch
 
-- added `pyjs_repl.maxpat` bpatcher
+- Added `pyjs_repl.maxpat` bpatcher
 
 
 ### Core

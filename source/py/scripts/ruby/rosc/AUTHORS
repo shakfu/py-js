@@ -1,0 +1,13 @@
+This library is based on the original Ruby osc library by Tadayoshi Funaba
+<tadf@funaba.org> which can be found at http://www.funaba.org/en/ruby.html#osc
+
+Hans Fugal <hans@fugal.net> heavily refactored, rewrote, and to some extent
+redesigned that code to produce what you have here.
+
+Thanks to Paul Battley for the ingenious Tiger pack hack.
+
+Thanks to Von and Jacob Fugal for various very useful contributions.
+
+Thanks to Liam Staskawicz for some testing and bug-finding.
+
+Thanks to Jan Krutisch for some debugging and better unit tests.
