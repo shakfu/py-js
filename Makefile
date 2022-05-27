@@ -429,6 +429,10 @@ cflow:
 	@cflow2dot -x $(CFLOW)/ignore.txt -i source/py/py.c -f pdf -o $(CFLOW)/py_cflow
 	@rm -f $(CFLOW)/*.dot
 
+	@cflow2dot -x $(CFLOW)/ignore.txt -i source/projects/mamba/py.h -f pdf -o $(CFLOW)/mamba_cflow
+	@rm -f $(CFLOW)/*.dot
+
+
 cmake:
 	@bash source/py/scripts/build_cmake.sh
 
