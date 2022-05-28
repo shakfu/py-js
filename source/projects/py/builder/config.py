@@ -23,7 +23,7 @@ DEFAULT_SSL_VERSION = "1.1.1n"
 DEFAULT_XZ_VERSION = "5.2.5"
 
 # BASEDIR=f"{HOME}/.build_pyjs"
-BASEDIR = Path(__file__).parent.parent.parent.parent
+BASEDIR = Path(__file__).parent.parent.parent.parent.parent
 BASELOGSDIR = f"{BASEDIR}/logs"
 LOGDIR = f"{BASELOGSDIR}/{CURRENT_PYTHON_VERSION}"
 ESCAPED_HOME = HOME.replace("/", "\\/")
@@ -236,13 +236,9 @@ class Project:
 
     is_symlinked = True
 
-    # root in this case is root assumed for build / make / scripts
-    # actual project is root.parent.parent (see below)
-    # current working directory
-    pydir = Path.cwd()
-
     # project root here
-    root = pydir.parent.parent
+    root = BASEDIR # i.e py-js
+    pydir = root / 'source' / 'projects' / 'py'
     support = root / "support"
     externals = root / "externals"
 

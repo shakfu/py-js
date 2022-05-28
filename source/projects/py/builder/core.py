@@ -339,9 +339,8 @@ class Builder:
             if src.exists():
                 self.cmd.copy(src, dst)
 
-    def xcodebuild(
-        self, project: str, targets: List[str], *preprocessor_flags, **xcconfig_flags
-    ):
+    def xcodebuild(self, project: str, targets: List[str], 
+            *preprocessor_flags, **xcconfig_flags):
         """python wrapper around command-line xcodebuild"""
 
         # defaults
@@ -374,6 +373,7 @@ class Builder:
             if preprocessor_flags
             else ""
         )
+
         for target in targets:
             self.cmd(
                 f"xcodebuild -project 'targets/{project}/py-js.xcodeproj'"
