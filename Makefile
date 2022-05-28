@@ -456,7 +456,7 @@ cmake:
 
 clean: clean-externals clean-support clean-targets clean-build clean-docs
 
-@clean-targets: clean-local-sys  \
+clean-targets:  clean-local-sys  \
 			    clean-homebrew-pkg clean-homebrew-ext  \
 			    clean-framework-pkg clean-framework-ext \
 			    clean-shared-pkg clean-shared-ext \
