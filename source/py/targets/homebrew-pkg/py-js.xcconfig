@@ -1,9 +1,0 @@
-#include "../common.xcconfig"
-
-PREFIX = $(SUPPORT)/Python.framework/Versions/$(VERSION)
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
-PY_LIBS = $(PREFIX)/lib
-PY_LDFLAGS = -lpython$(VERSION)$(ABIFLAGS) -ldl
-
-// to enable compilation for arm64 (or change manually in xcode)
-FRAMEWORK_SEARCH_PATH = $(inherited) $(PYJS_BUILD_LIB)

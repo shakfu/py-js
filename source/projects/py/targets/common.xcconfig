@@ -1,4 +1,4 @@
-#include "../../maxmspsdk.xcconfig"
+#include "../../../../maxmspsdk.xcconfig"
 
 PY_VERSION = 3.9.12
 PY_SHORT_VERSION = 3.9
@@ -30,7 +30,7 @@ PYJS_BUILD_DOWNLOADS = $(PYJS_BUILD_ROOT)/downloads
 PYJS_BUILD_SRC = $(PYJS_BUILD_ROOT)/src
 PYJS_BUILD_LIB = $(PYJS_BUILD_ROOT)/lib
 
-SUPPORT = $(SRCROOT)/../../../../support
+SUPPORT = $(SRCROOT)/../../../../../support
 PRODUCT_NAME = $(TARGET_NAME)
 HEADER_SEARCH_PATHS = $(inherited) $(PY_HEADERS)
 LIBRARY_SEARCH_PATHS = $(inherited) $(PY_LIBS)

@@ -28,9 +28,9 @@ leoenv
 log.txt
 logs
 package-info.json
-source/py/docs
-source/py/dump.yml
-source/py/scripts/archive/*
+source/projects/py/docs
+source/projects/py/dump.yml
+source/projects/py/scripts/archive/*
 support/*
 sysbuild
 tmp

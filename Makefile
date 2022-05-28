@@ -9,10 +9,12 @@ PYTHON = python3
 # paths
 ROOTDIR := $(shell pwd)
 SRCDIR := $(ROOTDIR)/source
-PYDIR := $(SRCDIR)/py
+PROJECTS := $(SRCDIR)/projects
+PYDIR := $(PROJECTS)/py
+BUILDER := $(PYDIR)/builder
 SCRIPTS := $(PYDIR)/scripts
 BUILDDIR := $(HOME)/.build_pyjs
-CFLOW := ${PYDIR}/resources/cflow
+CFLOW := $(PYDIR)/resources/cflow
 
 # project variables
 NAME = py
@@ -25,8 +27,8 @@ MAX_VERSION := 8
 MAX_DIR := "Max\ $(MAX_VERSION)"
 PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
 PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
-PKG_DIRS = docs examples externals help init \
-           javascript jsextensions media patchers
+PKG_DIRS = docs examples extensions externals help init \
+           javascript jsextensions media misc patchers
 
 
 # constants
@@ -52,7 +54,7 @@ endef
 # $(call xbuild,name)
 define xbuild-targets
 $(call section,"build $1")
-@for target in ${TARGETS}; do \
+@for target in $(TARGETS); do \
 		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target ; \
 	done
 endef
@@ -60,7 +62,7 @@ endef
 # $(call xbuild,name,flags)
 define xbuild-targets-flags
 $(call section,"build $1 with flags: $2")
-@for target in ${TARGETS}; do \
+@for target in $(TARGETS); do \
 		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
 	done
 endef
@@ -439,7 +441,7 @@ cflow:
 
 
 cmake:
-	@bash source/py/scripts/build_cmake.sh
+	@bash $(SCRIPTS)/build_cmake.sh
 
 
 # Cleaning
