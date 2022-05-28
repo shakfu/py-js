@@ -22,6 +22,7 @@ build
 CMakeFiles
 env.sh
 externals/*
+extensions/*
 javascript/node_modules
 leoenv
 log.txt
