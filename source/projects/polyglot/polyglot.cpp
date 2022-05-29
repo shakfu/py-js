@@ -104,11 +104,11 @@ t_max_err polyglot_exec(t_polyglot* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err polyglot_execfile(t_polyglot* x, t_symbol* s);
 
 // extra py methods
-t_max_err polyglot_call(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err polyglot_call(t_polyglot* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err polyglot_assign(t_polyglot* x, t_symbol* s, long argc, t_atom* argv); 
-t_max_err polyglot_code(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err polyglot_anything(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err polyglot_pipe(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err polyglot_code(t_polyglot* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err polyglot_anything(t_polyglot* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err polyglot_pipe(t_polyglot* x, t_symbol* s, long argc, t_atom* argv);
 
 
 END_USING_C_LINKAGE
@@ -224,7 +224,7 @@ t_max_err polyglot_execfile(t_polyglot* x, t_symbol* s)
 }
 
 
-t_max_err polyglot_call(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err polyglot_call(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->call(s, argc, argv, x->outlet);
 }
@@ -236,20 +236,19 @@ t_max_err polyglot_assign(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 
-t_max_err polyglot_code(t_polyglot* x, t_symbol* s, long argc, t_atom* argv,
-                     void* outlet)
+t_max_err polyglot_code(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->code(s, argc, argv, x->outlet);
 }
 
 
-t_max_err polyglot_anything(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err polyglot_anything(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->anything(s, argc, argv, x->outlet);
 }
 
 
-t_max_err polyglot_pipe(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err polyglot_pipe(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->pipe(s, argc, argv, x->outlet);
 }

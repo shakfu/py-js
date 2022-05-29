@@ -4,6 +4,8 @@
 
 ### Variants
 
+- Added the `krait` project, which pushes the single-header implementation into cpp territory with a cpp class `PythonInterpreter` implementing and encapsulating all of the functionality. This is final extension of the idea of modular python3 interpreter which can be easily nested into any Max external object. This object makes the polyglot object obsolete and it will be deleted after the next commit.
+
 - Added the `polyglot` project, which uses single-header library developed in the mamba project (see below) to provide the functionality for a c++ `PythonInterpreter` class. Once this class is mature, it may be added to `py.h` in case c++ is used.
 
 - Added the `mamba` project: a single header python3 library for max externals which provides the `t_py` max type providings max-friendly python3 interpreter methods.  The idea is that an object from this type be instanciated and nested inside any another external.

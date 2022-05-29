@@ -1562,6 +1562,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     char* varname = NULL;
     PyObject* list = NULL;
+    int res = 0;
 
     if (s != gensym(""))
         py_log(x, "s: %s", s->s_name);
@@ -1592,7 +1593,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // finally, assign list to varname in object namespace
     py_log(x, "setting %s to list in namespace", varname);
     // following does not steal ref to list
-    int res = PyDict_SetItemString(x->p_globals, varname, list);
+    res = PyDict_SetItemString(x->p_globals, varname, list);
     if (res != 0) {
         py_error(x, "assign varname to list failed");
         goto error;
@@ -1626,6 +1627,8 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     long textsize = 0;
     char* text = NULL;
     int is_eval = 1;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
 
     t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
@@ -1635,7 +1638,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
         goto error;
     }
 
-    PyObject* co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
 
     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
         PyErr_Clear();
@@ -1648,7 +1651,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     }
     sysmem_freeptr(text);
 
-    PyObject* pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
     if (pval == NULL) {
         goto error;
     }
