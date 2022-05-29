@@ -11,6 +11,7 @@
 
 #include "ext.h"
 #include "ext_obex.h"
+#include "py.h"
 
 typedef struct person {
     int age;
@@ -26,10 +27,79 @@ typedef struct person {
 } person;
 
 
+
+struct py_interpreter {
+    t_py* self;
+
+    py_interpreter()
+    {
+        self = py_init();
+    }
+
+    ~py_interpreter()
+    {
+        py_free(self);
+        self = nullptr;
+    }
+
+    t_max_err import(t_symbol* s)
+    {
+        return py_import(self, s);
+    }
+
+    t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet)
+    {
+        return py_eval(self, s, argc, argv, outlet);
+    }
+
+    t_max_err exec(t_symbol* s, long argc, t_atom* argv)
+    {
+        return py_exec(self, s, argc, argv);
+    }
+
+    t_max_err execfile(t_symbol* s)
+    {
+        return py_execfile(self, s);
+    }
+
+    t_max_err call(t_symbol* s, long argc, t_atom* argv, void* outlet)
+    {
+        return py_call(self, s, argc, argv, outlet); 
+    }
+
+    t_max_err assign(t_symbol* s, long argc, t_atom* argv)
+    {
+        return py_assign(self, s, argc, argv);
+    }
+
+    t_max_err code(t_symbol* s, long argc, t_atom* argv, void* outlet)
+    {
+        return py_code(self, s, argc, argv, outlet);
+    }
+
+    t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet)
+    {
+        return py_anything(self, s, argc, argv, outlet);
+    }
+
+    t_max_err pipe(t_symbol* s, long argc, t_atom* argv, void* outlet)
+    {
+        return py_pipe(self, s, argc, argv, outlet);
+    }
+
+    void status(void)
+    {
+        post("py interpreter status: 0");
+    }
+
+};
+
+
 typedef struct _polyglot {
     t_object ob;
     void* outlet;
     person sam;
+    py_interpreter py;
 } t_polyglot;
 
 
@@ -75,7 +145,10 @@ void polyglot_assist(t_polyglot* x, void* b, long m, long a, char* s)
     }
 }
 
-void polyglot_free(t_polyglot* x) { ; }
+void polyglot_free(t_polyglot* x)
+{
+    ;
+}
 
 
 void* polyglot_new(t_symbol* s, long argc, t_atom* argv)
@@ -106,6 +179,7 @@ void* polyglot_new(t_symbol* s, long argc, t_atom* argv)
 
     x->outlet = bangout((t_object*)x);
     x->sam = person(100, (char*)"sammy");
+    x->py = py_interpreter();
 
     return (x);
 }
@@ -114,5 +188,6 @@ void polyglot_bang(t_polyglot* x)
 {
     post("age: %d", x->sam.get_age());
     post("name: %s", x->sam.get_name()->s_name);
+    x->py.status();
     outlet_bang(x->outlet);
 }
