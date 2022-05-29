@@ -1,7 +1,7 @@
 /**
  * @file polyglot.cpp
  * @author shakfu (shak@fu.com)
- * @brief basic experiment in mixing cpp and c in a max external
+ * @brief basic experiment in mixing c, cpp, and python in a max external
  * @version 0.1
  * @date 2022-05-28
  * 
@@ -11,33 +11,21 @@
 
 #include "ext.h"
 #include "ext_obex.h"
-#include "py.h"
 
-typedef struct person {
-    int age;
-    t_symbol* name;
-
-    person(int n, char* a_name)
-    {
-        age = n;
-        name = gensym(a_name);
-    }
-    int get_age() { return age; }
-    t_symbol* get_name() { return name; }
-} person;
+#include "../mamba/py.h"
 
 
-
-class py_interpreter {
-    public:
+class PythonInterpreter {
+    private:
         t_py* self;
 
-        py_interpreter()
+    public:
+        PythonInterpreter()
         {
             self = py_init();
         }
 
-        ~py_interpreter()
+        ~PythonInterpreter()
         {
             py_free(self);
             self = nullptr;
@@ -92,16 +80,13 @@ class py_interpreter {
         {
             post("py interpreter status: 0");
         }
-
 };
 
 
 typedef struct _polyglot {
     t_object ob;
     void* outlet;
-    person sam;
-    py_interpreter* py;
-    // t_py* py;
+    PythonInterpreter* py;
 } t_polyglot;
 
 
@@ -112,8 +97,18 @@ void polyglot_free(t_polyglot* x);
 void polyglot_assist(t_polyglot* x, void* b, long m, long a, char* s);
 
 void polyglot_bang(t_polyglot*);
+
 t_max_err polyglot_import(t_polyglot* x, t_symbol* s);
 t_max_err polyglot_eval(t_polyglot* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err polyglot_exec(t_polyglot* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err polyglot_execfile(t_polyglot* x, t_symbol* s);
+
+// extra py methods
+t_max_err polyglot_call(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err polyglot_assign(t_polyglot* x, t_symbol* s, long argc, t_atom* argv); 
+t_max_err polyglot_code(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err polyglot_anything(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err polyglot_pipe(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
 
 END_USING_C_LINKAGE
@@ -132,10 +127,19 @@ void ext_main(void* r)
             A_GIMME,
             0L);
 
-    class_addmethod(c, (method)polyglot_assist,     "assist",   A_CANT,   0);
-    class_addmethod(c, (method)polyglot_bang,       "bang",               0);
-    class_addmethod(c, (method)polyglot_import,     "import",   A_SYM,    0);
-    class_addmethod(c, (method)polyglot_eval,       "eval",     A_GIMME,  0);
+    class_addmethod(c, (method)polyglot_assist,     "assist",   A_CANT,     0);
+
+    class_addmethod(c, (method)polyglot_bang,       "bang",                 0);
+    class_addmethod(c, (method)polyglot_import,     "import",   A_SYM,      0);
+    class_addmethod(c, (method)polyglot_eval,       "eval",     A_GIMME,    0);
+    class_addmethod(c, (method)polyglot_exec,       "exec",     A_GIMME,    0);
+    class_addmethod(c, (method)polyglot_execfile,   "execfile", A_DEFSYM,   0);
+
+    class_addmethod(c, (method)polyglot_assign,     "assign",   A_GIMME,    0);
+    class_addmethod(c, (method)polyglot_call,       "call",     A_GIMME,    0);
+    class_addmethod(c, (method)polyglot_code,       "code",     A_GIMME,    0);
+    class_addmethod(c, (method)polyglot_pipe,       "pipe",     A_GIMME,    0);
+    class_addmethod(c, (method)polyglot_anything,   "anything", A_GIMME,    0);
 
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
@@ -187,31 +191,65 @@ void* polyglot_new(t_symbol* s, long argc, t_atom* argv)
     }
 
     x->outlet = bangout((t_object*)x);
-    x->sam = person(100, (char*)"sammy");
-    // x->py = py_interpreter();
-    x->py = new py_interpreter();
+    x->py = new PythonInterpreter(); // <-- can also be a struct
 
     return (x);
 }
 
 void polyglot_bang(t_polyglot* x)
 {
-    post("age: %d", x->sam.get_age());
-    post("name: %s", x->sam.get_name()->s_name);
-    // x->py.status();
     outlet_bang(x->outlet);
 }
 
-
 t_max_err polyglot_import(t_polyglot* x, t_symbol* s)
 {
-    // return py_import(x->py, s); // returns t_max_err
     return x->py->import(s);
 }
 
-
 t_max_err polyglot_eval(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
 {
-    // return py_eval(x->py, s, argc, argv, x->outlet);
     return x->py->eval(s, argc, argv, x->outlet);
+}
+
+
+t_max_err polyglot_exec(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return x->py->exec(s, argc, argv);
+}
+
+
+t_max_err polyglot_execfile(t_polyglot* x, t_symbol* s)
+{
+    return x->py->execfile(s);
+}
+
+
+t_max_err polyglot_call(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return x->py->call(s, argc, argv, x->outlet);
+}
+
+
+t_max_err polyglot_assign(t_polyglot* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return x->py->assign(s, argc, argv);
+}
+
+
+t_max_err polyglot_code(t_polyglot* x, t_symbol* s, long argc, t_atom* argv,
+                     void* outlet)
+{
+    return x->py->code(s, argc, argv, x->outlet);
+}
+
+
+t_max_err polyglot_anything(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return x->py->anything(s, argc, argv, x->outlet);
+}
+
+
+t_max_err polyglot_pipe(t_polyglot* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return x->py->pipe(s, argc, argv, x->outlet);
 }

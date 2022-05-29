@@ -4,6 +4,8 @@
 
 ### Variants
 
+- Added the `polyglot` project, which uses single-header library developed in the mamba project (see below) to provide the functionality for a c++ `PythonInterpreter` class. Once this class is mature, it may be added to `py.h` in case c++ is used.
+
 - Added the `mamba` project: a single header python3 library for max externals which provides the `t_py` max type providings max-friendly python3 interpreter methods.  The idea is that an object from this type be instanciated and nested inside any another external.
 
 ### Patchers
@@ -11,7 +13,6 @@
 - Added example `pyjs_overview.maxpat` patch
 
 - Added `pyjs_repl.maxpat` bpatcher
-
 
 ### Core
 
@@ -26,7 +27,6 @@
 - added doxygen docs for `py.c`
 
 - added doxygen for code documentation generation
-
 
 ## v0.1
 
@@ -46,7 +46,7 @@
   
   - removing openssl as a dependency
   - shrinking the python lib further
-  - setting `-configuration` as `Deployment` 
+  - setting `-configuration` as `Deployment`
 
 - if python_version for relocatable is given as major.minor only, then it should still work. Currently requires full major.minor.patch version.
 
@@ -85,7 +85,6 @@
 - `_hashlib` and `_ssl` are now built for `static-ext` build.
 
 - fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
-
 
 ### Core Features
 

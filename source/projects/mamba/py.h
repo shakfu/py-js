@@ -124,7 +124,6 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset,
 PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from);
 
 
-
 // ---------------------------------------------------------------------------------------
 // HELPERS
 
@@ -186,7 +185,7 @@ t_py* py_init(void)
 {
     // t_py *x = calloc(1, sizeof *x);
     // t_py *x = calloc(1, sizeof (struct t_py));
-    t_py* x = (t_py *)malloc(sizeof(struct t_py));
+    t_py* x = (t_py*)malloc(sizeof(struct t_py));
 
     x->p_name = symbol_unique();
     x->p_pythonpath = gensym("");
@@ -272,7 +271,8 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
             ret = path_toabsolutesystempath(x->p_code_path, x->p_code_filename,
                                             x->p_code_pathname);
             if (ret != MAX_ERR_NONE) {
-                py_error(x, (char*)"can't convert %s to absolutepath", s->s_name);
+                py_error(x, (char*)"can't convert %s to absolutepath",
+                         s->s_name);
                 goto finally;
             }
         }
@@ -405,8 +405,7 @@ t_max_err py_handle_string_output(t_py* x, void* outlet, PyObject* pstring)
         if (unicode_result == NULL) {
             goto error;
         }
-        outlet_anything(outlet, gensym(unicode_result), 0, (t_atom *)NIL);
-
+        outlet_anything(outlet, gensym(unicode_result), 0, (t_atom*)NIL);
     }
 
     Py_XDECREF(pstring);
@@ -976,7 +975,8 @@ t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
         goto error;
     }
 
-    py_log(x, (char*)"length of argc:%ld list: %d", argc, PyList_Size(py_argslist));
+    py_log(x, (char*)"length of argc:%ld list: %d", argc,
+           PyList_Size(py_argslist));
 
     // convert py_args to tuple
     py_args = PyList_AsTuple(py_argslist);
@@ -1230,7 +1230,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
             if (unicode_result == NULL) {
                 goto error;
             }
-            outlet_anything(outlet, gensym(unicode_result), 0, (t_atom *)NIL);
+            outlet_anything(outlet, gensym(unicode_result), 0, (t_atom*)NIL);
             Py_XDECREF(pval);
         }
 

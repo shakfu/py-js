@@ -10,7 +10,6 @@ The name is of this header is likely to change to differentiate it from the `py`
 
 Other names could be `mpy.h` or `mamba.h`
 
-
 ## Building
 
 From the root of the `py-js` project
@@ -19,7 +18,6 @@ From the root of the `py-js` project
 make cmake
 ```
 
-
 ## Tests
 
-See `test_mamba.maxpat` in `py-js/patchers`
+See `mamba.maxhelp` in `py-js/help`
