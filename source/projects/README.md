@@ -10,24 +10,31 @@ make cmake
 
 The projects currently fall into two groups:
 
+## A. Core Externals (py and pyjs)
 
-## A. Implementation and Packaging Experiments
+Full featured and with most most developed packaging options.
 
+Currently implemented in the `py` directory, both of these externals are built together.
 
-### mamba
-
-A Single-header python3 library to nest python3 objects in other externals
+## B. Implementation and Packaging Experiments
 
 ### cobra
 
 Deferred and clocked evaluation of a python function via Max's ITM-based sequencing
 
+### mamba
+
+A Single-header python3 c library to nest python3 objects in other externals
+
+### krait
+
+A Single-header python3 c++ library to nest python3 objects in other externals
+
 ### mxpy
 
 A translation of [pdpython](https://github.com/garthz/pdpython) to maxmsp
 
-
-## B. ZeroMQ / Jupyter Experiments
+## C. ZeroMQ / Jupyter Experiments
 
 These are experiments in the use of [zeromq](https://zeromq.org) in Max externals, ultimately toward an attempt to develop something like a minimal jupyter client for Max.
 
@@ -38,7 +45,6 @@ brew install zeromq czmq libsodium
 ```
 
 For static compilation, the dependencies are `libzmq.a` (itself depending on `libsodium.a`) with associated headers, and also `libczmq.a`.
-
 
 ### zpy
 

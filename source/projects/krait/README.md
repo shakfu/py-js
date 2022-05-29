@@ -1,8 +1,6 @@
 # The Krait Experiment
 
-This project is an extension of the [polyglot](../polyglot) experiment. 
-
-Its objective is to create a cpp single-header `py.h` library with a fully implemented python3 interpreter class.
+Its objective is to create a cpp single-header `py_interpreter.h` library with a fully implemented python3 interpreter class.
 
 ## Building
 
