@@ -89,7 +89,7 @@ class PythonInterpreter {
 // ---------------------------------------------------------------------------------------
 // IMPLEMENTATION
 
-//#ifdef PY_IMPLEMENTATION
+#ifdef PY_INTERPRETER_IMPLEMENTATION
 
 /*
     py_interpreter.h -- single-header library providing minimal python3 services for Max
@@ -115,12 +115,13 @@ PythonInterpreter::PythonInterpreter()
     this->p_code_outtype = 0;
     this->p_code_filename[0] = 0;
     this->p_code_pathname[0] = 0;
-    // this->p_code_path = 0;
+    this->p_code_path = 0;
     this->p_code_filepath = gensym("");
+
+    // python init
 
     Py_Initialize();
 
-    // python init
     PyObject* main_mod = PyImport_AddModule(this->p_name->s_name); // borrowed
     this->p_globals = PyModule_GetDict(main_mod); // borrowed reference
 
@@ -1175,3 +1176,7 @@ error:
     PyGILState_Release(gstate);
     return MAX_ERR_GENERIC;
 }
+
+// ---------------------------------------------------------------------------------------
+
+#endif // End PY_INTERPRETER_IMPLEMENTATION

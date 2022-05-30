@@ -12,6 +12,7 @@
 #include "ext.h"
 #include "ext_obex.h"
 
+#define PY_INTERPRETER_IMPLEMENTATION
 #include "py_interpreter.h"
 
 

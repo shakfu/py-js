@@ -73,7 +73,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 // ---------------------------------------------------------------------------------------
 // IMPLEMENTATION
 
-//#ifdef PY_IMPLEMENTATION
+#ifdef PY_IMPLEMENTATION
 
 /*
     py.h -- single-header library providing minimal python3 services for Max
@@ -195,7 +195,7 @@ t_py* py_init(void)
     x->p_code_outtype = 0;
     x->p_code_filename[0] = 0;
     x->p_code_pathname[0] = 0;
-    // x->p_code_path = 0;
+    x->p_code_path = 0;
     x->p_code_filepath = gensym("");
 
     Py_Initialize();
@@ -1251,7 +1251,7 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-//#endif
+#endif
 
 // ---------------------------------------------------------------------------------------
 // END IMPLEMENTATION
