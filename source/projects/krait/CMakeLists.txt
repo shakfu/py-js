@@ -3,7 +3,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmak
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
 
-#set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 find_package(Python3 COMPONENTS Interpreter Development)
 

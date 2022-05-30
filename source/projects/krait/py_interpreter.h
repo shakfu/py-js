@@ -37,7 +37,7 @@
     This library is placed in the public domain.
 
 */
-// ---------------------------------------------------------------------------------------
+// ===========================================================================
 // HEADER
 
 
@@ -71,12 +71,21 @@ class PythonInterpreter {
         PythonInterpreter();
         ~PythonInterpreter();
 
+        // py <-> atom list translators
+        PyObject* atoms_to_plist(long argc, t_atom* argv);
+        PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
+        t_max_err plist_to_atoms(PyObject* seq, int* argc, t_atom** argv);
+        PyObject* atoms_to_ptuple(int argc, t_atom* argv);
+
+        // py <-> atom object translators
+        PyObject* atom_to_pobject(t_atom* atom);
+        t_max_err pobject_to_atom(PyObject* value, t_atom* atom);
+
         // helpers
         void log_debug(char* fmt, ...);
         void log_error(char* fmt, ...);
         void handle_error(char* fmt, ...);
 
-        PyObject* atoms_to_list(long argc, t_atom* argv, int start_from);
         t_max_err locate_path_from_symbol(t_symbol* s);
         t_max_err eval_text(long argc, t_atom* argv, int offset, void* outlet);
 
@@ -104,21 +113,28 @@ class PythonInterpreter {
 
 #endif /* PY_INTERPRETER_H */
 
-// ---------------------------------------------------------------------------------------
+// ===========================================================================
 // IMPLEMENTATION
 
 #ifdef PY_INTERPRETER_IMPLEMENTATION
 
 /*
-    py_interpreter.h -- single-header library providing minimal python3 services for Max
-   externals.
+    py_interpreter.h
+    
+    single-header library providing minimal python3 services for Max externals.
 */
+
+// ---------------------------------------------------------------------------
+// constants
 
 #define PY_MAX_ATOMS 128
 #define PY_MAX_LOG_CHAR 500
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 #define PY_DEBUG 1
 
+
+// ---------------------------------------------------------------------------
+// constructor / destructor methods
 
 /**
  * @brief      Constructs a new PythonInterpreter instance.
@@ -161,6 +177,10 @@ PythonInterpreter::~PythonInterpreter()
     Py_XDECREF(this->p_globals);
     Py_FinalizeEx();
 }
+
+
+// ---------------------------------------------------------------------------
+// helper methods
 
 
 /**
@@ -286,6 +306,216 @@ finally:
     return ret;
 }
 
+// ---------------------------------------------------------------------------
+// translation methods
+
+/**
+ * @brief      Converts max atom to python object
+ *
+ * @param      atom  The atom
+ *
+ * @return     python object (int, float, string)
+ */
+PyObject* PythonInterpreter::atom_to_pobject(t_atom* atom)
+{
+    this->log_debug((char*)"py_atom_to_py_object start");
+
+    switch (atom->a_type) {
+
+    case A_LONG:
+        this->log_debug((char*)"int: %i", atom_getlong(atom));
+        return PyLong_FromLong(atom_getlong(atom));
+
+    case A_FLOAT:
+        this->log_debug((char*)"float: %f", atom_getfloat(atom));
+        return PyFloat_FromDouble(atom_getfloat(atom));
+
+    case A_SYM:
+        this->log_debug((char*)"symbol: %s", atom_getsym(atom)->s_name);
+        return PyUnicode_FromString(atom_getsym(atom)->s_name);
+
+    case A_NOTHING:
+        Py_RETURN_NONE;
+
+    default:
+        // FIXME: should be this->log_warning
+        this->log_error((char*)"Warning: type %d unsupported for conversion to Python.",
+             atom->a_type);
+        Py_RETURN_NONE;
+    }
+}
+
+
+/**
+ * @brief      Converts a python object to a max atom 
+ *
+ * @param      value  Python value
+ * @param[out] atom   Max atom
+ */
+t_max_err PythonInterpreter::pobject_to_atom(PyObject* value, t_atom* atom)
+{
+    t_max_err err = MAX_ERR_NONE;
+
+    if (value == Py_True)
+        atom_setlong(atom, 1);
+    else if (value == Py_False)
+        atom_setlong(atom, 0);
+    else if (PyFloat_Check(value))
+        atom_setfloat(atom, (float)PyFloat_AsDouble(value));
+    else if (PyLong_Check(value))
+        atom_setlong(atom, (float)PyLong_AsLong(value));
+    else if (PyUnicode_Check(value))
+        atom_setsym(atom, gensym(PyUnicode_AsUTF8(value)));
+    else {
+        // FIXME: should this not return an 'error' t_symbol
+        this->log_error((char*)"Warning: python type unsupported for conversion to max t_atom.");
+        atom_setsym(atom, gensym("error"));
+        err = MAX_ERR_GENERIC;
+    }
+    return err;
+}
+
+
+/**
+ * @brief Translates atom vector to python list
+ *
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ *
+ * @return PyObject* list
+ */
+PyObject* PythonInterpreter::atoms_to_plist(long argc, t_atom* argv)
+{
+    return this->atoms_to_plist_with_offset(argc, argv, 0);
+}
+
+/**
+ * @brief Translates atom vector to python list
+ *
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param start_from index of vector to start from
+ *
+ * @return PyObject* python list
+ */
+PyObject* PythonInterpreter::atoms_to_plist_with_offset(long argc,
+                                                          t_atom* argv,
+                                                          int start_from)
+{
+
+    PyObject* plist = NULL; // python list
+
+    if ((plist = PyList_New(0)) == NULL) {
+        this->log_error((char*)"could not create an empty python list");
+        goto error;
+    }
+
+    for (int i = start_from; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            double c_float = atom_getfloat(argv + i);
+            PyObject* p_float = PyFloat_FromDouble(c_float);
+            if (p_float == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_float);
+            Py_DECREF(p_float);
+            break;
+        }
+        case A_LONG: {
+            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_DECREF(p_long);
+            break;
+        }
+        case A_SYM: {
+            PyObject* p_str = PyUnicode_FromString(
+                atom_getsym(argv + i)->s_name);
+            if (p_str == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_str);
+            Py_DECREF(p_str);
+            break;
+        }
+        default:
+            this->log_debug((char*)"cannot process unknown type");
+            break;
+        }
+    }
+    return plist;
+
+error:
+    this->log_error((char*)"atom to list conversion failed");
+    return NULL;
+}
+
+/**
+ * @brief      Populates in-place an empty atom list with the contents of a
+ * python list
+ *
+ * @param      seq   The python list
+ * @param      argc  The count of arguments
+ * @param[out] argv  The arguments array
+ * 
+ * @return t_max_err error code
+ */
+t_max_err PythonInterpreter::plist_to_atoms(PyObject* plist, int* argc,
+                                            t_atom** argv)
+{
+    Py_ssize_t len = 0;
+    Py_ssize_t i;
+    PyObject* elem;
+    t_max_err err;
+
+    if (plist == NULL) {
+        goto error;
+    }
+
+    // FIXME: possible bug here. Check!
+    if (PyList_Check(plist)) {
+        len = PyList_Size(plist);
+        *argv = (t_atom*)malloc(len * sizeof(t_atom));
+        for (i = 0; i < len; i++) {
+            elem = PyList_GetItem(plist, i);
+            this->pobject_to_atom(elem, (*argv) + i);
+        }
+        *argc = (int)len;
+        return MAX_ERR_NONE;
+    }
+
+error:
+    this->handle_error((char*)"plist_to_atoms failed");
+    Py_XDECREF(plist);
+    return MAX_ERR_GENERIC;
+}
+
+
+/**
+ * @brief      Converts an atom vector to a Python tuple
+ *
+ * @param[in]  argc  The length of the atom vector
+ * @param      argv  The max atom vector
+ *
+ * @return     Python tuple object
+ */
+PyObject* PythonInterpreter::atoms_to_ptuple(int argc, t_atom* argv)
+{
+    PyObject* list = PyTuple_New(argc);
+    int i;
+    for (i = 0; i < argc; i++) {
+        PyObject* value = this->atom_to_pobject(&argv[i]);
+        PyTuple_SetItem(list, i, value); // pass value ref to the tuple
+    }
+    return list;
+}
+
+
+// ---------------------------------------------------------------------------
+// output methods
 
 /**
  * @brief Handler to output python float as max float
@@ -748,67 +978,6 @@ error:
 // ---------------------------------------------------------------------------------------
 // EXTRA METHODS HELPERS
 
-/**
- * @brief Translates atom vector to python list
- *
- * @param argc atom argument count
- * @param argv atom argument vector
- * @param start_from index of vector to start from
- * @return PyObject* python list
- */
-PyObject* PythonInterpreter::atoms_to_list(long argc, t_atom* argv, int start_from)
-{
-
-    PyObject* plist = NULL; // python list
-
-    if ((plist = PyList_New(0)) == NULL) {
-        this->log_error((char*)"could not create an empty python list");
-        goto error;
-    }
-
-    for (int i = start_from; i < argc; i++) {
-        switch ((argv + i)->a_type) {
-        case A_FLOAT: {
-            double c_float = atom_getfloat(argv + i);
-            PyObject* p_float = PyFloat_FromDouble(c_float);
-            if (p_float == NULL) {
-                goto error;
-            }
-            PyList_Append(plist, p_float);
-            Py_DECREF(p_float);
-            break;
-        }
-        case A_LONG: {
-            PyObject* p_long = PyLong_FromLong(atom_getlong(argv + i));
-            if (p_long == NULL) {
-                goto error;
-            }
-            PyList_Append(plist, p_long);
-            Py_DECREF(p_long);
-            break;
-        }
-        case A_SYM: {
-            PyObject* p_str = PyUnicode_FromString(
-                atom_getsym(argv + i)->s_name);
-            if (p_str == NULL) {
-                goto error;
-            }
-            PyList_Append(plist, p_str);
-            Py_DECREF(p_str);
-            break;
-        }
-        default:
-            this->log_debug((char*)"cannot process unknown type");
-            break;
-        }
-    }
-    return plist;
-
-error:
-    this->log_error((char*)"atom to list conversion failed");
-    return NULL;
-}
-
 
 /**
  * @brief A helper function to evaluate Max text as a Python expression.
@@ -820,8 +989,7 @@ error:
  *
  * @return t_max_err error code
  */
-t_max_err PythonInterpreter::eval_text(long argc, t_atom* argv, int offset,
-                       void* outlet)
+t_max_err PythonInterpreter::eval_text(long argc, t_atom* argv, int offset, void* outlet)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
@@ -917,7 +1085,7 @@ t_max_err PythonInterpreter::call(t_symbol* s, long argc, t_atom* argv, void* ou
         goto error;
     }
 
-    py_argslist = this->atoms_to_list(argc, argv, 1);
+    py_argslist = this->atoms_to_plist_with_offset(argc, argv, 1);
     if (py_argslist == NULL) {
         this->log_error((char*)"atom to py list conversion failed");
         goto error;
@@ -1002,7 +1170,7 @@ t_max_err PythonInterpreter::assign(t_symbol* s, long argc, t_atom* argv)
         this->log_debug((char*)"varname: %s", varname);
     }
 
-    list = this->atoms_to_list(argc, argv, 1);
+    list = this->atoms_to_plist_with_offset(argc, argv, 1);
     if (list == NULL) {
         this->log_error((char*)"atom to py list conversion failed");
         goto error;
@@ -1197,6 +1365,6 @@ error:
 
 } // namespace pyjs
 
-// ---------------------------------------------------------------------------------------
+// ===========================================================================
 
 #endif // PY_INTERPRETER_IMPLEMENTATION

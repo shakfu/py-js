@@ -120,11 +120,9 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv)
                 object_error((t_object*)x, "forbidden argument");
             }
         }
+        x->outlet = bangout((t_object*)x);
+        x->py = new pyjs::PythonInterpreter(); // <-- can also be a struct
     }
-
-    x->outlet = bangout((t_object*)x);
-    x->py = new pyjs::PythonInterpreter(); // <-- can also be a struct
-
     return (x);
 }
 
