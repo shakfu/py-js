@@ -51,10 +51,12 @@
 #include <Python.h>
 
 
-namespace pyjs {
+namespace pyjs
+{
 
 
-class PythonInterpreter {
+class PythonInterpreter
+{
     private:
         t_symbol* p_name;                       //!< unique python object name
         t_symbol* p_pythonpath;                 //!< path to python directory
@@ -71,16 +73,6 @@ class PythonInterpreter {
         PythonInterpreter();
         ~PythonInterpreter();
 
-        // py <-> atom list translators
-        PyObject* atoms_to_plist(long argc, t_atom* argv);
-        PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
-        t_max_err plist_to_atoms(PyObject* seq, int* argc, t_atom** argv);
-        PyObject* atoms_to_ptuple(int argc, t_atom* argv);
-
-        // py <-> atom object translators
-        PyObject* atom_to_pobject(t_atom* atom);
-        t_max_err pobject_to_atom(PyObject* value, t_atom* atom);
-
         // helpers
         void log_debug(char* fmt, ...);
         void log_error(char* fmt, ...);
@@ -88,6 +80,15 @@ class PythonInterpreter {
 
         t_max_err locate_path_from_symbol(t_symbol* s);
         t_max_err eval_text(long argc, t_atom* argv, int offset, void* outlet);
+
+        // py <-> atom translation
+        PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
+        PyObject* atoms_to_plist(long argc, t_atom* argv); //+
+        t_max_err plist_to_atoms(PyObject* seq, int* argc, t_atom** argv); //+
+        PyObject* atoms_to_ptuple(int argc, t_atom* argv); //+
+
+        PyObject* atom_to_pobject(t_atom* atom); // used by atoms_to_ptuple
+        t_max_err pobject_to_atom(PyObject* value, t_atom* atom); // used by plist_to_atoms
 
         // translation -> output        
         t_max_err handle_float_output(void* outlet, PyObject* pval);
@@ -170,7 +171,7 @@ PythonInterpreter::PythonInterpreter()
 }
 
 /**
- * @brief      Destroys the PythonInterpreter object.
+ * @brief      PythonInterpreter destructor method.
  */
 PythonInterpreter::~PythonInterpreter()
 {
@@ -504,13 +505,13 @@ error:
  */
 PyObject* PythonInterpreter::atoms_to_ptuple(int argc, t_atom* argv)
 {
-    PyObject* list = PyTuple_New(argc);
+    PyObject* ptuple = PyTuple_New(argc);
     int i;
     for (i = 0; i < argc; i++) {
         PyObject* value = this->atom_to_pobject(&argv[i]);
-        PyTuple_SetItem(list, i, value); // pass value ref to the tuple
+        PyTuple_SetItem(ptuple, i, value); // pass value ref to the tuple
     }
-    return list;
+    return ptuple;
 }
 
 
@@ -1363,8 +1364,8 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-} // namespace pyjs
-
 // ===========================================================================
 
 #endif // PY_INTERPRETER_IMPLEMENTATION
+
+} // namespace pyjs
