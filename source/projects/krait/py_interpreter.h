@@ -1,25 +1,40 @@
 /** \file py_interpreter.h
-    \brief A single-header pyyhon3 library for Max externals.
+    \brief A single-header python3 library for Max externals.
 
-    This library is supposed to enable nested py objects in a given
-    Max external. This library is in the public domain.
+    Provides a `PythonInterpreter` implementation which can be dropped into any
+    arbitrary Max external. 
 
     The latest code can be found in [py-js](https://github.com/shakfu/py-js)
 
-    If PY_IMPLEMENTATION isdefined before including the header,
+    If PY_INTERPRETER_IMPLEMENTATION is defined before including the header,
     it will activate the implementation, otherwise the implementation
-    will not be included.
+    will not be included, this file is treated as a header.
 
     Usage example:
 
-        #define PY_IMPLEMENTATION // <-- activate the implementation
+        #define PY_INTERPRETER_IMPLEMENTATION // <-- activate the implementation
         #include "py_interpreter.h"
 
-        typedef struct myobj {
+        typedef struct my {
             t_object obj;
-            py_interpreter* py; // <-- this is the key opaque type and instance
+            PythonInterpreter* py; // <-- this is the key opaque type and instance
             void* outlet;
-        } t_myobj;
+        } t_my;
+
+        // then use the interpreter's methods as you like. For example:
+
+        t_max_err my_import(t_my* x, t_symbol* s)
+        {
+            return x->py->import(s);
+        }
+
+        t_max_err my_eval(t_my* x, t_symbol* s, long argc, t_atom* argv)
+        {
+            return x->py->eval(s, argc, argv, x->outlet);
+        }
+
+
+    This library is placed in the public domain.
 
 */
 // ---------------------------------------------------------------------------------------
@@ -34,6 +49,9 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+
+
+namespace pyjs {
 
 
 class PythonInterpreter {
@@ -1177,6 +1195,8 @@ error:
     return MAX_ERR_GENERIC;
 }
 
+} // namespace pyjs
+
 // ---------------------------------------------------------------------------------------
 
-#endif // End PY_INTERPRETER_IMPLEMENTATION
+#endif // PY_INTERPRETER_IMPLEMENTATION

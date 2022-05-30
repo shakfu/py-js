@@ -19,7 +19,7 @@
 typedef struct _krait {
     t_object ob;
     void* outlet;
-    PythonInterpreter* py;
+    pyjs::PythonInterpreter* py;
 } t_krait;
 
 
@@ -43,8 +43,8 @@ t_max_err krait_code(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_anything(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_pipe(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 
-
 END_USING_C_LINKAGE
+
 
 static t_class* krait_class = NULL;
 
@@ -123,7 +123,7 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv)
     }
 
     x->outlet = bangout((t_object*)x);
-    x->py = new PythonInterpreter(); // <-- can also be a struct
+    x->py = new pyjs::PythonInterpreter(); // <-- can also be a struct
 
     return (x);
 }
