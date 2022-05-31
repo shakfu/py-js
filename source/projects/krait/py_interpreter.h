@@ -78,8 +78,6 @@ class PythonInterpreter
         void log_error(char* fmt, ...);
         void handle_error(char* fmt, ...);
 
-        t_max_err locate_path_from_symbol(t_symbol* s);
-        t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
 
         // py <-> atom translation
         PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
@@ -98,16 +96,22 @@ class PythonInterpreter
         t_max_err handle_dict_output(void* outlet, PyObject* pval);
         t_max_err handle_output(void* outlet, PyObject* pval);
 
-        // core method helpes
+        // core method helpers
+        t_max_err import_module(char* module);
         PyObject* eval_pcode(char* pcode);
         t_max_err exec_pcode(char* pcode);
         t_max_err execfile_path(char* path);
+        t_max_err locate_path_from_symbol(t_symbol* s);
 
         // core
         t_max_err import(t_symbol* s);
         t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err exec(t_symbol* s, long argc, t_atom* argv);
         t_max_err execfile(t_symbol* s);
+
+        // extra method helpers
+        PyObject* eval_text(char* text);
+        t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
 
         // extra
         t_max_err call(t_symbol* s, long argc, t_atom* argv, void* outlet);
@@ -819,6 +823,41 @@ t_max_err PythonInterpreter::handle_output(void* outlet, PyObject* pval)
 // ---------------------------------------------------------------------------------------
 // CORE METHOD HELPERS
 
+
+/**
+ * @brief Import a python module
+ *
+ * @param module to be imported as cstring
+ * @return t_max_err error code
+ */
+t_max_err PythonInterpreter::import_module(char* module)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pmodule = NULL;
+
+    if (module == NULL) {
+        goto error;
+    }
+
+    pmodule = PyImport_ImportModule(module);
+    if (pmodule == NULL) {
+        goto error;
+    }
+        
+    PyDict_SetItemString(this->p_globals, module, pmodule);
+    PyGILState_Release(gstate);
+    this->log_debug((char*)"imported: %s", module);
+    return MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"import %s", module);
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
+
 /**
  * @brief      eval python code from cstring
  *
@@ -924,6 +963,56 @@ error:
 }
 
 
+/**
+ * @brief A helper function to evaluate Max text as a Python expression.
+ *
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param offset offset of atom vector from which to evaluate
+ * @param outlet object outlet
+ *
+ * @return PyObject* pointer to python object
+ */
+PyObject* PythonInterpreter::eval_text(char* text)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    int is_eval = 1;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
+
+    co = Py_CompileString(text, this->p_name->s_name, Py_eval_input);
+
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, this->p_name->s_name, Py_single_input);
+        is_eval = 0;
+    }
+
+    if (co == NULL) { // can be eval-co or exec-co or NULL here
+        sysmem_freeptr(text);
+        goto error;
+    }
+    sysmem_freeptr(text);
+
+    pval = PyEval_EvalCode(co, this->p_globals, this->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(co);
+
+    if (!is_eval) {
+        PyGILState_Release(gstate);
+    }
+
+    return pval;
+
+error:
+    this->handle_error((char*)"python code evaluation failed");
+    PyGILState_Release(gstate);
+    Py_RETURN_NONE;
+}
+
 // ---------------------------------------------------------------------------------------
 // CORE METHODS
 
@@ -936,27 +1025,10 @@ error:
  */
 t_max_err PythonInterpreter::import(t_symbol* s)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
-    PyObject* x_module = NULL;
-
-    if (s != gensym("")) {
-        x_module = PyImport_ImportModule(s->s_name);
-        // x_module borrrowed ref
-        if (x_module == NULL) {
-            goto error;
-        }
-        PyDict_SetItemString(this->p_globals, s->s_name, x_module);
-        PyGILState_Release(gstate);
-        this->log_debug((char*)"imported: %s", s->s_name);
+    if (s == gensym("")) {
+        return MAX_ERR_GENERIC;
     }
-    return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"import %s", s->s_name);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
+    return this->import_module(s->s_name);
 }
 
 
@@ -1037,7 +1109,6 @@ t_max_err PythonInterpreter::execfile(t_symbol* s)
 }
 
 
-
 // ---------------------------------------------------------------------------------------
 // EXTRA METHODS HELPERS
 
@@ -1054,56 +1125,24 @@ t_max_err PythonInterpreter::execfile(t_symbol* s)
  */
 t_max_err PythonInterpreter::eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet)
 {
-    PyGILState_STATE gstate = PyGILState_Ensure();
-
     long textsize = 0;
     char* text = NULL;
-    int is_eval = 1;
-    PyObject* co = NULL;
-    PyObject* pval = NULL;
-
+    PyObject* pval;
 
     t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         this->log_debug((char*)">>> %s", text);
-    } else {
-        goto error;
+        pval = this->eval_text(text);
+        if (pval != NULL) {
+            this->handle_output(outlet, pval);
+            return MAX_ERR_NONE;
+        }
     }
-
-    co = Py_CompileString(text, this->p_name->s_name, Py_eval_input);
-
-    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-        PyErr_Clear();
-        co = Py_CompileString(text, this->p_name->s_name, Py_single_input);
-        is_eval = 0;
-    }
-
-    if (co == NULL) { // can be eval-co or exec-co or NULL here
-        sysmem_freeptr(text);
-        goto error;
-    }
-    sysmem_freeptr(text);
-
-    pval = PyEval_EvalCode(co, this->p_globals, this->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-    Py_DECREF(co);
-
-    if (!is_eval) {
-        // bang for exec-type op
-        PyGILState_Release(gstate);
-    } else {
-        this->handle_output(outlet, pval);
-    }
-    return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"python code evaluation failed");
-    PyGILState_Release(gstate);
     return MAX_ERR_GENERIC;
 }
+
+
 
 
 // ---------------------------------------------------------------------------------------
