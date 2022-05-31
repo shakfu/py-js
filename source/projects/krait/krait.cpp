@@ -131,7 +131,7 @@ void krait_bang(t_krait* x)
     int argc = 0;
     t_atom* argv = NULL;
 
-    PyObject* pval = x->py->eval_pcode_to_pval((char*)"[1,2,3]");
+    PyObject* pval = x->py->eval_pcode((char*)"[1,2,3]");
 
     assert(pval != NULL);
 

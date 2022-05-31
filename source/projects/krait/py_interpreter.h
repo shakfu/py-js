@@ -80,7 +80,6 @@ class PythonInterpreter
 
         t_max_err locate_path_from_symbol(t_symbol* s);
         t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
-        PyObject* eval_pcode_to_pval(char* pcode);
 
         // py <-> atom translation
         PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
@@ -98,6 +97,11 @@ class PythonInterpreter
         t_max_err handle_list_output(void* outlet, PyObject* pval);
         t_max_err handle_dict_output(void* outlet, PyObject* pval);
         t_max_err handle_output(void* outlet, PyObject* pval);
+
+        // core method helpes
+        PyObject* eval_pcode(char* pcode);
+        t_max_err exec_pcode(char* pcode);
+        t_max_err execfile_path(char* path);
 
         // core
         t_max_err import(t_symbol* s);
@@ -812,6 +816,113 @@ t_max_err PythonInterpreter::handle_output(void* outlet, PyObject* pval)
     }
 }
 
+// ---------------------------------------------------------------------------------------
+// CORE METHOD HELPERS
+
+/**
+ * @brief      eval python code from cstring
+ *
+ * @param      python code in cstring
+ *
+ * @return     result of python evaluation
+ */
+PyObject* PythonInterpreter::eval_pcode(char* pcode)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = PyRun_String(pcode,
+        Py_eval_input, this->p_globals, this->p_globals);
+
+    if (pval != NULL) {
+        PyGILState_Release(gstate);
+        return pval;
+    } else {
+        this->handle_error((char*)"failed python code eval: %s", pcode);
+        PyGILState_Release(gstate);
+        Py_RETURN_NONE;
+    }
+}
+
+
+/**
+ * @brief Execute a line of python code
+ *
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */ 
+t_max_err PythonInterpreter::exec_pcode(char* pcode)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = PyRun_String(pcode,
+        Py_single_input, this->p_globals, this->p_globals);
+
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+
+    this->log_debug((char*)"exec %s", pcode);
+    return MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"exec %s", pcode);
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
+
+/**
+ * @brief Execute contents of a file (obtained from symbol) as python code
+ *
+ * @param path cstring of path to execfile
+ * @return t_max_err error code
+ */
+t_max_err PythonInterpreter::execfile_path(char* path)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = NULL;
+    FILE* fhandle = NULL;
+
+    if (path == NULL) {
+        goto error;
+    }
+
+    fhandle = fopen(path, "r+");
+
+    if (fhandle == NULL) {
+        this->log_error((char*)"could not open file");
+        goto error;
+    }
+
+    pval = PyRun_File(fhandle, path, Py_file_input, this->p_globals, this->p_globals);
+
+    if (pval == NULL) {
+        fclose(fhandle);
+        goto error;
+    }
+
+    // success cleanup
+    fclose(fhandle);
+    Py_DECREF(pval);
+    PyGILState_Release(gstate);
+    return MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"execfile");
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
 
 // ---------------------------------------------------------------------------------------
 // CORE METHODS
@@ -848,6 +959,7 @@ error:
     return MAX_ERR_GENERIC;
 }
 
+
 /**
  * @brief Evaluate a max symbol as a python expression
  *
@@ -860,25 +972,22 @@ error:
  */
 t_max_err PythonInterpreter::eval(t_symbol* s, long argc, t_atom* argv, void* outlet)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    char* pcode = atom_getsym(argv)->s_name;
 
-    char* py_argv = atom_getsym(argv)->s_name;
-    this->log_debug((char*)"%s %s", s->s_name, py_argv);
-
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, this->p_globals,
-                                  this->p_globals);
-
-    if (pval != NULL) {
-        this->handle_output(outlet, pval);
-        PyGILState_Release(gstate);
-        return MAX_ERR_NONE;
-    } else {
-        this->handle_error((char*)"eval %s", py_argv);
-        PyGILState_Release(gstate);
+    if (pcode == NULL) {
         return MAX_ERR_GENERIC;
     }
+
+    PyObject* pval = this->eval_pcode(pcode);
+
+    if (pval == NULL) {
+        return MAX_ERR_GENERIC;
+    }
+
+    this->handle_output(outlet, pval);
+    return MAX_ERR_NONE;
 }
+
 
 /**
  * @brief Execute a max symbol as a line of python code
@@ -890,33 +999,13 @@ t_max_err PythonInterpreter::eval(t_symbol* s, long argc, t_atom* argv, void* ou
  */
 t_max_err PythonInterpreter::exec(t_symbol* s, long argc, t_atom* argv)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
-    char* py_argv = NULL;
-    PyObject* pval = NULL;
-
-    py_argv = atom_getsym(argv)->s_name;
-    if (py_argv == NULL) {
-        goto error;
+    char* pcode = atom_getsym(argv)->s_name;
+    if (pcode == NULL) {
+        return MAX_ERR_GENERIC;
     }
-
-    pval = PyRun_String(py_argv, Py_single_input, this->p_globals, this->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
-    Py_DECREF(pval);
-    PyGILState_Release(gstate);
-
-    this->log_debug((char*)"exec %s", py_argv);
-    return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"exec %s", py_argv);
-    Py_XDECREF(pval);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
+    return this->exec_pcode(pcode);
 }
+
 
 /**
  * @brief Execute contents of a file (obtained from symbol) as python code
@@ -926,55 +1015,28 @@ error:
  */
 t_max_err PythonInterpreter::execfile(t_symbol* s)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
-    PyObject* pval = NULL;
-    FILE* fhandle = NULL;
 
     if (s != gensym("")) {
         // set this->p_code_filepath
         t_max_err err = this->locate_path_from_symbol(s);
         if (err != MAX_ERR_NONE) {
             this->log_error((char*)"could not locate path from symbol");
-            goto error;
+            return err;
         }
     }
 
     if (s == gensym("") || this->p_code_filepath == gensym("")) {
         this->log_error((char*)"could not set filepath");
-        goto error;
+        return MAX_ERR_GENERIC;
     }
 
     // assume this->p_code_filepath has be been set without errors
 
-    this->log_debug((char*)"pathname: %s", this->p_code_filepath->s_name);
-    fhandle = fopen(this->p_code_filepath->s_name, "r+");
+    return this->execfile_path(this->p_code_filepath->s_name);
 
-    if (fhandle == NULL) {
-        this->log_error((char*)"could not open file");
-        goto error;
-    }
-
-    pval = PyRun_File(fhandle, this->p_code_filepath->s_name, Py_file_input,
-                      this->p_globals, this->p_globals);
-    if (pval == NULL) {
-        fclose(fhandle);
-        goto error;
-    }
-
-    // success cleanup
-    fclose(fhandle);
-    Py_DECREF(pval);
-    PyGILState_Release(gstate);
-    return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"execfile");
-    Py_XDECREF(pval);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
 }
+
+
 
 // ---------------------------------------------------------------------------------------
 // EXTRA METHODS HELPERS
@@ -1041,24 +1103,6 @@ error:
     this->handle_error((char*)"python code evaluation failed");
     PyGILState_Release(gstate);
     return MAX_ERR_GENERIC;
-}
-
-
-PyObject* PythonInterpreter::eval_pcode_to_pval(char* pcode)
-{
-    PyObject* pval = PyRun_String(pcode,
-        Py_eval_input, this->p_globals, this->p_globals);
-
-    if (pval == NULL) {
-        this->log_error((char*)"python code evaluation result is NULL");
-        goto error;
-    }
-    return pval;  
-
-error:
-    this->handle_error((char*)"failed evaluation");
-    Py_XDECREF(pval);
-    Py_RETURN_NONE;
 }
 
 
