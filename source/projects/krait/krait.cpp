@@ -128,7 +128,20 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv)
 
 void krait_bang(t_krait* x)
 {
-    outlet_bang(x->outlet);
+    int argc = 0;
+    t_atom* argv = NULL;
+
+    PyObject* pval = x->py->eval_pcode_to_pval((char*)"[1,2,3]");
+
+    assert(pval != NULL);
+
+    x->py->plist_to_atoms(pval, &argc, &argv);
+
+    post("argc: %d", argc);
+
+    outlet_list(x->outlet, NULL, argc, argv);
+
+    // outlet_bang(x->outlet);
 }
 
 

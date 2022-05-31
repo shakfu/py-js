@@ -79,7 +79,8 @@ class PythonInterpreter
         void handle_error(char* fmt, ...);
 
         t_max_err locate_path_from_symbol(t_symbol* s);
-        t_max_err eval_text(long argc, t_atom* argv, int offset, void* outlet);
+        t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
+        PyObject* eval_pcode_to_pval(char* pcode);
 
         // py <-> atom translation
         PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
@@ -470,7 +471,6 @@ t_max_err PythonInterpreter::plist_to_atoms(PyObject* plist, int* argc,
     Py_ssize_t len = 0;
     Py_ssize_t i;
     PyObject* elem;
-    t_max_err err;
 
     if (plist == NULL) {
         goto error;
@@ -990,7 +990,7 @@ error:
  *
  * @return t_max_err error code
  */
-t_max_err PythonInterpreter::eval_text(long argc, t_atom* argv, int offset, void* outlet)
+t_max_err PythonInterpreter::eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
@@ -1041,6 +1041,24 @@ error:
     this->handle_error((char*)"python code evaluation failed");
     PyGILState_Release(gstate);
     return MAX_ERR_GENERIC;
+}
+
+
+PyObject* PythonInterpreter::eval_pcode_to_pval(char* pcode)
+{
+    PyObject* pval = PyRun_String(pcode,
+        Py_eval_input, this->p_globals, this->p_globals);
+
+    if (pval == NULL) {
+        this->log_error((char*)"python code evaluation result is NULL");
+        goto error;
+    }
+    return pval;  
+
+error:
+    this->handle_error((char*)"failed evaluation");
+    Py_XDECREF(pval);
+    Py_RETURN_NONE;
 }
 
 
@@ -1215,7 +1233,7 @@ error:
  */
 t_max_err PythonInterpreter::code(t_symbol* s, long argc, t_atom* argv, void* outlet)
 {
-    return this->eval_text(argc, argv, 0, outlet);
+    return this->eval_text_to_outlet(argc, argv, 0, outlet);
 }
 
 
@@ -1268,7 +1286,7 @@ t_max_err PythonInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
         }
     }
 
-    return this->eval_text(argc, atoms, 1, outlet);
+    return this->eval_text_to_outlet(argc, atoms, 1, outlet);
 }
 
 /**
