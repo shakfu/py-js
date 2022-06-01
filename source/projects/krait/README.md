@@ -1,6 +1,6 @@
 # The Krait Experiment
 
-Its objective is to create a cpp single-header `py_interpreter.h` library with a fully implemented python3 interpreter class.
+Provides a single-header cpp-centric `py_interpreter.h` library with a fully implemented python3 interpreter class.
 
 ## Building
 

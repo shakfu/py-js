@@ -42,6 +42,7 @@ t_max_err krait_assign(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_code(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_anything(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_pipe(t_krait* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err krait_property(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 
 END_USING_C_LINKAGE
 
@@ -67,6 +68,8 @@ void ext_main(void* r)
     class_addmethod(c, (method)krait_eval,       "eval",     A_GIMME,    0);
     class_addmethod(c, (method)krait_exec,       "exec",     A_GIMME,    0);
     class_addmethod(c, (method)krait_execfile,   "execfile", A_DEFSYM,   0);
+
+    class_addmethod(c, (method)krait_property,   "property", A_GIMME,    0);
 
     class_addmethod(c, (method)krait_assign,     "assign",   A_GIMME,    0);
     class_addmethod(c, (method)krait_call,       "call",     A_GIMME,    0);
@@ -196,4 +199,9 @@ t_max_err krait_anything(t_krait* x, t_symbol* s, long argc, t_atom* argv)
 t_max_err krait_pipe(t_krait* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->pipe(s, argc, argv, x->outlet);
+}
+
+t_max_err krait_property(t_krait* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return x->py->property(s, argc, argv);
 }

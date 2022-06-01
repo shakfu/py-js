@@ -55,12 +55,22 @@ namespace pyjs
 {
 
 
+/**
+ * @brief      specifies three logging levels
+ */
+enum log_level {
+    ERROR, INFO, DEBUG 
+};
+
+/**
+ * @brief      This class describes a python interpreter.
+ */
 class PythonInterpreter
 {
     private:
         t_symbol* p_name;                       //!< unique python object name
         t_symbol* p_pythonpath;                 //!< path to python directory
-        t_bool p_debug;                         //!< bool to switch per-object debug state
+        log_level p_log_level;                  //!< object-level log level (error, info, debug)
         t_fourcc p_code_filetype;               //!< filetype four char code of 'TEXT'
         t_fourcc p_code_outtype;                //!< filetype four char code of 'TEXT'
         char p_code_filename[MAX_PATH_CHARS];   //!< file name field
@@ -75,10 +85,11 @@ class PythonInterpreter
 
         // helpers
         void log_debug(char* fmt, ...);
+        void log_info(char* fmt, ...);
         void log_error(char* fmt, ...);
         void handle_error(char* fmt, ...);
-
-
+        void print_atom(int argc, t_atom* argv);
+        
         // py <-> atom translation
         PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
         PyObject* atoms_to_plist(long argc, t_atom* argv); //+
@@ -88,7 +99,7 @@ class PythonInterpreter
         PyObject* atom_to_pobject(t_atom* atom); // used by atoms_to_ptuple
         t_max_err pobject_to_atom(PyObject* value, t_atom* atom); // used by plist_to_atoms
 
-        // translation -> output        
+        // translation & output        
         t_max_err handle_float_output(void* outlet, PyObject* pval);
         t_max_err handle_long_output(void* outlet, PyObject* pval);
         t_max_err handle_string_output(void* outlet, PyObject* pval);
@@ -119,6 +130,9 @@ class PythonInterpreter
         t_max_err code(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err pipe(t_symbol* s, long argc, t_atom* argv, void* outlet);
+
+        // property access / setting
+        t_max_err property(t_symbol* s, long argc, t_atom* argv);
 };
 
 #endif /* PY_INTERPRETER_H */
@@ -140,7 +154,7 @@ class PythonInterpreter
 #define PY_MAX_ATOMS 128
 #define PY_MAX_LOG_CHAR 500
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
-#define PY_DEBUG 1
+// #define PY_DEBUG 1
 
 
 // ---------------------------------------------------------------------------
@@ -153,7 +167,7 @@ PythonInterpreter::PythonInterpreter()
 {
     this->p_name = symbol_unique();
     this->p_pythonpath = gensym("");
-    this->p_debug = PY_DEBUG;
+    this->p_log_level = log_level::DEBUG;
 
     this->p_code_filetype = FOUR_CHAR_CODE('TEXT');
     this->p_code_outtype = 0;
@@ -201,7 +215,7 @@ PythonInterpreter::~PythonInterpreter()
  */
 void PythonInterpreter::log_debug(char* fmt, ...)
 {
-    if (this->p_debug) {
+    if (this->p_log_level >= log_level::DEBUG) {
         char msg[PY_MAX_LOG_CHAR];
 
         va_list va;
@@ -209,9 +223,31 @@ void PythonInterpreter::log_debug(char* fmt, ...)
         vsprintf(msg, fmt, va);
         va_end(va);
 
-        post("[py %s]: %s", this->p_name->s_name, msg);
+        post("[py debug %s]: %s", this->p_name->s_name, msg);
     }
 }
+
+
+/**
+ * @brief Post msg to Max console.
+ *
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ */
+void PythonInterpreter::log_info(char* fmt, ...)
+{
+    if (this->p_log_level >= log_level::INFO) {
+        char msg[PY_MAX_LOG_CHAR];
+
+        va_list va;
+        va_start(va, fmt);
+        vsprintf(msg, fmt, va);
+        va_end(va);
+
+        post("[py info %s]: %s", this->p_name->s_name, msg);
+    }
+}
+
 
 /**
  * @brief Post error message to Max console.
@@ -221,14 +257,16 @@ void PythonInterpreter::log_debug(char* fmt, ...)
  */
 void PythonInterpreter::log_error(char* fmt, ...)
 {
-    char msg[PY_MAX_ERR_CHAR];
+    if (this->p_log_level >= log_level::ERROR) {
+        char msg[PY_MAX_ERR_CHAR];
 
-    va_list va;
-    va_start(va, fmt);
-    vsprintf(msg, fmt, va);
-    va_end(va);
+        va_list va;
+        va_start(va, fmt);
+        vsprintf(msg, fmt, va);
+        va_end(va);
 
-    error((char*)"[py %s]: %s", this->p_name->s_name, msg);
+        error((char*)"[py error %s]: %s", this->p_name->s_name, msg);
+    }
 }
 
 
@@ -264,6 +302,31 @@ void PythonInterpreter::handle_error(char* fmt, ...)
         Py_XDECREF(ptraceback);
 
         error((char*)"[py %s] %s: %s", this->p_name->s_name, msg, pvalue_str);
+    }
+}
+
+void PythonInterpreter::print_atom(int argc, t_atom* argv)
+{
+    for (int i = 0; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            this->log_info((char*)"(%d) float: %f", i,
+                           atom_getfloat(argv + i));
+            break;
+        }
+        case A_LONG: {
+            this->log_info((char*)"(%d) long: %d", i, atom_getlong(argv + i));
+            break;
+        }
+        case A_SYM: {
+            this->log_info((char*)"(%d) symbol: %s", i,
+                           atom_getsym(argv + i)->s_name);
+            break;
+        }
+        default:
+            this->log_debug((char*)"cannot process unknown type");
+            break;
+        }
     }
 }
 
@@ -1127,13 +1190,12 @@ t_max_err PythonInterpreter::eval_text_to_outlet(long argc, t_atom* argv, int of
 {
     long textsize = 0;
     char* text = NULL;
-    PyObject* pval;
 
     t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         this->log_debug((char*)">>> %s", text);
-        pval = this->eval_text(text);
+        PyObject* pval = this->eval_text(text);
         if (pval != NULL) {
             this->handle_output(outlet, pval);
             return MAX_ERR_NONE;
@@ -1462,6 +1524,51 @@ error:
     Py_XDECREF(pstr);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
+// ---------------------------------------------------------------------------------------
+// PROPERTY ACCESS
+
+t_max_err PythonInterpreter::property(t_symbol* s, long argc, t_atom* argv)
+{
+    assert(s == gensym("property"));
+
+    this->print_atom(argc, argv);
+
+    if (argc == 0) {
+        this->log_info((char*)"Provide 'property <name>' to get, 'proprety <name> <value>'");
+        this->log_info(
+            (char*)"Properties: 'pythonpath <path>', 'log_level <0-2>'");
+        return MAX_ERR_NONE;
+    }
+
+    if (argc == 1) {
+        if (argv->a_type == A_SYM) {
+            if (atom_getsym(argv + 0) == gensym("pythonpath")) {
+                this->log_info((char*)"property pythonpath: %s",
+                               this->p_pythonpath->s_name);
+                return MAX_ERR_NONE;
+            }
+            if (atom_getsym(argv + 0) == gensym("log_level")) {
+                this->log_info((char*)"property log_level: %d", this->p_log_level);
+                return MAX_ERR_NONE;
+            }
+        }
+    }
+
+    if (argc == 2) {
+        if (argv->a_type == A_SYM) {
+            if (atom_getsym(argv + 0) == gensym("pythonpath")) {
+                this->p_pythonpath = gensym(atom_getsym(argv + 1)->s_name);
+                return MAX_ERR_NONE;
+            }
+            if (atom_getsym(argv + 0) == gensym("log_level")) {
+                this->p_log_level = (log_level)atom_getlong(argv + 1);
+                return MAX_ERR_NONE;
+            }
+        }
+    }
     return MAX_ERR_GENERIC;
 }
 
