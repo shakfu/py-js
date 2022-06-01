@@ -50,6 +50,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+#define if_null_error(x) if(x == NULL) { goto error; }
 
 namespace pyjs
 {
@@ -87,10 +88,13 @@ class PythonInterpreter
         void log_debug(char* fmt, ...);
         void log_info(char* fmt, ...);
         void log_error(char* fmt, ...);
-        void handle_error(char* fmt, ...);
         void print_atom(int argc, t_atom* argv);
-        
-        // py <-> atom translation
+
+        // python helpers
+        void handle_error(char* fmt, ...);
+        t_max_err syspath_append(char* path);
+
+        // python <-> atom translation
         PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
         PyObject* atoms_to_plist(long argc, t_atom* argv); //+
         t_max_err plist_to_atoms(PyObject* seq, int* argc, t_atom** argv); //+
@@ -99,7 +103,7 @@ class PythonInterpreter
         PyObject* atom_to_pobject(t_atom* atom); // used by atoms_to_ptuple
         t_max_err pobject_to_atom(PyObject* value, t_atom* atom); // used by plist_to_atoms
 
-        // translation & output        
+        // python value -> atom -> output
         t_max_err handle_float_output(void* outlet, PyObject* pval);
         t_max_err handle_long_output(void* outlet, PyObject* pval);
         t_max_err handle_string_output(void* outlet, PyObject* pval);
@@ -107,32 +111,30 @@ class PythonInterpreter
         t_max_err handle_dict_output(void* outlet, PyObject* pval);
         t_max_err handle_output(void* outlet, PyObject* pval);
 
-        // core method helpers
+        // core message method helpers
         t_max_err import_module(char* module);
         PyObject* eval_pcode(char* pcode);
         t_max_err exec_pcode(char* pcode);
         t_max_err execfile_path(char* path);
         t_max_err locate_path_from_symbol(t_symbol* s);
 
-        // core
+        // core message methods
         t_max_err import(t_symbol* s);
         t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err exec(t_symbol* s, long argc, t_atom* argv);
         t_max_err execfile(t_symbol* s);
 
-        // extra method helpers
+        // extra message method helpers
         PyObject* eval_text(char* text);
         t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
 
-        // extra
+        // extra message methods
         t_max_err call(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err assign(t_symbol* s, long argc, t_atom* argv);
         t_max_err code(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err pipe(t_symbol* s, long argc, t_atom* argv, void* outlet);
 
-        // property access / setting
-        t_max_err property(t_symbol* s, long argc, t_atom* argv);
 };
 
 #endif /* PY_INTERPRETER_H */
@@ -298,7 +300,6 @@ void PythonInterpreter::handle_error(char* fmt, ...)
         const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
         Py_XDECREF(pvalue);
         Py_XDECREF(pvalue_pstr);
-
         Py_XDECREF(ptraceback);
 
         error((char*)"[py %s] %s: %s", this->p_name->s_name, msg, pvalue_str);
@@ -377,6 +378,76 @@ t_max_err PythonInterpreter::locate_path_from_symbol(t_symbol* s)
 
 finally:
     return ret;
+}
+
+t_max_err PythonInterpreter::syspath_append(char* path)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    t_max_err err = MAX_ERR_NONE;
+    PyObject* os = NULL;
+    PyObject* os_path = NULL;
+    PyObject* os_path_expandvars = NULL;
+    PyObject* pre_expanded = NULL;
+    PyObject* expanded_path = NULL;
+    PyObject* sys_path = NULL;
+    const char* expanded_path_cstr = NULL;
+
+    if (path == NULL) {
+        goto error;
+    }
+
+    os = PyImport_ImportModule("os"); // new ref
+    if (os == NULL) {
+        goto error;
+    }
+    
+    os_path = PyObject_GetAttrString(os, "path"); // new ref
+    if (os_path == NULL) {
+        goto error;
+    }
+
+    os_path_expandvars = PyObject_GetAttrString(os_path, "expandvars"); // new ref.
+    if (os_path_expandvars == NULL) {
+        goto error;
+    }
+    
+    pre_expanded = PyUnicode_FromString(path); // new ref
+    if (pre_expanded == NULL) {
+        goto error;
+    }
+
+    expanded_path = PyObject_CallFunctionObjArgs(os_path_expandvars, pre_expanded, NULL);
+    if (expanded_path == NULL) {
+        goto error;
+    }
+
+    expanded_path_cstr = PyUnicode_AsUTF8(expanded_path);
+    if (expanded_path_cstr == NULL) {
+        goto error;
+    }
+    this->log_debug((char*)"expanded string: %s", expanded_path_cstr);
+
+    sys_path = PySys_GetObject((char*)"path"); // borrowed ref
+    if (sys_path == NULL) {
+        goto error;
+    }
+    PyList_Append(sys_path, expanded_path);
+    goto finally;
+
+error:
+    err = MAX_ERR_GENERIC;
+    this->handle_error((char*)"syspath append failed");
+
+finally:
+    Py_XDECREF(expanded_path);
+    Py_XDECREF(pre_expanded);
+    Py_XDECREF(os_path_expandvars);
+    Py_XDECREF(os_path);
+    Py_XDECREF(os);
+    PyGILState_Release(gstate);
+    return err;
 }
 
 // ---------------------------------------------------------------------------
@@ -1403,35 +1474,73 @@ t_max_err PythonInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
     }
 
     // set '=' as shorthand for assign method
-    if (s == gensym("=")) {
-        this->assign(gensym(""), argc, argv);
-        return MAX_ERR_NONE;
+    else if (s == gensym("=")) {
+        return this->assign(gensym(""), argc, argv);
     }
 
-    // set symbol as first atom in new atoms array
-    atom_setsym(atoms, s);
-
-    for (int i = 0; i < argc; i++) {
-        switch ((argv + i)->a_type) {
-        case A_FLOAT: {
-            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
-            break;
+    // check for properties
+    else if (s == gensym("pythonpath")) {
+        if (argc == 0) {
+            this->log_info((char*)"property pythonpath: %s",
+                            this->p_pythonpath->s_name);
+            return MAX_ERR_NONE;
         }
-        case A_LONG: {
-            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
-            break;
+        
+        if (argc == 1) {
+            if ((argv)->a_type == A_SYM) {
+                this->log_info((char*)"setting pythonpath to %s",
+                               atom_getsym(argv)->s_name);
+                this->p_pythonpath = gensym(atom_getsym(argv)->s_name);
+                return this->syspath_append(this->p_pythonpath->s_name);
+            }
         }
-        case A_SYM: {
-            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
-            break;
-        }
-        default:
-            this->log_debug((char*)"cannot process unknown type");
-            break;
-        }
+        return MAX_ERR_GENERIC;
     }
 
-    return this->eval_text_to_outlet(argc, atoms, 1, outlet);
+    else if (s == gensym("log_level")) {
+        if (argc == 0) {
+            this->log_info((char*)"property log_level: %d", 
+                            this->p_log_level);
+            return MAX_ERR_NONE;
+        }
+
+        if (argc == 1) {
+            if ((argv)->a_type == A_LONG) {
+                this->log_info((char*)"setting log_level to %d", atom_getlong(argv));
+                this->p_log_level = (log_level)atom_getlong(argv);
+                return MAX_ERR_NONE;
+            }
+        }
+        return MAX_ERR_GENERIC;
+    }
+    
+    else {
+
+        // set symbol as first atom in new atoms array
+        atom_setsym(atoms, s);
+
+        for (int i = 0; i < argc; i++) {
+            switch ((argv + i)->a_type) {
+            case A_FLOAT: {
+                atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
+                break;
+            }
+            case A_LONG: {
+                atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
+                break;
+            }
+            case A_SYM: {
+                atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
+                break;
+            }
+            default:
+                this->log_debug((char*)"cannot process unknown type");
+                break;
+            }
+        }
+
+        return this->eval_text_to_outlet(argc, atoms, 1, outlet);
+    }
 }
 
 /**
@@ -1524,51 +1633,6 @@ error:
     Py_XDECREF(pstr);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
-}
-
-// ---------------------------------------------------------------------------------------
-// PROPERTY ACCESS
-
-t_max_err PythonInterpreter::property(t_symbol* s, long argc, t_atom* argv)
-{
-    assert(s == gensym("property"));
-
-    this->print_atom(argc, argv);
-
-    if (argc == 0) {
-        this->log_info((char*)"Provide 'property <name>' to get, 'proprety <name> <value>'");
-        this->log_info(
-            (char*)"Properties: 'pythonpath <path>', 'log_level <0-2>'");
-        return MAX_ERR_NONE;
-    }
-
-    if (argc == 1) {
-        if (argv->a_type == A_SYM) {
-            if (atom_getsym(argv + 0) == gensym("pythonpath")) {
-                this->log_info((char*)"property pythonpath: %s",
-                               this->p_pythonpath->s_name);
-                return MAX_ERR_NONE;
-            }
-            if (atom_getsym(argv + 0) == gensym("log_level")) {
-                this->log_info((char*)"property log_level: %d", this->p_log_level);
-                return MAX_ERR_NONE;
-            }
-        }
-    }
-
-    if (argc == 2) {
-        if (argv->a_type == A_SYM) {
-            if (atom_getsym(argv + 0) == gensym("pythonpath")) {
-                this->p_pythonpath = gensym(atom_getsym(argv + 1)->s_name);
-                return MAX_ERR_NONE;
-            }
-            if (atom_getsym(argv + 0) == gensym("log_level")) {
-                this->p_log_level = (log_level)atom_getlong(argv + 1);
-                return MAX_ERR_NONE;
-            }
-        }
-    }
     return MAX_ERR_GENERIC;
 }
 

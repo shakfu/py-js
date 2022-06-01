@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 403.0, 175.0, 640.0, 480.0 ],
+		"rect" : [ 230.0, 147.0, 640.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -40,39 +40,25 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-10",
+					"id" : "obj-30",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 354.0, 367.0, 240.0, 22.0 ],
-					"presentation_linecount" : 3,
-					"text" : "property pythonpath /Users/sa/Downloads"
+					"patching_rect" : [ 263.5, 140.0, 70.0, 22.0 ],
+					"text" : "eval big.me"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-4",
+					"id" : "obj-28",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 472.0, 412.0, 103.0, 22.0 ],
-					"text" : "property log_level"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-1",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 472.0, 339.0, 115.0, 22.0 ],
-					"presentation_linecount" : 3,
-					"text" : "property pythonpath"
+					"patching_rect" : [ 248.0, 110.0, 61.0, 22.0 ],
+					"text" : "import big"
 				}
 
 			}
@@ -83,8 +69,44 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 472.0, 310.0, 53.0, 22.0 ],
-					"text" : "property"
+					"patching_rect" : [ 420.0, 402.0, 66.0, 22.0 ],
+					"text" : "log_level 1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-10",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 419.0, 335.0, 177.0, 22.0 ],
+					"text" : "pythonpath $HOME/Downloads"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-4",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 419.0, 373.0, 56.0, 22.0 ],
+					"text" : "log_level"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-1",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 419.0, 307.0, 68.0, 22.0 ],
+					"text" : "pythonpath"
 				}
 
 			}
@@ -481,7 +503,21 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-23", 0 ],
+					"source" : [ "obj-28", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-23", 0 ],
 					"source" : [ "obj-3", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-23", 0 ],
+					"source" : [ "obj-30", 0 ]
 				}
 
 			}

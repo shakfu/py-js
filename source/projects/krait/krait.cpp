@@ -42,7 +42,6 @@ t_max_err krait_assign(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_code(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_anything(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_pipe(t_krait* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err krait_property(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 
 END_USING_C_LINKAGE
 
@@ -68,8 +67,6 @@ void ext_main(void* r)
     class_addmethod(c, (method)krait_eval,       "eval",     A_GIMME,    0);
     class_addmethod(c, (method)krait_exec,       "exec",     A_GIMME,    0);
     class_addmethod(c, (method)krait_execfile,   "execfile", A_DEFSYM,   0);
-
-    class_addmethod(c, (method)krait_property,   "property", A_GIMME,    0);
 
     class_addmethod(c, (method)krait_assign,     "assign",   A_GIMME,    0);
     class_addmethod(c, (method)krait_call,       "call",     A_GIMME,    0);
@@ -131,20 +128,33 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv)
 
 void krait_bang(t_krait* x)
 {
-    int argc = 0;
-    t_atom* argv = NULL;
+    // int argc = 0;
+    // t_atom* argv = NULL;
+    // PyObject* pval = x->py->eval_pcode((char*)"[1,2,3]");
+    // assert(pval != NULL);
+    // x->py->plist_to_atoms(pval, &argc, &argv);
+    // post("argc: %d", argc);
+    // outlet_list(x->outlet, NULL, argc, argv);
 
-    PyObject* pval = x->py->eval_pcode((char*)"[1,2,3]");
+    // get os.path.expandvars function
+    // PyObject* os = PyImport_ImportModule("os");             // new ref
+    // PyObject* os_path = PyObject_GetAttrString(os, "path"); // new ref
+    // PyObject* os_path_expandvars = PyObject_GetAttrString(
+    //     os_path, "expandvars"); // new ref.
+    // PyObject* pre_expanded = PyUnicode_FromString("$HOME/Downloads");
+    // PyObject* expanded_path = PyObject_CallFunctionObjArgs(os_path_expandvars,
+    //                                                        pre_expanded, NULL);
+    // PyObject* pvalue_pstr = PyObject_Repr(expanded_path);
+    // const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
+    // post((char*)"expanded string: %s", pvalue_str);
+    // Py_XDECREF(pvalue_pstr);
+    // Py_XDECREF(expanded_path);
+    // Py_XDECREF(pre_expanded);
+    // Py_XDECREF(os_path_expandvars);
+    // Py_XDECREF(os_path);
+    // Py_XDECREF(os);
 
-    assert(pval != NULL);
-
-    x->py->plist_to_atoms(pval, &argc, &argv);
-
-    post("argc: %d", argc);
-
-    outlet_list(x->outlet, NULL, argc, argv);
-
-    // outlet_bang(x->outlet);
+    outlet_bang(x->outlet);
 }
 
 
@@ -199,9 +209,4 @@ t_max_err krait_anything(t_krait* x, t_symbol* s, long argc, t_atom* argv)
 t_max_err krait_pipe(t_krait* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->pipe(s, argc, argv, x->outlet);
-}
-
-t_max_err krait_property(t_krait* x, t_symbol* s, long argc, t_atom* argv)
-{
-    return x->py->property(s, argc, argv);
 }
