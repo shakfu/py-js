@@ -82,7 +82,11 @@ class PythonInterpreter
 
     public:
         PythonInterpreter();
+        PythonInterpreter(char* name, char* path);
         ~PythonInterpreter();
+
+        // initialization
+        void init(void);
 
         // helpers
         void log_debug(char* fmt, ...);
@@ -163,14 +167,51 @@ class PythonInterpreter
 // constructor / destructor methods
 
 /**
- * @brief      Constructs a new PythonInterpreter instance.
+ * @brief      Constructs without params a new PythonInterpreter instance.
  */
-PythonInterpreter::PythonInterpreter()
-{
+PythonInterpreter::PythonInterpreter(void)
+{ 
     this->p_name = symbol_unique();
     this->p_pythonpath = gensym("");
     this->p_log_level = log_level::DEBUG;
 
+    this->init();
+
+}
+
+
+/**
+ * @brief      Constructs with params a new PythonInterpreter instance.
+ */
+PythonInterpreter::PythonInterpreter(char* name, char* path)
+{ 
+    this->p_name = gensym(name);
+    this->p_pythonpath = gensym(path);
+    this->p_log_level = log_level::DEBUG;
+
+    this->init();
+
+}
+
+
+/**
+ * @brief      PythonInterpreter destructor method.
+ */
+PythonInterpreter::~PythonInterpreter()
+{
+    Py_XDECREF(this->p_globals);
+    Py_FinalizeEx();
+}
+
+
+// ---------------------------------------------------------------------------
+// init method
+
+/**
+ * @brief      Initializes the object.
+ */
+void PythonInterpreter::init(void)
+{
     this->p_code_filetype = FOUR_CHAR_CODE('TEXT');
     this->p_code_outtype = 0;
     this->p_code_filename[0] = 0;
@@ -193,15 +234,6 @@ PythonInterpreter::PythonInterpreter()
     PyDict_SetItemString(builtins, "PY_OBJ_NAME", py_name);
     PyDict_SetItemString(this->p_globals, "__builtins__", builtins);
     Py_XDECREF(py_name);
-}
-
-/**
- * @brief      PythonInterpreter destructor method.
- */
-PythonInterpreter::~PythonInterpreter()
-{
-    Py_XDECREF(this->p_globals);
-    Py_FinalizeEx();
 }
 
 
@@ -380,6 +412,13 @@ finally:
     return ret;
 }
 
+
+/**
+ * @brief Append string to python sys.path
+ * 
+ * @param path 
+ * @return t_max_err 
+ */
 t_max_err PythonInterpreter::syspath_append(char* path)
 {
     PyGILState_STATE gstate;
