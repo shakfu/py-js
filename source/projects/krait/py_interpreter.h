@@ -55,6 +55,15 @@
 namespace pyjs
 {
 
+// ---------------------------------------------------------------------------
+// constants
+
+#define PY_MAX_ELEMS 1024
+#define PY_LOG_LEVEL DEBUG
+
+// ---------------------------------------------------------------------------
+// enums
+
 
 /**
  * @brief      specifies three logging levels
@@ -63,30 +72,25 @@ enum log_level {
     ERROR, INFO, DEBUG 
 };
 
+// ---------------------------------------------------------------------------
+// classes
+
 /**
  * @brief      This class describes a python interpreter.
  */
 class PythonInterpreter
 {
     private:
-        t_symbol* p_name;                       //!< unique python object name
-        t_symbol* p_pythonpath;                 //!< path to python directory
-        log_level p_log_level;                  //!< object-level log level (error, info, debug)
-        t_fourcc p_code_filetype;               //!< filetype four char code of 'TEXT'
-        t_fourcc p_code_outtype;                //!< filetype four char code of 'TEXT'
-        char p_code_filename[MAX_PATH_CHARS];   //!< file name field
-        char p_code_pathname[MAX_PATH_CHARS];   //!< file path field
-        short p_code_path;                      //!< short code for max file system
-        t_symbol* p_code_filepath;              //!< filepath to python file to execfile
-        PyObject* p_globals;                    //!< per object 'globals' python namespace
+        t_symbol* p_name;           //!< unique python object name
+        t_symbol* p_pythonpath;     //!< path to python directory
+        t_symbol* p_source_name;    //!< base name of python file to execfile
+        t_symbol* p_source_path;    //!< full path to python file to execfile
+        log_level p_log_level;      //!< object-level log level (error, info, debug)
+        PyObject* p_globals;        //!< per object 'globals' python namespace
 
     public:
         PythonInterpreter();
-        PythonInterpreter(char* name, char* path);
         ~PythonInterpreter();
-
-        // initialization
-        void init(void);
 
         // helpers
         void log_debug(char* fmt, ...);
@@ -154,70 +158,20 @@ class PythonInterpreter
     single-header library providing minimal python3 services for Max externals.
 */
 
-// ---------------------------------------------------------------------------
-// constants
-
-#define PY_MAX_ATOMS 128
-#define PY_MAX_LOG_CHAR 500
-#define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
-// #define PY_DEBUG 1
-
 
 // ---------------------------------------------------------------------------
 // constructor / destructor methods
 
 /**
- * @brief      Constructs without params a new PythonInterpreter instance.
+ * @brief      Constructs a new PythonInterpreter instance.
  */
-PythonInterpreter::PythonInterpreter(void)
-{ 
+PythonInterpreter::PythonInterpreter()
+{
     this->p_name = symbol_unique();
     this->p_pythonpath = gensym("");
-    this->p_log_level = log_level::DEBUG;
-
-    this->init();
-
-}
-
-
-/**
- * @brief      Constructs with params a new PythonInterpreter instance.
- */
-PythonInterpreter::PythonInterpreter(char* name, char* path)
-{ 
-    this->p_name = gensym(name);
-    this->p_pythonpath = gensym(path);
-    this->p_log_level = log_level::DEBUG;
-
-    this->init();
-
-}
-
-
-/**
- * @brief      PythonInterpreter destructor method.
- */
-PythonInterpreter::~PythonInterpreter()
-{
-    Py_XDECREF(this->p_globals);
-    Py_FinalizeEx();
-}
-
-
-// ---------------------------------------------------------------------------
-// init method
-
-/**
- * @brief      Initializes the object.
- */
-void PythonInterpreter::init(void)
-{
-    this->p_code_filetype = FOUR_CHAR_CODE('TEXT');
-    this->p_code_outtype = 0;
-    this->p_code_filename[0] = 0;
-    this->p_code_pathname[0] = 0;
-    this->p_code_path = 0;
-    this->p_code_filepath = gensym("");
+    this->p_source_name = gensym("");
+    this->p_source_path = gensym("");
+    this->p_log_level = log_level::PY_LOG_LEVEL;
 
     // python init
 
@@ -237,6 +191,16 @@ void PythonInterpreter::init(void)
 }
 
 
+/**
+ * @brief      PythonInterpreter destructor method.
+ */
+PythonInterpreter::~PythonInterpreter()
+{
+    Py_XDECREF(this->p_globals);
+    Py_FinalizeEx();
+}
+
+
 // ---------------------------------------------------------------------------
 // helper methods
 
@@ -250,7 +214,7 @@ void PythonInterpreter::init(void)
 void PythonInterpreter::log_debug(char* fmt, ...)
 {
     if (this->p_log_level >= log_level::DEBUG) {
-        char msg[PY_MAX_LOG_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
@@ -271,7 +235,7 @@ void PythonInterpreter::log_debug(char* fmt, ...)
 void PythonInterpreter::log_info(char* fmt, ...)
 {
     if (this->p_log_level >= log_level::INFO) {
-        char msg[PY_MAX_LOG_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
@@ -292,7 +256,7 @@ void PythonInterpreter::log_info(char* fmt, ...)
 void PythonInterpreter::log_error(char* fmt, ...)
 {
     if (this->p_log_level >= log_level::ERROR) {
-        char msg[PY_MAX_ERR_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
@@ -315,7 +279,7 @@ void PythonInterpreter::handle_error(char* fmt, ...)
     if (PyErr_Occurred()) {
 
         // build custom msg
-        char msg[PY_MAX_ERR_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
@@ -372,30 +336,34 @@ void PythonInterpreter::print_atom(int argc, t_atom* argv)
  */
 t_max_err PythonInterpreter::locate_path_from_symbol(t_symbol* s)
 {
-    t_max_err ret = 0;
+    t_fourcc filetype = FOUR_CHAR_CODE('TEXT');
+    t_fourcc outtype = 0;
+    short path_code = 0;
+    char filename[MAX_PATH_CHARS];
+    char pathname[MAX_PATH_CHARS];
+    t_max_err ret = MAX_ERR_NONE;
 
-    if (s == gensym("")) { // if no arg supplied ask for file
-        this->p_code_filename[0] = 0;
+    if (s == gensym("")) { // if no arg supplied to ask for file
+        filename[0] = 0;
 
-        if (open_dialog(this->p_code_filename, &this->p_code_path,
-                        &this->p_code_outtype, &this->p_code_filetype, 1))
+        if (open_dialog(filename, &path_code,
+                        &outtype, &filetype, 1))
             // non-zero: cancelled
             ret = MAX_ERR_GENERIC;
         goto finally;
 
     } else {
         // must copy symbol before calling locatefile_extended
-        strncpy_zero(this->p_code_filename, s->s_name, MAX_PATH_CHARS);
-        if (locatefile_extended(this->p_code_filename, &this->p_code_path,
-                                &this->p_code_outtype, &this->p_code_filetype, 1)) {
+        strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
+        if (locatefile_extended(filename, &path_code,
+                                &outtype, &filetype, 1)) {
             // nozero: not found
             this->log_error((char*)"can't find file %s", s->s_name);
             ret = MAX_ERR_GENERIC;
             goto finally;
         } else {
-            this->p_code_pathname[0] = 0;
-            ret = path_toabsolutesystempath(this->p_code_path, this->p_code_filename,
-                                            this->p_code_pathname);
+            pathname[0] = 0;
+            ret = path_toabsolutesystempath(path_code, filename, pathname);
             if (ret != MAX_ERR_NONE) {
                 this->log_error((char*)"can't convert %s to absolutepath", s->s_name);
                 goto finally;
@@ -404,7 +372,10 @@ t_max_err PythonInterpreter::locate_path_from_symbol(t_symbol* s)
 
         // success
         // set attribute from pathname symbol
-        this->p_code_filepath = gensym(this->p_code_pathname);
+        this->log_debug((char*)"filename: %s", filename);
+        this->log_debug((char*)"pathname: %s", pathname);
+        this->p_source_name = gensym(filename);
+        this->p_source_path = gensym(pathname);
         assert(ret == MAX_ERR_NONE);
     }
 
@@ -805,7 +776,7 @@ t_max_err PythonInterpreter::handle_list_output(void* outlet, PyObject* plist)
         PyObject* item = NULL;
         int i = 0;
 
-        t_atom atoms_static[PY_MAX_ATOMS];
+        t_atom atoms_static[PY_MAX_ELEMS];
         t_atom* atoms = NULL;
         int is_dynamic = 0;
 
@@ -817,9 +788,9 @@ t_max_err PythonInterpreter::handle_list_output(void* outlet, PyObject* plist)
             goto error;
         }
 
-        if (seq_size > PY_MAX_ATOMS) {
+        if (seq_size > PY_MAX_ELEMS) {
             this->log_debug((char*)"dynamically increasing size of atom array");
-            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ELEMS,
                                        seq_size + 1);
             is_dynamic = 1;
 
@@ -1262,7 +1233,7 @@ t_max_err PythonInterpreter::execfile(t_symbol* s)
 {
 
     if (s != gensym("")) {
-        // set this->p_code_filepath
+        // set this->p_source_path
         t_max_err err = this->locate_path_from_symbol(s);
         if (err != MAX_ERR_NONE) {
             this->log_error((char*)"could not locate path from symbol");
@@ -1270,14 +1241,14 @@ t_max_err PythonInterpreter::execfile(t_symbol* s)
         }
     }
 
-    if (s == gensym("") || this->p_code_filepath == gensym("")) {
+    if (s == gensym("") || this->p_source_path == gensym("")) {
         this->log_error((char*)"could not set filepath");
         return MAX_ERR_GENERIC;
     }
 
-    // assume this->p_code_filepath has be been set without errors
+    // assume this->p_source_path has be been set without errors
 
-    return this->execfile_path(this->p_code_filepath->s_name);
+    return this->execfile_path(this->p_source_path->s_name);
 
 }
 
@@ -1506,7 +1477,7 @@ t_max_err PythonInterpreter::code(t_symbol* s, long argc, t_atom* argv, void* ou
 t_max_err PythonInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
                       void* outlet)
 {
-    t_atom atoms[PY_MAX_ATOMS];
+    t_atom atoms[PY_MAX_ELEMS];
 
     if (s == gensym("")) {
         return MAX_ERR_GENERIC;

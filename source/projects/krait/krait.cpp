@@ -18,6 +18,7 @@
 
 typedef struct _krait {
     t_object ob;
+    t_symbol* name;
     void* outlet;
     pyjs::PythonInterpreter* py;
 } t_krait;
@@ -29,8 +30,15 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv);
 void krait_free(t_krait* x);
 void krait_assist(t_krait* x, void* b, long m, long a, char* s);
 
+// attr getters / setters
+t_max_err krait_name_get(t_krait* x, t_object* attr, long* argc, t_atom** argv);
+t_max_err krait_name_set(t_krait* x, t_object* attr, long argc, t_atom* argv);
+
+
+// basic methods
 void krait_bang(t_krait*);
 
+// core methods
 t_max_err krait_import(t_krait* x, t_symbol* s);
 t_max_err krait_eval(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err krait_exec(t_krait* x, t_symbol* s, long argc, t_atom* argv);
@@ -73,6 +81,11 @@ void ext_main(void* r)
     class_addmethod(c, (method)krait_code,       "code",     A_GIMME,    0);
     class_addmethod(c, (method)krait_pipe,       "pipe",     A_GIMME,    0);
     class_addmethod(c, (method)krait_anything,   "anything", A_GIMME,    0);
+
+    CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
+    CLASS_ATTR_SYM(c, "name", 0,   t_krait, name);
+    CLASS_ATTR_BASIC(c, "name", 0);
+    // CLASS_ATTR_ACCESSORS(c, "name", NULL, krait_name_set);
 
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
@@ -120,8 +133,12 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv)
                 object_error((t_object*)x, "forbidden argument");
             }
         }
+
+        x->name = gensym("");
         x->outlet = bangout((t_object*)x);
         x->py = new pyjs::PythonInterpreter(); // <-- can also be a struct
+
+        attr_args_process(x, argc, argv);
     }
     return (x);
 }
@@ -210,3 +227,16 @@ t_max_err krait_pipe(t_krait* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->pipe(s, argc, argv, x->outlet);
 }
+
+
+// t_max_err krait_name_set(t_krait* x, t_object* attr, long argc, t_atom* argv)
+// {
+//     if (argc && argv) {
+//         atom_setsym(&x->name, gensym("hello"));
+//     } else {
+//         atom_setsym(&x->name, gensym(""));
+//     }
+//     return MAX_ERR_NONE;
+
+// }
+
