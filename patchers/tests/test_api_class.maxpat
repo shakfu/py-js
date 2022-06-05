@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 455.0, 135.0, 627.0, 480.0 ],
+		"rect" : [ 433.0, 134.0, 627.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,56 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-12",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 213.0, 115.0, 143.0, 22.0 ],
+					"text" : "api.table_exists('notable')"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"editor_rect" : [ 100.0, 100.0, 300.0, 300.0 ],
+					"embed" : 1,
+					"id" : "obj-16",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 2,
+					"outlettype" : [ "int", "bang" ],
+					"patching_rect" : [ 502.5, 427.0, 80.0, 22.0 ],
+					"saved_object_attributes" : 					{
+						"name" : "mytable",
+						"parameter_enable" : 0,
+						"parameter_mappable" : 0,
+						"range" : 128,
+						"showeditor" : 0,
+						"size" : 128
+					}
+,
+					"showeditor" : 0,
+					"size" : 128,
+					"table_data" : [ 0, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 80, 74, 69, 63, 57, 54, 46, 42, 38, 37, 38, 40, 42, 43, 46, 47, 49, 50, 53, 55, 56, 58, 61, 63, 64, 66, 67, 70, 71, 73, 74, 77, 78, 79, 80, 82, 83, 84, 85, 86, 71, 88, 58, 57, 56, 56, 56, 56, 56, 56, 57, 58, 59, 60, 61, 62, 64, 65, 66, 68, 69, 69, 66, 65, 64, 63, 62, 62, 62, 62, 61, 61, 61, 61, 61, 61, 62, 62, 64, 65, 66, 67, 68, 69, 71, 72, 69, 67, 67, 67, 67, 67, 67, 68, 69, 70, 70, 70 ],
+					"text" : "table mytable"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-14",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 213.0, 83.0, 171.0, 22.0 ],
+					"text" : "eval api.table_exists('mytable')"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-6",
 					"maxclass" : "message",
@@ -476,7 +526,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 176.5, 427.0, 187.0, 22.0 ]
+					"patching_rect" : [ 176.5, 427.0, 187.0, 22.0 ],
+					"text" : "0"
 				}
 
 			}
@@ -537,7 +588,23 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"hidden" : 1,
+					"source" : [ "obj-12", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"hidden" : 1,
 					"source" : [ "obj-13", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-14", 0 ]
 				}
 
 			}
@@ -758,6 +825,12 @@
 			}
  ],
 		"dependency_cache" : [ 			{
+				"name" : "myTable",
+				"bootpath" : "C74:/help/max",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"
 			}

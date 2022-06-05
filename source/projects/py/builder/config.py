@@ -4,6 +4,13 @@ import platform
 import sysconfig
 from pathlib import Path
 
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
+
+
 # ----------------------------------------------------------------------------
 # Logging
 
@@ -183,6 +190,8 @@ class Python:
     dylib = f"libpython{version_short}{abiflags}.dylib"
 
     config_ver_platform = f"config-{version_short}{abiflags}-darwin"
+
+    numpy_includes = numpy.get_include() if numpy else None
 
     def to_dict(self) -> dict:
         return {

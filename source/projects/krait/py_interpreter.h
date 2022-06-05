@@ -143,6 +143,10 @@ class PythonInterpreter
         t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
         t_max_err pipe(t_symbol* s, long argc, t_atom* argv, void* outlet);
 
+        // datastructures
+        bool table_exists(char* table_name);
+        t_max_err plist_to_table(char* table_name, PyObject* pval);
+        PyObject* table_to_plist(char* table_name);
 };
 
 #endif /* PY_INTERPRETER_H */
@@ -1644,6 +1648,86 @@ error:
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
     return MAX_ERR_GENERIC;
+}
+
+// ---------------------------------------------------------------------------------------
+// datastructure support
+
+bool PythonInterpreter::table_exists(char* table_name)
+{
+    long **storage, size;
+
+    return (table_get(gensym(table_name), &storage, &size) == 0);
+}
+
+t_max_err PythonInterpreter::plist_to_table(char* table_name, PyObject* plist)
+{
+    long **storage, size, value;
+
+    Py_ssize_t len = 0;
+    PyObject* elem = NULL;
+
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (!PyList_Check(plist)) {
+        goto error;
+    }
+
+    len = PyList_Size(plist);
+
+
+    if (table_get(gensym(table_name), &storage, &size)) {
+        if (len > size)
+            goto error;
+
+        for(int i = 0; i < len; i++) {
+            elem = PyList_GetItem(plist, i);
+            value = PyLong_AsLong(elem);
+            *((*storage)+i) = value;
+            this->log_debug((char*)"storage[%d] = %d", i, value);
+        }
+    }
+    Py_XDECREF(plist);
+    Py_XDECREF(elem);
+    return MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"plist to table failed");
+    Py_XDECREF(plist);
+    Py_XDECREF(elem);
+    return MAX_ERR_GENERIC;
+}
+
+
+PyObject* PythonInterpreter::table_to_plist(char* table_name) {
+
+    PyObject* plist = NULL;
+    long **storage, size, value;
+
+    if ((plist = PyList_New(0)) == NULL) {
+        this->log_error((char*)"could not create an empty python list");
+        goto error;
+    }
+
+    if (table_get(gensym(table_name), &storage, &size) == 0) {
+        for(int i = 0; i < size; i++) {
+            value = *((*storage)+i);
+            this->log_debug((char*)"storage[%d] = %d", i, value);
+            PyObject* p_long = PyLong_FromLong(value);
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_DECREF(p_long);
+        }
+        return plist;
+    }
+
+error:
+    this->log_error((char*)"table to list conversion failed");
+    Py_RETURN_NONE;
 }
 
 // ===========================================================================

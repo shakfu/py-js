@@ -153,23 +153,21 @@ void krait_bang(t_krait* x)
     // post("argc: %d", argc);
     // outlet_list(x->outlet, NULL, argc, argv);
 
-    // get os.path.expandvars function
-    // PyObject* os = PyImport_ImportModule("os");             // new ref
-    // PyObject* os_path = PyObject_GetAttrString(os, "path"); // new ref
-    // PyObject* os_path_expandvars = PyObject_GetAttrString(
-    //     os_path, "expandvars"); // new ref.
-    // PyObject* pre_expanded = PyUnicode_FromString("$HOME/Downloads");
-    // PyObject* expanded_path = PyObject_CallFunctionObjArgs(os_path_expandvars,
-    //                                                        pre_expanded, NULL);
-    // PyObject* pvalue_pstr = PyObject_Repr(expanded_path);
-    // const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
-    // post((char*)"expanded string: %s", pvalue_str);
-    // Py_XDECREF(pvalue_pstr);
-    // Py_XDECREF(expanded_path);
-    // Py_XDECREF(pre_expanded);
-    // Py_XDECREF(os_path_expandvars);
-    // Py_XDECREF(os_path);
-    // Py_XDECREF(os);
+    // long **storage, size, value;
+
+    // if (table_get(gensym("mytable"), &storage, &size) == 0) {
+    //     for(int i = 0; i < size; i++) {
+    //         value = *((*storage)+i);
+    //         post("storage[%d] = %d", i, value);
+    //     }
+    // }
+
+    // if (table_get(gensym("mytable"), &storage, &size) == 0) {
+    //     for(int i = 0; i < size; i++) {
+    //         *((*storage)+i) = i;
+    //         // post("storage[%d] = %d", i, value);
+    //     }
+    // }
 
     outlet_bang(x->outlet);
 }

@@ -11,6 +11,7 @@ cdef extern from "py.h":
 
     mx.t_hashtab* get_global_registry()
 
+    
     ctypedef struct t_py
     
     # ctypedef struct t_py:
@@ -49,3 +50,7 @@ cdef extern from "py.h":
 
     cdef mx.t_atom* py_list_to_atom(t_py* x, PyObject* plist);
     cdef void py_list_to_atom2(t_py* x, PyObject* plist, long* argc, mx.t_atom** argv);
+
+    bint py_table_exists(t_py* x, char* table_name)
+    mx.t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
+    PyObject* py_table_to_list(t_py* x, char* table_name)

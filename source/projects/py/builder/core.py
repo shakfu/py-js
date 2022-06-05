@@ -358,6 +358,9 @@ class Builder:
             xcconfig_flags["ARCHS"] = "$(NATIVE_ARCH)"
             xcconfig_flags["ONLY_ACTIVE_ARCH"] = "NO"
 
+        if "NUMPY_HEADERS" not in xcconfig_flags and self.project.python.numpy_includes:
+            xcconfig_flags["NUMPY_HEADERS"] = self.project.python.numpy_includes
+
         xcconfig_flags["PROJECT_FOLDER_NAME"] = project
 
         configuration = "Deployment" if self.settings.release else "Development"

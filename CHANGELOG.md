@@ -2,9 +2,16 @@
 
 ## v0.1.1
 
+### API
+
+- added better docs to api.pyx
+- added max table access functions to cython api
+
+
+
 ### Variants
 
-- Removed the polyglot project as it is supeceded by the krait project.
+- Removed the polyglot project as it is superceded by the krait project.
 
 - Added the `krait` project, which pushes the single-header implementation into cpp territory with a cpp class `PythonInterpreter` implementing and encapsulating all of the functionality. This is final extension of the idea of modular python3 interpreter which can be easily nested into any Max external object. This object makes the polyglot object obsolete and it will be deleted after the next commit.
 

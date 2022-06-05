@@ -1,16 +1,59 @@
 # api.pyx
 """api: max api wrapped by cython for use by `py` external
 
-The main place to create wrappers and utilities to access max's api
+The main place to create and re-use cython wrappers and utilities which
+access Max's c-api.
 
-See below for examples of this.
+Using this file requires some knowledge of cython (https://cython.org).
 
-- [x] mx.object_method_typed(self.obj, mx.gensym(msg), argc, argv, NULL)
-- [ ] t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
+The wrappers here are available for use by python code running on the
+`py` external. First you have to send the `py` object an `import api`
+message and then call one of the functions or classes in this file
+making sure to prefix it with `api.`. For example:
 
+        1.
+   ( import api )
+        |
+        |                      2.
+      [ py ] ------ ( api.post('hello world') )
+
+
+A lot of the painful laborious work of creating header mappings has been
+done (at least for the  max api) and can be reviewed (and corrected) in
+the `api_max.pxd` file.
+
+This provides the benefit that we can import the max api via its header
+declarations as follows:
+
+    cimport api_max as mx
+
+Note that any function or symbol from the max api must be prefixed
+with `mx.` For example
+
+    gensym()    -> mx.gensym()
+    post()      -> mx.post()
+    ...
+
+In addition the `py` external api is also mapped for use by cython
+(see below) in api_py.pxd file:
+
+    cimport api_py as px
+
+
+Again please note any function exposed from the `py` external must
+be prefixed as `px`:
+
+    py_scan()   -> px.py_scan()
+
+
+This separation of namespaces is obviously very useful in this case. 
 
 """
-#cimport cython
+
+# ----------------------------------------------------------------------------
+# imports
+ 
+cimport cython
 from cpython cimport PyFloat_AsDouble
 from cpython cimport PyLong_AsLong
 from cpython.ref cimport PyObject
@@ -21,18 +64,57 @@ from libc.string cimport strcpy, strlen
 cimport api_max as mx # api is a cython keyword!
 cimport api_py as px
 
-# import numpy as np
-# cimport numpy as np
-# np.import_array()
+# ----------------------------------------------------------------------------
+# conditional imports
+
+DEF INCLUDE_NUMPY = False
+
+if INCLUDE_NUMPY:
+    import numpy as np
+    cimport numpy as np
+    np.import_array()
+
+# ----------------------------------------------------------------------------
+# constants
 
 DEF MAX_CHARS = 32767
 DEF PY_MAX_ATOMS = 128
 
+
+# ----------------------------------------------------------------------------
+# python c-api imports
+
+# TODO: can't this be imported from cimport!
 cdef extern from "Python.h":
     const char* PyUnicode_AsUTF8(object unicode)
     unicode PyUnicode_FromString(const char *u)
 
 
+# ----------------------------------------------------------------------------
+# numpy c-api import example
+
+if INCLUDE_NUMPY:
+
+    #@cython.boundscheck(False)
+    def zadd(in1, in2):
+        cdef double complex[:] a = in1.ravel()
+        cdef double complex[:] b = in2.ravel()
+
+        out = np.empty(a.shape[0], np.complex64)
+        cdef double complex[:] c = out.ravel()
+
+        for i in range(c.shape[0]):
+            c[i].real = a[i].real + b[i].real
+            c[i].imag = a[i].imag + b[i].imag
+
+        return out
+
+
+
+# ----------------------------------------------------------------------------
+# Atom extension type
+#
+# All type-casting to and from non-max types should be encapsulated here
 
 cdef class Atom:
     """A wrapper class for a Max t_atom
@@ -154,6 +236,13 @@ cdef class Atom:
         return Atom.from_ptr(ptr, size, owner=True)
 
 
+# ----------------------------------------------------------------------------
+# PyExternal extension type
+# 
+# Wrapper around the `py` external object and its methods. Should expose as much
+# functionality as possible.
+# 
+
 
 cdef class PyExternal:
     cdef px.t_py *obj
@@ -255,10 +344,20 @@ cdef class PyExternal:
         # mx.postatom(argv)
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
-    cdef success(self):
+
+    cdef bint table_exists(self, char* table_name):
+        return px.py_table_exists(self.obj, table_name)
+
+    cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
+        return px.py_list_to_table(self.obj, table_name, plist)
+
+    cdef PyObject* table_to_list(self, char* table_name):
+        return px.py_table_to_list(self.obj, table_name)
+
+    cdef success_bang(self):
         px.py_bang_success(self.obj)
 
-    cdef fail(self):
+    cdef failure_bang(self):
         px.py_bang_failure(self.obj)
 
     cdef out_sym(self, str arg):
@@ -316,11 +415,8 @@ cdef class PyExternal:
         else:
             return
 
-def test_atom():
-    ext = PyExternal()
-    a1 = Atom.from_list([1, 2.5, b'hello', 'world'])
-    ext.out(a1.to_list())
-
+# ----------------------------------------------------------------------------
+# helper functions
 
 def get_globals():
     return list(globals().keys())
@@ -329,13 +425,13 @@ def bang():
     ext = PyExternal()
     ext.bang()
 
-def success():
+def success_bang():
     ext = PyExternal()
-    ext.success()
+    ext.success_bang()
 
-def fail():
+def failure_bang():
     ext = PyExternal()
-    ext.fail()
+    ext.failure_bang()
 
 def out_sym(s='hello outlet!'):
     ext = PyExternal()
@@ -374,28 +470,92 @@ def post(str s):
 def error(str s):
     mx.error(s.encode('utf-8'))
 
-cpdef public str hello():
-    return greeting
 
 
-def random(int n):
-    import random
-    # return np.random.rand(n)
-    return random.randint(0, n)
+# ----------------------------------------------------------------------------
+# Max datastructure helper functions
+# 
+# Should ideally be refactored to cython extensions types.
+# 
+
+def table_exists(str name):
+    """checks if a table exists."""
+
+    cdef long **storage
+    cdef long size
+
+    result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
+
+    if result == 0:
+        success_bang()
+    else:
+        failure_bang()
+
+    return result
 
 
-def echo(*args):
-    return args
+def cp_list_to_table(list[int] xs, str name):
+    """copies integers from a python list[int] to a max table"""
+    
+    cdef long **storage
+    cdef long size
+
+    length = len(xs)
+
+    result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
+
+    if result == 0:
+        if length <= size:
+            for i, x in enumerate(xs):
+                storage[0][i] = <long>x
+        else:
+            for i in range(size):
+                storage[0][i] = <long>xs[i]
 
 
-def total(*args):
-    return sum(args)
+def get_table_as_list(str name):
+    """gets integer content of a named max table as a python list"""
+
+    cdef long **storage
+    cdef long size
+    cdef long value
+    cdef list[int] xs = []
+
+    result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
+
+    if result == 0:
+        for i in range(size):
+            value = storage[0][i]
+            xs.append(<int>value)
+
+    return xs
 
 
-# ext = PyExternal()
+# ----------------------------------------------------------------------------
+# test functions and variables
 
 txt = "Hello MAX!"
 
 greeting = 'Hello World'
+
+
+def test_atom():
+    ext = PyExternal()
+    a1 = Atom.from_list([1, 2.5, b'hello', 'world'])
+    ext.out(a1.to_list())
+
+
+cpdef public str hello():
+    return greeting
+
+def random(int n):
+    import random
+    return random.randint(0, n)
+
+def echo(*args):
+    return args
+
+def total(*args):
+    return sum(args)
 
 

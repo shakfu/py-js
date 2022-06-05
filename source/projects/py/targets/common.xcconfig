@@ -26,13 +26,18 @@ ABIFLAGS =
 PYJS_BUILD_ROOT = $(SRCROOT)/../build
 // PYJS_BUILD_ROOT = $(HOME)/.build_pyjs
 
+// NUMPY HEADERS can be obtained by 'import numpy; numpy.get_include()'
+// NUMPY HEADERS will be overriden by builder.xcodebuild
+// i.e. no need to manually change it here
+NUMPY_HEADERS = /usr/local/lib/python3.9/site-packages/numpy/core/include
+
 PYJS_BUILD_DOWNLOADS = $(PYJS_BUILD_ROOT)/downloads
 PYJS_BUILD_SRC = $(PYJS_BUILD_ROOT)/src
 PYJS_BUILD_LIB = $(PYJS_BUILD_ROOT)/lib
 
 SUPPORT = $(SRCROOT)/../../../../../support
 PRODUCT_NAME = $(TARGET_NAME)
-HEADER_SEARCH_PATHS = $(inherited) $(PY_HEADERS)
+HEADER_SEARCH_PATHS = $(inherited) "$(PY_HEADERS)"
 LIBRARY_SEARCH_PATHS = $(inherited) $(PY_LIBS)
 OTHER_LDFLAGS = $(inherited) $(PY_LDFLAGS)
 

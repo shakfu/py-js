@@ -302,7 +302,8 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					"$(PY_HEADERS)",
+					"\"$(PY_HEADERS)\"",
+					"\"$(NUMPY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
@@ -327,7 +328,8 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					"$(PY_HEADERS)",
+					"\"$(PY_HEADERS)\"",
+					"\"$(NUMPY_HEADERS)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";

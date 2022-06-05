@@ -2184,3 +2184,87 @@ void py_load(t_py* x, t_symbol* s)
     py_read(x, s);
     py_execfile(x, s);
 }
+
+
+
+/*--------------------------------------------------------------------------*/
+/* Max Datastructures Support */
+
+
+bool py_table_exists(t_py* x, char* table_name)
+{
+    long **storage, size;
+
+    return (table_get(gensym(table_name), &storage, &size) == 0);
+}
+
+t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
+{
+    long **storage, size, value;
+
+    Py_ssize_t len = 0;
+    PyObject* elem = NULL;
+
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (!PyList_Check(plist)) {
+        goto error;
+    }
+
+    len = PyList_Size(plist);
+
+
+    if (table_get(gensym(table_name), &storage, &size)) {
+        if (len > size)
+            goto error;
+
+        for(int i = 0; i < len; i++) {
+            elem = PyList_GetItem(plist, i);
+            value = PyLong_AsLong(elem);
+            *((*storage)+i) = value;
+            py_log(x, "storage[%d] = %d", i, value);
+        }
+    }
+    Py_XDECREF(plist);
+    Py_XDECREF(elem);
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, "plist to table failed");
+    Py_XDECREF(plist);
+    Py_XDECREF(elem);
+    return MAX_ERR_GENERIC;
+}
+
+
+PyObject* py_table_to_list(t_py* x, char* table_name)
+{
+
+    PyObject* plist = NULL;
+    long **storage, size, value;
+
+    if ((plist = PyList_New(0)) == NULL) {
+        py_log(x, "could not create an empty python list");
+        goto error;
+    }
+
+    if (table_get(gensym(table_name), &storage, &size) == 0) {
+        for(int i = 0; i < size; i++) {
+            value = *((*storage)+i);
+            py_log(x, "storage[%d] = %d", i, value);
+            PyObject* p_long = PyLong_FromLong(value);
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_DECREF(p_long);
+        }
+        return plist;
+    }
+
+error:
+    py_error(x, "table to list conversion failed");
+    Py_RETURN_NONE;
+}

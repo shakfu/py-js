@@ -108,7 +108,7 @@ all: default
 
 default: local-sys
 
-local-sys: clean-local-sys
+local-sys: clean-local-sys api
 	$(call call-builder,"pyjs" "local_sys")
 
 homebrew-pkg: clean-homebrew-pkg
