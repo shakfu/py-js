@@ -48,6 +48,15 @@ be prefixed as `px`:
 
 This separation of namespaces is obviously very useful in this case. 
 
+
+## TODO
+
+implement the following:
+
+- [ ] newinstance() -- privately instanciates objects
+- [ ] typedmess() -- sends typed messages to objects (given object ids)
+
+
 """
 
 # ----------------------------------------------------------------------------
@@ -328,6 +337,15 @@ cdef class PyExternal:
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
 
+    # UNTESTED
+    cdef mx.t_object * create(self, str classname, list args):
+        """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
+        """
+        atoms = Atom.from_list(list(args))
+        cdef mx.t_symbol * sym = <mx.t_symbol *>mx.gensym(classname.encode('utf-8'))
+        return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
+
+
     cdef bint table_exists(self, char* table_name):
         return px.py_table_exists(self.obj, table_name)
 
@@ -588,6 +606,26 @@ def get_table_as_list(str name):
 # cdef mx.t_symbol* buffer_getfilename(mp.t_buffer_obj* buffer_object):
 #     """Retrieve the name of the last file to be read by a buffer~."""
 
+
+# ----------------------------------------------------------------------------
+# numpy c-api import example
+
+if INCLUDE_NUMPY:
+
+    #@cython.boundscheck(False)
+    def zadd(in1, in2):
+        cdef double complex[:] a = in1.ravel()
+        cdef double complex[:] b = in2.ravel()
+
+        out = np.empty(a.shape[0], np.complex64)
+        cdef double complex[:] c = out.ravel()
+
+        for i in range(c.shape[0]):
+            c[i].real = a[i].real + b[i].real
+            c[i].imag = a[i].imag + b[i].imag
+
+        return out
+
 # ----------------------------------------------------------------------------
 # test functions and variables
 
@@ -615,21 +653,3 @@ def echo(*args):
 def total(*args):
     return sum(args)
 
-# ----------------------------------------------------------------------------
-# numpy c-api import example
-
-if INCLUDE_NUMPY:
-
-    #@cython.boundscheck(False)
-    def zadd(in1, in2):
-        cdef double complex[:] a = in1.ravel()
-        cdef double complex[:] b = in2.ravel()
-
-        out = np.empty(a.shape[0], np.complex64)
-        cdef double complex[:] c = out.ravel()
-
-        for i in range(c.shape[0]):
-            c[i].real = a[i].real + b[i].real
-            c[i].imag = a[i].imag + b[i].imag
-
-        return out

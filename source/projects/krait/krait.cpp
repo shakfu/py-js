@@ -153,21 +153,13 @@ void krait_bang(t_krait* x)
     // post("argc: %d", argc);
     // outlet_list(x->outlet, NULL, argc, argv);
 
-    // long **storage, size, value;
-
-    // if (table_get(gensym("mytable"), &storage, &size) == 0) {
-    //     for(int i = 0; i < size; i++) {
-    //         value = *((*storage)+i);
-    //         post("storage[%d] = %d", i, value);
-    //     }
+    // t_object * mycoll = (t_object *)newinstance(gensym("coll"), 0, NULL);
+    // if (mycoll) {
+    //     post("newinstance coll sucessful");
+    //     freeobject(mycoll);
     // }
-
-    // if (table_get(gensym("mytable"), &storage, &size) == 0) {
-    //     for(int i = 0; i < size; i++) {
-    //         *((*storage)+i) = i;
-    //         // post("storage[%d] = %d", i, value);
-    //     }
-    // }
+    // 
+    // see: stringload for loading patches
 
     outlet_bang(x->outlet);
 }

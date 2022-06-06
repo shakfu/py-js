@@ -1,6 +1,17 @@
 # TODO
 
+## API Wrapper
+
+- [ ] add Table
+- [ ] add Buffer
+- [ ] add Binbuf (text)
+
+
 ## Build System
+
+- [ ] add NUMPY_INCLUDE var to all xcode projects
+
+- [ ] add `-framework MaxAudioAPI -framework JitterAPI` to OTHER_LDFLAGS in all xcode projects.
 
 - [x] add shrink standalone step to scripts
 
