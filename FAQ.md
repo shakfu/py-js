@@ -31,7 +31,6 @@ Python3 external types which are not 'isolated' (see the [build variations](READ
 
 Of course, it would normally be considered redundant to install two different python3 externals in your project.
 
-
 ## Logging
 
 ### Every time I open a patch there is a some debug information in the console. Should I be concerned?

@@ -303,13 +303,17 @@
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
 					"\"$(PY_HEADERS)\"",
-					"\"$(NUMPY_HEADERS)",
+					"\"$(NUMPY_HEADERS)\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
+					"-framework",
+					MaxAudioAPI,
+					"-framework",
+					JitterAPI,
 					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
@@ -329,13 +333,17 @@
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
 					"\"$(PY_HEADERS)\"",
-					"\"$(NUMPY_HEADERS)",
+					"\"$(NUMPY_HEADERS)\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(PY_LIBS)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
+					"-framework",
+					MaxAudioAPI,
+					"-framework",
+					JitterAPI,
 					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;

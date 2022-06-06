@@ -62,6 +62,7 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy, strlen
 
 cimport api_max as mx # api is a cython keyword!
+# cimport api_msp as mp
 cimport api_py as px
 
 # ----------------------------------------------------------------------------
@@ -78,7 +79,7 @@ if INCLUDE_NUMPY:
 # constants
 
 DEF MAX_CHARS = 32767
-DEF PY_MAX_ATOMS = 128
+DEF PY_MAX_ATOMS = 1024
 
 
 # ----------------------------------------------------------------------------
@@ -88,28 +89,6 @@ DEF PY_MAX_ATOMS = 128
 cdef extern from "Python.h":
     const char* PyUnicode_AsUTF8(object unicode)
     unicode PyUnicode_FromString(const char *u)
-
-
-# ----------------------------------------------------------------------------
-# numpy c-api import example
-
-if INCLUDE_NUMPY:
-
-    #@cython.boundscheck(False)
-    def zadd(in1, in2):
-        cdef double complex[:] a = in1.ravel()
-        cdef double complex[:] b = in2.ravel()
-
-        out = np.empty(a.shape[0], np.complex64)
-        cdef double complex[:] c = out.ravel()
-
-        for i in range(c.shape[0]):
-            c[i].real = a[i].real + b[i].real
-            c[i].imag = a[i].imag + b[i].imag
-
-        return out
-
-
 
 # ----------------------------------------------------------------------------
 # Atom extension type
@@ -247,6 +226,7 @@ cdef class Atom:
 cdef class PyExternal:
     cdef px.t_py *obj
     cdef bytes name
+    # cdef mp.t_buffer_ref *ref
 
     def __cinit__(self):
         """Retrieves the py object name and reference.
@@ -262,6 +242,9 @@ cdef class PyExternal:
         self.name = PY_OBJ_NAME.encode('utf-8')
         self.obj = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(self.name))
+
+    # def get_buffer_ref(self, str s):
+    #     self.ref = mp.buffer_ref_new(<mx.t_object *>self.obj, mx.gensym(s.encode('utf-8')))
 
     cpdef bang(self):
         px.py_bang(self.obj)
@@ -471,12 +454,13 @@ def error(str s):
     mx.error(s.encode('utf-8'))
 
 
-
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Max datastructure helper functions
 # 
 # Should ideally be refactored to cython extensions types.
 # 
+# ----------------------------------------------------------------------------
+# table 
 
 def table_exists(str name):
     """checks if a table exists."""
@@ -530,6 +514,79 @@ def get_table_as_list(str name):
 
     return xs
 
+# ----------------------------------------------------------------------------
+# buffer
+
+# cdef class Buffer:
+#     """A wrapper class for a Max t_buffer_obj
+#     """
+#     cdef mp.t_buffer_obj *obj
+#     cdef mp.t_buffer_ref *ref
+#     cdef mx.t_object *x
+
+#     def __cinit__(self): pass
+
+#     def __dealloc__(self):
+#         # De-allocate if not null
+#         if self.ref is not NULL:
+#             mx.object_free(self.ref)
+#             self.ref = NULL
+
+#     @staticmethod
+#     cdef Buffer from_name(mx.t_object *x, mx.t_symbol *name):
+#         # Call to __new__ bypasses __init__ constructor
+#         cdef Buffer buffer = Buffer.__new__(Buffer)
+#         buffer.ref = mp.buffer_ref_new(x, name)
+#         assert(mp.buffer_ref_exists(buffer.ref))
+#         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
+#         return buffer
+
+    
+
+# cdef mp.t_buffer_ref* buffer_ref_new(mx.t_object *x, mx.t_symbol *name):
+#     """Create a reference to a buffer~ object by name."""
+
+# cdef mx.t_atom_long* buffer_ref_exists(mp.t_buffer_ref *x):
+#     """Query to find out if a buffer with the referenced name actually exists."""
+
+# cdef mp.t_buffer_obj* buffer_ref_getobject(mp.t_buffer_ref *x):
+#     """Query a buffer reference to get the actual buffer~ object being referenced, if it exists."""
+
+# cdef buffer_ref_set(mp.t_buffer_ref *x, mx.t_symbol *name):
+#     """Change a buffer reference to refer to a different buffer object by name."""
+
+# cdef mx.t_max_err buffer_ref_notify(mp.t_buffer_ref *x, mx.t_symbol *s, mx.t_symbol *msg, void *sender, void *data):
+#     """Your object needs to handle notifications issued by the buffer~ you reference."""
+
+# cdef buffer_view(mp.t_buffer_obj* buffer_object):
+#     """Open a viewer window to display the contents of the buffer."""
+
+# cdef float* buffer_locksamples(mp.t_buffer_obj* buffer_object):
+#     """Claim the buffer∼ and get a pointer to the first sample in memory."""
+
+# cdef buffer_unlocksamples(mp.t_buffer_obj* buffer_object):
+#     """Release your claim on the buffer~ contents so that other objects may read/write to the buffer~."""
+
+# cdef mx.t_atom_long buffer_getchannelcount(mp.t_buffer_obj* buffer_object):
+#     """Query a buffer~ to find out how many channels are present in the buffer content."""
+
+# cdef mx.t_atom_long buffer_getframecount (mp.t_buffer_obj* buffer_object):
+#     """Query a buffer~ to find out how many frames long the buffer content is in samples."""
+
+# cdef mx.t_atom_float buffer_getsamplerate (mp.t_buffer_obj* buffer_object):
+#     """Query a buffer~ to find out its native sample rate in samples per second."""
+
+# cdef mx.t_atom_float buffer_getmillisamplerate (mp.t_buffer_obj *buffer_object):
+#     """Query a buffer~ to find out its native sample rate in samples per millisecond."""
+
+# cdef mx.t_max_err buffer_setpadding(mp.t_buffer_obj* buffer_object, mx.t_atom_long samplecount):
+#     """Set the number of samples with which to zero-pad the buffer~'s contents."""
+
+# cdef mx.t_max_err buffer_setdirty(mp.t_buffer_obj* buffer_object):
+#     """Set the buffer's dirty flag, indicating that changes have been made."""
+
+# cdef mx.t_symbol* buffer_getfilename(mp.t_buffer_obj* buffer_object):
+#     """Retrieve the name of the last file to be read by a buffer~."""
 
 # ----------------------------------------------------------------------------
 # test functions and variables
@@ -558,4 +615,21 @@ def echo(*args):
 def total(*args):
     return sum(args)
 
+# ----------------------------------------------------------------------------
+# numpy c-api import example
 
+if INCLUDE_NUMPY:
+
+    #@cython.boundscheck(False)
+    def zadd(in1, in2):
+        cdef double complex[:] a = in1.ravel()
+        cdef double complex[:] b = in2.ravel()
+
+        out = np.empty(a.shape[0], np.complex64)
+        cdef double complex[:] c = out.ravel()
+
+        for i in range(c.shape[0]):
+            c[i].real = a[i].real + b[i].real
+            c[i].imag = a[i].imag + b[i].imag
+
+        return out
