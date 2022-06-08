@@ -100,6 +100,29 @@ cdef extern from "Python.h":
     unicode PyUnicode_FromString(const char *u)
 
 # ----------------------------------------------------------------------------
+# helper cdef functions
+
+
+
+cdef mx.t_symbol* str_to_sym(str string):
+    """converts a python string to a t_symbol* 
+
+    api.gensym(str s) -> t_symbol*
+    """
+    return mx.gensym(string.encode('utf-8'))
+
+
+cdef str sym_to_str(mx.t_symbol* symbol):
+    """converts a max symbol to a python string 
+
+    api.sym_to_str(symbol) -> python str
+    """
+    return symbol.s_name.decode()
+
+
+
+
+# ----------------------------------------------------------------------------
 # Atom extension type
 #
 # All type-casting to and from non-max types should be encapsulated here
@@ -136,13 +159,14 @@ cdef class Atom:
         return <int>mx.atom_getlong(self.ptr + idx)
 
     def set_symbol(self, str symbol, int idx=0):
-        mx.atom_setsym(self.ptr + idx, mx.gensym(symbol.encode('utf8')))
+        mx.atom_setsym(self.ptr + idx, str_to_sym(symbol))
 
     cdef mx.t_symbol *get_symbol(self, int idx=0):
         return mx.atom_getsym(self.ptr + idx)
 
     def get_string(self, int idx=0) -> str:
-        return (self.get_symbol(idx).s_name).decode()
+        # return (self.get_symbol(idx).s_name).decode()
+        return sym_to_str(self.get_symbol(idx))
 
     cdef bint is_symbol(self, int idx=0):
         return (self.ptr + idx).a_type  == mx.A_SYM
@@ -215,7 +239,7 @@ cdef class Atom:
                 mx.atom_setsym(ptr+i, mx.gensym(obj))
 
             elif isinstance(obj, str):
-                mx.atom_setsym(ptr+i, mx.gensym(obj.encode('UTF-8')))
+                mx.atom_setsym(ptr+i, str_to_sym(obj))
 
             else:
                 print("cannot convert:", obj)
@@ -276,8 +300,7 @@ cdef class PyExternal:
             self.error("registry not populated")
             return
 
-        err = mx.hashtab_lookup(registry, 
-            mx.gensym(name.encode('utf-8')), &obj)
+        err = mx.hashtab_lookup(registry, str_to_sym(name), &obj)
 
         if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
             self.error("no object found with name")
@@ -330,7 +353,7 @@ cdef class PyExternal:
             elif type(elem) == int:
                 mx.atom_setlong((&argv[i]), <long>elem)
             elif type(elem) == str:
-                mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
+                mx.atom_setsym((&argv[i]), str_to_sym(elem))
             else:
                 continue
         # mx.postatom(argv)
@@ -342,7 +365,7 @@ cdef class PyExternal:
         """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
         """
         atoms = Atom.from_list(list(args))
-        cdef mx.t_symbol * sym = <mx.t_symbol *>mx.gensym(classname.encode('utf-8'))
+        cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
         return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
 
 
@@ -362,12 +385,10 @@ cdef class PyExternal:
         px.py_bang_failure(self.obj)
 
     cdef out_sym(self, str arg):
-        mx.outlet_anything(<void*>px.get_outlet(self.obj),
-            mx.gensym(arg.encode('utf-8')), 0, NULL)
+        mx.outlet_anything(<void*>px.get_outlet(self.obj), str_to_sym(arg), 0, NULL)
 
     cdef out_float(self, float arg):
         mx.outlet_float(<void*>px.get_outlet(self.obj), <double>arg)
-
 
     cdef out_int(self, int arg):
         mx.outlet_int(<void*>px.get_outlet(self.obj), <long>arg)
@@ -387,7 +408,7 @@ cdef class PyExternal:
             elif type(elem) == int:
                 mx.atom_setlong((&argv[i]), <long>elem)
             elif type(elem) == str:
-                mx.atom_setsym((&argv[i]), mx.gensym(elem.encode('utf-8')))
+                mx.atom_setsym((&argv[i]), str_to_sym(elem))
             else:
                 continue
 
@@ -472,6 +493,8 @@ def error(str s):
     mx.error(s.encode('utf-8'))
 
 
+
+
 # ============================================================================
 # Max datastructure helper functions
 # 
@@ -496,7 +519,7 @@ def table_exists(str name):
     return result
 
 
-def cp_list_to_table(list[int] xs, str name):
+def copy_list_to_table(list[int] xs, str name):
     """copies integers from a python list[int] to a max table"""
     
     cdef long **storage
@@ -504,7 +527,7 @@ def cp_list_to_table(list[int] xs, str name):
 
     length = len(xs)
 
-    result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
+    result = mx.table_get(str_to_sym(name), &storage, &size)
 
     if result == 0:
         if length <= size:
@@ -523,7 +546,7 @@ def get_table_as_list(str name):
     cdef long value
     cdef list[int] xs = []
 
-    result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
+    result = mx.table_get(str_to_sym(name), &storage, &size)
 
     if result == 0:
         for i in range(size):
@@ -535,14 +558,22 @@ def get_table_as_list(str name):
 # ----------------------------------------------------------------------------
 # buffer
 
+# temporarily disabled until MSP headers are enabled for all targets
+
 # cdef class Buffer:
 #     """A wrapper class for a Max t_buffer_obj
 #     """
 #     cdef mp.t_buffer_obj *obj
 #     cdef mp.t_buffer_ref *ref
-#     cdef mx.t_object *x
+#     # cdef mx.t_object *tobj # t_object with ref to buffer
+#     cdef bint is_locked
+#     cdef float* samples
 
-#     def __cinit__(self): pass
+#     def __cinit__(self):
+#         self.obj = NULL
+#         self.ref = NULL
+#         self.samples = NULL
+#         self.is_locked = False
 
 #     def __dealloc__(self):
 #         # De-allocate if not null
@@ -552,6 +583,7 @@ def get_table_as_list(str name):
 
 #     @staticmethod
 #     cdef Buffer from_name(mx.t_object *x, mx.t_symbol *name):
+#         """Create a reference to a buffer~ object by name."""
 #         # Call to __new__ bypasses __init__ constructor
 #         cdef Buffer buffer = Buffer.__new__(Buffer)
 #         buffer.ref = mp.buffer_ref_new(x, name)
@@ -559,52 +591,59 @@ def get_table_as_list(str name):
 #         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
 #         return buffer
 
+
+#     def change_reference(self, str name):
+#         """Change a buffer reference to refer to a different buffer object by name."""
+#         mp.buffer_ref_set(self.ref, str_to_sym(name))
+#         assert(mp.buffer_ref_exists(self.ref))
+#         self.obj = mp.buffer_ref_getobject(self.ref)
+
+#     def view(self):
+#         """Open a viewer window to display the contents of the buffer."""
+#         mp.buffer_view(self.obj)
     
+#     @property
+#     def channelcount(self):
+#         """Query a buffer~ to find out how many channels are present in the buffer content."""
+#         return mp.buffer_getchannelcount(self.obj)
 
-# cdef mp.t_buffer_ref* buffer_ref_new(mx.t_object *x, mx.t_symbol *name):
-#     """Create a reference to a buffer~ object by name."""
+#     @property
+#     def framecount(self):
+#         """Query a buffer~ to find out how many frames long the buffer content is in samples."""
+#         return mp.buffer_getframecount(self.obj)
 
-# cdef mx.t_atom_long* buffer_ref_exists(mp.t_buffer_ref *x):
-#     """Query to find out if a buffer with the referenced name actually exists."""
+#     @property
+#     def samplerate(self):
+#         """Query a buffer~ to find out its native sample rate in samples per second."""
+#         return mp.buffer_getsamplerate(self.obj)
 
-# cdef mp.t_buffer_obj* buffer_ref_getobject(mp.t_buffer_ref *x):
-#     """Query a buffer reference to get the actual buffer~ object being referenced, if it exists."""
+#     @property
+#     def millisamplerate(self):
+#         """Query a buffer~ to find out its native sample rate in samples per millisecond."""
+#         return mp.buffer_getmillisamplerate(self.obj)
 
-# cdef buffer_ref_set(mp.t_buffer_ref *x, mx.t_symbol *name):
-#     """Change a buffer reference to refer to a different buffer object by name."""
+#     @property
+#     def filename(self):
+#         """Retrieve the name of the last file to be read by a buffer~."""
+#         return sym_to_str(mp.buffer_getfilename(self.obj))
 
-# cdef mx.t_max_err buffer_ref_notify(mp.t_buffer_ref *x, mx.t_symbol *s, mx.t_symbol *msg, void *sender, void *data):
-#     """Your object needs to handle notifications issued by the buffer~ you reference."""
+#     def setdirty(self):
+#         """Set the buffer's dirty flag, indicating that changes have been made."""
+#         mp.buffer_setdirty(self.obj)
 
-# cdef buffer_view(mp.t_buffer_obj* buffer_object):
-#     """Open a viewer window to display the contents of the buffer."""
+#     def setpadding(self, long samplecount):
+#         """Set the number of samples with which to zero-pad the buffer~'s contents."""
+#         mp.buffer_setpadding(self.obj, samplecount)
 
-# cdef float* buffer_locksamples(mp.t_buffer_obj* buffer_object):
-#     """Claim the buffer∼ and get a pointer to the first sample in memory."""
+#     def locksamples(self):
+#         """Claim the buffer∼ and get a pointer to the first sample in memory."""
+#         self.samples = mp.buffer_locksamples(self.obj)
+#         self.is_locked = True
 
-# cdef buffer_unlocksamples(mp.t_buffer_obj* buffer_object):
-#     """Release your claim on the buffer~ contents so that other objects may read/write to the buffer~."""
-
-# cdef mx.t_atom_long buffer_getchannelcount(mp.t_buffer_obj* buffer_object):
-#     """Query a buffer~ to find out how many channels are present in the buffer content."""
-
-# cdef mx.t_atom_long buffer_getframecount (mp.t_buffer_obj* buffer_object):
-#     """Query a buffer~ to find out how many frames long the buffer content is in samples."""
-
-# cdef mx.t_atom_float buffer_getsamplerate (mp.t_buffer_obj* buffer_object):
-#     """Query a buffer~ to find out its native sample rate in samples per second."""
-
-# cdef mx.t_atom_float buffer_getmillisamplerate (mp.t_buffer_obj *buffer_object):
-#     """Query a buffer~ to find out its native sample rate in samples per millisecond."""
-
-# cdef mx.t_max_err buffer_setpadding(mp.t_buffer_obj* buffer_object, mx.t_atom_long samplecount):
-#     """Set the number of samples with which to zero-pad the buffer~'s contents."""
-
-# cdef mx.t_max_err buffer_setdirty(mp.t_buffer_obj* buffer_object):
-#     """Set the buffer's dirty flag, indicating that changes have been made."""
-
-# cdef mx.t_symbol* buffer_getfilename(mp.t_buffer_obj* buffer_object):
-#     """Retrieve the name of the last file to be read by a buffer~."""
+#     def unlocksamples(self):
+#         """Release your claim on the buffer~ contents so that other objects may read/write to the buffer~."""
+#         mp.buffer_unlocksamples(self.obj)
+#         self.is_locked = False
 
 
 # ----------------------------------------------------------------------------

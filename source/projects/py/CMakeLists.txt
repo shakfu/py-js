@@ -1,22 +1,28 @@
+
+# ============================================================================
+# MAX EXTERNAL
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 
-#############################################################
-# MAX EXTERNAL
-#############################################################
-
-# ---------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # common steps
 
+# configuration
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+
+
+# options
+option(USE_STATIC_PY "build static extension")
+option(USE_FRAMEWORK_PY "build framework-based extension")
+option(DEBUG "display debug variables")
+
+
+
 
 find_package(Python3 COMPONENTS Interpreter Development)
 
-set(PY_DEBUG "FALSE")
-
-# skipped unless PYDEBUG is defined earlier
-if(DEFINED PY_DEBUG)
+if(DEBUG)
 	message("CMAKE_LIBRARY_OUTPUT_DIRECTORY:${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 	message("CMAKE_CURRENT_BINARY_DIR:${CMAKE_CURRENT_BINARY_DIR}")
 	message("Python3_VERSION:${Python3_VERSION}")
@@ -41,9 +47,9 @@ endif()
 
 
 # file(GLOB PROJECT_SRC
-#      "*.h"
+#    "*.h"
 # 	 "*.c"
-#      "*.cpp"
+#    "*.cpp"
 # )
 
 set(PROJECT_SRC
@@ -64,13 +70,28 @@ add_library(
 	${PROJECT_SRC}
 )
 
-# if custom static compilation option is available
-set(STATICPY ${CMAKE_CURRENT_SOURCE_DIR}/build/lib/python-static)
 
-if(EXISTS ${STATICPY})
-	set(PY_INCLUDE "${STATICPY}/include/python3.9")
-	set(PY_LIBDIRS "${STATICPY}/lib")
+
+# variables to support custom compilation options
+set(BUILD_LIB ${CMAKE_CURRENT_SOURCE_DIR}/targets/build/lib)
+set(STATIC_PY ${BUILD_LIB}/python-static)
+set(FRAMEWORK_PY ${BUILD_LIB}/Python.framework)
+
+
+
+message("USE_STATIC_PY: ${USE_STATIC_PY}")
+
+
+if(USE_STATIC_PY)
+	message("USE_STATIC_PY : ${USE_STATIC_PY}")
+	set(PY_INCLUDE "${STATIC_PY}/include/python3.9")
+	set(PY_LIBDIRS "${STATIC_PY}/lib")
+elseif(USE_FRAMEWORK_PY)
+	message("USE_FRAMEWORK_PY: ${USE_FRAMEWORK_PY}")
+	set(PY_INCLUDE "${FRAMEWORK_PY}/Headers")
+	set(PY_LIBDIRS "${FRAMEWORK_PY}/lib")
 else()
+	message("using standard local configuration")
 	set(PY_INCLUDE "${Python3_INCLUDE_DIRS}")
 	set(PY_LIBDIRS "${Python3_LIBRARY_DIRS}")
 endif()
@@ -116,8 +137,7 @@ target_link_directories(
 # conditional steps
 
 
-
-if(EXISTS ${STATICPY})
+if(USE_STATIC_PY)
 
 	find_library(STATICINTL libintl.a)
 
@@ -129,6 +149,10 @@ if(EXISTS ${STATICPY})
 		"-liconv"
 		"-lz"
 		"-ldl"
+		# "-lssl"
+		# "-lbz2"
+		# "-llzma"
+		# "-lcrypto"
 		"-framework CoreFoundation"
 	)
 
@@ -160,4 +184,8 @@ endif()
 
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
+
+# ============================================================================
+
+
 

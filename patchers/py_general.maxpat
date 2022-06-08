@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 283.0, 79.0, 853.0, 774.0 ],
+		"rect" : [ 180.0, 79.0, 829.0, 774.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 853.0, 748.0 ],
+						"rect" : [ 0.0, 26.0, 829.0, 748.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 1,
 						"default_fontsize" : 12.0,
@@ -1402,7 +1402,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 283.0, 105.0, 853.0, 748.0 ],
+						"rect" : [ 180.0, 105.0, 829.0, 748.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1433,6 +1433,29 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-91",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 488.5, 414.0, 119.0, 20.0 ],
+									"text" : "display external info"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-87",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 455.75, 414.0, 29.5, 22.0 ],
+									"text" : "info"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-100",
 									"linecount" : 3,
 									"maxclass" : "comment",
@@ -1446,12 +1469,11 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-98",
-									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 455.75, 389.5, 151.75, 33.0 ],
-									"text" : "count gives number of active  py objects"
+									"patching_rect" : [ 459.25, 377.0, 118.75, 20.0 ],
+									"text" : "count = # py objects"
 								}
 
 							}
@@ -1480,12 +1502,12 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-94",
-									"linecount" : 3,
+									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 495.0, 340.5, 116.0, 47.0 ],
-									"text" : "double-click on py object after read or load msg"
+									"patching_rect" : [ 495.0, 340.5, 116.0, 33.0 ],
+									"text" : "dbl-click on py after read or load msg"
 								}
 
 							}
@@ -3198,6 +3220,14 @@
 								"patchline" : 								{
 									"destination" : [ "obj-7", 0 ],
 									"source" : [ "obj-86", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-7", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-87", 0 ]
 								}
 
 							}

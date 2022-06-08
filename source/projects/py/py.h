@@ -75,8 +75,13 @@ void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
 void py_init_osx_set_home_framework_ext(void);
 t_hashtab* get_global_registry(void);
-t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
 t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
+
+/*--------------------------------------------------------------------------*/
+/* Path helpers */
+
+t_symbol* py_locate_path_to_external(t_py* x);
+t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
 
 /*--------------------------------------------------------------------------*/
 /* Side-effect helpers */
@@ -117,6 +122,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /*--------------------------------------------------------------------------*/
 /* Informations Methods */
 
+void py_info(t_py* x);
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
 void py_appendtodict(t_py* x, t_dictionary* dict);

@@ -186,6 +186,25 @@ t_hashtab* get_global_registry(void)
     return py_global_registry;
 }
 
+
+t_symbol* py_locate_path_to_external(t_py* x)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+
+    short path_id = class_getpath(py_class);
+    sprintf(external_name, "%s.mxo", py_class->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    // path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_PATH);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
+    post("path_id: %d, external_name: %s, external_path: %s conform_path: %s", 
+        path_id, external_name, external_path, conform_path);
+    return gensym(external_path);
+}
+
+
+
 /**
  * @brief Searches the Max filesystem context for a file given by a symbol
  *
@@ -278,6 +297,8 @@ void ext_main(void* module_ref)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",                  0);
+    class_addmethod(c, (method)py_info,       "info",                  0);
+
    
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
@@ -729,6 +750,44 @@ void py_count(t_py* x)
     outlet_int(x->p_outlet_left, py_global_obj_count);
 }
 
+/**
+ * @brief      Displays info about the external
+ *
+ * @param      x     pointer to object struct.
+ */
+void py_info(t_py* x)
+{
+    char output_path[MAX_PATH_CHARS];
+
+    short supportpath_id = path_getsupportpath();
+    short tempfolder_id = path_tempfolder();
+    short desktopfolder_id = path_desktopfolder();
+    short userdocfolder_id = path_userdocfolder();
+    short usermaxfolder_id = path_usermaxfolder();
+    short defaultpath_id = path_getdefault();
+    
+    path_toabsolutesystempath(supportpath_id, "", output_path);
+    post("supportpath: %s", output_path);
+
+    path_toabsolutesystempath(tempfolder_id, "", output_path);
+    post("tempfolder: %s", output_path);
+
+    path_toabsolutesystempath(desktopfolder_id, "", output_path);
+    post("desktopfolder: %s", output_path);
+
+    path_toabsolutesystempath(userdocfolder_id, "", output_path);
+    post("userdocfolder: %s", output_path);
+
+    path_toabsolutesystempath(usermaxfolder_id, "", output_path);
+    post("usermaxfolder: %s", output_path);
+
+    path_toabsolutesystempath(defaultpath_id, "", output_path);
+    post("defaultpath: %s", output_path);
+
+    t_symbol* path = py_locate_path_to_external(x);
+    post("externalpath: %s", path->s_name);
+}
+
 /*--------------------------------------------------------------------------*/
 /* Side-effects */
 
@@ -739,6 +798,7 @@ void py_count(t_py* x)
  */
 void py_bang(t_py* x)
 {
+
     // just a passthrough: bang out the left outlet
     outlet_bang(x->p_outlet_left);
 }
