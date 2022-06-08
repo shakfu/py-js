@@ -467,10 +467,12 @@ cdef extern from "ext_dictionary.h":
     cdef t_max_err dictionary_clone_to_existing(const t_dictionary *d, t_dictionary *dc)
     cdef t_max_err dictionary_copy_to_existing(const t_dictionary *d, t_dictionary *dc)
     cdef t_max_err dictionary_merge_to_existing(const t_dictionary *d, t_dictionary *dc)
+    cdef t_max_err dictionary_copy_nonunique_to_existing(const t_dictionary *d, t_dictionary *dc)
     cdef void dictionary_funall(t_dictionary *d, method fun, void *arg)
     cdef t_symbol* dictionary_entry_getkey(t_dictionary_entry *x)
     cdef void dictionary_entry_getvalue(t_dictionary_entry *x, t_atom *value)
     cdef void dictionary_entry_getvalues(t_dictionary_entry *x, long *argc, t_atom **argv) 
+    
     cdef t_max_err dictionary_copyunique(t_dictionary *d, t_dictionary *copyfrom)
     cdef t_max_err dictionary_getdeflong(const t_dictionary *d, t_symbol *key, t_atom_long *value, t_atom_long xdef)
     cdef t_max_err dictionary_getdeffloat(const t_dictionary *d, t_symbol *key, double *value, double xdef)
@@ -480,11 +482,14 @@ cdef extern from "ext_dictionary.h":
     cdef t_max_err dictionary_getdefatoms(t_dictionary *d, t_symbol *key, long *argc, t_atom **argv, t_atom *xdef)
     cdef t_max_err dictionary_copydefatoms(t_dictionary *d, t_symbol *key, long *argc, t_atom **argv, t_atom *xdef)
     cdef t_max_err dictionary_dump(t_dictionary *d, long recurse, long console)
+
     cdef t_max_err dictionary_copyentries(t_dictionary *src, t_dictionary *dst, t_symbol **keys)
-    cdef t_dictionary *dictionary_sprintf(const char *fmt, ...)
+    cdef t_dictionary *dictionary_sprintf(char *fmt, ...);
     cdef t_object *newobject_sprintf(t_object *patcher, const char *fmt, ...)
     cdef t_object *newobject_fromboxtext(t_object *patcher, const char *text)
     cdef t_object *newobject_fromdictionary(t_object *patcher, t_dictionary *d)
+    cdef long dictionary_transaction_lock(t_dictionary *d)
+    cdef long dictionary_transaction_unlock(t_dictionary *d)
 
 
 cdef extern from "ext_dictobj.h":

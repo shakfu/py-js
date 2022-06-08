@@ -664,6 +664,8 @@ cdef class Dictionary:
     def __setitem__(self, str key, object value): pass
     def __getitem__(self, str key): pass
 
+    # cdef mx.t_dictionary* sprintf(self, char* fmt, ...):
+    #     return mx.dictionary_sprintf(char* fmt, ...)
 
     cdef mx.t_max_err appendlong(self, mx.t_symbol* key, mx.t_atom_long value):
         return mx.dictionary_appendlong(self.d, key, value)
@@ -779,8 +781,8 @@ cdef class Dictionary:
     cdef mx.t_max_err merge_to_existing(self, mx.t_dictionary* dc):
         return mx.dictionary_merge_to_existing(self.d, dc)
 
-    # cdef mx.t_max_err copy_nonunique_to_existing(self, mx.t_dictionary* dc):
-    #     return mx.dictionary_copy_nonunique_to_existing(self.d, dc)
+    cdef mx.t_max_err copy_nonunique_to_existing(self, mx.t_dictionary* dc):
+        return mx.dictionary_copy_nonunique_to_existing(self.d, dc)
 
     # cdef mx.dictionary_funall(self, method fun, void* arg)
     #     mx.dictionary_funall(self, method fun, void* arg)
@@ -827,11 +829,11 @@ cdef class Dictionary:
     # cdef mx.t_dictionary* sprintf(self, char* fmt, ...):
     #     return mx.dictionary_sprintf(char* fmt, ...)
 
-    # cdef mx.long transaction_lock(self):
-    #     return mx.dictionary_transaction_lock(self.d)
+    cdef long transaction_lock(self):
+        return mx.dictionary_transaction_lock(self.d)
 
-    # cdef mx.long dictionary_transaction_unlock(self):
-    #     return mx.dictionary_transaction_unlock(self.d)
+    cdef long transaction_unlock(self):
+        return mx.dictionary_transaction_unlock(self.d)
 
     # FIXME: add staticmethod as well
     cdef mx.t_max_err dictionary_read(self, const char* filename, short path, mx.t_dictionary** d):
