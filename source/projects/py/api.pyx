@@ -643,6 +643,204 @@ cdef class Buffer:
         mp.buffer_unlocksamples(self.obj)
         self.is_locked = False
 
+# ----------------------------------------------------------------------------
+# dictionary
+
+
+cdef class Dictionary:
+    """A wrapper class for a Max t_dictionary
+    """
+    cdef mx.t_dictionary *d
+
+    def __cinit__(self):
+        self.d = mx.dictionary_new()
+
+    def __dealloc__(self):
+        # De-allocate if not null
+        if self.d is not NULL:
+            mx.object_free(self.d)
+            self.d = NULL
+
+    def __setitem__(self, str key, object value): pass
+    def __getitem__(self, str key): pass
+
+
+    cdef mx.t_max_err appendlong(self, mx.t_symbol* key, mx.t_atom_long value):
+        return mx.dictionary_appendlong(self.d, key, value)
+
+    cdef mx.t_max_err appendfloat(self, mx.t_symbol* key, double value):
+        return mx.dictionary_appendfloat(self.d, key, value)
+
+    cdef mx.t_max_err appendsym(self, mx.t_symbol* key, mx.t_symbol* value):
+        return mx.dictionary_appendsym(self.d, key, value)
+
+    cdef mx.t_max_err appendatom(self, mx.t_symbol* key, mx.t_atom* value):
+        return mx.dictionary_appendatom(self.d, key, value)
+
+    cdef mx.t_max_err appendstring(self, mx.t_symbol* key, const char* value):
+        return mx.dictionary_appendstring(self.d, key, value)
+
+    cdef mx.t_max_err appendatoms(self, mx.t_symbol* key, long argc, mx.t_atom* argv):
+        return mx.dictionary_appendatoms(self.d, key, argc, argv)
+
+    cdef mx.t_max_err appendatomarray(self, mx.t_symbol* key, mx.t_object* value):
+        return mx.dictionary_appendatomarray(self.d, key, value)
+
+    cdef mx.t_max_err appenddictionary(self, mx.t_symbol* key, mx.t_object* value):
+       return mx.dictionary_appenddictionary(self.d, key, value)
+
+    cdef mx.t_max_err appendobject(self, mx.t_symbol* key, mx.t_object* value):
+        return mx.dictionary_appendobject(self.d, key, value)
+
+    cdef mx.t_max_err appendobject_flags(self, mx.t_symbol* key, mx.t_object* value, long flags):
+        return mx.dictionary_appendobject_flags(self.d, key, value, flags)
+
+    cdef mx.t_max_err appendbinbuf(self, mx.t_symbol* key, void* value):
+        return mx.dictionary_appendbinbuf(self.d, key, value)
+ 
+    cdef mx.t_max_err getlong(self, mx.t_symbol* key, mx.t_atom_long* value):
+        return mx.dictionary_getlong(self.d, key, value)
+
+    cdef mx.t_max_err getfloat(self, mx.t_symbol* key, double* value):
+        return mx.dictionary_getfloat(self.d, key, value)
+
+    cdef mx.t_max_err getsym(self, mx.t_symbol* key, mx.t_symbol** value):
+        return mx.dictionary_getsym(self.d, key, value)
+
+    cdef mx.t_max_err getatom(self, mx.t_symbol* key, mx.t_atom* value):
+        return mx.dictionary_getatom(self.d, key, value)
+
+    cdef mx.t_max_err getstring(self, mx.t_symbol* key, const char** value):
+        return mx.dictionary_getstring(self.d, key, value)
+
+    cdef mx.t_max_err getatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv):
+        return mx.dictionary_getatoms(self.d, key, argc, argv)
+
+    cdef mx.t_max_err getatoms_ext(self, mx.t_symbol* key, long stringstosymbols, long* argc, mx.t_atom** argv):
+        return mx.dictionary_getatoms_ext(self.d, key, stringstosymbols, argc, argv)
+
+    cdef mx.t_max_err copyatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv):
+        return mx.dictionary_copyatoms(self.d, key, argc, argv)
+
+    cdef mx.t_max_err getatomarray(self, mx.t_symbol* key, mx.t_object** value):
+        return mx.dictionary_getatomarray(self.d, key, value)
+
+    cdef mx.t_max_err getdictionary(self, mx.t_symbol* key, mx.t_object** value):
+        return mx.dictionary_getdictionary(self.d, key, value)
+
+    cdef mx.t_max_err get_ex(self, mx.t_symbol* key, long* ac, mx.t_atom** av, char* errstr):
+        return mx.dictionary_get_ex(self.d, key, ac, av, errstr)
+
+    cdef mx.t_max_err getobject(self, mx.t_symbol* key, mx.t_object** value):
+        return mx.dictionary_getobject(self.d, key, value)
+
+    cdef bint has_string_value(self, mx.t_symbol* key):
+        return mx.dictionary_entryisstring(self.d, key)
+
+    cdef bint has_atomarray_value(self, mx.t_symbol* key):
+        return mx.dictionary_entryisatomarray(self.d, key)
+
+    cdef bint has_dictionary_value(self, mx.t_symbol* key):
+        return mx.dictionary_entryisdictionary(self.d, key)
+
+    cdef bint has_entry(self, mx.t_symbol* key):
+        return mx.dictionary_hasentry(self.d, key)
+
+    def getentrycount(self) -> long:
+        return mx.dictionary_getentrycount(self.d)
+
+    cdef mx.t_max_err getkeys(self, long* numkeys, mx.t_symbol*** keys):
+        return mx.dictionary_getkeys(self.d, numkeys, keys)
+
+    cdef mx.t_max_err getkeys_ordered(self, long* numkeys, mx.t_symbol*** keys):
+        return mx.dictionary_getkeys_ordered(self.d, numkeys, keys)
+
+    cdef void freekeys(self, long numkeys, mx.t_symbol** keys):
+        mx.dictionary_freekeys(self.d, numkeys, keys)
+
+    cdef mx.t_max_err deleteentry(self, mx.t_symbol* key):
+         return mx.dictionary_deleteentry(self.d, key)
+
+    cdef mx.t_max_err chuckentry(self, mx.t_symbol* key):
+         return mx.dictionary_chuckentry(self.d, key)
+
+    cdef mx.t_max_err clear(self):
+         return mx.dictionary_clear(self.d)
+
+    cdef mx.t_dictionary* clone(self):
+        return mx.dictionary_clone(self.d)
+
+    cdef mx.t_max_err clone_to_existing(self, mx.t_dictionary* dc):
+        return mx.dictionary_clone_to_existing(self.d, dc)
+
+    # cdef mx.t_max_err copy_to_existing(self, mx.t_dictionary* dc):
+    #     return mx.dictionary_copy_to_existing(self.d, dc)
+
+    cdef mx.t_max_err merge_to_existing(self, mx.t_dictionary* dc):
+        return mx.dictionary_merge_to_existing(self.d, dc)
+
+    # cdef mx.t_max_err copy_nonunique_to_existing(self, mx.t_dictionary* dc):
+    #     return mx.dictionary_copy_nonunique_to_existing(self.d, dc)
+
+    # cdef mx.dictionary_funall(self, method fun, void* arg)
+    #     mx.dictionary_funall(self, method fun, void* arg)
+
+    cdef mx.t_symbol* entry_getkey(self, mx.t_dictionary_entry* x):
+        return mx.dictionary_entry_getkey(x)
+
+    cdef void entry_getvalue(self, mx.t_dictionary_entry* x, mx.t_atom* value):
+        mx.dictionary_entry_getvalue(x, value)
+
+    cdef void entry_getvalues(self, mx.t_dictionary_entry* x, long* argc, mx.t_atom** argv):
+        mx.dictionary_entry_getvalues(x, argc, argv)
+
+    cdef mx.t_max_err copyunique(self, mx.t_dictionary* copyfrom):
+        return mx.dictionary_copyunique(self.d, copyfrom)
+
+    cdef mx.t_max_err getdeflong(self, mx.t_symbol* key, mx.t_atom_long* value, mx.t_atom_long dfn):
+        return mx.dictionary_getdeflong(self.d, key, value, dfn)
+
+    cdef mx.t_max_err getdeffloat(self, mx.t_symbol* key, double* value, double dfn):
+        return mx.dictionary_getdeffloat(self.d, key, value, dfn)
+
+    cdef mx.t_max_err getdefsym(self, mx.t_symbol* key, mx.t_symbol** value, mx.t_symbol* dfn):
+        return mx.dictionary_getdefsym(self.d, key, value, dfn)
+
+    cdef mx.t_max_err getdefatom(self, mx.t_symbol* key, mx.t_atom* value, mx.t_atom* dfn):
+        return mx.dictionary_getdefatom(self.d, key, value, dfn)
+
+    cdef mx.t_max_err getdefstring(self, mx.t_symbol* key, const char** value, char* dfn):
+        return mx.dictionary_getdefstring(self.d, key, value, dfn)
+
+    cdef mx.t_max_err getdefatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv, mx.t_atom* dfn):
+        return mx.dictionary_getdefatoms(self.d, key, argc, argv, dfn)
+
+    cdef mx.t_max_err copydefatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv, mx.t_atom* dfn):
+        return mx.dictionary_copydefatoms(self.d, key, argc, argv, dfn)
+
+    cdef mx.t_max_err dump(self, long recurse, long console):
+        return mx.dictionary_dump(self.d, recurse, console)
+
+    cdef mx.t_max_err copyentries(self, mx.t_dictionary *dst, mx.t_symbol **keys):
+        return mx.dictionary_copyentries(self.d, dst, keys)
+
+    # cdef mx.t_dictionary* sprintf(self, char* fmt, ...):
+    #     return mx.dictionary_sprintf(char* fmt, ...)
+
+    # cdef mx.long transaction_lock(self):
+    #     return mx.dictionary_transaction_lock(self.d)
+
+    # cdef mx.long dictionary_transaction_unlock(self):
+    #     return mx.dictionary_transaction_unlock(self.d)
+
+    # FIXME: add staticmethod as well
+    cdef mx.t_max_err dictionary_read(self, const char* filename, short path, mx.t_dictionary** d):
+        return mx.dictionary_read(filename, path, d)
+
+    cdef mx.t_max_err dictionary_write(self, const char* filename, short path):
+        return mx.dictionary_write(self.d, filename, path)
+
+
 
 # ----------------------------------------------------------------------------
 # numpy c-api import example
