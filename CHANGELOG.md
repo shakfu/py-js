@@ -4,7 +4,16 @@
 
 ### API
 
+- discovered builtin way for max to find the external using an included but undocumented
+  function. This is by way of the `class_getpath` function. This is demonstrated (partially)
+  in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
+
+- updated mapping from `py` methods to `px.methods`
+
+- added initial msp buffer object support
+
 - added better docs to api.pyx
+
 - added max table access functions to cython api
 
 

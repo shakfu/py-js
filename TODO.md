@@ -1,10 +1,10 @@
 # TODO
 
 ## API Wrapper
-
-- [ ] add Table
-- [ ] add Buffer
-- [ ] add Binbuf (text)
+- [ ] add more api wrappers. (PAUSED PENDING JUPYTER WORK)
+  - [ ] add Table
+  - [ ] add Buffer
+  - [ ] add Binbuf (text)
 
 
 ## Build System
@@ -80,7 +80,6 @@
 
 - [ ] add an additional PYTHONHOME is the containing package `support` folder or `scripts` folder for self-contained externals
 
-- [ ] add more api wrappers. (PAUSED PENDING JUPYTER WORK)
 
 ### Documentation, Attributes & Infrastructure
 
