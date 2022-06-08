@@ -7,7 +7,7 @@ PREFIX = /usr/local/opt/python@$(VERSION)/Frameworks/Python.framework/Versions/$
 
 // --------------------------------------------------------------------------------
 
-PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS) $(NUMPY_HEADERS)
 PY_LIBS = $(PREFIX)/lib
 PY_LDFLAGS = $(LIBS) -lpython$(VERSION)$(ABIFLAGS)
 

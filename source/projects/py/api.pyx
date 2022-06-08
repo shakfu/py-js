@@ -71,13 +71,13 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy, strlen
 
 cimport api_max as mx # api is a cython keyword!
-# cimport api_msp as mp
+cimport api_msp as mp
 cimport api_py as px
 
 # ----------------------------------------------------------------------------
 # conditional imports
 
-DEF INCLUDE_NUMPY = False
+DEF INCLUDE_NUMPY = True
 
 if INCLUDE_NUMPY:
     import numpy as np
@@ -558,92 +558,90 @@ def get_table_as_list(str name):
 # ----------------------------------------------------------------------------
 # buffer
 
-# temporarily disabled until MSP headers are enabled for all targets
+cdef class Buffer:
+    """A wrapper class for a Max t_buffer_obj
+    """
+    cdef mp.t_buffer_obj *obj
+    cdef mp.t_buffer_ref *ref
+    # cdef mx.t_object *tobj # t_object with ref to buffer
+    cdef bint is_locked
+    cdef float* samples
 
-# cdef class Buffer:
-#     """A wrapper class for a Max t_buffer_obj
-#     """
-#     cdef mp.t_buffer_obj *obj
-#     cdef mp.t_buffer_ref *ref
-#     # cdef mx.t_object *tobj # t_object with ref to buffer
-#     cdef bint is_locked
-#     cdef float* samples
+    def __cinit__(self):
+        self.obj = NULL
+        self.ref = NULL
+        self.samples = NULL
+        self.is_locked = False
 
-#     def __cinit__(self):
-#         self.obj = NULL
-#         self.ref = NULL
-#         self.samples = NULL
-#         self.is_locked = False
+    def __dealloc__(self):
+        # De-allocate if not null
+        if self.ref is not NULL:
+            mx.object_free(self.ref)
+            self.ref = NULL
 
-#     def __dealloc__(self):
-#         # De-allocate if not null
-#         if self.ref is not NULL:
-#             mx.object_free(self.ref)
-#             self.ref = NULL
-
-#     @staticmethod
-#     cdef Buffer from_name(mx.t_object *x, mx.t_symbol *name):
-#         """Create a reference to a buffer~ object by name."""
-#         # Call to __new__ bypasses __init__ constructor
-#         cdef Buffer buffer = Buffer.__new__(Buffer)
-#         buffer.ref = mp.buffer_ref_new(x, name)
-#         assert(mp.buffer_ref_exists(buffer.ref))
-#         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
-#         return buffer
+    @staticmethod
+    cdef Buffer from_name(mx.t_object *x, mx.t_symbol *name):
+        """Create a reference to a buffer~ object by name."""
+        # Call to __new__ bypasses __init__ constructor
+        cdef Buffer buffer = Buffer.__new__(Buffer)
+        buffer.ref = mp.buffer_ref_new(x, name)
+        assert(mp.buffer_ref_exists(buffer.ref))
+        buffer.obj = mp.buffer_ref_getobject(buffer.ref)
+        return buffer
 
 
-#     def change_reference(self, str name):
-#         """Change a buffer reference to refer to a different buffer object by name."""
-#         mp.buffer_ref_set(self.ref, str_to_sym(name))
-#         assert(mp.buffer_ref_exists(self.ref))
-#         self.obj = mp.buffer_ref_getobject(self.ref)
+    def change_reference(self, str name):
+        """Change a buffer reference to refer to a different buffer object by name."""
+        mp.buffer_ref_set(self.ref, str_to_sym(name))
+        assert(mp.buffer_ref_exists(self.ref))
+        self.obj = mp.buffer_ref_getobject(self.ref)
 
-#     def view(self):
-#         """Open a viewer window to display the contents of the buffer."""
-#         mp.buffer_view(self.obj)
+    def view(self):
+        """Open a viewer window to display the contents of the buffer."""
+        mp.buffer_view(self.obj)
     
-#     @property
-#     def channelcount(self):
-#         """Query a buffer~ to find out how many channels are present in the buffer content."""
-#         return mp.buffer_getchannelcount(self.obj)
+    @property
+    def channelcount(self):
+        """Query a buffer~ to find out how many channels are present in the buffer content."""
+        return mp.buffer_getchannelcount(self.obj)
 
-#     @property
-#     def framecount(self):
-#         """Query a buffer~ to find out how many frames long the buffer content is in samples."""
-#         return mp.buffer_getframecount(self.obj)
+    @property
+    def framecount(self):
+        """Query a buffer~ to find out how many frames long the buffer content is in samples."""
+        return mp.buffer_getframecount(self.obj)
 
-#     @property
-#     def samplerate(self):
-#         """Query a buffer~ to find out its native sample rate in samples per second."""
-#         return mp.buffer_getsamplerate(self.obj)
+    @property
+    def samplerate(self):
+        """Query a buffer~ to find out its native sample rate in samples per second."""
+        return mp.buffer_getsamplerate(self.obj)
 
-#     @property
-#     def millisamplerate(self):
-#         """Query a buffer~ to find out its native sample rate in samples per millisecond."""
-#         return mp.buffer_getmillisamplerate(self.obj)
+    @property
+    def millisamplerate(self):
+        """Query a buffer~ to find out its native sample rate in samples per millisecond."""
+        return mp.buffer_getmillisamplerate(self.obj)
 
-#     @property
-#     def filename(self):
-#         """Retrieve the name of the last file to be read by a buffer~."""
-#         return sym_to_str(mp.buffer_getfilename(self.obj))
+    @property
+    def filename(self):
+        """Retrieve the name of the last file to be read by a buffer~."""
+        return sym_to_str(mp.buffer_getfilename(self.obj))
 
-#     def setdirty(self):
-#         """Set the buffer's dirty flag, indicating that changes have been made."""
-#         mp.buffer_setdirty(self.obj)
+    def setdirty(self):
+        """Set the buffer's dirty flag, indicating that changes have been made."""
+        mp.buffer_setdirty(self.obj)
 
-#     def setpadding(self, long samplecount):
-#         """Set the number of samples with which to zero-pad the buffer~'s contents."""
-#         mp.buffer_setpadding(self.obj, samplecount)
+    def setpadding(self, long samplecount):
+        """Set the number of samples with which to zero-pad the buffer~'s contents."""
+        mp.buffer_setpadding(self.obj, samplecount)
 
-#     def locksamples(self):
-#         """Claim the buffer∼ and get a pointer to the first sample in memory."""
-#         self.samples = mp.buffer_locksamples(self.obj)
-#         self.is_locked = True
+    def locksamples(self):
+        """Claim the buffer∼ and get a pointer to the first sample in memory."""
+        self.samples = mp.buffer_locksamples(self.obj)
+        self.is_locked = True
 
-#     def unlocksamples(self):
-#         """Release your claim on the buffer~ contents so that other objects may read/write to the buffer~."""
-#         mp.buffer_unlocksamples(self.obj)
-#         self.is_locked = False
+    def unlocksamples(self):
+        """Release your claim on the buffer~ contents so that other objects may read/write to the buffer~."""
+        mp.buffer_unlocksamples(self.obj)
+        self.is_locked = False
 
 
 # ----------------------------------------------------------------------------

@@ -23,6 +23,8 @@ PROJECT_FOLDER_NAME =
 VERSION = $(PY_SHORT_VERSION)
 ABIFLAGS = 
 
+MSP_JIT_LDFLAGS = -framework MaxAudioAPI -framework JitterAPI
+
 PYJS_BUILD_ROOT = $(SRCROOT)/../build
 // PYJS_BUILD_ROOT = $(HOME)/.build_pyjs
 

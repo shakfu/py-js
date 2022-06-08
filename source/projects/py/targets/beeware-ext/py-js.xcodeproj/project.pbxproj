@@ -305,7 +305,8 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					"$(PY_HEADERS)",
+					"\"$(PY_HEADERS)\"",
+					"\"$(NUMPY_HEADERS)\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -315,6 +316,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
+					"$(MSP_JIT_LDFLAGS)",
 					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.pyjs;
@@ -339,7 +341,8 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					"$(PY_HEADERS)",
+					"\"$(PY_HEADERS)\"",
+					"\"$(NUMPY_HEADERS)\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -349,6 +352,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
+					"$(MSP_JIT_LDFLAGS)",
 					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.pyjs;
@@ -388,7 +392,8 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					"$(PY_HEADERS)",
+					"\"$(PY_HEADERS)\"",
+					"\"$(NUMPY_HEADERS)\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -398,6 +403,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
+					"$(MSP_JIT_LDFLAGS)",
 					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
@@ -422,7 +428,8 @@
 					"\"$(C74SUPPORT)/max-includes\"",
 					"\"$(C74SUPPORT)/msp-includes\"",
 					"\"$(C74SUPPORT)/jit-includes\"",
-					"$(PY_HEADERS)",
+					"\"$(PY_HEADERS)\"",
+					"\"$(NUMPY_HEADERS)\"",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/../../../Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -432,6 +439,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"$(C74_SYM_LINKER_FLAGS)",
+					"$(MSP_JIT_LDFLAGS)",
 					"$(PY_LDFLAGS)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.me.py;
