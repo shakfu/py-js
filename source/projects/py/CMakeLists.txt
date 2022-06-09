@@ -10,11 +10,13 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmak
 # configuration
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
 
 
 # options
 option(USE_STATIC_PY "build static extension")
 option(USE_FRAMEWORK_PY "build framework-based extension")
+option(USE_NUMPY "include numpy headers is available")
 option(DEBUG "display debug variables")
 
 
@@ -57,11 +59,29 @@ set(PROJECT_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/api.c
 )
 
+
+# optionally add numpy_header
+execute_process(
+	COMMAND ${Python3_EXECUTABLE} ${SCRIPTS}/check_numpy.py
+	OUTPUT_VARIABLE NUMPY_HEADERS
+	RESULT_VARIABLE NUMPY_HEADERS_RESULT
+)
+
+message("NUMPY_HEADERS_RESULT: " ${NUMPY_HEADERS_RESULT})
+message("NUMPY_HEADERS: " ${NUMPY_HEADERS})
+
+
 include_directories( 
 	"${MAX_SDK_INCLUDES}"
 	"${MAX_SDK_MSP_INCLUDES}"
 	"${MAX_SDK_JIT_INCLUDES}"
 )
+
+if (NUMPY_HEADERS_RESULT EQUAL 0) # 0 == SUCCESS
+include_directories("${NUMPY_HEADERS}")
+add_compile_definitions(INCLUDE_NUMPY=1)
+endif()
+
 
 
 add_library( 
@@ -77,9 +97,6 @@ set(BUILD_LIB ${CMAKE_CURRENT_SOURCE_DIR}/targets/build/lib)
 set(STATIC_PY ${BUILD_LIB}/python-static)
 set(FRAMEWORK_PY ${BUILD_LIB}/Python.framework)
 
-
-
-message("USE_STATIC_PY: ${USE_STATIC_PY}")
 
 
 if(USE_STATIC_PY)
