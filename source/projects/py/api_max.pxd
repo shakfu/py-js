@@ -114,6 +114,8 @@ cdef extern from "max_types.h":
 cdef extern from "ext_mess.h":
     ctypedef void *(*method)(void *, ...)
     ctypedef long (*t_intmethod)(void *, ...)
+    # ctypedef void t_outlet
+    # ctypedef void t_inlet
     ctypedef struct t_object
     ctypedef struct t_symbol:
         char *s_name

@@ -307,6 +307,12 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
+
+    def test_buffer(self, str name):
+        buf = Buffer.from_name(<mx.t_object*>self.obj, name)
+        buf.view()
+        return buf.samplerate
+
     # UNTESTED
     cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
         """atoms -> python string"""
@@ -503,6 +509,41 @@ def error(str s):
 # ----------------------------------------------------------------------------
 # table 
 
+cdef class Table:
+    """A wrapper class to acess a pre-existing Max table
+    """
+    cdef str name
+    cdef long **storage
+    cdef readonly long size
+
+    def __cinit__(self, str name):
+        self.name = name
+        check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
+        assert check == 0, f"table with name '{name}' doesn't exist"
+
+    def populate(self, list[int] xs):
+        """populate table from python list[int]"""
+        if len(xs) <= self.size:
+            for i, x in enumerate(xs):
+                self.storage[0][i] = <long>x
+        else:
+            for i in range(self.size):
+                self.storage[0][i] = <long>xs[i]
+
+
+    def as_list(self):
+        """converts table to python list of ints"""
+
+        cdef long value
+        cdef list[int] xs = []
+
+        for i in range(self.size):
+            value = self.storage[0][i]
+            xs.append(<int>value)
+
+        return xs
+
+
 def table_exists(str name):
     """checks if a table exists."""
 
@@ -567,6 +608,23 @@ cdef class Buffer:
     cdef bint is_locked
     cdef float* samples
 
+    # def __cinit__(self, str name):
+    #     self.x = <mx.t_object*>mx.sysmem_newptr(sizeof(mx.t_object))
+    #     self.ref = mp.buffer_ref_new(self.x, str_to_sym(name))
+    #     assert(mp.buffer_ref_exists(self.ref))
+    #     self.obj = mp.buffer_ref_getobject(self.ref)
+    #     self.samples = NULL
+    #     self.is_locked = False
+
+    # def __dealloc__(self):
+    #     # De-allocate if not null
+    #     if self.ref is not NULL:
+    #         mx.object_free(self.ref)
+    #         self.ref = NULL
+    #     if self.x is not NULL:
+    #         mx.sysmem_freeptr(self.x)
+    #         self.x = NULL
+
     def __cinit__(self):
         self.obj = NULL
         self.ref = NULL
@@ -580,11 +638,11 @@ cdef class Buffer:
             self.ref = NULL
 
     @staticmethod
-    cdef Buffer from_name(mx.t_object *x, mx.t_symbol *name):
+    cdef Buffer from_name(mx.t_object *x, str name):
         """Create a reference to a buffer~ object by name."""
         # Call to __new__ bypasses __init__ constructor
         cdef Buffer buffer = Buffer.__new__(Buffer)
-        buffer.ref = mp.buffer_ref_new(x, name)
+        buffer.ref = mp.buffer_ref_new(x, str_to_sym(name))
         assert(mp.buffer_ref_exists(buffer.ref))
         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
         return buffer
@@ -919,6 +977,12 @@ def test_dict():
     d['myint'] = 3
     d['hello'] = 'world'
     return d.getentrycount()
+
+
+def test_buffer(str name):
+    ext = PyExternal()
+    return ext.test_buffer(name)
+
 
 cpdef public str hello():
     return greeting
