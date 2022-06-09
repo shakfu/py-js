@@ -6180,4 +6180,10 @@ cdef extern from "jdataview.h":
     cdef void *jdataview_getdragreceiver(t_object *dv)
 
 
+# -------------------------------------------------------------------------------------------------
+# inlined functions
+
+# for eg
+# cdef inline int my_min(int a, int b):
+#     return b if b < a else a
 

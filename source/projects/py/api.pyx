@@ -651,9 +651,14 @@ cdef class Dictionary:
     """A wrapper class for a Max t_dictionary
     """
     cdef mx.t_dictionary *d
+    cdef dict type_map
 
     def __cinit__(self):
         self.d = mx.dictionary_new()
+        self.type_map = dict()
+
+    # def __init__(self):
+    #     self.type_map = dict()
 
     def __dealloc__(self):
         # De-allocate if not null
@@ -661,11 +666,23 @@ cdef class Dictionary:
             mx.object_free(self.d)
             self.d = NULL
 
-    def __setitem__(self, str key, object value): pass
-    def __getitem__(self, str key): pass
+    def __setitem__(self, str key, value):
+        if isinstance(value, float):
+            self.type_map[key] = 'float'
+            self.appendfloat(str_to_sym(key), <double>value)
+        elif isinstance(value, int):
+            self.type_map[key] = 'long'
+            self.appendlong(str_to_sym(key), <long>value)
+        elif isinstance(value, str):
+            self.type_map[key] = 'str'
+            self.appendsym(str_to_sym(key), str_to_sym(value))
 
-    # cdef mx.t_dictionary* sprintf(self, char* fmt, ...):
-    #     return mx.dictionary_sprintf(char* fmt, ...)
+    def __getitem__(self, str key):
+        return {
+            'float': self.get_float(key),
+            'long': self.get_long(key),
+            'str': self.get_str(key),
+        }[key]
 
     cdef mx.t_max_err appendlong(self, mx.t_symbol* key, mx.t_atom_long value):
         return mx.dictionary_appendlong(self.d, key, value)
@@ -703,11 +720,30 @@ cdef class Dictionary:
     cdef mx.t_max_err getlong(self, mx.t_symbol* key, mx.t_atom_long* value):
         return mx.dictionary_getlong(self.d, key, value)
 
+    def get_long(self, str key) -> int:
+        cdef mx.t_atom_long value
+        cdef mx.t_max_err err = mx.dictionary_getlong(self.d, str_to_sym(key), &value)
+        # cdef mx.t_max_err err = self.getlong(str_to_sym(key), &value)
+        if err == mx.MAX_ERR_NONE:
+            return <int>value
+
     cdef mx.t_max_err getfloat(self, mx.t_symbol* key, double* value):
         return mx.dictionary_getfloat(self.d, key, value)
 
+    def get_float(self, str key) -> float:
+        cdef double value
+        cdef mx.t_max_err err = mx.dictionary_getfloat(self.d, str_to_sym(key), &value)
+        if err == mx.MAX_ERR_NONE:
+            return <float>value
+
     cdef mx.t_max_err getsym(self, mx.t_symbol* key, mx.t_symbol** value):
         return mx.dictionary_getsym(self.d, key, value)
+
+    def get_str(self, str key) -> str:
+        cdef mx.t_symbol* value
+        cdef mx.t_max_err err = mx.dictionary_getsym(self.d, str_to_sym(key), &value)
+        if err == mx.MAX_ERR_NONE:
+            return sym_to_str(value)
 
     cdef mx.t_max_err getatom(self, mx.t_symbol* key, mx.t_atom* value):
         return mx.dictionary_getatom(self.d, key, value)
@@ -876,6 +912,13 @@ def test_atom():
     a1 = Atom.from_list([1, 2.5, b'hello', 'world'])
     ext.out(a1.to_list())
 
+
+def test_dict():
+    d = Dictionary()
+    d['myfloat'] = 10.1
+    d['myint'] = 3
+    d['hello'] = 'world'
+    return d.getentrycount()
 
 cpdef public str hello():
     return greeting

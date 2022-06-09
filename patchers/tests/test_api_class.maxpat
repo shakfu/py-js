@@ -40,6 +40,18 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-24",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 213.0, 174.0, 81.0, 22.0 ],
+					"text" : "api.test_dict()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-12",
 					"maxclass" : "message",
 					"numinlets" : 2,
@@ -260,8 +272,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 174.0, 77.0, 22.0 ],
-					"text" : "eval api.fail()"
+					"patching_rect" : [ 17.0, 174.0, 127.0, 22.0 ],
+					"text" : "eval api.failure_bang()"
 				}
 
 			}
@@ -272,8 +284,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 17.0, 142.0, 105.0, 22.0 ],
-					"text" : "eval api.success()"
+					"patching_rect" : [ 17.0, 142.0, 138.0, 22.0 ],
+					"text" : "eval api.success_bang()"
 				}
 
 			}
@@ -527,7 +539,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 176.5, 427.0, 187.0, 22.0 ],
-					"text" : "0"
+					"text" : "bang"
 				}
 
 			}
@@ -669,6 +681,14 @@
 					"destination" : [ "obj-1", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-23", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-24", 0 ]
 				}
 
 			}
