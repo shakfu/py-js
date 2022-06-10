@@ -1,5 +1,6 @@
 # api.pyx
-"""api: max api wrapped by cython for use by `py` external
+"""
+# api: max api wrapped by cython for use by `py` external
 
 The main place to create and re-use cython wrappers and utilities which
 access Max's c-api.
@@ -27,7 +28,7 @@ declarations as follows:
 
     cimport api_max as mx
 
-Note that any function or symbol from the max api must be prefixed
+Then you can start using the max api's symbols or functions by prefixing
 with `mx.` For example
 
     gensym()    -> mx.gensym()
@@ -46,16 +47,33 @@ be prefixed as `px`:
     py_scan()   -> px.py_scan()
 
 
-This separation of namespaces is obviously very useful in this case. 
+This separation of namespaces is clearly very useful when you are
+wrapping code.
 
 
-## TODO
+## Extension Types
 
-implement the following:
+We use cython extension types to wrap related C data structures and functions
+in the Max api and provide a Python-like interface to them.
 
-- [ ] newinstance() -- privately instanciates objects
-- [ ] typedmess() -- sends typed messages to objects (given object ids)
+So far the following extension types are planned or implemnted
 
+- [x] Atom
+- [x] Buffer
+- [x] Dictionary
+- [x] PyExternal
+- [x] Table
+
+planned (maybe)
+
+- [ ] Atom Array
+- [ ] Database
+- [ ] Hash Table
+- [ ] Linked List
+
+no plans so far
+
+- [x] String Object (created just to demo a simple extension type)
 
 """
 
@@ -211,6 +229,19 @@ cdef class Atom:
             else:
                 print("other:", i)
 
+    # TODO: move to PyExternal
+    # def create_object(self, classname: str, namespace: str = "box"):
+    #     """Creates an object.
+
+    #     :param      classname:  t_class class name
+    #     :type       classname:  str
+    #     :param      namespace:  The namespace i.e. CLASS_BOX | CLASS_NOBOX
+    #     :type       namespace:  str
+    #     """
+    #     mx.object_new_typed(str_to_sym(namespace), 
+    #         str_to_sym(classname), self.size, self.ptr)
+
+
     @staticmethod
     cdef Atom from_ptr(mx.t_atom *ptr, int size, bint owner=False):
         # Call to __new__ bypasses __init__ constructor
@@ -228,14 +259,14 @@ cdef class Atom:
         return Atom.from_ptr(ptr, size, owner=True)
 
     @staticmethod
-    cdef Atom from_list(list lst):
-        cdef int size = len(lst)
+    cdef Atom from_seq(object seq):
+        cdef int size = len(seq)
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
 
         cdef int i
-        for i, obj in enumerate(lst):
+        for i, obj in enumerate(seq):
             
             if isinstance(obj, float):
                 mx.atom_setfloat(ptr+i, <float>obj)
@@ -254,6 +285,32 @@ cdef class Atom:
                 continue
 
         return Atom.from_ptr(ptr, size, owner=True)
+
+
+# ----------------------------------------------------------------------------
+# String type
+
+# This string type is totally useless in this context
+# use python string instead!!
+
+# cdef class String:
+#     cdef mx.t_string* _str
+
+#     def __cinit__(self, bytes cstr):
+#         self._str = mx.string_new(cstr)
+
+#     def getptr(self) -> bytes:
+#         return mx.string_getptr(self._str)
+            
+#     def reserve(self, long numbytes):
+#         mx.string_reserve(self._str, numbytes)
+
+#     def append(self, bytes s):
+#         mx.string_append(self._str, s)
+
+#     def chop(self, long numchars):
+#         mx.string_chop(self._str, numchars)
+
 
 
 # ----------------------------------------------------------------------------
@@ -378,7 +435,7 @@ cdef class PyExternal:
     cdef mx.t_object * create(self, str classname, list args):
         """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
         """
-        atoms = Atom.from_list(list(args))
+        atoms = Atom.from_seq(list(args))
         cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
         return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
 
@@ -552,57 +609,57 @@ cdef class Table:
         return xs
 
 
-def table_exists(str name):
-    """checks if a table exists."""
+# def table_exists(str name):
+#     """checks if a table exists."""
 
-    cdef long **storage
-    cdef long size
+#     cdef long **storage
+#     cdef long size
 
-    result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
+#     result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
 
-    if result == 0:
-        success_bang()
-    else:
-        failure_bang()
+#     if result == 0:
+#         success_bang()
+#     else:
+#         failure_bang()
 
-    return result
+#     return result
 
 
-def copy_list_to_table(list[int] xs, str name):
-    """copies integers from a python list[int] to a max table"""
+# def copy_list_to_table(list[int] xs, str name):
+#     """copies integers from a python list[int] to a max table"""
     
-    cdef long **storage
-    cdef long size
+#     cdef long **storage
+#     cdef long size
 
-    length = len(xs)
+#     length = len(xs)
 
-    result = mx.table_get(str_to_sym(name), &storage, &size)
+#     result = mx.table_get(str_to_sym(name), &storage, &size)
 
-    if result == 0:
-        if length <= size:
-            for i, x in enumerate(xs):
-                storage[0][i] = <long>x
-        else:
-            for i in range(size):
-                storage[0][i] = <long>xs[i]
+#     if result == 0:
+#         if length <= size:
+#             for i, x in enumerate(xs):
+#                 storage[0][i] = <long>x
+#         else:
+#             for i in range(size):
+#                 storage[0][i] = <long>xs[i]
 
 
-def get_table_as_list(str name):
-    """gets integer content of a named max table as a python list"""
+# def get_table_as_list(str name):
+#     """gets integer content of a named max table as a python list"""
 
-    cdef long **storage
-    cdef long size
-    cdef long value
-    cdef list[int] xs = []
+#     cdef long **storage
+#     cdef long size
+#     cdef long value
+#     cdef list[int] xs = []
 
-    result = mx.table_get(str_to_sym(name), &storage, &size)
+#     result = mx.table_get(str_to_sym(name), &storage, &size)
 
-    if result == 0:
-        for i in range(size):
-            value = storage[0][i]
-            xs.append(<int>value)
+#     if result == 0:
+#         for i in range(size):
+#             value = storage[0][i]
+#             xs.append(<int>value)
 
-    return xs
+#     return xs
 
 # ----------------------------------------------------------------------------
 # buffer
@@ -711,6 +768,35 @@ cdef class Buffer:
 
 # ----------------------------------------------------------------------------
 # dictionary
+
+"""
+You can make a patcher by passing a dictionary to object_new_typed() 
+when making a "jpatcher". Using atom_setparse() and attr_args_dictionary() makes 
+this relatively easy.
+
+Use newobject_sprintf() to programmatically make an object in a patch. Actually, you
+don't explicitly use a dictionary here! If you do want more control, so you can touch
+the dictionary to customize it, then see the next bullet.
+
+Use dictionary_sprintf() to make a dictionary to specify a box (i.e. specify class
+with @maxclass attr). Then, make another dictionary and append your box dictionary to
+it under the key "box" via dictionary_appenddictionary(). Finally, make your object
+with newobject_fromdictionary().
+
+
+// not implemented
+cdef void *object_new_typed(t_symbol *name_space, t_symbol *classname, long ac, t_atom *av)
+cdef t_dictionary *class_cloneprototype(t_class *x)
+cdef t_dictionary *dictionary_sprintf(char *fmt, ...)
+cdef t_dictionary *object_dictionaryarg(long ac, t_atom *av)
+cdef t_max_err atom_setparse(long *ac, t_atom **av, const char *parsestr)
+cdef t_object *newobject_fromboxtext(t_object *patcher, const char *text)
+cdef t_object *newobject_fromdictionary(t_object *patcher, t_dictionary *d)
+cdef t_object *newobject_sprintf(t_object *patcher, const char *fmt, ...)
+cdef void attr_args_dictionary(t_dictionary *x, short ac, t_atom *av)
+cdef void attr_dictionary_check(void *x, t_dictionary *d)
+cdef void attr_dictionary_process(void *x, t_dictionary *d)
+"""
 
 
 cdef class Dictionary:
@@ -1014,10 +1100,172 @@ cdef class Dictionary:
     #     """Serialize the specified t_dictionary object to a YAML file."""
     #     return mx.dictionary_write_yaml(self.d, filename, path)
 
+    cdef void post(self):
+        """Print the contents of a dictionary to the Max window."""
+        mx.postdictionary(<mx.t_object*>self.x)    
 
-cdef void postdictionary(mx.t_object *d):
-    """Print the contents of a dictionary to the Max window."""
-    mx.postdictionary(d)
+
+# ----------------------------------------------------------------------------
+# t_dictionary passing api
+
+    cdef mx.t_dictionary *dictobj_register(self, mx.t_symbol **name):
+        """Register a t_dictdictobj_registerionary with the dictionary passing system and map it to a unique name.
+
+        If the t_symbol pointer has a NULL value then a unique name will be generated and filled-in
+        upon return.
+        """
+        return mx.dictobj_register(self.d, name)
+
+    cdef mx.t_max_err dictobj_unregister(self):
+        """unregister dictionary (not required if dict is object-freed)"""
+        return mx.dictobj_unregister(self.d)
+
+    cdef mx.t_dictionary *dictobj_findregistered_clone(self, mx.t_symbol *name):
+        """Find the t_dictionary for a given name, and return a copy of that dictionary.
+
+        When you are done, do not call dictobj_release() on the dictionary, because you 
+        are working on a copy rather than on a retained pointer.
+        """
+        return mx.dictobj_findregistered_clone(name)
+
+    cdef mx.t_dictionary *dictobj_findregistered_retain(self, mx.t_symbol *name):
+        """Find the t_dictionary for a given name, return a pointer to that t_dictionary, and increment
+        its reference count.
+
+        When you are done you should call dictobj_release() on the dictionary.
+        """
+        return mx.dictobj_findregistered_retain(name)
+
+    cdef mx.t_max_err dictobj_release(self):
+        """For a t_dictionary/name previously retained with dictobj_findregistered_retain(),
+        release it (decrement its reference count).
+        """
+        return mx.dictobj_release(self.d)
+
+    cdef mx.t_symbol *dictobj_namefromptr(self):
+        """Find the name associated with a given t_dictionary."""
+        return mx.dictobj_namefromptr(self.d)
+
+    cdef void dictobj_outlet_atoms(self, void *out, long argc, mx.t_atom *argv):
+        """Send atoms to an outlet in your Max object, handling complex datatypes
+        that may be present in those atoms.
+        """
+        mx.dictobj_outlet_atoms(out, argc, argv)
+
+    cdef long dictobj_atom_safety(self, mx.t_atom *a):
+        """Ensure that an atom is safe for passing.
+
+        Atoms are allowed to be A_LONG, A_FLOAT, or A_SYM, but not A_OBJ. If the atom is an A_OBJ,
+        it will be converted into something that will be safe to pass.
+        """
+        return mx.dictobj_atom_safety(a)
+
+    # cdef long dictobj_atom_safety_flags(self, mx.t_atom *a, long flags):
+    #     """Ensure that an atom is safe for passing.
+
+    #     Atoms are allowed to be A_LONG, A_FLOAT, or A_SYM, but not A_OBJ. If the atom is an A_OBJ,
+    #     it will be converted into something that will be safe to pass.
+
+    #     Pass DICTOBJ_ATOM_FLAGS_REGISTER to flaga to have dictionary atoms registered/retained.
+    #     """
+    #     mx.dictobj_atom_safety_flags(a, flags)
+
+    cdef long dictobj_validate(self, const mx.t_dictionary *schema, const mx.t_dictionary *candidate):
+        """Validate the contents of a t_dictionary against a second t_dictionary containing a schema."""
+        return mx.dictobj_validate(schema, candidate)
+
+    cdef mx.t_max_err dictobj_jsonfromstring(self, long *jsonsize, char **json, const char *cstr):
+        """Convert a C-string of Dictionary Syntax into a C-string of JSON."""
+        return mx.dictobj_jsonfromstring(jsonsize, json, cstr)
+
+    cdef mx.t_max_err dictobj_dictionaryfromstring(self, mx.t_dictionary **d, const char *cstr, int str_is_already_json, char *errorstring):
+        """Create a new t_dictionary from Dictionary Syntax which is passed in as a C-string."""
+        return mx.dictobj_dictionaryfromstring(d, cstr, str_is_already_json, errorstring)
+
+    cdef mx.t_max_err dictobj_dictionaryfromatoms(self, mx.t_dictionary **d, const long argc, const mx.t_atom *argv):
+        """Create a new t_dictionary from Dictionary Syntax which is passed in as an array of atoms."""
+        return mx.dictobj_dictionaryfromatoms(d, argc, argv)
+
+    # cdef t_max_err dictobj_dictionaryfromatoms_extended(t_dictionary **d, const t_symbol *msg, long argc, const t_atom *argv):
+    #     """Create a new t_dictionary from from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
+
+    cdef mx.t_max_err dictobj_dictionarytoatoms(self, long *argc, mx.t_atom **argv):
+        """Serialize the contents of a t_dictionary into Dictionary Syntax."""
+        return mx.dictobj_dictionarytoatoms(self.d, argc, argv)
+
+    # cdef t_max_err dictobj_key_parse(t_object *x, t_dictionary *d, t_atom *akey, t_bool create, t_dictionary **targetdict, t_symbol **targetkey, t_int32 *index):
+    #     """Given a complex key (one that includes potential heirarchy or array-member access), return the actual key and the dictionary in which the key should be referenced."""
+
+
+
+# ----------------------------------------------------------------------------
+# Database 
+
+cdef class Database:
+    cdef mx.t_database *db
+    cdef mx.t_symbol* db_name
+    cdef bytes db_path
+
+    def __cinit__(self, str db_name, str db_path):
+        self.db_name = str_to_sym(db_name)
+        self.db_path = db_path.encode('utf-8')
+        mx.db_open(self.db_name, self.db_path, &self.db)
+
+    def __dealloc__(self):
+        mx.db_close(&self.db)
+
+    # def open(self, flag: int = None):
+    #     if flag:
+    #         mx.db_open_ext(self.db_name, self.db_path, &self.db, flag)
+    #     else:
+    #         mx.db_open(self.db_name, self.db_path, &self.db)
+
+    def open(self):
+        mx.db_open(self.db_name, self.db_path, &self.db)
+
+    def close(self):
+        mx.db_close(&self.db)
+
+    def query_table_new(self, str tablename):
+        mx.db_query_table_new(self.db, tablename.encode('utf-8'))
+
+    def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags):
+        mx.db_query_table_addcolumn(self.db, tablename.encode('utf-8'), 
+            columnname.encode('utf-8'), columntype.encode('utf-8'), flags.encode('utf-8'))
+
+    def transaction_start(self):
+        mx.db_transaction_start(self.db)
+
+    def transaction_end(self):
+        mx.db_transaction_end(self.db)
+
+    def transaction_flush(self):
+        mx.db_transaction_flush(self.db)
+
+# cdef t_max_err db_query(t_database *db, t_db_result **dbresult, const char *sql, ...)
+# cdef t_max_err db_query_direct(t_database *db, t_db_result **dbresult, const char *sql)
+# cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
+# cdef t_max_err db_query_getlastinsertid(t_database *db, long *id)
+# cdef t_max_err db_query_table_new(t_database *db, const char *tablename)
+# cdef t_max_err db_query_table_addcolumn(t_database *db, const char *tablename, const char *columnname, const char *columntype, const char *flags)
+# cdef t_max_err db_view_create(t_database *db, const char *sql, t_db_view **dbview)
+# cdef t_max_err db_view_remove(t_database *db, t_db_view **dbview)
+# 
+# cdef t_max_err db_view_getresult(t_db_view *dbview, t_db_result **result)
+# cdef t_max_err db_view_setquery(t_db_view *dbview, char *newquery)
+# cdef char** db_result_nextrecord(t_db_result *result)
+# cdef void db_result_reset(t_db_result *result)
+# cdef void db_result_clear(t_db_result *result)
+# cdef long db_result_numrecords(t_db_result *result)
+# cdef long db_result_numfields(t_db_result *result)
+# cdef char* db_result_fieldname(t_db_result *result, long fieldindex)
+# cdef char* db_result_string(t_db_result *result, long recordindex, long fieldindex)
+# cdef long db_result_long(t_db_result *result, long recordindex, long fieldindex)
+# cdef float db_result_float(t_db_result *result, long recordindex, long fieldindex)
+# cdef t_ptr_uint db_result_datetimeinseconds(t_db_result *result, long recordindex, long fieldindex)
+# cdef void db_util_stringtodate(const char *string, t_ptr_uint *date)
+# cdef void db_util_datetostring(const t_ptr_uint date, char *string)
+
 
 # ----------------------------------------------------------------------------
 # numpy c-api import example
@@ -1048,9 +1296,12 @@ greeting = 'Hello World'
 
 def test_atom():
     ext = PyExternal()
-    a1 = Atom.from_list([1, 2.5, b'hello', 'world'])
+    a1 = Atom.from_seq([1, 2.5, b'hello', 'world'])
     ext.out(a1.to_list())
 
+def test_atom_create():
+    atom = Atom.from_seq([440])
+    atom.create_object('cycle~')
 
 def test_dict():
     d = Dictionary()

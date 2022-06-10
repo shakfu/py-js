@@ -35,7 +35,7 @@
 - [x] ext_mess.h
 - [x] ext_obex.h
 - [x] ext_obex_util.h
-- [-] ext_obstring.h
+- [x] ext_obstring.h
 - [x] ext_packages.h
 - [x] ext_parameter.h
 - [x] ext_path.h
@@ -1082,6 +1082,19 @@ cdef extern from "ext_obex_util.h":
     cdef t_max_err object_attr_obsolete_getter(t_object *x, t_object *attr, long *ac, t_atom **av)
     cdef t_max_err object_attr_obsolete_setter(t_object *x, t_object *attr, long ac, t_atom *av)
     cdef void object_method_obsolete(t_object *x, t_symbol *s, long ac, t_atom *av)
+
+cdef extern from "ext_obstring.h":
+
+    ctypedef struct t_string:
+        # t_object s_obj
+        char     *s_text
+        long     s_size
+
+    cdef t_string* string_new(const char *psz)
+    cdef const char* string_getptr(t_string *x)            
+    cdef void string_reserve(t_string *x, long numbytes)
+    cdef void string_append(t_string *x, const char *s)
+    cdef void string_chop(t_string *x, long numchars)
 
 
 cdef extern from "ext_database.h":
