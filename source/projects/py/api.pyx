@@ -59,19 +59,16 @@ in the Max api and provide a Python-like interface to them.
 So far the following extension types are planned or implemnted (partial or otherwise)
 
 - [x] Atom
+- [x] Atom Array
 - [x] Binbuf
 - [x] Buffer
 - [x] Database
 - [x] Dictionary
+- [x] Hash Table
 - [x] Linked List
 - [x] Table
 
 - [x] PyExternal
-
-planned (maybe)
-
-- [ ] Atom Array
-- [ ] Hash Table
 
 
 ## Table of Contents
@@ -80,13 +77,7 @@ planned (maybe)
 - conditional imports
 - constants
 - helper cdef functions (type-translation)
-- extension types:
-    - Atom
-    - Table
-    - Buffer
-    - Dictionary
-    - Database
-    - PyExternal
+- extension types
 - helper def functions
 - test functions
 """
@@ -1065,6 +1056,7 @@ cdef class Linklist:
     cdef void funall(self, mx.method fun, void* arg):
         mx.linklist_funall(self.lst, fun, arg)
 
+
     # cdef mx.t_llelem* index2ptr(self, long index):
     #      return mx.linklist_index2ptr(self.lst, index)
 
@@ -1089,9 +1081,8 @@ cdef class Linklist:
     # cdef void free(self, mx.t_llelem* elem):
     #      mx.linklistelem_free(self.lst, elem)
 
-
-
     # ERRORS
+    
     # cdef t_llelem *linklistelem_new()
     # cdef long linklist_insert_sorted(t_linklist *x, void *o, long cmpfn(void *, void *))
     # cdef t_atom_long linklist_findfirst(t_linklist *x, void **o, long cmpfn(void *, void *), void *cmpdata)
@@ -1144,6 +1135,175 @@ cdef class Binbuf:
 
     cdef short readatom(self, char *outstr, char **text, long *n, long e, mx.t_atom *ap):
         mx.readatom(outstr, text, n, e, ap)
+
+# ---------------------------------------------------------------------------
+# Hashtab
+
+cdef class Hashtab:
+    cdef mx.t_hashtab* x
+
+    def __cinit__(self, long slotcount):
+        self.x = mx.hashtab_new(slotcount)
+
+    def __dealloc__(self):
+        mx.object_free(self.x)
+
+    cdef mx.t_max_err store(self, mx.t_symbol* key, mx.t_object* val):
+         return mx.hashtab_store(self.x, key, val)
+
+    cdef mx.t_max_err storelong(self, mx.t_symbol* key, mx.t_atom_long val):
+         return mx.hashtab_storelong(self.x, key, val)
+
+    cdef mx.t_max_err storesym(self, mx.t_symbol* key, mx.t_symbol* val):
+         return mx.hashtab_storesym(self.x, key, val)
+
+    cdef mx.t_max_err store_safe(self, mx.t_symbol* key, mx.t_object* val):
+         return mx.hashtab_store_safe(self.x, key, val)
+
+    cdef mx.t_max_err storeflags(self, mx.t_symbol* key, mx.t_object* val, long flags):
+         return mx.hashtab_storeflags(self.x, key, val, flags)
+
+    cdef mx.t_max_err lookup(self, mx.t_symbol* key, mx.t_object** val):
+         return mx.hashtab_lookup(self.x, key, val)
+
+    cdef mx.t_max_err lookuplong(self, mx.t_symbol* key, mx.t_atom_long* val):
+         return mx.hashtab_lookuplong(self.x, key, val)
+
+    cdef mx.t_max_err lookupsym(self, mx.t_symbol* key, mx.t_symbol** val):
+         return mx.hashtab_lookupsym(self.x, key, val)
+
+    cdef mx.t_max_err lookupentry(self, mx.t_symbol* key, mx.t_hashtab_entry** entry):
+         return mx.hashtab_lookupentry(self.x, key, entry)
+
+    cdef mx.t_max_err lookupflags(self, mx.t_symbol* key, mx.t_object** val, long* flags):
+         return mx.hashtab_lookupflags(self.x, key, val, flags)
+
+    cdef mx.t_max_err delete(self, mx.t_symbol* key):
+         return mx.hashtab_delete(self.x, key)
+
+    cdef mx.t_max_err clear(self):
+         return mx.hashtab_clear(self.x)
+
+    cdef mx.t_max_err chuckkey(self, mx.t_symbol* key):
+         return mx.hashtab_chuckkey(self.x, key)
+
+    cdef mx.t_max_err chuck(self):
+         return mx.hashtab_chuck(self.x)
+
+    cdef mx.t_max_err methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
+         return mx.hashtab_methodall_imp(self.x, sym, p1, p2, p3, p4, p5, p6, p7, p8)
+
+    cdef mx.t_max_err funall(self, mx.method fun, void* arg):
+         return mx.hashtab_funall(self.x, fun, arg)
+
+    cdef mx.t_max_err objfunall(self, mx.method fun, void* arg):
+         return mx.hashtab_objfunall(self.x, fun, arg)
+
+    cdef mx.t_atom_long getsize(self):
+         return mx.hashtab_getsize(self.x)
+
+    cdef void print(self):
+         mx.hashtab_print(self.x)
+
+    cdef void readonly(self, long readonly):
+         mx.hashtab_readonly(self.x, readonly)
+
+    cdef void flags(self, long flags):
+         mx.hashtab_flags(self.x, flags)
+
+    cdef mx.t_atom_long getflags(self):
+         return mx.hashtab_getflags(self.x)
+
+    cdef mx.t_max_err keyflags(self, mx.t_symbol* key, long flags):
+         return mx.hashtab_keyflags(self.x, key, flags)
+
+    cdef mx.t_atom_long getkeyflags(self, mx.t_symbol* key):
+         return mx.hashtab_getkeyflags(self.x, key)
+
+    cdef mx.t_max_err getkeys(self, long* kc, mx.t_symbol*** kv):
+         return mx.hashtab_getkeys(self.x, kc, kv)
+
+
+    # ERRORS
+    # cdef mx.t_hashtab_entry* entry_new(self, mx.t_symbol* key, mx.t_object* val):
+    #      return mx.hashtab_entry_new(key, val)
+
+    # cdef void entry_free(self, mx.t_hashtab_entry *x):
+    #      mx.hashtab_entry_free(x)
+
+    # cdef t_max_err hashtab_findfirst(t_hashtab *x, void **o, long cmpfn(void *, void *), void *cmpdata)
+
+    # cdef t_max_err hashtab_methodall(t_hashtab *x, t_symbol *s, ...)
+
+# ---------------------------------------------------------------------------
+# Atom Array
+
+cdef class AtomArray:
+    cdef mx.t_atomarray *x
+    cdef bint owner
+
+    def __cinit__(self):
+        self.x = NULL
+        self.owner = False
+
+    @staticmethod
+    cdef AtomArray from_atom(mx.t_atom *av, int ac, bint owner=False):
+        cdef AtomArray atom_array = AtomArray.__new__(AtomArray)
+        atom_array.x = mx.atomarray_new(ac, av)
+        atom_array.owner = owner
+        return atom_array
+
+    @staticmethod
+    cdef AtomArray new(int size):
+        cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
+        if ptr is NULL:
+            raise MemoryError
+        return AtomArray.from_atom(ptr, size, owner=True)
+
+    cdef void flags(self, long flags):
+         mx.atomarray_flags(self.x, flags)
+
+    cdef long getflags(self):
+         return mx.atomarray_getflags(self.x)
+
+    cdef mx.t_max_err setatoms(self, long ac, mx.t_atom* av):
+         return mx.atomarray_setatoms(self.x, ac, av)
+
+    cdef mx.t_max_err getatoms(self, long* ac, mx.t_atom** av):
+         return mx.atomarray_getatoms(self.x, ac, av)
+
+    cdef mx.t_max_err copyatoms(self, long* ac, mx.t_atom** av):
+         return mx.atomarray_copyatoms(self.x, ac, av)
+
+    cdef mx.t_atom_long getsize(self):
+         return mx.atomarray_getsize(self.x)
+
+    cdef mx.t_max_err getindex(self, long index, mx.t_atom* av):
+         return mx.atomarray_getindex(self.x, index, av)
+
+    # cdef mx.t_max_err setindex(self, long index, mx.t_atom* av):
+    #      return mx.atomarray_setindex(self.x, index, av)
+
+    cdef void* duplicate(self):
+         return mx.atomarray_duplicate(self.x)
+
+    cdef void* clone(self):
+         return mx.atomarray_clone(self.x)
+
+    cdef void appendatom(self, mx.t_atom* a):
+         mx.atomarray_appendatom(self.x, a)
+
+    cdef void appendatoms(self, long ac, mx.t_atom* av):
+         mx.atomarray_appendatoms(self.x, ac, av)
+
+    cdef void chuckindex(self, long index):
+         mx.atomarray_chuckindex(self.x, index)
+
+    cdef void clear(self):
+         mx.atomarray_clear(self.x)
+
+    cdef void funall(self, mx.method fun, void* arg):
+         mx.atomarray_funall(self.x, fun, arg)
 
 # ----------------------------------------------------------------------------
 # PyExternal extension type
@@ -1339,6 +1499,9 @@ cdef class PyExternal:
         elif isinstance(arg, dict): self.out_dict(<dict>arg)
         else:
             return
+
+    cdef mx.t_max_err method_binbuf(self, mx.t_symbol* s, void* buf, mx.t_atom* rv):
+         return mx.object_method_binbuf(<mx.t_object*>self.obj, s, buf, rv)
 
 
 # ----------------------------------------------------------------------------

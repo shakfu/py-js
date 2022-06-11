@@ -1,51 +1,29 @@
+"""
+script to parse related functions in a .pxd and convert them to 
+functions which can be include in an extension type
+
+note: does not try to be perfect: first arg of function 
+is not deliberately included and not converted to self
+to help manual check if conversion is correct.
+
+"""
+
 lines = """\
-cdef void *linklist_getindex(t_linklist *x, long index)
-cdef t_llelem *linklist_index2ptr(t_linklist *x, long index)
-cdef long linklist_ptr2index(t_linklist *x, t_llelem *p)
-cdef t_atom_long linklist_objptr2index(t_linklist *x, void *p)
-cdef t_atom_long linklist_append(t_linklist *x, void *o)
-cdef t_atom_long linklist_insertindex(t_linklist *x,  void *o, long index)
-cdef long linklist_insert_sorted(t_linklist *x, void *o, long cmpfn(void *, void *))
-cdef t_llelem *linklist_insertafterobjptr(t_linklist *x, void *o, void *objptr)  
-cdef t_llelem *linklist_insertbeforeobjptr(t_linklist *x, void *o, void *objptr) 
-cdef t_llelem *linklist_moveafterobjptr(t_linklist *x, void *o, void *objptr)    
-cdef t_llelem *linklist_movebeforeobjptr(t_linklist *x, void *o, void *objptr)   
-cdef t_llelem *linklist_insertptr(t_linklist *x,  void *o, t_llelem *p) 
-cdef t_atom_long linklist_deleteindex(t_linklist *x, long index) 
-cdef long linklist_chuckindex(t_linklist *x, long index)
-cdef long linklist_chuckobject(t_linklist *x, void *o)
-cdef long linklist_deleteobject(t_linklist *x, void *o)
-cdef long linklist_deleteptr(t_linklist *x, t_llelem *p)
-cdef long linklist_chuckptr(t_linklist *x, t_llelem *p) 
-cdef void linklist_clear(t_linklist *x)
-cdef long linklist_insertnodeindex(t_linklist *x, t_llelem *p, long index)
-cdef t_llelem *linklist_insertnodeptr(t_linklist *x, t_llelem *p1, t_llelem *p2)
-cdef long linklist_appendnode(t_linklist *x, t_llelem *p)
-cdef t_llelem *linklistelem_new()
-cdef void linklistelem_free(t_linklist *x, t_llelem *elem)
-cdef t_atom_long linklist_makearray(t_linklist *x, void **a, long max)
-cdef void linklist_reverse(t_linklist *x)
-cdef void linklist_rotate(t_linklist *x, long i)
-cdef void linklist_shuffle(t_linklist *x)
-cdef void linklist_swap(t_linklist *x, long a, long b)
-cdef t_atom_long linklist_findfirst(t_linklist *x, void **o, long cmpfn(void *, void *), void *cmpdata)
-cdef void linklist_findall(t_linklist *x, t_linklist **out, long cmpfn(void *, void *), void *cmpdata)
-cdef void linklist_methodall(t_linklist *x, t_symbol *s, ...)
-cdef void linklist_methodall_imp(void *x, void *sym, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
-cdef void *linklist_methodindex(t_linklist *x, t_atom_long i, t_symbol *s, ...)
-cdef void *linklist_methodindex_imp(void *x, void *i, void *s, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7) 
-cdef void linklist_sort(t_linklist *x, long cmpfn(void *, void *))
-cdef void linklist_funall(t_linklist *x, method fun, void *arg)
-cdef t_atom_long linklist_funall_break(t_linklist *x, method fun, void *arg)
-cdef void *linklist_funindex(t_linklist *x, long i, method fun, void *arg)
-cdef void *linklist_substitute(t_linklist *x, void *p, void *newp)
-cdef void *linklist_next(t_linklist *x, void *p, void **next)
-cdef void *linklist_prev(t_linklist *x, void *p, void **prev)
-cdef void *linklist_last(t_linklist *x, void **item)
-cdef void linklist_readonly(t_linklist *x, long readonly)
-cdef void linklist_flags(t_linklist *x, long flags)
-cdef t_atom_long linklist_getflags(t_linklist *x)
-cdef long linklist_match(void *a, void *b)
+cdef void atomarray_flags(t_atomarray *x, long flags) 
+cdef long atomarray_getflags(t_atomarray *x) 
+cdef t_max_err atomarray_setatoms(t_atomarray *x, long ac, t_atom *av)
+cdef t_max_err atomarray_getatoms(t_atomarray *x, long *ac, t_atom **av)
+cdef t_max_err atomarray_copyatoms(t_atomarray *x, long *ac, t_atom **av)
+cdef t_atom_long atomarray_getsize(t_atomarray *x)
+cdef t_max_err atomarray_getindex(t_atomarray *x, long index, t_atom *av)
+cdef t_max_err atomarray_setindex(t_atomarray *x, long index, t_atom *av)
+cdef void *atomarray_duplicate(t_atomarray *x)
+cdef void *atomarray_clone(t_atomarray *x)
+cdef void atomarray_appendatom(t_atomarray *x, t_atom *a)
+cdef void atomarray_appendatoms(t_atomarray *x, long ac, t_atom *av)
+cdef void atomarray_chuckindex(t_atomarray *x, long index)
+cdef void atomarray_clear(t_atomarray *x)
+cdef void atomarray_funall(t_atomarray *x, method fun, void *arg)
 """.splitlines()
 
 import re
@@ -112,7 +90,7 @@ for line in lines:
         args = [arg.strip() for arg in args.split(',')]
         try:
             funcdef(cdef, ftype, fname, args)
-            funcbody(ftype, fname, args, x='self.lst')
+            funcbody(ftype, fname, args, x='self.x')
             print()
         except ValueError:
             errors.append(line)
