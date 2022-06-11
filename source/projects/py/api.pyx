@@ -56,25 +56,39 @@ wrapping code.
 We use cython extension types to wrap related C data structures and functions
 in the Max api and provide a Python-like interface to them.
 
-So far the following extension types are planned or implemnted
+So far the following extension types are planned or implemnted (partial or otherwise)
 
 - [x] Atom
+- [x] Binbuf
 - [x] Buffer
+- [x] Database
 - [x] Dictionary
-- [x] PyExternal
+- [x] Linked List
 - [x] Table
+
+- [x] PyExternal
 
 planned (maybe)
 
 - [ ] Atom Array
-- [ ] Database
 - [ ] Hash Table
-- [ ] Linked List
 
-no plans so far
 
-- [x] String Object (created just to demo a simple extension type)
+## Table of Contents
 
+- imports
+- conditional imports
+- constants
+- helper cdef functions (type-translation)
+- extension types:
+    - Atom
+    - Table
+    - Buffer
+    - Dictionary
+    - Database
+    - PyExternal
+- helper def functions
+- test functions
 """
 
 # ----------------------------------------------------------------------------
@@ -129,7 +143,6 @@ cdef extern from "Python.h":
 # helper cdef functions
 
 
-
 cdef mx.t_symbol* str_to_sym(str string):
     """converts a python string to a t_symbol* 
 
@@ -146,12 +159,11 @@ cdef str sym_to_str(mx.t_symbol* symbol):
     return symbol.s_name.decode()
 
 
-
+# ============================================================================
+# EXTENSION TYPES
 
 # ----------------------------------------------------------------------------
-# Atom extension type
-#
-# All type-casting to and from non-max types should be encapsulated here
+# Atom
 
 cdef class Atom:
     """A wrapper class for a Max t_atom
@@ -286,293 +298,8 @@ cdef class Atom:
 
         return Atom.from_ptr(ptr, size, owner=True)
 
-
 # ----------------------------------------------------------------------------
-# String type
-
-# This string type is totally useless in this context
-# use python string instead!!
-
-# cdef class String:
-#     cdef mx.t_string* _str
-
-#     def __cinit__(self, bytes cstr):
-#         self._str = mx.string_new(cstr)
-
-#     def getptr(self) -> bytes:
-#         return mx.string_getptr(self._str)
-            
-#     def reserve(self, long numbytes):
-#         mx.string_reserve(self._str, numbytes)
-
-#     def append(self, bytes s):
-#         mx.string_append(self._str, s)
-
-#     def chop(self, long numchars):
-#         mx.string_chop(self._str, numchars)
-
-
-
-# ----------------------------------------------------------------------------
-# PyExternal extension type
-# 
-# Wrapper around the `py` external object and its methods. Should expose as much
-# functionality as possible.
-# 
-
-
-cdef class PyExternal:
-    cdef px.t_py *obj
-    cdef bytes name
-    # cdef mp.t_buffer_ref *ref
-
-    def __cinit__(self):
-        """Retrieves the py object name and reference.
-
-        PY_OBJ_NAME is set to __builtins__ at object creation
-        making it available to all modules.
-
-        Since all py objects are registered, knowing the name
-        allows any module in the namespace to get a reference
-        (as below) to its parent object.
-        """
-        PY_OBJ_NAME = getattr(__builtins__, 'PY_OBJ_NAME')
-        self.name = PY_OBJ_NAME.encode('utf-8')
-        self.obj = <px.t_py *>mx.object_findregistered(
-            mx.CLASS_BOX, mx.gensym(self.name))
-
-    # def get_buffer_ref(self, str s):
-    #     self.ref = mp.buffer_ref_new(<mx.t_object *>self.obj, mx.gensym(s.encode('utf-8')))
-
-    cpdef bang(self):
-        px.py_bang(self.obj)
-
-    def log(self, str s):
-        px.py_log(self.obj, s.encode('utf-8'))
-
-    def error(self, str s):
-        px.py_error(self.obj, s.encode('utf-8'))
-
-    cdef scan(self):
-        px.py_scan(self.obj)
-
-    cdef lookup(self, str name):
-        cdef mx.t_hashtab* registry = px.get_global_registry()
-        cdef mx.t_object* obj = NULL
-        cdef mx.t_max_err err
-
-        if (mx.hashtab_getsize(registry) == 0):
-            self.error("registry not populated")
-            return
-
-        err = mx.hashtab_lookup(registry, str_to_sym(name), &obj)
-
-        if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
-            self.error("no object found with name")
-        else:
-            self.log("found object")
-
-
-    def test_buffer(self, str name):
-        buf = Buffer.from_name(<mx.t_object*>self.obj, name)
-        buf.view()
-        return buf.samplerate
-
-    # UNTESTED
-    cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
-        """atoms -> python string"""
-        cdef long textsize = 0
-        cdef char* text = NULL
-        cdef mx.t_max_err err = mx.atom_gettext(argc, argv, &textsize, &text, 
-            mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
-        pstr = PyUnicode_FromString(text)
-        mx.sysmem_freeptr(text)
-        return pstr
-
-    # UNTESTED
-    cdef int pstring_to_atoms(self, str parsestr, long argc, mx.t_atom *argv) except -1:
-        cdef char cparsestring[MAX_CHARS]
-        cparsestring = PyUnicode_AsUTF8(parsestr)
-        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, cparsestring)
-        if err != mx.MAX_ERR_NONE: # test this!!
-            raise Exception("cannot convert c parsestring to atom array")
-
-    # UNTESTED
-    cdef int cstring_to_atoms(self, char *parsestr, long argc, mx.t_atom *argv) except -1:
-        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, parsestr)
-        if err != mx.MAX_ERR_NONE: # test this!!
-            raise Exception("cannot convert c parsestring to atom array")
-        else:
-            return 0
-
-    cdef send(self, str name, list args):
-        cdef long argc = <long>len(args) + 1
-        cdef mx.t_atom argv[PY_MAX_ATOMS]
-        _args = [name] + args
-
-        if argc < 1:
-            self.error("no arguments given")
-            return
-
-        if argc >= PY_MAX_ATOMS - 1:
-            self.error("number of args exceeded app limit")
-            return
-
-        for i, elem in enumerate(_args):
-            if type(elem) == float:
-                mx.atom_setfloat(&argv[i], <double>elem)
-            elif type(elem) == int:
-                mx.atom_setlong((&argv[i]), <long>elem)
-            elif type(elem) == str:
-                mx.atom_setsym((&argv[i]), str_to_sym(elem))
-            else:
-                continue
-        # mx.postatom(argv)
-        px.py_send(self.obj, mx.gensym(""), argc, argv)
-
-
-    # UNTESTED
-    cdef mx.t_object * create(self, str classname, list args):
-        """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
-        """
-        atoms = Atom.from_seq(list(args))
-        cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
-        return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
-
-
-    cdef bint table_exists(self, char* table_name):
-        return px.py_table_exists(self.obj, table_name)
-
-    cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
-        return px.py_list_to_table(self.obj, table_name, plist)
-
-    cdef PyObject* table_to_list(self, char* table_name):
-        return px.py_table_to_list(self.obj, table_name)
-
-    cdef success_bang(self):
-        px.py_bang_success(self.obj)
-
-    cdef failure_bang(self):
-        px.py_bang_failure(self.obj)
-
-    cdef out_sym(self, str arg):
-        mx.outlet_anything(<void*>px.get_outlet(self.obj), str_to_sym(arg), 0, NULL)
-
-    cdef out_float(self, float arg):
-        mx.outlet_float(<void*>px.get_outlet(self.obj), <double>arg)
-
-    cdef out_int(self, int arg):
-        mx.outlet_int(<void*>px.get_outlet(self.obj), <long>arg)
-
-    cdef out_list(self, list arg):
-        """note: not recursive...(yet) still cannot deal with list in list"""
-        cdef long argc = <long>len(arg)
-        cdef mx.t_atom argv[PY_MAX_ATOMS]
-
-        if argc >= PY_MAX_ATOMS :
-            self.error("number of args exceeded app limit")
-            return
-
-        for i, elem in enumerate(arg):
-            if type(elem) == float:
-                mx.atom_setfloat(&argv[i], <double>elem)
-            elif type(elem) == int:
-                mx.atom_setlong((&argv[i]), <long>elem)
-            elif type(elem) == str:
-                mx.atom_setsym((&argv[i]), str_to_sym(elem))
-            else:
-                continue
-
-        mx.outlet_list(<void*>px.get_outlet(self.obj), mx.gensym("list"),
-            argc, argv)
-
-    cdef out_dict(self, dict arg):
-        """note: not recursive...(yet) still cannot deal with dict in dict"""
-        res = []
-        for k,v in arg.items():
-            res.append(k)
-            res.append(':')
-            if type(v) in [list, set, tuple]:
-                for i in v:
-                    res.append(i)
-            else:
-                res.append(v)
-        self.out_list(res)
-
-    cdef out(self, object arg):
-        if isinstance(arg, float): self.out_float(arg)
-        elif isinstance(arg, int): self.out_int(arg)
-        elif isinstance(arg, str): self.out_sym(arg)
-        elif isinstance(arg, list): self.out_list(arg)
-        elif isinstance(arg, dict): self.out_dict(<dict>arg)
-        else:
-            return
-
-# ----------------------------------------------------------------------------
-# helper functions
-
-def get_globals():
-    return list(globals().keys())
-
-def bang():
-    ext = PyExternal()
-    ext.bang()
-
-def success_bang():
-    ext = PyExternal()
-    ext.success_bang()
-
-def failure_bang():
-    ext = PyExternal()
-    ext.failure_bang()
-
-def out_sym(s='hello outlet!'):
-    ext = PyExternal()
-    ext.out(s)
-
-def out_int(n=100):
-    ext = PyExternal()
-    ext.out(n)
-
-def out_float(n=12.75):
-    ext = PyExternal()
-    ext.out(n)
-
-def out_list(xs=[1,'a','c',4,5]):
-    ext = PyExternal()
-    ext.out(xs)
-
-def out_dict(**kwargs):
-    if not kwargs:
-        kwargs = {'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
-    ext = PyExternal()
-    ext.out(kwargs)
-
-def send(name='mrfloat', value=9.5):
-    ext = PyExternal()
-    ext.send(name, [value])
-
-def lookup(name):
-    ext = PyExternal()
-    ext.lookup(name)
-
-def post(str s):
-    mx.post(s.encode('utf-8'))
-
-
-def error(str s):
-    mx.error(s.encode('utf-8'))
-
-
-
-
-# ============================================================================
-# Max datastructure helper functions
-# 
-# Should ideally be refactored to cython extensions types.
-# 
-# ----------------------------------------------------------------------------
-# table 
+# Table 
 
 cdef class Table:
     """A wrapper class to acess a pre-existing Max table
@@ -608,61 +335,8 @@ cdef class Table:
 
         return xs
 
-
-# def table_exists(str name):
-#     """checks if a table exists."""
-
-#     cdef long **storage
-#     cdef long size
-
-#     result = mx.table_get(mx.gensym(name.encode('utf-8')), &storage, &size)
-
-#     if result == 0:
-#         success_bang()
-#     else:
-#         failure_bang()
-
-#     return result
-
-
-# def copy_list_to_table(list[int] xs, str name):
-#     """copies integers from a python list[int] to a max table"""
-    
-#     cdef long **storage
-#     cdef long size
-
-#     length = len(xs)
-
-#     result = mx.table_get(str_to_sym(name), &storage, &size)
-
-#     if result == 0:
-#         if length <= size:
-#             for i, x in enumerate(xs):
-#                 storage[0][i] = <long>x
-#         else:
-#             for i in range(size):
-#                 storage[0][i] = <long>xs[i]
-
-
-# def get_table_as_list(str name):
-#     """gets integer content of a named max table as a python list"""
-
-#     cdef long **storage
-#     cdef long size
-#     cdef long value
-#     cdef list[int] xs = []
-
-#     result = mx.table_get(str_to_sym(name), &storage, &size)
-
-#     if result == 0:
-#         for i in range(size):
-#             value = storage[0][i]
-#             xs.append(<int>value)
-
-#     return xs
-
 # ----------------------------------------------------------------------------
-# buffer
+# Buffer
 
 cdef class Buffer:
     """A wrapper class for a Max t_buffer_obj
@@ -767,37 +441,7 @@ cdef class Buffer:
         self.is_locked = False
 
 # ----------------------------------------------------------------------------
-# dictionary
-
-"""
-You can make a patcher by passing a dictionary to object_new_typed() 
-when making a "jpatcher". Using atom_setparse() and attr_args_dictionary() makes 
-this relatively easy.
-
-Use newobject_sprintf() to programmatically make an object in a patch. Actually, you
-don't explicitly use a dictionary here! If you do want more control, so you can touch
-the dictionary to customize it, then see the next bullet.
-
-Use dictionary_sprintf() to make a dictionary to specify a box (i.e. specify class
-with @maxclass attr). Then, make another dictionary and append your box dictionary to
-it under the key "box" via dictionary_appenddictionary(). Finally, make your object
-with newobject_fromdictionary().
-
-
-// not implemented
-cdef void *object_new_typed(t_symbol *name_space, t_symbol *classname, long ac, t_atom *av)
-cdef t_dictionary *class_cloneprototype(t_class *x)
-cdef t_dictionary *dictionary_sprintf(char *fmt, ...)
-cdef t_dictionary *object_dictionaryarg(long ac, t_atom *av)
-cdef t_max_err atom_setparse(long *ac, t_atom **av, const char *parsestr)
-cdef t_object *newobject_fromboxtext(t_object *patcher, const char *text)
-cdef t_object *newobject_fromdictionary(t_object *patcher, t_dictionary *d)
-cdef t_object *newobject_sprintf(t_object *patcher, const char *fmt, ...)
-cdef void attr_args_dictionary(t_dictionary *x, short ac, t_atom *av)
-cdef void attr_dictionary_check(void *x, t_dictionary *d)
-cdef void attr_dictionary_process(void *x, t_dictionary *d)
-"""
-
+# Dictionary
 
 cdef class Dictionary:
     """A wrapper class for a Max t_dictionary
@@ -1105,8 +749,8 @@ cdef class Dictionary:
         mx.postdictionary(<mx.t_object*>self.x)    
 
 
-# ----------------------------------------------------------------------------
-# t_dictionary passing api
+    # ----------------------------------------------------------------------------
+    # t_dictionary passing api
 
     cdef mx.t_dictionary *dictobj_register(self, mx.t_symbol **name):
         """Register a t_dictdictobj_registerionary with the dictionary passing system and map it to a unique name.
@@ -1196,8 +840,6 @@ cdef class Dictionary:
     # cdef t_max_err dictobj_key_parse(t_object *x, t_dictionary *d, t_atom *akey, t_bool create, t_dictionary **targetdict, t_symbol **targetkey, t_int32 *index):
     #     """Given a complex key (one that includes potential heirarchy or array-member access), return the actual key and the dictionary in which the key should be referenced."""
 
-
-
 # ----------------------------------------------------------------------------
 # Database 
 
@@ -1213,12 +855,6 @@ cdef class Database:
 
     def __dealloc__(self):
         mx.db_close(&self.db)
-
-    # def open(self, flag: int = None):
-    #     if flag:
-    #         mx.db_open_ext(self.db_name, self.db_path, &self.db, flag)
-    #     else:
-    #         mx.db_open(self.db_name, self.db_path, &self.db)
 
     def open(self):
         mx.db_open(self.db_name, self.db_path, &self.db)
@@ -1242,29 +878,467 @@ cdef class Database:
     def transaction_flush(self):
         mx.db_transaction_flush(self.db)
 
-# cdef t_max_err db_query(t_database *db, t_db_result **dbresult, const char *sql, ...)
-# cdef t_max_err db_query_direct(t_database *db, t_db_result **dbresult, const char *sql)
-# cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
-# cdef t_max_err db_query_getlastinsertid(t_database *db, long *id)
-# cdef t_max_err db_query_table_new(t_database *db, const char *tablename)
-# cdef t_max_err db_query_table_addcolumn(t_database *db, const char *tablename, const char *columnname, const char *columntype, const char *flags)
-# cdef t_max_err db_view_create(t_database *db, const char *sql, t_db_view **dbview)
-# cdef t_max_err db_view_remove(t_database *db, t_db_view **dbview)
-# 
-# cdef t_max_err db_view_getresult(t_db_view *dbview, t_db_result **result)
-# cdef t_max_err db_view_setquery(t_db_view *dbview, char *newquery)
-# cdef char** db_result_nextrecord(t_db_result *result)
-# cdef void db_result_reset(t_db_result *result)
-# cdef void db_result_clear(t_db_result *result)
-# cdef long db_result_numrecords(t_db_result *result)
-# cdef long db_result_numfields(t_db_result *result)
-# cdef char* db_result_fieldname(t_db_result *result, long fieldindex)
-# cdef char* db_result_string(t_db_result *result, long recordindex, long fieldindex)
-# cdef long db_result_long(t_db_result *result, long recordindex, long fieldindex)
-# cdef float db_result_float(t_db_result *result, long recordindex, long fieldindex)
-# cdef t_ptr_uint db_result_datetimeinseconds(t_db_result *result, long recordindex, long fieldindex)
-# cdef void db_util_stringtodate(const char *string, t_ptr_uint *date)
-# cdef void db_util_datetostring(const t_ptr_uint date, char *string)
+    cdef mx.t_max_err query_direct(self, mx.t_db_result **dbresult, const char *sql):
+        return mx.db_query_direct(self.db, dbresult, sql)
+
+    cdef mx.t_max_err query_getlastinsertid(self, long *idx):
+        return mx.db_query_getlastinsertid(self.db, idx)
+
+    def query_table_new(self, str tablename) -> int:
+        return mx.db_query_table_new(self.db, tablename.encode('utf-8'))
+
+    def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags) -> int:
+        return mx.db_query_table_addcolumn(self.db, 
+            tablename.encode('utf-8'), 
+            columnname.encode('utf-8'), 
+            columntype.encode('utf-8'), 
+            flags.encode('utf-8'))
+
+    cdef mx.t_max_err view_create(self, const char *sql, mx.t_db_view **dbview):
+        return mx.db_view_create(self.db, sql, dbview)
+
+    cdef mx.t_max_err view_remove(self, mx.t_db_view **dbview):
+        return mx.db_view_remove(self.db, dbview)
+
+    cdef mx.t_max_err view_getresult(self, mx.t_db_view *dbview, mx.t_db_result **result):
+        return mx.db_view_getresult(dbview, result)
+
+    cdef mx.t_max_err view_setquery(self, mx.t_db_view *dbview, char *newquery):
+        return mx.db_view_setquery(dbview, newquery)
+
+    cdef char** result_nextrecord(self, mx.t_db_result *result):
+        return mx.db_result_nextrecord(result)
+
+    cdef void result_reset(self, mx.t_db_result *result):
+        mx.db_result_reset(result)
+
+    cdef void result_clear(self, mx.t_db_result *result):
+        mx.db_result_clear(result)
+
+    cdef long result_numrecords(self, mx.t_db_result *result):
+        return mx.db_result_numrecords(result)
+
+    cdef long result_numfields(self, mx.t_db_result *result):
+        return mx.db_result_numfields(result)
+
+    cdef char* result_fieldname(self, mx.t_db_result *result, long fieldindex):
+        return mx.db_result_fieldname(result, fieldindex)
+
+    cdef char* result_string(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        return mx.db_result_string(result, recordindex, fieldindex)
+
+    cdef long result_long(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        return mx.db_result_long(result, recordindex, fieldindex)
+
+    cdef float result_float(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        return mx.db_result_float(result, recordindex, fieldindex)
+
+    cdef mx.t_ptr_uint result_datetimeinseconds(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        return mx.db_result_datetimeinseconds(result, recordindex, fieldindex)
+
+    cdef void util_stringtodate(self, const char *string, mx.t_ptr_uint *date):
+        mx.db_util_stringtodate(string, date)
+
+    cdef void util_datetostring(self, const mx.t_ptr_uint date, char *string):
+        mx.db_util_datetostring(date, string)
+
+    # cdef t_max_err db_query(t_database *db, t_db_result **dbresult, const char *sql, ...)
+    # cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
+
+# ----------------------------------------------------------------------------
+# Linklist
+
+cdef class Linklist:
+    cdef mx.t_linklist* lst
+
+    def __cinit__(self):
+        self.lst = <mx.t_linklist*>mx.linklist_new()
+
+    def __dealloc__(self):
+        mx.linklist_chuck(self.lst) # will free list but contained objects
+        #or
+        # object_free(self.lst) # will free all in list
+
+    @property
+    def size(self) -> int:
+        return mx.linklist_getsize(self.lst)
+
+    cdef void* getindex(self, long index):
+         return mx.linklist_getindex(self.lst, index)
+
+    cdef void chuck(self):
+        mx.linklist_chuck(self.lst)
+
+    cdef mx.t_atom_long getsize(self):
+        return mx.linklist_getsize(self.lst)
+
+    cdef mx.t_atom_long objptr2index(self, void* p):
+         return mx.linklist_objptr2index(self.lst, p)
+
+    cdef mx.t_atom_long append(self, void* o):
+         return mx.linklist_append(self.lst, o)
+
+    cdef mx.t_atom_long insertindex(self, void* o, long index):
+         return mx.linklist_insertindex(self.lst, o, index)
+
+    cdef mx.t_llelem* insertafterobjptr(self, void* o, void* objptr):
+         return mx.linklist_insertafterobjptr(self.lst, o, objptr)
+
+    cdef mx.t_llelem* insertbeforeobjptr(self, void* o, void* objptr):
+         return mx.linklist_insertbeforeobjptr(self.lst, o, objptr)
+
+    cdef mx.t_llelem* moveafterobjptr(self, void* o, void* objptr):
+         return mx.linklist_moveafterobjptr(self.lst, o, objptr)
+
+    cdef mx.t_llelem* movebeforeobjptr(self, void* o, void* objptr):
+         return mx.linklist_movebeforeobjptr(self.lst, o, objptr)
+
+    cdef mx.t_atom_long deleteindex(self, long index):
+         return mx.linklist_deleteindex(self.lst, index)
+
+    cdef long chuckindex(self, long index):
+         return mx.linklist_chuckindex(self.lst, index)
+
+    cdef long chuckobject(self, void* o):
+         return mx.linklist_chuckobject(self.lst, o)
+
+    cdef long deleteobject(self, void* o):
+         return mx.linklist_deleteobject(self.lst, o)
+
+    cdef long chuckptr(self, mx.t_llelem* p):
+         return mx.linklist_chuckptr(self.lst, p)
+
+    cdef void clear(self):
+         mx.linklist_clear(self.lst)
+
+    cdef mx.t_atom_long makearray(self, void** a, long max):
+         return mx.linklist_makearray(self.lst, a, max)
+
+    cdef void reverse(self, mx.t_linklist* x):
+         mx.linklist_reverse(self.lst)
+
+    cdef void rotate(self, long i):
+         mx.linklist_rotate(self.lst, i)
+
+    cdef void shuffle(self, mx.t_linklist* x):
+         mx.linklist_shuffle(self.lst)
+
+    cdef void swap(self, long a, long b):
+         mx.linklist_swap(self.lst, a, b)
+
+    cdef void methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
+        mx.linklist_methodall_imp(x, sym, p1, p2, p3, p4, p5, p6, p7, p8)
+
+    cdef void* methodindex_imp(self, void* x, void* i, void* s, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7):
+        mx.linklist_methodindex_imp(x, i, s, p1, p2, p3, p4, p5, p6, p7)
+
+    cdef mx.t_atom_long funall_break(self, mx.method fun, void* arg):
+         return mx.linklist_funall_break(self.lst, fun, arg)
+
+    cdef void* funindex(self, long i, mx.method fun, void* arg):
+         return mx.linklist_funindex(self.lst, i, fun, arg)
+
+    cdef void* substitute(self, void* p, void* newp):
+         return mx.linklist_substitute(self.lst, p, newp)
+
+    cdef void* next(self, void* p, void** next):
+         return mx.linklist_next(self.lst, p, next)
+
+    cdef void* prev(self, void* p, void** prev):
+         return mx.linklist_prev(self.lst, p, prev)
+
+    cdef void* last(self, void** item):
+         return mx.linklist_last(self.lst, item)
+
+    cdef void readonly(self, long readonly):
+         mx.linklist_readonly(self.lst, readonly)
+
+    cdef void flags(self, long flags):
+         mx.linklist_flags(self.lst, flags)
+
+    cdef mx.t_atom_long getflags(self, mx.t_linklist* x):
+         return mx.linklist_getflags(self.lst)
+
+    cdef long match(self, void* a, void* b):
+         return mx.linklist_match(a, b)
+
+    cdef void funall(self, mx.method fun, void* arg):
+        mx.linklist_funall(self.lst, fun, arg)
+
+    # cdef mx.t_llelem* index2ptr(self, long index):
+    #      return mx.linklist_index2ptr(self.lst, index)
+
+    # cdef long ptr2index(self, mx.t_llelem* p):
+    #      return mx.linklist_ptr2index(self.lst, p)
+
+    # cdef mx.t_llelem* insertptr(self, void* o, mx.t_llelem* p):
+    #      return mx.linklist_insertptr(self.lst, o, p)
+
+    # cdef long deleteptr(self, mx.t_llelem* p):
+    #      return mx.linklist_deleteptr(self.lst, p)
+
+    # cdef long insertnodeindex(self, mx.t_llelem* p, long index):
+    #      return mx.linklist_insertnodeindex(self.lst, p, index)
+
+    # cdef mx.t_llelem* insertnodeptr(self, mx.t_llelem* p1, mx.t_llelem* p2):
+    #      return mx.linklist_insertnodeptr(self.lst, p1, p2)
+
+    # cdef long appendnode(self, mx.t_llelem* p):
+    #      return mx.linklist_appendnode(self.lst, p)
+
+    # cdef void free(self, mx.t_llelem* elem):
+    #      mx.linklistelem_free(self.lst, elem)
+
+
+
+    # ERRORS
+    # cdef t_llelem *linklistelem_new()
+    # cdef long linklist_insert_sorted(t_linklist *x, void *o, long cmpfn(void *, void *))
+    # cdef t_atom_long linklist_findfirst(t_linklist *x, void **o, long cmpfn(void *, void *), void *cmpdata)
+    # cdef void linklist_findall(t_linklist *x, t_linklist **out, long cmpfn(void *, void *), void *cmpdata)
+    # cdef void linklist_methodall(t_linklist *x, t_symbol *s, ...)
+    # cdef void *linklist_methodindex(t_linklist *x, t_atom_long i, t_symbol *s, ...)
+    # cdef void linklist_sort(t_linklist *x, long cmpfn(void *, void *))
+
+# ----------------------------------------------------------------------------
+# Binbuf
+
+cdef class Binbuf:
+    cdef void* buf
+
+    def __cinit__(self):
+        self.buf = mx.binbuf_new()
+
+    def __dealloc__(self):
+        mx.object_free(self.buf)
+
+    cdef void append(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
+        mx.binbuf_append(self.buf, s, argc, argv)
+
+    cdef void insert(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
+        mx.binbuf_insert(self.buf, s, argc, argv)
+
+    # cdef void vinsert(self, char *fmt, ...):
+    #     mx.binbuf_vinsert(self.buf, fmt, ...)
+
+    cdef void * eval(self, short ac, mx.t_atom *av, void *to):
+        return mx.binbuf_eval(self.buf, ac, av, to)
+
+    cdef short getatom(self, long *p1, long *p2, mx.t_atom *ap):
+        return mx.binbuf_getatom(self.buf, p1, p2, ap)
+
+    cdef short text(self, char **src_text, long n):
+        return mx.binbuf_text(self.buf, src_text, n)
+
+    cdef short totext(self, char **dst_text, mx.t_ptr_size *sizep):
+        return mx.binbuf_totext(self.buf, dst_text, sizep)
+
+    cdef void set(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
+        mx.binbuf_set(self.buf, s, argc, argv)
+     
+    cdef void delete(self, long from_type, long to_type, long from_data, long to_data):
+        mx.binbuf_delete(self.buf, from_type, to_type, from_data, to_data)
+
+    cdef void addtext(self, char **text, long size):
+        mx.binbuf_addtext(self.buf, text, size)
+
+    cdef short readatom(self, char *outstr, char **text, long *n, long e, mx.t_atom *ap):
+        mx.readatom(outstr, text, n, e, ap)
+
+# ----------------------------------------------------------------------------
+# PyExternal extension type
+ 
+cdef class PyExternal:
+    """
+    Wraps the `py` external object and its methods. 
+
+    Should expose as much functionality as possible.
+    """
+    cdef px.t_py *obj
+    cdef bytes name
+    # cdef mp.t_buffer_ref *ref
+
+    def __cinit__(self):
+        """Retrieves the py object name and reference.
+
+        PY_OBJ_NAME is set to __builtins__ at object creation
+        making it available to all modules.
+
+        Since all py objects are registered, knowing the name
+        allows any module in the namespace to get a reference
+        (as below) to its parent object.
+        """
+        PY_OBJ_NAME = getattr(__builtins__, 'PY_OBJ_NAME')
+        self.name = PY_OBJ_NAME.encode('utf-8')
+        self.obj = <px.t_py *>mx.object_findregistered(
+            mx.CLASS_BOX, mx.gensym(self.name))
+
+    # def get_buffer_ref(self, str s):
+    #     self.ref = mp.buffer_ref_new(<mx.t_object *>self.obj, mx.gensym(s.encode('utf-8')))
+
+    cpdef bang(self):
+        px.py_bang(self.obj)
+
+    def log(self, str s):
+        px.py_log(self.obj, s.encode('utf-8'))
+
+    def error(self, str s):
+        px.py_error(self.obj, s.encode('utf-8'))
+
+    cdef scan(self):
+        px.py_scan(self.obj)
+
+    cdef lookup(self, str name):
+        cdef mx.t_hashtab* registry = px.get_global_registry()
+        cdef mx.t_object* obj = NULL
+        cdef mx.t_max_err err
+
+        if (mx.hashtab_getsize(registry) == 0):
+            self.error("registry not populated")
+            return
+
+        err = mx.hashtab_lookup(registry, str_to_sym(name), &obj)
+
+        if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
+            self.error("no object found with name")
+        else:
+            self.log("found object")
+
+
+    def test_buffer(self, str name):
+        buf = Buffer.from_name(<mx.t_object*>self.obj, name)
+        buf.view()
+        return buf.samplerate
+
+    # UNTESTED
+    cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
+        """atoms -> python string"""
+        cdef long textsize = 0
+        cdef char* text = NULL
+        cdef mx.t_max_err err = mx.atom_gettext(argc, argv, &textsize, &text, 
+            mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
+        pstr = PyUnicode_FromString(text)
+        mx.sysmem_freeptr(text)
+        return pstr
+
+    # UNTESTED
+    cdef int pstring_to_atoms(self, str parsestr, long argc, mx.t_atom *argv) except -1:
+        cdef char cparsestring[MAX_CHARS]
+        cparsestring = PyUnicode_AsUTF8(parsestr)
+        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, cparsestring)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
+
+    # UNTESTED
+    cdef int cstring_to_atoms(self, char *parsestr, long argc, mx.t_atom *argv) except -1:
+        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, parsestr)
+        if err != mx.MAX_ERR_NONE: # test this!!
+            raise Exception("cannot convert c parsestring to atom array")
+        else:
+            return 0
+
+    cdef send(self, str name, list args):
+        cdef long argc = <long>len(args) + 1
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
+        _args = [name] + args
+
+        if argc < 1:
+            self.error("no arguments given")
+            return
+
+        if argc >= PY_MAX_ATOMS - 1:
+            self.error("number of args exceeded app limit")
+            return
+
+        for i, elem in enumerate(_args):
+            if type(elem) == float:
+                mx.atom_setfloat(&argv[i], <double>elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&argv[i]), <long>elem)
+            elif type(elem) == str:
+                mx.atom_setsym((&argv[i]), str_to_sym(elem))
+            else:
+                continue
+        # mx.postatom(argv)
+        px.py_send(self.obj, mx.gensym(""), argc, argv)
+
+
+    # UNTESTED
+    cdef mx.t_object * create(self, str classname, list args):
+        """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
+        """
+        atoms = Atom.from_seq(list(args))
+        cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
+        return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
+
+
+    cdef bint table_exists(self, char* table_name):
+        return px.py_table_exists(self.obj, table_name)
+
+    cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
+        return px.py_list_to_table(self.obj, table_name, plist)
+
+    cdef PyObject* table_to_list(self, char* table_name):
+        return px.py_table_to_list(self.obj, table_name)
+
+    cdef success_bang(self):
+        px.py_bang_success(self.obj)
+
+    cdef failure_bang(self):
+        px.py_bang_failure(self.obj)
+
+    cdef out_sym(self, str arg):
+        mx.outlet_anything(<void*>px.get_outlet(self.obj), str_to_sym(arg), 0, NULL)
+
+    cdef out_float(self, float arg):
+        mx.outlet_float(<void*>px.get_outlet(self.obj), <double>arg)
+
+    cdef out_int(self, int arg):
+        mx.outlet_int(<void*>px.get_outlet(self.obj), <long>arg)
+
+    cdef out_list(self, list arg):
+        """note: not recursive...(yet) still cannot deal with list in list"""
+        cdef long argc = <long>len(arg)
+        cdef mx.t_atom argv[PY_MAX_ATOMS]
+
+        if argc >= PY_MAX_ATOMS :
+            self.error("number of args exceeded app limit")
+            return
+
+        for i, elem in enumerate(arg):
+            if type(elem) == float:
+                mx.atom_setfloat(&argv[i], <double>elem)
+            elif type(elem) == int:
+                mx.atom_setlong((&argv[i]), <long>elem)
+            elif type(elem) == str:
+                mx.atom_setsym((&argv[i]), str_to_sym(elem))
+            else:
+                continue
+
+        mx.outlet_list(<void*>px.get_outlet(self.obj), mx.gensym("list"),
+            argc, argv)
+
+    cdef out_dict(self, dict arg):
+        """note: not recursive...(yet) still cannot deal with dict in dict"""
+        res = []
+        for k,v in arg.items():
+            res.append(k)
+            res.append(':')
+            if type(v) in [list, set, tuple]:
+                for i in v:
+                    res.append(i)
+            else:
+                res.append(v)
+        self.out_list(res)
+
+    cdef out(self, object arg):
+        if isinstance(arg, float): self.out_float(arg)
+        elif isinstance(arg, int): self.out_int(arg)
+        elif isinstance(arg, str): self.out_sym(arg)
+        elif isinstance(arg, list): self.out_list(arg)
+        elif isinstance(arg, dict): self.out_dict(<dict>arg)
+        else:
+            return
 
 
 # ----------------------------------------------------------------------------
@@ -1285,6 +1359,62 @@ if INCLUDE_NUMPY:
             c[i].imag = a[i].imag + b[i].imag
 
         return out
+
+
+# ----------------------------------------------------------------------------
+# helper functions
+
+def get_globals():
+    return list(globals().keys())
+
+def bang():
+    ext = PyExternal()
+    ext.bang()
+
+def success_bang():
+    ext = PyExternal()
+    ext.success_bang()
+
+def failure_bang():
+    ext = PyExternal()
+    ext.failure_bang()
+
+def out_sym(s='hello outlet!'):
+    ext = PyExternal()
+    ext.out(s)
+
+def out_int(n=100):
+    ext = PyExternal()
+    ext.out(n)
+
+def out_float(n=12.75):
+    ext = PyExternal()
+    ext.out(n)
+
+def out_list(xs=[1,'a','c',4,5]):
+    ext = PyExternal()
+    ext.out(xs)
+
+def out_dict(**kwargs):
+    if not kwargs:
+        kwargs = {'a':[1,2,'a'], 'b':1.3, 'c': 100, 'd':'e'}
+    ext = PyExternal()
+    ext.out(kwargs)
+
+def send(name='mrfloat', value=9.5):
+    ext = PyExternal()
+    ext.send(name, [value])
+
+def lookup(name):
+    ext = PyExternal()
+    ext.lookup(name)
+
+def post(str s):
+    mx.post(s.encode('utf-8'))
+
+
+def error(str s):
+    mx.error(s.encode('utf-8'))
 
 # ----------------------------------------------------------------------------
 # test functions and variables

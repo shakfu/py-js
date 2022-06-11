@@ -378,7 +378,7 @@ cdef extern from "ext_proto.h":
     cdef void *binbuf_eval(void *x, short ac, t_atom *av, void *to)
     cdef short binbuf_getatom(void *x, long *p1, long *p2, t_atom *ap)
     cdef short binbuf_text(void *x, char **srcText, long n)
-    # cdef short binbuf_totext(void *x, char **dstText, t_ptr_size *sizep)
+    cdef short binbuf_totext(void *x, char **dstText, t_ptr_size *sizep)
     cdef void binbuf_set(void *x, t_symbol *s, short argc, t_atom *argv);
     cdef void binbuf_append(void *x, t_symbol *s, short argc, t_atom *argv)
     cdef void binbuf_delete(void *x, long fromType, long toType, long fromData, long toData)
