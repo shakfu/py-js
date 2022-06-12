@@ -61,8 +61,9 @@ struct t_py {
     char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
     char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
     short p_code_path;          /*!< short code for max file system */
-    long p_run_on_save;       /*!< evaluate/run code in editor on save */
-    long p_run_on_close;      /*!< evaluate/run code in editor on close */
+    long p_run_on_save;         /*!< evaluate/run code in editor on save */
+    long p_run_on_close;        /*!< evaluate/run code in editor on close */
+    t_symbol* p_run_on;
 
     t_symbol* p_code_filepath;  /*!< default python filepath to load into
                                   the code editor and object 'globals'
@@ -337,7 +338,7 @@ void ext_main(void* module_ref)
     // experimental
     class_addmethod(c, (method)py_appendtodict,  "appendtodictionary",  A_CANT, 0);
 
-    // object attributes
+    // class attributes
     //------------------------------------------------------------------------
 
     CLASS_ATTR_LABEL(c,     "name", 0,      "unique object id");
@@ -370,7 +371,15 @@ void ext_main(void* module_ref)
     CLASS_ATTR_BASIC(c,     "run_on_close", 0);
     CLASS_ATTR_SAVE(c,      "run_on_close", 0);
 
-    CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "per-object pythonpath");
+    CLASS_ATTR_LABEL(c,     "run_on", 0,  "set run_on to run on save or close");
+    CLASS_ATTR_SYM(c,       "run_on", 0,  t_py, p_run_on);
+    CLASS_ATTR_STYLE(c,     "run_on", 0,  "enum");
+    CLASS_ATTR_ENUM(c,      "run_on", 0,  "close save");
+    CLASS_ATTR_DEFAULT(c,   "run_on", 0,  "close");
+    CLASS_ATTR_BASIC(c,     "run_on", 0);
+    CLASS_ATTR_SAVE(c,      "run_on", 0);
+
+    CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "patch-wide pythonpath");
     CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_STYLE(c,     "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,     "pythonpath", 0);
@@ -387,8 +396,9 @@ void ext_main(void* module_ref)
     CLASS_ATTR_ORDER(c,     "autoload",     0,  "3");
     CLASS_ATTR_ORDER(c,     "run_on_save",  0,  "4");
     CLASS_ATTR_ORDER(c,     "run_on_close", 0,  "5");
-    CLASS_ATTR_ORDER(c,     "pythonpath",   0,  "6");
-    CLASS_ATTR_ORDER(c,     "debug",        0,  "7");
+    CLASS_ATTR_ORDER(c,     "run_on",       0,  "6");
+    CLASS_ATTR_ORDER(c,     "pythonpath",   0,  "7");
+    CLASS_ATTR_ORDER(c,     "debug",        0,  "8");
 
     // clang-format on
     //------------------------------------------------------------------------
@@ -459,6 +469,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_autoload = 0;
         x->p_run_on_save = 0;
         x->p_run_on_close = 1;
+        x->p_run_on = gensym("close");
 
         // set default debug level
         x->p_debug = 0;
