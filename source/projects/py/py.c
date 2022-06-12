@@ -61,7 +61,8 @@ struct t_py {
     char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
     char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
     short p_code_path;          /*!< short code for max file system */
-    t_bool p_run_on_save;       /*!< evaluate or run code on save option */
+    long p_run_on_save;       /*!< evaluate/run code in editor on save */
+    long p_run_on_close;      /*!< evaluate/run code in editor on close */
 
     t_symbol* p_code_filepath;  /*!< default python filepath to load into
                                   the code editor and object 'globals'
@@ -331,7 +332,7 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_edsave,     "edsave",     A_CANT,    0);
     class_addmethod(c, (method)py_load,       "load",       A_DEFSYM,  0);
     class_addmethod(c, (method)py_run,        "run",        A_NOTHING, 0);
-    // class_addmethod(c, (method)py_okclose,    "okclose",    A_CANT,    0);
+    class_addmethod(c, (method)py_okclose,    "okclose",    A_CANT,    0);
 
     // experimental
     class_addmethod(c, (method)py_appendtodict,  "appendtodictionary",  A_CANT, 0);
@@ -339,47 +340,55 @@ void ext_main(void* module_ref)
     // object attributes
     //------------------------------------------------------------------------
 
-    CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
-    CLASS_ATTR_SYM(c,   "name", 0,   t_py, p_name);
-    CLASS_ATTR_BASIC(c, "name", 0);
-    // CLASS_ATTR_INVISIBLE(c, "name", 0);
+    CLASS_ATTR_LABEL(c,     "name", 0,      "unique object id");
+    CLASS_ATTR_SYM(c,       "name", 0,      t_py, p_name);
+    CLASS_ATTR_BASIC(c,     "name", 0);
 
-    CLASS_ATTR_LABEL(c,  "file", 0,  "default python script");
-    CLASS_ATTR_SYM(c,    "file", 0,   t_py,  p_code_filepath);
-    CLASS_ATTR_STYLE(c,  "file", 0,   "file");
-    CLASS_ATTR_BASIC(c,  "file", 0);
-    CLASS_ATTR_SAVE(c,   "file", 0);
+    CLASS_ATTR_LABEL(c,     "file", 0,     "default python script");
+    CLASS_ATTR_SYM(c,       "file", 0,     t_py,  p_code_filepath);
+    CLASS_ATTR_STYLE(c,     "file", 0,     "file");
+    CLASS_ATTR_BASIC(c,     "file", 0);
+    CLASS_ATTR_SAVE(c,      "file", 0);
 
-    CLASS_ATTR_LABEL(c,  "autoload", 0,  "autoload default python script");
-    CLASS_ATTR_CHAR(c,   "autoload", 0,  t_py, p_autoload);
-    CLASS_ATTR_STYLE(c,  "autoload", 0, "onoff");
-    CLASS_ATTR_BASIC(c,  "autoload", 0);
-    CLASS_ATTR_SAVE(c,   "autoload", 0);
+    CLASS_ATTR_LABEL(c,     "autoload", 0,     "autoload default python script");
+    CLASS_ATTR_LONG(c,      "autoload", 0,     t_py, p_autoload);
+    CLASS_ATTR_STYLE(c,     "autoload", 0,     "onoff");
+    CLASS_ATTR_BASIC(c,     "autoload", 0);
+    CLASS_ATTR_SAVE(c,      "autoload", 0);
 
-    CLASS_ATTR_LABEL(c,  "run_on_save", 0,  "run content of editor on save");
-    CLASS_ATTR_CHAR(c,   "run_on_save", 0,  t_py, p_run_on_save);
-    CLASS_ATTR_STYLE(c,  "run_on_save", 0, "onoff");
-    CLASS_ATTR_BASIC(c,  "run_on_save", 0);
-    CLASS_ATTR_SAVE(c,   "run_on_save", 0);
+    CLASS_ATTR_LABEL(c,     "run_on_save", 0,  "run content of editor on save");
+    CLASS_ATTR_LONG(c,      "run_on_save", 0,  t_py, p_run_on_save);
+    CLASS_ATTR_STYLE(c,     "run_on_save", 0, "onoff");
+    CLASS_ATTR_DEFAULT(c,   "run_on_save", 0, "0");
+    CLASS_ATTR_BASIC(c,     "run_on_save", 0);
+    CLASS_ATTR_SAVE(c,      "run_on_save", 0);
+    
+    CLASS_ATTR_LABEL(c,     "run_on_close", 0,  "run content of editor on close");
+    CLASS_ATTR_LONG(c,      "run_on_close", 0,  t_py, p_run_on_close);
+    CLASS_ATTR_STYLE(c,     "run_on_close", 0, "onoff");
+    CLASS_ATTR_DEFAULT(c,   "run_on_close", 0, "1");
+    CLASS_ATTR_BASIC(c,     "run_on_close", 0);
+    CLASS_ATTR_SAVE(c,      "run_on_close", 0);
 
-    CLASS_ATTR_LABEL(c,  "pythonpath", 0,  "per-object pythonpath");
-    CLASS_ATTR_SYM(c,    "pythonpath", 0,  t_py, p_pythonpath);
-    CLASS_ATTR_STYLE(c,  "pythonpath", 0,  "file");
-    CLASS_ATTR_BASIC(c,  "pythonpath", 0);
-    CLASS_ATTR_SAVE(c,   "pythonpath", 0);
-
-    CLASS_ATTR_LABEL(c,  "debug", 0,  "debug log to console");
-    CLASS_ATTR_CHAR(c,   "debug", 0,  t_py, p_debug);
-    CLASS_ATTR_STYLE(c,  "debug", 0, "onoff");
-    CLASS_ATTR_BASIC(c,  "debug", 0);
-    CLASS_ATTR_SAVE(c,   "debug", 0);
-
-    CLASS_ATTR_ORDER(c,  "name",        0,  "1");
-    CLASS_ATTR_ORDER(c,  "file",        0,  "2");
-    CLASS_ATTR_ORDER(c,  "autoload",    0,  "3");
-    CLASS_ATTR_ORDER(c,  "run_on_save", 0,  "4");
-    CLASS_ATTR_ORDER(c,  "pythonpath",  0,  "5");
-    CLASS_ATTR_ORDER(c,  "debug",       0,  "6");
+    CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "per-object pythonpath");
+    CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
+    CLASS_ATTR_STYLE(c,     "pythonpath", 0,  "file");
+    CLASS_ATTR_BASIC(c,     "pythonpath", 0);
+    CLASS_ATTR_SAVE(c,      "pythonpath", 0);
+    
+    CLASS_ATTR_LABEL(c,     "debug", 0,  "debug log to console");
+    CLASS_ATTR_LONG(c,      "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_STYLE(c,     "debug", 0, "onoff");
+    CLASS_ATTR_BASIC(c,     "debug", 0);
+    CLASS_ATTR_SAVE(c,      "debug", 0);
+    
+    CLASS_ATTR_ORDER(c,     "name",         0,  "1");
+    CLASS_ATTR_ORDER(c,     "file",         0,  "2");
+    CLASS_ATTR_ORDER(c,     "autoload",     0,  "3");
+    CLASS_ATTR_ORDER(c,     "run_on_save",  0,  "4");
+    CLASS_ATTR_ORDER(c,     "run_on_close", 0,  "5");
+    CLASS_ATTR_ORDER(c,     "pythonpath",   0,  "6");
+    CLASS_ATTR_ORDER(c,     "debug",        0,  "7");
 
     // clang-format on
     //------------------------------------------------------------------------
@@ -449,6 +458,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_code_filepath = gensym("");
         x->p_autoload = 0;
         x->p_run_on_save = 0;
+        x->p_run_on_close = 1;
 
         // set default debug level
         x->p_debug = 0;
@@ -2133,23 +2143,6 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 }
 
-/**
- * @brief Event function to preserve text in buffer after editor is closed
- * 
- * @param x pointer to object structure
- * @param text text to be saved to buffer
- * @param size size of text to be saved to buffer
- */
-void py_edclose(t_py* x, char** text, long size)
-{
-    if (x->p_code)
-        sysmem_freehandle(x->p_code);
-
-    x->p_code = sysmem_newhandleclear(size + 1);
-    sysmem_copyptr((char*)*text, *x->p_code, size);
-    x->p_code_size = size + 1;
-    x->p_code_editor = NULL;
-}
 
 /**
  * @brief Run python code stored in editor buffer
@@ -2187,12 +2180,45 @@ error:
 }
 
 
-// void py_okclose(t_py* x, char *s, short *result)
-// {
-//     // see: https://cycling74.com/forums/text-editor-without-dirty-bit
-//     py_log(x, "okclose: called");
-//     *result = 3; // don't put up a dialog
-// }
+/**
+ * @brief Event function to preserve text in buffer after editor is closed
+ * 
+ * @param x pointer to object structure
+ * @param text text to be saved to buffer
+ * @param size size of text to be saved to buffer
+ */
+void py_edclose(t_py* x, char** text, long size)
+{
+    if (x->p_code)
+        sysmem_freehandle(x->p_code);
+
+    x->p_code = sysmem_newhandleclear(size + 1);
+    sysmem_copyptr((char*)*text, *x->p_code, size);
+    x->p_code_size = size + 1;
+    x->p_code_editor = NULL;
+    if (x->p_run_on_close) {
+        py_run(x);        
+    }
+}
+
+
+/**
+ * @brief      { function_description }
+ *
+ * @param      x       pointer to object structure
+ * @param      s       custom save text (optional)
+ * @param      result  set values [0-4] to adjust what happens
+ *                     how the system responds when the editor
+ *                     window is closed.
+ */
+void py_okclose(t_py* x, char *s, short *result)
+{
+    // see: https://cycling74.com/forums/text-editor-without-dirty-bit
+    py_log(x, "okclose: called -- run-on-close: %d", x->p_run_on_close);
+    *result = 3; // don't put up a dialog
+    // const char *string = "custom save text";
+    // memcpy(s, string, strlen(string)+1); 
+}
 
 /**
  * @brief Provides run-code-on-save functionality to code-editor

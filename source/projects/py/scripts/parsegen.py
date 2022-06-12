@@ -6,24 +6,25 @@ note: does not try to be perfect: first arg of function
 is not deliberately included and not converted to self
 to help manual check if conversion is correct.
 
+should try to see if this can be done more
+systematically by use of pycparser (see python cffi for examples)
+
 """
 
 lines = """\
-cdef void atomarray_flags(t_atomarray *x, long flags) 
-cdef long atomarray_getflags(t_atomarray *x) 
-cdef t_max_err atomarray_setatoms(t_atomarray *x, long ac, t_atom *av)
-cdef t_max_err atomarray_getatoms(t_atomarray *x, long *ac, t_atom **av)
-cdef t_max_err atomarray_copyatoms(t_atomarray *x, long *ac, t_atom **av)
-cdef t_atom_long atomarray_getsize(t_atomarray *x)
-cdef t_max_err atomarray_getindex(t_atomarray *x, long index, t_atom *av)
-cdef t_max_err atomarray_setindex(t_atomarray *x, long index, t_atom *av)
-cdef void *atomarray_duplicate(t_atomarray *x)
-cdef void *atomarray_clone(t_atomarray *x)
-cdef void atomarray_appendatom(t_atomarray *x, t_atom *a)
-cdef void atomarray_appendatoms(t_atomarray *x, long ac, t_atom *av)
-cdef void atomarray_chuckindex(t_atomarray *x, long index)
-cdef void atomarray_clear(t_atomarray *x)
-cdef void atomarray_funall(t_atomarray *x, method fun, void *arg)
+cdef t_max_err atom_setlong(t_atom *a, t_atom_long b)
+cdef t_max_err atom_setfloat(t_atom *a, double b)
+cdef t_max_err atom_setsym(t_atom *a, const t_symbol *b)
+cdef t_max_err atom_setobj(t_atom *a, void *b)
+cdef t_atom_long atom_getlong(const t_atom *a)
+cdef t_atom_float atom_getfloat(const t_atom *a)
+cdef t_symbol *atom_getsym(const t_atom *a)
+cdef void *atom_getobj(const t_atom *a)
+cdef long atom_getcharfix(const t_atom *a)
+cdef long atom_gettype(const t_atom *a)
+cdef t_max_err atom_arg_getlong(t_atom_long *c, long idx, long ac, const t_atom *av)
+cdef t_max_err atom_alloc(long *ac, t_atom **av, char *alloc)
+cdef t_max_err atom_alloc_array(long minsize, long *ac, t_atom **av, char *alloc)
 """.splitlines()
 
 import re

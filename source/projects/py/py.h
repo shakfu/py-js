@@ -150,7 +150,7 @@ void py_dblclick(t_py* x);
 void py_run(t_py* x);
 void py_edclose(t_py* x, char** text, long size);
 t_max_err py_edsave(t_py* x, char** text, long size);
-// void py_okclose(t_py* x, char *s, short *result);
+void py_okclose(t_py* x, char *s, short *result);
 
 /*--------------------------------------------------------------------------*/
 /* max datastructure support methods */

@@ -1,5 +1,12 @@
 # TODO
 
+## Usability
+
+- redo editor logic (it's broken), set current default to run-on-close
+- Fix defaults of `run_on_save`, `close_onsave` options
+
+
+
 ## API Wrapper
 - [ ] add more api wrappers. (PAUSED PENDING JUPYTER WORK)
   - [ ] add Table
