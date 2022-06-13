@@ -100,22 +100,10 @@ cimport api_py as px
 # ----------------------------------------------------------------------------
 # conditional imports
 
-# cdef extern from *:
-#     """
-#     #ifndef INCLUDE_NUMPY
-#     #define INCLUDE_NUMPY 0
-#     #endif
-#     """
-#     cdef bint INCLUDE_NUMPY
-
-DEF INCLUDE_NUMPY = 0
-
 IF INCLUDE_NUMPY:
     import numpy as np
     cimport numpy as np
     np.import_array()
-
-#assert INCLUDE_NUMPY == 0
 
 # ----------------------------------------------------------------------------
 # constants

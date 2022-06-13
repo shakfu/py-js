@@ -67,7 +67,7 @@ include_directories(
 
 # optionally add numpy_header
 execute_process(
-	COMMAND ${Python3_EXECUTABLE} ${SCRIPTS}/check_numpy.py
+	COMMAND ${Python3_EXECUTABLE} ${SCRIPTS}/check_numpy.py --include
 	OUTPUT_VARIABLE NUMPY_HEADERS
 	RESULT_VARIABLE NUMPY_HEADERS_RESULT
 )
@@ -76,10 +76,12 @@ message("NUMPY_HEADERS_RESULT: " ${NUMPY_HEADERS_RESULT})
 message("NUMPY_HEADERS: " ${NUMPY_HEADERS})
 
 if (NUMPY_HEADERS_RESULT EQUAL 0) # 0 == SUCCESS
-include_directories("${NUMPY_HEADERS}")
-add_compile_definitions(INCLUDE_NUMPY=1)
+	include_directories("${NUMPY_HEADERS}")
+	add_compile_definitions(INCLUDE_NUMPY=1)
+	set(CYTHON_INCL_NUMPY "1")
+else()
+	set(CYTHON_INCL_NUMPY "0")
 endif()
-
 
 
 add_library( 
@@ -131,9 +133,12 @@ target_compile_options(
 	-Wall
 )
 
+
+
+
 add_custom_target(
 	run_cython ALL
-	COMMAND cython -3 api.pyx
+	COMMAND cython -3 -E INCLUDE_NUMPY=${CYTHON_INCL_NUMPY} api.pyx
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	COMMENT "Generating api.c"
 )

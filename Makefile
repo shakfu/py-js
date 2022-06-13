@@ -29,6 +29,7 @@ PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
 PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
 PKG_DIRS = docs examples extensions externals help init \
            javascript jsextensions media misc patchers
+NUMPY_EXISTS := $(shell sh -c '$(PYTHON) $(SCRIPTS)/check_numpy.py --exists')
 
 
 # constants
@@ -106,7 +107,7 @@ all: default
 # python3 external argets
 
 
-default: local-sys
+default: local-sys api
 
 local-sys: clean-local-sys api
 	$(call call-builder,"pyjs" "local_sys")
@@ -341,7 +342,7 @@ build-beeware-ext: clean-static-ext
 
 compile-extension:
 	$(call section,"generate c code from cython extension")
-	@cython -3 ${EXTENSION}
+	@cython -3 -E INCLUDE_NUMPY=$(NUMPY_EXISTS) ${EXTENSION}
 
 api: compile-extension
 
@@ -405,6 +406,9 @@ check_logs:
 maxtests:
 	$(call section,"running all .maxtests results")
 	@cd $(SCRIPTS)/ruby; ruby test.rb $(MAX_APP)
+
+numpy:
+	echo $(NUMPY_INCL)
 
 
 # Styling
@@ -557,5 +561,6 @@ clean-python-framework-ext:
 
 clean-python-framework-pkg: clean-externals clean-support
 	$(call xcleanlib,"Python.framework")
+
 
 
