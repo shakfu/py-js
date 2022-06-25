@@ -209,9 +209,7 @@ With all three options, a python3 source distribution (matching your own python3
 
 At the end of this process you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`.
 
-Although the three options deliver somewhat different products (see below for details), with options (1) and (2) the external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder and also has a `site-packages` directory for your own code.
-
-With option (3), the externals are linked to, and have been compiled against, a relocatable python3 installation in the `support` folder.
+Although the three options deliver somewhat different products (see below for details), with options (1) and (2) the external 'bundle' contains an embedded python3 interpreter with a zipped standard library in the `Resources` folder and also has a `site-packages` directory for your own code; with option (3), the externals are linked to, and have been compiled against, a relocatable python3 installation in the `support` folder.
 
 Depending on your choice above, the python interpreter in each external is either statically compiled or dynamically linked, and in all three cases we have a self-contained and relocatable structure (external or package) without any non-system dependencies. This makes it appropriate for use in Max Packages and Standalones.
 
@@ -263,7 +261,7 @@ make test-shared-pkg
 
 If you have downloaded any pre-build externals from [releases](https://github.com/shakfu/py-js/releases) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
 
-As a side note: to release externals in a standalone they must be codesigned and notarized. To this end, there are scripts in `py-js/source/py/scripts` to make this a little easier.
+As a side note: to release externals in a standalone they must be codesigned and notarized. To this end, there are scripts in `py-js/source/projects/py/scripts` to make this a little easier.
 
 ### py.mxo
 
@@ -289,7 +287,7 @@ You can test first if it works without issues by building the following patcher,
 
 Open the resulting standalone and test that the `pyjs` object works as expected. If it doesn't then try the following workaround:
 
-To fix a sometimes recurrent issue where the standalone build algorithm doesn't pick up `pyjs.mxo`: if you look inside the built standalone bundle, `py_test_standalone_only_pyjs.app/Contents/Resources/C74/externals` you may not find `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `pyjs_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. If anyone knows of some scripting at the standalone build step to automate the manual fix above it woulld be greatly appreciated.
+To fix a sometimes recurrent issue where the standalone build algorithm doesn't pick up `pyjs.mxo`: if you look inside the built standalone bundle, `py_test_standalone_only_pyjs.app/Contents/Resources/C74/externals` you may not find `pyjs.mxo`. This is likely a bug in Max 8 but easily resolved. Fix it by manually copying the `pyjs.mxo` external into this folder and then copy the `javascript` and `jsextensions` folders from the root of the `py-js` project and place them into the `pyjs_test_standalone.app/Contents/Resources/C74` folder. Now re-run the standalone app again and now the `pyjs` external should work. A script is provided in `py-js/source/projects/py/scripts/fix-pyjs-standalone.sh` to do the above in an automated way.
 
 Please read on for further details about what the py-js externals can do.
 
@@ -555,16 +553,16 @@ make relocatable-pkg
 More options are available if you use the `builder` package directly:
 
 ```bash
-$ cd py-js/source/py
-
-     python3 -m builder pyjs relocatable_pkg --help
+$ python3 -m builder pyjs relocatable_pkg --help
 usage: __main__.py pyjs relocatable_pkg [-h] [--destination DESTINATION]
                                         [--baseurl BASEURL]
                                         [--os-version OS_VERSION]
                                         [--python-version PYTHON_VERSION]
                                         [--pip-requirements PIP_REQUIREMENTS]
+                                        [--pip-modules PIP_MODULES]
                                         [--no-unsign] [--upgrade-pip]
-                                        [--without-pip]
+                                        [--without-pip] [--release] [-b] [-i]
+                                        [--dump]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -584,10 +582,16 @@ optional arguments:
                         Path to a pip freeze requirements.txt file that
                         describes extra Python modules to be installed. If not
                         provided, no modules will be installed.
+  --pip-modules PIP_MODULES
+                        list of extra Python modules to be installed.
   --no-unsign           Do not unsign binaries and libraries after they are
                         relocatablized.
   --upgrade-pip         Upgrade pip prior to installing extra python modules.
   --without-pip         Do not install pip.
+  --release             set configuration to release
+  -b, --build           build python
+  -i, --install         install python to build/lib
+  --dump                dump project and product vars
 ```
 
 ### Sidenote about building on a Mac
