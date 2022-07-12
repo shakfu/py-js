@@ -1,8 +1,15 @@
 # zpy
 
-A max external which uses zmq to connect to a separate python process
+A max external which uses czmq to connect to a separate python process
 
-The objective is to replicate what the `py` external does but using zmq.
+The objective is to replicate what the `py` external does but using czmq.
+
+
+## Requires
+
+```bash
+brew install czmq
+```
 
 
 
@@ -21,11 +28,6 @@ The objective is to replicate what the `py` external does but using zmq.
 ## Alternatives
 
 - [ ] run as subprocess and read and write from stdin and stdout via a pipe
-
-```bash
-$ echo 'print(1+1)' | python3 -
-2
-```
 
 
 ## Research

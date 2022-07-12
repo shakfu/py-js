@@ -2,6 +2,14 @@
 
 This is a proof-of-concept subproject to build a [jupyter client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) as a Max/MSP external.
 
+
+## Requires
+
+```bash
+brew install zmq
+```
+
+
 ## Implementation Notes
 
 There's an insidious linker error that emerges at attempts to use `jsonwriter` and the below post sugests having to link the `commonsys.c` in the sdk.

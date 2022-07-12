@@ -710,18 +710,6 @@ void py_free(t_py* x)
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
-    // delete api object
-    // PyObject* api = PyDict_GetItemString(x->p_globals, "api");
-    // if (api != NULL) {
-    //     PyModuleDef* api_def = PyModule_GetDef(api);
-    //     if (PyState_RemoveModule(api_def) == 0) {
-    //         py_log(x, "removed api module");
-    //     }
-    //     if (PyDict_DelItemString(x->p_globals, "api") == 0) {
-    //         py_log(x, "removed ref to api module in globals");
-    //     }
-    // }
-
     // crashes if one attempts to free.
     // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
     // defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif

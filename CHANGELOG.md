@@ -5,8 +5,7 @@
 ### API
 
 - discovered builtin way for max to find the external using an included but undocumented
-  function. This is by way of the `class_getpath` function. This is demonstrated (partially)
-  in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
+  function. This is by way of the `class_getpath` function. This is demonstrated (partially) in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
 
 - updated mapping from `py` methods to `px.methods`
 
@@ -153,39 +152,6 @@
 
 - builder: new python build system
 
-  - While the makefile/bash based build system works quite well for the homebrew cases, it was found to be a little limited in more complex cases. This led me to go off on a protracted tangent to develop a pure python build system which is now included as a parallel build system.
-  
-  - This does not mean that bash and makefile will be abandoned. This parallel track just means that I can use the python build system when bash scripts and makefiles become unwieldy. Ultimately the python builder should be able to address all compilation cases comprehensively.
-
-  To test it, from path `py-js/source/py` run the following
-
-  ```bash
-  $ python3 -m builder --help
-
-  usage: builder [-h] [-v]
-
-  builder: builds the py-js max external and python from source.
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -v, --version         show program's version number and exit
-
-  subcommands:
-    valid subcommands
-
-    {py_all,py_shared,py_static,pyjs_ext,pyjs_pkg,pyjs_sys,static_ext,test}
-                          additional help
-      py_all              build all python variations
-      py_shared           build shared python
-      py_static           build static python
-      pyjs_ext            build portable pyjs externals (homebrew)
-      pyjs_pkg            build portable pyjs package (homebrew)
-      pyjs_sys            build non-portable pyjs package (homebrew)
-      static_ext          build portable pyjs externals (static py)
-      test                interactive testing shell
-
-  ```
-
 - `bin-homebrew-pkg` is now working without issues and can even be used in standalones
 
   - The package has to be manually moved into the standalone C74/packages directory and the py.mxo external which was automatically copied during standalone creation has to to be removed since it already exists in the package which copied in manually.
@@ -280,7 +246,7 @@
 
 - refactor error handling code (if possible)
 
-- Refactor eval code from py_eval into a function to allow for exec and execfile or PyRun_File scenarios
+- Refactor eval code from py_eval into a function to allow for exec and execfile or `PyRun_File` scenarios
 
 - Refactor into functions
 
@@ -300,7 +266,7 @@
 
 - fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
 
-- globex remains after all objects are freed. solution: `PyXDECREF x->p_globals` on `py_free`
+- globals remains after all objects are freed. solution: `PyXDECREF x->p_globals` on `py_free`
 
 - space in `eval` without quotes will cause a crash!
 
@@ -312,4 +278,4 @@
 
 - `import` statement in eval causes a segmentation fault. see: <https://docs.python.org/3/c-api/intro.html> exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
 
-- do not give attr has same name as method (the import saga) as this will crash. fix by making them different.
+- Do not give attributes the same name as methods (the `import` saga) as this cause problems and crashes. Fixed by making them different.
