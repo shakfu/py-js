@@ -16,7 +16,7 @@ To this end, a number of python3 externals have been developed for use in a live
 
 name     | sdk        | lang   | description
 :------- | :--------- | :----: | :---------------------------------------------------
-py       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
+[py]       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
 pyjs     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
 mxpy     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 pymx [1] | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
@@ -26,6 +26,8 @@ mamba    | max-sdk    | c      | single-header c library to nest a python3 inter
 krait    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 
 [1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
+
+[py]: (source/projects/py)
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. They are mostly differentiated in the ways that this is done and in the choice of packaging to serve different deployment requirements for your patch, package or standalone.
 

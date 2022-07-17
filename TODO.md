@@ -114,3 +114,26 @@
 
 - [ ] Try to integrate an ipython shell somehow (via node.js seems to be most promising)
 
+
+### Collected
+
+- Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
+
+- for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
+
+- enable code to be run from editor
+
+- create a pkg distribution built from python src which retains pip for easily installing python packages
+
+- investigate static linking of numpy and python (see notes): not viable due to project size constraints.
+
+- Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
+
+- inject commandline parameters in python build system to enable more granular downstream decisions.
+
+- add step in bundle-creation to prepopulate site-packages with list of packages
+
+
+
+
+

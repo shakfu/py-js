@@ -1,63 +1,80 @@
 # CHANGELOG
 
-## v0.1.1
+All notable changes to this project will be documented in this file.
 
-### API
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Commons Changelog](https://common-changelog.org). This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- discovered builtin way for max to find the external using an included but undocumented
-  function. This is by way of the `class_getpath` function. This is demonstrated (partially) in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
+## Types of Changes
 
-- updated mapping from `py` methods to `px.methods`
-
-- added initial msp buffer object support
-
-- added better docs to api.pyx
-
-- added max table access functions to cython api
+- Added: for new features.
+- Changed: for changes in existing functionality.
+- Deprecated: for soon-to-be removed features.
+- Removed: for now removed features.
+- Fixed: for any bug fixes.
+- Security: in case of vulnerabilities.
 
 
+## [Unreleased]
 
-### Variants
+- Discovered builtin way for max to find the external using an included but undocumented function. This is by way of the `class_getpath` function. This is demonstrated (partially) in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
 
-- Removed the polyglot project as it is superceded by the krait project.
-
-- Added the `krait` project, which pushes the single-header implementation into cpp territory with a cpp class `PythonInterpreter` implementing and encapsulating all of the functionality. This is final extension of the idea of modular python3 interpreter which can be easily nested into any Max external object. This object makes the polyglot object obsolete and it will be deleted after the next commit.
-
-- Added the `polyglot` project, which uses single-header library developed in the mamba project (see below) to provide the functionality for a c++ `PythonInterpreter` class. Once this class is mature, it may be added to `py.h` in case c++ is used.
+- Added the `krait` project, which pushes the single-header implementation into cpp territory with a cpp class `PythonInterpreter` implementing and encapsulating all of the functionality. This is final extension of the idea of modular python3 interpreter which can be easily nested into any Max external object.
 
 - Added the `mamba` project: a single header python3 library for max externals which provides the `t_py` max type providings max-friendly python3 interpreter methods.  The idea is that an object from this type be instanciated and nested inside any another external.
 
-### Patchers
+- Added FAQ
 
-- Added example `pyjs_overview.maxpat` patch
+- Changed to `max-sdk-base` and was able to build on Apple Silicon macs successfully: externals now build as native `arm64` on Apple Silicon machines. Universal binaries are not currently supported.
 
-- Added `pyjs_repl.maxpat` bpatcher
+- Added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
 
-### Core
 
-- normalized functions signatures between `py.c` and `pyjs.c` so they return Max errors instead of being void functions
+## [0.1.1]
 
-- refactored `py_code` and `py_anything` to `py_eval_text`
+### Added
 
-### Documention
+- Added initial msp buffer object support
 
-- added doxygen docs to `pyjs.c`
+- Added better docs to api.pyx
 
-- added doxygen docs for `py.c`
+- Added max table access functions to cython api
 
-- added doxygen for code documentation generation
+- Added doxygen docs for `py.c`
 
-## v0.1
 
-### Build System (builder)
+### Changed
 
-#### Enhancements
+- Changed mapping from `py` methods to `px.methods`
 
-- Apple Silicon Comptability: externals now build as native `arm64` on Apple Silicon machines. Universal binaries are not currently supported.
+- Changed functions signatures between `py.c` so they return Max errors instead of being void functions
 
-- Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
+- Changed `py_code` and `py_anything` to used refactored `py_eval_text`
 
-- removed `shared-pkg` till further notice or until I recreate it as a custom `.framework`, since its not working for Apple's notarization algorithm which only recognizes `.frameworks`.
+
+## [0.1.0]
+
+### Added
+
+- Apple Silicon Compatibility: externals now build as native `arm64` on Apple Silicon machines. Universal binaries are not currently supported.
+
+- Added FAQ
+
+- Added shrunk external + numpy to 30MB
+
+- Added --enable-optimizations at configure
+
+- Added codesigning / notarization solved.
+
+- Added even more intuitive make frontend to builder with help (via `make help`)
+
+
+### Changed
+
+- Changed to python-based build system. Bash / Makefile is now deprecated.
+
+- replacing 'cp -rf' with pure python self.copy
+
+- copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
 
 - created smallest possible python3 external: self-contained python3 external yet (6.2MB) for StaticTinyExt.
 
@@ -79,61 +96,33 @@
 
 - can build dependencies individually now from make
 
-- added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
+- Added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
 
 - streamlined `common.xcconfig` so that it refers to `.build_pyjs` centrally
 
 - Dropped 'full' version of `static-ext` as it was redundant after adding `_ssl` and `_hashlib` to `static-ext`
 
-- added even more intuitive make frontend to builder with help (via `make help`)
 
-- make all xcodeprojects externally xcconfig-parametrizable to `builder`:
+### Removed
 
-  ```bash
-  xcodebuild -project py-js.xcodeproj -target py VERSION=3.7 SUFFIX=m
-  ```
-  
-- inject commandline parameters in python build system to enable more granular downstream decisions.
+- Removed `shared-pkg` till further notice or until I recreate it as a custom `.framework`, since its not working for Apple's notarization algorithm which only recognizes `.frameworks`.
 
-- add step in bundle-creation to prepopulate site-packages with list of packages
+- Removed dependency on libintl via patching `configure` for both static and shared
 
-#### Bugs
+### Fixed
 
-- fixed static builds to work with `.build_pyjs`
+- Fixed static builds to work with `.build_pyjs`
 
-- `_hashlib` and `_ssl` are now built for `static-ext` build.
+- Fixed: `_hashlib` and `_ssl` are now built for `static-ext` build.
 
-- fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
+- Fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
 
-### Core Features
 
-- shift to python-based build system. Bash / Makefile is now deprecated.
+## [0.0.1]
 
-- create a pkg distribution built from python src which retains pip for easily installing python packages
+### Added
 
-- create FAQ
-
-- shrunk external + numpy to 30MB
-
-- investigate static linking of numpy and python (see notes): not viable due to project size constraints.
-
-- --enable-optimizations at configure
-
-- replacing 'cp -rf' with pure python self.copy
-
-- remove dependency on libintl via patching `configure` for both static and shared
-
-- copy libintl.a from /usr/local/opt/gettext/lib to ../targets/build/lib/.. for static linking as building it takes ages.
-
-- fix references (still pointing to compiled locations) ??
-
-- fix problem with `--enable-shared` builds where pythonhome is not found, and sys.prefix defaults to what is hardcoded at compilation time.
-
-- codesigning / notarization solved.
-
-## Pre-release0
-
-- created a release (using python 3.96) of statically built `py.mxo` and `pyjs.mxo`.
+- created a release (using python 3.96) of statically built `py.mxo`.
 
 - retructuring folder structure to properly separate subprojects and projects.
 
@@ -141,141 +130,60 @@
 
 - Added an example of framework-pkg bundle using Greg Neagle's [relocatable-python]( https://github.com/gregneagle/relocatable-python)
 
+- Added builder: new python build system
+
+- Added new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
+
+- Added `autoload` attribute to trigger autoload (`load` msg) of code editor code
+
+- Added features to get the `py` object's name from any module in its namespace!
+
+
+- Added a few high level python api functions in max (`eval`, `exec`) to allow the evaluation of python code in a python `globals` namespace associated with the `py` object.
+
+- Added right inlet bang after successful op, middle outlet bang on error
+
+
+- Added 'send' msg method, which sends typed messages to (script) named objects (see: <https://cycling74.com/forums/error-handling-with-object_method_typed>)
+
+- Added `call (anything)` method to call python callables in a namespace
+
+- Added text edit object
+
+- Added line repl, up-arrow last line recall (great for `random.random()`)
+
+- Added type conversion methods in `api.pyx` which can serve python code and also c-code calling python code.
+
+- Added python scripts to `examples/scripts`
+
+- Added cythonized access to max c-api
+
+- Added `.maxref.xml` to docs
+
+- Added pytest testing harness
+
+### Changed
+
+- Changed `py_exec` method to create a single string from argv so it can import easily
+
+- Changed `py_anything` method to eval if identifier is not a callable yet exists in ns
+
+- Changed `py_eval` to make it more consistent with the others
+
+- Changed `py_coll_tester` into bpatcher that can be fed by `py_repl`
+
+### Fixed
+
 - Fixed some shell expansion risks highlighted by jobor019.
 
-- Finally managed to resolve the release blocking issue of letting the external know its own path without hardcoding the name of the bundle. This means that in the specific case of static externals, `PYTHONHOME` can be set to the external's `Resources` folder. Thanks to Timothy Place for the tip on the cycling74 forums.
+- Fixed the release blocking issue of letting the external know its own path without hardcoding the name of the bundle. This means that in the specific case of static externals, `PYTHONHOME` can be set to the external's `Resources` folder. Thanks to Timothy Place for the tip on the cycling74 forums.
 
-- Side project: translate [pdpython](https://github.com/garthz/pdpython) to max -> mxpy.c
-  - compiling without errors but non-functional right now.
+- Fixed global object/dict/ref mgmt (so two externals can exist without `Py_Finalize()` causing a crash)
 
-- New demo section: uses [xcodegen](https://github.com/yonaskolb/XcodeGen) to generate xcode projects from `yaml` spec files.
+- Python: now picks up default homebrew installed python details by querying `/usr/local/opt/python/libexec/bin/python`
 
-- builder: new python build system
+- Fixed 'send' which did not have enough error checking and was crashing frequently
 
-- `bin-homebrew-pkg` is now working without issues and can even be used in standalones
+- Fixed STRANGE bug, single quotes in `py_log` caused a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
 
-  - The package has to be manually moved into the standalone C74/packages directory and the py.mxo external which was automatically copied during standalone creation has to to be removed since it already exists in the package which copied in manually.
-
-  - The static python build was used in a new target `static-ext` to statically build `py.mxo` and `pyjs.mxo` externals successfully.
-
-### Features
-
-#### Core
-
-- pyjs in-function calls to code did not work well as strings (conversion to array fixed it)
-
-- no-return ops in`pyjs` such as `exec` and `import` somehow make javascript assume an error has occured.
-
-- Convert `py` into a `jsextension` class
-
-- create new `py_anything` with heuristics to decide whether to delegate to `py_call` or `py_code`.
-
-- add `autoload` attribute to trigger autoload (`load` msg) of code editor code
-
-- for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
-
-- branch `embed-pkg`, embeds a local python install with a zipped stdlib in `support` already successfully tested embedding the python distro in the external itself.
-
-- made it possible to get the py object's name from any module in its namespace!
-
-- enhance `py_exec` method to create a single string from argv so it can import easily
-
-- enhance `py_anything` method to eval if identifier is not a callable yet exists in ns
-
-- Refactor 'py_eval' to make it more consistent with the others
-
-- Implementation of a few high level python api functions in max (eval, exec) to allow the evaluation of python code in a python `globals` namespace associated with the py object.
-
-- Each py object has its own python 'globals' namespace and responds to the following
-      msgs
-  - `import <module>`: adds module to the namespace
-    - `eval <expression>`: evaluate expression within the context of the namespace (cannot modify ns)
-    - `exec <statement>`: executes statement into the namespace (can modify ns)
-    - `execfile <file.py>`: executes python file into the namespace (can modify ns)
-    - `run <file.py>`: executes python file into the namespace (can modify ns)
-
-- Add right inlet bang after eval op ends
-
-- add third (middle) outlet which bangs on an error
-
-#### Extra
-
-- check whether setting a normal attr name, can also set scripting name
-
-- Implement 'send' msg, which sends typed messages to (script) named objects (see: <https://cycling74.com/forums/error-handling-with-object_method_typed>)
-
-- Add `call (anything)` method to call python callables in a namespace
-
-#### Code Editor (Usability)
-
-- Edit default with text editor
-
-- Add text edit object
-  - enable code to be run from editor
-
-#### Line REPL (Usability)
-
-- Add line repl
-  - Add up-arrow last line recall (great for 'random.random()')
-
-#### Extensibility
-
-- Create type conversion method in `api.pyx` which could serve python code and also c-code calling python code
-
-- Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
-
-- Add bpatcher line repl
-
-- add python scripts to 'examples/scripts'
-
-- Add cythonized access to max c-api..?
-
-- Extensible by embedded cython based python extensions which can call a library of wrapped max_api functions in python code. There is a proof of concept of the python code in the namsepace calling the max api `post` function successfully.
-
-- Exposing of good portion of the max api to cython scripting
-
-#### Architectural
-
-- Global object/dict/ref mgmt (so two externals can exist without Py_Finalize() causing a crash
-
-#### Documentation
-
-- Add .maxref.xml to docs
-
-#### Code Quality
-
-- refactor error handling code (if possible)
-
-- Refactor eval code from py_eval into a function to allow for exec and execfile or `PyRun_File` scenarios
-
-- Refactor into functions
-
-#### Testing
-
-- pytest testing harness
-
-- convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
-
-- make test between test_translate and test_py2 which includes references to a the struct which is missing in the former
-
-### Bug Fixes
-
-- pick up default homebrew installed python details by querying /usr/local/opt/python/libexec/bin/python
-
-- fixed 'send' which did not have enough error checking and was crashing frequently
-
-- fixed STRANGE bug, single quotes in `py_log` cased a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
-
-- globals remains after all objects are freed. solution: `PyXDECREF x->p_globals` on `py_free`
-
-- space in `eval` without quotes will cause a crash!
-
-- space in path causes "sprintf" type debugging in execfile to crash max!
-
-- codesigning errors are due to Package being developed in Documents/... which causes issues. If it's a non icloud exposed folder it works ok.
-
-- make exec work! (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
-
-- `import` statement in eval causes a segmentation fault. see: <https://docs.python.org/3/c-api/intro.html> exception handling example -> needed to changed Py_DECREF to Py_XDECREF in error handling code
-
-- Do not give attributes the same name as methods (the `import` saga) as this cause problems and crashes. Fixed by making them different.
+- Fixed `exec`: (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
