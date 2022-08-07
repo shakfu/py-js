@@ -82,6 +82,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 
 t_symbol* py_locate_path_to_external(t_py* x);
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
+void path_join(char* destination, const char* path1, const char* path2);
 
 /*--------------------------------------------------------------------------*/
 /* Side-effect helpers */
