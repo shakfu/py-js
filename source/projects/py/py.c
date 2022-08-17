@@ -200,8 +200,8 @@ t_symbol* py_locate_path_to_external(t_py* x)
     path_toabsolutesystempath(path_id, external_name, external_path);
     // path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_PATH);
     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
-    post("path_id: %d, external_name: %s, external_path: %s conform_path: %s", 
-        path_id, external_name, external_path, conform_path);
+    // post("path_id: %d, external_name: %s, external_path: %s conform_path: %s", 
+    //     path_id, external_name, external_path, conform_path);
     return gensym(external_path);
 }
 
@@ -762,7 +762,7 @@ void py_count(t_py* x)
 /**
  * @brief      join parent path to child subpath
  *
- * @param      destination  output destination path
+ * @param[out] destination  output destination path
  * @param[in]  path1        parent path
  * @param[in]  path2        child subpath
  */
@@ -852,8 +852,6 @@ void py_info(t_py* x)
   
     // package mode
     const char* support_python_path = "support/python" PY_VER;
-
-    // const char* external_path = "Documents/Max 8/Packages/py-js/externals/py.mxo";
 
     char external_contents_path[MAX_PATH_CHARS];
     char external_resources_path[MAX_PATH_CHARS];
