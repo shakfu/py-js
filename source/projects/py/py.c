@@ -842,11 +842,14 @@ void py_info(t_py* x)
     char* package_externals_path[MAX_PATH_CHARS];
     char* external_name[MAX_PATH_CHARS];
     char* externals_folder[MAX_PATH_CHARS];
-    path_splitnames(path->s_name, package_externals_path, external_name);
+
+    path_splitnames(path->s_name, (char*)package_externals_path,
+                    (char*)external_name);
     post("package_externals_path: %s", package_externals_path);
     post("external_name: %s", external_name);
 
-    path_splitnames(package_externals_path, package_path, externals_folder);
+    path_splitnames((char*)package_externals_path, (char*)package_path,
+                    (char*)externals_folder);
     post("package_path: %s", package_path);
     post("externals_folder: %s", externals_folder);    
   
@@ -859,7 +862,7 @@ void py_info(t_py* x)
 
     path_join(external_contents_path, path->s_name, "Contents");
     path_join(external_resources_path, external_contents_path, "Resources");
-    path_join(python_path, package_path, support_python_path);
+    path_join(python_path, (char*)package_path, support_python_path);
 
     post("external_resources_path: %s", external_resources_path);
     post("python_path: %s", python_path);
