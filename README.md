@@ -10,7 +10,7 @@ repo - <https://github.com/shakfu/py-js>
 
 ## Preface
 
-This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring a number of different ways of using python3 in max.
+This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring different ways of using python3 in max.
 
 To this end, a number of python3 externals have been developed for use in a live Max environment:
 
@@ -37,21 +37,19 @@ Note: pymx has been moved to its own [github project](https://github.com/shakfu/
 [krait]: source/projects/krait
 
 
-The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. 
-
-Several python3 external implementations were developed to address particular deployment requirements as patch, package, or standalone. Many of these can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). For this pair, an extensive python-based build system was developed to provide different ways of packaging and deploying the externals. Please see below for an overview and feature comparison.
+The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many of these can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). For this pair, an extensive python-based build system was developed to provide for packaging and deploying the externals in Max packages and standalones. Please see below for an overview and feature comparison.
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. Download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations. If you are interested in the others, please look into the `py-js/source/projects` section and ask questions or make suggestions via the project issue tracker. 
+This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations. If you are interested in the others, please look into the `py-js/source/projects` section and ask questions or suggestions via the project issue tracker. 
 
-At the outset, you can build all externals (for general use) using the following:
+At the outset, you can build all externals (for local use) using the following:
 
 ```bash
 make cmake
 ```
 
-This may cause errors if dependencies are not found. To resolve them all (only include python if it is not installed already):
+This may cause errors if dependencies for some of the build variations are not found. You can easily resolve them all using the macOS Homebrew package manager. Note that this is not required but quite practical. Of course, skip what is already installed:
 
 ```bash
 
@@ -59,7 +57,7 @@ brew install cmake python pybind11 zmq czmq
 
 ```
 
-also make sure that `cython` is installed
+also make sure that `cython` is installed using `pip`:
 
 ```bash
 pip3 install cython
