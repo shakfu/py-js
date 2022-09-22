@@ -18,6 +18,8 @@ From the root of the `py-js` project
 make cmake
 ```
 
+This will build all subprojects, including `mamba`, using the standard cmake build process.
+
 ## Tests
 
 See `mamba.maxhelp` in `py-js/help`

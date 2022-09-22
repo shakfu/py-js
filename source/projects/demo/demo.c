@@ -5,7 +5,7 @@ typedef struct _demo {
     t_object ob;
     void *ob_proxy_1;     // inlet proxy
     void *ob_proxy_2;     // inlet proxy
-    long ob_inletnum;   // # of inlet currently in use
+    long ob_inletnum;     // # of inlet currently in use
 
     // params
     float param0;

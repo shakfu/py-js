@@ -2,7 +2,6 @@
 
 This project is an experimental attempt to defer the evaluation of a python function via Max's ITM-based sequencing.
 
-
 ## Building
 
 From the root of the `py-js` project
@@ -11,7 +10,8 @@ From the root of the `py-js` project
 make cmake
 ```
 
+This will build all subprojects, including `cobra`, using the standard cmake build process.
 
-## Tests
+## Help
 
-See `test_cobra.maxpat` in `py-js/patchers`
+See `cobra.maxhelp` in `py-js/help` folder.

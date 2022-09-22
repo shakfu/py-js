@@ -58,6 +58,10 @@ def section(title):
 
 
 def display_help():
+    section("general")
+    print(f"{CYAN}make{RESET} {GREEN}{'cmake':<20}{RESET} : build all subprojects using standard cmake process")
+    print()
+
     section("pyjs targets")
 
     for t in PYJS_TARGETS:

@@ -1,7 +1,7 @@
 # mxpy
 
 This is an ongoing attempt to translate pdpython to maxmsp
-from https://github.com/garthz/pdpython
+from <https://github.com/garthz/pdpython>
 
 /// pdpython.c : Pd external to bridge data in and out of Python
 /// Copyright (c) 2014, Garth Zeglin.  All rights reserved.  Provided under the
@@ -17,23 +17,21 @@ unless we A_CANT or A_GIMMEBACK?
 See a simple A_GIMMEBACK example simplejs.c example in the max-sdk
 
 see:
-- https://cycling74.com/forums/a_gimmeback-routine-appears-in-quickref-menu
-- https://cycling74.com/forums/obex-how-to-get-return-values-from-object_method
-
-
+- <https://cycling74.com/forums/a_gimmeback-routine-appears-in-quickref-menu>
+- <https://cycling74.com/forums/obex-how-to-get-return-values-from-object_method>
 
 ## Flow
 
 1. ext_main
    sets up one 'anything' method:
-    class_addmethod(c, (method)mxpy_eval, "anything", A_GIMME, 0)
+    `class_addmethod(c, (method)mxpy_eval, "anything", A_GIMME, 0)`
 
 2. mxpy_new
      [mxpy module Class arg1 arg2 arg3 .. argN]
-   PyObject* args = t_atom_list_to_PyObject_list(argc- 2, argv + 2)
-   x->py_object = PyObject_CallObject(func, args)
+   `PyObject* args = t_atom_list_to_PyObject_list(argc- 2, argv + 2)`
+   `x->py_object = PyObject_CallObject(func, args)`
    note: if Class is actually a function which return a non-callable value
-   then x->py_object contains could be return with a bang
+   then `x->py_object` contains could be return with a bang
 
 3. mxpy_eval
     responds to max message and dispatches to the python-Class
