@@ -490,10 +490,7 @@ clean-build:
 
 clean-externals:
 	$(call section,"cleaning externals")
-	@for target in $(TARGETS); do \
-		rm -rf '$(ROOTDIR)'/externals/$$target.mxo ;\
-		rm -rf '$(BUILDDIR)'/externals/$$target.mxo ;\
-	done
+	@rm -rf '$(ROOTDIR)'/externals/*.mxo
 
 clean-docs:
 	$(call section,"cleaning docs directory")

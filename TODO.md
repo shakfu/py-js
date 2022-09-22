@@ -4,7 +4,6 @@
 
 - [ ] drop all platform specific code related to finding external path and use the builtin `class_getpath` (see CHANGELOG and `py_locate_path_to_external`)
 
-
 ## Bugs
 
 - [ ] `PyLong_Check` can't pick up `numpy` numbers: the type of numpy numbers has to be implmented in the type translator.
@@ -13,8 +12,7 @@
 
 - [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror. In version 3.10, the import of does not raise an error but is still doesn't work (see bug above). At least there's progress!
 
-
-## Features 
+## Features
 
 ### Core
 
@@ -36,7 +34,6 @@
 
 - [ ] split `.maxhelp` files into tabs for more information.
 
-
 ### Testing
 
 - [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
@@ -46,7 +43,6 @@
 - [ ] complete comprehensive test suite
   - [ ] complete c test suite
   - [ ] complete max test suite
-
 
 ### Attributes
 
@@ -109,11 +105,9 @@
 
 - [ ] Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
 
-
 ### Future Experiments
 
 - [ ] Try to integrate an ipython shell somehow (via node.js seems to be most promising)
-
 
 ### Collected
 
@@ -132,8 +126,3 @@
 - inject commandline parameters in python build system to enable more granular downstream decisions.
 
 - add step in bundle-creation to prepopulate site-packages with list of packages
-
-
-
-
-

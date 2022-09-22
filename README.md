@@ -36,14 +36,13 @@ Note: pymx has been moved to its own [github project](https://github.com/shakfu/
 [mamba]: source/projects/mamba
 [krait]: source/projects/krait
 
-
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many of these can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations which are available due to an extensive python-based build system which was developed to provide for packaging and deploying the externals in Max packages and standalones. 
+This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations which are available due to an extensive python-based build system which was developed to provide for packaging and deploying the externals in Max packages and standalones.
 
-If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section and ask questions or make suggestions via the project's issue tracker. 
+If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section and ask questions or make suggestions via the project's issue tracker.
 
 At the outset, you can build all externals (for local use) using the following:
 
@@ -54,9 +53,7 @@ make cmake
 This may cause errors if dependencies for some of the build variations are not found. You can easily resolve them all using the macOS Homebrew package manager. Note that this is not required but quite practical. Of course, skip what is already installed:
 
 ```bash
-
 brew install cmake python pybind11 zmq czmq
-
 ```
 
 also make sure that `cython` is installed using `pip`:
@@ -240,8 +237,11 @@ There are other [build variations](#build-variations) which are discussed in mor
 ```bash
 $ make help
 
+>>> general
+make cmake                : build all subprojects using standard cmake process
+
 >>> pyjs targets
-make default              : non-portable pyjs externals linked to your system
+make                      : non-portable pyjs externals linked to your system
 make homebrew-pkg         : portable package w/ pyjs (requires homebrew python)
 make homebrew-ext         : portable pyjs externals (requires homebrew python)
 make shared-pkg           : portable package with pyjs externals (shared)
@@ -301,7 +301,7 @@ To demonstrate the above, a pre-built standalone that was built using exactly th
 
 ### pyjs.mxo
 
-If you included `pyjs.mxo` as an external in your standalone, then it may be a litte more involved: 
+If you included `pyjs.mxo` as an external in your standalone, then it may be a litte more involved:
 
 You can first test if it works without issues by building 'a max standalone' from the `py_test_standalone_only_pyjs.maxpat` patcher whici is included in `py-js/patchers`.
 
