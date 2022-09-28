@@ -172,7 +172,7 @@ If you'd rather build them yourself then the process is straightforward:
 
     The above will initialize and update the required git submodules and symlink the repo to `$HOME/Documents/Max 8/Packages/py-js` to install it as a Max Package and enable you to test the externals and run the patches.
 
-    [?] It is possible to install `py-js` directly into `$HOME/Documents/Max 8/Packages`, but it is requires moving the place of compilation to a location in your filesystem which is not exposed to errors due to icloud syncing or spaces in the path. This split is possible, but it is not recommended for the purposes of this quickstart.
+    [?] It is possible to install `py-js` directly into `$HOME/Documents/Max 8/Packages`, but it requires moving the place of compilation to a location in your filesystem that is not exposed to errors due to icloud syncing or spaces in the path. This split is possible, but it is not recommended for the purposes of this quickstart.
 
 4. (Optional) Install [cython](https://cython.org) via `pip3 install cython`, which is used for wrapping the max api and worth installing in case you want to play around or extend the max api wrapper (which it is written in cython).
 
@@ -281,7 +281,7 @@ make test-shared-pkg
 
 ### Using Self-contained Python Externals in a Standalone
 
-If you have downloaded any pre-build externals from [releases](https://github.com/shakfu/py-js/releases) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
+If you have downloaded any pre-built externals from [releases](https://github.com/shakfu/py-js/releases) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
 
 As a side note: to release externals in a standalone they must be codesigned and notarized. To this end, there are scripts in `py-js/source/projects/py/scripts` to make this a little easier.
 
@@ -325,19 +325,19 @@ Both externals have access to builtin python modules and the whole universe of 3
 
 There are 3 general deployment variations:
 
-1. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
+1. **Linked to system python**. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
 
-2. Embedding the python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This makes it size efficient and usable in standalones.
+2. **Embedded in package**. Embedding the python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external or `pyjs` extension (or both). This makes it size efficient and usable in standalones.
 
-3. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external bundle itself, which can make it portable and usable in standalones.
+3. **Embedded in external**. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external bundle itself, which can make it portable and usable in standalones.
 
 As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case, and a number of build variations exist. This topic is treated in more detail below (see [Build Variations](#build-variations))
 
-Deployment Scenario  | `py` | `pyjs`
-:------------------- | :--: | :--------:
-Link to sys python   | 1    | 1
-Embed in package     | 1    | 1
-Embed in external    | 1    | 1
+Deployment Scenario    | `py` | `pyjs`
+:--------------------- | :--: | :--------:
+Linked to sys python   | 1    | 1
+Embeddded in package   | 1    | 1
+Embeddded in external  | 1    | 1
 
 ### Key Features
 
@@ -502,7 +502,7 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 
 [1] Homebrew only tested on current relase (3.9.10), other versions are expected to work without issues.
 
-[2] Relocatable python can selected on its own version of python. Only testing python 3.9.10, other versions should work without issues
+[2] Relocatable python can select its own version of python (Only tested with python 3.9.10, other versions should work without issues)
 
 #### Packages vs Self-contained Externals
 
