@@ -447,6 +447,10 @@ cflow:
 cmake:
 	@bash $(SCRIPTS)/build_cmake.sh
 
+# fat:
+# 	@echo "NOT FUNCTIONAL UNLESS DEPS ARE ALSO FAT"
+# 	@bash $(SCRIPTS)/build_universal.sh
+
 
 # Cleaning
 # -----------------------------------------------------------------------
