@@ -40,7 +40,7 @@ The common objective in these externals is to help you use and distribute your p
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations which are available due to an extensive python-based build system which was developed to provide for packaging and deploying the externals in Max packages and standalones.
+This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations available via a custom python-based build system which was developed to provide for packaging and deploying the externals in Max packages and standalones.
 
 If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section and ask questions or make suggestions via the project's issue tracker.
 

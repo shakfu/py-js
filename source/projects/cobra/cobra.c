@@ -13,8 +13,8 @@
 #include "Python.h"
 
 // constants
-#define PY_MAX_ATOMS 128
-#define PY_MAX_LOG_CHAR 500 // high number during development
+#define PY_MAX_ELEMS 1024
+#define PY_MAX_LOG_CHAR PY_MAX_ELEMS
 #define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
 
 // globals
@@ -189,14 +189,14 @@ void cobra_assist(t_cobra *x, void *b, long m, long a, char *s)
 {
     if (m == ASSIST_INLET) {    // Inlets
         switch (a) {
-        case 0: sprintf(s, "bang Gets Delayed, stop Cancels"); break;
-        case 1: sprintf(s, "Set Delay Time"); break;
+        case 0: snprintf_zero(s, PY_MAX_ELEMS, "bang Gets Delayed, stop Cancels"); break;
+        case 1: snprintf_zero(s, PY_MAX_ELEMS, "Set Delay Time"); break;
         }
     }
     else {                      // Outlets
         switch (a) {
-        case 0: sprintf(s, "Delayed bang"); break;
-        case 1: sprintf(s, "Another Delayed bang"); break;
+        case 0: snprintf_zero(s, PY_MAX_ELEMS, "Delayed bang"); break;
+        case 1: snprintf_zero(s, PY_MAX_ELEMS, "Another Delayed bang"); break;
         }
     }
 }
@@ -292,7 +292,7 @@ void cobra_handle_error(t_cobra* x, char* fmt, ...)
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         // get error info
@@ -399,7 +399,7 @@ t_max_err cobra_handle_list_output(t_cobra* x, PyObject* plist)
         PyObject* item = NULL;
         int i = 0;
 
-        t_atom atoms_static[PY_MAX_ATOMS];
+        t_atom atoms_static[PY_MAX_ELEMS];
         t_atom* atoms = NULL;
         int is_dynamic = 0;
 
@@ -411,9 +411,9 @@ t_max_err cobra_handle_list_output(t_cobra* x, PyObject* plist)
             goto error;
         }
 
-        if (seq_size > PY_MAX_ATOMS) {
+        if (seq_size > PY_MAX_ELEMS) {
             post("dynamically increasing size of atom array");
-            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ELEMS,
                                        seq_size + 1);
             is_dynamic = 1;
 

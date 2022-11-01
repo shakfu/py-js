@@ -97,9 +97,9 @@ void ext_main(void* r)
 void krait_assist(t_krait* x, void* b, long m, long a, char* s)
 {
     if (m == ASSIST_INLET) { // inlet
-        sprintf(s, "I am inlet %ld", a);
+        snprintf(s, PY_MAX_ELEMS, "I am inlet %ld", a);
     } else { // outlet
-        sprintf(s, "I am outlet %ld", a);
+        snprintf(s, PY_MAX_ELEMS, "I am outlet %ld", a);
     }
 }
 

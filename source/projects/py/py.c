@@ -103,17 +103,17 @@ void* get_outlet(t_py* x)
  * This log function is a variadic function which does not `post` its message
  * if the object struct member `x->p_debug` is 0.
  *
- * WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is less than
+ * WARNING: if PY_MAX_ELEMS is less than
  * the length of the log or err message, Max will crash.
  */
 void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
-        char msg[PY_MAX_LOG_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         post("[py %s]: %s", x->p_name->s_name, msg);
@@ -129,11 +129,11 @@ void py_log(t_py* x, char* fmt, ...)
  */
 void py_error(t_py* x, char* fmt, ...)
 {
-    char msg[PY_MAX_ERR_CHAR];
+    char msg[PY_MAX_ELEMS];
 
     va_list va;
     va_start(va, fmt);
-    vsprintf(msg, fmt, va);
+    vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
     va_end(va);
 
     error("[py %s]: %s", x->p_name->s_name, msg);
@@ -196,7 +196,7 @@ t_symbol* py_locate_path_to_external(t_py* x)
     char conform_path[MAX_PATH_CHARS];
 
     short path_id = class_getpath(py_class);
-    sprintf(external_name, "%s.mxo", py_class->c_sym->s_name);
+    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", py_class->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
     // path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_PATH);
     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
@@ -743,9 +743,9 @@ void py_free(t_py* x)
 void py_assist(t_py* x, void* b, long m, long a, char* s)
 {
     if (m == ASSIST_INLET) { // inlet
-        sprintf(s, "I am inlet %ld", a);
+        snprintf_zero(s, PY_MAX_ELEMS, "I am inlet %ld", a);
     } else { // outlet
-        sprintf(s, "I am outlet %ld", a);
+        snprintf_zero(s, PY_MAX_ELEMS, "I am outlet %ld", a);
     }
 }
 
@@ -1024,11 +1024,11 @@ void py_handle_error(t_py* x, char* fmt, ...)
     if (PyErr_Occurred()) {
 
         // build custom msg
-        char msg[PY_MAX_ERR_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         // get error info
@@ -1164,7 +1164,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
         PyObject* item = NULL;
         int i = 0;
 
-        t_atom atoms_static[PY_MAX_ATOMS];
+        t_atom atoms_static[PY_MAX_ELEMS];
         t_atom* atoms = NULL;
         int is_dynamic = 0;
 
@@ -1176,9 +1176,9 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
             goto error;
         }
 
-        if (seq_size > PY_MAX_ATOMS) {
+        if (seq_size > PY_MAX_ELEMS) {
             py_log(x, "dynamically increasing size of atom array");
-            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ELEMS,
                                        seq_size + 1);
             is_dynamic = 1;
 
@@ -1845,7 +1845,7 @@ t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
  */
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    t_atom atoms[PY_MAX_ATOMS];
+    t_atom atoms[PY_MAX_ELEMS];
 
     if (s == gensym("")) {
         return MAX_ERR_GENERIC; 

@@ -222,7 +222,7 @@ void PythonInterpreter::log_debug(char* fmt, ...)
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         post("[py debug %s]: %s", this->p_name->s_name, msg);
@@ -243,7 +243,7 @@ void PythonInterpreter::log_info(char* fmt, ...)
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         post("[py info %s]: %s", this->p_name->s_name, msg);
@@ -264,7 +264,7 @@ void PythonInterpreter::log_error(char* fmt, ...)
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         error((char*)"[py error %s]: %s", this->p_name->s_name, msg);
@@ -287,7 +287,7 @@ void PythonInterpreter::handle_error(char* fmt, ...)
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         // get error info

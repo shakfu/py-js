@@ -80,9 +80,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
    externals.
 */
 
-#define PY_MAX_ATOMS 128
-#define PY_MAX_LOG_CHAR 500
-#define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
+#define PY_MAX_ELEMS 1024
 #define PY_DEBUG 1
 
 // ---------------------------------------------------------------------------------------
@@ -137,17 +135,17 @@ PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from);
  * This log function is a variadic function which does not `post` its message
  * if the object struct member `x->p_debug` is 0.
  *
- * WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is less than
+ * WARNING: if PY_MAX_ELEMS (which defines PY_MAX_ELEMS) is less than
  * the length of the log or err message, Max will crash.
  */
 void py_log(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
-        char msg[PY_MAX_LOG_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         post("[py %s]: %s", x->p_name->s_name, msg);
@@ -163,11 +161,11 @@ void py_log(t_py* x, char* fmt, ...)
  */
 void py_error(t_py* x, char* fmt, ...)
 {
-    char msg[PY_MAX_ERR_CHAR];
+    char msg[PY_MAX_ELEMS];
 
     va_list va;
     va_start(va, fmt);
-    vsprintf(msg, fmt, va);
+    vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
     va_end(va);
 
     error("[py %s]: %s", x->p_name->s_name, msg);
@@ -303,11 +301,11 @@ void py_handle_error(t_py* x, char* fmt, ...)
     if (PyErr_Occurred()) {
 
         // build custom msg
-        char msg[PY_MAX_ERR_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         // get error info
@@ -436,7 +434,7 @@ t_max_err py_handle_list_output(t_py* x, void* outlet, PyObject* plist)
         PyObject* item = NULL;
         int i = 0;
 
-        t_atom atoms_static[PY_MAX_ATOMS];
+        t_atom atoms_static[PY_MAX_ELEMS];
         t_atom* atoms = NULL;
         int is_dynamic = 0;
 
@@ -448,9 +446,9 @@ t_max_err py_handle_list_output(t_py* x, void* outlet, PyObject* plist)
             goto error;
         }
 
-        if (seq_size > PY_MAX_ATOMS) {
+        if (seq_size > PY_MAX_ELEMS) {
             py_log(x, (char*)"dynamically increasing size of atom array");
-            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ELEMS,
                                        seq_size + 1);
             is_dynamic = 1;
 
@@ -1119,7 +1117,7 @@ t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv,
                       void* outlet)
 {
-    t_atom atoms[PY_MAX_ATOMS];
+    t_atom atoms[PY_MAX_ELEMS];
 
     if (s == gensym("")) {
         return MAX_ERR_GENERIC;

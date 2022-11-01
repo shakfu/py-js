@@ -32,9 +32,7 @@
 /*--------------------------------------------------------------------------*/
 /* Constants */
 
-#define PY_MAX_ATOMS 128
-#define PY_MAX_LOG_CHAR 500 // high number during development
-#define PY_MAX_ERR_CHAR PY_MAX_LOG_CHAR
+#define PY_MAX_ELEMS 1024
 
 /*--------------------------------------------------------------------------*/
 /* Macros */

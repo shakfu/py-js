@@ -119,7 +119,7 @@ typedef struct _shell
 	t_fildes		fd_r;
 	t_fildes		fd_w;
 #endif
-	long			forkmode; // disabled on Windows
+	// long			forkmode; // disabled on Windows
 	t_procid		pid;
 	char			merge_stderr;
 	t_symbol		*wd;
@@ -192,13 +192,13 @@ int C74_EXPORT main(void)
 	CLASS_ATTR_DEFAULT_SAVE(shell_class, "shell", 0, "");
 	CLASS_ATTR_STYLE_LABEL(shell_class, "shell", 0, "file", "Shell");
 
-	CLASS_ATTR_LONG(shell_class, "forkmode", 0, t_shell, forkmode);
-	CLASS_ATTR_ENUMINDEX2(shell_class, "forkmode", 0, "fork", "vfork");
-	CLASS_ATTR_DEFAULT_SAVE(shell_class, "forkmode", 0, "0");
-	CLASS_ATTR_STYLE_LABEL(shell_class, "forkmode", 0, "enumindex", "Fork Method (Expert)");
-#ifdef WIN_VERSION
-	CLASS_ATTR_INVISIBLE(shell_class, "forkmode", 0);
-#endif
+// 	CLASS_ATTR_LONG(shell_class, "forkmode", 0, t_shell, forkmode);
+// 	CLASS_ATTR_ENUMINDEX2(shell_class, "forkmode", 0, "fork", "vfork");
+// 	CLASS_ATTR_DEFAULT_SAVE(shell_class, "forkmode", 0, "0");
+// 	CLASS_ATTR_STYLE_LABEL(shell_class, "forkmode", 0, "enumindex", "Fork Method (Expert)");
+// #ifdef WIN_VERSION
+// 	CLASS_ATTR_INVISIBLE(shell_class, "forkmode", 0);
+// #endif
 
 	class_register(CLASS_BOX, shell_class);
 
@@ -763,7 +763,7 @@ void doReport()
 void shell_assist(t_shell *x, void *b, long m, long a, char *s)
 {
 	if (m==1)
-		sprintf(s,"anything: shell command to exec");
+		snprintf_zero(s, MAX_MESSAGELEN, "anything: shell command to exec");
 	else if (m==2)
 		switch (a) {
 
@@ -871,7 +871,8 @@ int shell_pipe_open(t_shell *x, t_fildes *masterfd_r, t_fildes *masterfd_w, char
 	}
 
 	// SIGTTOU or SIGTTIN won't be sent in processes created using vfork, which breaks SSH
-	t_forkfn forkfn = (t_forkfn)(x->forkmode ? vfork : fork);
+	// t_forkfn forkfn = (t_forkfn)(x->forkmode ? vfork : fork);
+	t_forkfn forkfn = (t_forkfn)(fork);
 	*ppid = forkfn();
 	if (*ppid < 0) {
 		close(masterfd);

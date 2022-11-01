@@ -310,17 +310,17 @@ void pyjs_init(t_pyjs* x)
  * This log function is a variadic function which doesn'y `post` its msg
  * if the object struct member `x->p_debug` is 0.
  *
- * WARNING: if PY_MAX_LOG_CHAR (which defines PY_MAX_ERR_CHAR) is less than
+ * WARNING: if PY_MAX_ELEMS is less than
  * the length of the log or err message, Max will crash.
  */
 void pyjs_log(t_pyjs* x, char* fmt, ...)
 {
     if (x->p_debug) {
-        char msg[PY_MAX_LOG_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         post("[pyjs %s]: %s", x->p_name->s_name, msg);
@@ -336,11 +336,11 @@ void pyjs_log(t_pyjs* x, char* fmt, ...)
  */
 void pyjs_error(t_pyjs* x, char* fmt, ...)
 {
-    char msg[PY_MAX_ERR_CHAR];
+    char msg[PY_MAX_ELEMS];
 
     va_list va;
     va_start(va, fmt);
-    vsprintf(msg, fmt, va);
+    vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
     va_end(va);
 
     error("[pyjs %s]: %s", x->p_name->s_name, msg);
@@ -413,11 +413,11 @@ void pyjs_handle_error(t_pyjs* x, char* fmt, ...)
     if (PyErr_Occurred()) {
 
         /* build custom msg */
-        char msg[PY_MAX_ERR_CHAR];
+        char msg[PY_MAX_ELEMS];
 
         va_list va;
         va_start(va, fmt);
-        vsprintf(msg, fmt, va);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
         // get error info
@@ -523,7 +523,7 @@ error:
  */
 t_max_err pyjs_handle_string_output(t_pyjs* x, PyObject* pstring, t_atom* rv)
 {
-    t_atom atom_result[PY_MAX_ATOMS];
+    t_atom atom_result[PY_MAX_ELEMS];
 
     if (pstring == NULL) {
         goto error;
@@ -569,7 +569,7 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
         PyObject* item = NULL;
         int i = 0;
 
-        t_atom atoms_static[PY_MAX_ATOMS];
+        t_atom atoms_static[PY_MAX_ELEMS];
         t_atom* atoms = NULL;
         int is_dynamic = 0;
 
@@ -580,9 +580,9 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
             goto error;
         }
 
-        if (seq_size > PY_MAX_ATOMS) {
+        if (seq_size > PY_MAX_ELEMS) {
             pyjs_log(x, "dynamically increasing size of atom array");
-            atoms = atom_dynamic_start(atoms_static, PY_MAX_ATOMS,
+            atoms = atom_dynamic_start(atoms_static, PY_MAX_ELEMS,
                                        seq_size + 1);
             is_dynamic = 1;
 
@@ -998,7 +998,7 @@ error:
 t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
                             t_atom* rv)
 {
-    t_atom atoms[PY_MAX_ATOMS];
+    t_atom atoms[PY_MAX_ELEMS];
     PyObject* pval = NULL;
     PyObject* json_module = NULL;
     PyObject* json_dict = NULL;

@@ -7,3 +7,8 @@ The original github repo is https://github.com/jeremybernstein/shell
 It is included here for convenience and because it has an elegant implementation using threading and interprocess communication.
 
 The intent is to learn from this and perhaps incorporate some of the techniques for the python externals.
+
+
+## Changes from original:
+
+- change `sprintf` to `snprintf_zero`
