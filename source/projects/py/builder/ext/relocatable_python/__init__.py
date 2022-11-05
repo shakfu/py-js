@@ -8,7 +8,7 @@ from ...config import Project
 
 from sysconfig import get_config_var
 
-AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.12", "3.10.4"]
+AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.12", "3.10.8", "3.11.0"]
 
 if Project.python.arch == 'arm64':
     DEFAULT_OS_VERSION = '11'
@@ -92,8 +92,6 @@ def download_relocatable_to(directory, settings):
     if framework_path:
         files_relocatablized = relocatablize(framework_path)
         fix_broken_signatures(files_relocatablized)
-        
-
         install_extras(
             framework_path,
             version=py_short_version,

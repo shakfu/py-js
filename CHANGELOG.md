@@ -16,6 +16,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+- Added: preliminary support (without shrinking yet) for python 3.11.0 via `relocatable-pkg`. To build:
+
+    ```bash
+    cd py-js/source/project/py
+    python3 -m builder pyjs relocatable_pkg --install --build \
+        --python-version 3.11.0 --os-version 11
+    ```
+
+- Changed: supported python for `relocatable-pkg` to python 3.10.8
+
+- Fixed: `tiny-static-ext` or `make tiny` option for python 3.10.x
+
 - Discovered builtin way for max to find the external using an included but undocumented function. This is by way of the `class_getpath` function. This is demonstrated (partially) in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
 
 - Added the `krait` project, which pushes the single-header implementation into cpp territory with a cpp class `PythonInterpreter` implementing and encapsulating all of the functionality. This is final extension of the idea of modular python3 interpreter which can be easily nested into any Max external object.
