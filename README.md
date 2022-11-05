@@ -192,13 +192,16 @@ No worries, if you need portable relocatable python3 externals for your package 
 
 ### Alternative Quickstart for Self-contained Python3 Externals / Packages
 
-idx  | command               | type       | format     | py size |  pyjs size
-:--: | :-------------------- | :--------- | :--------- | :------ | :----------
-1    | `make static-ext`     | static     | external   | 9.0     | 8.8
-2    | `make shared-ext`     | shared     | external   | 16.7    | 16.5
-3    | `make framework-pkg`  | framework  | package    | 22.8    | 22.8 [1]
+idx  | command                | type       | format     | py size |  pyjs size
+:--: | :--------------------- | :--------- | :--------- | :------ | :----------
+1    | `make static-ext`      | static     | external   | 9.0     | 8.8
+2    | `make tiny-static-ext` | static     | external   | 6.7     | 6.2  [1]
+3    | `make shared-ext`      | shared     | external   | 16.4    | 15.8
+4    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8 [2]
 
-[1] size, in this case, is not the individual external but uncompressed size of the package which includes patches, help files and both externals, and can vary by python version used to compile the external.
+[1] Can also be created by calling `make tiny`, this static variation  was created as part of an effort to create the smallest possible portable pyjs externals. Size figures are for python 3.10.x .
+
+[2] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
 
 This alternative quickstart assumes that you have a recent python3 installation (python.org, homebrew or otherwise).
 
@@ -210,6 +213,12 @@ If you don't mind compiling (and have xcode installed) then pick one of the foll
 
     ```bash
     make static-ext
+    ```
+
+    You may also prefer the tiny version:
+
+    ```bash
+    make tiny
     ```
 
 2. To build self-contained python3 exernals which include a dynamically linked libpythonX.Y.dylib:
@@ -247,6 +256,7 @@ make homebrew-ext         : portable pyjs externals (requires homebrew python)
 make shared-pkg           : portable package with pyjs externals (shared)
 make shared-ext           : portable pyjs externals (shared)
 make static-ext           : portable pyjs externals (static)
+make tiny-static-ext      : tiny portable pyjs externals (static)
 make framework-pkg        : portable package with pyjs externals (framework)
 make framework-ext        : portable pyjs externals (framework)
 make relocatable-pkg      : portable package w/ more custom options (framework)

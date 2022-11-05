@@ -59,6 +59,7 @@ PYJS_TARGETS = {
     ),
     "shared-ext": dict(desc="portable pyjs externals (shared)", lines=14195),
     "static-ext": dict(desc="portable pyjs externals (static)", lines=14064),
+    "tiny-static-ext": dict(desc="tiny portable pyjs externals (static)", lines=14064),
     "framework-pkg": dict(
         desc="portable package with pyjs externals (framework)", lines=14383
     ),
@@ -66,6 +67,7 @@ PYJS_TARGETS = {
     "relocatable-pkg": dict(
         desc="portable package w/ more custom options (framework)", lines=414
     ),
+
     # "pymx"          : dict(desc="non-portable alternative python3 externals (min-lib)", lines=210),
 }
 
