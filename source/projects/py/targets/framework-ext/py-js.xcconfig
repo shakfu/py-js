@@ -1,6 +1,6 @@
 #include "../common.xcconfig"
 
-PY_LOCAL = /Users/sa/Downloads/projects/py-js/source/py/targets/build/lib
+PY_LOCAL = $(HOME)/Downloads/projects/py-js/source/py/targets/build/lib
 
 PREFIX = $(PYJS_BUILD_LIB)/Python.framework/Versions/${VERSION}
 PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)

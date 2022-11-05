@@ -1,9 +1,10 @@
 #include "../common.xcconfig"
 
 // This can overriden by the builder at the commandline build
-VERSION = 3.9
+VERSION = 3.10
 ABIFLAGS = 
 PREFIX = /usr/local/opt/python@$(VERSION)/Frameworks/Python.framework/Versions/$(VERSION)
+NUMPY_HEADERS = /usr/local/lib/python$(VERSION)/site-packages/numpy/core/include
 
 // --------------------------------------------------------------------------------
 
