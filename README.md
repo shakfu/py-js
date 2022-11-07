@@ -40,9 +40,11 @@ The common objective in these externals is to help you use and distribute your p
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
+This README will mostly cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
 
-If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section, the [Quickstart](#quickstart) section below for help with dependencies and building.
+If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section.
+
+If you are impatient, the [Quickstart](#quickstart) section below covers general setup for all the externals and will get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the Advanced Building topics and the [Building self-contained Python3 Externals for Packages and Standalones](#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios.
 
 Please feel free to ask questions or make suggestions via the project's github issue tracker.
 
