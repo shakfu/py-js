@@ -38,13 +38,13 @@ name       | sdk        | lang   | description
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many of these can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
-At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
+At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but intentionally only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
 This README will mostly cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
 
 If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section.
 
-If you are impatient, the [Quickstart](#quickstart) section below covers general setup for all the externals and will get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios.
+If you are impatient, the [Quickstart](#quickstart) section below covers general setup for all the externals and will quickly get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios.
 
 Please feel free to ask questions or make suggestions via the project's github issue tracker.
 
@@ -53,6 +53,8 @@ Please feel free to ask questions or make suggestions via the project's github i
 The following will give you a sense of the feature differences between the two core python3 max externals:
 
 ### `py` external
+
+General purpose python3 Max external.
 
 ```text
 globals
@@ -114,6 +116,8 @@ py max external
 
 ### `pyjs` external
 
+General purpose python3 jsextension.
+
 ```text
 pyjs max external (jsextension)
     attributes
@@ -160,7 +164,7 @@ If you'd rather build them, or the other subproject externals yourself then the 
 
 4. Install [cython](https://cython.org) via `pip3 install cython`, which is used for wrapping the max api and worth installing in case you want to play around or extend the max api wrapper (which is written in cython) for the `py` or `pyjs` externals.
 
-5. To build only the `py` or `pyjs` externals, type the following in the root directory of the `py-js` source (other installation options are detailed below):
+5. To build only the `py` or `pyjs` externals, type the following in the root directory of the `py-js` project (other installation options are detailed below):
 
     ```bash
     make
