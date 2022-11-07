@@ -44,7 +44,7 @@ This README will mostly cover the first two mature externals (`py.mxo` and `pyjs
 
 If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section.
 
-If you are impatient, the [Quickstart](#quickstart) section below covers general setup for all the externals and will get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the Advanced Building topics and the [Building self-contained Python3 Externals for Packages and Standalones](#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios.
+If you are impatient, the [Quickstart](#quickstart) section below covers general setup for all the externals and will get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios.
 
 Please feel free to ask questions or make suggestions via the project's github issue tracker.
 
