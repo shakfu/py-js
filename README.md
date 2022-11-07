@@ -42,7 +42,7 @@ At the time of this writing, and since the switch to the new [max-sdk-base](http
 
 This README will cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
 
-If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section, the [quickstart] section below for help with dependencies and building.
+If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section, the [Quickstart](#quickstart) section below for help with dependencies and building.
 
 Please feel free to ask questions or make suggestions via the project's github issue tracker.
 
@@ -170,11 +170,11 @@ No worries, if you need portable relocatable python3 externals for your package 
 
 Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
 
-### Building via cmake other more experimental externals
+### Building Experimental Externals using Cmake
 
-You can also use `cmake` to build `all` externals, using the exact same methods as in the `max-sdk`. 
+You can also use `cmake` to build **all** externals using the exact same methods as in the `max-sdk`. 
 
-First make sure you have completed the [Quickstart] section above. Next you will install `cmake` if necessary and a couple of additional dependencies for some of the subprojects. Of course, skip what is already installed:
+First make sure you have completed the [Quickstart](#quickstart) section above. Next you will install `cmake` if necessary and a couple of additional dependencies for some of the subprojects. Of course, skip what is already installed:
 
 ```bash
 brew install cmake zmq czmq
@@ -190,9 +190,11 @@ For some of the less developed externals and more experimental features please d
 
 Also note that the `cmake` build method does not yet create self-contained python externals which can be used in Max Packages and Standalones.
 
-The following section addresses this requirement (currently only for `py` and `pyjs` externals.)
+The following section addresses this requirement. 
 
-### Building self-contained Python3 Externals / Packages
+### Building self-contained Python3 Externals for Packages and Standalones
+
+Currently only the `py` and `pyjs` externals are built using these methods.
 
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
@@ -205,7 +207,7 @@ idx  | command                | type       | format     | py size |  pyjs size
 
 [3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
 
-This section assumes that you have completed the [Quickstart] above and have a recent python3 installation (python.org, homebrew or otherwise).
+This section assumes that you have completed the [Quickstart](#quickstart) above and have a recent python3 installation (python.org, homebrew or otherwise).
 
 Again, if you'd rather not compile anything there are self-contained python3 externals which can be included in standalones in the [releases](https://github.com/shakfu/py-js/releases) section.
 
