@@ -36,7 +36,7 @@ name       | sdk        | lang   | description
 [mamba]: source/projects/mamba
 [krait]: source/projects/krait
 
-The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many of these can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
+The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project **is compatible with Apple Silicon-based machines** but intentionally only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
@@ -44,7 +44,7 @@ This README will mostly cover the first two mature externals (`py.mxo` and `pyjs
 
 If you are interested in any of the other subprojects, please look into the respective folder in the `py-js/source/projects` section.
 
-If you are impatient, the [Quickstart](#quickstart) section below covers general setup for all the externals and will quickly get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios.
+The [Quickstart](#quickstart) section below covers general setup for all of the externals, and will get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios.
 
 Please feel free to ask questions or make suggestions via the project's github issue tracker.
 
@@ -146,7 +146,7 @@ pyjs max external (jsextension)
 
 As mentioned earlier, the `py` and `pyjs` objects are the most mature and best documented of the collection. Happily, there is also no need to compile them as they are available for download, fully codesigned and notarized, from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-If you'd rather build them, or the other subproject externals yourself then the process is straightforward:
+If you'd rather build them or any of the other externals yourself then the process is straightforward:
 
 1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.7 to 3.10 are tested and known to work.
 
@@ -170,7 +170,7 @@ If you'd rather build them, or the other subproject externals yourself then the 
     make
     ```
 
-This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are quite small in size and are linked to your your system python3 installation. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
+Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are quite small in size and are linked to your your system python3 installation. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
 No worries, if you need portable relocatable python3 externals for your package or standalone then make sure to read the [Alternative Quickstart for self-contained Python3 Externals / Packages] section
 

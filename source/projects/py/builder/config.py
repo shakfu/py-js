@@ -45,7 +45,7 @@ RESET = "\033[m"
 
 
 PYJS_TARGETS = {
-    "": dict(
+    "default": dict(
         desc="non-portable pyjs externals linked to your system", lines=210
     ),
     "homebrew-pkg": dict(
