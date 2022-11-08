@@ -1,31 +1,31 @@
 
 CC = gcc
 CFLAGS = -Wall -g -std=c99
-INCLUDES=`python3.9-config --cflags`
-LDFLAGS=`python3.9-config --ldflags` -lpython3.9
+INCLUDES=`python3-config --cflags`
+LDFLAGS=`python3-config --ldflags` -lpython3.10
 
 
-READLINE_INCLUDES=-I/usr/local/Cellar/readline/8.0.4/include \
-				  -I/usr/local/Cellar/readline/8.0.4/include/readline
-READLINE_LDFLAGS=-L/usr/local/Cellar/readline/8.0.4/lib -lreadline
+READLINE_INCLUDES=-I/usr/local/Cellar/readline/8.2.1/include \
+				  -I/usr/local/Cellar/readline/8.2.1/include/readline
+READLINE_LDFLAGS=-L/usr/local/Cellar/readline/8.2.1/lib -lreadline
 
-TARGETS=test_interactive test_py
+TARGETS=test_interactive test_demo
 
 
 .PHONY: clean
 
-all: 
+all: build
 
 
 # BUILDING
 # -----------------------------------------------------------------------
-.PHONY: build test_py test_interactive
+.PHONY: build test_demo test_interactive
 
-build: test_py
+build: test_demo
 	$(call section,"build tests")
 
-test_py:
-	$(call section,"build test_py")
+test_demo:
+	$(call section,"build test_demo")
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $(LDFLAGS) $@.c
 
 
@@ -48,7 +48,7 @@ test:
 # -----------------------------------------------------------------------
 .PHONY: memcheck
 
-memcheck: test_py
+memcheck: test_demo
 	$(call section,"checking for memory leaks")
 	valgrind --tool=memcheck \
 			 --dsymutil=yes \

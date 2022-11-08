@@ -171,7 +171,7 @@ def builder_factory(name, **settings):
 # -----------------------------------------------------------------------------
 # RECIPES
 
-# this is an example of a recipe which can fixes requirements to versions.
+# An example of a recipe which can fix requirements to versions.
 
 
 def get_static_python_recipe(

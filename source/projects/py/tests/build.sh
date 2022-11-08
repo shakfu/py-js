@@ -3,16 +3,14 @@
 
 echo "compiling..."
 
-
-
 for fname in $@
 do
     echo "compiling $fname"
     bname=$(basename $fname .c)
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    clang -g -I /usr/include/python3.9 -lpython3.9 $fname -o $bname
+    clang -g -I /usr/include/python3.10 -lpython3.10 $fname -o $bname
 	elif [[ "$OSTYPE" == "darwin"* ]]; then
-	gcc -g `python3.9-config --cflags --ldflags` -lpython3.9 $fname -o $bname
+	gcc -g `python3-config --cflags --ldflags` -lpython3.10 $fname -o $bname
 	else
 		echo "not implemented"
 	fi
