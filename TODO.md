@@ -1,5 +1,9 @@
 # TODO
 
+## Important
+
+- [ ] Fix .github workflows which have become deprecated due to api changes at github
+
 ## Refactor
 
 - [ ] drop all platform specific code related to finding external path and use the builtin `class_getpath` (see CHANGELOG and `py_locate_path_to_external`)
@@ -13,6 +17,10 @@
 - [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror. In version 3.10, the import of does not raise an error but is still doesn't work (see bug above). At least there's progress!
 
 ## Features
+
+### Language
+
+- [ ] Add [hy-lang](https://github.com/hylang/hy) evaluation as `[hy <...>]`. This syntax of this "dialect of Lisp that's embedded in Python" can potentially make code easier to write at the Max Level.
 
 ### Core
 
@@ -107,6 +115,8 @@
 
 ### Future Experiments
 
+- [ ] move `builder` from `py-js/source/projects/py/builder`to `py-js/source/builder` and make it more general such that it can build other python3 externals. This requires `xcodegen` to become more mature.
+
 - [ ] Try to integrate an ipython shell somehow (via node.js seems to be most promising)
 
 ### Collected
@@ -115,14 +125,14 @@
 
 - for `pythonpath` add file location feature (try pkg/examples/scripts then absolute paths)
 
-- enable code to be run from editor
+- [ ] enable code to be run from editor (now it optionally runs when an editor is closed)
 
-- create a pkg distribution built from python src which retains pip for easily installing python packages
+- [ ] create a pkg distribution built from python src which retains pip for easily installing python packages
 
-- investigate static linking of numpy and python (see notes): not viable due to project size constraints.
+- [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
 
-- Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
+- [ ] Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
 
-- inject commandline parameters in python build system to enable more granular downstream decisions.
+- [ ] inject commandline parameters in python build system to enable more granular downstream decisions.
 
-- add step in bundle-creation to prepopulate site-packages with list of packages
+- [ ] add step in bundle-creation to prepopulate site-packages with list of packages (this is alread done with `relocatable python` variations)
