@@ -33,7 +33,7 @@ import os
 import unittest
 
 
-class ProgressBar(object):
+class ProgressBar:
 
     def __init__(self, max_value, title=None, start_state=0, max_refreshrate=0.3, zero_index=True):
         self.max_value = max_value

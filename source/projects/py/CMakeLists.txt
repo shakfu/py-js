@@ -101,7 +101,7 @@ set(FRAMEWORK_PY ${BUILD_LIB}/Python.framework)
 
 if(USE_STATIC_PY)
 	message("USE_STATIC_PY : ${USE_STATIC_PY}")
-	set(PY_INCLUDE "${STATIC_PY}/include/python3.9")
+	set(PY_INCLUDE "${STATIC_PY}/include/python3.10")
 	set(PY_LIBDIRS "${STATIC_PY}/lib")
 elseif(USE_FRAMEWORK_PY)
 	message("USE_FRAMEWORK_PY: ${USE_FRAMEWORK_PY}")
@@ -164,7 +164,7 @@ if(USE_STATIC_PY)
 	target_link_libraries(
 		${PROJECT_NAME} 
 		PRIVATE
-		python3.9
+		python3.10
 		"${STATICINTL}"
 		"-liconv"
 		"-lz"
@@ -183,8 +183,8 @@ if(USE_STATIC_PY)
 	add_custom_command(TARGET ${PROJECT_NAME}
 		POST_BUILD
 		COMMAND mkdir -p ${PY_EXT_LIB}
-		COMMAND cp -af ${PY_LIBDIRS}/python3.9 ${PY_EXT_LIB}
-		COMMAND cp -af ${PY_LIBDIRS}/python39.zip ${PY_EXT_LIB}
+		COMMAND cp -af ${PY_LIBDIRS}/python3.10 ${PY_EXT_LIB}
+		COMMAND cp -af ${PY_LIBDIRS}/python310.zip ${PY_EXT_LIB}
 		COMMENT "Add Resources" VERBATIM
 	)
 
