@@ -64,11 +64,11 @@ jobs:
         python-version: ${{ github.event.inputs.py_version }}
         cache: 'pip' # caching pip dependencies
 
+    - name: install python requirements
+      run: pip install -r requirements.txt
+
     - name: Display python version
       run: python3 --version
-
-    - name: install cython
-      run: pip3 install cython
 
     - name: Import development certificate
       uses: apple-actions/import-codesign-certs@v1
