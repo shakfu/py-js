@@ -29,6 +29,17 @@ jobs:
           source/py/targets/build/lib/xz
         key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
 
+    - name: setup python
+      uses: actions/setup-python@v4
+      with:
+        cache: 'pip' # caching pip dependencies
+
+    - name: display python version
+      run: python3 --version
+
+    - name: install cython
+      run: pip3 install cython
+    
     - name: build_default
       run: make
 
