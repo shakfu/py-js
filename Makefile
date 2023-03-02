@@ -29,7 +29,11 @@ PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
 PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
 PKG_DIRS = docs examples extensions externals help init \
            javascript jsextensions media misc patchers
-NUMPY_EXISTS := $(shell sh -c '$(PYTHON) $(SCRIPTS)/check_numpy.py --exists')
+
+#NUMPY_EXISTS := $(shell sh -c '$(PYTHON) $(SCRIPTS)/check_numpy.py --exists')
+NUMPY_EXISTS := 0 # change this to 1 if you want to enable numpy in api.pyx
+				  # this requires numpy to be available to the python
+				  # interpreter.	
 
 
 # constants
