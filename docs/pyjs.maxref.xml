@@ -5,7 +5,7 @@
 
 	<digest>Evaluate python code</digest>
 	<description>
-		<o>pyjs</o> provides the 'PyJS' javascript class and set of methods to execute and evaluate python code and return the results in <o>js</o> objects.
+		<o>pyjs</o> provides the 'PyJS' javascript class and set of methods to execute and evaluate python3 code and return the results in <o>js</o> objects.
 	</description>
 	
 	<!--METADATA-->

@@ -5,7 +5,7 @@
 
 	<digest>Evaluate python code</digest>
 	<description>
-		<o>py</o> provides a set of methods to execute and evaluate python code and to return the results in a max/msp patch.
+		<o>py</o> provides a set of methods to execute and evaluate python3 code and to return the results in a max/msp patch.
 	</description>
 	
 	<!--METADATA-->
