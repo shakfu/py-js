@@ -18,7 +18,6 @@ subcommands:
 """
 from . import utils
 from .cli import Commander, option, option_group
-from .depend import DependencyManager
 from .ext.relocatable_python import relocatable_options, fix_framework
 from .factory import builder_factory
 from .sign import sign_all, package, package_as_dmg, sign_dmg

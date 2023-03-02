@@ -2,6 +2,8 @@
 
 ## Important
 
+- [ ] Fix `import api` which currently requires numpy to be in sys.path
+
 - [ ] Fix .github workflows which have become deprecated due to api changes at github
 
 ## Refactor

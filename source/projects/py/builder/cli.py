@@ -31,7 +31,6 @@ concept is
 """
 import argparse
 import sys
-import inspect
 
 # ------------------------------------------------------------------------------
 # Generic utility functions and classes for commandline ops

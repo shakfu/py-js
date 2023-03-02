@@ -37,7 +37,8 @@ PYJS_BUILDERS = dict(
 # UTILITY FUNCTIONS
 
 # returns default if k is not found in d or d[k] returns None
-get = lambda d, k, default: d[k] if (k in d and d[k]) else default
+def get(d, k, default):
+    return d[k] if k in d and d[k] else default
 
 # -----------------------------------------------------------------------------
 # DEPENDENCY PRODUCTS
@@ -126,9 +127,9 @@ def python_builder_factory(name, **settings):
 def pyjs_builder_factory(name, **settings):
 
     py_version = get(settings, "py_version", CURRENT_PYTHON_VERSION)
-    bz2_version = get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
-    ssl_version = get(settings, "ssl_version", DEFAULT_SSL_VERSION)
-    xz_version = get(settings, "xz_version", DEFAULT_XZ_VERSION)
+    get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
+    get(settings, "ssl_version", DEFAULT_SSL_VERSION)
+    get(settings, "xz_version", DEFAULT_XZ_VERSION)
 
     _builder, dependencies = PYJS_BUILDERS[name]
     if dependencies:

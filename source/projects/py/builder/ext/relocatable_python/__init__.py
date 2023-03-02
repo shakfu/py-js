@@ -1,14 +1,14 @@
 from . import get
 from .fix import fix_broken_signatures, fix_other_things
 from .install import install_extras
-from .relocatablizer import analyze, relocatablize
+from .relocatablizer import relocatablize
 
 from ...cli import option, option_group
 from ...config import Project
 
 from sysconfig import get_config_var
 
-AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.12", "3.10.8", "3.11.0"]
+AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.12", "3.10.8", "3.11.2"]
 
 if Project.python.arch == 'arm64':
     DEFAULT_OS_VERSION = '11'
@@ -44,7 +44,7 @@ relocatable_options = option_group(
     ),
     option("--os-version", default=DEFAULT_OS_VERSION,
         help="Override the macOS version of the downloaded pkg. "
-        'Current supported versions are "10.6", "10.9", and "11". '
+        'Current supported versions are "10.6", "10.9", and "11.2". '
         "Not all Python version and macOS version combinations are valid.",
     ),
     # option("--python-version", default=get.DEFAULT_PYTHON_VERSION,

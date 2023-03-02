@@ -21,7 +21,6 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import pathlib
 import platform
 
@@ -29,10 +28,10 @@ CURL = "/usr/bin/curl"
 DITTO = "/usr/bin/ditto"
 PKGUTIL = "/usr/sbin/pkgutil"
 DEFAULT_BASEURL = "https://www.python.org/ftp/python/%s/python-%s-macosx%s.pkg"
-DEFAULT_PYTHON_VERSION = "3.9.12"
-DEFAULT_OS_VERSION = "10.9"
+DEFAULT_PYTHON_VERSION = "3.11.2"
+DEFAULT_OS_VERSION = "11"
 
-class FrameworkGetter(object):
+class FrameworkGetter:
     """Handles getting the Python.org pkg and extracting the framework"""
 
     downloaded_pkg_path = ""

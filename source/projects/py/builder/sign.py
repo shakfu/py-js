@@ -46,8 +46,6 @@ import os
 import pathlib
 import re
 import subprocess
-import sys
-from pathlib import Path
 
 
 from .config import Project
@@ -238,7 +236,8 @@ class CodesignExternal:
 
     def process_dry_run(self):
         """main process to recursive sign."""
-        right = lambda x: str(x).lstrip(str(self.path))
+        def right(x):
+            return str(x).lstrip(str(self.path))
 
         self.section("PROCESSING:", self.path)
 

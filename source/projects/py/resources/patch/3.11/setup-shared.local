@@ -1,6 +1,6 @@
-
-# VARS
 # -----------------------------------------------------------------------------
+# VARS
+
 DESTLIB=$(LIBDEST)
 DESTLIB=$(LIBDEST)
 MACHDESTLIB=$(BINLIBDEST)
@@ -11,6 +11,8 @@ COREPYTHONPATH=$(DESTPATH)$(SITEPATH)$(TESTPATH)
 PYTHONPATH=$(COREPYTHONPATH)
 
 # -----------------------------------------------------------------------------
+# SHARED
+
 *shared*
 
 _asyncio _asynciomodule.c
@@ -63,8 +65,9 @@ zlib  zlibmodule.c -lz
 _hashlib _hashopenssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) -lcrypto
 _ssl _ssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) $(OPENSSL_LIBS)
 
-
 # -----------------------------------------------------------------------------
+# DISABLED
+
 *disabled*
 
 _codecs_cn cjkcodecs/_codecs_cn.c
@@ -98,4 +101,4 @@ unicodedata unicodedata.c
 xx xxmodule.c
 xxlimited xxlimited.c
 xxlimited_35 xxlimited_35.c
-
+xxsubtype xxsubtype.c

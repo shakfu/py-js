@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 from pprint import pprint
-from typing import Optional, Union
+from typing import Union
 
 Pathlike = Union[str, Path]
 
@@ -23,7 +23,8 @@ PATTERNS_TO_FIX = [
 ]
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
-title = lambda x: print(x)
+def title(x):
+    return print(x)
 
 # ----------------------------------------------------------------------------
 # Utility Classes

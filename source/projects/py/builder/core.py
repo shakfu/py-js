@@ -41,7 +41,6 @@ install:
 
 import logging
 import os
-import re
 import shutil
 import subprocess
 import tempfile
@@ -51,7 +50,7 @@ from types import SimpleNamespace
 from typing import Dict, List, Optional
 
 from .config import CURRENT_PYTHON_VERSION, LOG_FORMAT, LOG_LEVEL, Project
-from .depend import PATTERNS_TO_FIX, DependencyManager
+from .depend import DependencyManager
 from .ext.relocatable_python import download_relocatable_to
 from .shell import ShellCmd
 
@@ -63,7 +62,8 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 # ----------------------------------------------------------------------------
 # Utility Functions
 
-quote = lambda p: repr(str(p))
+def quote(p):
+    return repr(str(p))
 
 # ----------------------------------------------------------------------------
 # Utility Classes
@@ -277,10 +277,14 @@ class Builder:
         }
 
     def to_yaml(self):
-        import yaml
+        try:
+            import yaml
+            with open("dump.yml", "w", encoding="utf8") as f:
+                f.write(yaml.safe_dump(self.to_dict(), indent=4, default_flow_style=False))
+        except ImportError:
+            self.log.error("could not import yaml module")
 
-        with open("dump.yml", "w", encoding="utf8") as f:
-            f.write(yaml.safe_dump(self.to_dict(), indent=4, default_flow_style=False))
+
 
     def to_json(self):
         import json
@@ -886,6 +890,8 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
             "with_lto",
             "without_doc_strings",
             "without_ensurepip",
+            "disable_test_modules",
+            # "with_system_libmpdec",
             **kwargs,
         )
 
@@ -923,6 +929,8 @@ class SharedPythonBuilder(PythonSrcBuilder):
             "with_lto",
             "without_doc_strings",
             "without_ensurepip",
+            "disable_test_modules",
+            # "with_system_libmpdec",
             prefix=quote(self.prefix),
             with_openssl=quote(self.project.build_lib / "openssl"),
         )
@@ -943,7 +951,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
     def build(self):
         self.cmd.chdir(self.src_path)
 
-        kwargs = dict(prefix=quote(self.prefix))
+        dict(prefix=quote(self.prefix))
 
         self.configure(
             "enable_ipv6",
@@ -951,6 +959,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
             "with_lto",
             "without_doc_strings",
             "without_ensurepip",
+            "disable_test_modules",
             prefix=quote(self.prefix),
             with_openssl=quote(self.project.build_lib / "openssl"),
         )
@@ -1163,7 +1172,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
     def build(self):
         self.cmd.chdir(self.src_path)
 
-        kwargs = dict(prefix=quote(self.prefix))
+        dict(prefix=quote(self.prefix))
 
         self.configure(
             "enable_ipv6",
@@ -1171,6 +1180,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
             "with_lto",
             "without_doc_strings",
             "without_ensurepip",
+            "disable_test_modules",
             prefix=quote(self.prefix),
             # with_openssl=quote(self.project.build_lib / "openssl"),
         )
@@ -1287,15 +1297,15 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.rm_bins(
             [
                 f"2to3-{ver}",
-                f"2to3",
+                "2to3",
                 f"idle{ver}",
-                f"idle3",
+                "idle3",
                 f"easy_install-{ver}",
                 f"pip{ver}",
                 # f"pip3",
                 f"pyvenv-{ver}",
                 f"pydoc{ver}",
-                f"pydoc3",
+                "pydoc3",
                 # f"python3",
                 # f"python3-config",
             ]
@@ -1624,17 +1634,17 @@ class HomebrewPkgBuilder(PyJsBuilder):
         self.rm_bins(
             [
                 f"2to3-{ver}",
-                f"2to3",
+                "2to3",
                 f"idle{ver}",
-                f"idle3",
+                "idle3",
                 f"easy_install-{ver}",
                 f"pip{ver}",
-                f"pip3",
+                "pip3",
                 f"pyvenv-{ver}",
                 f"pydoc{ver}",
-                f"pydoc3",
-                f"python3",
-                f"python3-config",
+                "pydoc3",
+                "python3",
+                "python3-config",
             ]
         )
 
@@ -1827,10 +1837,8 @@ class RelocatablePkgBuilder(PyJsBuilder):
                 / "bin"
                 / "python3"
             )
-            get = lambda x: subprocess.check_output(
-                [py, "-c", f"import sysconfig; print(sysconfig.get_config_var('{x}'))"],
-                text=True,
-            ).strip()
+            def get(x):
+                return subprocess.check_output([py, "-c", f"import sysconfig; print(sysconfig.get_config_var('{x}'))"], text=True).strip()
 
             self.xcodebuild(
                 self.NAME,

@@ -15,8 +15,6 @@
 # limitations under the License.
 """Functions to make the Python framework relocatable"""
 
-from __future__ import print_function
-
 import os
 import subprocess
 import sys

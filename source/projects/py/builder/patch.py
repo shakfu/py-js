@@ -78,7 +78,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
 """
 import sysconfig
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 from enum import Enum
 
@@ -348,12 +348,14 @@ class PythonSetup:
     #                 writeln(module)
 
     def render(self, level: int, setup_path: str = 'setup.local', static_ssl=False):
-        setup = self.get_setup(level)
+        self.get_setup(level)
         excluded, static, shared, disabled = self.get_config(level)
         with open(setup_path, 'w') as f:
-            writeln = lambda *s: print(*s, file=f)
-            writeln("# VARS")
+            def writeln(*s):
+                return print(*s, file=f)
             writeln("# " + "-"*77)
+            writeln("# VARS")
+            writeln()
             writeln("DESTLIB=$(LIBDEST)")
             writeln("DESTLIB=$(LIBDEST)")
             writeln("MACHDESTLIB=$(BINLIBDEST)")
@@ -367,22 +369,25 @@ class PythonSetup:
             writeln()
             if static:
                 writeln()
-                writeln("# STATIC")
                 writeln("# " + "-"*77)
+                writeln("# STATIC")
+                writeln()
                 writeln("*static*")
                 for module in static:
                     writeln(module, " ".join(static[module].elems))
             if shared:
                 writeln()
-                writeln("# SHARED")
                 writeln("# " + "-"*77)
+                writeln("# SHARED")
+                writeln()
                 writeln("*shared*")
                 for module in shared:
                     writeln(module, " ".join(shared[module].elems))
             if disabled:
                 writeln()
-                writeln("# DISABLED")
                 writeln("# " + "-"*77)
+                writeln("# DISABLED")
+                writeln()
                 writeln("*disabled*")
                 for module in disabled:
                     writeln(module)

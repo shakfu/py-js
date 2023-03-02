@@ -142,7 +142,7 @@ def check_success(path: str, requirement: int = 2):
 def check_version(path: str, requirement: int = 2):
     version_folder = Path(path)
     print()
-    total_successes = sum(check_success(str(log), requirement) for log in version_folder.iterdir())
+    sum(check_success(str(log), requirement) for log in version_folder.iterdir())
     # print(f"{version_folder.name:<6}: {GREEN}{total_successes}{RESET} out of {requirement * 2} builds OK")
 
 def check_logs(path: str, requirement: int = 2):
