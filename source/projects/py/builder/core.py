@@ -1075,7 +1075,8 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
                 "_csv",
                 "_elementtree",
                 "_json",
-                "_multiprocessing" "_pickle",
+                "_multiprocessing",
+                "_pickle",
                 "_zoneinfo",
                 "pyexpat",
                 "unicodedata",
@@ -1580,13 +1581,14 @@ class HomebrewExtBuilder(PyJsBuilder):
                 "logging",
                 "multiprocessing",
                 "pydoc_data",
+                "re",
                 "sqlite3",
                 "unittest",
                 "urllib",
                 "wsgiref",
                 "xml",
                 "xmlrpc",
-            ]
+             ]
         )
         self.cmd.copy(self.project.python.prefix / "include", self.prefix_include)
         self.cmd.remove(self.prefix_lib / self.product.dylib)
