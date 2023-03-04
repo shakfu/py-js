@@ -39,6 +39,7 @@ install:
 
 """
 
+import json
 import logging
 import os
 import shutil
@@ -62,8 +63,9 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 # ----------------------------------------------------------------------------
 # Utility Functions
 
-def quote(p):
-    return repr(str(p))
+def quote(obj):
+    """convert object to string and ensure it's quoted"""
+    return repr(str(obj))
 
 # ----------------------------------------------------------------------------
 # Utility Classes
@@ -152,11 +154,14 @@ class Product:
     @property
     def url(self):
         """Returns url to download product src as a pathlib.Path instance."""
-        if self.url_template:
-            return Path(self.url_template.format(name=self.name, version=self.version))
+        assert self.url_template, "Product.url_template required"
+        return Path(self.url_template.format(name=self.name, version=self.version))
+        # if self.url_template:
+        #     return Path(self.url_template.format(name=self.name, version=self.version))
         # raise KeyError("url_template not providing in settings")
 
     def to_dict(self) -> Dict:
+        """convert properties to dict"""
         return {
             "name": self.name,
             "version": self.version,
@@ -224,8 +229,8 @@ class Builder:
     @property
     def download_path(self) -> Optional[Path]:
         """Returns path to downloaded product-version archive."""
-        if self.product.name_archive:
-            return self.project.build_downloads / self.product.name_archive
+        assert self.product.name_archive, "Build.product.name_archive required"
+        return self.project.build_downloads / self.product.name_archive
 
     @property
     def src_path(self) -> Path:
@@ -277,20 +282,24 @@ class Builder:
         }
 
     def to_yaml(self):
+        """convert properties to yaml"""
         try:
             import yaml
-            with open("dump.yml", "w", encoding="utf8") as f:
-                f.write(yaml.safe_dump(self.to_dict(), indent=4, default_flow_style=False))
+            with open("dump.yml", "w", encoding="utf8") as fopen:
+                fopen.write(
+                    yaml.safe_dump(
+                        self.to_dict(),
+                        indent=4,
+                        default_flow_style=False
+                    )
+                )
         except ImportError:
             self.log.error("could not import yaml module")
 
-
-
     def to_json(self):
-        import json
-
-        with open("dump.json", "w", encoding="utf8") as f:
-            json.dump(self.to_dict(), f, sort_keys=True, indent=4)
+        """convert properties to json"""
+        with open("dump.json", "w", encoding="utf8") as fopen:
+            json.dump(self.to_dict(), fopen, sort_keys=True, indent=4)
 
     def configure(self, *options, **kwargs):
         """generate ./configure instructions"""
@@ -302,17 +311,14 @@ class Builder:
             _env.update(self.default_env_vars)
 
         prefix = " ".join(f"{k}={v}" for k, v in _env.items()) if _env else ""
-        for key in kwargs:
-            _key = key.replace("_", "-")
-            _kwargs[_key] = kwargs[key]
 
-        self.cmd(
-            "{prefix} ./configure {options} {kwargs}".format(
-                prefix=prefix,
-                options=" ".join(f"--{opt}" for opt in _options),
-                kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items()),
-            )
-        )
+        for key, val in kwargs.items():
+            _key = key.replace("_", "-")
+            _kwargs[_key] = val
+
+        options=" ".join(f"--{opt}" for opt in _options)
+        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
+        self.cmd(f"{prefix} ./configure {options} {kwargs}")
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
@@ -334,7 +340,7 @@ class Builder:
         self.cmd(_cmd)
 
     def deploy(self, targets: List[str] = None):  # type: ignore
-        """copies externals from the external build dir to the package/externals directory"""
+        """copies externals from external build dir to package/externals dir"""
         for ext in [f"{t}.mxo" for t in targets]:
             src = self.project.build_externals / ext
             dst = self.project.externals / ext
@@ -343,7 +349,7 @@ class Builder:
             if src.exists():
                 self.cmd.copy(src, dst)
 
-    def xcodebuild(self, project: str, targets: List[str], 
+    def xcodebuild(self, project: str, targets: List[str],
             *preprocessor_flags, **xcconfig_flags):
         """python wrapper around command-line xcodebuild"""
 
@@ -877,10 +883,11 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
 
         self.cmd.chdir(self.src_path)
 
-        kwargs = dict(
-            enable_framework=quote(self.project.build_lib),
-            with_openssl=quote(self.project.build_lib / "openssl"),
-        )
+        kwargs = {
+            "enable_framework": quote(self.project.build_lib), 
+            "with_openssl": quote(self.project.build_lib / 'openssl'),
+        }
+
         if self.project.python.arch == 'arm64':
             kwargs['with_universal_archs'] = 'universal2'
 
@@ -950,8 +957,6 @@ class StaticPythonBuilder(PythonSrcBuilder):
 
     def build(self):
         self.cmd.chdir(self.src_path)
-
-        dict(prefix=quote(self.prefix))
 
         self.configure(
             "enable_ipv6",
@@ -1093,11 +1098,10 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
             "utf_8.py",
         ]
         encodings = self.python_lib / "encodings"
-        for f in encodings.iterdir():
-            if f.name in keep:
+        for filename in encodings.iterdir():
+            if filename.name in keep:
                 continue
-            else:
-                self.cmd.remove(f)
+            self.cmd.remove(filename)
 
     def remove_packages(self):
         """remove list of non-critical packages"""
@@ -1119,7 +1123,8 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
                 "idlelib",
                 "lib2to3",
                 "mailbox",
-                "mailbox.py" "multiprocessing",
+                "mailbox.py",
+                "multiprocessing",
                 "optparse.py",
                 "pickletools.py",
                 "pydoc.py",
@@ -1173,8 +1178,6 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
     def build(self):
         self.cmd.chdir(self.src_path)
 
-        dict(prefix=quote(self.prefix))
-
         self.configure(
             "enable_ipv6",
             "enable_optimizations",
@@ -1208,7 +1211,7 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.download()
         self.post_process()
 
-    def configure(self):
+    def configure(self, *options, **kwargs):
         """configures overrides to defaults from commandline"""
         if self.settings.python_version != self.product.version:
             self.product.version = self.settings.python_version
@@ -1219,7 +1222,7 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.cmd.remove(framework)
         assert not framework.exists(), "reset not completed"
 
-    def download(self):
+    def download(self, include_dependencies=True):
         """download relocatable python"""
         self.project.build_downloads.mkdir(parents=True,  exist_ok=True)
         download_relocatable_to(self.project.support, self.settings)
@@ -1230,11 +1233,13 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.ziplib()
 
     def temp_remove_site_packages(self):
+        """move site_packages to a tmp directory"""
         tmp_dir = tempfile.mkdtemp()
         self.cmd.move(self.site_packages, tmp_dir)
         return tmp_dir
 
     def restore_site_packages(self, tmp_dir):
+        """restore site_packages from tmp directory"""
         tmp_dir = Path(tmp_dir)
         self.cmd.move(tmp_dir / 'site-packages', self.site_packages)
 
@@ -1315,8 +1320,8 @@ class RelocatablePythonBuilder(PythonBuilder):
     def rm_globbed(self, names):
         """remove all named glob patterns of libraries and files"""
         for name in names:
-            for f in self.prefix_lib.glob(name):
-                self.cmd.remove(f)
+            for filename in self.prefix_lib.glob(name):
+                self.cmd.remove(filename)
 
     def remove_tkinter(self):
         """remove tkinter-related stuff"""
@@ -1651,8 +1656,7 @@ class HomebrewPkgBuilder(PyJsBuilder):
         )
 
     def copy_python(self):
-        # """copy python from homebrew to destination"""
-
+        """copy python framework from homebrew to support directory"""
         src = self.project.python.prefix.parent.parent
         self.cmd(f'ditto {src} {self.project.support / "Python.framework"}')
         self.clean()
@@ -1685,10 +1689,10 @@ class LocalSystemBuilder(PyJsBuilder):
     def build(self):
         """builds externals from local system python"""
 
-        flags = dict(
-            PREFIX=str(self.project.python.prefix),
-            LIBS=str(self.project.python.libs),
-        )
+        flags = {
+            "PREFIX": str(self.project.python.prefix), 
+            "LIBS": str(self.project.python.libs),
+        }
 
         self.xcodebuild(self.NAME, targets=["py", "pyjs"], **flags)
 
@@ -1831,7 +1835,7 @@ class RelocatablePkgBuilder(PyJsBuilder):
         """builds externals from framework python"""
 
         if self.product_exists:
-            py = (
+            py_exe = (
                 self.project.support
                 / "Python.framework"
                 / "Versions"
@@ -1839,8 +1843,13 @@ class RelocatablePkgBuilder(PyJsBuilder):
                 / "bin"
                 / "python3"
             )
-            def get(x):
-                return subprocess.check_output([py, "-c", f"import sysconfig; print(sysconfig.get_config_var('{x}'))"], text=True).strip()
+            def get(name):
+                return subprocess.check_output([
+                    py_exe,
+                    "-c",
+                    f"import sysconfig; print(sysconfig.get_config_var('{name}'))"
+                ],
+                text=True).strip()
 
             self.xcodebuild(
                 self.NAME,
@@ -1873,4 +1882,3 @@ class BeewareExtBuilder(PyJsBuilder):
 
         if self.product_exists:
             self.xcodebuild(self.NAME, targets=["py", "pyjs"])
-
