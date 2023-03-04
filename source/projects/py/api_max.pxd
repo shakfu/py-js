@@ -112,8 +112,8 @@ cdef extern from "max_types.h":
 
 
 cdef extern from "ext_mess.h":
-    ctypedef void *(*method)(void *, ...)
-    ctypedef long (*t_intmethod)(void *, ...)
+    ctypedef void *(*method)(void *)
+    ctypedef long (*t_intmethod)(void *)
     # ctypedef void t_outlet
     # ctypedef void t_inlet
     ctypedef struct t_object
@@ -122,12 +122,12 @@ cdef extern from "ext_mess.h":
         # struct object *s_thing
     cdef long MAGIC
     cdef long OB_MAGIC
-    cdef int NOGOOD(x)
-    cdef int OB_INVALID(x)
+    cdef int NOGOOD(void *x)
+    cdef int OB_INVALID(void *x)
     cdef int MSG_MAXARG
 
     ctypedef union word:
-        t_atom_long w_long;
+        t_atom_long w_long
         t_atom_float w_float
         t_symbol *w_sym
         #object *w_obj
@@ -186,6 +186,7 @@ cdef extern from "ext_hashtab.h":
     cdef int HASH_DEFSLOTS
     ctypedef struct t_hashtab_entry
     ctypedef struct t_hashtab
+    cdef long cmpfn(void *x, void *y)
 
     cdef t_hashtab *hashtab_new(long slotcount)
     cdef t_max_err hashtab_store(t_hashtab *x, t_symbol *key, t_object *val)
@@ -202,7 +203,7 @@ cdef extern from "ext_hashtab.h":
     cdef t_max_err hashtab_clear(t_hashtab *x)
     cdef t_max_err hashtab_chuckkey(t_hashtab *x, t_symbol *key)
     cdef t_max_err hashtab_chuck(t_hashtab *x)
-    cdef t_max_err hashtab_findfirst(t_hashtab *x, void **o, long cmpfn(void *, void *), void *cmpdata)
+    cdef t_max_err hashtab_findfirst(t_hashtab *x, void **o, cmpfn, void *cmpdata)
     cdef t_max_err hashtab_methodall(t_hashtab *x, t_symbol *s, ...)
     #cdef t_max_err hashtab_methodall(...)
     cdef t_max_err hashtab_methodall_imp(void *x, void *sym, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
@@ -210,7 +211,7 @@ cdef extern from "ext_hashtab.h":
     cdef t_max_err hashtab_objfunall(t_hashtab *x, method fun, void *arg)
     cdef t_atom_long hashtab_getsize(t_hashtab *x)
     cdef void hashtab_print(t_hashtab *x)
-    cdef void hashtab_readonly(t_hashtab *x, long readonly)
+    cdef void hashtab_readonly(t_hashtab *x, long _readonly)
     cdef void hashtab_flags(t_hashtab *x, long flags)
     cdef t_atom_long hashtab_getflags(t_hashtab *x)
     cdef t_max_err hashtab_keyflags(t_hashtab *x, t_symbol *key, long flags)
@@ -236,7 +237,7 @@ cdef extern from "ext_linklist.h":
     cdef t_atom_long linklist_objptr2index(t_linklist *x, void *p)
     cdef t_atom_long linklist_append(t_linklist *x, void *o)
     cdef t_atom_long linklist_insertindex(t_linklist *x,  void *o, long index)
-    cdef long linklist_insert_sorted(t_linklist *x, void *o, long cmpfn(void *, void *))
+    cdef long linklist_insert_sorted(t_linklist *x, void *o, cmpfn)
     cdef t_llelem *linklist_insertafterobjptr(t_linklist *x, void *o, void *objptr)  
     cdef t_llelem *linklist_insertbeforeobjptr(t_linklist *x, void *o, void *objptr) 
     cdef t_llelem *linklist_moveafterobjptr(t_linklist *x, void *o, void *objptr)    
@@ -259,13 +260,13 @@ cdef extern from "ext_linklist.h":
     cdef void linklist_rotate(t_linklist *x, long i)
     cdef void linklist_shuffle(t_linklist *x)
     cdef void linklist_swap(t_linklist *x, long a, long b)
-    cdef t_atom_long linklist_findfirst(t_linklist *x, void **o, long cmpfn(void *, void *), void *cmpdata)
-    cdef void linklist_findall(t_linklist *x, t_linklist **out, long cmpfn(void *, void *), void *cmpdata)
+    cdef t_atom_long linklist_findfirst(t_linklist *x, void **o, cmpfn, void *cmpdata)
+    cdef void linklist_findall(t_linklist *x, t_linklist **out, cmpfn, void *cmpdata)
     cdef void linklist_methodall(t_linklist *x, t_symbol *s, ...)
     cdef void linklist_methodall_imp(void *x, void *sym, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
     cdef void *linklist_methodindex(t_linklist *x, t_atom_long i, t_symbol *s, ...)
     cdef void *linklist_methodindex_imp(void *x, void *i, void *s, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7) 
-    cdef void linklist_sort(t_linklist *x, long cmpfn(void *, void *))
+    cdef void linklist_sort(t_linklist *x, cmpfn)
     cdef void linklist_funall(t_linklist *x, method fun, void *arg)
     cdef t_atom_long linklist_funall_break(t_linklist *x, method fun, void *arg)
     cdef void *linklist_funindex(t_linklist *x, long i, method fun, void *arg)
@@ -273,7 +274,7 @@ cdef extern from "ext_linklist.h":
     cdef void *linklist_next(t_linklist *x, void *p, void **next)
     cdef void *linklist_prev(t_linklist *x, void *p, void **prev)
     cdef void *linklist_last(t_linklist *x, void **item)
-    cdef void linklist_readonly(t_linklist *x, long readonly)
+    cdef void linklist_readonly(t_linklist *x, long _readonly)
     cdef void linklist_flags(t_linklist *x, long flags)
     cdef t_atom_long linklist_getflags(t_linklist *x)
     cdef long linklist_match(void *a, void *b)
@@ -379,7 +380,7 @@ cdef extern from "ext_proto.h":
     cdef short binbuf_getatom(void *x, long *p1, long *p2, t_atom *ap)
     cdef short binbuf_text(void *x, char **srcText, long n)
     cdef short binbuf_totext(void *x, char **dstText, t_ptr_size *sizep)
-    cdef void binbuf_set(void *x, t_symbol *s, short argc, t_atom *argv);
+    cdef void binbuf_set(void *x, t_symbol *s, short argc, t_atom *argv)
     cdef void binbuf_append(void *x, t_symbol *s, short argc, t_atom *argv)
     cdef void binbuf_delete(void *x, long fromType, long toType, long fromData, long toData)
     cdef void binbuf_addtext(void *x, char **text, long size)
@@ -486,7 +487,7 @@ cdef extern from "ext_dictionary.h":
     cdef t_max_err dictionary_dump(t_dictionary *d, long recurse, long console)
 
     cdef t_max_err dictionary_copyentries(t_dictionary *src, t_dictionary *dst, t_symbol **keys)
-    cdef t_dictionary *dictionary_sprintf(char *fmt, ...);
+    cdef t_dictionary *dictionary_sprintf(char *fmt, ...)
     cdef t_object *newobject_sprintf(t_object *patcher, const char *fmt, ...)
     cdef t_object *newobject_fromboxtext(t_object *patcher, const char *text)
     cdef t_object *newobject_fromdictionary(t_object *patcher, t_dictionary *d)
@@ -995,7 +996,7 @@ cdef extern from "ext_obex_util.h":
     cdef long atomisstring(const t_atom *a)
     cdef long atomisatomarray(t_atom *a)
     cdef long atomisdictionary(t_atom *a)
-    cdef OB_MSG(x,p)
+    cdef OB_MSG(t_object *x, const char p)
     cdef t_max_err object_method_parse(t_object *x, t_symbol *s, const char *parsestr, t_atom *rv)
     cdef t_max_err object_method_binbuf(t_object *x, t_symbol *s, void *buf, t_atom *rv)
     cdef t_max_err object_method_attrval(t_object *x, t_symbol *s, t_symbol *attrname, t_object *obj, t_atom *rv)
@@ -1137,9 +1138,9 @@ cdef extern from "ext_database.h":
 
 
 cdef extern from "ext_default.h":
-    cdef t_max_err patcher_setdefault(t_object *patcher, t_symbol *key, long argc, t_atom *argv);
-    cdef t_max_err patcher_getdefault(t_object *patcher, t_symbol *key, long *argc, t_atom *argv);
-    cdef t_max_err patcher_removedefault(t_object *patcher, t_symbol *key);
+    cdef t_max_err patcher_setdefault(t_object *patcher, t_symbol *key, long argc, t_atom *argv)
+    cdef t_max_err patcher_getdefault(t_object *patcher, t_symbol *key, long *argc, t_atom *argv)
+    cdef t_max_err patcher_removedefault(t_object *patcher, t_symbol *key)
 
 
 cdef extern from "ext_parameter.h":
@@ -1501,7 +1502,7 @@ cdef extern from "ext_path.h":
         PATH_TYPE_TEMPFOLDER
         PATH_TYPE_MAXDB
 
-    cdef int PATH_CHAR_IS_SEPARATOR(c)
+    cdef int PATH_CHAR_IS_SEPARATOR(char c)
 
     ctypedef enum e_max_fileinfo_flags: 
         PATH_FILEINFO_ALIAS = 1
@@ -1733,22 +1734,22 @@ cdef extern from "ext_sysfile.h":
 
 cdef extern from "ext_sysmem.h":
 
-    extern t_ptr sysmem_newptr(long size)
-    extern t_ptr sysmem_newptrclear(long size)
-    extern t_ptr sysmem_resizeptr(void *ptr, long newsize)
-    extern t_ptr sysmem_resizeptrclear(void *ptr, long newsize)
-    extern long sysmem_ptrsize(void *ptr)
-    extern void sysmem_freeptr(void *ptr)
-    extern void sysmem_copyptr(const void *src, void *dst, long bytes)
-    extern t_handle sysmem_newhandle(long size)
-    extern t_handle sysmem_newhandleclear(unsigned long size) 
-    extern long sysmem_resizehandle(t_handle handle, long newsize)
-    extern long sysmem_handlesize(t_handle handle)
-    extern void sysmem_freehandle(t_handle handle)
-    extern long sysmem_lockhandle(t_handle handle, long lock)
-    extern long sysmem_ptrandhand(void *p, t_handle h, long size)
-    extern long sysmem_ptrbeforehand(void *p, t_handle h, unsigned long size)
-    extern long sysmem_nullterminatehandle(t_handle h)
+    cdef t_ptr sysmem_newptr(long size)
+    cdef t_ptr sysmem_newptrclear(long size)
+    cdef t_ptr sysmem_resizeptr(void *ptr, long newsize)
+    cdef t_ptr sysmem_resizeptrclear(void *ptr, long newsize)
+    cdef long sysmem_ptrsize(void *ptr)
+    cdef void sysmem_freeptr(void *ptr)
+    cdef void sysmem_copyptr(const void *src, void *dst, long bytes)
+    cdef t_handle sysmem_newhandle(long size)
+    cdef t_handle sysmem_newhandleclear(unsigned long size) 
+    cdef long sysmem_resizehandle(t_handle handle, long newsize)
+    cdef long sysmem_handlesize(t_handle handle)
+    cdef void sysmem_freehandle(t_handle handle)
+    cdef long sysmem_lockhandle(t_handle handle, long lock)
+    cdef long sysmem_ptrandhand(void *p, t_handle h, long size)
+    cdef long sysmem_ptrbeforehand(void *p, t_handle h, unsigned long size)
+    cdef long sysmem_nullterminatehandle(t_handle h)
 
 
 cdef extern from "ext_atomarray.h":
@@ -5381,8 +5382,8 @@ cdef extern from "jgraphics.h":
     ctypedef struct t_jsvg      
     ctypedef struct t_jsvg_remap    
 
-    cdef int JGRAPHICS_RECT_BOTTOM(rect)
-    cdef int JGRAPHICS_RECT_RIGHT(rect)
+    cdef int JGRAPHICS_RECT_BOTTOM(t_rect *rect)
+    cdef int JGRAPHICS_RECT_RIGHT(t_rect *rect)
     cdef int JGRAPHICS_PI
     cdef int JGRAPHICS_2PI
     cdef int JGRAPHICS_PIOVER2
