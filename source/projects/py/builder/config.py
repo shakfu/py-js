@@ -43,6 +43,28 @@ MAGENTA = "\033[1;35m"
 CYAN = "\033[1;36m"
 RESET = "\033[m"
 
+DEFAULT_CONFIGURE_OPTIONS = [
+    "disable_profiling",
+    "disable_test_modules",
+    "enable_ipv6",
+    "enable_optimizations",
+    "with_lto",
+    "without_doc_strings",
+    "without_readline",
+    # "with_readline=editline",
+    # "with_lto=thin",
+    # "with_system_libmpdec",
+    # "with_system_expat",
+    # "with_system_ffi",
+    # "with_openssl=DIR",
+    # "with_openssl_rpath=auto",
+    # "enable_universalsdk",
+    # "enable_universalsdk=SDKDIR",
+    # "enable_framework",
+    # "enable_framework=INSTALLDIR",
+    
+
+]
 
 PYJS_TARGETS = {
     "default": dict(

@@ -50,7 +50,8 @@ from textwrap import dedent
 from types import SimpleNamespace
 from typing import Dict, List, Optional
 
-from .config import CURRENT_PYTHON_VERSION, LOG_FORMAT, LOG_LEVEL, Project
+from .config import (CURRENT_PYTHON_VERSION, DEFAULT_CONFIGURE_OPTIONS,
+                     LOG_FORMAT, LOG_LEVEL, Project)
 from .depend import DependencyManager
 from .ext.relocatable_python import download_relocatable_to
 from .shell import ShellCmd
@@ -585,6 +586,26 @@ class PythonBuilder(Builder):
     # ------------------------------------------------------------------------
     # src-level operations
 
+    def configure(self, *options, **kwargs):
+        """generate ./configure instructions"""
+        _kwargs = {}
+        options = set(DEFAULT_CONFIGURE_OPTIONS).union(set(options))
+        _options = [opt.replace("_", "-") for opt in options]
+        _env = {}
+
+        if self.default_env_vars:
+            _env.update(self.default_env_vars)
+
+        prefix = " ".join(f"{k}={v}" for k, v in _env.items()) if _env else ""
+
+        for key, val in kwargs.items():
+            _key = key.replace("_", "-")
+            _kwargs[_key] = val
+
+        options=" ".join(f"--{opt}" for opt in _options)
+        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
+        self.cmd(f"{prefix} ./configure {options} {kwargs}")
+
     def pre_process(self):
         """pre-build operations"""
 
@@ -892,12 +913,12 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
             kwargs['with_universal_archs'] = 'universal2'
 
         self.configure(
-            "enable_ipv6",
-            "enable_optimizations",
-            "with_lto",
-            "without_doc_strings",
+            # "enable_ipv6",
+            # "enable_optimizations",
+            # "with_lto",
+            # "without_doc_strings",
             "without_ensurepip",
-            "disable_test_modules",
+            # "disable_test_modules",
             # "with_system_libmpdec",
             **kwargs,
         )
@@ -912,7 +933,6 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
     #     """clean everything."""
     #     super().clean() # call superclass clean method
     #     self.cmd.remove(self.prefix_resources / "Python.app")
-
 
 
 class SharedPythonBuilder(PythonSrcBuilder):
@@ -930,13 +950,14 @@ class SharedPythonBuilder(PythonSrcBuilder):
 
         self.cmd.chdir(self.src_path)
         self.configure(
-            "enable_ipv6",
-            "enable_optimizations",
+            # "enable_ipv6",
+            # "enable_optimizations",
             "enable_shared",
-            "with_lto",
-            "without_doc_strings",
+            "without_static_libpython",
+            # "with_lto",
+            # "without_doc_strings",
             "without_ensurepip",
-            "disable_test_modules",
+            # "disable_test_modules",
             # "with_system_libmpdec",
             prefix=quote(self.prefix),
             with_openssl=quote(self.project.build_lib / "openssl"),
@@ -959,12 +980,12 @@ class StaticPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.src_path)
 
         self.configure(
-            "enable_ipv6",
-            "enable_optimizations",
-            "with_lto",
-            "without_doc_strings",
+            # "enable_ipv6",
+            # "enable_optimizations",
+            # "with_lto",
+            # "without_doc_strings",
             "without_ensurepip",
-            "disable_test_modules",
+            # "disable_test_modules",
             prefix=quote(self.prefix),
             with_openssl=quote(self.project.build_lib / "openssl"),
         )
@@ -1179,12 +1200,12 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.src_path)
 
         self.configure(
-            "enable_ipv6",
-            "enable_optimizations",
-            "with_lto",
-            "without_doc_strings",
+            # "enable_ipv6",
+            # "enable_optimizations",
+            # "with_lto",
+            # "without_doc_strings",
             "without_ensurepip",
-            "disable_test_modules",
+            # "disable_test_modules",
             prefix=quote(self.prefix),
             # with_openssl=quote(self.project.build_lib / "openssl"),
         )
