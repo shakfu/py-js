@@ -1,0 +1,30 @@
+direction: right
+python-framework: "Python.framework"
+
+python-src -> python-framework: FrameworkPythonBuilder("shared-min")
+python-framework -> framework-ext: FrameworkExtBuilder
+python-framework -> framework-pkg: FrameworkPkgBuilder
+
+python-src -> static-python: StaticPythonBuilder("static-min")
+static-python -> static-ext: StaticExtBuilder
+
+python-src -> tiny-static-python: TinyStaticPythonBuilder("static-tiny")
+tiny-static-python -> tiny-static-ext: TinyStaticExtBuilder
+
+python-src -> shared-python: SharedPythonBuilder("shared-min")
+shared-python -> shared-ext: SharedExtBuilder
+shared-python -> shared-pkg: SharedPkgBuilder
+
+python-src -> tiny-shared-python: TinySharedPythonBuilder("shared-tiny")
+tiny-shared-python -> tiny-shared-ext: TinySharedPkgBuilder
+tiny-shared-python -> tiny-shared-pkg: TinySharedPkgBuilder
+
+python-src -> beeware-python: BeewarePythonBuilder("beeware")
+beeware-python -> beeware-ext: BeewareExtBuilder
+
+
+homebrew-python -> homebrew-ext: HomebrewExtBuilder
+homebrew-python -> homebrew-pkg: HomebrewPkgBuilder
+
+python-pkg -> relocatable-pkg: RelocatablePkgBuilder
+
