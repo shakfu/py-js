@@ -21,7 +21,7 @@ Feel free to change the default ports as required.
 To build the oscar maxtest runner locally (the source is included) run the following:
 
 ```bash
-make cmake
+make projects
 ```
 
 ## Running

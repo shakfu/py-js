@@ -189,7 +189,7 @@ brew install cmake zmq czmq
 Now you can build all externals (includeing `py` and `pyjs`) in one shot:
 
 ```bash
-make cmake
+make projects
 ```
 
 For some of the less developed externals and more experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
@@ -257,7 +257,7 @@ There are other [build variations](#build-variations) which are discussed in mor
 $ make help
 
 >>> general
-make cmake                : build all subprojects using standard cmake process
+make projects             : build all subprojects using standard cmake process
 
 >>> pyjs targets
 make                      : non-portable pyjs externals linked to your system

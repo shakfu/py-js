@@ -94,7 +94,7 @@ def dependency_builder_factory(name, **settings):
 
 def python_builder_factory(name, **settings):
 
-    py_version = get(settings, "py_version", CURRENT_PYTHON_VERSION)
+    py_version = get(settings, "python_version", CURRENT_PYTHON_VERSION)
     bz2_version = get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
     ssl_version = get(settings, "ssl_version", DEFAULT_SSL_VERSION)
     xz_version = get(settings, "xz_version", DEFAULT_XZ_VERSION)
@@ -126,7 +126,7 @@ def python_builder_factory(name, **settings):
 
 def pyjs_builder_factory(name, **settings):
 
-    py_version = get(settings, "py_version", CURRENT_PYTHON_VERSION)
+    py_version = get(settings, "python_version", CURRENT_PYTHON_VERSION)
     get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
     get(settings, "ssl_version", DEFAULT_SSL_VERSION)
     get(settings, "xz_version", DEFAULT_XZ_VERSION)

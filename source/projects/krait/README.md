@@ -12,7 +12,7 @@ I called it `krait`, in honour of the 'Krait Lightspeeder' in the original [Elit
 From the root of the `py-js` project
 
 ```bash
-make cmake
+make projects
 ```
 
 This will build all subprojects, including `krait`, using the standard cmake build process.

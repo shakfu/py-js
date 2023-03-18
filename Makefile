@@ -448,8 +448,8 @@ cflow:
 	@rm -f $(CFLOW)/*.dot
 
 
-cmake:
-	@bash $(SCRIPTS)/build_cmake.sh
+projects:
+	@bash $(SCRIPTS)/build_projects.sh
 
 # fat:
 # 	@echo "NOT FUNCTIONAL UNLESS DEPS ARE ALSO FAT"

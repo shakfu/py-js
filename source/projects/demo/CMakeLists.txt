@@ -12,7 +12,7 @@ include_directories(
 
 file(GLOB PROJECT_SRC
      "*.h"
-	 "*.c"
+	"*.c"
      "*.cpp"
 )
 add_library( 

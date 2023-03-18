@@ -5,7 +5,7 @@ This folder contains some code experiments using Max with Python3.
 All of these projects can be built using cmake:
 
 ```bash
-make cmake
+make projects
 ```
 
 The projects currently fall into two groups:

@@ -7,7 +7,7 @@ This project is an experimental attempt to defer the evaluation of a python func
 From the root of the `py-js` project
 
 ```bash
-make cmake
+make projects
 ```
 
 This will build all subprojects, including `cobra`, using the standard cmake build process.

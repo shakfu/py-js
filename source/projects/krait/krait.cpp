@@ -1,6 +1,6 @@
 /**
  * @file krait.cpp
- * @author shakfu (shak@fu.com)
+ * @author shakfu (https://github.com/shakfu)
  * @brief another experiment in mixing c, cpp, and python in a max external
  * @version 0.1
  * @date 2022-05-28
