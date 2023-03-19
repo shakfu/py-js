@@ -20881,7 +20881,6 @@ static PyObject *__pyx_pf_3api_38echo(CYTHON_UNUSED PyObject *__pyx_self, PyObje
  * 
  * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
- * 
  */
 
 /* Python wrapper */
@@ -20916,7 +20915,6 @@ static PyObject *__pyx_pf_3api_40total(CYTHON_UNUSED PyObject *__pyx_self, PyObj
  * 
  * def total(*args):
  *     return sum(args)             # <<<<<<<<<<<<<<
- * 
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_sum, __pyx_v_args); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1613, __pyx_L1_error)
@@ -20930,7 +20928,6 @@ static PyObject *__pyx_pf_3api_40total(CYTHON_UNUSED PyObject *__pyx_self, PyObj
  * 
  * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
- * 
  */
 
   /* function exit code */
@@ -22829,7 +22826,6 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * 
  * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
- * 
  */
   __pyx_tuple__61 = PyTuple_Pack(1, __pyx_n_s_args); if (unlikely(!__pyx_tuple__61)) __PYX_ERR(0, 1612, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__61);
@@ -23746,7 +23742,6 @@ if (!__Pyx_RefNanny) {
  * 
  * def total(*args):             # <<<<<<<<<<<<<<
  *     return sum(args)
- * 
  */
   __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_41total, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1612, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);

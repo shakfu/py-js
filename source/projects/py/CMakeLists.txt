@@ -26,26 +26,26 @@ option(DEBUG "display debug variables")
 find_package(Python3 COMPONENTS Interpreter Development)
 
 if(DEBUG)
-	message("CMAKE_LIBRARY_OUTPUT_DIRECTORY:${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-	message("CMAKE_CURRENT_BINARY_DIR:${CMAKE_CURRENT_BINARY_DIR}")
-	message("Python3_VERSION:${Python3_VERSION}")
-	message("Python3_FOUND:${Python3_FOUND}")
-	message("Python3_Interpreter_FOUND:${Python3_Interpreter_FOUND}")
-	message("Python3_Development_FOUND:${Python3_Development_FOUND}")
+	message("CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+	message("CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+	message("Python3_VERSION: ${Python3_VERSION}")
+	message("Python3_FOUND: ${Python3_FOUND}")
+	message("Python3_Interpreter_FOUND: ${Python3_Interpreter_FOUND}")
+	message("Python3_Development_FOUND: ${Python3_Development_FOUND}")
 
-	message("Python3_EXECUTABLE:${Python3_EXECUTABLE}")
-	message("Python3_INTERPRETER_ID:${Python3_INTERPRETER_ID}")
-	message("Python3_STDARCH:${Python3_STDARCH}")
-	message("Python3_STDLIB:${Python3_STDLIB}")
-	message("Python3_SITELIB:${Python3_SITELIB}")
-	message("Python3_SITEARCH:${Python3_SITEARCH}")
-	message("Python3_SOABI:${Python3_SOABI}")
+	message("Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+	message("Python3_INTERPRETER_ID: ${Python3_INTERPRETER_ID}")
+	message("Python3_STDARCH: ${Python3_STDARCH}")
+	message("Python3_STDLIB: ${Python3_STDLIB}")
+	message("Python3_SITELIB: ${Python3_SITELIB}")
+	message("Python3_SITEARCH: ${Python3_SITEARCH}")
+	message("Python3_SOABI: ${Python3_SOABI}")
 
-	message("Python3_LIBRARIES:${Python3_LIBRARIES}")
-	message("Python3_INCLUDE_DIRS:${Python3_INCLUDE_DIRS}")
-	message("Python3_LINK_OPTIONS:${Python3_LINK_OPTIONS}")
-	message("Python3_LIBRARY_DIRS:${Python3_LIBRARY_DIRS}")
-	message("Python3_RUNTIME_LIBRARY_DIRS:${Python3_RUNTIME_LIBRARY_DIRS}")
+	message("Python3_LIBRARIES: ${Python3_LIBRARIES}")
+	message("Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+	message("Python3_LINK_OPTIONS: ${Python3_LINK_OPTIONS}")
+	message("Python3_LIBRARY_DIRS: ${Python3_LIBRARY_DIRS}")
+	message("Python3_RUNTIME_LIBRARY_DIRS: ${Python3_RUNTIME_LIBRARY_DIRS}")
 endif()
 
 
@@ -138,17 +138,19 @@ target_compile_options(
 	-Wall
 )
 
-
-
-
-add_custom_target(
-	run_cython ALL
+add_custom_command(
+	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/api.c
 	COMMAND cython -3 -E INCLUDE_NUMPY=${CYTHON_INCL_NUMPY} api.pyx
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	DEPENDS api.pyx
 	COMMENT "Generating api.c"
 )
 
-add_dependencies(${PROJECT_NAME} run_cython)
+add_custom_target(api.c
+	DEPENDS api.pyx
+)
+
+add_dependencies(${PROJECT_NAME} api.c)
 
 
 target_link_directories(
