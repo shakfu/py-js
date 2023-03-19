@@ -1,14 +1,3 @@
-/**
- * @file pktpy.cpp
- * @author shakfu (https://github.com/shakfu)
- * @brief another experiment in mixing c, cpp, and python in a max external
- * @version 0.1
- * @date 2022-05-28
- * 
- * @copyright Copyright (c) 2022
- * 
- */
-
 #include "ext.h"
 #include "ext_obex.h"
 
@@ -16,11 +5,13 @@
 
 #define PY_MAX_ELEMS 1024
 
+using namespace pkpy;
+
 typedef struct _pktpy {
     t_object ob;
     t_symbol* name;
     void* outlet;
-    pkpy::VM* py; // PocketPy VM object is named `py` for familiarity
+    VM* py; // PocketPy VM object is named `py` for familiarity
 } t_pktpy;
 
 
@@ -105,7 +96,7 @@ void pktpy_assist(t_pktpy* x, void* b, long m, long a, char* s)
 
 void pktpy_free(t_pktpy* x)
 {
-    pkpy_delete(x->py);
+    // pkpy_delete(x->py);
 }
 
 
@@ -136,7 +127,8 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
 
         x->name = gensym("");
         x->outlet = bangout((t_object*)x);
-        x->py = pkpy_new_vm(false); // instanciate the PocketPy VM
+        x->py = new VM(true);    // instanciate the PocketPy VM
+        // x->py = pkpy_new_vm(false); // instanciate the PocketPy VM
 
         attr_args_process(x, argc, argv);
     }
@@ -154,12 +146,15 @@ void pktpy_bang(t_pktpy* x)
 //     return x->py->import(s);
 // }
 
+
 /**
  * @brief Execute a max symbol as a line of python code
  *
+ * @param x instance of t_pktpy struct
  * @param s symbol
  * @param argc atom argument count
  * @param argv atom argument vector
+ * 
  * @return t_max_err error code
  */
 t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
@@ -168,12 +163,25 @@ t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
     if (pcode == NULL) {
         return MAX_ERR_GENERIC;
     }
-    // x->py->exec(pcode, "main.py", EXEC_MODE);
-    pkpy_vm_exec(x->py, pcode);
+
+    if(x->py->exec(pcode, "main.py", EXEC_MODE) == NULL) {
+        return MAX_ERR_GENERIC;
+    }
     return MAX_ERR_NONE;
 }
 
 
+
+/**
+ * @brief Evaluate a max symbol as a python expression
+ *
+ * @param x instance of t_pktpy struct
+ * @param s symbol of object to be evaluated
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ *
+ * @return t_max_err error code
+ */
 t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 {
     char* pcode = atom_getsym(argv)->s_name;
@@ -182,14 +190,56 @@ t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
         return MAX_ERR_GENERIC;
     }
 
-    char* result = pkpy_vm_eval(x->py, pcode);
+    // char* result = pkpy_vm_eval(x->py, pcode);
+    PyVar result = x->py->exec(pcode, "<eval>", EVAL_MODE);
 
-    outlet_anything(x->outlet, gensym(result), 0, (t_atom*)NIL);
+    if (result != NULL) {
 
-    pkpy_delete(result);
+        if (is_type(result, x->py->tp_int)) {
+            int int_result = py_cast<int>(x->py, result);
+            outlet_int(x->outlet, int_result);
+        }
+        
+        else if (is_type(result, x->py->tp_float)) {
+            double float_result = py_cast<float>(x->py, result);
+            outlet_float(x->outlet, float_result);
+        }
 
+        else if (is_type(result, x->py->tp_bool)) {
+            bool bool_result = py_cast<bool>(x->py, result);
+            outlet_int(x->outlet, bool_result);
+        }
+
+        else if (is_type(result, x->py->tp_str)) {
+            Str str_result = py_cast<Str>(x->py, result);
+            const char* cstr = strdup(str_result.c_str());
+            outlet_anything(x->outlet, gensym(cstr), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_list)) {
+            List list_result = py_cast<List>(x->py, result);
+            outlet_anything(x->outlet, gensym("list"), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_tuple)) {
+            Tuple list_result = py_cast<Tuple>(x->py, result);
+            outlet_anything(x->outlet, gensym("tuple"), 0, (t_atom*)NIL);
+
+        }
+
+        else if (is_type(result, x->py->tp_function)) {
+            Function func_result = py_cast<Function>(x->py, result);
+            outlet_anything(x->outlet, gensym("function"), 0, (t_atom*)NIL);
+        }
+    
+        else {
+            outlet_anything(x->outlet, gensym("unknown_type"), 0, (t_atom*)NIL);
+        }
+        return MAX_ERR_NONE;
+    }
     return MAX_ERR_GENERIC;
 }
+
 
 
 

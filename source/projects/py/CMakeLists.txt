@@ -3,13 +3,14 @@
 # MAX EXTERNAL
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
 # ----------------------------------------------------------------------------
 # common steps
 
 # configuration
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
-set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+# set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
+# set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
 
 
@@ -65,20 +66,24 @@ include_directories(
 	"${MAX_SDK_JIT_INCLUDES}"
 )
 
-# optionally add numpy_header
-execute_process(
-	COMMAND ${Python3_EXECUTABLE} ${SCRIPTS}/check_numpy.py --include
-	OUTPUT_VARIABLE NUMPY_HEADERS
-	RESULT_VARIABLE NUMPY_HEADERS_RESULT
-)
+if(USE_NUMPY)
+	# optionally add numpy_header
+	execute_process(
+		COMMAND ${Python3_EXECUTABLE} ${SCRIPTS}/check_numpy.py --include
+		OUTPUT_VARIABLE NUMPY_HEADERS
+		RESULT_VARIABLE NUMPY_HEADERS_RESULT
+	)
 
-message("NUMPY_HEADERS_RESULT: " ${NUMPY_HEADERS_RESULT})
-message("NUMPY_HEADERS: " ${NUMPY_HEADERS})
+	message("NUMPY_HEADERS_RESULT: " ${NUMPY_HEADERS_RESULT})
+	message("NUMPY_HEADERS: " ${NUMPY_HEADERS})
 
-if (NUMPY_HEADERS_RESULT EQUAL 0) # 0 == SUCCESS
-	include_directories("${NUMPY_HEADERS}")
-	add_compile_definitions(INCLUDE_NUMPY=1)
-	set(CYTHON_INCL_NUMPY "1")
+	if (NUMPY_HEADERS_RESULT EQUAL 0) # 0 == SUCCESS
+		include_directories("${NUMPY_HEADERS}")
+		add_compile_definitions(INCLUDE_NUMPY=1)
+		set(CYTHON_INCL_NUMPY "1")
+	else()
+		set(CYTHON_INCL_NUMPY "0")
+	endif()
 else()
 	set(CYTHON_INCL_NUMPY "0")
 endif()

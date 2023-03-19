@@ -14,19 +14,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Security: in case of vulnerabilities.
 
 
-## [Unreleased]
+## [0.1.x] [Unreleased]
 
-- Added: preliminary support (without shrinking yet) for python 3.11.0 via `relocatable-pkg`. To build:
+- Changed: minimal macos version to '12.0'. This can be set in `py-js/source/scripts/common.cmake`
 
-    ```bash
-    cd py-js/source/project/py
-    python3 -m builder pyjs relocatable_pkg --install --build \
-        --python-version 3.11.0 --os-version 11
-    ```
+- Changed: to build all projects with cmake type `make projects` instead of `make cmake`
 
-- Changed: supported python for `relocatable-pkg` to python 3.10.8
+- Added `pktpy` project which demonstrates use of [PocketPy](https://github.com/blueloveTH/pocketpy) as a max external.
 
-- Fixed: `tiny-static-ext` or `make tiny` option for python 3.10.x
+- Changed: enabling `numpy` support now requires setting manual switches at Makefile and Cmake level.
+
+- Added general support for python 3.11.x for all build variations (see prelease for signed but not notarized demos)
+
+- Changed supported python for `relocatable-pkg` to python 3.10.8
+
+- Fixed `tiny-static-ext` or `make tiny` option for python 3.10.x
 
 - Discovered builtin way for max to find the external using an included but undocumented function. This is by way of the `class_getpath` function. This is demonstrated (partially) in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
 

@@ -3,13 +3,14 @@
 # MAX EXTERNAL
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
 # ----------------------------------------------------------------------------
 # common steps
 
 # configuration
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
-set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+# set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
+# set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
 
 
