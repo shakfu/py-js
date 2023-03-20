@@ -42,6 +42,11 @@ t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_pipe(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 
+// utilities
+t_symbol* pktpy_get_path_to_external(t_pktpy* x);
+int add100(int a);
+
+
 END_USING_C_LINKAGE
 
 
@@ -85,6 +90,28 @@ void ext_main(void* r)
     post("I am the pktpy object");
 }
 
+
+t_symbol* pktpy_get_path_to_external(t_pktpy* x)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+
+    short path_id = class_getpath(pktpy_class);
+    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", pktpy_class->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
+    // post("path_id: %d, external_name: %s, external_path: %s conform_path: %s", 
+    //     path_id, external_name, external_path, conform_path);
+    return gensym(external_path);
+}
+
+// example function to be wrapped by NativeProxyFunc
+int add100(int a){
+    return a + 100;
+}
+
+
 void pktpy_assist(t_pktpy* x, void* b, long m, long a, char* s)
 {
     if (m == ASSIST_INLET) { // inlet
@@ -98,7 +125,6 @@ void pktpy_free(t_pktpy* x)
 {
     pkpy_delete(x->py);
 }
-
 
 void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
 {
@@ -128,7 +154,33 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
         x->name = gensym("");
         x->outlet = bangout((t_object*)x);
         x->py = new VM(true);    // instanciate the PocketPy VM
-        // x->py = pkpy_new_vm(false); // instanciate the PocketPy VM
+
+        // builtins
+        x->py->bind_builtin_func<1>("add10", [](VM* vm, Args& args) {
+            i64 a = CAST(i64, args[0]);
+            return VAR(a + 10);
+        });
+
+        // example of wrapping a max api function
+        // bind: void *outlet_int(t_outlet *x, t_atom_long n);
+        // >>> out_int(10) -> sends 10 out of outlet
+        x->py->bind_builtin_func<1>("out_int", [x](VM* vm, Args& args) {
+            i64 a = CAST(i64, args[0]);
+            outlet_int(x->outlet, a);
+            return vm->None;
+        });
+
+        // wrap exist function pktpy_get_path_to_external
+        x->py->bind_builtin_func<0>("location", [x](VM* vm, Args& args) {
+            t_symbol* sym = pktpy_get_path_to_external(x);
+            outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
+            return vm->None;
+        });
+
+        // example of wrapping function using NativeProxyFunc
+        // It can be constructed from a function pointer,
+        // a lambda function, or a std::function.
+        x->py->bind_builtin_func<1>("add100", NativeProxyFunc(&add100));
 
         attr_args_process(x, argc, argv);
     }
@@ -246,7 +298,7 @@ t_max_err pktpy_eval_text(t_pktpy* x, char* text)
         }
     
         else {
-            outlet_anything(x->outlet, gensym("unknown_type"), 0, (t_atom*)NIL);
+             // pass
         }
         return MAX_ERR_NONE;
     }
@@ -311,11 +363,8 @@ t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
             break;
         }
     }
-
-    // return py_eval_text(x, argc, atoms, 1);
     
     t_max_err err = atom_gettext(argc+1, atoms, &textsize, &text,
-                                 // OBEX_UTIL_ATOM_GETTEXT_SYM_FORCE_QUOTE);
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     post("text: %s", text);
     if (err == MAX_ERR_NONE && textsize && text) {
