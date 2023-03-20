@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 242.0, 281.0, 664.0, 480.0 ],
+		"rect" : [ 300.0, 202.0, 664.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -40,6 +40,18 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-16",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 169.0, 146.0, 29.5, 22.0 ],
+					"text" : "sys"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"bgcolor" : [ 0.866667, 0.866667, 0.866667, 0.0 ],
 					"bgfillcolor_autogradient" : 0.79,
 					"bgfillcolor_color" : [ 0.2, 0.2, 0.2, 1 ],
@@ -55,7 +67,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 409.0, 11.5, 225.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "https://github.com/blueloveTH/pocketpy",
 					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ]
 				}
@@ -73,7 +84,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 409.0, 46.5, 112.0, 30.0 ],
-					"presentation_linecount" : 2,
 					"text" : ";\rmax launchbrowser $1"
 				}
 
@@ -99,7 +109,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 35.0, 45.0, 301.0, 33.0 ],
-					"text" : "An external using the pocketpy single-header python interpreter library for games engines "
+					"text" : "An external using pocketpy, a C++17 header-only Python interpreter for game engines."
 				}
 
 			}
@@ -288,7 +298,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 301.0, 429.0, 70.0, 22.0 ],
-					"text" : "2"
+					"text" : "module"
 				}
 
 			}
@@ -377,6 +387,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-4", 0 ],
 					"source" : [ "obj-15", 2 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-16", 0 ]
 				}
 
 			}

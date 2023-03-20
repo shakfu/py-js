@@ -173,26 +173,10 @@ t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 
 
 
-/**
- * @brief Evaluate a max symbol as a python expression
- *
- * @param x instance of t_pktpy struct
- * @param s symbol of object to be evaluated
- * @param argc atom argument count
- * @param argv atom argument vector
- *
- * @return t_max_err error code
- */
-t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
+
+t_max_err pktpy_eval_text(t_pktpy* x, char* text)
 {
-    char* pcode = atom_getsym(argv)->s_name;
-
-    if (pcode == NULL) {
-        return MAX_ERR_GENERIC;
-    }
-
-    // char* result = pkpy_vm_eval(x->py, pcode);
-    PyVar result = x->py->exec(pcode, "<eval>", EVAL_MODE);
+    PyVar result = x->py->exec(text, "<eval>", EVAL_MODE);
 
     if (result != NULL) {
 
@@ -223,14 +207,42 @@ t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
         }
 
         else if (is_type(result, x->py->tp_tuple)) {
-            Tuple list_result = py_cast<Tuple>(x->py, result);
+            Tuple tuple_result = py_cast<Tuple>(x->py, result);
             outlet_anything(x->outlet, gensym("tuple"), 0, (t_atom*)NIL);
+        }
 
+        else if (is_type(result, x->py->tp_slice)) {
+            Slice slice_result = py_cast<Slice>(x->py, result);
+            outlet_anything(x->outlet, gensym("slice"), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_range)) {
+            Range range_result = py_cast<Range>(x->py, result);
+            outlet_anything(x->outlet, gensym("range"), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_exception)) {
+            Exception exception_result = py_cast<Exception>(x->py, result);
+            outlet_anything(x->outlet, gensym("star_wrapper"), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_star_wrapper)) {
+            StarWrapper star_wrapper_result = py_cast<StarWrapper>(x->py, result);
+            outlet_anything(x->outlet, gensym("star_wrapper"), 0, (t_atom*)NIL);
         }
 
         else if (is_type(result, x->py->tp_function)) {
             Function func_result = py_cast<Function>(x->py, result);
             outlet_anything(x->outlet, gensym("function"), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_native_function)) {
+            NativeFunc func_result = py_cast<NativeFunc>(x->py, result);
+            outlet_anything(x->outlet, gensym("native_function"), 0, (t_atom*)NIL);
+        }
+    
+        else if (is_type(result, x->py->tp_module)) {
+            outlet_anything(x->outlet, gensym("module"), 0, (t_atom*)NIL);
         }
     
         else {
@@ -240,6 +252,28 @@ t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
     }
     return MAX_ERR_GENERIC;
 }
+
+/**
+ * @brief Evaluate a max symbol as a python expression
+ *
+ * @param x instance of t_pktpy struct
+ * @param s symbol of object to be evaluated
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ *
+ * @return t_max_err error code
+ */
+t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
+{
+    char* pcode = atom_getsym(argv)->s_name;
+
+    if (pcode == NULL) {
+        return MAX_ERR_GENERIC;
+    }
+
+    return pktpy_eval_text(x, pcode);
+}
+
 
 
 t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
@@ -291,61 +325,20 @@ t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
         return MAX_ERR_GENERIC;
     }
 
-    PyVar result = x->py->exec(text, "<eval>", EVAL_MODE);
-
-    if (result != NULL) {
-
-        if (is_type(result, x->py->tp_int)) {
-            int int_result = py_cast<int>(x->py, result);
-            outlet_int(x->outlet, int_result);
-        }
-
-        else if (is_type(result, x->py->tp_float)) {
-            double float_result = py_cast<float>(x->py, result);
-            outlet_float(x->outlet, float_result);
-        }
-
-        else if (is_type(result, x->py->tp_bool)) {
-            bool bool_result = py_cast<bool>(x->py, result);
-            outlet_int(x->outlet, bool_result);
-        }
-
-        else if (is_type(result, x->py->tp_str)) {
-            Str str_result = py_cast<Str>(x->py, result);
-            const char* cstr = strdup(str_result.c_str());
-            outlet_anything(x->outlet, gensym(cstr), 0, (t_atom*)NIL);
-        }
-
-        else if (is_type(result, x->py->tp_list)) {
-            List list_result = py_cast<List>(x->py, result);
-            outlet_anything(x->outlet, gensym("list"), 0, (t_atom*)NIL);
-        }
-
-        else if (is_type(result, x->py->tp_tuple)) {
-            Tuple list_result = py_cast<Tuple>(x->py, result);
-            outlet_anything(x->outlet, gensym("tuple"), 0, (t_atom*)NIL);
-
-        }
-
-        else if (is_type(result, x->py->tp_function)) {
-            Function func_result = py_cast<Function>(x->py, result);
-            outlet_anything(x->outlet, gensym("function"), 0, (t_atom*)NIL);
-        }
-
-        else {
-            outlet_anything(x->outlet, gensym("unknown_type"), 0,
-                            (t_atom*)NIL);
-        }
+    if (pktpy_eval_text(x, text) == MAX_ERR_NONE) {
         post("pktpy_anything: eval succeeded");
         return MAX_ERR_NONE;
-    } 
-    else if (x->py->exec(text, "main.py", EXEC_MODE) == NULL) {
-        error("pktpy_anything: exec failed");
-        return MAX_ERR_GENERIC;
     }
-    post("pktpy_anything: exec succeeded");
-    return MAX_ERR_NONE;
+    
+    if (x->py->exec(text, "main.py", EXEC_MODE) != NULL) {
+        post("pktpy_anything: exec succeeded");
+        return MAX_ERR_NONE;
+    }
+    error("pktpy_anything: exec failed");
+    return MAX_ERR_GENERIC;
 }
+
+
 
 
 // t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s)
