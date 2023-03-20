@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.1.x]
 
+- Added `anything` method for `pktpy` project.
+
 - Fixed `py` cython build step such that it run only if `api.pyx` is changed.
 
 - Changed minimal macos version to '12.0'. This can be set in `py-js/source/scripts/common.cmake`

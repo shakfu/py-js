@@ -24,7 +24,7 @@ name       | sdk        | lang   | description
 [cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
-[pktpy]    | max-sdk    | c++    | external using the [pocketpy](https://github.com/blueloveTH/pocketpy)single-header c++ library
+[pktpy]    | max-sdk    | c++    | external using the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
 
 [1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
 
@@ -188,15 +188,17 @@ First make sure you have completed the [Quickstart](#quickstart) section above. 
 brew install cmake zmq czmq
 ```
 
-Now you can build all externals (includeing `py` and `pyjs`) in one shot:
+Now you can build all externals (including `py` and `pyjs`) in one shot using cmake:
 
 ```bash
 make projects
 ```
 
-For some of the less developed externals and more experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
+After doing the above, the recommended interative development workflow in this repository is to make changes to the source code in the respective project and then `cd py-js/build` and `make`. This will cause cmake to only build modified projects efficiently.
 
-Also note that the `cmake` build method does not yet create self-contained python externals which can be used in Max Packages and Standalones.
+Note that for some of the less developed externals and more experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
+
+Also note that for `py` and `pyjs` externals the `cmake` build method described does not yet create self-contained python externals which can be used in Max Packages and Standalones.
 
 The following section addresses this requirement.
 
