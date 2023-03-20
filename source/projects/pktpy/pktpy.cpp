@@ -39,7 +39,7 @@ t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_call(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_assign(t_pktpy* x, t_symbol* s, long argc, t_atom* argv); 
 // t_max_err pktpy_code(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
-// t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_pipe(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 
 END_USING_C_LINKAGE
@@ -71,7 +71,7 @@ void ext_main(void* r)
     // class_addmethod(c, (method)pktpy_call,       "call",     A_GIMME,    0);
     // class_addmethod(c, (method)pktpy_code,       "code",     A_GIMME,    0);
     // class_addmethod(c, (method)pktpy_pipe,       "pipe",     A_GIMME,    0);
-    // class_addmethod(c, (method)pktpy_anything,   "anything", A_GIMME,    0);
+    class_addmethod(c, (method)pktpy_anything,   "anything", A_GIMME,    0);
 
     CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
     CLASS_ATTR_SYM(c, "name", 0,   t_pktpy, name);
@@ -96,7 +96,7 @@ void pktpy_assist(t_pktpy* x, void* b, long m, long a, char* s)
 
 void pktpy_free(t_pktpy* x)
 {
-    // pkpy_delete(x->py);
+    pkpy_delete(x->py);
 }
 
 
@@ -143,6 +143,7 @@ void pktpy_bang(t_pktpy* x)
 
 // t_max_err pktpy_import(t_pktpy* x, t_symbol* s)
 // {
+//     char* pcode = atom_getsym(s->s_name;
 //     return x->py->import(s);
 // }
 
@@ -241,7 +242,110 @@ t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 
+t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
+{
 
+    t_atom atoms[PY_MAX_ELEMS];
+    long textsize = 0;
+    char* text = NULL;
+    // int is_eval = 1;
+
+
+    if (s == gensym("")) {
+        return MAX_ERR_GENERIC; 
+    }
+
+    // set symbol as first atom in new atoms array
+    atom_setsym(atoms, s);
+
+    for (int i = 0; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
+            break;
+        }
+        case A_LONG: {
+            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
+            break;
+        }
+        case A_SYM: {
+            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
+            break;
+        }
+        default:
+            post("cannot process unknown type");
+            break;
+        }
+    }
+
+    // return py_eval_text(x, argc, atoms, 1);
+    
+    t_max_err err = atom_gettext(argc+1, atoms, &textsize, &text,
+                                 // OBEX_UTIL_ATOM_GETTEXT_SYM_FORCE_QUOTE);
+                                 OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    post("text: %s", text);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        post(">>> %s", text);
+    } else {
+        error("pktpy_anything: null entry");
+        return MAX_ERR_GENERIC;
+    }
+
+    PyVar result = x->py->exec(text, "<eval>", EVAL_MODE);
+
+    if (result != NULL) {
+
+        if (is_type(result, x->py->tp_int)) {
+            int int_result = py_cast<int>(x->py, result);
+            outlet_int(x->outlet, int_result);
+        }
+
+        else if (is_type(result, x->py->tp_float)) {
+            double float_result = py_cast<float>(x->py, result);
+            outlet_float(x->outlet, float_result);
+        }
+
+        else if (is_type(result, x->py->tp_bool)) {
+            bool bool_result = py_cast<bool>(x->py, result);
+            outlet_int(x->outlet, bool_result);
+        }
+
+        else if (is_type(result, x->py->tp_str)) {
+            Str str_result = py_cast<Str>(x->py, result);
+            const char* cstr = strdup(str_result.c_str());
+            outlet_anything(x->outlet, gensym(cstr), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_list)) {
+            List list_result = py_cast<List>(x->py, result);
+            outlet_anything(x->outlet, gensym("list"), 0, (t_atom*)NIL);
+        }
+
+        else if (is_type(result, x->py->tp_tuple)) {
+            Tuple list_result = py_cast<Tuple>(x->py, result);
+            outlet_anything(x->outlet, gensym("tuple"), 0, (t_atom*)NIL);
+
+        }
+
+        else if (is_type(result, x->py->tp_function)) {
+            Function func_result = py_cast<Function>(x->py, result);
+            outlet_anything(x->outlet, gensym("function"), 0, (t_atom*)NIL);
+        }
+
+        else {
+            outlet_anything(x->outlet, gensym("unknown_type"), 0,
+                            (t_atom*)NIL);
+        }
+        post("pktpy_anything: eval succeeded");
+        return MAX_ERR_NONE;
+    } 
+    else if (x->py->exec(text, "main.py", EXEC_MODE) == NULL) {
+        error("pktpy_anything: exec failed");
+        return MAX_ERR_GENERIC;
+    }
+    post("pktpy_anything: exec succeeded");
+    return MAX_ERR_NONE;
+}
 
 
 // t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s)

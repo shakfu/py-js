@@ -24,6 +24,7 @@ name       | sdk        | lang   | description
 [cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
+[pktpy]    | max-sdk    | c++    | external using the [pocketpy](https://github.com/blueloveTH/pocketpy)single-header c++ library
 
 [1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
 
@@ -35,6 +36,7 @@ name       | sdk        | lang   | description
 [cobra]: source/projects/cobra
 [mamba]: source/projects/mamba
 [krait]: source/projects/krait
+[pktpy]: source/projects/pktpy
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
@@ -178,7 +180,7 @@ Open up any of the patch files in the `patcher` directory of the generated max p
 
 ### Building Experimental Externals using Cmake
 
-You can also use `cmake` to build **all** externals using the exact same methods as in the `max-sdk`. 
+You can also use `cmake` to build **all** externals using the exact same methods as in the `max-sdk`.
 
 First make sure you have completed the [Quickstart](#quickstart) section above. Next you will install `cmake` if necessary and a couple of additional dependencies for some of the subprojects. Of course, skip what is already installed:
 
@@ -196,7 +198,7 @@ For some of the less developed externals and more experimental features please d
 
 Also note that the `cmake` build method does not yet create self-contained python externals which can be used in Max Packages and Standalones.
 
-The following section addresses this requirement. 
+The following section addresses this requirement.
 
 ### Building self-contained Python3 Externals for Packages and Standalones
 
@@ -552,7 +554,6 @@ On the other hand, sometimes you just want an external which embeds a python dis
 
 [1] If you want to codesign and notarize it for use in your standalone or package, the [codesigning / notarization script](source/py/scripts/notarize.sh) and related [entitlements file](source/py/scripts/entitlements.plist) can be found in the [source/py/scripts](source/py/scripts) folder.
 
-
 ### The relocatable-python variation
 
 [relocatable-python](https://github.com/gregneagle/relocatable-python) is Greg Neagle's excellent tool for building standalone relocatable Python.framework bundles.
@@ -617,7 +618,6 @@ The solution is to move the external project folder to a non iCloud drive folder
 
 I've tried this several times and and it works (for "sign to run locally" case and for the "Development" case).
 
-
 ### Code Style
 
 The coding style for this project can be applied automatically during the build process with `clang-format`. On OS X, you can easily install this using brew:
@@ -639,6 +639,8 @@ The style used in this project is specified in the `.clang-format` file.
 - [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
 
 - [maxutils](https://github.com/shakfu/maxutils) : scripts and utilities to help with codesigning and notarization of Max standalones and externals.
+
+- [pocketpy](https://github.com/blueloveTH/pocketpy): C++17 header-only Python interpreter for game engines.
 
 ## Prior Art and Thanks
 

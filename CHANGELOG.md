@@ -13,14 +13,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Fixed: for any bug fixes.
 - Security: in case of vulnerabilities.
 
+---
 
-## [0.1.x] [Unreleased]
+## [0.1.x]
 
-- Changed: minimal macos version to '12.0'. This can be set in `py-js/source/scripts/common.cmake`
+- Fixed `py` cython build step such that it run only if `api.pyx` is changed.
 
-- Changed: to build all projects with cmake type `make projects` instead of `make cmake`
+- Changed minimal macos version to '12.0'. This can be set in `py-js/source/scripts/common.cmake`
 
-- Added `pktpy` project which demonstrates use of [PocketPy](https://github.com/blueloveTH/pocketpy) as a max external.
+- Changed: build all projects of cmake type use `make projects` instead of `make cmake`
+
+- Added the `pktpy` project which demonstrates use of [pocketpy](https://github.com/blueloveTH/pocketpy) as a max external.
 
 - Changed: enabling `numpy` support now requires setting manual switches at Makefile and Cmake level.
 
@@ -42,10 +45,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Added `runlog_all` bash function to `scripts/funcs.sh` to run and log all variations as a complete test cycle. (also added option to do it with homebrew variations via `runlog_all_no_brew`)
 
-
 ## [0.1.1]
 
-### Added
+### Added in '0.1.1'
 
 - Added initial msp buffer object support
 
@@ -55,8 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Added doxygen docs for `py.c`
 
-
-### Changed
+### Changed in '0.1.1'
 
 - Changed mapping from `py` methods to `px.methods`
 
@@ -64,10 +65,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Changed `py_code` and `py_anything` to used refactored `py_eval_text`
 
-
 ## [0.1.0]
 
-### Added
+### Added in '0.1.0'
 
 - Apple Silicon Compatibility: externals now build as native `arm64` on Apple Silicon machines. Universal binaries are not currently supported.
 
@@ -81,8 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Added even more intuitive make frontend to builder with help (via `make help`)
 
-
-### Changed
+### Changed in '0.1.0'
 
 - Changed to python-based build system. Bash / Makefile is now deprecated.
 
@@ -116,14 +115,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Dropped 'full' version of `static-ext` as it was redundant after adding `_ssl` and `_hashlib` to `static-ext`
 
-
-### Removed
+### Removed in '0.1.0'
 
 - Removed `shared-pkg` till further notice or until I recreate it as a custom `.framework`, since its not working for Apple's notarization algorithm which only recognizes `.frameworks`.
 
 - Removed dependency on libintl via patching `configure` for both static and shared
 
-### Fixed
+### Fixed in '0.1.0'
 
 - Fixed static builds to work with `.build_pyjs`
 
@@ -131,10 +129,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
 
-
 ## [0.0.1]
 
-### Added
+### Added in '0.0.1'
 
 - created a release (using python 3.96) of statically built `py.mxo`.
 
@@ -152,11 +149,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Added features to get the `py` object's name from any module in its namespace!
 
-
 - Added a few high level python api functions in max (`eval`, `exec`) to allow the evaluation of python code in a python `globals` namespace associated with the `py` object.
 
 - Added right inlet bang after successful op, middle outlet bang on error
-
 
 - Added 'send' msg method, which sends typed messages to (script) named objects (see: <https://cycling74.com/forums/error-handling-with-object_method_typed>)
 
@@ -176,7 +171,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Added pytest testing harness
 
-### Changed
+### Changed in '0.0.1'
 
 - Changed `py_exec` method to create a single string from argv so it can import easily
 
@@ -186,7 +181,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Changed `py_coll_tester` into bpatcher that can be fed by `py_repl`
 
-### Fixed
+### Fixed in '0.0.1'
 
 - Fixed some shell expansion risks highlighted by jobor019.
 
@@ -200,4 +195,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Fixed STRANGE bug, single quotes in `py_log` caused a crash in `py_scan_callback`, it's based on post but post alone with the same does not cause a crash. Should simplify logging!
 
-- Fixed `exec`: (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals)`
+- Fixed `exec`: (needs globals in both slots: `PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals`)
