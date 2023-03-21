@@ -150,7 +150,7 @@ As mentioned earlier, the `py` and `pyjs` objects are the most mature and best d
 
 If you'd rather build them or any of the other externals yourself then the process is straightforward:
 
-1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.7 to 3.10 are tested and known to work.
+1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.7 to 3.11 are tested and known to work.
 
 2. Make sure you also have [Xcode](https://xcodereleases.com/) installed.
 
@@ -172,15 +172,15 @@ If you'd rather build them or any of the other externals yourself then the proce
     make
     ```
 
-Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are quite small in size and are linked to your your system python3 installation. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
+Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are quite small in size and are linked to your system python3 installation. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
-No worries, if you need portable relocatable python3 externals for your package or standalone then make sure to read the [Alternative Quickstart for self-contained Python3 Externals / Packages] section
+No worries, if you need portable relocatable python3 externals for your package or standalone then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section
 
-Open up any of the patch files in the `patcher` directory of the generated max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
+Open up any of the patch files in the `patchers` directory of the repo or the generated max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
 
 ### Building Experimental Externals using Cmake
 
-You can also use `cmake` to build **all** externals using the exact same methods as in the `max-sdk`.
+You can also use `cmake` to build **all** externals using similarmethds to the `max-sdk`.
 
 First make sure you have completed the [Quickstart](#quickstart) section above. Next you will install `cmake` if necessary and a couple of additional dependencies for some of the subprojects. Of course, skip what is already installed:
 
@@ -194,7 +194,7 @@ Now you can build all externals (including `py` and `pyjs`) in one shot using cm
 make projects
 ```
 
-After doing the above, the recommended interative development workflow in this repository is to make changes to the source code in the respective project and then `cd py-js/build` and `make`. This will cause cmake to only build modified projects efficiently.
+After doing the above, the recommended iterative development workflow is to make changes to the source code in the respective project and then `cd py-js/build` and `make`. This will cause cmake to only build modified projects efficiently.
 
 Note that for some of the less developed externals and more experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
@@ -204,7 +204,7 @@ The following section addresses this requirement.
 
 ### Building self-contained Python3 Externals for Packages and Standalones
 
-Currently only the `py` and `pyjs` externals are built using these methods.
+Currently only the `py` and `pyjs` externals are built using these methods, which rely on a python [builder manager](https://github.com/shakfu/py-js/tree/main/source/projects/py/builder). The `Makefile` in the project root provides a simplified interface to this builder. See the [Current Status of Builders](https://github.com/shakfu/py-js#current-status-of-builders) section for further information.
 
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
@@ -478,7 +478,7 @@ To fix it, just restart Max and use it normally in your patch. Treat each patch 
 
 ### Current Status of Builders
 
-As of this writing this project uses a combination of a `Makefile` in the project root, a basic `cmake` build option and a custom python build system, `builder`, which resides in the `py-js/source/py/builder` package. The `Makefile` is a kind of 'frontend' to the more complex python build system. The latter can be used directly of course. A view into its many options can be obtained by typing the following:
+As mentioned earlier, as of this writing this project uses a combination of a `Makefile` in the project root, a basic `cmake` build option and a custom python build system, `builder`, which resides in the `py-js/source/py/builder` package. The `Makefile` is a kind of 'frontend' to the more complex python build system. The latter can be used directly of course. A view into its many options can be obtained by typing the following:
 
 ```bash
 cd py-js/source/py
