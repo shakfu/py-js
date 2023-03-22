@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.1.x]
 
+- Added list support to `pktpy`.
+
 - Added examples of wrapping max api and local functions to `pktpy`.
 
 - Added `anything` method for `pktpy` project.

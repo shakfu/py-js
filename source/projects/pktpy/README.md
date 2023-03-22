@@ -6,9 +6,9 @@ This is an experiment to use [pocketpy](https://github.com/blueloveTH/pocketpy),
 
 This is a very cool early stage project to create an embedding-friendly self-contained python implementation for game engines.
 
-A lot of language compatibility has been implemented but not a lot of infrastructure support (module coverage, user module support) yet. Still it's early days, so will be interesting to track the project and improve the external iteratively.
+A lot of language compatibility has been implemented but not a lot of infrastructure support (module coverage, user module support) yet.
 
-The project offers preliminary support for the following modules:
+So far `pocketpy` project offers preliminary support for the following modules:
 
 - bisect
 - c (custom module for c-level access)
@@ -22,12 +22,18 @@ The project offers preliminary support for the following modules:
 - sys
 - time
 
-The key feature of this library / external implementation is that it creates a smallish sized external (~ 1.2 Mb) without dependencies making it completely self-contained and portable and ideal for standalones and packages.
+Still it's early days, so it will be interesting to track the project and improve the external iteratively.
+
+The key feature of this library / external implementation is that it creates a smallish sized external (~ 0.75 Mb when stripped) without dependencies making it completely self-contained and portable and ideal for standalones and packages.
 
 
 ## Current Status
 
-- `exec`, `eval`, `anything` methods to execute, eval and import pocketpy python code with support for basic types (int, float, string)
+- `exec`, `eval`, `anything` methods to provide enable the execution, evaluation and importation pocketpy python code with support for basic types (int, float, string)
+
+- no separate method for `import`, this is provided as part of `anything` and it works as expected.
+
+- `List` to atom conversion support
 
 - examples of wrapped functions and builtins (local, max api, etc.).
 
@@ -36,7 +42,7 @@ The key feature of this library / external implementation is that it creates a s
 
 ## TODO
 
-- add support for container types (list, tuple, set, slice, range)
+- add additional support for container types (list, tuple, set, slice, range)
 
 - add support for code editor object to edit code
 
