@@ -26,9 +26,21 @@ Still it's early days, so it will be interesting to track the project and improv
 
 The key feature of this library / external implementation is that it creates a smallish sized external (~ 0.75 Mb when stripped) without dependencies making it completely self-contained and portable and ideal for standalones and packages.
 
-## Current Status
+## Structure of Implementation
 
-- structure of code: `pocketpy.h` -> `pktpy.h` -> `pktpy.cpp`: the middle layer is a cpp class which provides translation methods between pocketpy and the max c-api, with the final layer providing the max-api methods. As of this writing, this is not refactored and is largely using the `krait` project api.
+```text
+pocketpy.h -> pktpy.h -> pktpy.cpp
+
+    where '->' denotes is-included-by
+```
+
+- `pocketpy.h`: the [pocketpy](https://github.com/blueloveTH/pocketpy) header.
+
+- `pktp.h`: a general middle layer providing a cpp class, `PktpythonInterpreter`, with helper methods and round-trip translation methods between pocketpy and the max c-api. The user should ideally not need to change anything in this file.
+
+- `pktpy.cpp`: In this file, the max-api methods are implemented by using the functionality in the middle layer. This also were customization should ocurr including custom bultin methods.
+
+## Current Status
 
 - `exec`, `eval`, `anything` methods to provide enable the execution, evaluation and importation pocketpy python code with support for basic types (int, float, string)
 
@@ -47,3 +59,5 @@ The key feature of this library / external implementation is that it creates a s
 - add support for code editor object to edit code
 
 - wrap more of max api
+
+- add exception handling (if required)

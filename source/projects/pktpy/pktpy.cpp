@@ -15,23 +15,16 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv);
 void pktpy_free(t_pktpy* x);
 void pktpy_assist(t_pktpy* x, void* b, long m, long a, char* s);
 
-// attr getters / setters
-// t_max_err pktpy_name_get(t_pktpy* x, t_object* attr, long* argc, t_atom** argv);
-// t_max_err pktpy_name_set(t_pktpy* x, t_object* attr, long argc, t_atom* argv);
-
-
-// basic methods
-void pktpy_bang(t_pktpy*);
-
 // core methods
+void pktpy_bang(t_pktpy*);
 t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s);
 
 // extra py methods
+t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_call(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_assign(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_pipe(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 
 // utilities
@@ -78,25 +71,14 @@ void ext_main(void* r)
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     pktpy_class = c;
 
-    post("I am the pktpy object");
+    // post("I am the pktpy object");
 }
 
 
 t_symbol* pktpy_get_path_to_external(t_pktpy* x)
 {
-    char external_path[MAX_PATH_CHARS];
-    char external_name[MAX_PATH_CHARS];
-    char conform_path[MAX_PATH_CHARS];
-
-    short path_id = class_getpath(pktpy_class);
-    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", pktpy_class->c_sym->s_name);
-    path_toabsolutesystempath(path_id, external_name, external_path);
-    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
-    // post("path_id: %d, external_name: %s, external_path: %s conform_path: %s", 
-    //     path_id, external_name, external_path, conform_path);
-    return gensym(external_path);
+    return x->py->get_path_to_external(pktpy_class);
 }
-
 
 
 
@@ -159,7 +141,7 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
     long i;
 
     if ((x = (t_pktpy*)object_alloc(pktpy_class))) {
-        object_post((t_object*)x, "a new %s object was instantiated: %p",
+        object_post((t_object*)x, "a new %s object was created: %p",
                     s->s_name, x);
         object_post((t_object*)x, "it has %ld arguments", argc);
 
@@ -199,31 +181,12 @@ void pktpy_bang(t_pktpy* x)
 }
 
 
-/**
- * @brief Execute a max symbol as a line of python code
- *
- * @param x instance of t_pktpy struct
- * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
- * 
- * @return t_max_err error code
- */
 t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->exec(s, argc, argv);
 }
 
-/**
- * @brief Evaluate a max symbol as a python expression
- *
- * @param x instance of t_pktpy struct
- * @param s symbol of object to be evaluated
- * @param argc atom argument count
- * @param argv atom argument vector
- *
- * @return t_max_err error code
- */
+
 t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv) {
     return x->py->eval(s, argc, argv, x->outlet);
 }

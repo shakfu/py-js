@@ -1,5 +1,3 @@
-// hacky prototype code (NOT REFACTORED YET!!!)
-
 #ifndef PKTPY_INTERPRETER_H
 #define PKTPY_INTERPRETER_H
 
@@ -67,13 +65,14 @@ public:
     t_max_err handle_pyvar_output(void* outlet, PyVar pval);
 
     // core message method helpers
-    t_max_err eval_pcode(char* pcode, t_outlet* outlet);
+    t_max_err eval_pcode(char* pcode, void* outlet);
     // PyVar eval_pcode(char* pcode);
     // t_max_err exec_pcode(char* pcode);
     // t_max_err execfile_path(char* path);
 
     // utilities
     t_max_err locate_path_from_symbol(t_symbol* s);
+    t_symbol* get_path_to_external(t_class* klass);
 
     // core message methods
     t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
@@ -851,6 +850,24 @@ t_max_err PktpyInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
     }
     error("pktpy_anything: exec failed");
     return MAX_ERR_GENERIC;
+}
+
+
+t_symbol* PktpyInterpreter::get_path_to_external(t_class* klass)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+
+    short path_id = class_getpath(klass);
+    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    // post("path_id: %d, external_name: %s, external_path: %s conform_path:
+    // %s",
+    //     path_id, external_name, external_path, conform_path);
+    return gensym(external_path);
 }
 
 #endif /* PKTPY_INTERPRETER_H */

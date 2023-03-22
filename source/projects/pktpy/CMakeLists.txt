@@ -1,11 +1,12 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
+set(CMAKE_BUILD_TYPE "Release")
 
 file(GLOB PROJECT_SRC
-     "*.h"
+    "*.h"
 	"*.c"
-     "*.cpp"
+    "*.cpp"
 )
 
 include_directories( 
