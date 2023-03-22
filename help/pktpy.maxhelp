@@ -40,13 +40,26 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-21",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 169.0, 291.0, 118.0, 22.0 ],
+					"presentation_linecount" : 2,
+					"text" : "from math import sin"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-30",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 169.0, 296.0, 75.0, 22.0 ],
-					"text" : "math.sin(90)"
+					"patching_rect" : [ 169.0, 321.0, 45.0, 22.0 ],
+					"text" : "sin(90)"
 				}
 
 			}
@@ -357,7 +370,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 58.0, 429.0, 313.0, 22.0 ],
-					"text" : "3.141593"
+					"text" : "30"
 				}
 
 			}
@@ -467,6 +480,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-20", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-21", 0 ]
 				}
 
 			}

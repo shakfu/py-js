@@ -51,8 +51,7 @@ public:
     // Tuple atoms_to_ptuple(int argc, t_atom* argv); //+
 
     PyVar atom_to_pobject(t_atom* atom);     // used by atoms_to_ptuple
-    t_max_err pobject_to_atom(PyVar value,
-                              t_atom* atom); // used by plist_to_atoms
+    t_max_err pobject_to_atom(PyVar value, t_atom* atom); // used by plist_to_atoms
 
     t_max_err handle_list_output(void* outlet, List plist);
 
