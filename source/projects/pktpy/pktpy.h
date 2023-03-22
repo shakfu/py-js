@@ -29,9 +29,10 @@ private:
     t_symbol* p_source_name; //!< base name of python file to execfile
     t_symbol* p_source_path; //!< full path to python file to execfile
     log_level p_log_level;   //!< object-level log level (error, info, debug)
-    VM* p_vm;                //!< pocketpy vm instance
 
 public:
+    VM* p_vm;                //!< pocketpy vm instance
+
     PktpyInterpreter();
     ~PktpyInterpreter();
 

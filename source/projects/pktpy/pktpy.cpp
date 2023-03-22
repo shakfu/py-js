@@ -1,4 +1,3 @@
-
 #include "pktpy.h"
 
 
@@ -6,7 +5,6 @@ typedef struct _pktpy {
     t_object ob;
     t_symbol* name;
     void* outlet;
-    // VM* py; // PocketPy VM object is named `py` for familiarity
     PktpyInterpreter* py;
 } t_pktpy;
 
@@ -118,35 +116,35 @@ int add100(int a){
     return a + 100;
 }
 
-// void add_custom_builtins(t_pktpy* x)
-// {
-//         // builtins
-//         x->py->bind_builtin_func<1>("add10", [](VM* vm, Args& args) {
-//             i64 a = CAST(i64, args[0]);
-//             return VAR(a + 10);
-//         });
+void add_custom_builtins(t_pktpy* x)
+{
+        // builtins
+        x->py->p_vm->bind_builtin_func<1>("add10", [](VM* vm, Args& args) {
+            i64 a = CAST(i64, args[0]);
+            return VAR(a + 10);
+        });
 
-//         // example of wrapping a max api function
-//         // bind: void *outlet_int(t_outlet *x, t_atom_long n);
-//         // >>> out_int(10) -> sends 10 out of outlet
-//         x->py->bind_builtin_func<1>("out_int", [x](VM* vm, Args& args) {
-//             i64 a = CAST(i64, args[0]);
-//             outlet_int(x->outlet, a);
-//             return vm->None;
-//         });
+        // example of wrapping a max api function
+        // bind: void *outlet_int(t_outlet *x, t_atom_long n);
+        // >>> out_int(10) -> sends 10 out of outlet
+        x->py->p_vm->bind_builtin_func<1>("out_int", [x](VM* vm, Args& args) {
+            i64 a = CAST(i64, args[0]);
+            outlet_int(x->outlet, a);
+            return vm->None;
+        });
 
-//         // wrap exist function pktpy_get_path_to_external
-//         x->py->bind_builtin_func<0>("location", [x](VM* vm, Args& args) {
-//             t_symbol* sym = pktpy_get_path_to_external(x);
-//             outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
-//             return vm->None;
-//         });
+        // wrap exist function pktpy_get_path_to_external
+        x->py->p_vm->bind_builtin_func<0>("location", [x](VM* vm, Args& args) {
+            t_symbol* sym = pktpy_get_path_to_external(x);
+            outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
+            return vm->None;
+        });
 
-//         // example of wrapping function using NativeProxyFunc
-//         // It can be constructed from a function pointer,
-//         // a lambda function, or a std::function.
-//         x->py->bind_builtin_func<1>("add100", NativeProxyFunc(&add100));
-// }
+        // example of wrapping function using NativeProxyFunc
+        // It can be constructed from a function pointer,
+        // a lambda function, or a std::function.
+        x->py->p_vm->bind_builtin_func<1>("add100", NativeProxyFunc(&add100));
+}
 
 
 
@@ -186,7 +184,7 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
         x->py = new PktpyInterpreter(); // <-- can also be a struct
 
         // custom builtins
-        // add_custom_builtins(x);
+        add_custom_builtins(x);
 
         attr_args_process(x, argc, argv);
     }
@@ -237,8 +235,6 @@ t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 
-
-
 // t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s)
 // {
 //     return x->py->execfile(s);
@@ -254,21 +250,7 @@ t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 //     return x->py->call(s, argc, argv, x->outlet);
 // }
 
-
-// t_max_err pktpy_code(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     return x->py->code(s, argc, argv, x->outlet);
-// }
-
-
-// t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     return x->py->anything(s, argc, argv, x->outlet);
-// }
-
-
 // t_max_err pktpy_pipe(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 // {
 //     return x->py->pipe(s, argc, argv, x->outlet);
 // }
-
