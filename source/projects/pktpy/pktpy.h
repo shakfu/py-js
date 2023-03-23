@@ -42,7 +42,7 @@ public:
     PktpyInterpreter();
     ~PktpyInterpreter();
 
-    // helpers
+    // logging helpers
     void log_debug(char* fmt, ...);
     void log_info(char* fmt, ...);
     void log_error(char* fmt, ...);
@@ -52,13 +52,13 @@ public:
     // void handle_error(char* fmt, ...);
     // t_max_err syspath_append(char* path);
 
-    // python <-> atom translation
+    // python <-> atom translation helpers
     List atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
-    List atoms_to_plist(long argc, t_atom* argv);                 //+
-    t_max_err plist_to_atoms(List seq, int* argc, t_atom** argv); //+
-    // Tuple atoms_to_ptuple(int argc, t_atom* argv); //+
+    List atoms_to_plist(long argc, t_atom* argv);
+    // Tuple atoms_to_ptuple(int argc, t_atom* argv);
+    t_max_err plist_to_atoms(List seq, int* argc, t_atom** argv);
 
-    PyVar atom_to_pobject(t_atom* atom);     // used by atoms_to_ptuple
+    PyVar atom_to_pobject(t_atom* atom);                  // used by atoms_to_ptuple
     t_max_err pobject_to_atom(PyVar value, t_atom* atom); // used by plist_to_atoms
 
     t_max_err handle_plist_output(void* outlet, List plist);
@@ -100,7 +100,7 @@ public:
 };
 
 // ---------------------------------------------------------------------------
-// constructor / destructor methods
+// constructor / destructor
 
 /**
  * @brief      Constructs a new PktpyInterpreter instance.
@@ -123,7 +123,7 @@ PktpyInterpreter::~PktpyInterpreter() { pkpy_delete(this->p_vm); }
 
 
 // ---------------------------------------------------------------------------
-// helper methods
+// logging methods
 
 
 /**
@@ -215,6 +215,9 @@ void PktpyInterpreter::print_atom(int argc, t_atom* argv)
 }
 
 
+// ---------------------------------------------------------------------------
+// helper methods
+
 /**
  * @brief Searches the Max filesystem context for a file given by a symbol
  *
@@ -271,6 +274,24 @@ finally:
 }
 
 
+
+t_symbol* PktpyInterpreter::get_path_to_external(t_class* klass)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+
+    short path_id = class_getpath(klass);
+    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    // post("path_id: %d, external_name: %s, external_path: %s conform_path:
+    // %s",
+    //     path_id, external_name, external_path, conform_path);
+    return gensym(external_path);
+}
+
 // ---------------------------------------------------------------------------
 // translation methods
 
@@ -312,8 +333,12 @@ PyVar PktpyInterpreter::atom_to_pobject(t_atom* atom)
 }
 
 
+// ---------------------------------------------------------------------------
+// translation helper methods
+
 /**
- * @brief      Converts a python object to a max atom
+ * @brief      Converts a primitive python object to a max atom
+ *             used by `plist_to_atoms`
  *
  * @param      value  Python value
  * @param[out] atom   Max atom
@@ -413,7 +438,7 @@ List PktpyInterpreter::atoms_to_plist_with_offset(long argc, t_atom* argv,
 
 /**
  * @brief      Populates in-place an empty atom list with the contents of a
- * python list
+ *             python list
  *
  * @param      seq   The python list
  * @param      argc  The count of arguments
@@ -803,22 +828,7 @@ t_max_err PktpyInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
 }
 
 
-t_symbol* PktpyInterpreter::get_path_to_external(t_class* klass)
-{
-    char external_path[MAX_PATH_CHARS];
-    char external_name[MAX_PATH_CHARS];
-    char conform_path[MAX_PATH_CHARS];
 
-    short path_id = class_getpath(klass);
-    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
-    path_toabsolutesystempath(path_id, external_name, external_path);
-    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
-                     PATH_TYPE_TILDE);
-    // post("path_id: %d, external_name: %s, external_path: %s conform_path:
-    // %s",
-    //     path_id, external_name, external_path, conform_path);
-    return gensym(external_path);
-}
 
 
 /**

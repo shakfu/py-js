@@ -1,14 +1,14 @@
 # PocketPy Max External
 
-This is an experiment to use [pocketpy](https://github.com/blueloveTH/pocketpy), a C++17 header-only Python interpreter for game engines, in a Max external.
+This is an experiment to use [pocketpy](https://github.com/blueloveTH/pocketpy), a nifty C++17 header-only Python interpreter for game engines, in a Max external.
 
 ## Notes
 
-This is a very cool early stage project to create an embedding-friendly self-contained python implementation for game engines.
+[pocketpy](https://github.com/blueloveTH/pocketpy) is a very cool early stage project to create an embedding-friendly self-contained python implementation for game engines.
 
 A lot of language compatibility has been implemented but not a lot of infrastructure support (module coverage, user module support) yet.
 
-So far `pocketpy` project offers preliminary support for the following modules:
+So far it offers preliminary support for the following modules:
 
 - bisect
 - c (custom module for c-level access)
@@ -22,27 +22,23 @@ So far `pocketpy` project offers preliminary support for the following modules:
 - sys
 - time
 
-Still it's early days, so it will be interesting to track the project and improve the external iteratively.
-
-The key feature of this library / external implementation is that it creates a smallish sized external (~ 0.75 Mb when stripped) without dependencies making it completely self-contained and portable and ideal for standalones and packages.
+This max external project embeds the pocketpy interpreter, provides for easy wrapping of max-api functions in c++, and produces a small sized external (~ 0.68 Mb when stripped) without dependencies making it completely self-contained, portable and ideal for standalones and packages.
 
 ## Structure of Implementation
 
 ```text
-pocketpy.h -> pktpy.h -> pktpy.cpp
-
-    where '->' denotes is-included-by
+pktpy.cpp -includes-> pktpy.h -includes-> pocketpy.h
 ```
 
 - `pocketpy.h`: the [pocketpy](https://github.com/blueloveTH/pocketpy) header.
 
-- `pktp.h`: a general middle layer providing a cpp class, `PktpythonInterpreter`, with helper methods and round-trip translation methods between pocketpy and the max c-api. The user should ideally not need to change anything in this file.
+- `pktp.h`: a general middle layer providing a cpp class, `PktpythonInterpreter`, with helpers and round-trip translation methods between pocketpy and the max c-api. The user should ideally not need to change anything in this file.
 
-- `pktpy.cpp`: In this file, the max-api methods are implemented by using the functionality in the middle layer. This also were customization should ocurr including custom bultin methods.
+- `pktpy.cpp`: In this file, the max-api methods are implemented by using the functionality in the middle layer. This is were customization should ocurr (e.g custom bultin methods).
 
 ## Current Status
 
-- `exec`, `eval`, `anything` methods to provide enable the execution, evaluation and importation pocketpy python code with support for basic types (int, float, string)
+- `exec`, `eval`, `anything` methods to enable the execution, evaluation and importation of pocketpy python code with support for basic types (int, float, strings) and also lists.
 
 - no separate method for `import`, this is provided as part of `anything` and it works as expected.
 

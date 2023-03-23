@@ -33,19 +33,12 @@ target_compile_options(
 	--std=c++17
 	-O2
 	-Wall
+	-Wfatal-errors
+	-Wno-sign-compare
+	-Wno-unused-variable
+	-fno-rtti
+	-stdlib=libc++
 )
-
-# target_link_directories(
-# 	${PROJECT_NAME} 
-# 	PRIVATE
-# )
-
-# target_link_libraries(
-# 	${PROJECT_NAME} 
-# 	PRIVATE
-# 	"-ldl"
-# 	"-framework CoreFoundation"
-# )
 
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
