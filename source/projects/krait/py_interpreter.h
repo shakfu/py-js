@@ -1114,10 +1114,7 @@ error:
 /**
  * @brief A helper function to evaluate Max text as a Python expression.
  *
- * @param argc atom argument count
- * @param argv atom argument vector
- * @param offset offset of atom vector from which to evaluate
- * @param outlet object outlet
+ * @param text c-string
  *
  * @return PyObject* pointer to python object
  */

@@ -9,13 +9,21 @@
 using namespace pkpy;
 
 
+// ---------------------------------------------------------------------------
+// HEADER
+
+/**
+ * @brief      constants
+ */
+#define PY_MAX_ELEMS 1024
+#define PY_LOG_LEVEL DEBUG
+
+
 /**
  * @brief      specifies three logging levels
  */
 enum log_level { ERROR, INFO, DEBUG };
 
-#define PY_MAX_ELEMS 1024
-#define PY_LOG_LEVEL DEBUG
 
 /**
  * @brief      This class describes a pocketpy interpreter.
@@ -53,7 +61,15 @@ public:
     PyVar atom_to_pobject(t_atom* atom);     // used by atoms_to_ptuple
     t_max_err pobject_to_atom(PyVar value, t_atom* atom); // used by plist_to_atoms
 
-    t_max_err handle_list_output(void* outlet, List plist);
+    t_max_err handle_plist_output(void* outlet, List plist);
+
+    // python value -> atom -> output
+    // t_max_err handle_float_output(void* outlet, PyObject* pval);
+    // t_max_err handle_long_output(void* outlet, PyObject* pval);
+    // t_max_err handle_string_output(void* outlet, PyObject* pval);
+    // t_max_err handle_list_output(void* outlet, PyObject* pval);
+    // t_max_err handle_dict_output(void* outlet, PyObject* pval);
+    // t_max_err handle_output(void* outlet, PyObject* pval);
 
     // python value -> atom -> output
     t_max_err handle_pyvar_float_output(void* outlet, PyVar pval);
@@ -79,9 +95,10 @@ public:
     // t_max_err execfile(t_symbol* s);
 
     // extra message method helpers
-    // PyVar eval_text(char* text);
+    PyVar eval_text(char* text);
     // t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset,
     //                               void* outlet);
+    t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
 
     // extra message methods
     // t_max_err call(t_symbol* s, long argc, t_atom* argv, void* outlet);
@@ -437,7 +454,7 @@ t_max_err PktpyInterpreter::plist_to_atoms(List plist, int* argc,
  * @param plist pktpy List
  * @return t_max_err error code
  */
-t_max_err PktpyInterpreter::handle_list_output(void* outlet, List plist)
+t_max_err PktpyInterpreter::handle_plist_output(void* outlet, List plist)
 {
     t_atom atoms_static[PY_MAX_ELEMS];
     t_atom* atoms = NULL;
@@ -559,65 +576,7 @@ t_max_err PktpyInterpreter::handle_pyvar_list_output(void* outlet, PyVar pval)
 
         List plist = py_cast<List>(this->p_vm, pval);
 
-        t_atom atoms_static[PY_MAX_ELEMS];
-        t_atom* atoms = NULL;
-        int is_dynamic = 0;
-        int i = 0;
-
-        int seq_size = plist.size();
-        this->log_debug((char*)"seq_size: %d", seq_size);
-
-        if (seq_size == 0) {
-            this->log_error(
-                (char*)"cannot convert py list of length 0 to atoms");
-            return MAX_ERR_GENERIC;
-        }
-
-        if (seq_size > PY_MAX_ELEMS) {
-            this->log_debug(
-                (char*)"dynamically increasing size of atom array");
-            atoms = atom_dynamic_start(atoms_static, PY_MAX_ELEMS,
-                                       seq_size + 1);
-            is_dynamic = 1;
-
-        } else {
-            atoms = atoms_static;
-        }
-
-        this->log_debug((char*)"seq_size2: %d", seq_size);
-
-        for (PyVar obj : plist) {
-            if (is_int(obj)) {
-                int int_obj = py_cast<int>(this->p_vm, obj);
-                atom_setlong(atoms + i, int_obj);
-                this->log_debug((char*)"%d long: %ld\n", i, int_obj);
-                i += 1;
-            }
-
-            if (is_float(obj)) {
-                float float_obj = py_cast<float>(this->p_vm, obj);
-                atom_setfloat(atoms + i, float_obj);
-                this->log_debug((char*)"%d float: %f\n", i, float_obj);
-                i += 1;
-            }
-
-            if (is_type(obj, this->p_vm->tp_str)) {
-                Str str_obj = py_cast<Str>(this->p_vm, obj);
-                const char* cstr = strdup(str_obj.c_str());
-                atom_setsym(atoms + i, gensym(cstr));
-                this->log_debug((char*)"%d unicode: %s\n", i, cstr);
-                i += 1;
-            }
-        }
-
-        outlet_list(outlet, NULL, i, atoms);
-        this->log_debug((char*)"end iter op: %d", i);
-
-        if (is_dynamic) {
-            this->log_debug((char*)"restoring to static atom array");
-            atom_dynamic_end(atoms_static, atoms);
-        }
-        return MAX_ERR_NONE;
+        return handle_plist_output(outlet, plist);
     }
     return MAX_ERR_GENERIC;
 }
@@ -736,7 +695,7 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
 
         else if (is_type(result, this->p_vm->tp_list)) {
             List list_result = py_cast<List>(this->p_vm, result);
-            this->handle_list_output(outlet, list_result);
+            this->handle_plist_output(outlet, list_result);
             // outlet_anything(outlet, gensym("list"), 0, (t_atom*)NIL);
         }
 
@@ -868,5 +827,56 @@ t_symbol* PktpyInterpreter::get_path_to_external(t_class* klass)
     //     path_id, external_name, external_path, conform_path);
     return gensym(external_path);
 }
+
+
+/**
+ * @brief A helper function to evaluate Max text as a Python expression.
+ * 
+ * @return PyVar python object
+ */
+PyVar PktpyInterpreter::eval_text(char* text)
+{
+    PyVar result = this->p_vm->exec(text, "<eval>", EVAL_MODE);
+ 
+    if (result == NULL) {
+        if (this->p_vm->exec(text, "main.py", EXEC_MODE) != NULL) {
+            return this->p_vm->None;
+        }
+    } else {
+        return result;
+    }
+    return NULL;
+}
+
+
+/**
+ * @brief A helper function to evaluate Max text as a Python expression.
+ *
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @param offset offset of atom vector from which to evaluate
+ * @param outlet object outlet
+ *
+ * @return t_max_err error code
+ */
+t_max_err PktpyInterpreter::eval_text_to_outlet(long argc, t_atom* argv,
+                                                int offset, void* outlet)
+{
+    long textsize = 0;
+    char* text = NULL;
+
+    t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
+                                 OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        this->log_debug((char*)">>> %s", text);
+        PyVar pval = this->eval_text(text);
+        if (pval != NULL) {
+            this->handle_pyvar_output(outlet, pval);
+            return MAX_ERR_NONE;
+        }
+    }
+    return MAX_ERR_GENERIC;
+}
+
 
 #endif /* PKTPY_INTERPRETER_H */
