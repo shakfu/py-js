@@ -81,7 +81,6 @@ public:
 
     // core message method helpers
     t_max_err eval_pcode(char* pcode, void* outlet);
-    // PyVar eval_pcode(char* pcode);
     // t_max_err exec_pcode(char* pcode);
     // t_max_err execfile_path(char* path);
 
@@ -92,19 +91,12 @@ public:
     // core message methods
     t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
     t_max_err exec(t_symbol* s, long argc, t_atom* argv);
+    t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
     // t_max_err execfile(t_symbol* s);
 
     // extra message method helpers
     PyVar eval_text(char* text);
-    // t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset,
-    //                               void* outlet);
     t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
-
-    // extra message methods
-    // t_max_err call(t_symbol* s, long argc, t_atom* argv, void* outlet);
-    // t_max_err assign(t_symbol* s, long argc, t_atom* argv);
-    t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
-    // t_max_err pipe(t_symbol* s, long argc, t_atom* argv, void* outlet);
 };
 
 // ---------------------------------------------------------------------------

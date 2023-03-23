@@ -19,13 +19,9 @@ void pktpy_assist(t_pktpy* x, void* b, long m, long a, char* s);
 void pktpy_bang(t_pktpy*);
 t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 // t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s);
 
-// extra py methods
-t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
-// t_max_err pktpy_call(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
-// t_max_err pktpy_assign(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
-// t_max_err pktpy_pipe(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 
 // utilities
 t_symbol* pktpy_get_path_to_external(t_pktpy* x);
@@ -50,28 +46,18 @@ void ext_main(void* r)
             0L);
 
     class_addmethod(c, (method)pktpy_assist,     "assist",   A_CANT,     0);
-
     class_addmethod(c, (method)pktpy_bang,       "bang",                 0);
-
     class_addmethod(c, (method)pktpy_eval,       "eval",     A_GIMME,    0);
     class_addmethod(c, (method)pktpy_exec,       "exec",     A_GIMME,    0);
-    // class_addmethod(c, (method)pktpy_execfile,   "execfile", A_DEFSYM,   0);
-
-    // class_addmethod(c, (method)pktpy_assign,     "assign",   A_GIMME,    0);
-    // class_addmethod(c, (method)pktpy_call,       "call",     A_GIMME,    0);
-    // class_addmethod(c, (method)pktpy_pipe,       "pipe",     A_GIMME,    0);
     class_addmethod(c, (method)pktpy_anything,   "anything", A_GIMME,    0);
+    // class_addmethod(c, (method)pktpy_execfile,   "execfile", A_DEFSYM,   0);
 
     CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
     CLASS_ATTR_SYM(c, "name", 0,   t_pktpy, name);
     CLASS_ATTR_BASIC(c, "name", 0);
-    // CLASS_ATTR_ACCESSORS(c, "name", NULL, pktpy_name_set);
-
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     pktpy_class = c;
-
-    // post("I am the pktpy object");
 }
 
 
@@ -203,17 +189,3 @@ t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 //     return x->py->execfile(s);
 // }
 
-// t_max_err pktpy_assign(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     return x->py->assign(s, argc, argv);
-// }
-
-// t_max_err pktpy_call(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     return x->py->call(s, argc, argv, x->outlet);
-// }
-
-// t_max_err pktpy_pipe(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
-// {
-//     return x->py->pipe(s, argc, argv, x->outlet);
-// }
