@@ -4,7 +4,7 @@ This is an experiment to use [pocketpy](https://github.com/blueloveTH/pocketpy),
 
 ## Notes
 
-[pocketpy](https://github.com/blueloveTH/pocketpy) is a very cool early stage project to create an embedding-friendly self-contained python implementation for game engines.
+[pocketpy](https://github.com/blueloveTH/pocketpy) is a very cool early stage project to create an embeddable self-contained python implementation for game engines.
 
 A lot of language compatibility has been implemented but not a lot of infrastructure support (module coverage, user module support) yet.
 
@@ -48,12 +48,3 @@ pktpy.cpp -includes-> pktpy.h -includes-> pocketpy.h
 
 - see `pktpy.maxhelp` for a demo
 
-## TODO
-
-- add additional support for container types (list, tuple, set, slice, range)
-
-- add support for code editor object to edit code
-
-- wrap more of max api
-
-- add exception handling (if required)

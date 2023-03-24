@@ -118,7 +118,7 @@ void add_custom_builtins(t_pktpy* x)
 
 void pktpy_free(t_pktpy* x)
 {
-    // pkpy_delete(x->py);
+    // not required
 }
 
 void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
@@ -148,7 +148,6 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
 
         x->name = gensym("");
         x->outlet = bangout((t_object*)x);
-        // x->py = new VM(true);    // instanciate the PocketPy VM
         x->py = new PktpyInterpreter(); // <-- can also be a struct
 
         // custom builtins
