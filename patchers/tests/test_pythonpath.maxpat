@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 5,
+			"minor" : 5,
+			"revision" : 3,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -82,17 +82,17 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
-					"outlettype" : [ "", "", "" ],
-					"patching_rect" : [ 206.0, 138.0, 213.0, 22.0 ],
+					"outlettype" : [ "", "bang", "bang" ],
+					"patching_rect" : [ 206.0, 138.0, 205.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
-						"debug" : 1,
+						"debug" : 0,
 						"file" : "",
-						"pythonpath" : "/Users/sa/Downloads"
+						"pythonpath" : "$HOME/Downloads"
 					}
 ,
-					"text" : "py @pythonpath /Users/sa/Downloads",
-					"varname" : "u511001301"
+					"text" : "py @pythonpath $HOME/Downloads",
+					"varname" : "__main__"
 				}
 
 			}

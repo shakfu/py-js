@@ -15,6 +15,9 @@
 /*--------------------------------------------------------------------------*/
 /* Includes */
 
+/* posix */
+#include <wordexp.h>
+
 /* max api */
 #include "ext.h"
 #include "ext_obex.h"

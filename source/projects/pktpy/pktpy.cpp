@@ -20,7 +20,7 @@ void pktpy_bang(t_pktpy*);
 t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv);
-// t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s);
+t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s);
 
 
 // utilities
@@ -50,7 +50,7 @@ void ext_main(void* r)
     class_addmethod(c, (method)pktpy_eval,       "eval",     A_GIMME,    0);
     class_addmethod(c, (method)pktpy_exec,       "exec",     A_GIMME,    0);
     class_addmethod(c, (method)pktpy_anything,   "anything", A_GIMME,    0);
-    // class_addmethod(c, (method)pktpy_execfile,   "execfile", A_DEFSYM,   0);
+    class_addmethod(c, (method)pktpy_execfile,   "execfile", A_DEFSYM,   0);
 
     CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
     CLASS_ATTR_SYM(c, "name", 0,   t_pktpy, name);
@@ -183,8 +183,8 @@ t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 
-// t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s)
-// {
-//     return x->py->execfile(s);
-// }
+t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s)
+{
+    return x->py->execfile(s);
+}
 

@@ -231,8 +231,13 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
             goto finally;
 
     } else {
+        // tilde expansion in path
+        wordexp_t exp_result;
+        wordexp(s->s_name, &exp_result, 0);
         // must copy symbol before calling locatefile_extended
-        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
+        strncpy_zero(x->p_code_filename, exp_result.we_wordv[0], MAX_PATH_CHARS);
+        wordfree(&exp_result);
+
         if (locatefile_extended(x->p_code_filename, &x->p_code_path,
                                 &x->p_code_outtype, &x->p_code_filetype, 1)) {
             // nozero: not found

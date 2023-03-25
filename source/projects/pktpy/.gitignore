@@ -2,5 +2,4 @@ demo
 *.gch
 test_dylib
 test_gch
-pktpy_interpreter.h
 

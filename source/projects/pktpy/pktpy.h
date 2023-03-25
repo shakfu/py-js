@@ -4,6 +4,8 @@
 #include "ext.h"
 #include "ext_obex.h"
 
+#include <wordexp.h>
+
 #include "pocketpy.h"
 // #define PK_ENABLE_FILEIO 1
 
@@ -50,7 +52,6 @@ public:
     void print_atom(int argc, t_atom* argv);
 
     // error handling helpers
-    // void handle_error(char* fmt, ...);
     void handle_error(void);
     // void reset_error_buffer(void);
     // t_max_err syspath_append(char* path);
@@ -73,7 +74,7 @@ public:
     // core message method helpers
     t_max_err eval_pcode(char* pcode, bool quiet_errors, void* outlet);
     t_max_err exec_pcode(char* pcode, bool quiet_errors);
-    // t_max_err execfile_path(char* path);
+    t_max_err execfile_path(char* path);
 
     // utilities
     t_max_err locate_path_from_symbol(t_symbol* s);
@@ -83,7 +84,7 @@ public:
     t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
     t_max_err exec(t_symbol* s, long argc, t_atom* argv);
     t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
-    // t_max_err execfile(t_symbol* s);
+    t_max_err execfile(t_symbol* s);
 
     // extra message method helpers
     PyVar eval_text(char* text);
@@ -259,8 +260,13 @@ t_max_err PktpyInterpreter::locate_path_from_symbol(t_symbol* s)
         goto finally;
 
     } else {
+        // tilde expansion in path
+        wordexp_t exp_result;
+        wordexp(s->s_name, &exp_result, 0);
         // must copy symbol before calling locatefile_extended
-        strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
+        strncpy_zero(filename, exp_result.we_wordv[0], MAX_PATH_CHARS);
+        wordfree(&exp_result);
+
         if (locatefile_extended(filename, &path_code, &outtype, &filetype,
                                 1)) {
             // nozero: not found
@@ -887,5 +893,59 @@ t_max_err PktpyInterpreter::eval_text_to_outlet(long argc, t_atom* argv,
     }
     return MAX_ERR_GENERIC;
 }
+
+
+/**
+ * @brief Execute contents of a file (obtained from symbol) as python code
+ *
+ * @param s symbol
+ * @return t_max_err error code
+ */
+t_max_err PktpyInterpreter::execfile(t_symbol* s)
+{
+
+    if (s != gensym("")) {
+        // set this->p_source_path
+        t_max_err err = this->locate_path_from_symbol(s);
+        if (err != MAX_ERR_NONE) {
+            this->log_error((char*)"could not locate path from symbol");
+            return err;
+        }
+    }
+
+    if (s == gensym("") || this->p_source_path == gensym("")) {
+        this->log_error((char*)"could not set filepath");
+        return MAX_ERR_GENERIC;
+    }
+
+    // assume this->p_source_path has be been set without errors
+
+    return this->execfile_path(this->p_source_path->s_name);
+
+}
+
+
+/**
+ * @brief Execute contents of a file (obtained from symbol) as python code
+ *
+ * @param path cstring of path to execfile
+ * @return t_max_err error code
+ */
+t_max_err PktpyInterpreter::execfile_path(char* path)
+{
+    if (path == NULL) {
+        return MAX_ERR_GENERIC;
+    }
+
+    std::string str_path(path);
+    std::ifstream ifs(str_path);
+    std::stringstream buffer;
+    buffer << ifs.rdbuf();
+    this->p_vm->exec(buffer.str(), "main.py", EXEC_MODE);
+
+    return MAX_ERR_NONE;
+}
+
+
 
 #endif /* PKTPY_INTERPRETER_H */
