@@ -38,7 +38,7 @@ pktpy.cpp -includes-> pktpy.h -includes-> pocketpy.h
 
 ## Current Status
 
-- `exec`, `eval`, `anything` methods to enable the execution, evaluation and importation of pocketpy python code with support for basic types (int, float, strings) and also lists.
+- `exec`, `eval`, `anything`, `execfile`, methods to enable the execution, evaluation and importation of pocketpy python code with support for basic types (int, float, strings) and lists.
 
 - no separate method for `import`, this is provided as part of `anything` and it works as expected.
 

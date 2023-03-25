@@ -45,17 +45,21 @@ public:
     PktpyInterpreter();
     ~PktpyInterpreter();
 
-    // logging helpers
+    // logging methods
     void log_debug(char* fmt, ...);
     void log_info(char* fmt, ...);
     void log_error(char* fmt, ...);
     void print_atom(int argc, t_atom* argv);
 
-    // error handling helpers
+    // error handling methods
     void handle_error(void);
     // void reset_error_buffer(void);
+
+    // path handling methods
     // t_max_err syspath_append(char* path);
-    
+    t_max_err locate_path_from_symbol(t_symbol* s);
+    t_symbol* get_path_to_external(t_class* klass);
+
     // simple python <-> atom type translation helpers
     PyVar atom_to_pobject(t_atom* atom);                  // used by atoms_to_ptuple
     t_max_err pobject_to_atom(PyVar value, t_atom* atom); // used by plist_to_atoms
@@ -67,18 +71,18 @@ public:
     // Tuple atoms_to_ptuple(int argc, t_atom* argv);
 
     // python value -> atom -> outlet
-    t_max_err handle_plist_output(List plist, void* outlet);
     t_max_err handle_pyvar_output(PyVar pval, void* outlet);
+    t_max_err handle_plist_output(List plist, void* outlet);
     // t_max_err handle_dict_output(PyVar pval, void* outlet);
 
     // core message method helpers
-    t_max_err eval_pcode(char* pcode, bool quiet_errors, void* outlet);
-    t_max_err exec_pcode(char* pcode, bool quiet_errors);
+    t_max_err eval_pcode(char* pcode, void* outlet);
+    t_max_err exec_pcode(char* pcode);
     t_max_err execfile_path(char* path);
-
-    // utilities
-    t_max_err locate_path_from_symbol(t_symbol* s);
-    t_symbol* get_path_to_external(t_class* klass);
+    
+    // anything message method helpers
+    PyVar eval_text(char* text);
+    t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
 
     // core message methods
     t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
@@ -86,9 +90,6 @@ public:
     t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
     t_max_err execfile(t_symbol* s);
 
-    // extra message method helpers
-    PyVar eval_text(char* text);
-    t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
 };
 
 // ---------------------------------------------------------------------------
@@ -211,6 +212,9 @@ void PktpyInterpreter::print_atom(int argc, t_atom* argv)
     }
 }
 
+// ---------------------------------------------------------------------------
+// error handling methods
+
 // void PktpyInterpreter::reset_error_buffer(void)
 // {
 //     delete this->p_vm->_stderr;
@@ -234,7 +238,7 @@ void PktpyInterpreter::handle_error(void)
 
 
 // ---------------------------------------------------------------------------
-// helper methods
+// path handling methods
 
 /**
  * @brief Searches the Max filesystem context for a file given by a symbol
@@ -322,7 +326,7 @@ t_symbol* PktpyInterpreter::get_path_to_external(t_class* klass)
 }
 
 // ---------------------------------------------------------------------------
-// translation methods
+// simple type translation methods
 
 /**
  * @brief      Converts max atom to python object
@@ -362,8 +366,6 @@ PyVar PktpyInterpreter::atom_to_pobject(t_atom* atom)
 }
 
 
-// ---------------------------------------------------------------------------
-// translation helper methods
 
 /**
  * @brief      Converts a primitive python object to a max atom
@@ -406,6 +408,10 @@ t_max_err PktpyInterpreter::pobject_to_atom(PyVar value, t_atom* atom)
     }
     return err;
 }
+
+
+// ---------------------------------------------------------------------------
+// complex type translation methods
 
 
 /**
@@ -609,46 +615,9 @@ t_max_err PktpyInterpreter::handle_pyvar_output(PyVar pval, void* outlet)
     }
 }
 
-/**
- * @brief Execute a max symbol as a line of python code
- *
- * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
- *
- * @return t_max_err error code
- */
-t_max_err PktpyInterpreter::exec(t_symbol* s, long argc, t_atom* argv)
-{
-    char* pcode = atom_getsym(argv)->s_name;
-    if (pcode == NULL) {
-        return MAX_ERR_GENERIC;
-    }
+// ---------------------------------------------------------------------------
+// core message method helpers
 
-    return this->exec_pcode(pcode, false);
-}
-
-
-/**
- * @brief Evaluate a max symbol as a python expression
- *
- * @param s symbol of object to be evaluated
- * @param argc atom argument count
- * @param argv atom argument vector
- *
- * @return t_max_err error code
- */
-t_max_err PktpyInterpreter::eval(t_symbol* s, long argc, t_atom* argv,
-                                 void* outlet)
-{
-    char* pcode = atom_getsym(argv)->s_name;
-
-    if (pcode == NULL) {
-        return MAX_ERR_GENERIC;
-    }
-
-    return this->eval_pcode(pcode, false, outlet);
-}
 
 /**
  * @brief      'eval' a string of python code and convert it into
@@ -659,7 +628,7 @@ t_max_err PktpyInterpreter::eval(t_symbol* s, long argc, t_atom* argv,
  *
  * @return     The t maximum error.
  */
-t_max_err PktpyInterpreter::eval_pcode(char* pcode, bool quiet_errors, void* outlet)
+t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
 {
     PyVar result = this->p_vm->exec(pcode, "<eval>", EVAL_MODE);
 
@@ -745,10 +714,8 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, bool quiet_errors, void* out
         }
         return MAX_ERR_NONE;
     }
-    if (!quiet_errors) {
-        this->handle_error();
-        // this->log_error((char*)"eval %s", pcode);        
-    }
+    // this->handle_error();
+    this->log_error((char*)"eval %s", pcode);
     return MAX_ERR_GENERIC;
 }
 
@@ -761,13 +728,11 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, bool quiet_errors, void* out
  * @param argv atom argument vector
  * @return t_max_err error code
  */ 
-t_max_err PktpyInterpreter::exec_pcode(char* pcode, bool quiet_errors)
+t_max_err PktpyInterpreter::exec_pcode(char* pcode)
 {
     if (this->p_vm->exec(pcode, "main.py", EXEC_MODE) == NULL) {
-        if (!quiet_errors) {
-            this->handle_error();
-            // this->log_error((char*)"exec %s", pcode);            
-        }
+        // this->handle_error();
+        this->log_error((char*)"exec %s", pcode);            
         return MAX_ERR_GENERIC;
     }
 
@@ -775,75 +740,30 @@ t_max_err PktpyInterpreter::exec_pcode(char* pcode, bool quiet_errors)
     return MAX_ERR_NONE;
 }
 
+
 /**
- * @brief      Try to eval a string of python code, if it succeeds convert
- *             it to atoms and send it out the outlet, otherwise, try to exec it
+ * @brief Execute contents of a file (obtained from symbol) as python code
  *
- * @param      s       symbol
- * @param[in]  argc    The count of arguments
- * @param      argv    The arguments array
- * @param      outlet  The outlet
- *
- * @return     The t maximum error.
+ * @param path cstring of path to execfile
+ * @return t_max_err error code
  */
-t_max_err PktpyInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
-                                     void* outlet)
+t_max_err PktpyInterpreter::execfile_path(char* path)
 {
-    t_atom atoms[PY_MAX_ELEMS];
-    long textsize = 0;
-    char* text = NULL;
-    int is_eval = 1;
-
-
-    if (s == gensym("")) {
+    if (path == NULL) {
         return MAX_ERR_GENERIC;
     }
 
-    // set symbol as first atom in new atoms array
-    atom_setsym(atoms, s);
+    std::string str_path(path);
+    std::ifstream ifs(str_path);
+    std::stringstream buffer;
+    buffer << ifs.rdbuf();
+    this->p_vm->exec(buffer.str(), "main.py", EXEC_MODE);
 
-    for (int i = 0; i < argc; i++) {
-        switch ((argv + i)->a_type) {
-        case A_FLOAT: {
-            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
-            break;
-        }
-        case A_LONG: {
-            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
-            break;
-        }
-        case A_SYM: {
-            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
-            break;
-        }
-        default:
-            this->log_error((char*)"cannot process unknown type");
-            break;
-        }
-    }
-
-    t_max_err err = atom_gettext(argc + 1, atoms, &textsize, &text,
-                                 OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
-
-    if (!(err == MAX_ERR_NONE && textsize && text)) {
-        this->log_error((char*)"anything: null entry");
-        return MAX_ERR_GENERIC;
-    }
-
-    if (this->eval_pcode(text, true, outlet) == MAX_ERR_NONE) {
-        return MAX_ERR_NONE;
-    }
-
-    else if (this->exec_pcode(text, true) == MAX_ERR_NONE) {
-        return MAX_ERR_NONE;
-    }
-
-    else {
-        this->log_error((char*)"anything method failed");
-        return MAX_ERR_GENERIC;
-    }
+    return MAX_ERR_NONE;
 }
 
+// ---------------------------------------------------------------------------
+// core message method helpers (quiet)
 
 /**
  * @brief A helper function to evaluate Max text as a Python expression.
@@ -895,6 +815,51 @@ t_max_err PktpyInterpreter::eval_text_to_outlet(long argc, t_atom* argv,
 }
 
 
+// ---------------------------------------------------------------------------
+// core message methods
+
+/**
+ * @brief Evaluate a max symbol as a python expression
+ *
+ * @param s symbol of object to be evaluated
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ *
+ * @return t_max_err error code
+ */
+t_max_err PktpyInterpreter::eval(t_symbol* s, long argc, t_atom* argv,
+                                 void* outlet)
+{
+    char* pcode = atom_getsym(argv)->s_name;
+
+    if (pcode == NULL) {
+        return MAX_ERR_GENERIC;
+    }
+
+    return this->eval_pcode(pcode, outlet);
+}
+
+
+/**
+ * @brief Execute a max symbol as a line of python code
+ *
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ *
+ * @return t_max_err error code
+ */
+t_max_err PktpyInterpreter::exec(t_symbol* s, long argc, t_atom* argv)
+{
+    char* pcode = atom_getsym(argv)->s_name;
+    if (pcode == NULL) {
+        return MAX_ERR_GENERIC;
+    }
+
+    return this->exec_pcode(pcode);
+}
+
+
 /**
  * @brief Execute contents of a file (obtained from symbol) as python code
  *
@@ -926,24 +891,54 @@ t_max_err PktpyInterpreter::execfile(t_symbol* s)
 
 
 /**
- * @brief Execute contents of a file (obtained from symbol) as python code
+ * @brief      Try to eval a string of python code, if it succeeds convert
+ *             it to atoms and send it out the outlet, otherwise, try to exec it
  *
- * @param path cstring of path to execfile
- * @return t_max_err error code
+ * @param      s       symbol
+ * @param[in]  argc    The count of arguments
+ * @param      argv    The arguments array
+ * @param      outlet  The outlet
+ *
+ * @return     The t maximum error.
  */
-t_max_err PktpyInterpreter::execfile_path(char* path)
+t_max_err PktpyInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
+                                     void* outlet)
 {
-    if (path == NULL) {
+    t_atom atoms[PY_MAX_ELEMS];
+    long textsize = 0;
+    char* text = NULL;
+    int is_eval = 1;
+
+
+    if (s == gensym("")) {
         return MAX_ERR_GENERIC;
     }
 
-    std::string str_path(path);
-    std::ifstream ifs(str_path);
-    std::stringstream buffer;
-    buffer << ifs.rdbuf();
-    this->p_vm->exec(buffer.str(), "main.py", EXEC_MODE);
+    // set symbol as first atom in new atoms array
+    atom_setsym(atoms, s);
 
-    return MAX_ERR_NONE;
+    for (int i = 0; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
+            break;
+        }
+        case A_LONG: {
+            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
+            break;
+        }
+        case A_SYM: {
+            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
+            break;
+        }
+        default:
+            this->log_error((char*)"cannot process unknown type");
+            break;
+        }
+    }
+
+    return this->eval_text_to_outlet(argc, atoms, 1, outlet);
+
 }
 
 
