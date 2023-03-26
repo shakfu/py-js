@@ -14,13 +14,20 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
 
 
+
 # options
 option(USE_STATIC_PY "build static extension")
 option(USE_FRAMEWORK_PY "build framework-based extension")
 option(USE_NUMPY "include numpy headers if available")
 option(DEBUG "display debug variables")
 
-
+set(DEBUG ON)
+# set(BUILD_LIB ${CMAKE_CURRENT_SOURCE_DIR}/targets/build/lib)
+# set(STATIC_PY ${BUILD_LIB}/python-static)
+# set(Python_ROOT_DIR ${STATIC_PY})
+# set(Python_ROOT_DIR ${FRAMEWORK_PY})
+# set(Python_USE_STATIC_LIBS ON)
+# set(Python_FIND_STRATEGY "LOCATION")
 
 
 find_package(Python3 COMPONENTS Interpreter Development)
@@ -29,6 +36,8 @@ if(DEBUG)
 	message("CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 	message("CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 	message("Python3_VERSION: ${Python3_VERSION}")
+	message("Python3_VERSION_MAJOR: ${Python3_VERSION_MAJOR}")
+	message("Python3_VERSION_MINOR: ${Python3_VERSION_MINOR}")
 	message("Python3_FOUND: ${Python3_FOUND}")
 	message("Python3_Interpreter_FOUND: ${Python3_Interpreter_FOUND}")
 	message("Python3_Development_FOUND: ${Python3_Development_FOUND}")
@@ -106,7 +115,7 @@ set(FRAMEWORK_PY ${BUILD_LIB}/Python.framework)
 
 if(USE_STATIC_PY)
 	message("USE_STATIC_PY : ${USE_STATIC_PY}")
-	set(PY_INCLUDE "${STATIC_PY}/include/python3.10")
+	set(PY_INCLUDE "${STATIC_PY}/include/python3.${Python3_VERSION_MINOR}")
 	set(PY_LIBDIRS "${STATIC_PY}/lib")
 elseif(USE_FRAMEWORK_PY)
 	message("USE_FRAMEWORK_PY: ${USE_FRAMEWORK_PY}")
@@ -171,7 +180,7 @@ if(USE_STATIC_PY)
 	target_link_libraries(
 		${PROJECT_NAME} 
 		PRIVATE
-		python3.10
+		python3.${Python_VERSION_MINOR}
 		"${STATICINTL}"
 		"-liconv"
 		"-lz"
@@ -190,8 +199,8 @@ if(USE_STATIC_PY)
 	add_custom_command(TARGET ${PROJECT_NAME}
 		POST_BUILD
 		COMMAND mkdir -p ${PY_EXT_LIB}
-		COMMAND cp -af ${PY_LIBDIRS}/python3.10 ${PY_EXT_LIB}
-		COMMAND cp -af ${PY_LIBDIRS}/python310.zip ${PY_EXT_LIB}
+		COMMAND cp -af ${PY_LIBDIRS}/python3.${Python_VERSION_MINOR} ${PY_EXT_LIB}
+		COMMAND cp -af ${PY_LIBDIRS}/python3${Python_VERSION_MINOR}.zip ${PY_EXT_LIB}
 		COMMENT "Add Resources" VERBATIM
 	)
 

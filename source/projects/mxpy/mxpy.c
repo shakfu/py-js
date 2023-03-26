@@ -326,6 +326,7 @@ static void* mxpy_new(t_symbol* selector, int argc, t_atom* argv)
             PyList_Append(sysPath, modulePath);
         }
         Py_DECREF(modulePath);
+        // end TODO
         
         // try loading a system module
         PyObject* os_name = PyUnicode_FromString("os");
