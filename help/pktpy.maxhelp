@@ -468,18 +468,6 @@
 				}
 
 			}
-, 			{
-				"box" : 				{
-					"id" : "obj-42",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 0.0, 0.0, 100.0, 22.0 ],
-					"text" : "loadbang"
-				}
-
-			}
  ],
 		"lines" : [ 			{
 				"patchline" : 				{
