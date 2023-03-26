@@ -25,7 +25,7 @@ The default build creates a lightweight external linked to your local python3; a
 
 ## Installation
 
-### Can I install two different python3 externals the same project?
+### Can I install two different python3 externals in the same project?
 
 Python3 external types which are not 'isolated' (see the [build variations](README.md#build-variations) section) cannot be loaded at the same time. So for example, if you build a `framework-ext`, `py.mxo` and `pyjs.mxo` will not work together in the same patch, but if you built a `framework-pkg` variations of the same two externals they should work fine without issues.
 
@@ -71,4 +71,8 @@ You can also add your system `site-packages` to the externals pythonpath attribu
 
 If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `bin-homebrew-pkg` build option for example.
 
-It is also possible to package numpy in a full relocatable external, it's quite involved, and cannot currently only be done with non-statically built relocatable externals. The releases section has an example of this.
+It is also possible to package numpy in a full relocatable external, it's quite involved, and can currently only be done with non-statically built relocatable externals. The releases section has an example of this.
+
+The build used to auto-detect numpy in a python used to build the external, but now it is a manual
+process and the limited numpy support has to be enabled at the Makefile and cmake level.
+

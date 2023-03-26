@@ -39,7 +39,7 @@ void pktpy_okclose(t_pktpy* x, char *s, short *result);
 
 // utilities
 t_symbol* pktpy_get_path_to_external(t_pktpy* x);
-
+void add_custom_builtins(t_pktpy* x);
 
 END_USING_C_LINKAGE
 
@@ -64,6 +64,8 @@ void ext_main(void* r)
             0L);
 
     class_addmethod(c, (method)pktpy_assist,     "assist",     A_CANT,     0);
+
+    // message methods
     class_addmethod(c, (method)pktpy_bang,       "bang",                   0);
     class_addmethod(c, (method)pktpy_eval,       "eval",       A_GIMME,    0);
     class_addmethod(c, (method)pktpy_exec,       "exec",       A_GIMME,    0);
@@ -110,42 +112,6 @@ void pktpy_assist(t_pktpy* x, void* b, long m, long a, char* s)
     }
 }
 
-/* -------------------------------------------------------------------------
- * custom builtins
- */
-
-// example function to be wrapped by NativeProxyFunc
-int add100(int a) { return a + 100; }
-
-void add_custom_builtins(t_pktpy* x)
-{
-    // builtins
-    x->py->vm->bind_builtin_func<1>("add10", [](VM* vm, Args& args) {
-        i64 a = CAST(i64, args[0]);
-        return VAR(a + 10);
-    });
-
-    // example of wrapping a max api function
-    // bind: void *outlet_int(t_outlet *x, t_atom_long n);
-    // >>> out_int(10) -> sends 10 out of outlet
-    x->py->vm->bind_builtin_func<1>("out_int", [x](VM* vm, Args& args) {
-        i64 a = CAST(i64, args[0]);
-        outlet_int(x->outlet, a);
-        return vm->None;
-    });
-
-    // wrap exist function pktpy_get_path_to_external
-    x->py->vm->bind_builtin_func<0>("location", [x](VM* vm, Args& args) {
-        t_symbol* sym = pktpy_get_path_to_external(x);
-        outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
-        return vm->None;
-    });
-
-    // example of wrapping function using NativeProxyFunc
-    // It can be constructed from a function pointer,
-    // a lambda function, or a std::function.
-    x->py->vm->bind_builtin_func<1>("add100", NativeProxyFunc(&add100));
-}
 
 /* -------------------------------------------------------------------------
  * constructor / destructor
@@ -216,7 +182,6 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
     }
     return (x);
 }
-
 
 
 /* -------------------------------------------------------------------------
@@ -437,3 +402,63 @@ void pktpy_load(t_pktpy* x, t_symbol* s)
     pktpy_read(x, s);
     pktpy_execfile(x, s);
 }
+
+
+/* -------------------------------------------------------------------------
+ * custom builtin function wrappers (can be used as python functions)
+ */
+
+// example function to be wrapped by NativeProxyFunc
+int add100(int a) { return a + 100; }
+
+void add_custom_builtins(t_pktpy* x)
+{
+    // builtins
+    x->py->vm->bind_builtin_func<1>("add10", [](VM* vm, Args& args) {
+        i64 a = CAST(i64, args[0]);
+        return VAR(a + 10);
+    });
+
+    // example of wrapping a max api function
+    // bind: void *outlet_int(t_outlet *x, t_atom_long n);
+    // >>> out_int(10) -> sends 10 out of outlet
+    x->py->vm->bind_builtin_func<1>("out_int", [x](VM* vm, Args& args) {
+        i64 a = CAST(i64, args[0]);
+        outlet_int(x->outlet, a);
+        return vm->None;
+    });
+
+    // wrap existing function pktpy_get_path_to_external
+    x->py->vm->bind_builtin_func<0>("location", [x](VM* vm, Args& args) {
+        t_symbol* sym = pktpy_get_path_to_external(x);
+        outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
+        return vm->None;
+    });
+
+    // wrap existing function pktpy_load
+    x->py->vm->bind_builtin_func<1>("load", [x](VM* vm, Args& args) {
+        Str path = CAST(Str, args[0]);
+        const char* path_cstr = strdup(path.c_str());
+        pktpy_load(x, gensym(path_cstr)); 
+        return vm->None;
+    });
+
+    // wrap max-api function newobject_fromboxtext as create(text: str)
+    x->py->vm->bind_builtin_func<1>("create", [x](VM* vm, Args& args) {
+        Str text = CAST(Str, args[0]);
+        const char* text_cstr = strdup(text.c_str());
+        t_object *patcher;//, *obj;
+        t_max_err err;
+        if (object_obex_lookup(x, gensym("#P"), &patcher) == MAX_ERR_NONE)
+            // obj = newobject_fromboxtext(patcher, text_cstr);
+            newobject_fromboxtext(patcher, text_cstr);
+        return vm->None;
+    });
+
+    // example of wrapping function using NativeProxyFunc
+    // It can be constructed from a function pointer,
+    // a lambda function, or a std::function.
+    x->py->vm->bind_builtin_func<1>("add100", NativeProxyFunc(&add100));
+}
+
+
