@@ -2,15 +2,15 @@
 
 
 typedef struct _pktpy {
-    t_object ob;
-    t_symbol* name;
-    t_object* p_code_editor; /*!< code editor object */
-    char** p_code;           /*!< handle to code buffer for code editor */
-    long p_code_size;        /*!< length of code buffer */
-    long p_run_on_save;      /*!< evaluate/run code in editor on save */
-    long p_run_on_close;     /*!< evaluate/run code in editor on close */
-    void* outlet;
-    PktpyInterpreter* py;
+    t_object ob;            /*!< object header */
+    t_symbol* name;         /*!< unique object name */
+    t_object* code_editor;  /*!< code editor object */
+    char** code_buffer;     /*!< handle to code buffer for code editor */
+    long code_size;         /*!< length of code buffer */
+    long run_on_save;       /*!< evaluate/run code in editor on save */
+    long run_on_close;      /*!< evaluate/run code in editor on close */
+    void* outlet;           /*!< object outlet */
+    PktpyInterpreter* py;   /*!< pktpy interpreter instance */
 } t_pktpy;
 
 // clang-format off
@@ -39,10 +39,14 @@ void pktpy_okclose(t_pktpy* x, char *s, short *result);
 
 // utilities
 t_symbol* pktpy_get_path_to_external(t_pktpy* x);
-// int add100(int a);
 
 
 END_USING_C_LINKAGE
+
+
+/* -------------------------------------------------------------------------
+ * EXTERNAL IMPLEMENTATION
+ */
 
 
 static t_class* pktpy_class = NULL;
@@ -84,6 +88,13 @@ void ext_main(void* r)
 }
 // clang-format on
 
+/**
+ * @brief      returns path to external
+ *
+ * @param      x     object instance
+ *
+ * @return     symbol path to external
+ */
 t_symbol* pktpy_get_path_to_external(t_pktpy* x)
 {
     return x->py->get_path_to_external(pktpy_class);
@@ -99,6 +110,9 @@ void pktpy_assist(t_pktpy* x, void* b, long m, long a, char* s)
     }
 }
 
+/* -------------------------------------------------------------------------
+ * custom builtins
+ */
 
 // example function to be wrapped by NativeProxyFunc
 int add100(int a) { return a + 100; }
@@ -106,7 +120,7 @@ int add100(int a) { return a + 100; }
 void add_custom_builtins(t_pktpy* x)
 {
     // builtins
-    x->py->p_vm->bind_builtin_func<1>("add10", [](VM* vm, Args& args) {
+    x->py->vm->bind_builtin_func<1>("add10", [](VM* vm, Args& args) {
         i64 a = CAST(i64, args[0]);
         return VAR(a + 10);
     });
@@ -114,14 +128,14 @@ void add_custom_builtins(t_pktpy* x)
     // example of wrapping a max api function
     // bind: void *outlet_int(t_outlet *x, t_atom_long n);
     // >>> out_int(10) -> sends 10 out of outlet
-    x->py->p_vm->bind_builtin_func<1>("out_int", [x](VM* vm, Args& args) {
+    x->py->vm->bind_builtin_func<1>("out_int", [x](VM* vm, Args& args) {
         i64 a = CAST(i64, args[0]);
         outlet_int(x->outlet, a);
         return vm->None;
     });
 
     // wrap exist function pktpy_get_path_to_external
-    x->py->p_vm->bind_builtin_func<0>("location", [x](VM* vm, Args& args) {
+    x->py->vm->bind_builtin_func<0>("location", [x](VM* vm, Args& args) {
         t_symbol* sym = pktpy_get_path_to_external(x);
         outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
         return vm->None;
@@ -130,18 +144,35 @@ void add_custom_builtins(t_pktpy* x)
     // example of wrapping function using NativeProxyFunc
     // It can be constructed from a function pointer,
     // a lambda function, or a std::function.
-    x->py->p_vm->bind_builtin_func<1>("add100", NativeProxyFunc(&add100));
+    x->py->vm->bind_builtin_func<1>("add100", NativeProxyFunc(&add100));
 }
 
+/* -------------------------------------------------------------------------
+ * constructor / destructor
+ */
 
+/**
+ * @brief      external cleanup (called on object deletion)
+ *
+ * @param      x     object instance
+ */
 void pktpy_free(t_pktpy* x)
 {
     // code editor cleanup
-    object_free(x->p_code_editor);
-    if (x->p_code)
-        sysmem_freehandle(x->p_code);
+    object_free(x->code_editor);
+    if (x->code_buffer)
+        sysmem_freehandle(x->code_buffer);
 }
 
+/**
+ * @brief      external initializer (called on creation)
+ *
+ * @param      s     symbol
+ * @param[in]  argc  number of atoms
+ * @param      argv  The arguments array
+ *
+ * @return     pointer to external instance
+ */
 void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_pktpy* x = NULL;
@@ -172,19 +203,12 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
         x->py = new PktpyInterpreter(); // <-- can also be a struct
 
         // text editor
-        x->p_code = sysmem_newhandle(0);
-        x->p_code_size = 0;
-        x->p_code_editor = NULL;
-        // x->p_code_filetype = FOUR_CHAR_CODE('TEXT');
-        // x->p_code_outtype = 0;
-        // x->p_code_filename[0] = 0;
-        // x->p_code_pathname[0] = 0;
-        // short p_code_path;
-        // x->p_code_filepath = gensym("");
-        // x->p_autoload = 0;
-        x->p_run_on_save = 0;
-        x->p_run_on_close = 1;
-        // x->p_run_on = gensym("close");
+        x->code_buffer = sysmem_newhandle(0);
+        x->code_size = 0;
+        x->code_editor = NULL;
+        x->run_on_save = 0;
+        x->run_on_close = 1;
+
         // custom builtins
         add_custom_builtins(x);
 
@@ -194,36 +218,80 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
 }
 
 
+
+/* -------------------------------------------------------------------------
+ * core message methods
+ */
+
+/**
+ * @brief      bang method
+ *
+ * @param      x     object instance
+ */
 void pktpy_bang(t_pktpy* x) { outlet_bang(x->outlet); }
 
-
+/**
+ * @brief      { function_description }
+ *
+ * @param      x     object instance
+ * @param      s     symbol
+ * @param[in]  argc  no of atoms
+ * @param      argv  atom array
+ *
+ * @return     The t maximum error.
+ */
 t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->exec(s, argc, argv);
 }
 
-
+/**
+ * @brief      { function_description }
+ *
+ * @param      x     object instance
+ * @param      s     symbol
+ * @param[in]  argc  no of atoms
+ * @param      argv  atom array
+ *
+ * @return     The t maximum error.
+ */
 t_max_err pktpy_eval(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->eval(s, argc, argv, x->outlet);
 }
 
-
+/**
+ * @brief      { function_description }
+ *
+ * @param      x     object instance
+ * @param      s     symbol
+ * @param[in]  argc  no of atoms
+ * @param      argv  atom array
+ *
+ * @return     The t maximum error.
+ */
 t_max_err pktpy_anything(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 {
     return x->py->anything(s, argc, argv, x->outlet);
 }
 
-
+/**
+ * @brief      { function_description }
+ *
+ * @param      x     object instance
+ * @param      s     symbol
+ *
+ * @return     The t maximum error.
+ */
 t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s)
 {
     return x->py->execfile(s);
 }
 
 
-// ---------------------------------------------------------------------------
-// code-editor methods
-
+/* -------------------------------------------------------------------------
+ * code-editor methods
+ */
 
 /**
  * @brief Event of double-clicking on external object launches code-editor UI
@@ -233,15 +301,14 @@ t_max_err pktpy_execfile(t_pktpy* x, t_symbol* s)
  */
 void pktpy_dblclick(t_pktpy* x)
 {
-    if (x->p_code_editor)
-        object_attr_setchar(x->p_code_editor, gensym("visible"), 1);
+    if (x->code_editor)
+        object_attr_setchar(x->code_editor, gensym("visible"), 1);
     else {
-        x->p_code_editor = (t_object*)object_new(CLASS_NOBOX, gensym("jed"), x,
-                                                 0);
-        object_method(x->p_code_editor, gensym("settext"), *x->p_code,
+        x->code_editor = (t_object*)object_new(CLASS_NOBOX, gensym("jed"), x, 0);
+        object_method(x->code_editor, gensym("settext"), *x->code_buffer,
                       gensym("utf-8"));
-        object_attr_setchar(x->p_code_editor, gensym("scratch"), 1);
-        object_attr_setsym(x->p_code_editor, gensym("title"),
+        object_attr_setchar(x->code_editor, gensym("scratch"), 1);
+        object_attr_setsym(x->code_editor, gensym("title"),
                            gensym("py-editor"));
     }
 }
@@ -272,14 +339,14 @@ void pktpy_doread(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
     t_filehandle fh;
 
     x->py->locate_path_from_symbol(s);
-    err = path_opensysfile((const char*)x->py->p_source_name,
-                           (const short)x->py->p_path_code, &fh, READ_PERM);
+    err = path_opensysfile((const char*)x->py->source_name,
+                           (const short)x->py->path_code, &fh, READ_PERM);
     if (!err) {
         sysfile_readtextfile(
-            fh, x->p_code, 0,
+            fh, x->code_buffer, 0,
             (t_sysfile_text_flags)(TEXT_LB_UNIX | TEXT_NULL_TERMINATE));
         sysfile_close(fh);
-        x->p_code_size = sysmem_handlesize(x->p_code);
+        x->code_size = sysmem_handlesize(x->code_buffer);
     }
 }
 
@@ -291,11 +358,11 @@ void pktpy_doread(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
  */
 t_max_err pktpy_run(t_pktpy* x)
 {
-    if ((*(x->p_code) != NULL) && (*(x->p_code)[0] == '\0'))
+    if ((*(x->code_buffer) != NULL) && (*(x->code_buffer)[0] == '\0'))
         // is empty string
         return MAX_ERR_GENERIC;
 
-    return x->py->exec_pcode(*(x->p_code));
+    return x->py->exec_pcode(*(x->code_buffer));
 }
 
 
@@ -308,14 +375,14 @@ t_max_err pktpy_run(t_pktpy* x)
  */
 void pktpy_edclose(t_pktpy* x, char** text, long size)
 {
-    if (x->p_code)
-        sysmem_freehandle(x->p_code);
+    if (x->code_buffer)
+        sysmem_freehandle(x->code_buffer);
 
-    x->p_code = sysmem_newhandleclear(size + 1);
-    sysmem_copyptr((char*)*text, *x->p_code, size);
-    x->p_code_size = size + 1;
-    x->p_code_editor = NULL;
-    if (x->p_run_on_close) {
+    x->code_buffer = sysmem_newhandleclear(size + 1);
+    sysmem_copyptr((char*)*text, *x->code_buffer, size);
+    x->code_size = size + 1;
+    x->code_editor = NULL;
+    if (x->run_on_close) {
         pktpy_run(x);
     }
 }
@@ -334,7 +401,7 @@ void pktpy_okclose(t_pktpy* x, char* s, short* result)
 {
     // see: https://cycling74.com/forums/text-editor-without-dirty-bit
     x->py->log_debug((char*)"okclose: called -- run-on-close: %d",
-                     x->p_run_on_close);
+                     x->run_on_close);
     *result = 3; // don't put up a dialog
     // const char *string = "custom save text";
     // memcpy(s, string, strlen(string)+1);
@@ -350,11 +417,11 @@ void pktpy_okclose(t_pktpy* x, char* s, short* result)
  */
 t_max_err pktpy_edsave(t_pktpy* x, char** text, long size)
 {
-    if (x->p_run_on_save) {
+    if (x->run_on_save) {
 
         x->py->log_debug((char*)"run-on-save activated");
 
-        return x->py->exec_pcode(*(x->p_code));
+        return x->py->exec_pcode(*(x->code_buffer));
     }
     return MAX_ERR_NONE;
 }
