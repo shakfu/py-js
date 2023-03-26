@@ -35,12 +35,13 @@ class PktpyInterpreter {
 private:
     t_symbol* p_name;        //!< unique python object name
     t_symbol* p_pythonpath;  //!< path to python directory
-    t_symbol* p_source_name; //!< base name of python file to execfile
-    t_symbol* p_source_path; //!< full path to python file to execfile
     log_level p_log_level;   //!< object-level log level (error, info, debug)
 
 public:
     VM* p_vm;                //!< pocketpy vm instance
+    t_symbol* p_source_name; //!< base name of python file to execfile
+    t_symbol* p_source_path; //!< full path to python file to execfile
+    short     p_path_code;    
 
     PktpyInterpreter();
     ~PktpyInterpreter();
@@ -89,7 +90,6 @@ public:
     t_max_err exec(t_symbol* s, long argc, t_atom* argv);
     t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
     t_max_err execfile(t_symbol* s);
-
 };
 
 // ---------------------------------------------------------------------------
@@ -104,6 +104,7 @@ PktpyInterpreter::PktpyInterpreter()
     this->p_pythonpath = gensym("");
     this->p_source_name = gensym("");
     this->p_source_path = gensym("");
+    this->p_path_code = 0;
     this->p_log_level = log_level::PY_LOG_LEVEL;
     this->p_vm = new VM(false); // vm->use_stdio = false
 }
@@ -250,7 +251,7 @@ t_max_err PktpyInterpreter::locate_path_from_symbol(t_symbol* s)
 {
     t_fourcc filetype = FOUR_CHAR_CODE('TEXT');
     t_fourcc outtype = 0;
-    short path_code = 0;
+    // short path_code = 0;
     char filename[MAX_PATH_CHARS];
     char pathname[MAX_PATH_CHARS];
     t_max_err ret = MAX_ERR_NONE;
@@ -258,7 +259,7 @@ t_max_err PktpyInterpreter::locate_path_from_symbol(t_symbol* s)
     if (s == gensym("")) { // if no arg supplied to ask for file
         filename[0] = 0;
 
-        if (open_dialog(filename, &path_code, &outtype, &filetype, 1))
+        if (open_dialog(filename, &this->p_path_code, &outtype, &filetype, 1))
             // non-zero: cancelled
             ret = MAX_ERR_GENERIC;
         goto finally;
@@ -271,7 +272,7 @@ t_max_err PktpyInterpreter::locate_path_from_symbol(t_symbol* s)
         strncpy_zero(filename, exp_result.we_wordv[0], MAX_PATH_CHARS);
         wordfree(&exp_result);
 
-        if (locatefile_extended(filename, &path_code, &outtype, &filetype,
+        if (locatefile_extended(filename, &this->p_path_code, &outtype, &filetype,
                                 1)) {
             // nozero: not found
             this->log_error((char*)"can't find file %s", s->s_name);
@@ -279,7 +280,7 @@ t_max_err PktpyInterpreter::locate_path_from_symbol(t_symbol* s)
             goto finally;
         } else {
             pathname[0] = 0;
-            ret = path_toabsolutesystempath(path_code, filename, pathname);
+            ret = path_toabsolutesystempath(this->p_path_code, filename, pathname);
             if (ret != MAX_ERR_NONE) {
                 this->log_error((char*)"can't convert %s to absolutepath",
                                 s->s_name);
@@ -940,7 +941,6 @@ t_max_err PktpyInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
     return this->eval_text_to_outlet(argc, atoms, 1, outlet);
 
 }
-
 
 
 #endif /* PKTPY_INTERPRETER_H */

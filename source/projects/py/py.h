@@ -16,7 +16,9 @@
 /* Includes */
 
 /* posix */
+#if defined(__APPLE__)
 #include <wordexp.h>
+#endif
 
 /* max api */
 #include "ext.h"

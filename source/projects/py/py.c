@@ -198,10 +198,11 @@ t_symbol* py_locate_path_to_external(t_py* x)
     short path_id = class_getpath(py_class);
     snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", py_class->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
-    // path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_PATH);
+    /* path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_PATH); */
     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
-    // post("path_id: %d, external_name: %s, external_path: %s conform_path: %s", 
-    //     path_id, external_name, external_path, conform_path);
+    /* post("path_id: %d, external_name: %s, external_path: %s conform_path: %s",
+             path_id, external_name, external_path, conform_path);
+    */
     return gensym(external_path);
 }
 
@@ -221,22 +222,30 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
 {
     t_max_err ret = 0;
 
-    if (s == gensym("")) { // if no arg supplied ask for file
+    if (s == gensym("")) { /* if no arg supplied ask for file */
         x->p_code_filename[0] = 0;
 
         if (open_dialog(x->p_code_filename, &x->p_code_path,
                         &x->p_code_outtype, &x->p_code_filetype, 1))
-            // non-zero: cancelled
+            /* non-zero: cancelled */
             ret = MAX_ERR_GENERIC;
             goto finally;
 
     } else {
-        // tilde expansion in path
+
+#if defined(__APPLE__)
+        /* depends on posix header wordexp.h for tilde expansion in path
+         * e.g. $HOME becomes /Users/<name>
+         */
         wordexp_t exp_result;
         wordexp(s->s_name, &exp_result, 0);
         // must copy symbol before calling locatefile_extended
         strncpy_zero(x->p_code_filename, exp_result.we_wordv[0], MAX_PATH_CHARS);
         wordfree(&exp_result);
+#else
+        // must copy symbol before calling locatefile_extended
+        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
+#endif
 
         if (locatefile_extended(x->p_code_filename, &x->p_code_path,
                                 &x->p_code_outtype, &x->p_code_filetype, 1)) {
