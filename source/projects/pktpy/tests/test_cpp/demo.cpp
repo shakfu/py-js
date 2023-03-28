@@ -23,6 +23,8 @@ int main(){
     // Create a virtual machine
     VM* vm = new VM(true);
     
+    std::cout << "== testing eval/exec ==" << std::endl;
+
     // Hello world!
     vm->exec("print('Hello world!')", "main.py", EXEC_MODE);
 
@@ -40,7 +42,7 @@ int main(){
 
     printf("\nas c string: %s\n", st.c_str());
 
-    std::cout << st;
+    std::cout << st << std::endl;
 
 
     // test read_file()
@@ -49,19 +51,19 @@ int main(){
     // vm->exec(code, "main.py", EXEC_MODE);
     // vm->exec("print(test())", "main.py", EXEC_MODE);
 
-
+    // test execfile
+    std::cout << "== testing execfile ==" << std::endl;
     std::ifstream t("test.py");
     std::stringstream buffer;
     buffer << t.rdbuf();
-    // std::string code = read_file("test.py");
-    // std::cout << code << std::endl;
     vm->exec(buffer.str(), "main.py", EXEC_MODE);
     vm->exec("print(test())", "main.py", EXEC_MODE);
 
 
     // test import
-    // vm->exec("import test", "main.py", EXEC_MODE);
-    // vm->exec("print(test.test())", "main.py", EXEC_MODE);
+    std::cout << "== testing import ==" << std::endl;
+    vm->exec("import test", "main.py", EXEC_MODE);
+    vm->exec("print(test.test())", "main.py", EXEC_MODE);
 
     // Eval the sum of the list
     // PyVar t_result = vm->exec("test.test()", "<eval>", EVAL_MODE);
