@@ -16,6 +16,8 @@ Currently, the webserver serves a basic react app with a python code-editor (mon
 
 ## TODO
 
+- feed functions calls into a queue to prevent blocking which currently occurs with object creation tests.
+
 - figure out how to do two-way communication between editor and external.
 
 

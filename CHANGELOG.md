@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.1.x]
 
-- Add the `webserv` external based on the [mongoose](https://github.com/cesanta/mongoose) embedded webserver platform for a proof-of-concept of a webserver in an external.
+- Added the `webserv` external based on the [mongoose](https://github.com/cesanta/mongoose) embedded webserver platform for a proof-of-concept of a webserver in an external.
 
 - Changed minimal macos version to '12.0'. This can be set in `py-js/source/scripts/common.cmake`
 
