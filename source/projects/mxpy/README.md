@@ -1,16 +1,19 @@
 # mxpy
 
 This is an ongoing attempt to translate pdpython to maxmsp
-from <https://github.com/garthz/pdpython>
+from <https://github.com/garthz/pdpython> and 
+my fork <https://github.com/shakfu/pdpython>
 
+```text
 /// pdpython.c : Pd external to bridge data in and out of Python
 /// Copyright (c) 2014, Garth Zeglin.  All rights reserved.  Provided under the
 /// terms of the BSD 3-clause license.
+```
 
 ## TODO
 
 - make ints, floats, and basic symbols work
-- make mxpy_eval to handle  bang (see py_send), ints, floats, list, etc..
+- make mxpy_eval to handle bang (see py_send), ints, floats, list, etc..
 - nonsense: the restriction is that typed methods will fail,
 unless we A_CANT or A_GIMMEBACK?
 

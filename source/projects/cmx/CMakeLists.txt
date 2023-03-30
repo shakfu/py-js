@@ -3,8 +3,11 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
 
 #############################################################
-# MAX EXTERNAL
+# CMX: Common Max Library
 #############################################################
+
+enable_language(C)
+
 
 include_directories( 
 	"${MAX_SDK_INCLUDES}"
@@ -18,26 +21,20 @@ file(GLOB PROJECT_SRC
      "*.cpp"
 )
 
-
 add_library( 
 	${PROJECT_NAME}
-	MODULE
+	STATIC
 	${PROJECT_SRC}
 )
 
 
-target_link_libraries(
+# header propogates to sibling directories which link to this target (cmx)
+# see: https://stackoverflow.com/questions/61709086/cmake-target-with-sibling-folders
+target_include_directories(
 	${PROJECT_NAME}
-	PRIVATE
-	cmx
+	PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 
-message("CMAKE_SOURCE_DIR/source/projects/cmx: " ${CMAKE_SOURCE_DIR}/source/projects/cmx)
-message("CMAKE_BINARY_DIR}/include: " ${CMAKE_BINARY_DIR}/include)
-
-# target_include_directories(${PROJECT_NAME} PRIVATE
-# 	${CMAKE_SOURCE_DIR}/source/projects/cmx
-# )
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
+#include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)

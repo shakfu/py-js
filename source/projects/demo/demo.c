@@ -1,5 +1,6 @@
 #include "ext.h"
 #include "ext_obex.h"
+#include "cmx.h"
 
 typedef struct _demo {
     t_object ob;
@@ -14,9 +15,12 @@ typedef struct _demo {
 } t_demo;
 
 
+
+
 // method prototypes
 void* demo_new(t_symbol* s, long argc, t_atom* argv);
 void demo_free(t_demo* x);
+void demo_bang(t_demo* x);
 void demo_float(t_demo *x, double f);
 
 // global class pointer variable
@@ -29,6 +33,7 @@ void ext_main(void* r)
                            (method)demo_free, (long)sizeof(t_demo), 0L,
                            A_GIMME, 0);
 
+    class_addmethod(c, (method)demo_bang,  "bang", 0);
     class_addmethod(c, (method)demo_float, "float", A_FLOAT, 0);
 
     class_register(CLASS_BOX, c);
@@ -87,5 +92,13 @@ void demo_float(t_demo *x, double f)
     default:
         error("demo_float switch out-of-index");
     }
+}
+
+
+void demo_bang(t_demo* x) {
+    // example of using libcmx.a (common max lib)
+    t_symbol* path = locate_path_to_external(demo_class);
+    post("path: %s", path->s_name);
+    outlet_bang(x->ob_proxy_1); 
 }
 

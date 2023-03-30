@@ -21,7 +21,7 @@ option(USE_FRAMEWORK_PY "build framework-based extension")
 option(USE_NUMPY "include numpy headers if available")
 option(DEBUG "display debug variables")
 
-set(DEBUG ON)
+set(DEBUG OFF)
 # set(BUILD_LIB ${CMAKE_CURRENT_SOURCE_DIR}/targets/build/lib)
 # set(STATIC_PY ${BUILD_LIB}/python-static)
 # set(Python_ROOT_DIR ${STATIC_PY})
