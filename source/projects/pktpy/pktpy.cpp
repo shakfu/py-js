@@ -178,10 +178,21 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
         // custom builtins
         add_custom_builtins(x);
 
+        // set scripts directory as pythonpath
+        post("setting pythonpath to scripts directory");
+        x->py->set_scripts_path(pktpy_class);
+
+        // process args to external object
         attr_args_process(x, argc, argv);
     }
     return (x);
 }
+
+/* -------------------------------------------------------------------------
+ * set import path
+ */
+
+
 
 
 /* -------------------------------------------------------------------------

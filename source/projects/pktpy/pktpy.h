@@ -58,6 +58,8 @@ public:
 
     // path handling methods
     // t_max_err syspath_append(char* path);
+    t_max_err set_working_directory(char* path);
+    t_max_err set_scripts_path(t_class* klass);
     t_max_err locate_path_from_symbol(t_symbol* s);
     t_symbol* get_path_to_external(t_class* klass);
 
@@ -240,6 +242,46 @@ void PktpyInterpreter::handle_error(void)
 
 // ---------------------------------------------------------------------------
 // path handling methods
+
+/**
+ * @brief      Sets the working directory.
+ *
+ * @param      path  The path
+ *
+ * @return     t_max_err
+ */
+t_max_err PktpyInterpreter::set_working_directory(char* path)
+{
+    std::filesystem::path p(path);
+    if (std::filesystem::exists(p)) {
+        std::filesystem::current_path(p);
+        return MAX_ERR_NONE;
+    }
+    return MAX_ERR_GENERIC;
+}
+
+
+t_max_err PktpyInterpreter::set_scripts_path(t_class* klass)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+
+    short path_id = class_getpath(klass);
+    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+
+    std::filesystem::path p (external_path);
+    std::filesystem::path scripts = p.parent_path().parent_path() / "source/projects/pktpy/scripts";
+    if (std::filesystem::exists(scripts)) {
+        std::filesystem::current_path(scripts);
+        return MAX_ERR_NONE;
+    }
+    return MAX_ERR_GENERIC;
+}
+
 
 /**
  * @brief Searches the Max filesystem context for a file given by a symbol
