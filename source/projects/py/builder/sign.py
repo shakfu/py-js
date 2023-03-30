@@ -312,13 +312,13 @@ def sign_folder(folder="externals", dry_run=False):
     matchers = [match_suffix, match_python_shared]
     dev_id = os.environ["DEV_ID"]
     assert dev_id, "environment var DEV_ID not set"
-    root = pathlib.Path(__file__).parent.parent.parent.parent
+    root = pathlib.Path(__file__).parent.parent.parent.parent.parent
     target_folder = pathlib.Path(root / folder)
     entitlements = pathlib.Path(
         root / "source/py/resources/entitlements/entitlements.plist"
     )
-    assert target_folder.exists()
-    assert entitlements.exists()
+    assert target_folder.exists(), f"not found: {target_folder}"
+    assert entitlements.exists(), f"not found: {entitlements}"
     targets = list(target_folder.iterdir())
     assert len(targets) > 0, "no targets to sign"
     for target in targets:

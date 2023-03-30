@@ -97,7 +97,7 @@ jobs:
     #     appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
     #     primary-bundle-id: org.me.py-dmg
 
-    - name: Notarize Release Build
+    - name: Notarize .dmg
       uses: BoundfoxStudios/action-xcode-notarize@v1
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
@@ -110,7 +110,7 @@ jobs:
     #   with:
     #     product-path: "${{ env.PRODUCT_DMG }}"
 
-    - name: Staple Release Build
+    - name: Staple .dmg
       uses: BoundfoxStudios/action-xcode-staple@v1
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
