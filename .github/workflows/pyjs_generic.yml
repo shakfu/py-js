@@ -72,7 +72,7 @@ jobs:
       run: python3 --version
 
     - name: Import development certificate
-      uses: apple-actions/import-codesign-certs@v1
+      uses: apple-actions/import-codesign-certs@v2
       with: 
         p12-file-base64: ${{ secrets.MACOS_DEV_CERTIFICATE }}
         p12-password: ${{ secrets.MACOS_DEV_PWD }}
@@ -89,16 +89,29 @@ jobs:
     - name: Sign .dmg        
       run: make sign-dmg
 
-    - name: Notarize dmg
-      uses: devbotsxyz/xcode-notarize@v1
+    # - name: Notarize dmg
+    #   uses: devbotsxyz/xcode-notarize@v1
+    #   with:
+    #     product-path: "${{ env.PRODUCT_DMG }}"
+    #     appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
+    #     appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
+    #     primary-bundle-id: org.me.py-dmg
+
+    - name: Notarize Release Build
+      uses: BoundfoxStudios/action-xcode-notarize@v1
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-        appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
+        appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
         primary-bundle-id: org.me.py-dmg
 
-    - name: Staple dmg
-      uses: devbotsxyz/xcode-staple@v1
+    # - name: Staple dmg
+    #   uses: devbotsxyz/xcode-staple@v1
+    #   with:
+    #     product-path: "${{ env.PRODUCT_DMG }}"
+
+    - name: Staple Release Build
+      uses: BoundfoxStudios/action-xcode-staple@v1
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
 
