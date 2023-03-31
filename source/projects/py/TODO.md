@@ -2,7 +2,11 @@
 
 ## Important
 
-- [ ] Fix `import api` which currently requires numpy to be in sys.path
+- [x] Fix `import api` which currently requires numpy to be in sys.path
+
+## General Improvements
+
+- [ ] ensure notarized .dmg is name according to the format `py-js-<variation>-<platform>-<arch>-<py_ver>` for example `py-js-shared-ext-darwin-x86-3.11`
 
 ## Refactor
 
@@ -14,7 +18,7 @@
 
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
-- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror. In version 3.10, the import of does not raise an error but is still doesn't work (see bug above). At least there's progress!
+- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug above). At least there's progress!
 
 ## Features
 
@@ -111,7 +115,7 @@
 
 ### Future Experiments
 
-- [ ] move `builder` from `py-js/source/projects/py/builder`to `py-js/source/builder` and make it more general such that it can build other python3 externals. This requires `xcodegen` to become more mature.
+- [ ] move `builder` from `py-js/source/projects/py/builder`to `py-js/source/scripts/builder` and make it more general such that it can build other python3 externals. This requires `xcodegen` to become more mature.
 
 - [ ] Try to integrate an ipython shell somehow (via node.js seems to be most promising)
 
@@ -127,7 +131,7 @@
 
 - [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
 
-- [ ] Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
+- [x] Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
 
 - [ ] inject commandline parameters in python build system to enable more granular downstream decisions.
 

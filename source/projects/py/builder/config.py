@@ -243,14 +243,21 @@ class Project:
     build one or more software products.
     """
 
+
     name = "py-js"
+
     python = Python()
 
     arch = platform.machine()
 
+    system = platform.system()
+
     HOME = Path(HOME)
 
     # environmental vars
+    # TODO: package_name should be
+    #  py-js-<variation>-<platform>-<arch>-<py_ver> for example
+    #  py-js-shared-ext-darwin-x86-3.11
     package_name = name
     package = Path(f"{HOME}/Documents/Max 8/Packages/{package_name}")
     package_dirs = [
@@ -338,3 +345,18 @@ class Project:
 
     def __hash__(self):
         return hash((self.name, self.python.name, self.mac_dep_target))
+
+    def get_package_name(self, build_variation):
+        """ensure package name has standard format.
+
+        `py-js-<variation>-<system>-<arch>-<py_ver>` for example 
+        `py-js-shared-ext-darwin-x86-3.11`
+        """
+        name = self.name
+        variation = build_variation
+        system = self.system.lower()
+        arch = self.arch
+        ver = self.python.version
+        return f"{name}-{variation}-{system}-{arch}-{ver}"
+
+

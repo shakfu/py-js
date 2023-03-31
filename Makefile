@@ -21,6 +21,7 @@ NAME = py
 PROJECT = $(NAME).xcodeproj
 TARGETS = py pyjs
 EXTENSION = $(PYDIR)/api.pyx
+PKG_NAME = py-js
 
 MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSION := 8
@@ -273,17 +274,17 @@ sign-dry:
 	$(call section,"sign externals")
 	$(call call-builder,"sign" "--dry-run")
 
-sign-dmg:
-	$(call section,"sign dmg")
-	$(call call-builder,"sign" "dmg")
-
 package:
 	$(call section,"make package")
-	$(call call-builder,"package")
+	$(call call-builder,"package" "$(PKG_NAME)")
 
 dmg:
 	$(call section,"make package as dmg")
-	$(call call-builder,"dmg")
+	$(call call-builder,"dmg" "$(PKG_NAME)")
+
+sign-dmg:
+	$(call section,"sign dmg")
+	$(call call-builder,"sign" "dmg")
 
 make fix-framework:
 	$(call section,"fix framework in support")

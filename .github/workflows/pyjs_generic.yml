@@ -85,9 +85,10 @@ jobs:
       run: make sign
 
     - name: Create package, convert it to a .dmg
-      run: make dmg
+      run: make dmg PKG_NAME=${{ github.event.inputs.variant }}
+      #run: cd source/projects/py && python3 -m builder dmg ${{ github.event.inputs.variant }}
 
-    - name: Sign .dmg        
+    - name: Sign .dmg
       run: make sign-dmg
 
     - name: Notarize dmg

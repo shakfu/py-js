@@ -333,34 +333,38 @@ def sign_folder(folder="externals", dry_run=False):
                 signer.process()
 
 
-def package(package_name=Project.package_name):
+def package(name=Project.package_name):
+    project = Project()
+    package_name = project.get_package_name(name)
     log = logging.getLogger("packager")
     cmd = ShellCmd(log)
-    PACKAGE = Project.root / "PACKAGE"
+    PACKAGE = project.root / "PACKAGE"
     # print(PACKAGE.absolute())
     targets = [
         "package-info.json",
         "package-info.json.in",
         "icon.png",
-    ] + Project.package_dirs
+    ] + project.package_dirs
 
     destination = PACKAGE / package_name
     cmd.makedirs(destination)
     for target in targets:
-        p = Project.root / target
+        p = project.root / target
         if p.exists():
             if p.name in ["externals", "support"]:
                 dst = destination / p.name
                 cmd(f"ditto {p} {dst}")
             else:
                 cmd.copy(p, destination)
-    for f in Project.root.glob("*.md"):
+    for f in project.root.glob("*.md"):
         cmd.copy(f, PACKAGE)
 
     return PACKAGE
 
 
-def package_as_dmg(package_name=Project.package_name):
+def package_as_dmg(name=Project.package_name):
+    project = Project()
+    package_name = project.get_package_name(name)
     srcfolder = package(package_name)
     log = logging.getLogger("dmg_packager")
     cmd = ShellCmd(log)
@@ -386,11 +390,10 @@ def sign_dmg(dmg=None):
     log = logging.getLogger("dmg_packager")
     cmd = ShellCmd(log)
     dev_id = os.environ["DEV_ID"]
-    product_dmg = os.getenv("PRODUCT_DMG")
     if dmg:
         product_dmg = dmg
     else:
-        product_dmg = Project.dmg
+        product_dmg = os.getenv("PRODUCT_DMG", Project.dmg)
     assert product_dmg, "PRODUCT_DMG or dmg path not set"
     assert dev_id, "environment var DEV_ID not set"
     cmd(

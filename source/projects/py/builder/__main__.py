@@ -277,17 +277,19 @@ class Application(Commander):
         """sign all required folders recursively"""
         sign_all(args.dry_run)
 
+    @option("variant", help="name of variant")
+    def do_package(self, args):
+        """package project"""
+        package(args.variant)
+
+    @option("variant", help="name of variant")
+    def do_dmg(self, args):
+        """package project as .dmg"""
+        package_as_dmg(args.variant)
+
     def do_sign_dmg(self, args):
         """sign dmg"""
         sign_dmg()
-
-    def do_package(self, args):
-        """package project"""
-        package()
-
-    def do_dmg(self, args):
-        """package project as .dmg"""
-        package_as_dmg()
 
     # ----------------------------------------------------------------------------
     # utility methods
