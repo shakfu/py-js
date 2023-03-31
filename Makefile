@@ -276,7 +276,7 @@ sign-dry:
 
 package:
 	$(call section,"make package")
-	$(call call-builder,"package" "$(PKG_NAME)")
+	$(call call-builder,"package")
 
 dmg:
 	$(call section,"make package as dmg")

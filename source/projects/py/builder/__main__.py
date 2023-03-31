@@ -277,10 +277,9 @@ class Application(Commander):
         """sign all required folders recursively"""
         sign_all(args.dry_run)
 
-    @option("variant", help="name of variant")
     def do_package(self, args):
         """package project"""
-        package(args.variant)
+        package()
 
     @option("variant", help="name of variant")
     def do_dmg(self, args):

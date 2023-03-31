@@ -333,30 +333,28 @@ def sign_folder(folder="externals", dry_run=False):
                 signer.process()
 
 
-def package(name=Project.package_name):
-    project = Project()
-    package_name = project.get_package_name(name)
+def package(name=Project.name):
     log = logging.getLogger("packager")
     cmd = ShellCmd(log)
-    PACKAGE = project.root / "PACKAGE"
+    PACKAGE = Project.root / "PACKAGE"
     # print(PACKAGE.absolute())
     targets = [
         "package-info.json",
         "package-info.json.in",
         "icon.png",
-    ] + project.package_dirs
+    ] + Project.package_dirs
 
-    destination = PACKAGE / package_name
+    destination = PACKAGE / name
     cmd.makedirs(destination)
     for target in targets:
-        p = project.root / target
+        p = Project.root / target
         if p.exists():
             if p.name in ["externals", "support"]:
                 dst = destination / p.name
                 cmd(f"ditto {p} {dst}")
             else:
                 cmd.copy(p, destination)
-    for f in project.root.glob("*.md"):
+    for f in Project.root.glob("*.md"):
         cmd.copy(f, PACKAGE)
 
     return PACKAGE
@@ -365,7 +363,7 @@ def package(name=Project.package_name):
 def package_as_dmg(name=Project.package_name):
     project = Project()
     package_name = project.get_package_name(name)
-    srcfolder = package(package_name)
+    srcfolder = package(project.name)
     log = logging.getLogger("dmg_packager")
     cmd = ShellCmd(log)
     # name = package_name.replace('-','')
