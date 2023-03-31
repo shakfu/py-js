@@ -746,6 +746,7 @@ class PythonBuilder(Builder):
         temp_os_py = self.prefix_lib / "os.py"
 
         self.cmd.remove(self.site_packages)
+        assert self.lib_dynload.exists(), f"not found: {self.lib_dynload}"
         self.lib_dynload.rename(temp_lib_dynload)
         self.cmd.copy(self.python_lib / "os.py", temp_os_py)
 

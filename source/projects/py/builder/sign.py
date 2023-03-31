@@ -366,12 +366,10 @@ def package_as_dmg(name=Project.package_name):
     srcfolder = package(project.name)
     log = logging.getLogger("dmg_packager")
     cmd = ShellCmd(log)
-    # name = package_name.replace('-','')
-    # dmgname = Project.root / f"{name}-{Project.python.tag}"
     dmg = Project.root / f"{package_name}.dmg"
     if srcfolder.exists():
         cmd(
-            f"hdiutil create -volname {package_name.upper()} "
+            f"hdiutil create -volname {project.name.upper()} "
             f"-srcfolder {srcfolder} -ov "
             f"-format UDZO {dmg}"
         )

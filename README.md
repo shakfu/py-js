@@ -150,7 +150,7 @@ As mentioned earlier, the `py` and `pyjs` objects are the most mature and best d
 
 If you'd rather build them or any of the other externals yourself then the process is straightforward:
 
-1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.7 to 3.11 are tested and known to work.
+1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.8 to 3.11 are tested and known to work.
 
 2. Make sure you also have [Xcode](https://xcodereleases.com/) installed.
 
@@ -616,7 +616,7 @@ optional arguments:
 
 If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your iCloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can be mostly ignored (unless your only focus is codesigning the external).
 
-The solution is to move the external project folder to a non iCloud drive folder (such as $HOME/Downloads for example) and then run "xattr -cr ." in the project directory to remove the detritus (ironically which Apple's system is itself creating) and then it should succeed (provided you have your Info.plist and bundle id correctly specified). The just symlink the folder to `$HOME/Documents/Max 8/Packages/` to prevent this from recurring.
+The solution is to move the external project folder to folder that's not synced-with-icloud  (such as `$HOME/Downloads` for example) and then run `xattr -cr .` in the project directory to remove the detritus (which ironically Apple's system is itself creating) and then it should succeed (provided you have your `Info.plist` and `bundle id` correctly specified). Then just symlink the folder to `$HOME/Documents/Max 8/Packages/` to prevent this from recurring.
 
 I've tried this several times and and it works (for "sign to run locally" case and for the "Development" case).
 

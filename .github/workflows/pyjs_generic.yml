@@ -19,8 +19,7 @@ on:
         description: Please select a python version
         default: '3.11'
         required: true
-        options: 
-          - '3.7'
+        options:
           - '3.8'
           - '3.9'
           - '3.10'
@@ -54,11 +53,11 @@ jobs:
         cache-name: pyjs-cache-1
       with:
         path: |
-          source/py/targets/build/downloads
-          source/py/targets/build/lib/bzip2
-          source/py/targets/build/lib/openssl
-          source/py/targets/build/lib/xz
-        key: $${{ env.cache-name }}-${{ hashFiles('source/py/resources/pyjs-dependencies.txt') }}
+          source/projects/py/targets/build/downloads
+          source/projects/py/targets/build/lib/bzip2
+          source/projects/py/targets/build/lib/openssl
+          source/projects/py/targets/build/lib/xz
+        key: $${{ env.cache-name }}-${{ hashFiles('source/projects/py/resources/pyjs-dependencies.txt') }}
 
     - name: Setup python
       uses: actions/setup-python@v4
