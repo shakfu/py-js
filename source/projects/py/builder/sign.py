@@ -315,7 +315,7 @@ def sign_folder(folder="externals", dry_run=False):
     root = pathlib.Path(__file__).parent.parent.parent.parent.parent
     target_folder = pathlib.Path(root / folder)
     entitlements = pathlib.Path(
-        root / "source/py/resources/entitlements/entitlements.plist"
+        root / "source/projects/py/resources/entitlements/entitlements.plist"
     )
     assert target_folder.exists(), f"not found: {target_folder}"
     assert entitlements.exists(), f"not found: {entitlements}"
