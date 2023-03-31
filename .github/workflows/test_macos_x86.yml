@@ -8,7 +8,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-10.15, macos-11]
+        os: [macos-10.15]
+        # os: [macos-10.15, macos-11] # macos-11 requires changes
 
     steps:
     - uses: actions/checkout@v3

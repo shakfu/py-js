@@ -60,6 +60,23 @@ t_symbol* locate_path_to_external(t_class* c)
 }
 
 
+t_string* get_path_from_external(t_class* klass, char* subpath)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+
+    short path_id = class_getpath(klass);
+    snprintf_zero(external_name, CMX_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    t_string* final_path = string_new(dirname(dirname(external_path)));
+    string_append(final_path, subpath);
+    return final_path;
+}
+
+
 
 t_object* create_object(t_object* x, const char* text)
 {
@@ -84,6 +101,46 @@ void open_patch(const char *name)
 		error("could not load patch: '%s'", name);
 }
 
+
+/**
+ * @brief      join parent path to child subpath
+ *
+ * @param[out] destination  output destination path
+ * @param[in]  path1        parent path
+ * @param[in]  path2        child subpath
+ */
+void path_join(char* destination, const char* path1, const char* path2)
+{
+    //char filename[MAX_FILENAME_CHARS]; 
+    //strncpy_zero(filename,str->s_name, MAX_FILENAME_CHARS); 
+
+    if(path1 == NULL && path2 == NULL) {
+        strcpy(destination, "");
+    }
+    else if(path2 == NULL || strlen(path2) == 0) {
+        strcpy(destination, path1);
+    }
+    else if(path1 == NULL || strlen(path1) == 0) {
+        strcpy(destination, path2);
+    } 
+    else {
+        char directory_separator[] = "/";
+#ifdef WIN32
+        directory_separator[0] = '\\';
+#endif
+        const char *last_char = path1;
+        while(*last_char != '\0')
+            last_char++;        
+        int append_directory_separator = 0;
+        if(strcmp(last_char, directory_separator) != 0) {
+            append_directory_separator = 1;
+        }
+        strcpy(destination, path1);
+        if(append_directory_separator)
+            strcat(destination, directory_separator);
+        strcat(destination, path2);
+    }
+}
 
 
 /**
