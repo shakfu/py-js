@@ -308,8 +308,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 235.0, 238.0, 50.0, 21.0 ],
-					"text" : "webserv"
+					"patching_rect" : [ 235.0, 238.0, 38.0, 21.0 ],
+					"text" : "wbsrv"
 				}
 
 			}
@@ -388,7 +388,7 @@
 			}
  ],
 		"dependency_cache" : [ 			{
-				"name" : "webserv.mxo",
+				"name" : "wbsrv.mxo",
 				"type" : "iLaX"
 			}
  ],

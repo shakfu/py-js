@@ -73,5 +73,5 @@ jobs:
     - name: Display python version
       run: python3 --version
 
-    - name: Build externals
+    - name: Build python variant
       run: make ${{ github.event.inputs.variant }}

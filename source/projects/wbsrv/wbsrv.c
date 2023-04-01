@@ -1,9 +1,9 @@
 /**
- * @defgroup   webserv external
+ * @defgroup   wbsrv external
  *
- * @brief      This external borrows the max-sdk simplethread example external
- * and embeds an http webserver using the mongoose webserver library. ref:
- * https://github.com/cesanta/mongoose
+ * @brief      This external borrows from the implementation max-sdk simplethread
+ *             example external and embeds an http webserver using the mongoose
+ *             webserver library. ref: https://github.com/cesanta/mongoose
  *
  * @author     sa
  * @date       2023
@@ -24,12 +24,13 @@ static const   int s_debug_level = 2;
 static const char* s_listening_address = "http://localhost:8000";
 static const char* s_enable_hexdump = "no";
 static const char* s_ssi_pattern = "#.shtml";
+static const char* s_subpath = "/source/projects/wbsrv/webroot";
 
 // mutable constants
 static const char* s_root_dir = NULL;
 
 
-typedef struct _webserv {
+typedef struct _wbsrv {
     t_object x_ob;             // standard max object
     t_systhread x_systhread;   // thread reference
     t_systhread_mutex x_mutex; // mutual exclusion lock for threadsafety
@@ -39,24 +40,24 @@ typedef struct _webserv {
     void* x_outlet;            // our outlet
     int x_foo;                 // simple data to pass between threads
     int x_sleeptime;           // how many milliseconds to sleep
-    int x_is_running;          // status of webserver
+    int x_is_running;          // status of wbsrver
     t_string* x_root_dir;      // root path to statically serve from
-} t_webserv;
+} t_wbsrv;
 
-void webserv_bang(t_webserv* x);
-void webserv_start(t_webserv* x);
-void webserv_foo(t_webserv* x, long foo);
-void webserv_sleeptime(t_webserv* x, long sleeptime);
-void webserv_stop(t_webserv* x);
-void webserv_cancel(t_webserv* x);
-void* webserv_threadproc(t_webserv* x);
-void webserv_qfn(t_webserv* x);
-void webserv_assist(t_webserv* x, void* b, long m, long a, char* s);
-void webserv_free(t_webserv* x);
-void* webserv_new(void);
+void wbsrv_bang(t_wbsrv* x);
+void wbsrv_start(t_wbsrv* x);
+void wbsrv_foo(t_wbsrv* x, long foo);
+void wbsrv_sleeptime(t_wbsrv* x, long sleeptime);
+void wbsrv_stop(t_wbsrv* x);
+void wbsrv_cancel(t_wbsrv* x);
+void* wbsrv_threadproc(t_wbsrv* x);
+void wbsrv_qfn(t_wbsrv* x);
+void wbsrv_assist(t_wbsrv* x, void* b, long m, long a, char* s);
+void wbsrv_free(t_wbsrv* x);
+void* wbsrv_new(void);
 
 
-void do_build_objects(t_webserv* x, t_symbol *s, short argc, t_atom *argv) {
+void do_build_objects(t_wbsrv* x, t_symbol *s, short argc, t_atom *argv) {
 
     t_object *patcher;
 
@@ -76,7 +77,7 @@ void do_build_objects(t_webserv* x, t_symbol *s, short argc, t_atom *argv) {
 
 
 
-// webserver main function
+// wbsrver main function
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 {
     switch(ev) {
@@ -199,7 +200,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 }
 
 
-// // webserver main function
+// // wbsrver main function
 // static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 // {
 //     if (ev == MG_EV_OPEN) {
@@ -245,59 +246,59 @@ t_string* get_path_to_webroot(t_class* klass)
     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
                      PATH_TYPE_TILDE);
     t_string* webroot_path = string_new(dirname(dirname(external_path)));
-    string_append(webroot_path, "/source/projects/webserv/webroot");
+    string_append(webroot_path, s_subpath);
     return webroot_path;
 }
 
 
-t_class* webserv_class;
+t_class* wbsrv_class;
 
 void ext_main(void* r)
 {
     t_class* c;
 
-    c = class_new("webserv", (method)webserv_new, (method)webserv_free,
-                  sizeof(t_webserv), 0L, 0);
+    c = class_new("wbsrv", (method)wbsrv_new, (method)wbsrv_free,
+                  sizeof(t_wbsrv), 0L, 0);
 
-    class_addmethod(c, (method)webserv_bang, "bang", 0);
-    class_addmethod(c, (method)webserv_start, "start", 0);
-    class_addmethod(c, (method)webserv_foo, "foo", A_DEFLONG, 0);
-    class_addmethod(c, (method)webserv_sleeptime, "sleeptime", A_DEFLONG, 0);
-    class_addmethod(c, (method)webserv_cancel, "cancel", 0);
-    class_addmethod(c, (method)webserv_assist, "assist", A_CANT, 0);
+    class_addmethod(c, (method)wbsrv_bang, "bang", 0);
+    class_addmethod(c, (method)wbsrv_start, "start", 0);
+    class_addmethod(c, (method)wbsrv_foo, "foo", A_DEFLONG, 0);
+    class_addmethod(c, (method)wbsrv_sleeptime, "sleeptime", A_DEFLONG, 0);
+    class_addmethod(c, (method)wbsrv_cancel, "cancel", 0);
+    class_addmethod(c, (method)wbsrv_assist, "assist", A_CANT, 0);
 
     class_register(CLASS_BOX, c);
-    webserv_class = c;
+    wbsrv_class = c;
 }
 
 
 
-void webserv_start(t_webserv* x)
+void wbsrv_start(t_wbsrv* x)
 {
     if (x->x_is_running)
-        webserv_stop(x); // kill thread if, any
+        wbsrv_stop(x); // kill thread if, any
 
     // create new thread + begin execution
     if (x->x_systhread == NULL && !x->x_is_running) {
-        // post("starting a webserver on port: %d", x->x_port);
+        // post("starting a wbsrver on port: %d", x->x_port);
 
         post("Mongoose version : v%s", MG_VERSION);
         post("Listening on     : %s", s_listening_address);
         post("Web root         : [%s]", s_root_dir);
-        systhread_create((method)webserv_threadproc, x, 0, 0, 0,
+        systhread_create((method)wbsrv_threadproc, x, 0, 0, 0,
                          &x->x_systhread);
         x->x_is_running = true;
     }
 }
 
-void webserv_foo(t_webserv* x, long foo)
+void wbsrv_foo(t_wbsrv* x, long foo)
 {
     systhread_mutex_lock(x->x_mutex);
     x->x_foo = foo; // override our current value
     systhread_mutex_unlock(x->x_mutex);
 }
 
-void webserv_sleeptime(t_webserv* x, long sleeptime)
+void wbsrv_sleeptime(t_wbsrv* x, long sleeptime)
 {
     if (sleeptime < 10)
         sleeptime = 10;
@@ -306,7 +307,7 @@ void webserv_sleeptime(t_webserv* x, long sleeptime)
 }
 
 
-void webserv_stop(t_webserv* x)
+void wbsrv_stop(t_wbsrv* x)
 {
     unsigned int ret;
 
@@ -320,14 +321,14 @@ void webserv_stop(t_webserv* x)
 }
 
 
-void webserv_cancel(t_webserv* x)
+void wbsrv_cancel(t_wbsrv* x)
 {
-    webserv_stop(x); // kill thread if, any
+    wbsrv_stop(x); // kill thread if, any
     post("Exiting on message cancel");
     outlet_anything(x->x_outlet, gensym("cancelled"), 0, NULL);
 }
 
-void* webserv_threadproc(t_webserv* x)
+void* wbsrv_threadproc(t_wbsrv* x)
 {
     // char listening_address[100];
     // int max_len = sizeof listening_address;
@@ -367,7 +368,7 @@ void* webserv_threadproc(t_webserv* x)
 }
 
 // triggered by the helper thread
-void webserv_qfn(t_webserv* x)
+void wbsrv_qfn(t_wbsrv* x)
 {
     int myfoo;
 
@@ -379,7 +380,7 @@ void webserv_qfn(t_webserv* x)
     outlet_int(x->x_outlet, myfoo);
 }
 
-void webserv_assist(t_webserv* x, void* b, long m, long a, char* s)
+void wbsrv_assist(t_wbsrv* x, void* b, long m, long a, char* s)
 {
     if (m == 1)
         sprintf(s, "start starts a new thread");
@@ -387,10 +388,10 @@ void webserv_assist(t_webserv* x, void* b, long m, long a, char* s)
         sprintf(s, "report when done/cancelled");
 }
 
-void webserv_free(t_webserv* x)
+void wbsrv_free(t_wbsrv* x)
 {
     // stop our thread if it is still running
-    webserv_stop(x);
+    wbsrv_stop(x);
 
     // free our qelem
     if (x->x_qelem)
@@ -401,20 +402,20 @@ void webserv_free(t_webserv* x)
         systhread_mutex_free(x->x_mutex);
 }
 
-void* webserv_new(void)
+void* wbsrv_new(void)
 {
-    t_webserv* x;
+    t_wbsrv* x;
 
-    x = (t_webserv*)object_alloc(webserv_class);
+    x = (t_wbsrv*)object_alloc(wbsrv_class);
     x->x_outlet = outlet_new(x, NULL);
-    x->x_qelem = qelem_new(x, (method)webserv_qfn);
+    x->x_qelem = qelem_new(x, (method)wbsrv_qfn);
     x->x_systhread = NULL;
     systhread_mutex_new(&x->x_mutex, 0);
     x->x_foo = 0;
     x->x_sleeptime = 1000;
     // x->x_port = 8000;
     x->x_is_running = false;
-    x->x_root_dir = get_path_to_webroot(webserv_class);
+    x->x_root_dir = get_path_to_webroot(wbsrv_class);
 
     // set global
     s_root_dir = string_getptr(x->x_root_dir);
@@ -422,6 +423,6 @@ void* webserv_new(void)
     return (x);
 }
 
-void webserv_bang(t_webserv* x) {
+void wbsrv_bang(t_wbsrv* x) {
     outlet_bang(x->x_outlet); 
 }
