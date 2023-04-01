@@ -1,0 +1,77 @@
+name: pyjs-builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        type: choice
+        description: Please select a python build variant
+        default: python-shared
+        required: true
+        options: 
+          - python-shared
+          - python-shared-ext
+          - python-shared-pkg
+          - python-static
+          - python-framework
+          - python-framework-ext
+          - python-framework-pkg
+          - python-relocatable
+      py_version:
+        type: choice
+        description: Please select a python version
+        default: '3.11'
+        required: true
+        options:
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+
+env:
+  arch: darwin-x86
+  DEV_ID: ${{ secrets.DEV_ID }}
+
+jobs:
+  build:
+    runs-on: macos-10.15
+
+    steps:
+
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+        fetch-depth: '0'
+
+    - uses: benjlevesque/short-sha@v1.2
+      id: short-sha
+      with:
+        length: 7
+
+    - name: Cache downloads
+      id: cache-downloads
+      uses: actions/cache@v3
+      env:
+        cache-name: pyjs-cache-1
+      with:
+        path: |
+          source/projects/py/targets/build/downloads
+          source/projects/py/targets/build/lib/bzip2
+          source/projects/py/targets/build/lib/openssl
+          source/projects/py/targets/build/lib/xz
+        key: $${{ env.cache-name }}-${{ hashFiles('source/projects/py/resources/pyjs-dependencies.txt') }}
+
+    - name: Setup python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ github.event.inputs.py_version }}
+        cache: 'pip' # caching pip dependencies
+
+    - name: install python requirements
+      run: pip install -r requirements.txt
+
+    - name: Display python version
+      run: python3 --version
+
+    - name: Build externals
+      run: make ${{ github.event.inputs.variant }}
