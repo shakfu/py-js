@@ -30,7 +30,9 @@
 // ---------------------------------------------------------------------------
 // forward declarations
 
-t_symbol* locate_path_to_external(t_class* c);
+// t_symbol* locate_path_to_external(t_class* c);
+t_string* get_path_from_external(t_class* c, char* subpath);
+t_string* get_path_from_package(t_class* c, char* subpath);
 t_object* create_object(t_object* x, const char* text);
 
 #endif // CMX_H
@@ -42,38 +44,46 @@ t_object* create_object(t_object* x, const char* text);
 #ifdef CMX_IMPLEMENTATION
 
 
-t_symbol* locate_path_to_external(t_class* c)
+t_string* get_path_from_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
     char conform_path[MAX_PATH_CHARS];
     short path_id = class_getpath(c);
+    t_string* result;
+
 #ifdef __APPLE__
     const char* ext_filename = "%s.mxo";
 #else
-    const char* ext_filename = "%s.mxe";
+    const char* ext_filename = "%s.mxe64";
 #endif
     snprintf_zero(external_name, CMX_MAX_ELEMS, ext_filename, c->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
-    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
-    return gensym(external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    result = string_new(external_path);
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+    return result;
 }
 
 
-t_string* get_path_from_external(t_class* klass, char* subpath)
+t_string* get_path_from_package(t_class* c, char* subpath)
 {
-    char external_path[MAX_PATH_CHARS];
-    char external_name[MAX_PATH_CHARS];
-    char conform_path[MAX_PATH_CHARS];
+    t_string* result;
 
-    short path_id = class_getpath(klass);
-    snprintf_zero(external_name, CMX_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
-    path_toabsolutesystempath(path_id, external_name, external_path);
-    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
-                     PATH_TYPE_TILDE);
-    t_string* final_path = string_new(dirname(dirname(external_path)));
-    string_append(final_path, subpath);
-    return final_path;
+    t_string* external_path = get_path_from_external(c, NULL);
+
+    const char* ext_path_c = string_getptr(external_path);
+
+    result = string_new(dirname(dirname(ext_path_c)));
+
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+
+    return result;
 }
 
 

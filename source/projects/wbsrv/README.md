@@ -2,7 +2,7 @@
 
 An external which uses the [mongoose](https://github.com/cesanta/mongoose) embedded webserver library to embed a webserver in a max external.
 
-See `wbsrv.maxhelp` for a demo of the the external launching the embedded webserver and running a react application with the monaco-editor (same editor as ms visual code) and demonstrating two-communication between the embedded webserver which is exposed to the max c-api and the web application.
+See `wbsrv.maxhelp` for a demo of the the external launching the embedded webserver and running a react-based [code-editor](https://github.com/suren-atoyan/monaco-react) (same editor as ms visual code) and demonstrating two-way communication between the embedded webserver which is exposed to the max c-api and the web application.
 
 The mongoose platform was chosen because it is quite lightweight and versatile. See [Documentation and Examples](https://mongoose.ws/documentation/).
 

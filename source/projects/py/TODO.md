@@ -6,11 +6,11 @@
 
 ## General Improvements
 
-- [ ] ensure notarized .dmg is name according to the format `py-js-<variation>-<platform>-<arch>-<py_ver>` for example `py-js-shared-ext-darwin-x86-3.11`
+- [x] ensure notarized .dmg is named according to the format `py-js-<variation>-<platform>-<arch>-<py_ver>` for example `py-js-shared-ext-darwin-x86-3.11`
 
 ## Refactor
 
-- [ ] drop all platform specific code related to finding external path and use the builtin `class_getpath` (see CHANGELOG and `py_locate_path_to_external`)
+- [x] drop all platform specific code related to finding external path and use the builtin `class_getpath` (see CHANGELOG and `py_locate_path_to_external`)
 
 ## Bugs
 

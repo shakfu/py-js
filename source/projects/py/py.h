@@ -18,6 +18,7 @@
 /* posix */
 #if defined(__APPLE__)
 #include <wordexp.h>
+#include <libgen.h>
 #endif
 
 /* max api */
@@ -27,12 +28,6 @@
 /* python */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
-/* conditional includes */
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-#include <CoreFoundation/CoreFoundation.h>
-#include <libgen.h>
-#endif
 
 /*--------------------------------------------------------------------------*/
 /* Constants */
@@ -83,7 +78,8 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
 /*--------------------------------------------------------------------------*/
 /* Path helpers */
 
-t_symbol* py_locate_path_to_external(t_py* x);
+t_string* py_get_path_from_external(t_class* c, char* subpath);
+t_string* py_get_path_from_package(t_class* c, char* subpath);
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
 void path_join(char* destination, const char* path1, const char* path2);
 

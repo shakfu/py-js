@@ -20,13 +20,6 @@ static int py_global_obj_count = 0; // when 0 then free interpreter
 
 static t_hashtab* py_global_registry = NULL; // global object lookups
 
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-CFBundleRef py_global_bundle;
-#endif
-
-#if defined(_WIN64) && defined(PY_STATIC_EXT)
-static char* py_global_external_path[MAX_PATH_CHARS];
-#endif
 
 /*--------------------------------------------------------------------------*/
 /* Datastructures */
@@ -182,30 +175,70 @@ error:
  * @brief Get the global registry object
  * 
  * @return t_hashtab* 
+ * 
+ * This is only used in the api module
  */
 t_hashtab* get_global_registry(void)
 {
     return py_global_registry;
 }
 
-
-t_symbol* py_locate_path_to_external(t_py* x)
+/**
+ * @brief      Return path to external with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to external + (optional subpath)
+ */
+t_string* py_get_path_from_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
     char conform_path[MAX_PATH_CHARS];
+    short path_id = class_getpath(c);
+    t_string* result;
 
-    short path_id = class_getpath(py_class);
-    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", py_class->c_sym->s_name);
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
+#endif
+    snprintf_zero(external_name, PY_MAX_ELEMS, ext_filename, c->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
-    /* path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_PATH); */
-    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
-    /* post("path_id: %d, external_name: %s, external_path: %s conform_path: %s",
-             path_id, external_name, external_path, conform_path);
-    */
-    return gensym(external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    result = string_new(external_path);
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+    return result;
 }
 
+/**
+ * @brief      Return path to package with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to package + (optional subpath)
+ */
+t_string* py_get_path_from_package(t_class* c, char* subpath)
+{
+    t_string* result;
+
+    t_string* external_path = py_get_path_from_external(c, NULL);
+
+    const char* ext_path_c = string_getptr(external_path);
+
+    result = string_new(dirname(dirname((char*)ext_path_c)));
+
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+
+    return result;
+}
 
 
 /**
@@ -424,17 +457,6 @@ void ext_main(void* module_ref)
     // class_register(CLASS_NOBOX, c);
 
     py_class = c;
-
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-    // set global bundle ref for macos case
-    py_global_bundle = module_ref;
-#endif
-#if defined(_WIN64) && defined(PY_STATIC_EXT)
-    // set external_path for win64 case
-    GetModuleFileName(moduleRef, (LPCH)py_global_external_path,
-                      sizeof(py_global_external_path));
-    post("external path: %s", py_global_external_path);
-#endif
 }
 
 /*--------------------------------------------------------------------------*/
@@ -554,119 +576,61 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
             PyList_Append(sys_path, py_path);
         }
     }
-
     return (x);
 }
 
 
+// /**
+//  * @brief main init function called within body of `py_new`
+//  * 
+//  * @param x 
+//  */
+// void py_init(t_py* x)
+// {
+//     wchar_t* python_home = NULL;
 
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
-/**
- * @brief OSX specific method to set python_home in case of static ext external.
- * 
- */
-void py_init_osx_set_home_static_ext(void)
-{
-    // sets python_home to <bundle>/Resources folder
+// #if defined(__APPLE__) && defined(PY_STATIC_EXT)
+//     const char* resources_path = string_getptr(
+//         py_get_path_from_external(py_class, "/Contents/Resources"));
+//     python_home = Py_DecodeLocale(resources_path, NULL);
+// #endif
 
-    wchar_t* python_home;
+// #if defined(__APPLE__) && defined(PY_SHARED_PKG)
+//     const char* package_path = string_getptr(
+//         py_get_path_from_package(py_class, "/support/python" PY_VER));
+//     python_home = Py_DecodeLocale(package_path, NULL);
+// #endif
 
-    CFURLRef resources_url;
-    CFURLRef resources_abs_url;
-    CFStringRef resources_str;
-    const char* resources_path;
+//     if (python_home != NULL) {
+//         Py_SetPythonHome(python_home);
+//         PyMem_RawFree(python_home);
+//     }
 
-    // Look for a bundle using its using global bundle ref
-    resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
-    resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-    resources_str = CFURLCopyFileSystemPath(resources_abs_url,
-                                            kCFURLPOSIXPathStyle);
-    resources_path = CFStringGetCStringPtr(resources_str,
-                                           kCFStringEncodingUTF8);
+//     /* Add the cythonized 'api' built-in module, before Py_Initialize */
+//     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
+//         py_error(x, "could not add api to builtin modules table");
+//     }
 
-    python_home = Py_DecodeLocale(resources_path, NULL);
+//     Py_Initialize();
 
-    CFRelease(resources_str);
-    CFRelease(resources_abs_url);
-    CFRelease(resources_url);
+//     // python init
+//     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
+//     x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
+//     py_init_builtins(x); // does this have to be a separate function?
 
-    post("py resources_path: %s", resources_path);
+//     // register the object
+//     object_register(CLASS_BOX, x->p_name, x);
 
-    if (python_home == NULL) {
-        error("unable to set python_home");
-        return;
-    }
-    Py_SetPythonHome(python_home);
-}
-#endif
+//     // increment global object counter
+//     py_global_obj_count++;
 
+//     if (py_global_obj_count == 1) {
+//         // if first py object create the py_global_registry;
+//         py_global_registry = (t_hashtab*)hashtab_new(0);
+//         hashtab_flags(py_global_registry, OBJ_FLAG_REF);
+//     }
+// }
 
-#if defined(__APPLE__) && defined(PY_SHARED_PKG)
-/**
- * @brief OSX specific method to set python_home in case of shared pkg external.
- *
- */
-void py_init_osx_set_home_shared_pkg(void)
-{
-    // sets python_home to <package>/support/pythonX.Y folder
-
-    wchar_t* python_home;
-
-    CFURLRef bundle_url;
-    CFURLRef bundle_abs_url;
-    CFStringRef bundle_str;
-    const char* bundle_path;
-
-    const char* relative_path = "support/python" PY_VER;
-    CFStringRef relative_path_str;
-    CFURLRef externals_url;
-    CFURLRef package_url;
-    CFURLRef py_home_url;
-    CFStringRef py_home_str;
-    const char* py_home_path;
-
-    // get self bundle path
-    bundle_url = CFBundleCopyBundleURL(py_global_bundle);
-    bundle_abs_url = CFURLCopyAbsoluteURL(bundle_url);
-    bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
-    bundle_path = CFStringGetCStringPtr(bundle_str, kCFStringEncodingUTF8);
-
-    // get the absolute path of the <package>/support/pythonX.Y directory in a
-    // package
-    externals_url = CFURLCreateCopyDeletingLastPathComponent(
-        kCFAllocatorDefault, bundle_abs_url);
-    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault,
-                                                           externals_url);
-    relative_path_str = CFStringCreateWithCString(
-        kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
-    py_home_url = CFURLCreateCopyAppendingPathComponent(
-        kCFAllocatorDefault, package_url, relative_path_str, FALSE);
-    py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
-    py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
-
-    CFRelease(bundle_str);
-    CFRelease(bundle_abs_url);
-    CFRelease(bundle_url);
-
-    CFRelease(py_home_str);
-    CFRelease(py_home_url);
-    CFRelease(relative_path_str);
-    CFRelease(package_url);
-    CFRelease(externals_url);
-
-    post("py bundle_path: %s", bundle_path);
-
-    post("py home path: %s", py_home_path);
-
-    python_home = Py_DecodeLocale(py_home_path, NULL);
-
-    if (python_home == NULL) {
-        error("unable to set python_home");
-        return;
-    }
-    Py_SetPythonHome(python_home);
-}
-#endif
 
 /**
  * @brief main init function called within body of `py_new`
@@ -675,21 +639,49 @@ void py_init_osx_set_home_shared_pkg(void)
  */
 void py_init(t_py* x)
 {
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
-    py_init_osx_set_home_static_ext();
-#endif
-
-#if defined(__APPLE__) && defined(PY_SHARED_PKG)
-    py_init_osx_set_home_shared_pkg();
-#endif
-
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
         py_error(x, "could not add api to builtin modules table");
     }
 
+    PyStatus status;
 
-    Py_Initialize();
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+    // Disable parsing command line arguments
+    config.parse_argv = 0;
+
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+    const char* resources_path = string_getptr(
+        py_get_path_from_external(py_class, "/Contents/Resources"));
+    config.home = Py_DecodeLocale(resources_path, NULL);
+#endif
+
+#if defined(__APPLE__) && defined(PY_SHARED_PKG)
+    const char* package_path = string_getptr(
+        py_get_path_from_package(py_class, "/support/python" PY_VER));
+    config.home = Py_DecodeLocale(package_path, NULL);
+#endif
+
+    status = Py_InitializeFromConfig(&config);
+    if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&config);
+        py_error(x, "could not initialize python");
+    }
+
+    PyConfig_Clear(&config);
+
+    // { /* init module '%(module_name)s' as '__main__' */
+    //   PyObject* m = NULL;
+    //   %(module_is_main)s = 1;
+    //   m = PyImport_ImportModule("%(module_name)s");
+
+    //   if (!m && PyErr_Occurred()) {
+    //       PyErr_Print(); /* This exits with the right code if SystemExit. */
+    //       py_error(x, "could not set main module")
+    //   }
+    //   Py_XDECREF(m);
+    // }
 
     // python init
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
@@ -709,6 +701,7 @@ void py_init(t_py* x)
     }
 }
 
+
 /**
  * @brief Free object memory when deleted.
  * 
@@ -724,10 +717,6 @@ void py_free(t_py* x)
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
-    // crashes if one attempts to free.
-    // #if defined(__APPLE__) && (defined(PY_STATIC_EXT) ||
-    // defined(PY_SHARED_PKG)) CFRelease(py_global_bundle); #endif
-
     Py_XDECREF(x->p_globals);
     // python objects cleanup
     py_log(x, "will be deleted");
@@ -737,8 +726,8 @@ void py_free(t_py* x)
         hashtab_chuck(py_global_registry);
 
         post("last py obj freed -> finalizing py mem / interpreter.");
-        // PyMem_RawFree(program);
-        Py_FinalizeEx();
+        // Py_FinalizeEx();
+        Py_Finalize();
     }
 }
 
@@ -848,8 +837,10 @@ void py_info(t_py* x)
     path_toabsolutesystempath(defaultpath_id, "", output_path);
     post("defaultpath: %s", output_path);
 
-    t_symbol* path = py_locate_path_to_external(x);
-    post("externalpath: %s", path->s_name);
+    const char * external_path = string_getptr(
+        py_get_path_from_external(py_class, NULL));
+
+    post("externalpath: %s", external_path);
 
     // test new path finding
     char* package_path[MAX_PATH_CHARS];
@@ -857,7 +848,7 @@ void py_info(t_py* x)
     char* external_name[MAX_PATH_CHARS];
     char* externals_folder[MAX_PATH_CHARS];
 
-    path_splitnames(path->s_name, (char*)package_externals_path,
+    path_splitnames(external_path, (char*)package_externals_path,
                     (char*)external_name);
     post("package_externals_path: %s", package_externals_path);
     post("external_name: %s", external_name);
@@ -874,7 +865,7 @@ void py_info(t_py* x)
     char external_resources_path[MAX_PATH_CHARS];
     char python_path[MAX_PATH_CHARS];
 
-    path_join(external_contents_path, path->s_name, "Contents");
+    path_join(external_contents_path, external_path, "Contents");
     path_join(external_resources_path, external_contents_path, "Resources");
     path_join(python_path, (char*)package_path, support_python_path);
 

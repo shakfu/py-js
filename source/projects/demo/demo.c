@@ -97,8 +97,9 @@ void demo_float(t_demo *x, double f)
 
 void demo_bang(t_demo* x) {
     // example of using libcmx.a (common max lib)
-    t_symbol* path = locate_path_to_external(demo_class);
-    post("path: %s", path->s_name);
+    t_string* path = get_path_from_external(demo_class, NULL);
+    const char* txt = string_getptr(path);
+    post("path: %s", txt);
     outlet_bang(x->ob_proxy_1); 
 }
 
