@@ -1,4 +1,4 @@
-name: pyjs-builder
+name: test-macos-x86-python-1
 
 on:
   workflow_dispatch:
