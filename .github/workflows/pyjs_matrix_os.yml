@@ -1,4 +1,4 @@
-name: test-macos-x86
+name: pyjs-matrix-os
 
 on:
   workflow_dispatch:
