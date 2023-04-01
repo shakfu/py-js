@@ -1,4 +1,4 @@
-name: test-macos-x86-python-m
+name: pyjs-matrix-variants
 
 on:
   workflow_dispatch:
