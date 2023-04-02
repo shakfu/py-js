@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { Component, Fragment, useState, useRef } from "react";
 import ReactDOM from "react-dom";
 import Editor from "@monaco-editor/react";
 
@@ -26,8 +26,8 @@ function App() {
     editorRef.current = editor;
   }
 
-  function fetchHello() {
-    fetch(`/api/hello`)
+  function createObjects() {
+    fetch(`/api/create`)
       .then(response => response.json())
       .then((usefulData) => {
         console.log(usefulData);
@@ -39,8 +39,21 @@ function App() {
       });
   }
 
+  function sayHello() {
+    fetch(`/api/hello`)
+      .then(response => response.json())
+      .then((usefulData) => {
+        console.log(usefulData);
+        setLoading(false);
+        setData(usefulData);
+      })
+      .catch((e) => {
+        console.error(`An error occurred: ${e}`)
+      });
+  }
+  
   function aboutApp() {
-    alert("nice one");
+    alert("A demo of a max external with a web-based code-editor and embedded webserver.");
   }
 
   function showValue() {
@@ -51,12 +64,13 @@ function App() {
     <>
       <button onClick={aboutApp}>About</button>
       <button onClick={showValue}>Show value</button>
-      <button onClick={fetchHello}>Hello</button>
+      <button onClick={createObjects}>Create Objects</button>
+      <button onClick={sayHello}>Say Hello</button>
       <Editor
         height="90vh"
         defaultLanguage="python"
         theme="vs-dark"
-        defaultValue="# some comment"
+        defaultValue="# enter python code here"
         beforeMount={handleEditorWillMount}
         onMount={handleEditorDidMount}
       />

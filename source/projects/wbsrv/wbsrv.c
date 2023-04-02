@@ -74,121 +74,129 @@ void do_build_objects(t_wbsrv* x, t_symbol *s, short argc, t_atom *argv) {
     }
 }
 
+// http message handler
+void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
+{
+    post("MG_EV_HTTP_MSG");
+    struct mg_http_message *hm = (struct mg_http_message*)ev_data;
+    struct mg_http_message tmp = {0};
+    struct mg_str unknown = mg_str_n("?", 1);
+    struct mg_str *cl;
+    // On /api/hello requests, send dynamic JSON response
+    if (mg_http_match_uri(hm, "/api/hello")) {
+        // mg_http_reply(c, 200, "", "{%Q:%d}\n", "status", 1);
+        object_post((t_object*)c->fn_data, "in /api/hello msg");
+        mg_http_reply(c, 200, "", "{%Q:%d}\n", "status", 1);
+
+    } else if (mg_http_match_uri(hm, "/api/create")) {
+        object_post((t_object*)c->fn_data, "in /api/create msg");
+        defer((t_object*)c->fn_data, (method)do_build_objects, gensym(""),
+              0, NULL);
+    } else if (mg_http_match_uri(hm, "/api/f2/*")) {
+        mg_http_reply(c, 200, "", "{\"result\": \"%.*s\"}\n", (int) hm->uri.len,
+                hm->uri.ptr);
+    } else {
+        // static file server configuration
+        struct mg_http_serve_opts opts = {
+            .root_dir = s_root_dir,
+            .ssi_pattern = s_ssi_pattern
+        };
+        mg_http_serve_dir(c, hm, &opts);
+    }
+    mg_http_parse((char *) c->send.buf, c->send.len, &tmp);
+    cl = mg_http_get_header(&tmp, "Content-Length");
+    if (cl == NULL) cl = &unknown;
+    post("%.*s %.*s %.*s %.*s", (int) hm->method.len, hm->method.ptr,
+             (int) hm->uri.len, hm->uri.ptr, (int) tmp.uri.len, tmp.uri.ptr,
+             (int) cl->len, cl->ptr);
+}
 
 
-
-// wbsrver main function
+// wbsrv main function
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 {
     switch(ev) {
     
-    case MG_EV_ERROR: {
+    case MG_EV_ERROR: { // Error -> char *error_message
         char *error_message = strdup((char*)ev_data);
         error("MG_EV_ERROR: %s", error_message);
     }   break;
 
-    case MG_EV_OPEN:
+    case MG_EV_OPEN:    // Connection created -> NULL
         post("MG_EV_OPEN");
+        // c->is_hexdumping = 1;
         break;
 
-    case MG_EV_POLL: {
+    case MG_EV_POLL: {  // mg_mgr_poll iteration -> uint64_t *milliseconds
         // uint64_t *milliseconds = (uint64_t*)ev_data;
         // post("MG_EV_POLL: %d", milliseconds);
     }   break;
 
-    case MG_EV_RESOLVE:
+    case MG_EV_RESOLVE: // host name is resolved
         post("MG_EV_RESOLVE");
         break;
 
-    case MG_EV_CONNECT:
+    case MG_EV_CONNECT: // connection established
         post("MG_EV_CONNECT");
         break;
 
-    case MG_EV_ACCEPT:
+    case MG_EV_ACCEPT:  // connection accepted
         post("MG_EV_ACCEPT");
         break;
 
-    case MG_EV_TLS_HS:
+    case MG_EV_TLS_HS:  // TLS handshake succeeded
         post("MG_EV_TLS_HS");
         break;
 
-    case MG_EV_READ:
+    case MG_EV_READ:    // data received from socket -> long *bytes_read
         post("MG_EV_READ");
         break;
 
-    case MG_EV_WRITE:
+    case MG_EV_WRITE:   // data written to socket -> long *bytes_written
         post("MG_EV_WRITE");
         break;
 
-    case MG_EV_CLOSE:
+    case MG_EV_CLOSE:   // connection closed
         post("MG_EV_CLOSE");
         break;
 
-    case MG_EV_HTTP_MSG: {
-        post("MG_EV_HTTP_MSG");
-        struct mg_http_message *hm = (struct mg_http_message*)ev_data;
-        struct mg_http_message tmp = {0};
-        struct mg_str unknown = mg_str_n("?", 1);
-        struct mg_str *cl;
-        // On /api/hello requests, send dynamic JSON response
-        if (mg_http_match_uri(hm, "/api/hello")) {
-            // mg_http_reply(c, 200, "", "{%Q:%d}\n", "status", 1);
-            object_post((t_object*)c->fn_data, "in http msg");
-            defer((t_object*)c->fn_data, (method)do_build_objects, gensym(""), 0, NULL);
-            mg_http_reply(c, 200, "", "{%Q:%d}\n", "status", 1);            
+    case MG_EV_HTTP_MSG: // http request/respose -> struct mg_http_message *
+        handle_event_http_message(c, ev, ev_data, fn_data);
+        break;
 
-        } else if (mg_http_match_uri(hm, "/api/f2/*")) {
-            mg_http_reply(c, 200, "", "{\"result\": \"%.*s\"}\n", (int) hm->uri.len,
-                    hm->uri.ptr);
-        } else {
-            // static file server configuration
-            struct mg_http_serve_opts opts = {
-                .root_dir = s_root_dir,
-                .ssi_pattern = s_ssi_pattern
-            };
-            mg_http_serve_dir(c, hm, &opts);
-        }
-        mg_http_parse((char *) c->send.buf, c->send.len, &tmp);
-        cl = mg_http_get_header(&tmp, "Content-Length");
-        if (cl == NULL) cl = &unknown;
-        post("%.*s %.*s %.*s %.*s", (int) hm->method.len, hm->method.ptr,
-                 (int) hm->uri.len, hm->uri.ptr, (int) tmp.uri.len, tmp.uri.ptr,
-                 (int) cl->len, cl->ptr);
-    }   break;
-
-    case MG_EV_HTTP_CHUNK:
+    case MG_EV_HTTP_CHUNK: // HTTP chunk (partial msg) -> struct mg_http_message *
         post("MG_EV_HTTP_CHUNK");
         break;
 
-    case MG_EV_WS_OPEN:
+    case MG_EV_WS_OPEN: // Websocket handshake done -> struct mg_http_message *
         post("MG_EV_WS_OPEN");
         break;
 
-    case MG_EV_WS_MSG:
+    case MG_EV_WS_MSG: // Websocket msg, text or bin ->sstruct mg_ws_message *
         post("MG_EV_WS_MSG");
         break;
 
-    case MG_EV_WS_CTL:
+    case MG_EV_WS_CTL: // Websocket control msg -> struct mg_ws_message *
         post("MG_EV_WS_MSG");
         break;
 
-    case MG_EV_MQTT_CMD:
+    case MG_EV_MQTT_CMD: // /MQTT low-level command -> struct mg_mqtt_message *
         post("MG_EV_MQTT_CMD");
         break;
 
-    case MG_EV_MQTT_MSG:
+    case MG_EV_MQTT_MSG: // MQTT PUBLISH received -> struct mg_mqtt_message *
         post("MG_EV_MQTT_MSG");
         break;
 
-    case MG_EV_MQTT_OPEN:
+    case MG_EV_MQTT_OPEN: // MQTT CONNACK received -> int *connack_status_code
         post("MG_EV_MQTT_OPEN");
         break;
 
-    case MG_EV_SNTP_TIME:
+    case MG_EV_SNTP_TIME: // SNTP time received -> uint64_t *milliseconds
         post("MG_EV_SNTP_TIME");
         break;
 
-    case MG_EV_USER:
+    case MG_EV_USER: // Starting ID for user events
         post("MG_EV_USER");
         break;
 
