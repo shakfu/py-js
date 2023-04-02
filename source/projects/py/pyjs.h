@@ -24,11 +24,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-/* conditional includes */
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-#include <CoreFoundation/CoreFoundation.h>
 #include <libgen.h>
-#endif
 
 /*--------------------------------------------------------------------------*/
 /* Constants */
@@ -61,6 +57,8 @@ void pyjs_log(t_pyjs* x, char* fmt, ...);
 void pyjs_error(t_pyjs* x, char* fmt, ...);
 void pyjs_handle_error(t_pyjs* x, char* fmt, ...);
 void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s);
+t_string* pyjs_get_path_from_external(t_class* c, char* subpath);
+t_string* pyjs_get_path_from_package(t_class* c, char* subpath);
 t_max_err pyjs_import(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_exec(t_pyjs* x, t_symbol* s);
 t_max_err pyjs_execfile(t_pyjs* x, t_symbol* s);

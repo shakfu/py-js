@@ -23,15 +23,6 @@ struct t_pyjs {
 static t_class* pyjs_class;
 static int pyjs_global_obj_count; /*!< when 0 then free interpreter */
 
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-CFBundleRef py_global_bundle;
-#endif
-
-
-#if defined(_WIN64) && defined(PY_STATIC_EXT)
-static char* external_path[MAX_PATH_CHARS];
-#endif
-
 /*--------------------------------------------------------------------------*/
 /* External main */
 
@@ -60,16 +51,6 @@ void ext_main(void* module_ref)
     c->c_flags = CLASS_FLAG_POLYGLOT;
     class_register(CLASS_NOBOX, c);
     pyjs_class = c;
-
-#if defined(__APPLE__) && (defined(PY_STATIC_EXT) || defined(PY_SHARED_PKG))
-    /* set global bundle ref for macos case */
-    py_global_bundle = module_ref;
-#endif
-#if defined(_WIN64) && defined(PY_STATIC_EXT)
-    /* set external_path for win64 case */
-    GetModuleFileName(moduleRef, (LPCH)external_path, sizeof(external_path));
-    post("external path: %s", external_path);
-#endif
 }
 
 /*--------------------------------------------------------------------------*/
@@ -171,105 +152,62 @@ error:
 
 
 
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
-void py_init_osx_set_home_static_ext(void)
+/**
+ * @brief      Return path to external with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to external + (optional subpath)
+ */
+t_string* pyjs_get_path_from_external(t_class* c, char* subpath)
 {
-    // sets python_home to <bundle>/Resources folder
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+    short path_id = class_getpath(c);
+    t_string* result;
 
-    wchar_t* python_home;
-
-    CFURLRef resources_url;
-    CFURLRef resources_abs_url;
-    CFStringRef resources_str;
-    const char* resources_path;
-
-    // Look for a bundle using its using global bundle ref
-    resources_url = CFBundleCopyResourcesDirectoryURL(py_global_bundle);
-    resources_abs_url = CFURLCopyAbsoluteURL(resources_url);
-    resources_str = CFURLCopyFileSystemPath(resources_abs_url,
-                                            kCFURLPOSIXPathStyle);
-    resources_path = CFStringGetCStringPtr(resources_str,
-                                           kCFStringEncodingUTF8);
-
-    python_home = Py_DecodeLocale(resources_path, NULL);
-
-    CFRelease(resources_str);
-    CFRelease(resources_abs_url);
-    CFRelease(resources_url);
-
-    post("py resources_path: %s", resources_path);
-
-    if (python_home == NULL) {
-        error("unable to set python_home");
-        return;
-    }
-    Py_SetPythonHome(python_home);
-}
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
 #endif
+    snprintf_zero(external_name, PY_MAX_ELEMS, ext_filename, c->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    result = string_new(external_path);
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+    return result;
+}
 
-
-#if defined(__APPLE__) && defined(PY_SHARED_PKG)
-void py_init_osx_set_home_shared_pkg(void)
+/**
+ * @brief      Return path to package with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to package + (optional subpath)
+ */
+t_string* pyjs_get_path_from_package(t_class* c, char* subpath)
 {
-    // sets python_home to <package>/support/pythonX.Y folder
+    t_string* result;
 
-    wchar_t* python_home;
+    t_string* external_path = pyjs_get_path_from_external(c, NULL);
 
-    CFURLRef bundle_url;
-    CFURLRef bundle_abs_url;
-    CFStringRef bundle_str;
-    const char* bundle_path;
+    const char* ext_path_c = string_getptr(external_path);
 
-    const char* relative_path = "support/python" PY_VER;
-    CFStringRef relative_path_str;
-    CFURLRef externals_url;
-    CFURLRef package_url;
-    CFURLRef py_home_url;
-    CFStringRef py_home_str;
-    const char* py_home_path;
+    result = string_new(dirname(dirname((char*)ext_path_c)));
 
-    // get self bundle path
-    bundle_url = CFBundleCopyBundleURL(py_global_bundle);
-    bundle_abs_url = CFURLCopyAbsoluteURL(bundle_url);
-    bundle_str = CFURLCopyFileSystemPath(bundle_abs_url, kCFURLPOSIXPathStyle);
-    bundle_path = CFStringGetCStringPtr(bundle_str, kCFStringEncodingUTF8);
-
-    // get the absolute path of the <package>/support/pythonX.Y directory in a
-    // package
-    externals_url = CFURLCreateCopyDeletingLastPathComponent(
-        kCFAllocatorDefault, bundle_abs_url);
-    package_url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault,
-                                                           externals_url);
-    relative_path_str = CFStringCreateWithCString(
-        kCFAllocatorDefault, relative_path, kCFStringEncodingASCII);
-    py_home_url = CFURLCreateCopyAppendingPathComponent(
-        kCFAllocatorDefault, package_url, relative_path_str, FALSE);
-    py_home_str = CFURLCopyFileSystemPath(py_home_url, kCFURLPOSIXPathStyle);
-    py_home_path = CFStringGetCStringPtr(py_home_str, kCFStringEncodingUTF8);
-
-    CFRelease(bundle_str);
-    CFRelease(bundle_abs_url);
-    CFRelease(bundle_url);
-
-    CFRelease(py_home_str);
-    CFRelease(py_home_url);
-    CFRelease(relative_path_str);
-    CFRelease(package_url);
-    CFRelease(externals_url);
-
-    post("py bundle_path: %s", bundle_path);
-
-    post("py home path: %s", py_home_path);
-
-    python_home = Py_DecodeLocale(py_home_path, NULL);
-
-    if (python_home == NULL) {
-        error("unable to set python_home");
-        return;
+    if (subpath != NULL) {
+        string_append(result, subpath);
     }
-    Py_SetPythonHome(python_home);
+
+    return result;
 }
-#endif
 
 /**
  * @brief main init function called within body of `pyjs_new`
@@ -278,15 +216,32 @@ void py_init_osx_set_home_shared_pkg(void)
  */
 void pyjs_init(t_pyjs* x)
 {
+    PyStatus status;
+    PyConfig config;
+
+    PyConfig_InitPythonConfig(&config);
+    // Disable parsing command line arguments
+    config.parse_argv = 0;
+
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
-    py_init_osx_set_home_static_ext(); /* in py_common.h */
+    const char* resources_path = string_getptr(
+        pyjs_get_path_from_external(py_class, "/Contents/Resources"));
+    config.home = Py_DecodeLocale(resources_path, NULL);
 #endif
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
-    py_init_osx_set_home_shared_pkg(); /* in py_common.h */
+    const char* package_path = string_getptr(
+        pyjs_get_path_from_package(py_class, "/support/python" PY_VER));
+    config.home = Py_DecodeLocale(package_path, NULL);
 #endif
 
-    Py_Initialize();
+    status = Py_InitializeFromConfig(&config);
+    if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&config);
+        error("could not initialize python");
+    }
+
+    PyConfig_Clear(&config);
 
     /* python init */
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); /* borrowed reference */

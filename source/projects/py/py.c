@@ -580,58 +580,6 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 }
 
 
-// /**
-//  * @brief main init function called within body of `py_new`
-//  * 
-//  * @param x 
-//  */
-// void py_init(t_py* x)
-// {
-//     wchar_t* python_home = NULL;
-
-// #if defined(__APPLE__) && defined(PY_STATIC_EXT)
-//     const char* resources_path = string_getptr(
-//         py_get_path_from_external(py_class, "/Contents/Resources"));
-//     python_home = Py_DecodeLocale(resources_path, NULL);
-// #endif
-
-// #if defined(__APPLE__) && defined(PY_SHARED_PKG)
-//     const char* package_path = string_getptr(
-//         py_get_path_from_package(py_class, "/support/python" PY_VER));
-//     python_home = Py_DecodeLocale(package_path, NULL);
-// #endif
-
-//     if (python_home != NULL) {
-//         Py_SetPythonHome(python_home);
-//         PyMem_RawFree(python_home);
-//     }
-
-//     /* Add the cythonized 'api' built-in module, before Py_Initialize */
-//     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
-//         py_error(x, "could not add api to builtin modules table");
-//     }
-
-//     Py_Initialize();
-
-//     // python init
-//     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
-//     x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
-//     py_init_builtins(x); // does this have to be a separate function?
-
-//     // register the object
-//     object_register(CLASS_BOX, x->p_name, x);
-
-//     // increment global object counter
-//     py_global_obj_count++;
-
-//     if (py_global_obj_count == 1) {
-//         // if first py object create the py_global_registry;
-//         py_global_registry = (t_hashtab*)hashtab_new(0);
-//         hashtab_flags(py_global_registry, OBJ_FLAG_REF);
-//     }
-// }
-
-
 /**
  * @brief main init function called within body of `py_new`
  * 

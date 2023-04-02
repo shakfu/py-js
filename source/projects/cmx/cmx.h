@@ -44,6 +44,14 @@ t_object* create_object(t_object* x, const char* text);
 #ifdef CMX_IMPLEMENTATION
 
 
+/**
+ * @brief      Return path to external with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to external + (optional subpath)
+ */
 t_string* get_path_from_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
@@ -69,15 +77,22 @@ t_string* get_path_from_external(t_class* c, char* subpath)
 }
 
 
+/**
+ * @brief      Return path to package with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to package + (optional subpath)
+ */
 t_string* get_path_from_package(t_class* c, char* subpath)
 {
     t_string* result;
-
     t_string* external_path = get_path_from_external(c, NULL);
 
     const char* ext_path_c = string_getptr(external_path);
 
-    result = string_new(dirname(dirname(ext_path_c)));
+    result = string_new(dirname(dirname((char*)ext_path_c)));
 
     if (subpath != NULL) {
         string_append(result, subpath);
