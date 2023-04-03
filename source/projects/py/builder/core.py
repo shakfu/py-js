@@ -374,7 +374,8 @@ class Builder:
 
         xcconfig_flags["PROJECT_FOLDER_NAME"] = project
 
-        configuration = "Deployment" if self.settings.release else "Development"
+        # configuration = "Deployment" if self.settings.release else "Development"
+        configuration = "Release" if self.settings.release else "Debug"
         x_flags = (
             " ".join([f"{k}={repr(v)}" for k, v in xcconfig_flags.items()])
             if xcconfig_flags

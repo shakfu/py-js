@@ -2,8 +2,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmak
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
 
-#find_package(Python3 COMPONENTS Interpreter Development)
-
 file(GLOB PROJECT_SRC
      "*.h"
 	 "*.c"
@@ -15,23 +13,20 @@ include_directories(
 	"${MAX_SDK_INCLUDES}"
 	"${MAX_SDK_MSP_INCLUDES}"
 	"${MAX_SDK_JIT_INCLUDES}"
-	"/usr/local/include"
 )
 
 add_library( 
 	${PROJECT_NAME} 
 	MODULE
 	${PROJECT_SRC}
-	"${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/c74support/max-includes/common/commonsyms.c"
+	"${MAX_SDK_INCLUDES}/common/commonsyms.c"
 )
 
-#set(PY_INCLUDE "${Python3_INCLUDE_DIRS}")
-#set(PY_LIBDIRS "${Python3_LIBRARY_DIRS}")
 
 target_include_directories(
 	${PROJECT_NAME}
 	PRIVATE
-#	${PY_INCLUDE}
+	"${local_prefix}/include"
 )
 
 target_compile_options(
@@ -45,20 +40,17 @@ target_compile_options(
 	-fwrapv
 	-O3
 	-Wall
-	# -lstdc++
 )
 
 target_link_directories(
 	${PROJECT_NAME} 
 	PRIVATE
-#	${PY_LIBDIRS}
-	"/usr/local/lib"
+	"${local_prefix}/lib"
 )
 
 target_link_libraries(
 	${PROJECT_NAME} 
 	PRIVATE
-#	"${Python3_LIBRARIES}"
 	"-ldl"
 	"-framework CoreFoundation"
 	"-lzmq"

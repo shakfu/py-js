@@ -18,7 +18,8 @@ PYTHONPATH=$(COREPYTHONPATH)
 _asyncio _asynciomodule.c
 _bisect _bisectmodule.c
 _blake2 _blake2/blake2module.c _blake2/blake2b_impl.c _blake2/blake2s_impl.c
-_bz2 _bz2module.c -lbz2
+_bz2 _bz2module.c -I$(srcdir)/../../lib/bzip2/include -L$(srcdir)/../../lib/bzip2/lib -lbz2
+#_bz2 _bz2module.c -lbz2
 _contextvars _contextvarsmodule.c
 _csv _csv.c
 _datetime _datetimemodule.c
@@ -27,7 +28,8 @@ _elementtree _elementtree.c
 _heapq _heapqmodule.c
 _json _json.c
 _lsprof _lsprof.c rotatingtree.c
-_lzma _lzmamodule.c -llzma
+#_lzma _lzmamodule.c -llzma
+_lzma _lzmamodule.c -I$(srcdir)/../../lib/xz/include -L$(srcdir)/../../lib/xz/lib -llzma
 _md5 md5module.c
 _multiprocessing -I$(srcdir)/Modules/_multiprocessing _multiprocessing/multiprocessing.c _multiprocessing/semaphore.c
 _opcode _opcode.c
@@ -62,8 +64,11 @@ syslog syslogmodule.c
 termios termios.c
 zlib  zlibmodule.c -lz
 
-_hashlib _hashopenssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) -lcrypto
-_ssl _ssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) $(OPENSSL_LIBS)
+#_hashlib _hashopenssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) -lcrypto
+_hashlib _hashopenssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
+
+#_ssl _ssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) $(OPENSSL_LIBS)
+_ssl _ssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
 
 # -----------------------------------------------------------------------------
 # DISABLED

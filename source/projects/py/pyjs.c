@@ -225,13 +225,13 @@ void pyjs_init(t_pyjs* x)
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
-        pyjs_get_path_from_external(py_class, "/Contents/Resources"));
+        pyjs_get_path_from_external(pyjs_class, "/Contents/Resources"));
     config.home = Py_DecodeLocale(resources_path, NULL);
 #endif
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
     const char* package_path = string_getptr(
-        pyjs_get_path_from_package(py_class, "/support/python" PY_VER));
+        pyjs_get_path_from_package(pyjs_class, "/support/python" PY_VER));
     config.home = Py_DecodeLocale(package_path, NULL);
 #endif
 
