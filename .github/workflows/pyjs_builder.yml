@@ -99,23 +99,10 @@ jobs:
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
         primary-bundle-id: org.me.py-dmg
 
-    # - name: Notarize .dmg
-    #   uses: BoundfoxStudios/action-xcode-notarize@v1
-    #   with:
-    #     product-path: "${{ env.PRODUCT_DMG }}"
-    #     appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-    #     appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
-    #     primary-bundle-id: org.me.py-dmg
-
     - name: Staple dmg
       uses: devbotsxyz/xcode-staple@v1
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
-
-    # - name: Staple .dmg
-    #   uses: BoundfoxStudios/action-xcode-staple@v1
-    #   with:
-    #     product-path: "${{ env.PRODUCT_DMG }}"
 
     - uses: actions/upload-artifact@v3
       with:
