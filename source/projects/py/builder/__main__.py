@@ -20,7 +20,8 @@ from . import utils
 from .cli import Commander, option, option_group
 from .ext.relocatable_python import relocatable_options, fix_framework
 from .factory import builder_factory
-from .sign import sign_all, package, package_as_dmg, sign_dmg
+# from .sign import sign_all, package, package_as_dmg, sign_dmg
+from .release import ReleaseManager
 from .config import Project
 
 # ----------------------------------------------------------------------------
@@ -271,6 +272,16 @@ class Application(Commander):
 
     # ----------------------------------------------------------------------------
     # utility methods
+
+    @option("-i", "--dev-id", help="Developer ID")
+    @option("-k", "--keychain-profile", help="Keychain Profile")
+    @option("-d", "--dry-run", action="store_true", help="run without actual changes.")
+    @option("-v", "--variant", help="build variant name")
+    def do_release(self, args):
+        """package, sign and release external"""
+        mgr = ReleaseManager(args.variant, args.dev_id, args.keychain_profile, args.dry_run)
+        mgr.process()
+
 
     @option("--dry-run", "-d", action="store_true", help="run without actual changes.")
     def do_sign(self, args):

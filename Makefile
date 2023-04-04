@@ -353,7 +353,7 @@ api: compile-extension
 
 # Testing
 # -----------------------------------------------------------------------
-.PHONY: test maxtest \
+.PHONY: test \
 		test-homebrew-pkg test-homebrew-ext \
 		test-framework-pkg test-framework-ext \
 		test-shared-pkg test-shared-ext \
@@ -407,10 +407,6 @@ check:
 check_logs:
 	$(call section,"checking all test results")
 	$(call call-builder,"logs" "check_all")
-
-maxtests:
-	$(call section,"running all .maxtests results")
-	@cd $(SCRIPTS)/ruby; ruby test.rb $(MAX_APP)
 
 numpy:
 	echo $(NUMPY_INCL)
@@ -567,6 +563,9 @@ clean-python-framework-ext:
 
 clean-python-framework-pkg: clean-externals clean-support
 	$(call xcleanlib,"Python.framework")
+
+demo:
+	echo $@
 
 
 
