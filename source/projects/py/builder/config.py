@@ -310,6 +310,9 @@ class Project:
     build_src = build / "src"
     build_lib = build / "lib"
 
+    # collect stapled and zipped .dmgs in release directory
+    release_dir = HOME / 'Downloads' / 'PYJS_RELEASE'
+
     # settings
     mac_dep_target = "10.13"
 
@@ -353,10 +356,13 @@ class Project:
         with open(self.build_cache, 'w') as configfile:
             config.write(configfile)
 
-    def cache_get(self, key):
+    def cache_get(self, key, as_path=False):
         config = configparser.ConfigParser()
         config.read(self.build_cache)
-        return config['cache'][key]
+        value = config['cache'][key]
+        if as_path:
+            value = Path(value)
+        return value
 
     def get_package_name(self, variant):
         """ensure package name has standard format.
@@ -381,7 +387,7 @@ class Project:
         if name.startswith('pyjs'):
             variant = name[len('pyjs_'):].replace('_','-')
             self.cache_set(
-                PKG_NAME=variant,
+                VARIANT=variant,
                 PRODUCT_DMG=self.get_dmg(variant),
             )
 

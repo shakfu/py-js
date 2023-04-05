@@ -266,42 +266,42 @@ max-check:
 	@echo "$(PYJS_PACKAGE)"
 	@ls "$(PYJS_PACKAGE)"
 
+# DEPLOYING
+# -----------------------------------------------------------------------
+
+.PHONY: sign collect dmg sign-dmg notarize-dmg staple-dmg fix-framework
+
 sign:
-	$(call section,"sign externals")
-	$(call call-builder,"sign")
+	$(call section,"sign externals and binary dependencies")
+	$(call call-builder,"package" "sign")
 
-sign-dry:
-	$(call section,"sign externals")
-	$(call call-builder,"sign" "--dry-run")
-
-package:
-	$(call section,"make package")
-	$(call call-builder,"package")
+dist:
+	$(call section,"create package distribution folder")
+	$(call call-builder,"package" "dist")
 
 dmg:
-	$(call section,"make package as dmg")
-	$(call call-builder,"dmg" "$(PKG_NAME)")
+	$(call section,"package dist as dmg")
+	$(call call-builder,"package" "dmg")
 
 sign-dmg:
 	$(call section,"sign dmg")
-	$(call call-builder,"sign" "dmg")
+	$(call call-builder,"package" "sign_dmg")
 
-make fix-framework:
+notarize-dmg:
+	$(call section,"notarize dmg")
+	$(call call-builder,"package" "notarize_dmg")
+
+staple-dmg:
+	$(call section,"staple dmg")
+	$(call call-builder,"package" "staple_dmg")
+
+collect-dmg:
+	$(call section,"collect dmg")
+	$(call call-builder,"package" "collect_dmg")
+
+fix-framework:
 	$(call section,"fix framework in support")
 	$(call call-builder,"fix" "framework")
-
-
-# DEPLOYING
-# -----------------------------------------------------------------------
-.PHONY: sign dist
-
-# sign:
-# 	$(call call-builder,"utils" "sign" "--dev-id" $(DEV_ID))
-
-dist:
-	$(call section,"preparing for distribution")
-	@echo "do it here with git"
-
 
 
 # BUILDING

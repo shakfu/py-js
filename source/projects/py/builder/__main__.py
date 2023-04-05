@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-usage: python3 -m builder [-h] [-v]  ...
+% python3 -m builder
+
+usage: __main__.py [-h] [-v]  ...
 
 builder: builds python and py-js max externals from source or other methods.
 
-optional arguments:
+options:
   -h, --help     show this help message and exit
   -v, --version  show program's version number and exit
 
@@ -12,16 +14,20 @@ subcommands:
   valid subcommands
 
                  additional help
+    dep          dependency commands
+    fix          fix references and things
+    help         display online help
+    package      package, sign and release external
     pyjs         build pyjs externals
     python       download and build python from src
+    test         run all tests
 
 """
 from . import utils
 from .cli import Commander, option, option_group
 from .ext.relocatable_python import relocatable_options, fix_framework
 from .factory import builder_factory
-from .sign import sign_all, package, package_as_dmg, sign_dmg
-from .release import ReleaseManager
+from .package import PackageManager
 from .config import Project
 
 # ----------------------------------------------------------------------------
@@ -271,35 +277,52 @@ class Application(Commander):
         utils.runlog("static-pkg")
 
     # ----------------------------------------------------------------------------
-    # utility methods
+    # package management methods
 
     @option("-i", "--dev-id", help="Developer ID")
     @option("-k", "--keychain-profile", help="Keychain Profile")
     @option("-d", "--dry-run", action="store_true", help="run without actual changes.")
     @option("-v", "--variant", help="build variant name")
-    def do_release(self, args):
+    def do_package(self, args):
         """package, sign and release external"""
-        mgr = ReleaseManager(args.variant, args.dev_id, args.keychain_profile, args.dry_run)
+        mgr = PackageManager(args.variant, args.dev_id, args.keychain_profile, args.dry_run)
         mgr.process()
 
-
-    @option("--dry-run", "-d", action="store_true", help="run without actual changes.")
-    def do_sign(self, args):
+    def do_package_sign(self, args):
         """sign all required folders recursively"""
-        sign_all(args.dry_run)
+        mgr = PackageManager()
+        mgr.sign_all()
 
-    def do_package(self, args):
-        """package project"""
-        package()
+    def do_package_dist(self, args):
+        """create project distribution folder"""
+        mgr = PackageManager()
+        mgr.create_dist()
 
-    @option("variant", help="name of variant")
-    def do_dmg(self, args):
-        """package project as .dmg"""
-        package_as_dmg(args.variant)
+    def do_package_dmg(self, args):
+        """package distribution folder as .dmg"""
+        mgr = PackageManager()
+        mgr.package_as_dmg()
 
-    def do_sign_dmg(self, args):
+    def do_package_sign_dmg(self, args):
         """sign dmg"""
-        sign_dmg()
+        mgr = PackageManager()
+        mgr.sign_dmg()
+
+    def do_package_notarize_dmg(self, args):
+        """notarize dmg"""
+        mgr = PackageManager()
+        mgr.notarize_dmg()
+
+    def do_package_staple_dmg(self, args):
+        """staple dmg"""
+        mgr = PackageManager()
+        mgr.staple_dmg()
+
+    def do_package_collect_dmg(self, args):
+        """collect dmg"""
+        mgr = PackageManager()
+        mgr.collect_dmg()
+
 
     # ----------------------------------------------------------------------------
     # utility methods

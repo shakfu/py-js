@@ -1,11 +1,42 @@
 #!/usr/bin/env python3
-"""sign.py
+"""package.py
 
-Provides a utility class which recursively walks through a bundle or folder structure
+Contains two classes:
+
+    PackageManager
+    CodesignExternal
+
+## Package Manager
+
+Does the equivalent of the following workflow
+
+VARIANT="shared-ext"
+
+export DEV_ID="<first_name> <last_name>"
+
+make ${VARIANT}
+
+make sign
+
+make dmg PKG_NAME="${VARIANT}"
+
+export PRODUCT_DMG="<absolute-path-to-dmg>"
+
+make sign-dmg ${PRODUCT_DMG}
+
+xcrun notarytool submit ${PRODUCT_DMG} --keychain-profile "<keychain_profile>"
+
+xcrun stapler staple ${PRODUCT_DMG}
+
+mv ${PRODUCT_DMG} ~/Downloads/pyjs-builds
+
+
+## CodesignExternal
+
+Is a utility class which recursively walks through a bundle or folder structure
 and signs all of the internal binaries which fit the given pattern
 
 Note: you can reduce the logging verbosity by making DEBUG=False
-
 
 Steps to sign a Max package with a externals in the 'externals' folder
 depending on a framework or two in the 'support' folder:
@@ -47,6 +78,7 @@ import os
 import pathlib
 import re
 import subprocess
+import zipfile
 
 
 from .config import Project
@@ -56,10 +88,173 @@ from .shell import ShellCmd
 DEBUG = True
 
 logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(levelname)s - %(funcName)s - %(message)s",
     datefmt="%H:%M:%S",
     level=logging.DEBUG if DEBUG else logging.INFO,
 )
+
+
+def match_suffix(target):
+    return target.suffix in CodesignExternal.FOLDER_EXTENSIONS
+
+
+def match_python_shared(target):
+    """FIXME: shared-pkg does not notarize!!"""
+    match = re.match(r"python3.\d{1,2}", target.name)
+    if match:
+        return match.group(0) == target.name
+    return False
+
+
+class PackageManager:
+    """ Manages and executes the entire release process.
+    """
+
+    def __init__(self, variant=None, dev_id=None, keychain_profile=None, dry_run=False):
+        self.project = Project()        
+        self.variant, self.product_dmg = self.setup(variant)
+        self.dev_id = dev_id or os.environ['DEV_ID']
+        self.keychain_profile = keychain_profile or os.environ['KEYCHAIN_PROFILE']
+        self.dry_run = dry_run
+        self.entitlements = self.project.entitlements / "entitlements.plist"
+        assert self.entitlements.exists(), f"not found: {self.entitlements}"
+        self.log = logging.getLogger(__class__.__name__)
+        self.cmd = ShellCmd(self.log)
+
+    def setup(self, variant=None):
+        if variant:
+            self.project.record_variant(variant)
+        return (
+            self.project.cache_get('variant'),
+            self.project.cache_get('product_dmg', as_path=True)
+        )
+
+    @property
+    def package_name(self):
+        return self.project.get_package_name(self.variant)
+
+    def process(self):
+        self.sign_all()
+        self.package_as_dmg()
+        self.sign_dmg()
+        self.notarize_dmg()
+        self.staple_dmg()
+
+    def sign_all(self):
+        self.sign_folder(self.project.externals)
+        self.sign_folder(self.project.support)
+
+    def sign_folder(self, folder):
+        matchers = [match_suffix, match_python_shared]
+        root = pathlib.Path(__file__).parent.parent.parent.parent.parent
+        target_folder = root / folder
+        assert target_folder.exists(), f"not found: {target_folder}"
+        self.log.info("target_folder: %s", target_folder)
+        targets = list(target_folder.iterdir())
+        assert len(targets) > 0, "no targets to sign"
+        for target in targets:
+            if any(match(target) for match in matchers):
+                # if target.suffix in CodesignExternal.FOLDER_EXTENSIONS:
+                signer = CodesignExternal(
+                    target, dev_id=self.dev_id, 
+                    entitlements=self.entitlements, dry_run=self.dry_run
+                )
+                if signer.dry_run:
+                    signer.process_dry_run()
+                else:
+                    signer.process()
+
+    def create_dist(self):
+        PACKAGE = self.project.root / "PACKAGE"
+        targets = [
+            "package-info.json",
+            "package-info.json.in",
+            "icon.png",
+        ] + self.project.package_dirs
+
+        destination = PACKAGE / self.project.name
+        self.cmd.makedirs(destination)
+        for target in targets:
+            p = self.project.root / target
+            if p.exists():
+                if p.name in ["externals", "support"]:
+                    dst = destination / p.name
+                    self.cmd(f"ditto {p} {dst}")
+                else:
+                    self.cmd.copy(p, destination)
+        for f in self.project.root.glob("*.md"):
+            self.cmd.copy(f, PACKAGE)
+
+        return PACKAGE
+
+    def package_as_dmg(self):
+        srcfolder = self.create_dist()
+        assert srcfolder.exists(), f"{srcfolder} does not exist"
+        self.cmd(
+            f"hdiutil create -volname {self.project.name.upper()} "
+            f"-srcfolder {srcfolder} -ov "
+            f"-format UDZO {self.product_dmg}"
+        )
+        assert self.product_dmg.exists(), f"{self.product_dmg} does not exist"
+        self.cmd.remove(srcfolder)
+        env_file = os.getenv("GITHUB_ENV")
+        if env_file:
+            with open(env_file, "a") as fopen:
+                fopen.write(f"PRODUCT_DMG={self.product_dmg}")
+
+
+    def sign_dmg(self):
+        assert self.product_dmg.exists() and self.dev_id, f"{self.product_dmg} and DEV_ID not set"
+        self.cmd(
+            f'codesign --sign "Developer ID Application: {self.dev_id}" '
+            f'--deep --force --verbose --options runtime "{self.product_dmg}"'
+        )
+
+    # def notarize_dmg_old(self):
+    #     """
+    #     xcrun altool --notarize-app \
+    #         --file $1 \
+    #         -t osx \
+    #         -u "${APPLE_ID}" \
+    #         -p "${APP_PASS}" \
+    #         -primary-bundle-id "${BUNDLE_ID}"
+    #     """
+
+    def notarize_dmg(self):
+        """notarize .dmg using notarytool"""
+        assert self.product_dmg.exists() and self.dev_id, f"{self.product_dmg} and KEYCHAIN_PROFILE not set"
+        self.cmd(
+            f'xcrun notarytool submit "{self.product_dmg}" --keychain-profile "{self.keychain_profile}"'
+        )
+
+    def staple_dmg(self):
+        """staple .dmg using notarytool"""
+        assert self.product_dmg.exists(), f"{self.product_dmg} not set"
+        self.cmd(
+            f'xcrun stapler staple "{self.product_dmg}"'
+        )
+
+    def collect_dmg(self):
+        """zip and collect stapled dmg in folder"""
+        self.project.release_dir.mkdir(exist_ok=True)
+        archive = self.project.release_dir / f'{self.product_dmg.stem}.zip'
+        with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as zip_archive:
+            zip_archive.write(self.product_dmg, arcname=self.product_dmg.name)
+        os.rename(self.product_dmg, self.project.release_dir / self.product_dmg.name)
+
+    @classmethod
+    def cmdline(cls):
+        """commandline interface to class."""
+        parser = argparse.ArgumentParser(description=cls.__doc__)
+        option = parser.add_argument
+        option("-v", "--variant", help="name of build variant")
+        option("-i", "--dev-id", help="Developer ID")
+        option("-k", "--keychain-profile", help="Keychain Profile")
+        option("-d", "--dry-run",action="store_true", help="run without actual changes.")
+        args = parser.parse_args()
+        app = cls(args.variant, args.dev_id, args.keychain_profile, args.dry_run)
+        app.process()
+
 
 
 class CodesignExternal:
@@ -117,14 +312,14 @@ class CodesignExternal:
             self.log.critical(res.stderr)
         else:
             self.log.debug(" ".join(["DONE"] + arglist))
+        return res
 
     def is_binary(self, path):
         """returns True if file is a binary file."""
         txt = self.cmd_check(["file", "-b", str(path)])
         if txt:
             return "binary" in txt.split()
-        else:
-            return False
+        return False
 
     def verify(self, path):
         """verifies codesign of path"""
@@ -147,7 +342,7 @@ class CodesignExternal:
                             self.targets_runtimes.add(path)
                         else:
                             self.targets_internals.add(path)
-                for ext in self.FILE_EXTENSIONS:
+                for _ in self.FILE_EXTENSIONS:
                     if path.suffix not in self.FILE_EXTENSIONS:
                         continue
                     if path.is_symlink():
@@ -157,7 +352,7 @@ class CodesignExternal:
                         self.targets_internals.add(path)
             for folder in folders:
                 path = pathlib.Path(root) / folder
-                for ext in self.FOLDER_EXTENSIONS:
+                for _ in self.FOLDER_EXTENSIONS:
                     if path.suffix not in self.FOLDER_EXTENSIONS:
                         continue
                     if path.is_symlink():
@@ -296,138 +491,9 @@ class CodesignExternal:
                 app.process()
 
 
-def match_suffix(target):
-    return target.suffix in CodesignExternal.FOLDER_EXTENSIONS
 
-
-def match_python_shared(target):
-    """FIXME: shared-pkg does not notarize!!"""
-    match = re.match(r"python3.\d{1,2}", target.name)
-    if match:
-        return match.group(0) == target.name
-    else:
-        return False
-
-
-def sign_folder(folder="externals", dry_run=False):
-    matchers = [match_suffix, match_python_shared]
-    dev_id = os.environ["DEV_ID"]
-    assert dev_id, "environment var DEV_ID not set"
-    root = pathlib.Path(__file__).parent.parent.parent.parent.parent
-    target_folder = pathlib.Path(root / folder)
-    entitlements = pathlib.Path(
-        root / "source/projects/py/resources/entitlements/entitlements.plist"
-    )
-    assert target_folder.exists(), f"not found: {target_folder}"
-    assert entitlements.exists(), f"not found: {entitlements}"
-    targets = list(target_folder.iterdir())
-    assert len(targets) > 0, "no targets to sign"
-    for target in targets:
-        if any(match(target) for match in matchers):
-            # if target.suffix in CodesignExternal.FOLDER_EXTENSIONS:
-            signer = CodesignExternal(
-                target, dev_id=dev_id, entitlements=entitlements, dry_run=dry_run
-            )
-            if signer.dry_run:
-                signer.process_dry_run()
-            else:
-                signer.process()
-
-
-def package(name=Project.name):
-    log = logging.getLogger("packager")
-    cmd = ShellCmd(log)
-    PACKAGE = Project.root / "PACKAGE"
-    # print(PACKAGE.absolute())
-    targets = [
-        "package-info.json",
-        "package-info.json.in",
-        "icon.png",
-    ] + Project.package_dirs
-
-    destination = PACKAGE / name
-    cmd.makedirs(destination)
-    for target in targets:
-        p = Project.root / target
-        if p.exists():
-            if p.name in ["externals", "support"]:
-                dst = destination / p.name
-                cmd(f"ditto {p} {dst}")
-            else:
-                cmd.copy(p, destination)
-    for f in Project.root.glob("*.md"):
-        cmd.copy(f, PACKAGE)
-
-    return PACKAGE
-
-
-def package_as_dmg(name=Project.package_name):
-    project = Project()
-    package_name = project.get_package_name(name)
-    srcfolder = package(project.name)
-    log = logging.getLogger("dmg_packager")
-    cmd = ShellCmd(log)
-    dmg = Project.root / f"{package_name}.dmg"
-    if srcfolder.exists():
-        cmd(
-            f"hdiutil create -volname {project.name.upper()} "
-            f"-srcfolder {srcfolder} -ov "
-            f"-format UDZO {dmg}"
-        )
-        assert dmg.exists()
-        cmd.remove(srcfolder)
-
-    env_file = os.getenv("GITHUB_ENV")
-    if env_file:
-        with open(env_file, "a") as fopen:
-            fopen.write(f"PRODUCT_DMG={dmg}")
-
-
-def sign_dmg(product_dmg=None):
-    log = logging.getLogger("dmg_packager")
-    cmd = ShellCmd(log)
-    dev_id = os.environ["DEV_ID"]
-    if not product_dmg:
-        product_dmg = os.getenv("PRODUCT_DMG", Project.dmg)
-    assert product_dmg, "PRODUCT_DMG or dmg path not set"
-    assert dev_id, "environment var DEV_ID not set"
-    cmd(
-        f'codesign --sign "Developer ID Application: {dev_id}" '
-        f"--deep --force --verbose --options runtime {product_dmg}"
-    )
-
-
-def notarize_dmg_old():
-    """
-    xcrun altool --notarize-app \
-        --file $1 \
-        -t osx \
-        -u "${APPLE_ID}" \
-        -p "${APP_PASS}" \
-        -primary-bundle-id "${BUNDLE_ID}"
-    """
-
-def notarize_dmg(product_dmg=None, keychain_profile=None):
-    """notarize .dmg using notarytool"""
-    log = logging.getLogger("dmg_notarizer")
-    cmd = ShellCmd()
-    if not product_dmg:
-        product_dmg = os.getenv("PRODUCT_DMG", Project.dmg)
-    assert product_dmg, "PRODUCT_DMG or product_dmg not set"
-    if not keychain_profile:
-        keychain_profile = os.getenv("KEYCHAIN_PROFILE")
-    assert keychain_profile, "KEYCHAIN_PROFILE or keychain_profile no provided"
-    cmd(
-        f'xcrun notarytool submit {product_dmg} --keychain-profile "{keychain_profile}"'
-    )
-
-
-
-
-def sign_all(dry_run=False):
-    sign_folder("externals", dry_run)
-    sign_folder("support", dry_run)
 
 
 if __name__ == "__main__":
-    CodesignExternal.cmdline()
+    # CodesignExternal.cmdline()
+    ReleaseManager.cmdline()
