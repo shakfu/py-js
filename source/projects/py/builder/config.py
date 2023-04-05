@@ -1,3 +1,4 @@
+import configparser
 import logging
 import os
 import platform
@@ -294,7 +295,7 @@ class Project:
     scripts = pydir / "scripts"
     targets = pydir / "targets"
 
-    dmg = root / f"{name}.dmg"
+    # dmg = root / f"{name}.dmg"
 
     if is_symlinked:
         build = targets / "build"
@@ -304,6 +305,7 @@ class Project:
         build = HOME / ".build_pyjs"
         build_externals = build / "externals"
 
+    build_cache = build / "build.ini"
     build_downloads = build / "downloads"
     build_src = build / "src"
     build_lib = build / "lib"
@@ -345,17 +347,41 @@ class Project:
     def __hash__(self):
         return hash((self.name, self.python.name, self.mac_dep_target))
 
-    def get_package_name(self, build_variation):
+    def cache_set(self, **kwds):
+        config = configparser.ConfigParser()
+        config["cache"] = kwds
+        with open(self.build_cache, 'w') as configfile:
+            config.write(configfile)
+
+    def cache_get(self, key):
+        config = configparser.ConfigParser()
+        config.read(self.build_cache)
+        return config['cache'][key]
+
+    def get_package_name(self, variant):
         """ensure package name has standard format.
 
-        `py-js-<variation>-<system>-<arch>-<py_ver>` for example 
+        `py-js-<variant>-<system>-<arch>-<py_ver>` for example 
         `py-js-shared-ext-darwin-x86-3.11`
         """
         name = self.name
-        variation = build_variation
         system = self.system.lower()
         arch = self.arch
         ver = self.python.version
-        return f"{name}-{variation}-{system}-{arch}-{ver}"
+        return f"{name}-{variant}-{system}-{arch}-{ver}"
 
+    def get_dmg(self, variant):
+        """get final dmg package name and path
+        """
+        package_name = self.get_package_name(variant)
+        dmg = self.root / f'{package_name}.dmg'
+        return dmg.resolve()
+
+    def record_variant(self, name):
+        if name.startswith('pyjs'):
+            variant = name[len('pyjs_'):].replace('_','-')
+            self.cache_set(
+                PKG_NAME=variant,
+                PRODUCT_DMG=self.get_dmg(variant),
+            )
 

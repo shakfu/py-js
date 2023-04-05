@@ -1,5 +1,6 @@
 from . import core
 from .config import (
+    Project,
     CURRENT_PYTHON_VERSION,
     DEFAULT_BZ2_VERSION,
     DEFAULT_SSL_VERSION,
@@ -153,10 +154,10 @@ def pyjs_builder_factory(name, **settings):
 
 
 def builder_factory(name, **settings):
-    # print(settings)
     builder = None
     try:
         builder = pyjs_builder_factory(name, **settings)
+        Project().record_variant(name)
     except KeyError:
         try:
             builder = python_builder_factory(name, **settings)
