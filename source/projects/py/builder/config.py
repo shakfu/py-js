@@ -353,6 +353,8 @@ class Project:
     def cache_set(self, **kwds):
         config = configparser.ConfigParser()
         config["cache"] = kwds
+        if not self.build.exists():
+            self.build.mkdir(exist_ok=True)
         with open(self.build_cache, 'w') as configfile:
             config.write(configfile)
 
