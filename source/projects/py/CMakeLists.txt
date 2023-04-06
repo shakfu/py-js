@@ -13,21 +13,13 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 # set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
 
-
-
 # options
 option(USE_STATIC_PY "build static extension")
 option(USE_FRAMEWORK_PY "build framework-based extension")
 option(USE_NUMPY "include numpy headers if available")
 option(DEBUG "display debug variables")
 
-set(DEBUG OFF)
-# set(BUILD_LIB ${CMAKE_CURRENT_SOURCE_DIR}/targets/build/lib)
-# set(STATIC_PY ${BUILD_LIB}/python-static)
-# set(Python_ROOT_DIR ${STATIC_PY})
-# set(Python_ROOT_DIR ${FRAMEWORK_PY})
-# set(Python_USE_STATIC_LIBS ON)
-# set(Python_FIND_STRATEGY "LOCATION")
+set(DEBUG ON)
 
 
 find_package(Python3 COMPONENTS Interpreter Development)
@@ -116,11 +108,21 @@ set(FRAMEWORK_PY ${BUILD_LIB}/Python.framework)
 if(USE_STATIC_PY)
 	message("USE_STATIC_PY : ${USE_STATIC_PY}")
 	set(PY_INCLUDE "${STATIC_PY}/include/python3.${Python3_VERSION_MINOR}")
-	set(PY_LIBDIRS "${STATIC_PY}/lib")
+	set(PY_LIBDIRS 
+		"${STATIC_PY}/lib"
+		"${BUILD_LIB}/openssl/lib"
+		"${BUILD_LIB}/bzip2/lib"
+		"${BUILD_LIB}/xz/lib"
+	)
 elseif(USE_FRAMEWORK_PY)
 	message("USE_FRAMEWORK_PY: ${USE_FRAMEWORK_PY}")
 	set(PY_INCLUDE "${FRAMEWORK_PY}/Headers")
-	set(PY_LIBDIRS "${FRAMEWORK_PY}/lib")
+	set(PY_LIBDIRS 
+		"${FRAMEWORK_PY}"
+		# "${BUILD_LIB}/openssl/lib"
+		# "${BUILD_LIB}/bzip2/lib"
+		# "${BUILD_LIB}/xz/lib"
+	)
 else()
 	message("using standard local configuration")
 	set(PY_INCLUDE "${Python3_INCLUDE_DIRS}")
@@ -175,20 +177,16 @@ target_link_directories(
 
 if(USE_STATIC_PY)
 
-	find_library(STATICINTL libintl.a)
-
 	target_link_libraries(
 		${PROJECT_NAME} 
 		PRIVATE
-		python3.${Python_VERSION_MINOR}
-		"${STATICINTL}"
-		"-liconv"
-		"-lz"
-		"-ldl"
-		# "-lssl"
-		# "-lbz2"
-		# "-llzma"
-		# "-lcrypto"
+		python3.${Python3_VERSION_MINOR}
+		-ldl
+		-lssl
+		-lbz2
+		-llzma
+		-lz
+		-lcrypto
 		"-framework CoreFoundation"
 	)
 
@@ -199,13 +197,42 @@ if(USE_STATIC_PY)
 	add_custom_command(TARGET ${PROJECT_NAME}
 		POST_BUILD
 		COMMAND mkdir -p ${PY_EXT_LIB}
-		COMMAND cp -af ${PY_LIBDIRS}/python3.${Python_VERSION_MINOR} ${PY_EXT_LIB}
-		COMMAND cp -af ${PY_LIBDIRS}/python3${Python_VERSION_MINOR}.zip ${PY_EXT_LIB}
+		COMMAND cp -af "${STATIC_PY}/lib/python3.${Python3_VERSION_MINOR}" ${PY_EXT_LIB}
+		COMMAND cp -af "${STATIC_PY}/lib/python3${Python3_VERSION_MINOR}.zip" ${PY_EXT_LIB}
 		COMMENT "Add Resources" VERBATIM
 	)
 
-else()
+elseif(USE_FRAMEWORK_PY)
 
+	# FIXME: not working
+	# set_target_properties(
+	# 	${PROJECT_NAME}
+	# 	PROPERTIES
+	# 	BUILD_WITH_INSTALL_RPATH ON
+	# 	INSTALL_NAME_DIR "@executable_path/../Resources/Python.framework/Python"
+	# )
+
+	target_link_libraries(
+		${PROJECT_NAME} 
+		PRIVATE
+		${FRAMEWORK_PY}
+		-ldl
+		"-framework CoreFoundation"
+	)
+
+	set(PY_EXT_PATH ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}.mxo)
+
+	set(PY_EXT_RESOURCES ${PY_EXT_PATH}/Contents/Resources)
+
+	add_custom_command(TARGET ${PROJECT_NAME}
+		PRE_BUILD
+		COMMAND mkdir -p ${PY_EXT_RESOURCES}
+		COMMAND cp -af "${FRAMEWORK_PY}" ${PY_EXT_RESOURCES}
+		COMMENT "Add Resources" VERBATIM
+	)
+
+
+else()
 	target_link_libraries(
 		${PROJECT_NAME} 
 		PRIVATE
