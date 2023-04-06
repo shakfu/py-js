@@ -928,7 +928,7 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.pydir)
 
-    # PYTHONBUG: Python.framework/Versions/3.9/Resources/Python.app
+    # PYTHONBUG: Python.framework/Versions/3.X/Resources/Python.app
     #            is linked to executable in the frameowork
 
     # def clean(self):
@@ -979,6 +979,9 @@ class StaticPythonBuilder(PythonSrcBuilder):
         return self.project.build_lib / self.product.build_dir
 
     def build(self):
+        for builder in self.depends_on:
+            builder.build()
+
         self.cmd.chdir(self.src_path)
 
         self.configure(
