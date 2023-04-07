@@ -1,8 +1,25 @@
 # CHANGELOG for `py` object
 
-## [0.1.x]
+
+## [0.2.x]
+
+
+- Changed notarized .dmg to be named according to the format `py-js-<variation>-<platform>-<arch>-<py_ver>` for example `py-js-shared-ext-darwin-x86-3.11`
+
+- Changed Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
+
+- Added cmake support for building from custom python-X variants
+
+- Fix a bug where python-static was not building its dependencies
+
+
+## [0.2.0]
+
+- Removed most platform specific code related to finding external path and use the builtin `class_getpath`
 
 - Added general support for python 3.11.x for all build variations (see prelease for signed but not notarized demos)
+
+- Changed `import api` to be more robust especially relative to import numpy logic which is now manually enabled.
 
 - Fixed `py` cython build step such that it run only if `api.pyx` is changed.
 
@@ -14,10 +31,21 @@
 
 - Discovered builtin way for max to find the external using an included but undocumented function. This is by way of the `class_getpath` function. This is demonstrated (partially) in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
 
+- Added more api wrappers to cython-based `api` builtin module:
+  - Atom
+  - Table
+  - Buffer
+  - Dictionary
+  - Database
+  - Linklist
+  - Binbuf
+  - Hashtab
+  - AtomArray
+
+
 
 ## [0.1.1]
 
-### Added in '0.1.1'
 
 - Added initial msp buffer object support
 
@@ -27,21 +55,16 @@
 
 - Added doxygen docs for `py.c`
 
-### Changed in '0.1.1'
-
 - Changed mapping from `py` methods to `px.methods`
 
 - Changed functions signatures between `py.c` so they return Max errors instead of being void functions
 
 - Changed `py_code` and `py_anything` to used refactored `py_eval_text`
 
+
 ## [0.1.0]
 
-### Added in '0.1.0'
-
 - Added even more intuitive make frontend to builder with help (via `make help`)
-
-### Changed in '0.1.0'
 
 - Changed to python-based build system. Bash / Makefile is now deprecated.
 
@@ -55,13 +78,9 @@
 
 - Dropped 'full' version of `static-ext` as it was redundant after adding `_ssl` and `_hashlib` to `static-ext`
 
-### Removed in '0.1.0'
-
 - Removed `shared-pkg` till further notice or until I recreate it as a custom `.framework`, since its not working for Apple's notarization algorithm which only recognizes `.frameworks`.
 
 - Removed dependency on libintl via patching `configure` for both static and shared
-
-### Fixed in '0.1.0'
 
 - Fixed static builds to work with `.build_pyjs`
 
@@ -70,8 +89,6 @@
 - Fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
 
 ## [0.0.1]
-
-### Added in '0.0.1'
 
 - created a release (using python 3.96) of statically built `py.mxo`.
 
@@ -111,8 +128,6 @@
 
 - Added pytest testing harness
 
-### Changed in '0.0.1'
-
 - Changed `py_exec` method to create a single string from argv so it can import easily
 
 - Changed `py_anything` method to eval if identifier is not a callable yet exists in ns
@@ -120,8 +135,6 @@
 - Changed `py_eval` to make it more consistent with the others
 
 - Changed `py_coll_tester` into bpatcher that can be fed by `py_repl`
-
-### Fixed in '0.0.1'
 
 - Fixed some shell expansion risks highlighted by jobor019.
 

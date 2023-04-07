@@ -15,15 +15,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [0.12.x]
+## [0.2.x]
+
+- Added library of common utility functions
+
+- Added CHANGELOG and TODO files for each subproject
+
+- Fixed .github workflows which have become deprecated due to api changes at github
 
 
 
-
-
-
-
-## [0.11.2]
+## [0.2.0]
 
 - Added the `webserv` external based on the [mongoose](https://github.com/cesanta/mongoose) embedded webserver platform for a proof-of-concept of a webserver in an external.
 

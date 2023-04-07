@@ -18,6 +18,11 @@ option(USE_STATIC_PY "build static extension")
 option(USE_FRAMEWORK_PY "build framework-based extension")
 option(USE_NUMPY "include numpy headers if available")
 option(DEBUG "display debug variables")
+option(BUILD_UNIVERSAL "build universal binaries (requires universal dependencies)")
+
+if(BUILD_UNIVERSAL)
+	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
+endif()
 
 set(DEBUG ON)
 
@@ -116,12 +121,10 @@ if(USE_STATIC_PY)
 	)
 elseif(USE_FRAMEWORK_PY)
 	message("USE_FRAMEWORK_PY: ${USE_FRAMEWORK_PY}")
+
 	set(PY_INCLUDE "${FRAMEWORK_PY}/Headers")
 	set(PY_LIBDIRS 
 		"${FRAMEWORK_PY}"
-		# "${BUILD_LIB}/openssl/lib"
-		# "${BUILD_LIB}/bzip2/lib"
-		# "${BUILD_LIB}/xz/lib"
 	)
 else()
 	message("using standard local configuration")
@@ -135,6 +138,11 @@ target_include_directories(
 	${PY_INCLUDE}
 )
 
+# works if compiling -GXcode only (XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS: List)
+# set_target_properties(${PROJECT_NAME} 
+#     PROPERTIES
+#     XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@loader_path/../Resources/Python.framework/Python"
+# )
 
 target_compile_options(
 	${PROJECT_NAME}
@@ -204,14 +212,6 @@ if(USE_STATIC_PY)
 
 elseif(USE_FRAMEWORK_PY)
 
-	# FIXME: not working
-	# set_target_properties(
-	# 	${PROJECT_NAME}
-	# 	PROPERTIES
-	# 	BUILD_WITH_INSTALL_RPATH ON
-	# 	INSTALL_NAME_DIR "@executable_path/../Resources/Python.framework/Python"
-	# )
-
 	target_link_libraries(
 		${PROJECT_NAME} 
 		PRIVATE
@@ -224,12 +224,33 @@ elseif(USE_FRAMEWORK_PY)
 
 	set(PY_EXT_RESOURCES ${PY_EXT_PATH}/Contents/Resources)
 
+	# target_link_options(${PROJECT_NAME} 
+	# 	PRIVATE
+	# 	-rpath "@loader_path/../Resources/Python.framework/Python" 
+	# )
+
+	set(fwk_binary "Python.framework/Versions/3.${Python3_VERSION_MINOR}/Python")
+	set(from_path "${BUILD_LIB}/${fwk_binary}")
+	set(to_path "@loader_path/../Resources/${fwk_binary}")
+	set(to_rpath "@rpath/${fwk_binary}")
+	set(external_binary "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/py.mxo/Contents/MacOS/py")
+	set(external_fwk_binary "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/py.mxo/Contents/Resources/${fwk_binary}")
+
 	add_custom_command(TARGET ${PROJECT_NAME}
-		PRE_BUILD
+		POST_BUILD
 		COMMAND mkdir -p ${PY_EXT_RESOURCES}
 		COMMAND cp -af "${FRAMEWORK_PY}" ${PY_EXT_RESOURCES}
+		COMMAND install_name_tool -id ${to_path} ${external_fwk_binary}
+		COMMAND install_name_tool -change ${from_path} ${to_path} ${external_binary}
+		DEPENDS ${from_path}
 		COMMENT "Add Resources" VERBATIM
 	)
+
+	add_custom_target(external_framework
+		DEPENDS ${from_path}
+	)
+
+	add_dependencies(${PROJECT_NAME} external_framework)
 
 
 else()

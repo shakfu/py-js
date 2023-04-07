@@ -4,6 +4,9 @@ string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
 project(${THIS_FOLDER_NAME})
 
 
+# if getting error with -GXcode specify arch for example
+# cmake -G Xcode -D "CMAKE_OSX_ARCHITECTURES:STRING=x86_64" ..
+
 if (APPLE)
     if (${CMAKE_GENERATOR} MATCHES "Xcode")
             if (${XCODE_VERSION} VERSION_LESS 10)
@@ -47,7 +50,7 @@ MACRO(SUBDIRLIST result curdir)
   SET(${result} ${dirlist})
 ENDMACRO()
 
-# Generate a project for every folder in the "source/category" folder
+#Generate a project for every folder in the "source/category" folder
 SUBDIRLIST(CATEGORY_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/source)
 foreach (cat_dir ${CATEGORY_DIRS})
   SUBDIRLIST(PROJECT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/source/${cat_dir})
@@ -60,4 +63,8 @@ foreach (cat_dir ${CATEGORY_DIRS})
     endif ()
   endforeach ()
 endforeach ()
+
+# dev only
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
 

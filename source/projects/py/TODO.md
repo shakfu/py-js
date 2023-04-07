@@ -2,15 +2,13 @@
 
 ## Important
 
-- [x] Fix `import api` which currently requires numpy to be in sys.path
 
 ## General Improvements
 
-- [x] ensure notarized .dmg is named according to the format `py-js-<variation>-<platform>-<arch>-<py_ver>` for example `py-js-shared-ext-darwin-x86-3.11`
+
 
 ## Refactor
 
-- [x] drop all platform specific code related to finding external path and use the builtin `class_getpath` (see CHANGELOG and `py_locate_path_to_external`)
 
 ## Bugs
 
@@ -38,7 +36,7 @@
 
 ### Documentation
 
-- [ ] remove redundancy patcher files
+- [ ] remove redundant patcher files
 
 - [ ] split `.maxhelp` files into tabs for more information.
 
@@ -69,17 +67,6 @@
   - if they are mutually exclusive, then enum is better otherwise make them binary options
 
 ### Max API Wrapper
-
-- [x] add more api wrappers.
-  - [x] Atom
-  - [x] Table
-  - [x] Buffer
-  - [x] Dictionary
-  - [x] Database
-  - [x] Linklist
-  - [x] Binbuf
-  - [x] Hashtab
-  - [x] AtomArray
 
 - [ ] add more tests and examples
 
@@ -130,8 +117,6 @@
 - [ ] create a pkg distribution built from python src which retains pip for easily installing python packages
 
 - [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
-
-- [x] Github actions: improved build actions to provide a `.dmg` 'artifact' on-demand which packages and notarizes `py-js` and its externals and required frameworks.
 
 - [ ] inject commandline parameters in python build system to enable more granular downstream decisions.
 
