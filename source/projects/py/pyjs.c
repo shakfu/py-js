@@ -212,7 +212,7 @@ t_string* pyjs_get_path_from_package(t_class* c, char* subpath)
 /**
  * @brief main init function called within body of `pyjs_new`
  * 
- * @param x 
+ * @param x pointer to object struct
  */
 void pyjs_init(t_pyjs* x)
 {
@@ -307,8 +307,6 @@ void pyjs_error(t_pyjs* x, char* fmt, ...)
  * @param x pointer to object struct
  * @param s symbol to be search
  * 
- * @return t_max_err
- *
  * If successful, this function will set `x->p_code_filepath` with
  * the Max readable path of the found file.
  */

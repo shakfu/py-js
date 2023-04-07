@@ -310,7 +310,7 @@ finally:
  * @brief Update the dict with the filepath and autoload option.
  *
  * @param x pointer to object struct
- * @param dict
+ * @param dict pointer to dict instance
  */
 void py_appendtodict(t_py* x, t_dictionary* dict)
 {
@@ -327,7 +327,7 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
 /**
  * @brief Main external function / entrypoint. 
  * 
- * @param module_ref 
+ * @param module_ref used to obtain metadata
  * 
  * The sole parameter `module_ref` can be used to obtain a reference
  * to the bundle itself.
@@ -583,7 +583,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 /**
  * @brief main init function called within body of `py_new`
  * 
- * @param x 
+ * @param x object instance
  */
 void py_init(t_py* x)
 {
@@ -685,11 +685,11 @@ void py_free(t_py* x)
 /**
  * @brief Sets tool tips for external object inlets.
  * 
- * @param x 
- * @param b 
- * @param m 
- * @param a 
- * @param s 
+ * @param x object instance
+ * @param b notused (historical)
+ * @param m type
+ * @param a position
+ * @param s name
  */
 void py_assist(t_py* x, void* b, long m, long a, char* s)
 {
@@ -1939,7 +1939,7 @@ error:
 /**
  * @brief Scan object registry and populate object IDs.
  * 
- * @param x 
+ * @param x object instance
  */
 void py_scan(t_py* x)
 {
@@ -1965,8 +1965,8 @@ void py_scan(t_py* x)
 /**
  * @brief A help function used by scan to scan registry and retrieve object IDs.
  * 
- * @param x 
- * @param box 
+ * @param x object instance
+ * @param box box type instance
  * @return long 
  */
 long py_scan_callback(t_py* x, t_object* box)

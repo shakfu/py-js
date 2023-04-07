@@ -2,6 +2,7 @@ name: demo
 options:
   bundleIdPrefix: org.me
 settings:
+  MACOSX_DEPLOYMENT_TARGET: "10.13"
   CODE_SIGN_IDENTITY: "-"
   DEVELOPMENT_TEAM: ""
   GCC_OPTIMIZATION_LEVEL: 0
@@ -31,8 +32,6 @@ targets:
       - ../../api.c
     dependencies:
       - sdk: CoreFoundation.framework
-    settings:
-      MACOSX_DEPLOYMENT_TARGET: "10.13"
 
   pyjs:
     type: bundle
@@ -41,5 +40,3 @@ targets:
       - ../../pyjs.c
     dependencies:
       - sdk: CoreFoundation.framework
-    settings:
-      MACOSX_DEPLOYMENT_TARGET: "10.13"

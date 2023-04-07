@@ -7,7 +7,7 @@ if [[ -d ${XCODEPROJ} ]]
 then
     rm -rf ${XCODEPROJ}
 fi
-xcodegen
+VERSION=3.11 VER_MINOR=11 xcodegen
 
 for t in ${TARGETS}
 do

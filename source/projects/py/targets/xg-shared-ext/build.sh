@@ -3,6 +3,7 @@ XCODEPROJ=${PROJECT}.xcodeproj
 HELPFILE=${PROJECT}.maxhelp
 TARGETS="py pyjs"
 
+
 if [[ -d ${XCODEPROJ} ]]
 then
     rm -rf ${XCODEPROJ}

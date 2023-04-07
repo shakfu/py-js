@@ -114,7 +114,7 @@ class PackageManager:
         self.project = Project()        
         self.variant, self.product_dmg = self.setup(variant)
         self.dev_id = dev_id or os.environ['DEV_ID']
-        self.keychain_profile = keychain_profile or os.environ['KEYCHAIN_PROFILE']
+        self.keychain_profile = keychain_profile
         self.dry_run = dry_run
         self.entitlements = self.project.entitlements / "entitlements.plist"
         assert self.entitlements.exists(), f"not found: {self.entitlements}"
@@ -222,6 +222,8 @@ class PackageManager:
 
     def notarize_dmg(self):
         """notarize .dmg using notarytool"""
+        if not self.keychain_profile:
+            self.keychain_profile = os.environ['KEYCHAIN_PROFILE']
         assert self.product_dmg.exists() and self.dev_id, f"{self.product_dmg} and KEYCHAIN_PROFILE not set"
         self.cmd(
             f'xcrun notarytool submit "{self.product_dmg}" --keychain-profile "{self.keychain_profile}"'
