@@ -33,7 +33,7 @@ cdef extern from "max_types.h":
     ctypedef t_ptr_int t_int                # an integer  @ingroup misc
     ctypedef t_ptr_uint t_ptr_size          # unsigned pointer-sized value for counting (like size_t)  @ingroup misc
     ctypedef t_ptr_int t_atom_long          # the type that is an A_LONG in a #t_atom  @ingroup misc
-    ctypedef t_atom_long t_max_err          # an integer value suitable to be returned as an error code  @ingroup misc   
+    ctypedef t_atom_long t_max_err          # an integer value suitable to be returned as an error code  @ingroup misc
     ctypedef char **t_handle                # a handle (address of a pointer)  @ingroup misc
     ctypedef char *t_ptr                    # a pointer  @ingroup misc
     ctypedef t_uint8 t_bool                 # a true/false variable  @ingroup misc
@@ -52,7 +52,7 @@ cdef extern from "ext_buffer.h":
         long		b_frames
         long		b_nchans
         long		b_size
-        float		b_sr		
+        float		b_sr
         long		b_modtime
         long		b_rfu[57]
 

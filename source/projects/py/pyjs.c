@@ -58,7 +58,7 @@ void ext_main(void* module_ref)
 
 /**
  * @brief Create new external object with optional arguments.
- * 
+ *
  * @param s symbol
  * @param argc atom argument count
  * @param argv atom argument vector
@@ -94,7 +94,7 @@ void* pyjs_new(t_symbol* s, long argc, t_atom* argv)
 
 /**
  * @brief Free object memory when object is deleted.
- * 
+ *
  * @param x pointer to object struct.
  */
 void pyjs_free(t_pyjs* x)
@@ -114,11 +114,11 @@ void pyjs_free(t_pyjs* x)
 
 /**
  * @brief Initialize python builtins
- * 
+ *
  * @param x pointer to object struct
- * 
- * Collects python builtin initialization steps. Meant to be called in 
- * `pyjs_init` which itself should be called inside `pyjs_new`. 
+ *
+ * Collects python builtin initialization steps. Meant to be called in
+ * `pyjs_init` which itself should be called inside `pyjs_new`.
  */
 void pyjs_init_builtins(t_pyjs* x)
 {
@@ -211,7 +211,7 @@ t_string* pyjs_get_path_from_package(t_class* c, char* subpath)
 
 /**
  * @brief main init function called within body of `pyjs_new`
- * 
+ *
  * @param x pointer to object struct
  */
 void pyjs_init(t_pyjs* x)
@@ -306,7 +306,7 @@ void pyjs_error(t_pyjs* x, char* fmt, ...)
  *
  * @param x pointer to object struct
  * @param s symbol to be search
- * 
+ *
  * If successful, this function will set `x->p_code_filepath` with
  * the Max readable path of the found file.
  */
@@ -356,7 +356,7 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
 
 /**
  * @brief Generic python error handler
- * 
+ *
  * @param x pointer to object struct
  * @param fmt format string
  * @param ... other args

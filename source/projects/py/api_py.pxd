@@ -86,4 +86,3 @@ cdef extern from "py.h":
     cdef bint py_table_exists(t_py* x, char* table_name)
     cdef mx.t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
     cdef PyObject* py_table_to_list(t_py* x, char* table_name)
-

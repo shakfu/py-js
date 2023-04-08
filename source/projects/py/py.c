@@ -75,10 +75,10 @@ struct t_py {
 
 /**
  * @brief Get the outlet object
- * 
+ *
  * @param x pointer to object struct
  * @return void*
- * 
+ *
  * Returns a reference to the main object outlet
  */
 void* get_outlet(t_py* x)
@@ -134,11 +134,11 @@ void py_error(t_py* x, char* fmt, ...)
 
 /**
  * @brief Initialize python builtins
- * 
+ *
  * @param x pointer to object struct
- * 
- * Collects python builtin initialization steps. Meant to be called in 
- * `py_init` which itself should be called inside `py_new`. 
+ *
+ * Collects python builtin initialization steps. Meant to be called in
+ * `py_init` which itself should be called inside `py_new`.
  */
 void py_init_builtins(t_py* x)
 {
@@ -173,9 +173,9 @@ error:
 
 /**
  * @brief Get the global registry object
- * 
- * @return t_hashtab* 
- * 
+ *
+ * @return t_hashtab*
+ *
  * This is only used in the api module
  */
 t_hashtab* get_global_registry(void)
@@ -325,13 +325,13 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
 /* External main */
 
 /**
- * @brief Main external function / entrypoint. 
- * 
+ * @brief Main external function / entrypoint.
+ *
  * @param module_ref used to obtain metadata
- * 
+ *
  * The sole parameter `module_ref` can be used to obtain a reference
  * to the bundle itself.
- * 
+ *
  */
 void ext_main(void* module_ref)
 {
@@ -348,7 +348,7 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_bang,       "bang",                  0);
     class_addmethod(c, (method)py_info,       "info",                  0);
 
-   
+
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,   0);
@@ -410,7 +410,7 @@ void ext_main(void* module_ref)
     CLASS_ATTR_DEFAULT(c,   "run_on_save", 0, "0");
     CLASS_ATTR_BASIC(c,     "run_on_save", 0);
     CLASS_ATTR_SAVE(c,      "run_on_save", 0);
-    
+
     CLASS_ATTR_LABEL(c,     "run_on_close", 0,  "run content of editor on close");
     CLASS_ATTR_LONG(c,      "run_on_close", 0,  t_py, p_run_on_close);
     CLASS_ATTR_STYLE(c,     "run_on_close", 0, "onoff");
@@ -431,13 +431,13 @@ void ext_main(void* module_ref)
     CLASS_ATTR_STYLE(c,     "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,     "pythonpath", 0);
     CLASS_ATTR_SAVE(c,      "pythonpath", 0);
-    
+
     CLASS_ATTR_LABEL(c,     "debug", 0,  "debug log to console");
     CLASS_ATTR_LONG(c,      "debug", 0,  t_py, p_debug);
     CLASS_ATTR_STYLE(c,     "debug", 0, "onoff");
     CLASS_ATTR_BASIC(c,     "debug", 0);
     CLASS_ATTR_SAVE(c,      "debug", 0);
-    
+
     CLASS_ATTR_ORDER(c,     "name",         0,  "1");
     CLASS_ATTR_ORDER(c,     "file",         0,  "2");
     CLASS_ATTR_ORDER(c,     "autoload",     0,  "3");
@@ -464,11 +464,11 @@ void ext_main(void* module_ref)
 
 /**
  * @brief Create new external object with optional arguments.
- * 
+ *
  * @param s symbol
  * @param argc atom argument count
  * @param argv atom argument vector
- * @return void* 
+ * @return void*
  */
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
@@ -582,7 +582,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
 /**
  * @brief main init function called within body of `py_new`
- * 
+ *
  * @param x object instance
  */
 void py_init(t_py* x)
@@ -652,7 +652,7 @@ void py_init(t_py* x)
 
 /**
  * @brief Free object memory when deleted.
- * 
+ *
  * @param x pointer to object struct.
  */
 void py_free(t_py* x)
@@ -684,7 +684,7 @@ void py_free(t_py* x)
 
 /**
  * @brief Sets tool tips for external object inlets.
- * 
+ *
  * @param x object instance
  * @param b notused (historical)
  * @param m type
@@ -719,8 +719,8 @@ void py_count(t_py* x)
  */
 void path_join(char* destination, const char* path1, const char* path2)
 {
-    //char filename[MAX_FILENAME_CHARS]; 
-    //strncpy_zero(filename,str->s_name, MAX_FILENAME_CHARS); 
+    //char filename[MAX_FILENAME_CHARS];
+    //strncpy_zero(filename,str->s_name, MAX_FILENAME_CHARS);
 
     if(path1 == NULL && path2 == NULL) {
         strcpy(destination, "");
@@ -730,7 +730,7 @@ void path_join(char* destination, const char* path1, const char* path2)
     }
     else if(path1 == NULL || strlen(path1) == 0) {
         strcpy(destination, path2);
-    } 
+    }
     else {
         char directory_separator[] = "/";
 #ifdef WIN32
@@ -738,7 +738,7 @@ void path_join(char* destination, const char* path1, const char* path2)
 #endif
         const char *last_char = path1;
         while(*last_char != '\0')
-            last_char++;        
+            last_char++;
         int append_directory_separator = 0;
         if(strcmp(last_char, directory_separator) != 0) {
             append_directory_separator = 1;
@@ -766,7 +766,7 @@ void py_info(t_py* x)
     short userdocfolder_id = path_userdocfolder();
     short usermaxfolder_id = path_usermaxfolder();
     short defaultpath_id = path_getdefault();
-    
+
     path_toabsolutesystempath(supportpath_id, "", output_path);
     post("supportpath: %s", output_path);
 
@@ -804,8 +804,8 @@ void py_info(t_py* x)
     path_splitnames((char*)package_externals_path, (char*)package_path,
                     (char*)externals_folder);
     post("package_path: %s", package_path);
-    post("externals_folder: %s", externals_folder);    
-  
+    post("externals_folder: %s", externals_folder);
+
     // package mode
     const char* support_python_path = "support/python" PY_VER;
 
@@ -865,7 +865,7 @@ void py_bang_failure(t_py* x)
 
 /**
  * @brief Schedule a python function call
- * 
+ *
  * @param x pointer to object struct
  * @param s symbol
  * @param argc atom argument count
@@ -936,9 +936,9 @@ finally:
     return ret;
 }
 
-/** 
+/**
  * @brief Wraps a scheduled python function call.
- * 
+ *
  * @param x pointer to object struct
  * @return t_max_err error code
  */
@@ -967,7 +967,7 @@ t_max_err py_task(t_py* x)
 
 /**
  * @brief Generic python error handler
- * 
+ *
  * @param x pointer to object struct
  * @param fmt format string
  * @param ... other args
@@ -1003,7 +1003,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
 
 /**
  * @brief Handler to output python float as max float
- * 
+ *
  * @param x pointer to object struct
  * @param pfloat python float
  * @return t_max_err error code
@@ -1051,7 +1051,7 @@ t_max_err py_handle_long_output(t_py* x, PyObject* plong)
         if (long_result == -1 && PyErr_Occurred()) {
             goto error;
         }
-        
+
         outlet_int(x->p_outlet_left, long_result);
         py_bang_success(x);
     }
@@ -1316,7 +1316,7 @@ t_max_err py_handle_output(t_py* x, PyObject* pval)
 
 /**
  * @brief Translates atom vector to python list
- * 
+ *
  * @param x pointer to object struct
  * @param argc atom argument count
  * @param argv atom argument vector
@@ -1381,7 +1381,7 @@ error:
 
 /**
  * @brief Import a python module
- * 
+ *
  * @param x pointer to object structure
  * @param s symbol of module to be imported
  * @return t_max_err error code
@@ -1415,7 +1415,7 @@ error:
 
 /**
  * @brief Evaluate a max symbol as a python expression
- * 
+ *
  * @param x pointer to object structure
  * @param s symbol of object to be evaluated
  * @param argc atom argument count
@@ -1648,7 +1648,7 @@ error:
  * @param argc atom argument count
  * @param argv atom argument vector
  * @return t_max_err error code
- * 
+ *
  * The first item of the Max list must be a symbol. This is converted into a python variable
  * and the rest of the list is assignment to this variable in the object's python
  * namespace.
@@ -1801,7 +1801,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_atom atoms[PY_MAX_ELEMS];
 
     if (s == gensym("")) {
-        return MAX_ERR_GENERIC; 
+        return MAX_ERR_GENERIC;
     }
 
     // set '=' as shorthand for assign method
@@ -1938,7 +1938,7 @@ error:
 
 /**
  * @brief Scan object registry and populate object IDs.
- * 
+ *
  * @param x object instance
  */
 void py_scan(t_py* x)
@@ -1964,10 +1964,10 @@ void py_scan(t_py* x)
 
 /**
  * @brief A help function used by scan to scan registry and retrieve object IDs.
- * 
+ *
  * @param x object instance
  * @param box box type instance
- * @return long 
+ * @return long
  */
 long py_scan_callback(t_py* x, t_object* box)
 {
@@ -2118,9 +2118,9 @@ error:
 
 /**
  * @brief Event of double-clicking on external object launches code-editor UI
- * 
+ *
  * @param x pointer to object structure
- * 
+ *
  */
 void py_dblclick(t_py* x)
 {
@@ -2138,7 +2138,7 @@ void py_dblclick(t_py* x)
 
 /**
  * @brief Read text file into code-editor.
- * 
+ *
  * @param x pointer to object structure
  * @param s path to text file
  */
@@ -2173,7 +2173,7 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 /**
  * @brief Run python code stored in editor buffer
- * 
+ *
  * @param x pointer to object structure
  */
 void py_run(t_py* x)
@@ -2209,7 +2209,7 @@ error:
 
 /**
  * @brief Event function to preserve text in buffer after editor is closed
- * 
+ *
  * @param x pointer to object structure
  * @param text text to be saved to buffer
  * @param size size of text to be saved to buffer
@@ -2224,7 +2224,7 @@ void py_edclose(t_py* x, char** text, long size)
     x->p_code_size = size + 1;
     x->p_code_editor = NULL;
     if (x->p_run_on_close) {
-        py_run(x);        
+        py_run(x);
     }
 }
 
@@ -2244,7 +2244,7 @@ void py_okclose(t_py* x, char *s, short *result)
     py_log(x, "okclose: called -- run-on-close: %d", x->p_run_on_close);
     *result = 3; // don't put up a dialog
     // const char *string = "custom save text";
-    // memcpy(s, string, strlen(string)+1); 
+    // memcpy(s, string, strlen(string)+1);
 }
 
 /**

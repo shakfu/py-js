@@ -6,7 +6,7 @@
 
 /** \file py.h
     \brief Documentation of py external header interface.
-    
+
     This is the main header file for the `py` external. Note that the external
     structure is not directly exposed at the header level.
 */

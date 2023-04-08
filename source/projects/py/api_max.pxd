@@ -104,7 +104,7 @@ cdef extern from "max_types.h":
     ctypedef t_ptr_int t_int                # an integer  @ingroup misc
     ctypedef t_ptr_uint t_ptr_size          # unsigned pointer-sized value for counting (like size_t)  @ingroup misc
     ctypedef t_ptr_int t_atom_long          # the type that is an A_LONG in a #t_atom  @ingroup misc
-    ctypedef t_atom_long t_max_err          # an integer value suitable to be returned as an error code  @ingroup misc   
+    ctypedef t_atom_long t_max_err          # an integer value suitable to be returned as an error code  @ingroup misc
     ctypedef char **t_handle                # a handle (address of a pointer)  @ingroup misc
     ctypedef char *t_ptr                    # a pointer  @ingroup misc
     ctypedef t_uint8 t_bool                 # a true/false variable  @ingroup misc
@@ -133,7 +133,7 @@ cdef extern from "ext_mess.h":
         #object *w_obj
 
     ctypedef struct t_atom:
-        short a_type 
+        short a_type
         word a_w
 
     ctypedef struct t_class
@@ -167,11 +167,11 @@ cdef extern from "ext_mess.h":
 
 
 cdef extern from "ext_backgroundtask.h":
-    ctypedef struct t_backgroundtask 
-        
+    ctypedef struct t_backgroundtask
+
     cdef long backgroundtask_execute(t_object *owner, void *args, method cbtask, method cbcomplete, t_backgroundtask **task, long flags)
     cdef long backgroundtask_execute_method(
-        t_object *obtask, t_symbol *mtask, long actask, t_atom *avtask, 
+        t_object *obtask, t_symbol *mtask, long actask, t_atom *avtask,
         t_object *obcomp, t_symbol *mcomp, long accomp, t_atom *avcomp,
         t_backgroundtask **task, long flags)
     cdef void backgroundtask_purge_object(t_object *owner)
@@ -195,8 +195,8 @@ cdef extern from "ext_hashtab.h":
     cdef t_max_err hashtab_store_safe(t_hashtab *x, t_symbol *key, t_object *val)
     cdef t_max_err hashtab_storeflags(t_hashtab *x, t_symbol *key, t_object *val, long flags)
     cdef t_max_err hashtab_lookup(t_hashtab *x, t_symbol *key, t_object **val)
-    cdef t_max_err hashtab_lookuplong(t_hashtab *x, t_symbol *key, t_atom_long *val) 
-    cdef t_max_err hashtab_lookupsym(t_hashtab *x, t_symbol *key, t_symbol **val) 
+    cdef t_max_err hashtab_lookuplong(t_hashtab *x, t_symbol *key, t_atom_long *val)
+    cdef t_max_err hashtab_lookupsym(t_hashtab *x, t_symbol *key, t_symbol **val)
     cdef t_max_err hashtab_lookupentry(t_hashtab *x, t_symbol *key, t_hashtab_entry **entry)
     cdef t_max_err hashtab_lookupflags(t_hashtab *x, t_symbol *key, t_object **val, long *flags)
     cdef t_max_err hashtab_delete(t_hashtab *x, t_symbol *key)
@@ -225,11 +225,11 @@ cdef extern from "ext_linklist.h":
 
     ctypedef struct t_llelem
     ctypedef struct t_linklist
-    #cdef long LINKLIST_PRUNE_CHUCK 0x00000001L     
+    #cdef long LINKLIST_PRUNE_CHUCK 0x00000001L
     ctypedef long (*t_cmpfn)(void *, void *)
 
     cdef t_linklist *linklist_new()
-    cdef void linklist_chuck(t_linklist *x) 
+    cdef void linklist_chuck(t_linklist *x)
     cdef t_atom_long linklist_getsize(t_linklist *x)
     cdef void *linklist_getindex(t_linklist *x, long index)
     cdef t_llelem *linklist_index2ptr(t_linklist *x, long index)
@@ -238,17 +238,17 @@ cdef extern from "ext_linklist.h":
     cdef t_atom_long linklist_append(t_linklist *x, void *o)
     cdef t_atom_long linklist_insertindex(t_linklist *x,  void *o, long index)
     cdef long linklist_insert_sorted(t_linklist *x, void *o, cmpfn)
-    cdef t_llelem *linklist_insertafterobjptr(t_linklist *x, void *o, void *objptr)  
-    cdef t_llelem *linklist_insertbeforeobjptr(t_linklist *x, void *o, void *objptr) 
-    cdef t_llelem *linklist_moveafterobjptr(t_linklist *x, void *o, void *objptr)    
-    cdef t_llelem *linklist_movebeforeobjptr(t_linklist *x, void *o, void *objptr)   
-    cdef t_llelem *linklist_insertptr(t_linklist *x,  void *o, t_llelem *p) 
-    cdef t_atom_long linklist_deleteindex(t_linklist *x, long index) 
+    cdef t_llelem *linklist_insertafterobjptr(t_linklist *x, void *o, void *objptr)
+    cdef t_llelem *linklist_insertbeforeobjptr(t_linklist *x, void *o, void *objptr)
+    cdef t_llelem *linklist_moveafterobjptr(t_linklist *x, void *o, void *objptr)
+    cdef t_llelem *linklist_movebeforeobjptr(t_linklist *x, void *o, void *objptr)
+    cdef t_llelem *linklist_insertptr(t_linklist *x,  void *o, t_llelem *p)
+    cdef t_atom_long linklist_deleteindex(t_linklist *x, long index)
     cdef long linklist_chuckindex(t_linklist *x, long index)
     cdef long linklist_chuckobject(t_linklist *x, void *o)
     cdef long linklist_deleteobject(t_linklist *x, void *o)
     cdef long linklist_deleteptr(t_linklist *x, t_llelem *p)
-    cdef long linklist_chuckptr(t_linklist *x, t_llelem *p) 
+    cdef long linklist_chuckptr(t_linklist *x, t_llelem *p)
     cdef void linklist_clear(t_linklist *x)
     cdef long linklist_insertnodeindex(t_linklist *x, t_llelem *p, long index)
     cdef t_llelem *linklist_insertnodeptr(t_linklist *x, t_llelem *p1, t_llelem *p2)
@@ -265,7 +265,7 @@ cdef extern from "ext_linklist.h":
     cdef void linklist_methodall(t_linklist *x, t_symbol *s, ...)
     cdef void linklist_methodall_imp(void *x, void *sym, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7, void *p8)
     cdef void *linklist_methodindex(t_linklist *x, t_atom_long i, t_symbol *s, ...)
-    cdef void *linklist_methodindex_imp(void *x, void *i, void *s, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7) 
+    cdef void *linklist_methodindex_imp(void *x, void *i, void *s, void *p1, void *p2, void *p3, void *p4, void *p5, void *p6, void *p7)
     cdef void linklist_sort(t_linklist *x, cmpfn)
     cdef void linklist_funall(t_linklist *x, method fun, void *arg)
     cdef t_atom_long linklist_funall_break(t_linklist *x, method fun, void *arg)
@@ -287,9 +287,9 @@ cdef extern from "ext_maxtypes.h":
     ctypedef void* t_qelem
 
     ctypedef enum:
-        PI_DEEP = 1         
+        PI_DEEP = 1
         PI_REQUIREFIRSTIN = 2
-        PI_WANTBOX = 4          
+        PI_WANTBOX = 4
         PI_SKIPGEN = 8
         PI_WANTPATCHER = 16
 
@@ -297,7 +297,7 @@ cdef extern from "ext_maxtypes.h":
     ctypedef struct t_zll
 
     ctypedef struct Funbuff
-    ctypedef struct t_funbuff 
+    ctypedef struct t_funbuff
 
 
 cdef extern from "ext_proto.h":
@@ -430,41 +430,41 @@ cdef extern from "ext_dictionary.h":
     cdef t_dictionary* dictionary_new()
     # [private] cdef t_dictionary* dictionary_prototypefromclass(t_class *c)
     cdef t_max_err dictionary_appendlong(t_dictionary *d, t_symbol *key, t_atom_long value)
-    cdef t_max_err dictionary_appendfloat(t_dictionary *d, t_symbol *key, double value) 
-    cdef t_max_err dictionary_appendsym(t_dictionary *d, t_symbol *key, t_symbol *value) 
+    cdef t_max_err dictionary_appendfloat(t_dictionary *d, t_symbol *key, double value)
+    cdef t_max_err dictionary_appendsym(t_dictionary *d, t_symbol *key, t_symbol *value)
     cdef t_max_err dictionary_appendatom(t_dictionary *d, t_symbol *key, t_atom *value)
-    cdef t_max_err dictionary_appendattribute(t_dictionary *d, t_symbol *key, t_symbol *attrname, t_object *obj)  
-    cdef t_max_err dictionary_appendstring(t_dictionary *d, t_symbol *key, const char *value) 
-    cdef t_max_err dictionary_appendatoms(t_dictionary *d, t_symbol *key, long argc, t_atom *argv) 
-    cdef t_max_err dictionary_appendatoms_flags(t_dictionary *d, t_symbol *key, long argc, t_atom *argv, long flags) 
-    cdef t_max_err dictionary_appendatomarray(t_dictionary *d, t_symbol *key, t_object *value) 
-    cdef t_max_err dictionary_appenddictionary(t_dictionary *d, t_symbol *key, t_object *value) 
-    cdef t_max_err dictionary_appendobject(t_dictionary *d, t_symbol *key, t_object *value) 
-    cdef t_max_err dictionary_appendobject_flags(t_dictionary *d, t_symbol *key, t_object *value, long flags) 
-    cdef t_max_err dictionary_appendbinbuf(t_dictionary *d, t_symbol *key, void *value) 
+    cdef t_max_err dictionary_appendattribute(t_dictionary *d, t_symbol *key, t_symbol *attrname, t_object *obj)
+    cdef t_max_err dictionary_appendstring(t_dictionary *d, t_symbol *key, const char *value)
+    cdef t_max_err dictionary_appendatoms(t_dictionary *d, t_symbol *key, long argc, t_atom *argv)
+    cdef t_max_err dictionary_appendatoms_flags(t_dictionary *d, t_symbol *key, long argc, t_atom *argv, long flags)
+    cdef t_max_err dictionary_appendatomarray(t_dictionary *d, t_symbol *key, t_object *value)
+    cdef t_max_err dictionary_appenddictionary(t_dictionary *d, t_symbol *key, t_object *value)
+    cdef t_max_err dictionary_appendobject(t_dictionary *d, t_symbol *key, t_object *value)
+    cdef t_max_err dictionary_appendobject_flags(t_dictionary *d, t_symbol *key, t_object *value, long flags)
+    cdef t_max_err dictionary_appendbinbuf(t_dictionary *d, t_symbol *key, void *value)
     cdef t_max_err dictionary_getlong(const t_dictionary *d, t_symbol *key, t_atom_long *value)
-    cdef t_max_err dictionary_getfloat(const t_dictionary *d, t_symbol *key, double *value) 
-    cdef t_max_err dictionary_getsym(const t_dictionary *d, t_symbol *key, t_symbol **value) 
-    cdef t_max_err dictionary_getatom(const t_dictionary *d, t_symbol *key, t_atom *value) 
-    cdef t_max_err dictionary_getattribute(const t_dictionary *d, t_symbol *key, t_symbol *attrname, t_object *obj)  
+    cdef t_max_err dictionary_getfloat(const t_dictionary *d, t_symbol *key, double *value)
+    cdef t_max_err dictionary_getsym(const t_dictionary *d, t_symbol *key, t_symbol **value)
+    cdef t_max_err dictionary_getatom(const t_dictionary *d, t_symbol *key, t_atom *value)
+    cdef t_max_err dictionary_getattribute(const t_dictionary *d, t_symbol *key, t_symbol *attrname, t_object *obj)
     cdef t_max_err dictionary_getstring(const t_dictionary *d, t_symbol *key, const char **value)
     cdef t_max_err dictionary_getatoms(const t_dictionary *d, t_symbol *key, long *argc, t_atom **argv)
     cdef t_max_err dictionary_getatoms_ext(const t_dictionary *d, t_symbol *key, long stringstosymbols, long *argc, t_atom **argv)
     cdef t_max_err dictionary_copyatoms(const t_dictionary *d, t_symbol *key, long *argc, t_atom **argv)
-    cdef t_max_err dictionary_getatomarray(const t_dictionary *d, t_symbol *key, t_object **value) 
-    cdef t_max_err dictionary_getdictionary(const t_dictionary *d, t_symbol *key, t_object **value) 
+    cdef t_max_err dictionary_getatomarray(const t_dictionary *d, t_symbol *key, t_object **value)
+    cdef t_max_err dictionary_getdictionary(const t_dictionary *d, t_symbol *key, t_object **value)
     cdef t_max_err dictionary_get_ex(t_dictionary *d, t_symbol *key, long *ac, t_atom **av, char *errstr)
-    cdef t_max_err dictionary_getobject(const t_dictionary *d, t_symbol *key, t_object **value) 
-    cdef long dictionary_entryisstring(const t_dictionary *d, t_symbol *key) 
+    cdef t_max_err dictionary_getobject(const t_dictionary *d, t_symbol *key, t_object **value)
+    cdef long dictionary_entryisstring(const t_dictionary *d, t_symbol *key)
     cdef long dictionary_entryisatomarray(const t_dictionary *d, t_symbol *key)
-    cdef long dictionary_entryisdictionary(const t_dictionary *d, t_symbol *key) 
-    cdef long dictionary_hasentry(const t_dictionary *d, t_symbol *key) 
+    cdef long dictionary_entryisdictionary(const t_dictionary *d, t_symbol *key)
+    cdef long dictionary_hasentry(const t_dictionary *d, t_symbol *key)
     cdef t_atom_long dictionary_getentrycount(const t_dictionary *d)
     cdef t_max_err dictionary_getkeys(const t_dictionary *d, long *numkeys, t_symbol ***keys)
     cdef t_max_err dictionary_getkeys_ordered(const t_dictionary *d, long *numkeys, t_symbol ***keys)
-    cdef void dictionary_freekeys(t_dictionary *d, long numkeys, t_symbol **keys) 
+    cdef void dictionary_freekeys(t_dictionary *d, long numkeys, t_symbol **keys)
     cdef t_max_err dictionary_deleteentry(t_dictionary *d, t_symbol *key)
-    cdef t_max_err dictionary_chuckentry(t_dictionary *d, t_symbol *key)     
+    cdef t_max_err dictionary_chuckentry(t_dictionary *d, t_symbol *key)
     cdef t_max_err dictionary_clear(t_dictionary *d)
     cdef t_dictionary *dictionary_clone(t_dictionary *d)
     cdef t_max_err dictionary_clone_to_existing(const t_dictionary *d, t_dictionary *dc)
@@ -474,8 +474,8 @@ cdef extern from "ext_dictionary.h":
     cdef void dictionary_funall(t_dictionary *d, method fun, void *arg)
     cdef t_symbol* dictionary_entry_getkey(t_dictionary_entry *x)
     cdef void dictionary_entry_getvalue(t_dictionary_entry *x, t_atom *value)
-    cdef void dictionary_entry_getvalues(t_dictionary_entry *x, long *argc, t_atom **argv) 
-    
+    cdef void dictionary_entry_getvalues(t_dictionary_entry *x, long *argc, t_atom **argv)
+
     cdef t_max_err dictionary_copyunique(t_dictionary *d, t_dictionary *copyfrom)
     cdef t_max_err dictionary_getdeflong(const t_dictionary *d, t_symbol *key, t_atom_long *value, t_atom_long xdef)
     cdef t_max_err dictionary_getdeffloat(const t_dictionary *d, t_symbol *key, double *value, double xdef)
@@ -520,9 +520,9 @@ cdef extern from "ext_dictobj.h":
 
 
 cdef extern from "ext_expr.h":
-    
+
     cdef int EXPR_MAX_VARS
-        
+
     ctypedef enum e_max_expr_types:
         ET_INT =    0x1
         ET_FLT =    0x2
@@ -532,7 +532,7 @@ cdef extern from "ext_expr.h":
         ET_FUNC =   0x6
         ET_SYM =    0x7
         ET_VSYM =   0x8
-        ET_LP =     0x9 
+        ET_LP =     0x9
         ET_LB =     0x10
         ET_II =     0x11
         ET_FI =     0x12
@@ -577,7 +577,7 @@ cdef extern from "ext_obex.h":
         ATTR_SET_USURP_LOW =    0x08000000 # Placeholder for potential future functionality: Any calls to set the attribute will be called through the equivalent of a defer_low(), repeated calls will be ignored until the setter is actually run.
         ATTR_IS_JBOXATTR =      0x10000000 # a common jbox attr
         ATTR_DIRTY =            0x20000000 # attr has been changed from its default value
-    
+
     # Standard values returned by function calls with a return type of #t_max_err
     ctypedef enum e_max_errorcodes:
         MAX_ERR_NONE =           0 # No error
@@ -585,16 +585,16 @@ cdef extern from "ext_obex.h":
         MAX_ERR_INVALID_PTR =   -2 # Invalid Pointer
         MAX_ERR_DUPLICATE =     -3 # Duplicate
         MAX_ERR_OUT_OF_MEM =    -4 # Out of memory
-    
-    # Flags used in linklist and hashtab objects 
+
+    # Flags used in linklist and hashtab objects
     ctypedef enum e_max_datastore_flags:
         OBJ_FLAG_OBJ =          0x00000000 # free using object_free()
         OBJ_FLAG_REF =          0x00000001 # don't free
         OBJ_FLAG_DATA =         0x00000002 # don't free data or call method
-        OBJ_FLAG_MEMORY =       0x00000004 # don't call method, and when freeing use sysmem_freeptr() instead of freeobject 
+        OBJ_FLAG_MEMORY =       0x00000004 # don't call method, and when freeing use sysmem_freeptr() instead of freeobject
         OBJ_FLAG_SILENT =       0x00000100 # don't notify when modified
         OBJ_FLAG_INHERITABLE =  0x00000200 # obexprototype entry will be inherited by subpatchers and abstractions
-        OBJ_FLAG_ITERATING =    0x00001000 # used by linklist to signal when is inside iteration 
+        OBJ_FLAG_ITERATING =    0x00001000 # used by linklist to signal when is inside iteration
         OBJ_FLAG_DEBUG =        0x40000000 # context-dependent flag, used internally for linklist debug code
 
 
@@ -819,7 +819,7 @@ cdef extern from "ext_obex_util.h":
     cdef CLASS_ATTR_SYM_ARRAY(c,attrname,flags,structname,structmember,size)
     cdef CLASS_ATTR_ATOM_ARRAY(c,attrname,flags,structname,structmember,size)
     cdef CLASS_ATTR_OBJ_ARRAY(c,attrname,flags,structname,structmember,size)
-    cdef CLASS_ATTR_CHAR_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize) 
+    cdef CLASS_ATTR_CHAR_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
     cdef CLASS_ATTR_LONG_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
     cdef CLASS_ATTR_FLOAT_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
     cdef CLASS_ATTR_DOUBLE_VARSIZE(c,attrname,flags,structname,structmember,sizemember,maxsize)
@@ -838,16 +838,16 @@ cdef extern from "ext_obex_util.h":
     cdef STRUCT_ATTR_LONG_ARRAY(c,flags,structname,structmember,size)
     cdef STRUCT_ATTR_FLOAT_ARRAY(c,flags,structname,structmember,size)
     cdef STRUCT_ATTR_DOUBLE_ARRAY(c,flags,structname,structmember,size)
-    cdef STRUCT_ATTR_SYM_ARRAY(c,flags,structname,structmember,size) 
+    cdef STRUCT_ATTR_SYM_ARRAY(c,flags,structname,structmember,size)
     cdef STRUCT_ATTR_ATOM_ARRAY(c,flags,structname,structmember,size)
-    cdef STRUCT_ATTR_OBJ_ARRAY(c,flags,structname,structmember,size) 
+    cdef STRUCT_ATTR_OBJ_ARRAY(c,flags,structname,structmember,size)
     cdef STRUCT_ATTR_CHAR_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
     cdef STRUCT_ATTR_LONG_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
     cdef STRUCT_ATTR_FLOAT_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
     cdef STRUCT_ATTR_DOUBLE_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
-    cdef STRUCT_ATTR_SYM_VARSIZE(c,flags,structname,structmember,sizemember,maxsize) 
+    cdef STRUCT_ATTR_SYM_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
     cdef STRUCT_ATTR_ATOM_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
-    cdef STRUCT_ATTR_OBJ_VARSIZE(c,flags,structname,structmember,sizemember,maxsize) 
+    cdef STRUCT_ATTR_OBJ_VARSIZE(c,flags,structname,structmember,sizemember,maxsize)
     # cdef STATIC_ATTR_ATOMS
     # cdef STATIC_ATTR_PARSE
     # cdef STATIC_ATTR_FORMAT
@@ -858,13 +858,13 @@ cdef extern from "ext_obex_util.h":
     cdef STATIC_ATTR_SYM(c,attrname,flags,val)
     cdef STATIC_ATTR_ATOM(c,attrname,flags,val)
     cdef STATIC_ATTR_OBJ(c,attrname,flags,val)
-    cdef STATIC_ATTR_CHAR_ARRAY(c,attrname,flags,count,vals) 
-    cdef STATIC_ATTR_LONG_ARRAY(c,attrname,flags,count,vals) 
+    cdef STATIC_ATTR_CHAR_ARRAY(c,attrname,flags,count,vals)
+    cdef STATIC_ATTR_LONG_ARRAY(c,attrname,flags,count,vals)
     cdef STATIC_ATTR_FLOAT_ARRAY(c,attrname,flags,count,vals)
     cdef STATIC_ATTR_DOUBLE_ARRAY(c,attrname,flags,count,vals)
     cdef STATIC_ATTR_SYM_ARRAY(c,attrname,flags,count,vals)
-    # cdef STATIC_ATTR_ATOM_ARRAY  
-    cdef STATIC_ATTR_OBJ_ARRAY(c,attrname,flags,count,vals)  
+    # cdef STATIC_ATTR_ATOM_ARRAY
+    cdef STATIC_ATTR_OBJ_ARRAY(c,attrname,flags,count,vals)
     # cdef OBJ_ATTR_ATOMS
     # cdef OBJ_ATTR_PARSE
     # cdef OBJ_ATTR_FORMAT
@@ -874,14 +874,14 @@ cdef extern from "ext_obex_util.h":
     cdef OBJ_ATTR_DOUBLE(x,attrname,flags,val)
     cdef OBJ_ATTR_SYM(x,attrname,flags,val)
     cdef OBJ_ATTR_ATOM(x,attrname,flags,val)
-    cdef OBJ_ATTR_OBJ(x,attrname,flags,val)  
+    cdef OBJ_ATTR_OBJ(x,attrname,flags,val)
     cdef OBJ_ATTR_CHAR_ARRAY(x,attrname,flags,count,vals)
     cdef OBJ_ATTR_LONG_ARRAY(x,attrname,flags,count,vals)
     cdef OBJ_ATTR_FLOAT_ARRAY(x,attrname,flags,count,vals)
     cdef OBJ_ATTR_DOUBLE_ARRAY(x,attrname,flags,count,vals)
-    cdef OBJ_ATTR_SYM_ARRAY(x,attrname,flags,count,vals) 
+    cdef OBJ_ATTR_SYM_ARRAY(x,attrname,flags,count,vals)
     # cdef OBJ_ATTR_ATOM_ARRAY
-    cdef OBJ_ATTR_OBJ_ARRAY(x,attrname,flags,count,vals) 
+    cdef OBJ_ATTR_OBJ_ARRAY(x,attrname,flags,count,vals)
     cdef CLASS_ATTR_ACCESSORS(c,attrname,getter,setter)
     cdef CLASS_ATTR_ADD_FLAGS(c,attrname,flags)
     cdef CLASS_ATTR_REMOVE_FLAGS(c,attrname,flags)
@@ -895,7 +895,7 @@ cdef extern from "ext_obex_util.h":
     cdef CLASS_ATTR_DEFAULT(c,attrname,flags,parsestr)
     cdef CLASS_ATTR_SAVE(c,attrname,flags)
     cdef CLASS_ATTR_SELFSAVE(c,attrname,flags)
-    cdef CLASS_ATTR_DEFAULT_SAVE(c,attrname,flags,parsestr) 
+    cdef CLASS_ATTR_DEFAULT_SAVE(c,attrname,flags,parsestr)
     cdef CLASS_ATTR_DEFAULTNAME(c,attrname,flags,parsestr)
 
     cdef CLASS_ATTR_DEFAULTNAME_SAVE(c,attrname,flags,parsestr)
@@ -935,17 +935,17 @@ cdef extern from "ext_obex_util.h":
     # cdef OBJ_ATTR_ATTR_FORMAT
     cdef OBJ_ATTR_DEFAULT(x,attrname,flags,parsestr)
     cdef OBJ_ATTR_SAVE(x,attrname,flags)
-    cdef OBJ_ATTR_DEFAULT_SAVE(x,attrname,flags,parsestr) 
+    cdef OBJ_ATTR_DEFAULT_SAVE(x,attrname,flags,parsestr)
     cdef CLASS_STICKY_ATTR(c,name,flags,parsestr)
     cdef CLASS_STICKY_ATTR_CLEAR(c,name)
     cdef CLASS_STICKY_CATEGORY(c,flags,name)
     cdef CLASS_STICKY_CATEGORY_CLEAR(c)
     cdef CLASS_STICKY_METHOD(c,name,flags,parsestr)
     cdef CLASS_STICKY_METHOD_CLEAR(c,name)
-    cdef int OBEX_UTIL_MAX_ATOM_GETBYTES 
+    cdef int OBEX_UTIL_MAX_ATOM_GETBYTES
     cdef int OBEX_UTIL_MAX_ATOM_STATIC
     # cdef OBEX_UTIL_ATOM_SETUP_VAR_STATIC
-    # cdef OBEX_UTIL_ATOM_CLEANUP_VAR_STATIC 
+    # cdef OBEX_UTIL_ATOM_CLEANUP_VAR_STATIC
     cdef OBEX_UTIL_ATOM_SETUP_ARRAY_STATIC(ac)
     cdef OBEX_UTIL_ATOM_CLEANUP_ARRAY_STATIC(ac)
     # cdef OBEX_UTIL_ATOM_SETUP_VAR_DYN
@@ -961,14 +961,14 @@ cdef extern from "ext_obex_util.h":
     # cdef OBEX_UTIL_ATOM_SETUP_ARRAY
     # cdef OBEX_UTIL_ATOM_CLEANUP_ARRAY
     ctypedef enum e_max_atom_gettext_flags:
-        OBEX_UTIL_ATOM_GETTEXT_DEFAULT =            0x00000000 
-        OBEX_UTIL_ATOM_GETTEXT_TRUNCATE_ZEROS =     0x00000001 
-        OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE =       0x00000002 
-        OBEX_UTIL_ATOM_GETTEXT_SYM_FORCE_QUOTE =    0x00000004 
-        OBEX_UTIL_ATOM_GETTEXT_COMMA_DELIM =        0x00000008 
-        OBEX_UTIL_ATOM_GETTEXT_FORCE_ZEROS =        0x00000010 
-        OBEX_UTIL_ATOM_GETTEXT_NUM_HI_RES =         0x00000020  
-        OBEX_UTIL_ATOM_GETTEXT_NUM_LO_RES =         0x00000040  
+        OBEX_UTIL_ATOM_GETTEXT_DEFAULT =            0x00000000
+        OBEX_UTIL_ATOM_GETTEXT_TRUNCATE_ZEROS =     0x00000001
+        OBEX_UTIL_ATOM_GETTEXT_SYM_NO_QUOTE =       0x00000002
+        OBEX_UTIL_ATOM_GETTEXT_SYM_FORCE_QUOTE =    0x00000004
+        OBEX_UTIL_ATOM_GETTEXT_COMMA_DELIM =        0x00000008
+        OBEX_UTIL_ATOM_GETTEXT_FORCE_ZEROS =        0x00000010
+        OBEX_UTIL_ATOM_GETTEXT_NUM_HI_RES =         0x00000020
+        OBEX_UTIL_ATOM_GETTEXT_NUM_LO_RES =         0x00000040
 
     cdef t_max_err atom_setchar_array(long ac, t_atom *av, long count, unsigned char *vals)
     cdef t_max_err atom_setlong_array(long ac, t_atom *av, long count, t_atom_long *vals)
@@ -981,7 +981,7 @@ cdef extern from "ext_obex_util.h":
     cdef t_max_err atom_setbinbuf(long *ac, t_atom **av, void *buf)
     cdef t_max_err atom_setattrval(long *ac, t_atom **av, t_symbol *attrname, t_object *obj)
     cdef t_max_err atom_setobjval(long *ac, t_atom **av, t_object *obj)
-    cdef t_max_err atom_setformat(long *ac, t_atom **av, const char *fmt, ...) 
+    cdef t_max_err atom_setformat(long *ac, t_atom **av, const char *fmt, ...)
     #cdef t_max_err atom_setformat_va(long *ac, t_atom **av, const char *fmt, va_list args)
     cdef t_max_err atom_getformat(long ac, t_atom *av, const char *fmt, ...)
     #cdef t_max_err atom_getformat_va(long ac, t_atom *av, const char *fmt, va_list args)
@@ -1047,7 +1047,7 @@ cdef extern from "ext_obex_util.h":
     cdef void *object_new_binbuf(t_symbol *name_space, t_symbol *classname, void *buf)
     cdef void *object_new_attrval(t_symbol *name_space, t_symbol *classname, t_symbol *objattrname, t_object *obj)
     cdef void *object_new_objval(t_symbol *name_space, t_symbol *classname, t_object *obj)
-    cdef void *object_new_format(t_symbol *name_space, t_symbol *classname, const char *fmt, ...)    
+    cdef void *object_new_format(t_symbol *name_space, t_symbol *classname, const char *fmt, ...)
     cdef t_max_err object_attr_addattr(t_object *x, t_symbol *attrname, t_object *attr)
     cdef t_object *object_attr_attr_get(t_object *x, t_symbol *attrname, t_symbol *attrname2)
     cdef t_max_err object_attr_attr_setvalueof(t_object *x, t_symbol *attrname, t_symbol *attrname2, long argc, t_atom *argv)
@@ -1092,7 +1092,7 @@ cdef extern from "ext_obstring.h":
         long     s_size
 
     cdef t_string* string_new(const char *psz)
-    cdef const char* string_getptr(t_string *x)            
+    cdef const char* string_getptr(t_string *x)
     cdef void string_reserve(t_string *x, long numbytes)
     cdef void string_append(t_string *x, const char *s)
     cdef void string_chop(t_string *x, long numchars)
@@ -1157,13 +1157,13 @@ cdef extern from "ext_parameter.h":
         PARAM_TYPE_FLOAT = 0
         PARAM_TYPE_INT
         PARAM_TYPE_ENUM
-        PARAM_TYPE_BLOB     
+        PARAM_TYPE_BLOB
         PARAM_TYPE_FILE
 
     ctypedef enum PARAM_TYPE_ENABLE:
-        PARAM_TYPE_ENABLE_OFF   
-        PARAM_TYPE_ENABLE_ON    
-        PARAM_TYPE_ENABLE_BLOB  
+        PARAM_TYPE_ENABLE_OFF
+        PARAM_TYPE_ENABLE_ON
+        PARAM_TYPE_ENABLE_BLOB
 
     ctypedef enum PARAM_UNITSTYLE:
         PARAM_UNITSTYLE_INVALID = -1
@@ -1176,8 +1176,8 @@ cdef extern from "ext_parameter.h":
         PARAM_UNITSTYLE_PAN
         PARAM_UNITSTYLE_SEMITONE
         PARAM_UNITSTYLE_MIDINOTE
-        PARAM_UNITSTYLE_CUSTOM 
-        PARAM_UNITSTYLE_NATIVE 
+        PARAM_UNITSTYLE_CUSTOM
+        PARAM_UNITSTYLE_NATIVE
 
     ctypedef enum PARAM_MOD:
         PARAM_MOD_INVALID = -1
@@ -1208,10 +1208,10 @@ cdef extern from "ext_parameter.h":
         PARAM_DATA_TYPE_EXPONENT
         PARAM_DATA_TYPE_STEPS
         PARAM_DATA_TYPE_SPEEDLIM
-        PARAM_DATA_TYPE_SMOOTHING 
+        PARAM_DATA_TYPE_SMOOTHING
         PARAM_DATA_TYPE_UNITS
         PARAM_DATA_TYPE_INFO
-        PARAM_DATA_TYPE_FOCUS 
+        PARAM_DATA_TYPE_FOCUS
         PARAM_DATA_TYPE_INVISIBLE
         PARAM_DATA_TYPE_AUTOMATION_VALUE
         PARAM_DATA_TYPE_AUTOMATION_STATE
@@ -1224,7 +1224,7 @@ cdef extern from "ext_parameter.h":
         PARAM_DATA_TYPE_FILEREF_PATH
         PARAM_DATA_TYPE_FILEREF_DISPLAYPATH
         PARAM_DATA_TYPE_FILEREF_DISPLAYNAME
-        PARAM_DATA_TYPE_DEVICESTATE 
+        PARAM_DATA_TYPE_DEVICESTATE
         PARAM_DATA_TYPE_DEFER
         PARAM_DATA_TYPE_MAPPING_INDEX
         PARAM_DATA_TYPE_NOBLOBCACHE
@@ -1267,7 +1267,7 @@ cdef extern from "ext_parameter.h":
     ctypedef struct t_parameter_notify_data
 
     ctypedef struct t_param_class_defcolor_data
-    
+
     cdef t_max_err class_parameter_init(t_class *c)
     cdef t_max_err object_parameter_init(t_object *x, PARAM_TYPE type)
     cdef t_max_err object_parameter_dictionary_process(t_object *x, t_dictionary *d)
@@ -1300,27 +1300,27 @@ cdef extern from "ext_parameter.h":
     cdef t_atom_long object_parameter_get_order(t_object *x)
 
     cdef t_symbol *ps_surface_bg
-    cdef t_symbol *ps_control_bg         
-    cdef t_symbol *ps_control_text_bg    
-    cdef t_symbol *ps_control_fg         
-    cdef t_symbol *ps_control_fg_on      
-    cdef t_symbol *ps_control_fg_off     
-    cdef t_symbol *ps_control_selection  
-    cdef t_symbol *ps_control_zombie     
+    cdef t_symbol *ps_control_bg
+    cdef t_symbol *ps_control_text_bg
+    cdef t_symbol *ps_control_fg
+    cdef t_symbol *ps_control_fg_on
+    cdef t_symbol *ps_control_fg_off
+    cdef t_symbol *ps_control_selection
+    cdef t_symbol *ps_control_zombie
     cdef t_symbol *ps_value_arc
     cdef t_symbol *ps_value_bar
-    cdef t_symbol *ps_active_automation  
+    cdef t_symbol *ps_active_automation
     cdef t_symbol *ps_inactive_automation
-    cdef t_symbol *ps_macro_assigned     
-    cdef t_symbol *ps_contrast_frame     
-    cdef t_symbol *ps_key_assignment     
-    cdef t_symbol *ps_midi_assignment    
-    cdef t_symbol *ps_macro_assignment   
-    cdef t_symbol *ps_assignment_text_bg 
-    cdef t_symbol *ps_control_fg_zombie  
-    cdef t_symbol *ps_value_arc_zombie   
-    cdef t_symbol *ps_numbox_triangle    
-    cdef t_symbol *ps_macro_title        
+    cdef t_symbol *ps_macro_assigned
+    cdef t_symbol *ps_contrast_frame
+    cdef t_symbol *ps_key_assignment
+    cdef t_symbol *ps_midi_assignment
+    cdef t_symbol *ps_macro_assignment
+    cdef t_symbol *ps_assignment_text_bg
+    cdef t_symbol *ps_control_fg_zombie
+    cdef t_symbol *ps_value_arc_zombie
+    cdef t_symbol *ps_numbox_triangle
+    cdef t_symbol *ps_macro_title
     cdef t_symbol *ps_selection
     cdef t_symbol *ps_led_bg
     cdef char *PARAM_COLOR_SURFACE_BG
@@ -1382,21 +1382,21 @@ cdef extern from "ext_itm.h":
     ctypedef struct t_tschange
 
     ctypedef enum:
-        TIME_FLAGS_LOCATION = 1     
-        TIME_FLAGS_TICKSONLY = 2        
-        TIME_FLAGS_FIXEDONLY = 4        
-        TIME_FLAGS_LOOKAHEAD = 8        
-        TIME_FLAGS_USECLOCK = 16        
-        TIME_FLAGS_USEQELEM = 32        
-        TIME_FLAGS_FIXED = 64           
-        TIME_FLAGS_PERMANENT = 128      
-        TIME_FLAGS_TRANSPORT = 256      
-        TIME_FLAGS_EVENTLIST = 512      
+        TIME_FLAGS_LOCATION = 1
+        TIME_FLAGS_TICKSONLY = 2
+        TIME_FLAGS_FIXEDONLY = 4
+        TIME_FLAGS_LOOKAHEAD = 8
+        TIME_FLAGS_USECLOCK = 16
+        TIME_FLAGS_USEQELEM = 32
+        TIME_FLAGS_FIXED = 64
+        TIME_FLAGS_PERMANENT = 128
+        TIME_FLAGS_TRANSPORT = 256
+        TIME_FLAGS_EVENTLIST = 512
         TIME_FLAGS_CHECKSCHEDULE = 1024
-        TIME_FLAGS_LISTENTICKS = 2048   
-        TIME_FLAGS_NOUNITS = 4096       
-        TIME_FLAGS_BBUSOURCE = 8192 
-        TIME_FLAGS_POSITIVE = 16384         
+        TIME_FLAGS_LISTENTICKS = 2048
+        TIME_FLAGS_NOUNITS = 4096
+        TIME_FLAGS_BBUSOURCE = 8192
+        TIME_FLAGS_POSITIVE = 16384
 
     cdef void *itm_getglobal()
     cdef void *itm_getnamed(t_symbol *s, void *scheduler, t_symbol *defaultclocksourcename, long create)
@@ -1484,7 +1484,7 @@ cdef extern from "ext_path.h":
         PATH_STYLE_NATIVE
         PATH_STYLE_COLON
         PATH_STYLE_SLASH
-        PATH_STYLE_NATIVE_WIN       
+        PATH_STYLE_NATIVE_WIN
 
 
     cdef int PATH_STYLE_MAX_PLAT
@@ -1492,36 +1492,36 @@ cdef extern from "ext_path.h":
 
     ctypedef enum e_max_path_types:
         PATH_TYPE_IGNORE = 0
-        PATH_TYPE_ABSOLUTE  
-        PATH_TYPE_RELATIVE  
-        PATH_TYPE_BOOT      
-        PATH_TYPE_C74       
-        PATH_TYPE_PATH      
-        PATH_TYPE_DESKTOP   
-        PATH_TYPE_TILDE 
+        PATH_TYPE_ABSOLUTE
+        PATH_TYPE_RELATIVE
+        PATH_TYPE_BOOT
+        PATH_TYPE_C74
+        PATH_TYPE_PATH
+        PATH_TYPE_DESKTOP
+        PATH_TYPE_TILDE
         PATH_TYPE_TEMPFOLDER
         PATH_TYPE_MAXDB
 
     cdef int PATH_CHAR_IS_SEPARATOR(char c)
 
-    ctypedef enum e_max_fileinfo_flags: 
+    ctypedef enum e_max_fileinfo_flags:
         PATH_FILEINFO_ALIAS = 1
         PATH_FILEINFO_FOLDER = 2
-        PATH_FILEINFO_PACKAGE = 4   
+        PATH_FILEINFO_PACKAGE = 4
 
-    cdef int FILEINFO_ALIAS 
+    cdef int FILEINFO_ALIAS
     cdef int FILEINFO_FOLDER
 
     ctypedef enum e_max_path_folder_flags:
         PATH_REPORTPACKAGEASFOLDER = 1
-        PATH_FOLDER_SNIFF = 2   
-        PATH_NOALIASRESOLUTION = 4      
+        PATH_FOLDER_SNIFF = 2
+        PATH_NOALIASRESOLUTION = 4
 
 
     ctypedef enum e_max_openfile_permissions:
         PATH_READ_PERM = 1
         PATH_WRITE_PERM = 2
-        PATH_RW_PERM = 3    
+        PATH_RW_PERM = 3
 
 
     cdef int READ_PERM
@@ -1529,20 +1529,20 @@ cdef extern from "ext_path.h":
     cdef int RW_PERM
     cdef int PATH_DEFAULT_PATHNAME_COUNT
 
-    ctypedef enum e_max_path_indices:   
+    ctypedef enum e_max_path_indices:
         PATH_STARTUP_PATH = 0
         PATH_SEARCH_PATH
         PATH_ACTION_PATH
         PATH_HELP_PATH
 
 
-    cdef int STARTUP_PATH 
-    cdef int SEARCH_PATH      
+    cdef int STARTUP_PATH
+    cdef int SEARCH_PATH
     cdef int ACTION_PATH
     cdef int HELP_PATH
     cdef int COLLECTIVE_FILECOPY
     cdef int COLLECTIVE_COPYTOMADEFOLDER
-    cdef int TYPELIST_SIZE 
+    cdef int TYPELIST_SIZE
 
     ctypedef enum e_max_typelists:
         TYPELIST_MAXFILES       = 1
@@ -1567,7 +1567,7 @@ cdef extern from "ext_path.h":
     short path_getapppath()
     short path_getsupportpath()
 
-        
+
     # cdef short path_tofsref(const short path, const char *filename, FSRef *ref)
     # cdef short path_fromfsref(FSRef *ref)
     cdef void path_namefrompathname(char *pathname, char *name)
@@ -1603,7 +1603,7 @@ cdef extern from "ext_path.h":
     cdef short path_getfilecreationdate(const char *filename, const short path, t_ptr_uint *date)
     cdef short path_getfilesize(char *filename, short path, t_ptr_size *size)
     cdef long path_listcount(t_pathlink *list)
-    cdef short nameinpath(char *name, short *ref)                    
+    cdef short nameinpath(char *name, short *ref)
     cdef short path_nameinpath(const char *name, const short path, short *ref)
     cdef short path_sysnameinpath(char *name, short *ref)
     cdef void *path_openfolder(short path)
@@ -1624,14 +1624,14 @@ cdef extern from "ext_path.h":
     cdef short path_fileisresource(char *name, short path)
     cdef short path_topotentialname(const short path, const char *file, char *name, short check)
     cdef short path_topotentialunicodename(short path, char *file, unsigned short **name, long *outlen, short check)
-    cdef short path_fromunicodepathname(unsigned short *name, short *path, char *filename, short check)   
+    cdef short path_fromunicodepathname(unsigned short *name, short *path, char *filename, short check)
     cdef t_max_err path_toabsolutesystempath(const short in_path, const char *in_filename, char *out_filepath)
     cdef t_max_err path_absolutepath(t_symbol **returned_path, const t_symbol *s, const t_fourcc *filetypelist, short numtypes)
     cdef void path_addsearchpath(short path, short parent)
     cdef void path_addnamed(long pathtype, char *name, short recursive, short permanent)
     # cdef void path_removefromlist(t_pathlink **list, short parent)
     cdef short path_collpathnamefrompath(short vol, short *collvol, char *filename)
-    cdef short defvolume()           
+    cdef short defvolume()
 
 
 cdef extern from "ext_preferences.h":
@@ -1681,45 +1681,45 @@ cdef extern from "ext_symobject.h":
 
 cdef extern from "ext_sysfile.h":
 
-    ctypedef struct t_filestruct 
+    ctypedef struct t_filestruct
     ctypedef t_filestruct *t_filehandle
 
     ctypedef enum t_sysfile_pos_mode:
-        SYSFILE_ATMARK = 0          
-        SYSFILE_FROMSTART = 1       
-        SYSFILE_FROMLEOF = 2        
-        SYSFILE_FROMMARK = 3        
+        SYSFILE_ATMARK = 0
+        SYSFILE_FROMSTART = 1
+        SYSFILE_FROMLEOF = 2
+        SYSFILE_FROMMARK = 3
 
 
     ctypedef enum t_sysfile_flags:
         SYSFILE_SUBFILE = 1
-        SYSFILE_HANDLE = 2      
-        SYSFILE_RESOURCE = 4    
-        SYSFILE_MEMORY = 6      
-        SYSFILE_RESFILE = 8 
-        SYSFILE_OPENRESFILE = 16    
-        SYSFILE_EXTERNALDATA = 32   
-        SYSFILE_JUSTAPOINTER = 64   
-        SYSFILE_EXTERNALDATA_CANWRITE = 128  
-        SYSFILE_EXTERNALDATA_CANGROW = 256    
-        SYSFILE_EXTERNALDATA_FREE = 512       
+        SYSFILE_HANDLE = 2
+        SYSFILE_RESOURCE = 4
+        SYSFILE_MEMORY = 6
+        SYSFILE_RESFILE = 8
+        SYSFILE_OPENRESFILE = 16
+        SYSFILE_EXTERNALDATA = 32
+        SYSFILE_JUSTAPOINTER = 64
+        SYSFILE_EXTERNALDATA_CANWRITE = 128
+        SYSFILE_EXTERNALDATA_CANGROW = 256
+        SYSFILE_EXTERNALDATA_FREE = 512
         SYSFILE_EXTERNALDATA_LATEFREE = 1024
 
 
     ctypedef enum t_sysfile_text_flags:
-        TEXT_LB_NATIVE =            0x00000001L 
-        TEXT_LB_MAC =               0x00000002L 
-        TEXT_LB_PC =                0x00000004L 
-        TEXT_LB_UNIX =              0x00000008L 
-        TEXT_LB_MASK = 0x0000000FL              
-        TEXT_ENCODING_USE_FILE =    0x00000100L 
-        TEXT_NULL_TERMINATE =       0x00000200L     
+        TEXT_LB_NATIVE =            0x00000001L
+        TEXT_LB_MAC =               0x00000002L
+        TEXT_LB_PC =                0x00000004L
+        TEXT_LB_UNIX =              0x00000008L
+        TEXT_LB_MASK = 0x0000000FL
+        TEXT_ENCODING_USE_FILE =    0x00000100L
+        TEXT_NULL_TERMINATE =       0x00000200L
 
     cdef t_max_err sysfile_close(t_filehandle f)
-    cdef t_max_err sysfile_read( t_filehandle f, t_ptr_size *count, void *bufptr)  
+    cdef t_max_err sysfile_read( t_filehandle f, t_ptr_size *count, void *bufptr)
     cdef t_max_err sysfile_readtohandle(t_filehandle f, char ***h)
     cdef t_max_err sysfile_readtoptr(t_filehandle f, char **p)
-    cdef t_max_err sysfile_write(t_filehandle f, t_ptr_size *count, const void *bufptr)  
+    cdef t_max_err sysfile_write(t_filehandle f, t_ptr_size *count, const void *bufptr)
     cdef t_max_err sysfile_seteof(t_filehandle f, t_ptr_size logeof)
     cdef t_max_err sysfile_geteof(t_filehandle f, t_ptr_size *logeof)
     cdef t_max_err sysfile_setpos(t_filehandle f, t_sysfile_pos_mode mode, t_ptr_int offset)
@@ -1742,7 +1742,7 @@ cdef extern from "ext_sysmem.h":
     cdef void sysmem_freeptr(void *ptr)
     cdef void sysmem_copyptr(const void *src, void *dst, long bytes)
     cdef t_handle sysmem_newhandle(long size)
-    cdef t_handle sysmem_newhandleclear(unsigned long size) 
+    cdef t_handle sysmem_newhandleclear(unsigned long size)
     cdef long sysmem_resizehandle(t_handle handle, long newsize)
     cdef long sysmem_handlesize(t_handle handle)
     cdef void sysmem_freehandle(t_handle handle)
@@ -1759,8 +1759,8 @@ cdef extern from "ext_atomarray.h":
     ctypedef struct t_atomarray
 
     cdef t_atomarray *atomarray_new(long ac, t_atom *av)
-    cdef void atomarray_flags(t_atomarray *x, long flags) 
-    cdef long atomarray_getflags(t_atomarray *x) 
+    cdef void atomarray_flags(t_atomarray *x, long flags)
+    cdef long atomarray_getflags(t_atomarray *x)
     cdef t_max_err atomarray_setatoms(t_atomarray *x, long ac, t_atom *av)
     cdef t_max_err atomarray_getatoms(t_atomarray *x, long *ac, t_atom **av)
     cdef t_max_err atomarray_copyatoms(t_atomarray *x, long *ac, t_atom **av)
@@ -1781,25 +1781,25 @@ cdef extern from "ext_systhread.h":
     ctypedef void *t_systhread
     ctypedef void *t_systhread_mutex
     ctypedef void *t_systhread_cond
-    ctypedef void *t_systhread_rwlock   
+    ctypedef void *t_systhread_rwlock
     ctypedef void *t_systhread_key
 
     ctypedef enum e_max_systhread_mutex_flags:
         SYSTHREAD_MUTEX_NORMAL =        0x00000000
-        SYSTHREAD_MUTEX_ERRORCHECK =    0x00000001  
-        SYSTHREAD_MUTEX_RECURSIVE =     0x00000002  
+        SYSTHREAD_MUTEX_ERRORCHECK =    0x00000001
+        SYSTHREAD_MUTEX_RECURSIVE =     0x00000002
 
 
     ctypedef enum e_max_systhread_priority:
         SYSTHREAD_PRIORITY_MIN = -30
         SYSTHREAD_PRIORITY_DEFAULT = 0
         SYSTHREAD_PRIORITY_MAX = 30
-     
+
     ctypedef enum e_max_systhread_rwlock_flags:
         SYSTHREAD_RWLOCK_NORMAL =       0x00000000
         SYSTHREAD_RWLOCK_LITE =         0x00000001
 
-        
+
     cdef long systhread_create(method entryproc, void *arg, long stacksize, long priority, long flags, t_systhread *thread)
     cdef long systhread_terminate(t_systhread thread)
     cdef void systhread_sleep(long milliseconds)
@@ -1807,8 +1807,8 @@ cdef extern from "ext_systhread.h":
     cdef long systhread_join(t_systhread thread, unsigned int* retval)
     cdef long systhread_detach(t_systhread thread)
     cdef t_systhread systhread_self()
-    cdef void systhread_setpriority(t_systhread thread, int priority) 
-    cdef int systhread_getpriority(t_systhread thread) 
+    cdef void systhread_setpriority(t_systhread thread, int priority)
+    cdef int systhread_getpriority(t_systhread thread)
     cdef char *systhread_getstackbase()
     cdef void systhread_init()
     cdef void systhread_mainstacksetup()
@@ -1823,25 +1823,25 @@ cdef extern from "ext_systhread.h":
     cdef long systhread_mutex_unlock(t_systhread_mutex pmutex)
     cdef long systhread_mutex_trylock(t_systhread_mutex pmutex)
     cdef long systhread_mutex_newlock(t_systhread_mutex *pmutex,long flags)
-    cdef t_max_err systhread_rwlock_new(t_systhread_rwlock *rwlock, long flags) 
-    cdef t_max_err systhread_rwlock_free(t_systhread_rwlock rwlock) 
-    cdef t_max_err systhread_rwlock_rdlock(t_systhread_rwlock rwlock) 
-    cdef t_max_err systhread_rwlock_tryrdlock(t_systhread_rwlock rwlock) 
-    cdef t_max_err systhread_rwlock_rdunlock(t_systhread_rwlock rwlock) 
-    cdef t_max_err systhread_rwlock_wrlock(t_systhread_rwlock rwlock) 
-    cdef t_max_err systhread_rwlock_trywrlock(t_systhread_rwlock rwlock) 
-    cdef t_max_err systhread_rwlock_wrunlock(t_systhread_rwlock rwlock) 
+    cdef t_max_err systhread_rwlock_new(t_systhread_rwlock *rwlock, long flags)
+    cdef t_max_err systhread_rwlock_free(t_systhread_rwlock rwlock)
+    cdef t_max_err systhread_rwlock_rdlock(t_systhread_rwlock rwlock)
+    cdef t_max_err systhread_rwlock_tryrdlock(t_systhread_rwlock rwlock)
+    cdef t_max_err systhread_rwlock_rdunlock(t_systhread_rwlock rwlock)
+    cdef t_max_err systhread_rwlock_wrlock(t_systhread_rwlock rwlock)
+    cdef t_max_err systhread_rwlock_trywrlock(t_systhread_rwlock rwlock)
+    cdef t_max_err systhread_rwlock_wrunlock(t_systhread_rwlock rwlock)
     cdef t_max_err systhread_rwlock_setspintime(t_systhread_rwlock rwlock, double spintime_ms)
-    cdef t_max_err systhread_rwlock_getspintime(t_systhread_rwlock rwlock, double *spintime_ms) 
+    cdef t_max_err systhread_rwlock_getspintime(t_systhread_rwlock rwlock, double *spintime_ms)
     cdef long systhread_cond_new(t_systhread_cond *pcond, long flags)
     cdef long systhread_cond_free(t_systhread_cond pcond)
     cdef long systhread_cond_wait(t_systhread_cond pcond, t_systhread_mutex pmutex)
     cdef long systhread_cond_signal(t_systhread_cond pcond)
     cdef long systhread_cond_broadcast(t_systhread_cond pcond)
     cdef long systhread_key_create(t_systhread_key *key, void (*destructor)(void*))
-    cdef long systhread_key_delete(t_systhread_key key) 
+    cdef long systhread_key_delete(t_systhread_key key)
     cdef void* systhread_getspecific(t_systhread_key key)
-    cdef long systhread_setspecific(t_systhread_key key, const void *value) 
+    cdef long systhread_setspecific(t_systhread_key key, const void *value)
 
 
 cdef extern from "ext_sysparallel.h":
@@ -1857,7 +1857,7 @@ cdef extern from "ext_sysparallel.h":
     cdef int SYSPARALLEL_STATE_DONE
     cdef int SYSPARALLEL_STATE_QUIT
     cdef int SYSPARALLEL_TASK_FLAG_WORKERTRIGGERS
-            
+
     ctypedef struct t_sysparallel_task
     ctypedef struct t_sysparallel_worker
     cdef void sysparallel_init()
@@ -1865,7 +1865,7 @@ cdef extern from "ext_sysparallel.h":
     cdef t_sysparallel_task *sysparallel_task_new(void *data, method workerproc, long maxworkercount)
     cdef t_max_err sysparallel_task_workercount(t_sysparallel_task *x, long workercount)
     cdef t_max_err sysparallel_task_execute(t_sysparallel_task *x)
-    cdef void sysparallel_task_signalworkers(t_sysparallel_task *x, long count) 
+    cdef void sysparallel_task_signalworkers(t_sysparallel_task *x, long count)
     cdef t_max_err sysparallel_task_cancel(t_sysparallel_task *x)
     cdef void sysparallel_task_free(t_sysparallel_task *x)
     cdef void sysparallel_task_benchprint(t_sysparallel_task *x)
@@ -1878,11 +1878,11 @@ cdef extern from "ext_sysparallel.h":
 
 cdef extern from "ext_sysprocess.h":
 
-    cdef long sysprocess_isrunning(long id)   
-    cdef long sysprocess_launch(const char *utf8path, const char *utf8commandline)  
+    cdef long sysprocess_isrunning(long id)
+    cdef long sysprocess_launch(const char *utf8path, const char *utf8commandline)
     cdef long sysprocess_activate(long id)
-    cdef long sysprocess_getid(const char *utf8path)  
-    cdef long sysprocess_getcurrentid() 
+    cdef long sysprocess_getid(const char *utf8path)
+    cdef long sysprocess_getcurrentid()
     cdef long sysprocess_getpath(long id, char **utf8path)
     cdef t_object* sysprocesswatcher_new(long id, method m, void *arg)
     cdef long sysprocess_fitsarch(long id)
@@ -1890,9 +1890,9 @@ cdef extern from "ext_sysprocess.h":
 
 cdef extern from "ext_sysmem.h":
 
-    ctypedef void * t_syssem 
+    ctypedef void * t_syssem
     cdef t_max_err syssem_create(t_syssem *x, const char *name, long flags, unsigned int value)
-    cdef t_max_err syssem_open(t_syssem *x, const char *name, long flags) 
+    cdef t_max_err syssem_open(t_syssem *x, const char *name, long flags)
     cdef t_max_err syssem_close(t_syssem x)
     cdef t_max_err syssem_wait(t_syssem x)
     cdef t_max_err syssem_trywait(t_syssem x)
@@ -1901,12 +1901,12 @@ cdef extern from "ext_sysmem.h":
 
 cdef extern from "ext_sysshmem.h":
 
-    ctypedef void *t_sysshmem 
+    ctypedef void *t_sysshmem
     cdef int SYSSHMEM_FLAGS_READONLY
-    cdef t_max_err sysshmem_alloc(t_sysshmem *x, const char *name, long size, long flags)   
-    cdef t_max_err sysshmem_open(t_sysshmem *x, const char *name, long flags)               
-    cdef t_max_err sysshmem_close(t_sysshmem x)     
-    cdef unsigned long sysshmem_getsize(t_sysshmem x)       
+    cdef t_max_err sysshmem_alloc(t_sysshmem *x, const char *name, long size, long flags)
+    cdef t_max_err sysshmem_open(t_sysshmem *x, const char *name, long flags)
+    cdef t_max_err sysshmem_close(t_sysshmem x)
+    cdef unsigned long sysshmem_getsize(t_sysshmem x)
     cdef void* sysshmem_getptr(t_sysshmem x)
 
 
@@ -1916,9 +1916,9 @@ cdef extern from "ext_systime.h":
 
     ctypedef enum e_max_dateflags:
         SYSDATEFORMAT_FLAGS_SHORT = 1
-        SYSDATEFORMAT_FLAGS_MEDIUM = 2  
-        SYSDATEFORMAT_FLAGS_LONG = 3    
-        
+        SYSDATEFORMAT_FLAGS_MEDIUM = 2
+        SYSDATEFORMAT_FLAGS_LONG = 3
+
     cdef t_uint32 systime_ticks()
     cdef t_uint32 systime_ms()
     cdef t_int64 systime_datetime_milliseconds()
@@ -4851,14 +4851,14 @@ cdef extern from "commonsyms.h":
 
 
 
-    
+
 
 
 cdef extern from "ext_wind.h":
     ctypedef enum e_max_wind_advise_result:
         aaYes = 1
-        aaNo        
-        aaCancel        
+        aaNo
+        aaCancel
 
     cdef int ADVISE_SAVE
     cdef int ADVISE_DISCARD
@@ -4886,7 +4886,7 @@ cdef extern from "jpatcher_api.h":
         JCLIPBOARD_TYPE_UNKNOWN = 256
 
     cdef t_symbol *fontmap_getmapping(t_symbol *from_, char *mapped)
-    cdef double fontinfo_getsize(short oldsize)     
+    cdef double fontinfo_getsize(short oldsize)
     cdef t_symbol *fontinfo_getname(short number)
     cdef short fontinfo_getnumber(t_symbol *s)
     ctypedef struct t_rect
@@ -4909,29 +4909,29 @@ cdef extern from "jpatcher_api.h":
     cdef t_max_err object_attr_set_rect(t_object *o, t_symbol *name, t_rect *rect)
     cdef void object_attr_set_xywh(t_object *o, t_symbol *attr, double x, double y, double w, double h)
     cdef t_max_err object_attr_getpt(t_object *o, t_symbol *name, t_pt *pt)
-    cdef t_max_err object_attr_setpt(t_object *o, t_symbol *name, t_pt *pt) 
+    cdef t_max_err object_attr_setpt(t_object *o, t_symbol *name, t_pt *pt)
     cdef t_max_err object_attr_getsize(t_object *o, t_symbol *name, t_size *size)
-    cdef t_max_err object_attr_setsize(t_object *o, t_symbol *name, t_size *size) 
+    cdef t_max_err object_attr_setsize(t_object *o, t_symbol *name, t_size *size)
     cdef t_max_err object_attr_getcolor(t_object *b, t_symbol *attrname, t_jrgba *prgba)
     cdef t_max_err object_attr_setcolor(t_object *b, t_symbol *attrname, t_jrgba *prgba)
     cdef t_max_err jrgba_attr_get(t_jrgba *jrgba, long *argc, t_atom **argv)
     cdef t_max_err jrgba_attr_set(t_jrgba *jrgba, long argc, t_atom *argv)
-    cdef void set_jrgba_from_palette_index(short index, t_jrgba *jrgba) 
-    cdef void set_jrgba_from_boxcolor_index(short index, t_jrgba *jrgba) 
-    cdef short get_boxcolor_index_from_jrgba(t_jrgba *jrgba) 
-    cdef void jgraphics_clip_rgba(t_jrgba *rgba) 
+    cdef void set_jrgba_from_palette_index(short index, t_jrgba *jrgba)
+    cdef void set_jrgba_from_boxcolor_index(short index, t_jrgba *jrgba)
+    cdef short get_boxcolor_index_from_jrgba(t_jrgba *jrgba)
+    cdef void jgraphics_clip_rgba(t_jrgba *rgba)
     cdef void object_openhelp(t_object *x)
     cdef void object_openrefpage(t_object *x)
     cdef void object_openquery(t_object *x)
     cdef void classname_openhelp(char *classname)
     cdef void classname_openrefpage(char *classname)
-    cdef void classname_openquery(char *classname) 
+    cdef void classname_openquery(char *classname)
     cdef t_object* patcherview_findpatcherview(int x, int y)
     cdef void patcherview_makepalette()
     cdef int jpatcher_is_patcher(t_object *p)
     cdef t_object* jpatcher_get_box(t_object *p)
     cdef long jpatcher_get_count(t_object *p)
-    cdef char jpatcher_get_locked(t_object *p) 
+    cdef char jpatcher_get_locked(t_object *p)
     cdef t_max_err jpatcher_set_locked(t_object *p, char c)
     cdef char jpatcher_get_presentation(t_object *p)
     cdef t_max_err jpatcher_set_presentation(t_object *p, char c)
@@ -4966,14 +4966,14 @@ cdef extern from "jpatcher_api.h":
     cdef t_object* jpatcher_get_toppatcher(t_object *p)
     cdef t_object* jpatcher_get_hubholder(t_object *p)
     cdef t_symbol* jpatcher_get_maxclass(t_object *p)
-    cdef t_symbol* jpatcher_get_parentclass(t_object *p) 
+    cdef t_symbol* jpatcher_get_parentclass(t_object *p)
     cdef t_max_err jpatcher_get_rect(t_object *p, t_rect *pr)
     cdef t_max_err jpatcher_set_rect(t_object *p, t_rect *pr)
     cdef t_max_err jpatcher_get_defrect(t_object *p, t_rect *pr)
     cdef t_max_err jpatcher_set_defrect(t_object *p, t_rect *pr)
-    cdef char jpatcher_get_noedit(t_object *p) 
-    cdef t_object *jpatcher_get_collective(t_object *p) 
-    cdef char jpatcher_get_cansave(t_object *p) 
+    cdef char jpatcher_get_noedit(t_object *p)
+    cdef t_object *jpatcher_get_collective(t_object *p)
+    cdef char jpatcher_get_cansave(t_object *p)
     cdef t_symbol *jpatcher_uniqueboxname(t_object *p, t_symbol *classname)
     cdef short jpatcher_getboxfont(t_object *p, short fnum, double *fsize, t_symbol **fontname)
     cdef t_symbol *jpatcher_get_default_fontname(t_object *p)
@@ -4990,37 +4990,37 @@ cdef extern from "jpatcher_api.h":
     cdef t_max_err jbox_get_rect_for_sym(t_object *box, t_symbol *which, t_rect *pr)
     cdef t_max_err jbox_set_rect_for_sym(t_object *box, t_symbol *which, t_rect *pr)
     cdef t_max_err jbox_set_rect(t_object *box, t_rect *pr)
-    cdef t_max_err jbox_get_patching_rect(t_object *box, t_rect *pr)         
-    cdef t_max_err jbox_set_patching_rect(t_object *box, t_rect *pr)         
-    cdef t_max_err jbox_get_presentation_rect(t_object *box, t_rect *pr) 
-    cdef t_max_err jbox_set_presentation_rect(t_object *box, t_rect *pr) 
+    cdef t_max_err jbox_get_patching_rect(t_object *box, t_rect *pr)
+    cdef t_max_err jbox_set_patching_rect(t_object *box, t_rect *pr)
+    cdef t_max_err jbox_get_presentation_rect(t_object *box, t_rect *pr)
+    cdef t_max_err jbox_set_presentation_rect(t_object *box, t_rect *pr)
     cdef t_max_err jbox_set_position(t_object *box, t_pt *pos)
-    cdef t_max_err jbox_get_patching_position(t_object *box, t_pt *pos)  
-    cdef t_max_err jbox_set_patching_position(t_object *box, t_pt *pos)      
-    cdef t_max_err jbox_get_presentation_position(t_object *box, t_pt *pos) 
-    cdef t_max_err jbox_set_presentation_position(t_object *box, t_pt *pos) 
+    cdef t_max_err jbox_get_patching_position(t_object *box, t_pt *pos)
+    cdef t_max_err jbox_set_patching_position(t_object *box, t_pt *pos)
+    cdef t_max_err jbox_get_presentation_position(t_object *box, t_pt *pos)
+    cdef t_max_err jbox_set_presentation_position(t_object *box, t_pt *pos)
     cdef t_max_err jbox_set_size(t_object *box, t_size *size)
-    cdef t_max_err jbox_get_patching_size(t_object *box, t_size *size)  
-    cdef t_max_err jbox_set_patching_size(t_object *box, t_size *size)       
-    cdef t_max_err jbox_get_presentation_size(t_object *box, t_size *size) 
-    cdef t_max_err jbox_set_presentation_size(t_object *box, t_size *size) 
+    cdef t_max_err jbox_get_patching_size(t_object *box, t_size *size)
+    cdef t_max_err jbox_set_patching_size(t_object *box, t_size *size)
+    cdef t_max_err jbox_get_presentation_size(t_object *box, t_size *size)
+    cdef t_max_err jbox_set_presentation_size(t_object *box, t_size *size)
     cdef t_symbol* jbox_get_maxclass(t_object *b)
     cdef t_object* jbox_get_object(t_object *b)
-    cdef t_object* jbox_get_patcher(t_object *b) 
+    cdef t_object* jbox_get_patcher(t_object *b)
     cdef char jbox_get_hidden(t_object *b)
     cdef t_max_err jbox_set_hidden(t_object *b, char c)
     cdef t_symbol* jbox_get_fontname(t_object *b)
-    cdef t_max_err jbox_set_fontname(t_object *b, t_symbol *ps) 
+    cdef t_max_err jbox_set_fontname(t_object *b, t_symbol *ps)
     cdef double jbox_get_fontsize(t_object *b)
-    cdef t_max_err jbox_set_fontsize(t_object *b, double d) 
+    cdef t_max_err jbox_set_fontsize(t_object *b, double d)
     cdef t_max_err jbox_get_color(t_object *b, t_jrgba *prgba)
-    cdef t_max_err jbox_set_color(t_object *b, t_jrgba *prgba) 
-    cdef t_symbol *jbox_get_hint(t_object *b) 
-    cdef t_max_err jbox_set_hint(t_object *b, t_symbol *s) 
+    cdef t_max_err jbox_set_color(t_object *b, t_jrgba *prgba)
+    cdef t_symbol *jbox_get_hint(t_object *b)
+    cdef t_max_err jbox_set_hint(t_object *b, t_symbol *s)
     cdef char *jbox_get_hintstring(t_object *bb)
     cdef void jbox_set_hintstring(t_object *bb, char *s)
-    cdef char jbox_get_hinttrack(t_object *b) 
-    cdef t_max_err jbox_set_hinttrack(t_object *b, char h) 
+    cdef char jbox_get_hinttrack(t_object *b)
+    cdef t_max_err jbox_set_hinttrack(t_object *b, char h)
     cdef char *jbox_get_annotation(t_object *bb)
     cdef void jbox_set_annotation(t_object *bb, char *s)
     cdef t_object* jbox_get_nextobject(t_object *b)
@@ -5057,144 +5057,144 @@ cdef extern from "jpatcher_api.h":
         JPATCHLINE_CONNECT = 1
         JPATCHLINE_ORDER = 2
 
-        
+
     cdef t_max_err jpatchline_get_startpoint(t_object *l, double *x, double *y)
     cdef t_max_err jpatchline_get_endpoint(t_object *l, double *x, double *y)
-    cdef long jpatchline_get_nummidpoints(t_object *l) 
-    cdef char jpatchline_get_pending(t_object *l) 
-    cdef t_object* jpatchline_get_box1(t_object *l) 
+    cdef long jpatchline_get_nummidpoints(t_object *l)
+    cdef char jpatchline_get_pending(t_object *l)
+    cdef t_object* jpatchline_get_box1(t_object *l)
     cdef long jpatchline_get_outletnum(t_object *l)
-    cdef t_object* jpatchline_get_box2(t_object *l) 
+    cdef t_object* jpatchline_get_box2(t_object *l)
     cdef long jpatchline_get_inletnum(t_object *l)
     cdef double jpatchline_get_straightthresh(t_object *l)
     cdef t_max_err jpatchline_set_straightthresh(t_object *l, double d)
-    cdef char jpatchline_get_straightstart(t_object *l) 
-    cdef char jpatchline_get_straightend(t_object *l) 
-    cdef t_max_err jpatchline_set_straightstart(t_object *l, char c) 
+    cdef char jpatchline_get_straightstart(t_object *l)
+    cdef char jpatchline_get_straightend(t_object *l)
+    cdef t_max_err jpatchline_set_straightstart(t_object *l, char c)
     cdef t_max_err jpatchline_set_straightend(t_object *l, char c)
     cdef t_object* jpatchline_get_nextline(t_object *b)
-    cdef char jpatchline_get_hidden(t_object *l) 
-    cdef t_max_err jpatchline_set_hidden(t_object *l, char c) 
-    cdef t_max_err jpatchline_get_color(t_object *l, t_jrgba *prgba) 
+    cdef char jpatchline_get_hidden(t_object *l)
+    cdef t_max_err jpatchline_set_hidden(t_object *l, char c)
+    cdef t_max_err jpatchline_get_color(t_object *l, t_jrgba *prgba)
     cdef t_max_err jpatchline_set_color(t_object *l, t_jrgba *prgba)
     cdef t_object *jpatchline_get_wiretap(t_object *l)
     cdef long wiretap_get_id(t_object *w)
     cdef long wiretap_get_flags(t_object *w)
     cdef void wiretap_set_flags(t_object *w, long n)
-    cdef char patcherview_get_visible(t_object *pv) 
-    cdef t_max_err patcherview_set_visible(t_object *pv, char c) 
+    cdef char patcherview_get_visible(t_object *pv)
+    cdef t_max_err patcherview_set_visible(t_object *pv, char c)
     cdef t_max_err patcherview_get_rect(t_object *pv, t_rect *pr)
     cdef t_max_err patcherview_set_rect(t_object *pv, t_rect *pr)
-    cdef void patcherview_canvas_to_screen(t_object *pv, double cx, double cy, long *sx, long *sy) 
+    cdef void patcherview_canvas_to_screen(t_object *pv, double cx, double cy, long *sx, long *sy)
     cdef void patcherview_screen_to_canvas(t_object *pv, long sx, long sy, double *cx, double *cy)
-    cdef char patcherview_get_locked(t_object *p) 
-    cdef t_max_err patcherview_set_locked(t_object *p, char c) 
+    cdef char patcherview_get_locked(t_object *p)
+    cdef t_max_err patcherview_set_locked(t_object *p, char c)
     cdef char patcherview_get_presentation(t_object *pv)
     cdef t_max_err patcherview_set_presentation(t_object *p, char c)
     cdef double patcherview_get_zoomfactor(t_object *pv)
-    cdef t_max_err patcherview_set_zoomfactor(t_object *pv, double d) 
+    cdef t_max_err patcherview_set_zoomfactor(t_object *pv, double d)
     cdef t_object* patcherview_get_nextview(t_object *pv)
     cdef t_object* patcherview_get_jgraphics(t_object *pv)
     cdef t_max_err patcherview_set_jgraphics(t_object *pv, t_object *po)
-    cdef t_object* patcherview_get_patcher(t_object *pv) 
+    cdef t_object* patcherview_get_patcher(t_object *pv)
     cdef t_object* patcherview_get_topview(t_object *pv)
     cdef t_object* textfield_get_owner(t_object *tf)
-    cdef t_max_err textfield_get_textcolor(t_object *tf, t_jrgba *prgba) 
-    cdef t_max_err textfield_set_textcolor(t_object *tf, t_jrgba *prgba) 
-    cdef t_max_err textfield_get_bgcolor(t_object *tf, t_jrgba *prgba) 
-    cdef t_max_err textfield_set_bgcolor(t_object *tf, t_jrgba *prgba) 
+    cdef t_max_err textfield_get_textcolor(t_object *tf, t_jrgba *prgba)
+    cdef t_max_err textfield_set_textcolor(t_object *tf, t_jrgba *prgba)
+    cdef t_max_err textfield_get_bgcolor(t_object *tf, t_jrgba *prgba)
+    cdef t_max_err textfield_set_bgcolor(t_object *tf, t_jrgba *prgba)
     cdef t_max_err textfield_get_textmargins(t_object *tf, double *pleft, double *ptop, double *pright, double *pbottom)
-    cdef t_max_err textfield_set_textmargins(t_object *tf, double left, double top, double right, double bottom) 
+    cdef t_max_err textfield_set_textmargins(t_object *tf, double left, double top, double right, double bottom)
     cdef char textfield_get_editonclick(t_object *tf)
-    cdef t_max_err textfield_set_editonclick(t_object *tf, char c) 
+    cdef t_max_err textfield_set_editonclick(t_object *tf, char c)
     cdef char textfield_get_selectallonedit(t_object *tf)
-    cdef t_max_err textfield_set_selectallonedit(t_object *tf, char c) 
+    cdef t_max_err textfield_set_selectallonedit(t_object *tf, char c)
     cdef char textfield_get_noactivate(t_object *tf)
-    cdef t_max_err textfield_set_noactivate(t_object *tf, char c) 
+    cdef t_max_err textfield_set_noactivate(t_object *tf, char c)
     cdef char textfield_get_readonly(t_object *tf)
-    cdef t_max_err textfield_set_readonly(t_object *tf, char c) 
+    cdef t_max_err textfield_set_readonly(t_object *tf, char c)
     cdef char textfield_get_wordwrap(t_object *tf)
-    cdef t_max_err textfield_set_wordwrap(t_object *tf, char c) 
+    cdef t_max_err textfield_set_wordwrap(t_object *tf, char c)
     cdef char textfield_get_useellipsis(t_object *tf)
-    cdef t_max_err textfield_set_useellipsis(t_object *tf, char c) 
+    cdef t_max_err textfield_set_useellipsis(t_object *tf, char c)
     cdef char textfield_get_autoscroll(t_object *tf)
-    cdef t_max_err textfield_set_autoscroll(t_object *tf, char c) 
+    cdef t_max_err textfield_set_autoscroll(t_object *tf, char c)
     cdef char textfield_get_wantsreturn(t_object *tf)
-    cdef t_max_err textfield_set_wantsreturn(t_object *tf, char c) 
+    cdef t_max_err textfield_set_wantsreturn(t_object *tf, char c)
     cdef char textfield_get_wantstab(t_object *tf)
-    cdef t_max_err textfield_set_wantstab(t_object *tf, char c) 
+    cdef t_max_err textfield_set_wantstab(t_object *tf, char c)
     cdef char textfield_get_underline(t_object *tf)
     cdef t_max_err textfield_set_underline(t_object *tf, char c)
     cdef char textfield_get_justification(t_object *tf)
     cdef t_max_err textfield_set_justification(t_object *tf, char c)
     cdef char textfield_get_autofixwidth(t_object *tf)
-    cdef t_max_err textfield_set_autofixwidth(t_object *tf, char c) 
+    cdef t_max_err textfield_set_autofixwidth(t_object *tf, char c)
     cdef t_max_err textfield_set_emptytext(t_object *tf, t_symbol *txt)
     cdef t_symbol *textfield_get_emptytext(t_object *tf)
 
 
     cdef int TEXTFIELD_DEF_LEFTMARGIN
-    cdef int TEXTFIELD_DEF_TOPMARGIN   
-    cdef int TEXTFIELD_DEF_RIGHTMARGIN  
-    cdef int TEXTFIELD_DEF_BOTTOMMARGIN 
-    cdef int JBOX_DRAWFIRSTIN                 
-    cdef int JBOX_NODRAWBOX                   
-    cdef int JBOX_DRAWINLAST                  
-    cdef int JBOX_TRANSPARENT                 
-    cdef int JBOX_NOGROW                      
-    cdef int JBOX_GROWY                       
-    cdef int JBOX_GROWBOTH                    
-    cdef int JBOX_IGNORELOCKCLICK             
-    cdef int JBOX_HILITE                      
-    cdef int JBOX_BACKGROUND                  
-    cdef int JBOX_NOFLOATINSPECTOR                
-    cdef int JBOX_TEXTFIELD                       
-    cdef int JBOX_FIXWIDTH                        
-    cdef int JBOX_FONTATTR                        
-    cdef int JBOX_TEXTJUSTIFICATIONATTR        
-    cdef int JBOX_BINBUF                          
-    cdef int JBOX_MOUSEDRAGDELTA                  
-    cdef int JBOX_COLOR                           
-    cdef int JBOX_DRAWIOLOCKED                    
-    cdef int JBOX_DRAWBACKGROUND                  
-    cdef int JBOX_NOINSPECTFIRSTIN                
-                                              
-    cdef int JBOX_FOCUS                       
-    cdef int JBOX_BOXVIEW                     
-    cdef int JBOX_LEGACYCOLOR                 
-    cdef int JBOX_COPYLEGACYDEFAULT           
-    cdef int JBOX_NOLEGACYDEFAULT      
+    cdef int TEXTFIELD_DEF_TOPMARGIN
+    cdef int TEXTFIELD_DEF_RIGHTMARGIN
+    cdef int TEXTFIELD_DEF_BOTTOMMARGIN
+    cdef int JBOX_DRAWFIRSTIN
+    cdef int JBOX_NODRAWBOX
+    cdef int JBOX_DRAWINLAST
+    cdef int JBOX_TRANSPARENT
+    cdef int JBOX_NOGROW
+    cdef int JBOX_GROWY
+    cdef int JBOX_GROWBOTH
+    cdef int JBOX_IGNORELOCKCLICK
+    cdef int JBOX_HILITE
+    cdef int JBOX_BACKGROUND
+    cdef int JBOX_NOFLOATINSPECTOR
+    cdef int JBOX_TEXTFIELD
+    cdef int JBOX_FIXWIDTH
+    cdef int JBOX_FONTATTR
+    cdef int JBOX_TEXTJUSTIFICATIONATTR
+    cdef int JBOX_BINBUF
+    cdef int JBOX_MOUSEDRAGDELTA
+    cdef int JBOX_COLOR
+    cdef int JBOX_DRAWIOLOCKED
+    cdef int JBOX_DRAWBACKGROUND
+    cdef int JBOX_NOINSPECTFIRSTIN
+
+    cdef int JBOX_FOCUS
+    cdef int JBOX_BOXVIEW
+    cdef int JBOX_LEGACYCOLOR
+    cdef int JBOX_COPYLEGACYDEFAULT
+    cdef int JBOX_NOLEGACYDEFAULT
 
     ctypedef enum:
         JBOX_FONTFACE_REGULAR = 0
-        JBOX_FONTFACE_BOLD = 1      
-        JBOX_FONTFACE_ITALIC = 2        
-        JBOX_FONTFACE_BOLDITALIC = 3    
+        JBOX_FONTFACE_BOLD = 1
+        JBOX_FONTFACE_ITALIC = 2
+        JBOX_FONTFACE_BOLDITALIC = 3
 
     ctypedef enum HitTestResult:
-        HitNothing = 0      
-        HitBox = 1          
-        HitInlet = 2        
-        HitOutlet = 3       
-        HitGrowBox = 4      
-        HitLine = 5     
-        HitLineLocked = 6   
+        HitNothing = 0
+        HitBox = 1
+        HitInlet = 2
+        HitOutlet = 3
+        HitGrowBox = 4
+        HitLine = 5
+        HitLineLocked = 6
 
     ctypedef enum DecoratorPaintFlags:
         BoxSelected = 1 << 0
         DrawFirstIn = 1 << 1
         NoGrow = 1 << 2
-        Outline = 1 << 3 
+        Outline = 1 << 3
         Locked = 1 << 4
-        InletHighlighted = 1 << 5           
-        OutletHighlighted = 1 << 6          
+        InletHighlighted = 1 << 5
+        OutletHighlighted = 1 << 6
 
-    cdef void jbox_initclass(t_class *c, long flags)  
+    cdef void jbox_initclass(t_class *c, long flags)
     cdef t_max_err jbox_new(t_jbox *b, long flags, long argc, t_atom *argv)
     cdef void jbox_free(t_jbox *b)
     cdef void jbox_ready(t_jbox *b)
     cdef void jbox_redraw(t_jbox *b)
-    cdef void jbox_redrawcontents(t_jbox *b) 
+    cdef void jbox_redrawcontents(t_jbox *b)
     cdef void *jbox_getoutlet(t_jbox *x, long index)
     cdef void *jbox_getinlet(t_jbox *x, long index)
     cdef void jbox_updatetextfield(t_jbox *b)
@@ -5203,14 +5203,14 @@ cdef extern from "jpatcher_api.h":
     cdef void jbox_processlegacydefaults(t_jbox *b, t_dictionary *d, long flags)
     cdef t_max_err jbox_notify(t_jbox *b, t_symbol *s, t_symbol *msg, void *sender, void *data)
     cdef t_max_err jbox_set_to_defaultsize(t_jbox *b, t_symbol *s, short argc, t_atom *argv)
-    cdef void jbox_grabfocus(t_jbox *b) 
+    cdef void jbox_grabfocus(t_jbox *b)
     cdef void jbox_redrawpeers(t_jbox *b)
     cdef long jbox_getinletindex(t_jbox *b, void *inlet)
     cdef long jbox_getoutletindex(t_jbox *b, void *outlet)
     cdef void jbox_show_caption(t_jbox *b)
     cdef void jbox_hide_caption(t_jbox *b)
 
-    cdef int DICT_JRGBA  
+    cdef int DICT_JRGBA
 
     cdef t_max_err dictionary_appendjrgba(t_dictionary *d, t_symbol *key, t_jrgba *jc)
     cdef t_max_err dictionary_getdefjrgba(t_dictionary *d, t_symbol *key, t_jrgba *jc, t_jrgba *def_)
@@ -5227,28 +5227,28 @@ cdef extern from "jpatcher_api.h":
     #define newobject_fromdictionary_delete(p,d) newobject_fromdictionary(p,d), freeobject((t_object *)d)
 
     ctypedef enum t_modifiers:
-        eCommandKey = 1     
-        eShiftKey = 2           
-        eControlKey = 4     
-        eAltKey = 8         
-        eLeftButton = 16        
-        eRightButton = 32       
-        eMiddleButton = 64      
-        ePopupMenu = 128        
-        eCapsLock = 256     
-        eAutoRepeat = 512       
+        eCommandKey = 1
+        eShiftKey = 2
+        eControlKey = 4
+        eAltKey = 8
+        eLeftButton = 16
+        eRightButton = 32
+        eMiddleButton = 64
+        ePopupMenu = 128
+        eCapsLock = 256
+        eAutoRepeat = 512
 
-    cdef t_modifiers jkeyboard_getcurrentmodifiers() 
+    cdef t_modifiers jkeyboard_getcurrentmodifiers()
     cdef t_modifiers jkeyboard_getcurrentmodifiers_realtime()
 
     ctypedef enum t_keycode:
-        
-        
+
+
         JKEY_NONE               = -1
         JKEY_SPACEBAR           = -2
         JKEY_ESC                = -3
         JKEY_RETURN             = -4
-        JKEY_ENTER              = -4  
+        JKEY_ENTER              = -4
         JKEY_TAB                = -5
         JKEY_DELETE             = -6
         JKEY_BACKSPACE          = -7
@@ -5308,25 +5308,25 @@ cdef extern from "jpatcher_api.h":
     cdef void *jmouse_getobject()
 
     ctypedef enum t_jmouse_cursortype:
-        JMOUSE_CURSOR_NONE                      
-        JMOUSE_CURSOR_ARROW                         
-        JMOUSE_CURSOR_WAIT                      
-        JMOUSE_CURSOR_IBEAM                         
-        JMOUSE_CURSOR_CROSSHAIR                     
-        JMOUSE_CURSOR_COPYING                       
-        JMOUSE_CURSOR_POINTINGHAND                  
-        JMOUSE_CURSOR_DRAGGINGHAND                  
-        JMOUSE_CURSOR_RESIZE_LEFTRIGHT              
-        JMOUSE_CURSOR_RESIZE_UPDOWN             
-        JMOUSE_CURSOR_RESIZE_FOURWAY                
-        JMOUSE_CURSOR_RESIZE_TOPEDGE                
-        JMOUSE_CURSOR_RESIZE_BOTTOMEDGE         
-        JMOUSE_CURSOR_RESIZE_LEFTEDGE               
-        JMOUSE_CURSOR_RESIZE_RIGHTEDGE              
-        JMOUSE_CURSOR_RESIZE_TOPLEFTCORNER          
-        JMOUSE_CURSOR_RESIZE_TOPRIGHTCORNER     
-        JMOUSE_CURSOR_RESIZE_BOTTOMLEFTCORNER       
-        JMOUSE_CURSOR_RESIZE_BOTTOMRIGHTCORNER      
+        JMOUSE_CURSOR_NONE
+        JMOUSE_CURSOR_ARROW
+        JMOUSE_CURSOR_WAIT
+        JMOUSE_CURSOR_IBEAM
+        JMOUSE_CURSOR_CROSSHAIR
+        JMOUSE_CURSOR_COPYING
+        JMOUSE_CURSOR_POINTINGHAND
+        JMOUSE_CURSOR_DRAGGINGHAND
+        JMOUSE_CURSOR_RESIZE_LEFTRIGHT
+        JMOUSE_CURSOR_RESIZE_UPDOWN
+        JMOUSE_CURSOR_RESIZE_FOURWAY
+        JMOUSE_CURSOR_RESIZE_TOPEDGE
+        JMOUSE_CURSOR_RESIZE_BOTTOMEDGE
+        JMOUSE_CURSOR_RESIZE_LEFTEDGE
+        JMOUSE_CURSOR_RESIZE_RIGHTEDGE
+        JMOUSE_CURSOR_RESIZE_TOPLEFTCORNER
+        JMOUSE_CURSOR_RESIZE_TOPRIGHTCORNER
+        JMOUSE_CURSOR_RESIZE_BOTTOMLEFTCORNER
+        JMOUSE_CURSOR_RESIZE_BOTTOMRIGHTCORNER
 
     cdef void jmouse_setcursor(t_object *patcherview, t_object *box, t_jmouse_cursortype type)
     cdef t_object* jwind_getactive()
@@ -5334,7 +5334,7 @@ cdef extern from "jpatcher_api.h":
     cdef t_object* jwind_getat(long index)
     cdef long jmonitor_getnumdisplays()
     cdef void jmonitor_getdisplayrect(long workarea, long displayindex, t_rect *rect)
-    cdef void jmonitor_getdisplayrect_foralldisplays(long workarea, t_rect *rect)           
+    cdef void jmonitor_getdisplayrect_foralldisplays(long workarea, t_rect *rect)
     cdef void jmonitor_getdisplayrect_forpoint(long workarea, t_pt pt, t_rect *rect)
     cdef void swatches_init()
     cdef void swatches_shutdown()
@@ -5370,17 +5370,17 @@ cdef extern from "jpatcher_utils.h":
 
 
 cdef extern from "jgraphics.h":
-    ctypedef struct t_jgraphics 
-    ctypedef struct t_jpath     
-    ctypedef struct t_jpattern      
-    ctypedef struct t_jfont     
-    ctypedef struct t_jtextlayout   
-    ctypedef struct t_jtransform    
-    ctypedef struct t_jsurface  
-    ctypedef struct t_jdesktopui    
-    ctypedef struct t_jpopupmenu    
-    ctypedef struct t_jsvg      
-    ctypedef struct t_jsvg_remap    
+    ctypedef struct t_jgraphics
+    ctypedef struct t_jpath
+    ctypedef struct t_jpattern
+    ctypedef struct t_jfont
+    ctypedef struct t_jtextlayout
+    ctypedef struct t_jtransform
+    ctypedef struct t_jsurface
+    ctypedef struct t_jdesktopui
+    ctypedef struct t_jpopupmenu
+    ctypedef struct t_jsvg
+    ctypedef struct t_jsvg_remap
 
     cdef int JGRAPHICS_RECT_BOTTOM(t_rect *rect)
     cdef int JGRAPHICS_RECT_RIGHT(t_rect *rect)
@@ -5419,9 +5419,9 @@ cdef extern from "jgraphics.h":
     cdef int jgraphics_round(double d)
 
     ctypedef enum t_jgraphics_format:
-        JGRAPHICS_FORMAT_ARGB32   
-        JGRAPHICS_FORMAT_RGB24         
-        JGRAPHICS_FORMAT_A8             
+        JGRAPHICS_FORMAT_ARGB32
+        JGRAPHICS_FORMAT_RGB24
+        JGRAPHICS_FORMAT_A8
 
     ctypedef enum t_jgraphics_fileformat:
         JGRAPHICS_FILEFORMAT_PNG
@@ -5435,32 +5435,32 @@ cdef extern from "jgraphics.h":
     cdef t_jsurface* jgraphics_image_surface_create_from_filedata(const void *data, unsigned long datalen)
     cdef t_jsurface* jgraphics_image_surface_create_from_resource(const void* moduleRef, const char *resname)
     cdef t_max_err jgraphics_get_resource_data(const void *moduleRef, const char *resname, long extcount, t_atom *exts, void **data, unsigned long *datasize)
-    cdef t_jsurface* jgraphics_surface_reference(t_jsurface *s)      
-    cdef void        jgraphics_surface_destroy(t_jsurface *s)        
-    cdef t_max_err   jgraphics_image_surface_writepng(t_jsurface *surface, const char *filename, short path, long dpi) 
+    cdef t_jsurface* jgraphics_surface_reference(t_jsurface *s)
+    cdef void        jgraphics_surface_destroy(t_jsurface *s)
+    cdef t_max_err   jgraphics_image_surface_writepng(t_jsurface *surface, const char *filename, short path, long dpi)
     cdef t_max_err   jgraphics_image_surface_writejpeg(t_jsurface *surface, const char *filename, short path)
-    cdef void        jgraphics_surface_set_device_offset(t_jsurface *s, double x_offset, double y_offset) 
-    cdef void        jgraphics_surface_get_device_offset(t_jsurface *s, double *x_offset, double *y_offset) 
+    cdef void        jgraphics_surface_set_device_offset(t_jsurface *s, double x_offset, double y_offset)
+    cdef void        jgraphics_surface_get_device_offset(t_jsurface *s, double *x_offset, double *y_offset)
     cdef int         jgraphics_image_surface_get_width(t_jsurface *s)
-    cdef int         jgraphics_image_surface_get_height(t_jsurface *s) 
-    cdef void        jgraphics_image_surface_set_pixel(t_jsurface *s, int x, int y, t_jrgba color) 
+    cdef int         jgraphics_image_surface_get_height(t_jsurface *s)
+    cdef void        jgraphics_image_surface_set_pixel(t_jsurface *s, int x, int y, t_jrgba color)
     cdef void        jgraphics_image_surface_get_pixel(t_jsurface *s, int x, int y, t_jrgba *color)
-    cdef void        jgraphics_image_surface_scroll(t_jsurface *s, int x, int y, int width, int height, int dx, int dy, t_jpath **path)      
+    cdef void        jgraphics_image_surface_scroll(t_jsurface *s, int x, int y, int width, int height, int dx, int dy, t_jpath **path)
     cdef const unsigned char* jgraphics_image_surface_lockpixels_readonly(t_jsurface *s, int x, int y, int width, int height, int *linestride, int *pixelstride)
-    cdef void                 jgraphics_image_surface_unlockpixels_readonly(t_jsurface *s, const unsigned char *data) 
+    cdef void                 jgraphics_image_surface_unlockpixels_readonly(t_jsurface *s, const unsigned char *data)
     cdef unsigned char*       jgraphics_image_surface_lockpixels(t_jsurface *s, int x, int y, int width, int height, int *linestride, int *pixelstride)
-    cdef void                 jgraphics_image_surface_unlockpixels(t_jsurface *s, unsigned char *data) 
+    cdef void                 jgraphics_image_surface_unlockpixels(t_jsurface *s, unsigned char *data)
     cdef void        jgraphics_image_surface_draw(t_jgraphics *g, t_jsurface *s, t_rect srcRect, t_rect destRect)
-    cdef void        jgraphics_image_surface_draw_fast(t_jgraphics *g, t_jsurface *s)        
+    cdef void        jgraphics_image_surface_draw_fast(t_jgraphics *g, t_jsurface *s)
     cdef void jgraphics_write_image_surface_to_filedata(t_jsurface *surf, long fmt, void **data, long *size)
     cdef t_jsurface* jgraphics_image_surface_create_from_base64(const char *base64, unsigned long datalen)
     cdef void jgraphics_write_image_surface_to_base64(t_jsurface *surf, long fmt, char **base64, long *size)
     cdef void jgraphics_image_surface_clear(t_jsurface *s, int x, int y, int width, int height)
-    cdef t_jsvg*     jsvg_create_from_file(const char *filename, short path) 
+    cdef t_jsvg*     jsvg_create_from_file(const char *filename, short path)
     cdef t_jsvg*     jsvg_create_from_resource(const void *moduleRef, const char *resname)
-    cdef t_jsvg*     jsvg_create_from_xmlstring(const char *svgXML) 
-    cdef void        jsvg_get_size(t_jsvg *svg, double *width, double *height) 
-    cdef void        jsvg_destroy(t_jsvg *svg) 
+    cdef t_jsvg*     jsvg_create_from_xmlstring(const char *svgXML)
+    cdef void        jsvg_get_size(t_jsvg *svg, double *width, double *height)
+    cdef void        jsvg_destroy(t_jsvg *svg)
     cdef void        jsvg_render(t_jsvg *svg, t_jgraphics *g)
     cdef void jsvg_load_cached(t_symbol *name, t_jsvg **psvg)
     cdef t_jsvg_remap *jsvg_remap_create(t_jsvg *svg)
@@ -5476,18 +5476,18 @@ cdef extern from "jgraphics.h":
 
     cdef void        jgraphics_new_path(t_jgraphics *g)
     cdef t_jpath*    jgraphics_copy_path(t_jgraphics *g)
-    cdef t_jpath*    jgraphics_path_createstroked(t_jpath *p, double thickness, t_jgraphics_line_join join, t_jgraphics_line_cap cap) 
-    cdef void        jgraphics_path_destroy(t_jpath *path) 
+    cdef t_jpath*    jgraphics_path_createstroked(t_jpath *p, double thickness, t_jgraphics_line_join join, t_jgraphics_line_cap cap)
+    cdef void        jgraphics_path_destroy(t_jpath *path)
     cdef void        jgraphics_append_path(t_jgraphics *g, t_jpath *path)
-    cdef void        jgraphics_close_path(t_jgraphics *g)     
+    cdef void        jgraphics_close_path(t_jgraphics *g)
     cdef void        jgraphics_path_roundcorners(t_jgraphics *g, double cornerRadius)
-    cdef long        jgraphics_path_contains(t_jpath *path, double x, double y) 
-    cdef long        jgraphics_path_intersectsline(t_jpath *path, double x1, double y1, double x2, double y2) 
-    cdef double      jgraphics_path_getlength(t_jpath *path) 
-    cdef void        jgraphics_path_getpointalongpath(t_jpath *path, double distancefromstart, double *x, double *y) 
+    cdef long        jgraphics_path_contains(t_jpath *path, double x, double y)
+    cdef long        jgraphics_path_intersectsline(t_jpath *path, double x1, double y1, double x2, double y2)
+    cdef double      jgraphics_path_getlength(t_jpath *path)
+    cdef void        jgraphics_path_getpointalongpath(t_jpath *path, double distancefromstart, double *x, double *y)
     cdef double      jgraphics_path_getnearestpoint(t_jpath *path, double x, double y, double *path_x, double *path_y)
     cdef long        jgraphics_path_getpathelems(t_jpath *path, t_jgraphics_path_elem **elems)
-    cdef void        jgraphics_get_current_point(t_jgraphics *g, double *x, double *y) 
+    cdef void        jgraphics_get_current_point(t_jgraphics *g, double *x, double *y)
     cdef void        jgraphics_arc(t_jgraphics *g, double xc, double yc, double radius, double angle1, double angle2)
 
     cdef void jgraphics_piesegment(t_jgraphics *g, double xc, double yc, double radius, double angle1, double angle2, double innercircleproportionalsize)
@@ -5495,10 +5495,10 @@ cdef extern from "jgraphics.h":
     cdef void jgraphics_arc_negative(t_jgraphics *g, double xc, double yc, double radius, double angle1, double angle2)
     cdef void jgraphics_curve_to(t_jgraphics *g,double x1, double y1, double x2, double y2, double x3, double y3)
     cdef void jgraphics_rel_curve_to(t_jgraphics *g, double x1, double y1, double x2, double y2, double x3, double y3)
-    cdef void jgraphics_line_to(t_jgraphics *g, double x, double y)     
+    cdef void jgraphics_line_to(t_jgraphics *g, double x, double y)
     cdef void jgraphics_rel_line_to(t_jgraphics *g, double x, double y)
-    cdef void jgraphics_move_to(t_jgraphics *g, double x, double y)     
-    cdef void jgraphics_rel_move_to(t_jgraphics *g, double x, double y) 
+    cdef void jgraphics_move_to(t_jgraphics *g, double x, double y)
+    cdef void jgraphics_rel_move_to(t_jgraphics *g, double x, double y)
     cdef void jgraphics_rectangle(t_jgraphics *g, double x, double y, double width, double height)
     cdef void jgraphics_oval(t_jgraphics *g,    double x, double y, double width, double height)
     cdef void jgraphics_rectangle_rounded(t_jgraphics *g, double x, double y, double width, double height, double ovalwidth, double ovalheight)
@@ -5508,30 +5508,30 @@ cdef extern from "jgraphics.h":
     cdef void jgraphics_diagonal_line_fill(t_jgraphics *g, double pixels, double x, double y, double width, double height)
 
     ctypedef enum t_jgraphics_font_slant:
-        JGRAPHICS_FONT_SLANT_NORMAL,        
-        JGRAPHICS_FONT_SLANT_ITALIC         
+        JGRAPHICS_FONT_SLANT_NORMAL,
+        JGRAPHICS_FONT_SLANT_ITALIC
 
     ctypedef enum t_jgraphics_font_weight:
         JGRAPHICS_FONT_WEIGHT_NORMAL
         JGRAPHICS_FONT_WEIGHT_BOLD
 
     cdef void jgraphics_select_font_face(t_jgraphics *g, const char *family, t_jgraphics_font_slant slant, t_jgraphics_font_weight weight)
-    cdef void jgraphics_select_jfont(t_jgraphics *g, t_jfont *jfont) 
+    cdef void jgraphics_select_jfont(t_jgraphics *g, t_jfont *jfont)
     cdef void jgraphics_set_font_size(t_jgraphics *g, double size)
     cdef void jgraphics_set_underline(t_jgraphics *g, char underline)
-    cdef void jgraphics_show_text(t_jgraphics *g, const char *utf8) 
+    cdef void jgraphics_show_text(t_jgraphics *g, const char *utf8)
     cdef void jgraphics_text_path(t_jgraphics *g, const char *utf8)
 
     ctypedef struct t_jgraphics_font_extents
 
     cdef void jgraphics_font_extents(t_jgraphics *g, t_jgraphics_font_extents *extents)
     cdef void jgraphics_text_measure(t_jgraphics *g, const char *utf8, double *width, double *height)
-    cdef void jgraphics_text_measuretext_wrapped(t_jgraphics *g, const char *utf8, double wrapwidth, long includewhitespace, double *width, double *height, long *numlines) 
+    cdef void jgraphics_text_measuretext_wrapped(t_jgraphics *g, const char *utf8, double wrapwidth, long includewhitespace, double *width, double *height, long *numlines)
     cdef double jgraphics_getfontscale()
     cdef t_jfont* jfont_create_from_maxfont(short number, short size)
-    cdef t_jfont* jfont_create(const char *family, t_jgraphics_font_slant slant, t_jgraphics_font_weight weight, double size) 
-    cdef t_jfont* jfont_reference(t_jfont *font) 
-    cdef void jfont_destroy(t_jfont *font) 
+    cdef t_jfont* jfont_create(const char *family, t_jgraphics_font_slant slant, t_jgraphics_font_weight weight, double size)
+    cdef t_jfont* jfont_reference(t_jfont *font)
+    cdef void jfont_destroy(t_jfont *font)
     cdef long jfont_isequalto(t_jfont *font, t_jfont *other)
     cdef void jfont_set_family(t_jfont *font, t_symbol *family)
     cdef t_symbol* jfont_get_family(t_jfont *font)
@@ -5543,46 +5543,46 @@ cdef extern from "jgraphics.h":
     cdef double jfont_get_font_size(t_jfont *font)
     cdef void jfont_set_underline(t_jfont *font, char ul)
     cdef char jfont_get_underline(t_jfont *font)
-    cdef double jfont_get_heighttocharheightratio(t_jfont *font) 
+    cdef double jfont_get_heighttocharheightratio(t_jfont *font)
     cdef void jfont_extents(t_jfont *font, t_jgraphics_font_extents *extents)
     cdef void jfont_text_measure(t_jfont *font, const char *utf8, double *width, double *height)
     cdef void jfont_text_measuretext_wrapped(t_jfont *font, const char *utf8, double wrapwidth, long includewhitespace, double *width, double *height, long *numlines)
-    cdef void jfont_get_em_dimensions(t_jfont *font, double *width, double *height) 
+    cdef void jfont_get_em_dimensions(t_jfont *font, double *width, double *height)
     cdef t_max_err  jfont_getfontlist(long *count, t_symbol ***list)
-    cdef long jfont_isfixedwidth(const char *name) 
+    cdef long jfont_isfixedwidth(const char *name)
     cdef const char *jfont_get_default_fixedwidth_name()
     cdef void jfont_set_juce_default_fontname(char *s)
     cdef void jfont_copy_juce_default_fontname(char *s, long maxlen)
     cdef void jfont_copy_juce_platform_fontname(char *s, long maxlen)
     cdef void jfont_set_juce_fallback_fontname(char *s)
     cdef void jfont_copy_juce_fallback_fontname(char *s, long maxlen)
-    cdef long jgraphics_system_canantialiastexttotransparentbg() 
+    cdef long jgraphics_system_canantialiastexttotransparentbg()
     cdef long jgraphics_fontname_hasglyph(char *name, long code)
-    cdef t_jtextlayout* jtextlayout_create() 
-    cdef t_jtextlayout* jtextlayout_withbgcolor(t_jgraphics *g, t_jrgba *bgcolor) 
+    cdef t_jtextlayout* jtextlayout_create()
+    cdef t_jtextlayout* jtextlayout_withbgcolor(t_jgraphics *g, t_jrgba *bgcolor)
     cdef void jtextlayout_destroy(t_jtextlayout* textlayout)
 
     ctypedef enum t_jgraphics_text_justification:
-        JGRAPHICS_TEXT_JUSTIFICATION_LEFT = 1           
-        JGRAPHICS_TEXT_JUSTIFICATION_RIGHT = 2          
-        JGRAPHICS_TEXT_JUSTIFICATION_HCENTERED = 4      
-        JGRAPHICS_TEXT_JUSTIFICATION_TOP = 8            
-        JGRAPHICS_TEXT_JUSTIFICATION_BOTTOM = 16        
-        JGRAPHICS_TEXT_JUSTIFICATION_VCENTERED = 32 
-        JGRAPHICS_TEXT_JUSTIFICATION_HJUSTIFIED = 64    
-        JGRAPHICS_TEXT_JUSTIFICATION_CENTERED = JGRAPHICS_TEXT_JUSTIFICATION_HCENTERED + JGRAPHICS_TEXT_JUSTIFICATION_VCENTERED 
+        JGRAPHICS_TEXT_JUSTIFICATION_LEFT = 1
+        JGRAPHICS_TEXT_JUSTIFICATION_RIGHT = 2
+        JGRAPHICS_TEXT_JUSTIFICATION_HCENTERED = 4
+        JGRAPHICS_TEXT_JUSTIFICATION_TOP = 8
+        JGRAPHICS_TEXT_JUSTIFICATION_BOTTOM = 16
+        JGRAPHICS_TEXT_JUSTIFICATION_VCENTERED = 32
+        JGRAPHICS_TEXT_JUSTIFICATION_HJUSTIFIED = 64
+        JGRAPHICS_TEXT_JUSTIFICATION_CENTERED = JGRAPHICS_TEXT_JUSTIFICATION_HCENTERED + JGRAPHICS_TEXT_JUSTIFICATION_VCENTERED
 
     ctypedef enum t_jgraphics_textlayout_flags:
-        JGRAPHICS_TEXTLAYOUT_NOWRAP = 1     
-        JGRAPHICS_TEXTLAYOUT_USEELLIPSIS = 3    
+        JGRAPHICS_TEXTLAYOUT_NOWRAP = 1
+        JGRAPHICS_TEXTLAYOUT_USEELLIPSIS = 3
 
-    cdef void jtextlayout_set(t_jtextlayout *textlayout, const char *utf8,  t_jfont *jfont, double x, double y, double width, double height, t_jgraphics_text_justification justification, t_jgraphics_textlayout_flags flags) 
+    cdef void jtextlayout_set(t_jtextlayout *textlayout, const char *utf8,  t_jfont *jfont, double x, double y, double width, double height, t_jgraphics_text_justification justification, t_jgraphics_textlayout_flags flags)
     cdef void jtextlayout_settext(t_jtextlayout *textlayout, const char *utf8, t_jfont *jfont)
-    cdef void jtextlayout_settextcolor(t_jtextlayout *textlayout, t_jrgba *textcolor) 
+    cdef void jtextlayout_settextcolor(t_jtextlayout *textlayout, t_jrgba *textcolor)
     cdef void jtextlayout_measuretext(t_jtextlayout *textlayout, long startindex, long numchars, long includewhitespace, double *width, double *height, long *numlines)
-    cdef void jtextlayout_draw(t_jtextlayout *tl, t_jgraphics *g) 
-    cdef long jtextlayout_getnumchars(t_jtextlayout *tl) 
-    cdef t_max_err jtextlayout_getcharbox(t_jtextlayout *tl, long index, t_rect *rect) 
+    cdef void jtextlayout_draw(t_jtextlayout *tl, t_jgraphics *g)
+    cdef long jtextlayout_getnumchars(t_jtextlayout *tl)
+    cdef t_max_err jtextlayout_getcharbox(t_jtextlayout *tl, long index, t_rect *rect)
     cdef t_max_err jtextlayout_getchar(t_jtextlayout *tl, long index, long *pch)
     cdef t_jpath* jtextlayout_createpath(t_jtextlayout *tl)
 
@@ -5590,18 +5590,18 @@ cdef extern from "jgraphics.h":
 
 
     cdef void jgraphics_matrix_init(t_jmatrix *x, double xx, double yx, double xy, double yy, double x0, double y0)
-    cdef void jgraphics_matrix_init_identity(t_jmatrix *x) 
-    cdef void jgraphics_matrix_init_translate(t_jmatrix *x, double tx, double ty) 
-    cdef void jgraphics_matrix_init_scale(t_jmatrix *x, double sx, double sy) 
-    cdef void jgraphics_matrix_init_rotate(t_jmatrix *x, double radians) 
-    cdef void jgraphics_matrix_translate(t_jmatrix *x, double tx, double ty) 
-    cdef void jgraphics_matrix_scale(t_jmatrix *x, double sx, double sy) 
-    cdef void jgraphics_matrix_rotate(t_jmatrix *x, double radians) 
-    cdef void jgraphics_matrix_invert(t_jmatrix *x) 
-    cdef void jgraphics_matrix_multiply(t_jmatrix *result, const t_jmatrix *a, const t_jmatrix *b) 
-    cdef void jgraphics_matrix_transform_point(const t_jmatrix *matrix, double *x, double *y)  
-    cdef t_jpattern*    jgraphics_pattern_create_rgba(double red, double green, double blue, double alpha)  
-    cdef t_jpattern*    jgraphics_pattern_create_for_surface(t_jsurface *surface) 
+    cdef void jgraphics_matrix_init_identity(t_jmatrix *x)
+    cdef void jgraphics_matrix_init_translate(t_jmatrix *x, double tx, double ty)
+    cdef void jgraphics_matrix_init_scale(t_jmatrix *x, double sx, double sy)
+    cdef void jgraphics_matrix_init_rotate(t_jmatrix *x, double radians)
+    cdef void jgraphics_matrix_translate(t_jmatrix *x, double tx, double ty)
+    cdef void jgraphics_matrix_scale(t_jmatrix *x, double sx, double sy)
+    cdef void jgraphics_matrix_rotate(t_jmatrix *x, double radians)
+    cdef void jgraphics_matrix_invert(t_jmatrix *x)
+    cdef void jgraphics_matrix_multiply(t_jmatrix *result, const t_jmatrix *a, const t_jmatrix *b)
+    cdef void jgraphics_matrix_transform_point(const t_jmatrix *matrix, double *x, double *y)
+    cdef t_jpattern*    jgraphics_pattern_create_rgba(double red, double green, double blue, double alpha)
+    cdef t_jpattern*    jgraphics_pattern_create_for_surface(t_jsurface *surface)
     cdef t_jpattern* jgraphics_pattern_create_linear(double x0, double y0, double x1, double y1)
     cdef t_jpattern* jgraphics_pattern_create_radial(double cx0, double cy0, double radius0, double cx1, double cy1, double radius1)
     cdef void jgraphics_pattern_add_color_stop_rgba(t_jpattern* pattern, double offset, double red, double green, double blue, double alpha)
@@ -5615,20 +5615,20 @@ cdef extern from "jgraphics.h":
         JGRAPHICS_PATTERN_TYPE_LINEAR
         JGRAPHICS_PATTERN_TYPE_RADIAL
 
-    t_jgraphics_pattern_type jgraphics_pattern_get_type(t_jpattern *pattern) 
+    t_jgraphics_pattern_type jgraphics_pattern_get_type(t_jpattern *pattern)
 
     ctypedef enum t_jgraphics_extend:
         JGRAPHICS_EXTEND_NONE
         JGRAPHICS_EXTEND_REPEAT
-        JGRAPHICS_EXTEND_REFLECT       
-        JGRAPHICS_EXTEND_PAD            
+        JGRAPHICS_EXTEND_REFLECT
+        JGRAPHICS_EXTEND_PAD
 
     ##define JGRAPHICS_EXTEND_GRADIENT_DEFAULT JGRAPHICS_EXTEND_PAD
     ##define JGRAPHICS_EXTEND_SURFACE_DEFAULT JGRAPHICS_EXTEND_NONE
 
-    cdef void jgraphics_pattern_set_extend(t_jpattern *pattern, t_jgraphics_extend extend) 
-    cdef t_jgraphics_extend jgraphics_pattern_get_extend(t_jpattern *pattern) 
-    cdef void jgraphics_pattern_set_matrix(t_jpattern *pattern, const t_jmatrix *matrix) 
+    cdef void jgraphics_pattern_set_extend(t_jpattern *pattern, t_jgraphics_extend extend)
+    cdef t_jgraphics_extend jgraphics_pattern_get_extend(t_jpattern *pattern)
+    cdef void jgraphics_pattern_set_matrix(t_jpattern *pattern, const t_jmatrix *matrix)
     cdef void jgraphics_pattern_get_matrix(t_jpattern *pattern, t_jmatrix *matrix)
     cdef void jgraphics_pattern_translate(t_jpattern *pattern, double tx, double ty)
     cdef void jgraphics_pattern_scale(t_jpattern *pattern, double sx, double sy)
@@ -5641,23 +5641,23 @@ cdef extern from "jgraphics.h":
     cdef void jgraphics_rotate(t_jgraphics *g, double angle)
     cdef void jgraphics_transform(t_jgraphics *g, const t_jmatrix *matrix)
     cdef void jgraphics_set_matrix(t_jgraphics *g, const t_jmatrix *matrix)
-    cdef void jgraphics_get_matrix(t_jgraphics *g, t_jmatrix *matrix) 
+    cdef void jgraphics_get_matrix(t_jgraphics *g, t_jmatrix *matrix)
     cdef void jgraphics_identity_matrix(t_jgraphics *g)
     cdef void jgraphics_user_to_device(t_jgraphics *g, double *x, double *y)
     cdef void jgraphics_device_to_user(t_jgraphics *g, double *x, double *y)
-    cdef void jgraphics_save(t_jgraphics* g)                
+    cdef void jgraphics_save(t_jgraphics* g)
     cdef void jgraphics_restore(t_jgraphics *g)
-    cdef t_jsurface* jgraphics_get_target(t_jgraphics *g) 
+    cdef t_jsurface* jgraphics_get_target(t_jgraphics *g)
     cdef void jgraphics_push_group(t_jgraphics *g)
-    cdef t_jpattern* jgraphics_pop_group(t_jgraphics *g) 
-    cdef void jgraphics_pop_group_to_source(t_jgraphics *g) 
-    cdef t_jsurface* jgraphics_get_group_target(t_jgraphics *g) 
-    cdef t_jsurface* jgraphics_pop_group_surface(t_jgraphics *g) 
+    cdef t_jpattern* jgraphics_pop_group(t_jgraphics *g)
+    cdef void jgraphics_pop_group_to_source(t_jgraphics *g)
+    cdef t_jsurface* jgraphics_get_group_target(t_jgraphics *g)
+    cdef t_jsurface* jgraphics_pop_group_surface(t_jgraphics *g)
     cdef void jgraphics_set_source_rgba(t_jgraphics *g,double red, double green, double blue, double alpha)
-    cdef void jgraphics_set_source_jrgba(t_jgraphics *g, t_jrgba *rgba) 
-    cdef void jgraphics_set_source_rgb(t_jgraphics *g, double red, double green, double blue) 
+    cdef void jgraphics_set_source_jrgba(t_jgraphics *g, t_jrgba *rgba)
+    cdef void jgraphics_set_source_rgb(t_jgraphics *g, double red, double green, double blue)
     cdef void jgraphics_set_source(t_jgraphics *g, t_jpattern *source)
-    cdef void jgraphics_set_source_surface(t_jgraphics *g, t_jsurface *surface, double x, double y) 
+    cdef void jgraphics_set_source_surface(t_jgraphics *g, t_jsurface *surface, double x, double y)
 
 
     ctypedef enum t_jgraphics_pattern_shared:
@@ -5666,7 +5666,7 @@ cdef extern from "jgraphics.h":
 
 
 
-    cdef void jgraphics_set_source_shared(t_jgraphics *g, t_jgraphics_pattern_shared patindex) 
+    cdef void jgraphics_set_source_shared(t_jgraphics *g, t_jgraphics_pattern_shared patindex)
     cdef void jgraphics_scale_source_rgba(t_jgraphics *g, double redscale, double greenscale, double bluescale, double alphascale)
     cdef void jgraphics_translate_source_rgba(t_jgraphics *g, double redoffset, double greenoffset, double blueoffset, double alphaoffset)
     cdef void jgraphics_set_dash(t_jgraphics *g, double *dashes, int numdashes, double offset)
@@ -5685,21 +5685,21 @@ cdef extern from "jgraphics.h":
     cdef void jgraphics_set_line_width(t_jgraphics *g, double width)
     cdef double jgraphics_get_line_width(t_jgraphics *g)
     cdef void jgraphics_fill(t_jgraphics *g)
-    cdef void jgraphics_fill_preserve(t_jgraphics *g) 
+    cdef void jgraphics_fill_preserve(t_jgraphics *g)
     cdef void jgraphics_fill_with_alpha(t_jgraphics *g, double alpha)
     cdef void jgraphics_fill_preserve_with_alpha(t_jgraphics *g, double alpha)
-    cdef int jgraphics_in_fill(t_jgraphics *g, double x, double y)      
-    cdef int    jgraphics_path_intersects_line(t_jgraphics *g, double x1, double y1, double x2, double y2)      
+    cdef int jgraphics_in_fill(t_jgraphics *g, double x, double y)
+    cdef int    jgraphics_path_intersects_line(t_jgraphics *g, double x1, double y1, double x2, double y2)
     cdef int jgraphics_ptinrect(t_pt pt, t_rect rect)
     cdef int jgraphics_lines_intersect(double l1x1, double l1y1, double l1x2, double l1y2, double l2x1, double l2y1, double l2x2, double l2y2, double *ix, double *iy)
     cdef int jgraphics_line_intersects_rect(double linex1, double liney1, double linex2, double liney2, t_rect r, double *ix, double *iy)
     cdef int jgraphics_ptaboveline(t_pt pt, double lx1, double ly1, double lx2, double ly2)
     cdef int jgraphics_points_on_same_side_of_line(t_pt a, t_pt b, double lx1, double ly1, double lx2, double ly2)
-    cdef int jgraphics_ptinroundedrect(t_pt pt, t_rect rect, double ovalwidth, double ovalheight) 
+    cdef int jgraphics_ptinroundedrect(t_pt pt, t_rect rect, double ovalwidth, double ovalheight)
 
 
     cdef void jgraphics_fill_extents(t_jgraphics *g, double *x1, double *y1, double *x2, double *y2)
-    cdef void jgraphics_paint(t_jgraphics *g)       
+    cdef void jgraphics_paint(t_jgraphics *g)
     cdef void jgraphics_paint_with_alpha(t_jgraphics *g, double alpha)
     cdef void jgraphics_stroke(t_jgraphics *g)
     cdef void jgraphics_stroke_preserve(t_jgraphics *g)
@@ -5710,19 +5710,19 @@ cdef extern from "jgraphics.h":
     cdef void jgraphics_line_draw_fast(t_jgraphics *g, double x1, double y1, double x2, double y2, double linewidth)
 
     ctypedef enum t_jdesktopui_flags:
-        JDESKTOPUI_FLAGS_FIRSTFLAG = 1              
+        JDESKTOPUI_FLAGS_FIRSTFLAG = 1
 
-    cdef t_jdesktopui* jdesktopui_new(t_object *owner, t_jdesktopui_flags flags, t_rect rect) 
-    cdef void jdesktopui_destroy(t_jdesktopui *x) 
-    cdef void jdesktopui_setvisible(t_jdesktopui *x, long way) 
-    cdef void jdesktopui_setalwaysontop(t_jdesktopui *x, long way) 
-    cdef void jdesktopui_setrect(t_jdesktopui *x, t_rect rect) 
-    cdef void jdesktopui_getrect(t_jdesktopui *x, t_rect *rect) 
-    cdef void jdesktopui_setposition(t_jdesktopui *x, t_pt pt) 
-    cdef void jdesktopui_setfadetimes(t_jdesktopui *x, int fade_in_ms, int fade_out_ms) 
-    cdef t_jgraphics* jdesktopui_get_jgraphics(t_jdesktopui *x) 
-    cdef void jdesktopui_redraw(t_jdesktopui *x) 
-    cdef void jdesktopui_redrawrect(t_jdesktopui *x, t_rect rect) 
+    cdef t_jdesktopui* jdesktopui_new(t_object *owner, t_jdesktopui_flags flags, t_rect rect)
+    cdef void jdesktopui_destroy(t_jdesktopui *x)
+    cdef void jdesktopui_setvisible(t_jdesktopui *x, long way)
+    cdef void jdesktopui_setalwaysontop(t_jdesktopui *x, long way)
+    cdef void jdesktopui_setrect(t_jdesktopui *x, t_rect rect)
+    cdef void jdesktopui_getrect(t_jdesktopui *x, t_rect *rect)
+    cdef void jdesktopui_setposition(t_jdesktopui *x, t_pt pt)
+    cdef void jdesktopui_setfadetimes(t_jdesktopui *x, int fade_in_ms, int fade_out_ms)
+    cdef t_jgraphics* jdesktopui_get_jgraphics(t_jdesktopui *x)
+    cdef void jdesktopui_redraw(t_jdesktopui *x)
+    cdef void jdesktopui_redrawrect(t_jdesktopui *x, t_rect rect)
     cdef double jdesktopui_getopacity(t_jdesktopui *x)
     cdef void *jdesktopui_createtimer(t_jdesktopui *x, t_symbol *msg, void *arg)
     cdef void jdesktopui_starttimer(void *ref, int interval)
@@ -5737,22 +5737,22 @@ cdef extern from "jgraphics.h":
     cdef void jgraphics_jrgba_gethsb(t_jrgba *c, double *h, double *s, double *b)
     cdef t_jrgba jgraphics_jrgba_fromhsb(double h, double s, double b, double a)
     cdef long jcolor_getcolor(t_symbol *name, t_jrgba *on, t_jrgba *off)
-    cdef t_jpopupmenu* jpopupmenu_create() 
+    cdef t_jpopupmenu* jpopupmenu_create()
     cdef void jpopupmenu_destroy(t_jpopupmenu *menu)
     cdef void jpopupmenu_clear(t_jpopupmenu *menu)
     cdef void jpopupmenu_setitemcallback(method fun, void *arg)
 
-    cdef void jpopupmenu_setcolors(t_jpopupmenu *menu, t_jrgba text, t_jrgba bg, t_jrgba highlightedtext, t_jrgba highlightedbg) 
+    cdef void jpopupmenu_setcolors(t_jpopupmenu *menu, t_jrgba text, t_jrgba bg, t_jrgba highlightedtext, t_jrgba highlightedbg)
     cdef void jpopupmenu_setheadercolor(t_jpopupmenu *menu, t_jrgba *hc)
     cdef void jpopupmenu_setfont(t_jpopupmenu *menu, t_jfont *font)
     cdef void jpopupmenu_additem(t_jpopupmenu *menu, int itemid, const char *utf8Text, t_jrgba *textColor, int checked, int disabled, t_jsurface *icon)
-    cdef void jpopupmenu_addsubmenu(t_jpopupmenu *menu, const char *utf8Name, t_jpopupmenu *submenu, int disabled) 
-    cdef void jpopupmenu_addseperator(t_jpopupmenu *menu) 
+    cdef void jpopupmenu_addsubmenu(t_jpopupmenu *menu, const char *utf8Name, t_jpopupmenu *submenu, int disabled)
+    cdef void jpopupmenu_addseperator(t_jpopupmenu *menu)
     cdef void jpopupmenu_addheader(t_jpopupmenu *menu, const char *utf8Text)
     cdef void jpopupmenu_addownerdrawitem(t_jpopupmenu *menu, int itemid, t_object *owner)
     cdef int jpopupmenu_popup(t_jpopupmenu *menu, t_pt screen, int defitemid)
     cdef int jpopupmenu_popup_abovebox(t_jpopupmenu *menu, t_object *box, t_object *view, int offset, int defitemid)
-    cdef int jpopupmenu_popup_nearbox(t_jpopupmenu *menu, t_object *box, t_object *view, int defitemid) 
+    cdef int jpopupmenu_popup_nearbox(t_jpopupmenu *menu, t_object *box, t_object *view, int defitemid)
     cdef int jpopupmenu_popup_belowrect(t_jpopupmenu *menu, t_rect rect, int defitemid)
     cdef int jpopupmenu_popup_aboverect(t_jpopupmenu *menu, t_rect rect, int defitemid)
     cdef int jpopupmenu_popup_leftofpt(t_jpopupmenu *menu, t_pt pt, int defitemid, int flags)
@@ -5764,8 +5764,8 @@ cdef extern from "jgraphics.h":
 
     cdef void jpopupmenu_setstandardstyle(t_jpopupmenu *menu, long styleindex, double fontsize, int margin)
     cdef void jpopupmenu_setstandardstyle_forjucemenu(void *jpm, long styleindex, double fontsize, t_jrgba *headertextcolor)
-    cdef void jpopupmenu_closeall() 
-    cdef void jmouse_setcursor_surface(t_object *patcherview, t_object *box, t_jsurface *surface, int xHotSpot, int yHotSpot)   
+    cdef void jpopupmenu_closeall()
+    cdef void jmouse_setcursor_surface(t_object *patcherview, t_object *box, t_jsurface *surface, int xHotSpot, int yHotSpot)
     cdef void jbox_fontface_to_weight_slant(t_object *b, long *weight, long *slant)
     cdef long jbox_get_font_weight(t_object *b)
     cdef long jbox_get_font_slant(t_object *b)
@@ -5816,9 +5816,9 @@ cdef extern from "ext_boxstyle.h":
     cdef long object_attr_getfill(t_object *obj, t_symbol *attrname)
     cdef void object_style_setfillattribute(t_object *x, t_symbol *fillattr, t_symbol *entry, long argc, t_atom *argv)
     cdef void class_attr_stylemap(t_class *c, char *attrname, char *mapname)
-    cdef t_symbol *object_attr_attrname_forstylemap(t_object *x, t_symbol *mapname)     
-    cdef t_symbol *object_attr_stylemapname(t_object *x, t_symbol *attrname)            
-    cdef t_jpopupmenu *style_getmenu(t_object *context, t_symbol *current, long mask, long *selecteditem, long *headercount)        
+    cdef t_symbol *object_attr_attrname_forstylemap(t_object *x, t_symbol *mapname)
+    cdef t_symbol *object_attr_stylemapname(t_object *x, t_symbol *attrname)
+    cdef t_jpopupmenu *style_getmenu(t_object *context, t_symbol *current, long mask, long *selecteditem, long *headercount)
     cdef void style_handlemenu(t_object *context, long itemindex, t_symbol **current)
 
     cdef void CLASS_ATTR_STYLE_RGBA_NOSAVE(c,attrname,flags,structname,structmember,label)
@@ -5833,11 +5833,11 @@ cdef extern from "ext_boxstyle.h":
 cdef extern from "jdataview.h":
 
     cdef int JDATAVIEW_CELLMAX
-        
+
     cdef int JCOLUMN_DEFAULT_WIDTH
     cdef int JCOLUMN_DEFAULT_MINWIDTH
     cdef int JCOLUMN_DEFAULT_MAXWIDTH
-    cdef int JCOLUMN_DEFAULT_FONTSIZE 
+    cdef int JCOLUMN_DEFAULT_FONTSIZE
     cdef int JCOLUMN_DEFAULT_MAXTEXTLEN
 
     ctypedef enum:
@@ -5867,19 +5867,19 @@ cdef extern from "jdataview.h":
     ctypedef enum:
         JCOLUMN_COMPONENT_NONE = 0
         JCOLUMN_COMPONENT_CHECKBOX = 1
-        JCOLUMN_COMPONENT_TEXTEDITOR = 2        
+        JCOLUMN_COMPONENT_TEXTEDITOR = 2
         JCOLUMN_COMPONENT_SLIDER = 3
         JCOLUMN_COMPONENT_COLOR = 4
         JCOLUMN_COMPONENT_MENU = 5
 
     ctypedef enum:
-        JCOLUMN_MENU_INDEX = 1                  
-        JCOLUMN_MENU_FONTMENU = 2               
-        JCOLUMN_MENU_PAINT = 4                  
-        JCOLUMN_MENU_SELECT = 8                 
-        JCOLUMN_MENU_NOPANEL = 16               
-        JCOLUMN_MENU_CLEARITEM = 32             
-        JCOLUMN_MENU_STYLEMENU = 64             
+        JCOLUMN_MENU_INDEX = 1
+        JCOLUMN_MENU_FONTMENU = 2
+        JCOLUMN_MENU_PAINT = 4
+        JCOLUMN_MENU_SELECT = 8
+        JCOLUMN_MENU_NOPANEL = 16
+        JCOLUMN_MENU_CLEARITEM = 32
+        JCOLUMN_MENU_STYLEMENU = 64
 
     ctypedef enum:
         JCOLUMN_TEXT_ONESYMBOL = 1
@@ -5894,7 +5894,7 @@ cdef extern from "jdataview.h":
         JCOLUMN_TEXT_INT = 512
         JCOLUMN_TEXT_CANTEDIT = 1024
         JCOLUMN_TEXT_FONTSIZE = 2048
-        
+
         JCOLUMN_TEXT_FILTERED = 8192
         JCOLUMN_TEXT_STRINGOBJECT = 16384
         JCOLUMN_TEXT_PITCH = 32768
@@ -5960,7 +5960,7 @@ cdef extern from "jdataview.h":
     cdef void jdataview_setautosizerightcolumn(t_object *dv, long way)
     cdef long jdataview_getautosizerightcolumn(t_object *dv)
     cdef void jdataview_setusecharheightfont(t_object *dv, long way)
-    ctypedef long (*t_containersizechange_fun)(t_object *x, double cw, double ch, double *width, double *height, int asr, int asb) 
+    ctypedef long (*t_containersizechange_fun)(t_object *x, double cw, double ch, double *width, double *height, int asr, int asb)
     cdef t_atom_long jdataview_containersizechange(t_object *x, double cw, double ch, double *width, double *height, int asr, int asb)
     cdef t_max_err jdataview_gethorizscrollvalues(t_object *x, double *min, double *max, double *start, double *size)
     cdef void jdataview_sethorizscrollvalues(t_object *x, double start, double size)
@@ -5971,8 +5971,8 @@ cdef extern from "jdataview.h":
     cdef long jdataview_getborderthickness(t_object *dv)
     cdef void jdataview_setkeyfocusable(t_object *x, long val)
     cdef long jdataview_getkeyfocusable(t_object *x)
-    cdef void jdataview_setenabledeletekey(t_object *dv, long way) 
-    cdef long jdataview_getenabledeletekey(t_object *dv) 
+    cdef void jdataview_setenabledeletekey(t_object *dv, long way)
+    cdef long jdataview_getenabledeletekey(t_object *dv)
     cdef void jdataview_setfontname(t_object *dv, t_symbol *fontname)
     cdef t_symbol *jdataview_getfontname(t_object *dv)
     cdef void jdataview_setfontsize(t_object *dv, double fsize)
@@ -6091,7 +6091,7 @@ cdef extern from "jdataview.h":
     cdef void jdataview_deleterow(t_object *dv, t_rowref rr)
     cdef void jdataview_deleterowsfromsection(t_object *dv, void *section, long count, t_rowref *rrs)
     cdef void jdataview_deleterows(t_object *dv, long count, t_rowref *rrs)
-    cdef void jdataview_deleteselectedrows(t_object *dv) 
+    cdef void jdataview_deleteselectedrows(t_object *dv)
     cdef void jdataview_deleteselectedrowsforview(t_object *dv, t_object *patcherview)
     cdef void jdataview_clear(t_object *dv)
     cdef int jdataview_getnumrows(t_object *dv)
@@ -6129,7 +6129,7 @@ cdef extern from "jdataview.h":
     cdef void jdataview_getcelltextcolor(t_object *dv, t_symbol *colname, t_rowref rr, t_jrgba *color)
     cdef void jdataview_getcelltextstyle(t_object *dv, t_symbol *colname, t_rowref rr, long *style, long *align)
     cdef int jdataview_getcellmenu(t_object *dv, t_symbol *colname, t_rowref rr, long *argc, t_atom *argv, char **enabled, long *currentitemindex)
-    cdef int jdataview_getcelltooltip(t_object *dv, t_symbol *colname, t_rowref rr, t_rect *cellrect, char *text, long maxlen) 
+    cdef int jdataview_getcelltooltip(t_object *dv, t_symbol *colname, t_rowref rr, t_rect *cellrect, char *text, long maxlen)
     cdef void jdataview_setcellvalue(t_object *dv, t_symbol *colname, t_rowref rr, long argc, t_atom *argv)
     cdef void jdataview_editcell(t_object *dv, t_symbol *colname, t_rowref rr)
     cdef int jdataview_iscelltextselected(t_object *dv, char justfocused)
@@ -6158,7 +6158,7 @@ cdef extern from "jdataview.h":
     cdef void jdataview_cellexit(t_object *dv, t_symbol *colname, t_rowref rr, int px, int py)
     cdef void jdataview_cellmove(t_object *dv, t_symbol *colname, t_rowref rr, int px, int py)
     cdef t_atom_long jdataview_getcelleditable(t_object *dv, t_symbol *colname, t_rowref rr)
-    cdef long jdataview_getbordercolor(t_object *dv, t_jrgba *c)    
+    cdef long jdataview_getbordercolor(t_object *dv, t_jrgba *c)
     cdef void jdataview_setbordercolor(t_object *dv, t_jrgba *c)
     cdef long jdataview_getusesystemfont(t_object *dv)
     cdef void jdataview_setusesystemfont(t_object *dv, long way)
@@ -6191,7 +6191,7 @@ cdef extern from "jdataview.h":
     cdef t_max_err jdataview_jgraphics_from_paintcontext(t_jdataview *x, void *ctx, t_jgraphics **g)
     cdef long jdataview_containersize(t_object *dv, t_object *box, double cw, double ch, double *width, double *height)
     cdef void jdataview_forcecellvisible(t_object *x, t_symbol *colname, t_rowref rr)
-    cdef t_object *jdataview_getrowobject(t_object *dv, t_rowref rr)    
+    cdef t_object *jdataview_getrowobject(t_object *dv, t_rowref rr)
     cdef void jdataview_entermodalstate(t_object *dv, long way)
     cdef void *jdataview_getdragreceiver(t_object *dv)
 
