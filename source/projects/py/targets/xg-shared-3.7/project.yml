@@ -1,0 +1,107 @@
+name: py-js
+options:
+  bundleIdPrefix: org.me
+settings:
+  MACOSX_DEPLOYMENT_TARGET: "10.13"
+  CODE_SIGN_IDENTITY: "-"
+  DEVELOPMENT_TEAM: ""
+  GCC_OPTIMIZATION_LEVEL: s
+  GCC_NO_COMMON_BLOCKS: No
+  HEADER_SEARCH_PATHS:
+    - $(C74SUPPORT)/max-includes
+    - $(C74SUPPORT)/msp-includes
+    - $(C74SUPPORT)/jit-includes
+    - $(PROJECT_HEADERS)
+  INFOPLIST_FILE: $(SRCROOT)/../../../Info.plist
+  LIBRARY_SEARCH_PATHS: $(PROJECT_LIBS)
+  OTHER_LDFLAGS:
+    - $(C74_SYM_LINKER_FLAGS)
+    - $(MSP_JIT_LDFLAGS)
+    - $(PROJECT_LDFLAGS)
+  PRODUCT_NAME: $(TARGET_NAME)
+  BUILD_LIBRARY_FOR_DISTRIBUTION: yes
+  ASSETCATALOG_COMPILER_OPTIMIZATION: space
+  DEAD_CODE_STRIPPING: yes
+  CONFIGURATION: Release
+  DEPLOYMENT_POSTPROCESSING: yes
+  STRIP_INSTALLED_PRODUCT: yes
+  COPY_PHASE_STRIP: yes
+
+configFiles:
+  Debug: project.xcconfig
+  Release: project.xcconfig
+
+targets:
+  py:
+    type: bundle
+    platform: macOS
+    sources:
+      - ../../py.c
+      - ../../api.c
+      - path: ../build/lib/python-shared/lib
+        type: folder
+        buildPhase:
+          copyFiles:
+            destination: resources
+    dependencies:
+      - sdk: CoreFoundation.framework
+    preBuildScripts:
+      - name: fix rpaths
+        showEnvVars: false
+        script: |
+          echo
+          PYTHON3=`brew --prefix python`/bin/python3
+          VER=`${PYTHON3} -c "import sysconfig; print(sysconfig.get_python_version())"`
+          DYLIB="libpython${VER}.dylib"
+          EXTERNAL_BINARY="${DSTROOT}/${EXECUTABLE_PATH}"
+          FROM_PATH=`readlink -f "${PREFIX}/lib/${DYLIB}"`
+          TO_PATH="@loader_path/../Resources/lib/${DYLIB}"
+          BUNDLE_DYLIB="${DSTROOT}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/lib/${DYLIB}"
+
+          echo "EXECUTABLE_PATH: ${EXECUTABLE_PATH}"
+          echo "PYTHON3: ${PYTHON3}"
+          echo "DYLIB: ${DYLIB}"
+          echo "DSTROOT: ${DSTROOT}"
+          echo "PREFIX: ${PREFIX}"
+          echo "FROM_PATH: ${FROM_PATH}"
+          echo "TO_PATH: ${TO_PATH}"
+          echo "EXTERNAL_BINARY: ${EXTERNAL_BINARY}"
+          echo "BUNDLE_DYLIB: ${BUNDLE_DYLIB}"
+          echo "install_name_tool -id ${TO_PATH} ${BUNDLE_DYLIB}"
+
+          install_name_tool -id ${TO_PATH} ${FROM_PATH}
+          # install_name_tool -id ${TO_PATH} ${BUNDLE_DYLIB}
+          # install_name_tool -change ${FROM_PATH} ${TO_PATH} ${EXTERNAL_BINARY}
+          
+          # #!/bin/sh
+          # exec > ${PROJECT_DIR}/environment_variables.log 2>&1
+          # set
+          # install_name_tool -id ${to_path} ${external_fwk_binary}
+          # install_name_tool -change ${from_path} ${to_path} ${external_binary}
+
+  pyjs:
+    type: bundle
+    platform: macOS
+    sources:
+      - ../../pyjs.c
+      - path: ../build/lib/python-shared/lib
+        type: folder
+        buildPhase:
+          copyFiles:
+            destination: resources
+    dependencies:
+      - sdk: CoreFoundation.framework
+    # no need for script here as it picks up the install_name id set in py above
+    # preBuildScripts:
+    #   - name: fix rpaths
+    #     showEnvVars: false
+    #     script: |
+    #       echo
+    #       PYTHON3=`brew --prefix python`/bin/python3
+    #       VER=`${PYTHON3} -c "import sysconfig; print(sysconfig.get_python_version())"`
+    #       DYLIB="libpython${VER}.dylib"
+    #       FROM_PATH=`readlink -f "${PREFIX}/lib/${DYLIB}"`
+    #       TO_PATH="@loader_path/../Resources/lib/${DYLIB}"
+
+    #       install_name_tool -id ${TO_PATH} ${FROM_PATH}
+

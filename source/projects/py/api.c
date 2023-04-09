@@ -1284,7 +1284,7 @@ struct __pyx_obj_3api_PyExternal {
 
 
 /* "api.pyx":1660
- * # PyExternal extension type (obj pointer retrieved via uintptr_t
+ * # Alternative external extension type (obj pointer retrieved via uintptr_t
  * 
  * cdef class PyMxObject:             # <<<<<<<<<<<<<<
  *     cdef px.t_py *x
@@ -1612,7 +1612,7 @@ static struct __pyx_vtabstruct_3api_PyExternal *__pyx_vtabptr_3api_PyExternal;
 
 
 /* "api.pyx":1660
- * # PyExternal extension type (obj pointer retrieved via uintptr_t
+ * # Alternative external extension type (obj pointer retrieved via uintptr_t
  * 
  * cdef class PyMxObject:             # <<<<<<<<<<<<<<
  *     cdef px.t_py *x

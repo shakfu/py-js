@@ -1,0 +1,72 @@
+name: py-js
+options:
+  bundleIdPrefix: org.me
+settings:
+  MACOSX_DEPLOYMENT_TARGET: "10.13"
+  CODE_SIGN_IDENTITY: "-"
+  DEVELOPMENT_TEAM: ""
+  GCC_OPTIMIZATION_LEVEL: z
+  GCC_NO_COMMON_BLOCKS: No
+  GCC_PREPROCESSOR_DEFINITIONS: PY_37=1 PY_STATIC_EXT=1
+  HEADER_SEARCH_PATHS:
+    - $(C74SUPPORT)/max-includes
+    - $(C74SUPPORT)/msp-includes
+    - $(C74SUPPORT)/jit-includes
+    - $(PROJECT_HEADERS)
+  INFOPLIST_FILE: $(SRCROOT)/../../../Info.plist
+  LIBRARY_SEARCH_PATHS: $(PROJECT_LIBS)
+  OTHER_LDFLAGS:
+    - $(C74_SYM_LINKER_FLAGS)
+    - $(MSP_JIT_LDFLAGS)
+    - $(PROJECT_LDFLAGS)
+  PRODUCT_NAME: $(TARGET_NAME)
+  BUILD_LIBRARY_FOR_DISTRIBUTION: yes
+  ASSETCATALOG_COMPILER_OPTIMIZATION: space
+  DEAD_CODE_STRIPPING: yes
+  CONFIGURATION: Release
+  DEPLOYMENT_POSTPROCESSING: yes
+  STRIP_INSTALLED_PRODUCT: yes
+  COPY_PHASE_STRIP: yes
+configFiles:
+  Debug: project.xcconfig
+  Release: project.xcconfig
+
+targets:
+  py:
+    type: bundle
+    platform: macOS
+    sources:
+      - ../../py.c
+      - ../../api.c
+      - path: ../build/lib/python-static/lib/python3${VER_MINOR}.zip
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: lib
+      - path: ../build/lib/python-static/lib/python${VERSION}
+        type: folder
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: lib
+    dependencies:
+      - sdk: CoreFoundation.framework
+
+  pyjs:
+    type: bundle
+    platform: macOS
+    sources:
+      - ../../pyjs.c
+      - path: ../build/lib/python-static/lib/python3${VER_MINOR}.zip
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: lib
+      - path: ../build/lib/python-static/lib/python${VERSION}
+        type: folder
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: lib
+    dependencies:
+      - sdk: CoreFoundation.framework

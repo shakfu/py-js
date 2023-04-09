@@ -501,4 +501,4 @@ class CodesignExternal:
 
 if __name__ == "__main__":
     # CodesignExternal.cmdline()
-    ReleaseManager.cmdline()
+    PackageManager.cmdline()

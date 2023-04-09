@@ -1,0 +1,19 @@
+#include "../common.xcconfig"
+
+// This can overriden by the builder at the commandline build
+VERSION = 3.7
+VER_MINOR = 7
+ABIFLAGS = m
+PREFIX = $(PYJS_BUILD_LIB)/python-static 
+
+// --------------------------------------------------------------------------------
+
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS)
+PY_LIBS = $(PREFIX)/lib $(PYJS_BUILD_LIB)/bzip2/lib $(PYJS_BUILD_LIB)/openssl/lib $(PYJS_BUILD_LIB)/xz/lib
+PY_LDFLAGS = $(LIBS) -lpython$(VERSION)$(ABIFLAGS) -ldl -lssl -lbz2 -llzma -lz -lcrypto
+
+PROJECT_HEADERS = $(PY_HEADERS)
+PROJECT_LIBS = $(PY_LIBS)
+PROJECT_LDFLAGS = $(PY_LDFLAGS)
+
+

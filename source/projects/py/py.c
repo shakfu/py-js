@@ -593,6 +593,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 }
 
 
+
 /**
  * @brief main init function called within body of `py_new`
  *
@@ -600,29 +601,39 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
  */
 void py_init(t_py* x)
 {
+    wchar_t* python_home = NULL;
+
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
         py_error(x, "could not add api to builtin modules table");
     }
 
+#if defined(__APPLE__) && defined(PY_STATIC_EXT)
+    const char* resources_path = string_getptr(
+        py_get_path_from_external(py_class, "/Contents/Resources"));
+    python_home = Py_DecodeLocale(resources_path, NULL);
+#endif
+
+#if defined(__APPLE__) && defined(PY_SHARED_PKG)
+    const char* package_path = string_getptr(
+        py_get_path_from_package(py_class, "/support/python" PY_VER));
+    python_home = Py_DecodeLocale(package_path, NULL);
+#endif
+
+#if defined(PY_37)
+    if (python_home != NULL) {
+        Py_SetPythonHome(python_home);
+        PyMem_RawFree(python_home);
+    }
+    Py_Initialize();
+#else
     PyStatus status;
 
     PyConfig config;
     PyConfig_InitPythonConfig(&config);
     // Disable parsing command line arguments
     config.parse_argv = 0;
-
-#if defined(__APPLE__) && defined(PY_STATIC_EXT)
-    const char* resources_path = string_getptr(
-        py_get_path_from_external(py_class, "/Contents/Resources"));
-    config.home = Py_DecodeLocale(resources_path, NULL);
-#endif
-
-#if defined(__APPLE__) && defined(PY_SHARED_PKG)
-    const char* package_path = string_getptr(
-        py_get_path_from_package(py_class, "/support/python" PY_VER));
-    config.home = Py_DecodeLocale(package_path, NULL);
-#endif
+    config.home = python_home;
 
     status = Py_InitializeFromConfig(&config);
     if (PyStatus_Exception(status)) {
@@ -631,6 +642,7 @@ void py_init(t_py* x)
     }
 
     PyConfig_Clear(&config);
+#endif
 
     // { /* init module '%(module_name)s' as '__main__' */
     //   PyObject* m = NULL;

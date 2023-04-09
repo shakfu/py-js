@@ -216,24 +216,34 @@ t_string* pyjs_get_path_from_package(t_class* c, char* subpath)
  */
 void pyjs_init(t_pyjs* x)
 {
-    PyStatus status;
-    PyConfig config;
-
-    PyConfig_InitPythonConfig(&config);
-    // Disable parsing command line arguments
-    config.parse_argv = 0;
+    wchar_t* python_home = NULL;
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
         pyjs_get_path_from_external(pyjs_class, "/Contents/Resources"));
-    config.home = Py_DecodeLocale(resources_path, NULL);
+    python_home = Py_DecodeLocale(resources_path, NULL);
 #endif
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
     const char* package_path = string_getptr(
         pyjs_get_path_from_package(pyjs_class, "/support/python" PY_VER));
-    config.home = Py_DecodeLocale(package_path, NULL);
+    python_home = Py_DecodeLocale(package_path, NULL);
 #endif
+
+#if defined(PY_37)
+    if (python_home != NULL) {
+        Py_SetPythonHome(python_home);
+        PyMem_RawFree(python_home);
+    }
+    Py_Initialize();
+#else
+    PyStatus status;
+
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+    // Disable parsing command line arguments
+    config.parse_argv = 0;
+    config.home = python_home;
 
     status = Py_InitializeFromConfig(&config);
     if (PyStatus_Exception(status)) {
@@ -242,6 +252,7 @@ void pyjs_init(t_pyjs* x)
     }
 
     PyConfig_Clear(&config);
+#endif
 
     /* python init */
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); /* borrowed reference */
