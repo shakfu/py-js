@@ -3,6 +3,7 @@
 
 ## [0.2.x]
 
+- Added `patchers/py_external_editor.maxpat` prototype of using external editor with `filewatcher` and `py_load <path>` message.
 
 - Changed notarized .dmg to be named according to the format `py-js-<variation>-<platform>-<arch>-<py_ver>` for example `py-js-shared-ext-darwin-x86-3.11`
 

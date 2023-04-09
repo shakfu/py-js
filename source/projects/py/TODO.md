@@ -2,6 +2,8 @@
 
 ## Important
 
+- [ ] pass object pointer to cython api via [PyCapsule](https://docs.python.org/3/c-api/capsule.html) method.
+
 
 ## General Improvements
 
@@ -58,6 +60,8 @@
 - [ ] differentiate between class and object attributes!! (now everything is a class attribute)
 
 ### Editor
+
+- [ ] Add bpatcher for editing with external editor with filewatching and reloading on save (prototype done)
 
 - [ ] Workflow using the code-editor is not intuitive. The best implementation of this in the Thomas Grill's py/pyext project: double click on the external opens the preferred editor.
 
