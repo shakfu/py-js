@@ -182,7 +182,7 @@ Open up any of the patch files in the `patchers` directory of the repo or the ge
 
 ### Building Experimental Externals using Cmake
 
-You can also use `cmake` to build **all** externals using similarmethds to the `max-sdk`.
+You can also use `cmake` to build **all** externals using similar methods to the `max-sdk`.
 
 First make sure you have completed the [Quickstart](#quickstart) section above. Next you will install `cmake` if necessary and a couple of additional dependencies for some of the subprojects. Of course, skip what is already installed:
 

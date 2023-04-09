@@ -23,14 +23,11 @@ on:
         default: '3.11'
         required: true
         options:
+          - '3.7'
           - '3.8'
           - '3.9'
           - '3.10'
           - '3.11'
-
-env:
-  arch: darwin-x86
-  DEV_ID: ${{ secrets.DEV_ID }}
 
 jobs:
   build:
@@ -75,3 +72,8 @@ jobs:
 
     - name: Build python variant
       run: make ${{ github.event.inputs.variant }}
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
+        path: "source/projects/py/targets/build/lib/${{ github.event.inputs.variant }}"

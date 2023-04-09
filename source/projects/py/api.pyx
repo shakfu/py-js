@@ -1655,7 +1655,7 @@ def total(*args):
 
 
 # ----------------------------------------------------------------------------
-# PyExternal extension type (obj pointer retrieved via uintptr_t
+# Alternative external extension type (obj pointer retrieved via uintptr_t
 
 cdef class PyMxObject:
     cdef px.t_py *x
