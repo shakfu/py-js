@@ -3,6 +3,7 @@
 from cpython.ref cimport PyObject
 cimport api_max as mx
 
+from libc.stdint cimport uintptr_t
 
 cdef extern from "py.h":
 
@@ -12,8 +13,10 @@ cdef extern from "py.h":
 
     cdef void py_log(t_py* x, char* fmt, ...)
     cdef void py_error(t_py* x, char* fmt, ...)
-    cdef mx.t_hashtab* get_global_registry()
-    cdef mx.t_max_err py_eval_text(t_py* x, long argc, mx.t_atom* argv, int offset)
+
+    # api module helpers
+    cdef mx.t_hashtab* py_get_global_registry()
+    cdef uintptr_t py_get_object_ref()
 
     # Path helpers
 
@@ -26,6 +29,10 @@ cdef extern from "py.h":
     cdef void py_bang_success(t_py* x)
     cdef void py_bang_failure(t_py* x)
     cdef void* get_outlet(t_py* x)
+
+    # Core Method Helpers
+
+    cdef mx.t_max_err py_eval_text(t_py* x, long argc, mx.t_atom* argv, int offset)
 
     # Common handlers
 
@@ -52,7 +59,7 @@ cdef extern from "py.h":
     cdef mx.t_max_err py_pipe(t_py* x, mx.t_symbol* s, long argc, mx.t_atom* argv)
     cdef mx.t_max_err py_anything(t_py* x, mx.t_symbol* s, long argc, mx.t_atom* argv)
 
-    # Informations Methods
+    # Information Methods
 
     cdef void py_info(t_py* x)
     cdef void py_count(t_py* x)

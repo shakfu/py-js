@@ -72,8 +72,12 @@ void py_init_builtins(t_py* x);
 void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
 void py_init_osx_set_home_framework_ext(void);
-t_hashtab* get_global_registry(void);
 t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
+
+/* api module helpers */
+
+t_hashtab* py_get_global_registry(void);
+uintptr_t py_get_object_ref(void);
 
 /*--------------------------------------------------------------------------*/
 /* Path helpers */

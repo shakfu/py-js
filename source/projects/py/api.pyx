@@ -103,7 +103,7 @@ Workarounds for max types which are not exposed in the c-api:
 # from cpython cimport PyFloat_AsDouble
 # from cpython cimport PyLong_AsLong
 from cpython.ref cimport PyObject
-
+from libc.stdint cimport uintptr_t
 # from libc.stdlib cimport malloc, free
 # from libc.string cimport strcpy, strlen
 
@@ -1360,7 +1360,7 @@ cdef class PyExternal:
         px.py_scan(self.obj)
 
     cdef lookup(self, str name):
-        cdef mx.t_hashtab* registry = px.get_global_registry()
+        cdef mx.t_hashtab* registry = px.py_get_global_registry()
         cdef mx.t_object* obj = NULL
         cdef mx.t_max_err err
 
@@ -1652,3 +1652,20 @@ def echo(*args):
 
 def total(*args):
     return sum(args)
+
+
+# ----------------------------------------------------------------------------
+# PyExternal extension type (obj pointer retrieved via uintptr_t
+
+cdef class PyMxObject:
+    cdef px.t_py *x
+
+    def __cinit__(self):
+        self.x = <px.t_py*>px.py_get_object_ref()
+
+    cpdef bang(self):
+        px.py_bang(self.x)
+
+def test_ref():
+    ext = PyMxObject()
+    ext.bang()

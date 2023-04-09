@@ -50,7 +50,7 @@ MACRO(SUBDIRLIST result curdir)
   SET(${result} ${dirlist})
 ENDMACRO()
 
-#Generate a project for every folder in the "source/category" folder
+# Generate a project for every folder in the "source/category" folder
 SUBDIRLIST(CATEGORY_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/source)
 foreach (cat_dir ${CATEGORY_DIRS})
   SUBDIRLIST(PROJECT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/source/${cat_dir})

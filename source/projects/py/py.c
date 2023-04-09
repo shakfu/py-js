@@ -20,6 +20,7 @@ static int py_global_obj_count = 0; // when 0 then free interpreter
 
 static t_hashtab* py_global_registry = NULL; // global object lookups
 
+static uintptr_t py_global_obj_ref = 0;
 
 /*--------------------------------------------------------------------------*/
 /* Datastructures */
@@ -178,10 +179,22 @@ error:
  *
  * This is only used in the api module
  */
-t_hashtab* get_global_registry(void)
+t_hashtab* py_get_global_registry(void)
 {
     return py_global_registry;
 }
+
+/**
+ * @brief      Return a ref the t_py *x pointer via the global_ref
+ *
+ * @return     unitptr ref to the object struct
+ * 
+ * This is only used in the api module
+ */
+uintptr_t py_get_object_ref(void) {
+    return py_global_obj_ref;
+}
+
 
 /**
  * @brief      Return path to external with optional subpath
@@ -647,6 +660,9 @@ void py_init(t_py* x)
         py_global_registry = (t_hashtab*)hashtab_new(0);
         hashtab_flags(py_global_registry, OBJ_FLAG_REF);
     }
+
+    // set object ref which can be accessed from api module
+    py_global_obj_ref = (uintptr_t)x;
 }
 
 
@@ -2382,3 +2398,10 @@ error:
     py_error(x, "table to list conversion failed");
     Py_RETURN_NONE;
 }
+
+
+
+
+
+
+

@@ -2,8 +2,6 @@
 
 ## Important
 
-- [ ] pass object pointer to cython api via [PyCapsule](https://docs.python.org/3/c-api/capsule.html) method.
-
 
 ## General Improvements
 
