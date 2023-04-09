@@ -16,7 +16,7 @@ set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
 # options
 option(USE_STATIC_PY "build static extension")
 option(USE_FRAMEWORK_PY "build framework-based extension")
-option(USE_NUMPY "include numpy headers if available")
+option(INCLUDE_NUMPY "include numpy headers if available")
 option(DEBUG "display debug variables")
 option(BUILD_UNIVERSAL "build universal binaries (requires universal dependencies)")
 
@@ -72,7 +72,7 @@ include_directories(
 	"${MAX_SDK_JIT_INCLUDES}"
 )
 
-if(USE_NUMPY)
+if(INCLUDE_NUMPY)
 	# optionally add numpy_header
 	execute_process(
 		COMMAND ${Python3_EXECUTABLE} ${SCRIPTS}/check_numpy.py --include
@@ -80,18 +80,14 @@ if(USE_NUMPY)
 		RESULT_VARIABLE NUMPY_HEADERS_RESULT
 	)
 
-	message("NUMPY_HEADERS_RESULT: " ${NUMPY_HEADERS_RESULT})
-	message("NUMPY_HEADERS: " ${NUMPY_HEADERS})
-
 	if (NUMPY_HEADERS_RESULT EQUAL 0) # 0 == SUCCESS
+		message(STATUS "INCLUDING NUMPY_HEADERS")
+		message(STATUS "NUMPY_HEADERS: " ${NUMPY_HEADERS})
 		include_directories("${NUMPY_HEADERS}")
 		add_compile_definitions(INCLUDE_NUMPY=1)
-		set(CYTHON_INCL_NUMPY "1")
 	else()
-		set(CYTHON_INCL_NUMPY "0")
+		message(STATUS "NOT INCLUDING NUMPY_HEADERS: NUMPY NOT FOUND")
 	endif()
-else()
-	set(CYTHON_INCL_NUMPY "0")
 endif()
 
 

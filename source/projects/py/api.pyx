@@ -56,26 +56,40 @@ wrapping code.
 We use cython extension types to wrap related C data structures and functions
 in the Max api and provide a Python-like interface to them.
 
-So far the following extension types are planned or implemnted (partial or otherwise)
+So far the following extension types are planned or implemented (partial or otherwise)
 
 - [x] Atom
-- [x] Atom Array
+- [x] Atom Array: container for an array of atoms
 - [x] Binbuf
 - [x] Buffer
-- [x] Database
-- [x] Dictionary
-- [x] Hash Table
-- [x] Linked List
+- [x] Database: SQLite database access
+- [x] Dictionary: structured/hierarchical data that is both sortable and fast
+- [x] Hash Table: hash table for mapping symbols to data
+- [ ] Index Map: managed array of pointers
+- [x] Linked List: doubly-linked-list
+- [ ] Quick Map: a double hash with keys mapped to values and vice-versa
+- [x] String Object: wrapper for C-strings with an API for manipulating them
+- [ ] Symbol Object: wrapper for symbols
 - [x] Table
 
 - [x] PyExternal
+
+Workarounds for max types which are not exposed in the c-api:
+
+- coll: import and export the contents of a coll into a dict by
+  sending a message to the dict object.
+
+- jit.cellblock: link a coll to a cellblock and data sent to the
+  coll will be sent to the cellblock.
+
+- jit.matrix: can be populated via jit.fill from a coll
 
 
 ## Table of Contents
 
 - imports
-- conditional imports
-- constants
+- compile time conditional imports
+- compile time constants
 - helper cdef functions (type-translation)
 - extension types
 - helper def functions
@@ -98,15 +112,22 @@ cimport api_msp as mp
 cimport api_py as px
 
 # ----------------------------------------------------------------------------
-# conditional imports
+# compile-time conditional imports
 
-IF INCLUDE_NUMPY:
+cdef extern from *:
+    """
+    #define INCLUDE_NUMPY 0
+    """
+    bint INCLUDE_NUMPY
+
+if INCLUDE_NUMPY:
     import numpy as np
     cimport numpy as np
     np.import_array()
 
+
 # ----------------------------------------------------------------------------
-# constants
+# compile-time constants
 
 DEF MAX_CHARS = 32767
 DEF PY_MAX_ATOMS = 1024

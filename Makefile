@@ -32,9 +32,9 @@ PKG_DIRS = docs examples extensions externals help init \
            javascript jsextensions media misc patchers
 
 #NUMPY_EXISTS := $(shell sh -c '$(PYTHON) $(SCRIPTS)/check_numpy.py --exists')
-NUMPY_EXISTS := 0 # change this to 1 if you want to enable numpy in api.pyx
-				  # this requires numpy to be available to the python
-				  # interpreter.	
+INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
+				   # this requires numpy to be available to the python
+				   # interpreter.	
 
 
 # constants
@@ -347,7 +347,7 @@ build-beeware-ext: clean-static-ext
 
 compile-extension:
 	$(call section,"generate c code from cython extension")
-	@cython -3 -E INCLUDE_NUMPY=$(NUMPY_EXISTS) ${EXTENSION}
+	@cython -3 -E INCLUDE_NUMPY=$(ENABLE_NUMPY) ${EXTENSION}
 
 api: compile-extension
 
