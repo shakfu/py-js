@@ -1,6 +1,9 @@
 # ============================================================================
 # VARIABLES & CONSTANTS
 
+# architecture of current system
+# currently only macOS x86_64 and arm64 supported
+ARCH = $(shell uname -m)
 
 # python executable to use
 # PYTHON = /usr/bin/python3
@@ -447,6 +450,9 @@ cflow:
 
 projects:
 	@bash $(SCRIPTS)/build_projects.sh
+ifeq ($(ARCH),arm64)
+	$(MAKE) sign
+endif
 
 # fat:
 # 	@echo "NOT FUNCTIONAL UNLESS DEPS ARE ALSO FAT"

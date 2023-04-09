@@ -3,17 +3,16 @@ cmake_minimum_required(VERSION 3.19)
 string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
 project(${THIS_FOLDER_NAME})
 
+option(C74_BUILD_FAT "Build Universal Externals") # not supported (you're on your own! :-)
 
-# if getting error with -GXcode specify arch for example
-# cmake -G Xcode -D "CMAKE_OSX_ARCHITECTURES:STRING=x86_64" ..
 
 if (APPLE)
     if (${CMAKE_GENERATOR} MATCHES "Xcode")
             if (${XCODE_VERSION} VERSION_LESS 10)
                 message(STATUS "Xcode 10 or higher is required. Please install from the Mac App Store.")
                 return ()
-            elseif(${XCODE_VERSION} VERSION_GREATER_EQUAL 12)
-                set(C74_BUILD_FAT YES)
+            # elseif(${XCODE_VERSION} VERSION_GREATER_EQUAL 12)
+            #     set(C74_BUILD_FAT YES)
             endif ()
     endif ()
 
@@ -65,6 +64,16 @@ foreach (cat_dir ${CATEGORY_DIRS})
 endforeach ()
 
 # dev only
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cmx)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/demo)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/krait)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mxpy)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy) 
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/shell)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/wbsrv)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zpy)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zthread)
 

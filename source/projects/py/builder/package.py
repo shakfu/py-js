@@ -113,7 +113,7 @@ class PackageManager:
     def __init__(self, variant=None, dev_id=None, keychain_profile=None, dry_run=False):
         self.project = Project()        
         self.variant, self.product_dmg = self.setup(variant)
-        self.dev_id = dev_id or os.environ['DEV_ID']
+        self.dev_id = dev_id or os.getenv('DEV_ID', '-') # '-' fallback to ad-hoc signing
         self.keychain_profile = keychain_profile
         self.dry_run = dry_run
         self.entitlements = self.project.entitlements / "entitlements.plist"
@@ -278,7 +278,10 @@ class CodesignExternal:
         dry_run: bool = False,
     ):
         self.path = path
-        self.authority = f"Developer ID Application: {dev_id}"
+        if dev_id not in [None, '-']:
+            self.authority = f"Developer ID Application: {dev_id}"
+        else:
+            self.authority = None
         self.entitlements = entitlements
         self.dry_run = dry_run
         self.targets_runtimes = set()
@@ -290,7 +293,7 @@ class CodesignExternal:
         self._cmd_codesign = [
             "codesign",
             "--sign",
-            repr(self.authority),
+            repr(self.authority) if self.authority else '-',
             "--timestamp",
             "--deep",
             "--force",
