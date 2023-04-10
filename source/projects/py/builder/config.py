@@ -98,6 +98,7 @@ PYTHON_TARGETS = {
     "python-shared-ext": "minimal shared python build for externals",
     "python-shared-pkg": "minimal shared python build for packages",
     "python-static": "minimal statically-linked python build",
+    "python-static-tiny": "tiny statically-linked python build",
     "python-framework": "minimal framework python build",
     "python-framework-ext": "minimal framework python build for externals",
     "python-framework-pkg": "minimal framework python build for packages",

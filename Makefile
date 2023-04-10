@@ -105,11 +105,7 @@ all: default
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext \
-		static-pkg static-ext \
-		python-shared python-shared-pkg python-shared-ext \
-		python-static static-tiny-ext tiny \
-		python-framework python-framework-ext python-framework-pkg
-
+		static-pkg static-ext static-tiny-ext tiny
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -192,6 +188,10 @@ release-relocatable-pkg: clean-framework-pkg
 # -----------------------------------------------------------------------
 # python targets
 
+.PHONY: python-shared python-shared-pkg python-shared-ext \
+		python-static  python-static-tiny \
+		python-framework python-framework-ext python-framework-pkg
+
 python-shared: clean-python-shared
 	$(call call-builder,"python" "shared" "--install")
 
@@ -227,9 +227,11 @@ python-beeware:
 
 
 # -----------------------------------------------------------------------
-# dependencies
+# build dependencies
 
-.PHONY: bz2 ssl xz
+.PHONY: deps bz2 ssl xz
+
+deps: ssl bz2 xz
 
 bz2:
 	$(call call-builder, "dep" "bz2")
@@ -239,6 +241,54 @@ ssl:
 
 xz:
 	$(call call-builder, "dep" "xz")
+
+
+# BUILDING
+# -----------------------------------------------------------------------
+.PHONY: build-homebrew-pkg build-homebrew-ext \
+		build-framework-pkg build-framework-ext \
+		build-shared-pkg build-shared-ext \
+		build-static-pkg build-static-ext
+
+
+build-shared-pkg: clean-shared-pkg
+	$(call call-builder,"pyjs" "shared_pkg" "--build")
+
+build-shared-ext: clean-shared-ext
+	$(call call-builder,"pyjs" "shared_ext" "--build")
+
+build-static-ext: clean-static-ext
+	$(call call-builder,"pyjs" "static_ext" "--build")
+
+build-static-pkg: clean-static-pkg
+	$(call call-builder,"pyjs" "static_pkg" "--build")
+
+build-framework-pkg: clean-framework-pkg
+	$(call call-builder,"pyjs" "framework_pkg" "--build")
+
+build-framework-ext: clean-framework-ext
+	$(call call-builder,"pyjs" "framework_ext" "--build")
+
+build-relocatable-pkg: clean-externals
+	$(call call-builder,"pyjs" "relocatable_pkg" "--build")
+
+build-static-tiny-ext: clean-static-ext
+	$(call call-builder,"pyjs" "static_tiny_ext" "--build" "--release")
+
+build-beeware-ext: clean-static-ext
+	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
+
+
+# re-compile only
+# -----------------------------------------------------------------------
+.PHONY: compile-extension api
+
+compile-extension:
+	$(call section,"generate c code from cython extension")
+	@cython -3 -E INCLUDE_NUMPY=$(ENABLE_NUMPY) ${EXTENSION}
+
+api: compile-extension
+
 
 # -----------------------------------------------------------------------
 # utilities
@@ -307,52 +357,7 @@ fix-framework:
 	$(call call-builder,"fix" "framework")
 
 
-# BUILDING
-# -----------------------------------------------------------------------
-.PHONY: build-homebrew-pkg build-homebrew-ext \
-		build-framework-pkg build-framework-ext \
-		build-shared-pkg build-shared-ext \
-		build-static-pkg build-static-ext
 
-
-build-shared-pkg: clean-shared-pkg
-	$(call call-builder,"pyjs" "shared_pkg" "--build")
-
-build-shared-ext: clean-shared-ext
-	$(call call-builder,"pyjs" "shared_ext" "--build")
-
-build-static-ext: clean-static-ext
-	$(call call-builder,"pyjs" "static_ext" "--build")
-
-build-static-pkg: clean-static-pkg
-	$(call call-builder,"pyjs" "static_pkg" "--build")
-
-build-framework-pkg: clean-framework-pkg
-	$(call call-builder,"pyjs" "framework_pkg" "--build")
-
-build-framework-ext: clean-framework-ext
-	$(call call-builder,"pyjs" "framework_ext" "--build")
-
-build-relocatable-pkg: clean-externals
-	$(call call-builder,"pyjs" "relocatable_pkg" "--build")
-
-build-static-tiny-ext: clean-static-ext
-	$(call call-builder,"pyjs" "static_tiny_ext" "--build" "--release")
-
-build-beeware-ext: clean-static-ext
-	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
-
-
-
-# re-compile only
-# -----------------------------------------------------------------------
-.PHONY: compile-extension api
-
-compile-extension:
-	$(call section,"generate c code from cython extension")
-	@cython -3 -E INCLUDE_NUMPY=$(ENABLE_NUMPY) ${EXTENSION}
-
-api: compile-extension
 
 # Testing
 # -----------------------------------------------------------------------
