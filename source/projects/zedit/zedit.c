@@ -1,5 +1,5 @@
 /**
- * @defgroup   wbsrv external
+ * @defgroup   zedit external
  *
  * @brief      This external borrows from the implementation max-sdk simplethread
  *             example external and embeds an http webserver using the mongoose
@@ -24,40 +24,39 @@ static const   int s_debug_level = 2;
 static const char* s_listening_address = "http://localhost:8000";
 static const char* s_enable_hexdump = "no";
 static const char* s_ssi_pattern = "#.shtml";
-static const char* s_subpath = "/source/projects/wbsrv/webroot";
+static const char* s_subpath = "/source/projects/zedit/webroot";
 
 // mutable constants
 static const char* s_root_dir = NULL;
 
 
-typedef struct _wbsrv {
+typedef struct _zedit {
     t_object x_ob;             // standard max object
     t_systhread x_systhread;   // thread reference
     t_systhread_mutex x_mutex; // mutual exclusion lock for threadsafety
     int x_systhread_cancel;    // thread cancel flag
     void* x_qelem;             // for message passing between threads
-    // int x_port;                // server listening port
-    void* x_outlet;            // our outlet
+    void* x_outlet;            // the only outlet
     int x_foo;                 // simple data to pass between threads
     int x_sleeptime;           // how many milliseconds to sleep
-    int x_is_running;          // status of wbsrver
+    int x_is_running;          // status of zediter
     t_string* x_root_dir;      // root path to statically serve from
-} t_wbsrv;
+} t_zedit;
 
-void wbsrv_bang(t_wbsrv* x);
-void wbsrv_start(t_wbsrv* x);
-void wbsrv_foo(t_wbsrv* x, long foo);
-void wbsrv_sleeptime(t_wbsrv* x, long sleeptime);
-void wbsrv_stop(t_wbsrv* x);
-void wbsrv_cancel(t_wbsrv* x);
-void* wbsrv_threadproc(t_wbsrv* x);
-void wbsrv_qfn(t_wbsrv* x);
-void wbsrv_assist(t_wbsrv* x, void* b, long m, long a, char* s);
-void wbsrv_free(t_wbsrv* x);
-void* wbsrv_new(void);
+void zedit_bang(t_zedit* x);
+void zedit_start(t_zedit* x);
+void zedit_foo(t_zedit* x, long foo);
+void zedit_sleeptime(t_zedit* x, long sleeptime);
+void zedit_stop(t_zedit* x);
+void zedit_cancel(t_zedit* x);
+void* zedit_threadproc(t_zedit* x);
+void zedit_qfn(t_zedit* x);
+void zedit_assist(t_zedit* x, void* b, long m, long a, char* s);
+void zedit_free(t_zedit* x);
+void* zedit_new(void);
 
 
-void do_build_objects(t_wbsrv* x, t_symbol *s, short argc, t_atom *argv) {
+void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv) {
 
     t_object *patcher;
 
@@ -84,18 +83,36 @@ void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, v
     struct mg_str *cl;
     // On /api/hello requests, send dynamic JSON response
     if (mg_http_match_uri(hm, "/api/hello")) {
-        // mg_http_reply(c, 200, "", "{%Q:%d}\n", "status", 1);
-        object_post((t_object*)c->fn_data, "in /api/hello msg");
+        object_post((t_object*)c->fn_data, "in /api/hello");
         mg_http_reply(c, 200, "", "{%Q:%d}\n", "status", 1);
 
-    } else if (mg_http_match_uri(hm, "/api/create")) {
-        object_post((t_object*)c->fn_data, "in /api/create msg");
-        defer((t_object*)c->fn_data, (method)do_build_objects, gensym(""),
-              0, NULL);
-    } else if (mg_http_match_uri(hm, "/api/f2/*")) {
+    } else if (mg_http_match_uri(hm, "/api/code/save")) {
+        object_post((t_object*)c->fn_data, "/api/code/save");
+
+        // Expecting JSON array in the HTTP body, e.g. [ 1, "..." ]
+        long file_id;
+        char *code;
+
+        if ((file_id = mg_json_get_long(hm->body, "$.file_id", 100) &&
+            (code = mg_json_get_str(hm->body, "$.content")))) {
+            // Success! create JSON response
+            mg_http_reply(c, 200, "Content-Type: application/json\r\n",
+                          "{%Q:%g}\n",
+                          "result", "OK SAVED");
+            post("code: %s", code);
+            free(code);
+        } else {
+            mg_http_reply(c, 500, NULL, "Parameters missing\n");
+        }
+
+    } else if (mg_http_match_uri(hm, "/api/code/run")) {
+        object_post((t_object*)c->fn_data, "/api/code/run");
+    } else if (mg_http_match_uri(hm, "/api/items/*")) {
         mg_http_reply(c, 200, "", "{\"result\": \"%.*s\"}\n", (int) hm->uri.len,
                 hm->uri.ptr);
     } else {
+        // mg_http_reply(c, 500, NULL, "\n");
+        // OR
         // static file server configuration
         struct mg_http_serve_opts opts = {
             .root_dir = s_root_dir,
@@ -112,7 +129,7 @@ void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, v
 }
 
 
-// wbsrv main function
+// zedit main function
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 {
     switch(ev) {
@@ -208,7 +225,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 }
 
 
-// // wbsrver main function
+// // zediter main function
 // static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 // {
 //     if (ev == MG_EV_OPEN) {
@@ -259,54 +276,54 @@ t_string* get_path_to_webroot(t_class* klass)
 }
 
 
-t_class* wbsrv_class;
+t_class* zedit_class;
 
 void ext_main(void* r)
 {
     t_class* c;
 
-    c = class_new("wbsrv", (method)wbsrv_new, (method)wbsrv_free,
-                  sizeof(t_wbsrv), 0L, 0);
+    c = class_new("zedit", (method)zedit_new, (method)zedit_free,
+                  sizeof(t_zedit), 0L, 0);
 
-    class_addmethod(c, (method)wbsrv_bang, "bang", 0);
-    class_addmethod(c, (method)wbsrv_start, "start", 0);
-    class_addmethod(c, (method)wbsrv_foo, "foo", A_DEFLONG, 0);
-    class_addmethod(c, (method)wbsrv_sleeptime, "sleeptime", A_DEFLONG, 0);
-    class_addmethod(c, (method)wbsrv_cancel, "cancel", 0);
-    class_addmethod(c, (method)wbsrv_assist, "assist", A_CANT, 0);
+    class_addmethod(c, (method)zedit_bang, "bang", 0);
+    class_addmethod(c, (method)zedit_start, "start", 0);
+    class_addmethod(c, (method)zedit_foo, "foo", A_DEFLONG, 0);
+    class_addmethod(c, (method)zedit_sleeptime, "sleeptime", A_DEFLONG, 0);
+    class_addmethod(c, (method)zedit_cancel, "cancel", 0);
+    class_addmethod(c, (method)zedit_assist, "assist", A_CANT, 0);
 
     class_register(CLASS_BOX, c);
-    wbsrv_class = c;
+    zedit_class = c;
 }
 
 
 
-void wbsrv_start(t_wbsrv* x)
+void zedit_start(t_zedit* x)
 {
     if (x->x_is_running)
-        wbsrv_stop(x); // kill thread if, any
+        zedit_stop(x); // kill thread if, any
 
     // create new thread + begin execution
     if (x->x_systhread == NULL && !x->x_is_running) {
-        // post("starting a wbsrver on port: %d", x->x_port);
+        // post("starting a zediter on port: %d", x->x_port);
 
         post("Mongoose version : v%s", MG_VERSION);
         post("Listening on     : %s", s_listening_address);
         post("Web root         : [%s]", s_root_dir);
-        systhread_create((method)wbsrv_threadproc, x, 0, 0, 0,
+        systhread_create((method)zedit_threadproc, x, 0, 0, 0,
                          &x->x_systhread);
         x->x_is_running = true;
     }
 }
 
-void wbsrv_foo(t_wbsrv* x, long foo)
+void zedit_foo(t_zedit* x, long foo)
 {
     systhread_mutex_lock(x->x_mutex);
     x->x_foo = foo; // override our current value
     systhread_mutex_unlock(x->x_mutex);
 }
 
-void wbsrv_sleeptime(t_wbsrv* x, long sleeptime)
+void zedit_sleeptime(t_zedit* x, long sleeptime)
 {
     if (sleeptime < 10)
         sleeptime = 10;
@@ -315,7 +332,7 @@ void wbsrv_sleeptime(t_wbsrv* x, long sleeptime)
 }
 
 
-void wbsrv_stop(t_wbsrv* x)
+void zedit_stop(t_zedit* x)
 {
     unsigned int ret;
 
@@ -329,14 +346,14 @@ void wbsrv_stop(t_wbsrv* x)
 }
 
 
-void wbsrv_cancel(t_wbsrv* x)
+void zedit_cancel(t_zedit* x)
 {
-    wbsrv_stop(x); // kill thread if, any
+    zedit_stop(x); // kill thread if, any
     post("Exiting on message cancel");
     outlet_anything(x->x_outlet, gensym("cancelled"), 0, NULL);
 }
 
-void* wbsrv_threadproc(t_wbsrv* x)
+void* zedit_threadproc(t_zedit* x)
 {
     // char listening_address[100];
     // int max_len = sizeof listening_address;
@@ -376,7 +393,7 @@ void* wbsrv_threadproc(t_wbsrv* x)
 }
 
 // triggered by the helper thread
-void wbsrv_qfn(t_wbsrv* x)
+void zedit_qfn(t_zedit* x)
 {
     int myfoo;
 
@@ -388,7 +405,7 @@ void wbsrv_qfn(t_wbsrv* x)
     outlet_int(x->x_outlet, myfoo);
 }
 
-void wbsrv_assist(t_wbsrv* x, void* b, long m, long a, char* s)
+void zedit_assist(t_zedit* x, void* b, long m, long a, char* s)
 {
     if (m == 1)
         sprintf(s, "start starts a new thread");
@@ -396,10 +413,10 @@ void wbsrv_assist(t_wbsrv* x, void* b, long m, long a, char* s)
         sprintf(s, "report when done/cancelled");
 }
 
-void wbsrv_free(t_wbsrv* x)
+void zedit_free(t_zedit* x)
 {
     // stop our thread if it is still running
-    wbsrv_stop(x);
+    zedit_stop(x);
 
     // free our qelem
     if (x->x_qelem)
@@ -410,20 +427,20 @@ void wbsrv_free(t_wbsrv* x)
         systhread_mutex_free(x->x_mutex);
 }
 
-void* wbsrv_new(void)
+void* zedit_new(void)
 {
-    t_wbsrv* x;
+    t_zedit* x;
 
-    x = (t_wbsrv*)object_alloc(wbsrv_class);
+    x = (t_zedit*)object_alloc(zedit_class);
     x->x_outlet = outlet_new(x, NULL);
-    x->x_qelem = qelem_new(x, (method)wbsrv_qfn);
+    x->x_qelem = qelem_new(x, (method)zedit_qfn);
     x->x_systhread = NULL;
     systhread_mutex_new(&x->x_mutex, 0);
     x->x_foo = 0;
     x->x_sleeptime = 1000;
     // x->x_port = 8000;
     x->x_is_running = false;
-    x->x_root_dir = get_path_to_webroot(wbsrv_class);
+    x->x_root_dir = get_path_to_webroot(zedit_class);
 
     // set global
     s_root_dir = string_getptr(x->x_root_dir);
@@ -431,6 +448,6 @@ void* wbsrv_new(void)
     return (x);
 }
 
-void wbsrv_bang(t_wbsrv* x) {
+void zedit_bang(t_zedit* x) {
     outlet_bang(x->x_outlet); 
 }

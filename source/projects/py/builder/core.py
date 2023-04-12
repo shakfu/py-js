@@ -1011,7 +1011,7 @@ class BeewarePythonBuilder(StaticPythonBuilder):
         """pre-build operations"""
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
-        self.apply_patch(patch="beeware.patch")
+        self.apply_patch(patch="beeware.patch") # FIXME: not available
         self.apply_patch(patch="configure.patch", to_file="configure")
         self.cmd.chdir(self.project.pydir)
 
@@ -1099,7 +1099,6 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
 
     def remove_extensions(self):
         """remove extensions"""
-        print("INSIDE")
         self.rm_exts(
             [
                 "_blake2",
