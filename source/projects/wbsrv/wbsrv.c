@@ -24,7 +24,7 @@ static const   int s_debug_level = 2;
 static const char* s_listening_address = "http://localhost:8000";
 static const char* s_enable_hexdump = "no";
 static const char* s_ssi_pattern = "#.shtml";
-static const char* s_subpath = "/source/projects/wbsrv/webroot";
+static const char* s_subpath = "/source/projects/wbsrv/web/build";
 
 // mutable constants
 static const char* s_root_dir = NULL;

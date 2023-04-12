@@ -25,7 +25,7 @@ name       | sdk        | lang   | description
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 [pktpy]    | max-sdk    | c++    | uses the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
-[wbsrv]    | max-sdk    | c      | uses the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
+[zedit]    | max-sdk    | c      | a web-based python editor using the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
 
 [1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
 
@@ -38,7 +38,7 @@ name       | sdk        | lang   | description
 [mamba]: source/projects/mamba
 [krait]: source/projects/krait
 [pktpy]: source/projects/pktpy
-[wbsrv]: source/projects/wbsrv
+[wbsrv]: source/projects/zedit
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
