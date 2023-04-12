@@ -20,11 +20,16 @@
 #define PY_MAX_ELEMS 1024
 
 // static global constants
-static const   int s_debug_level = 2;
+#if defined RELEASE
 static const char* s_listening_address = "http://localhost:8000";
+static const char* s_subpath = "/Contents/Resources/public";
+#else
+static const char* s_listening_address = "http://0.0.0.0:8000";
+static const char* s_subpath = "/source/projects/zedit/webroot";
+#endif
+static const   int s_debug_level = 2;
 static const char* s_enable_hexdump = "no";
 static const char* s_ssi_pattern = "#.shtml";
-static const char* s_subpath = "/source/projects/zedit/webroot";
 
 // mutable constants
 static const char* s_root_dir = NULL;
@@ -83,7 +88,7 @@ void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, v
     struct mg_str *cl;
     // On /api/hello requests, send dynamic JSON response
     if (mg_http_match_uri(hm, "/api/hello")) {
-        object_post((t_object*)c->fn_data, "in /api/hello");
+        object_post((t_object*)c->fn_data, "/api/hello");
         mg_http_reply(c, 200, "", "{%Q:%d}\n", "status", 1);
 
     } else if (mg_http_match_uri(hm, "/api/code/save")) {
@@ -270,7 +275,11 @@ t_string* get_path_to_webroot(t_class* klass)
     path_toabsolutesystempath(path_id, external_name, external_path);
     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
                      PATH_TYPE_TILDE);
+#if defined RELEASE
+    t_string* webroot_path = string_new(external_path);
+#else
     t_string* webroot_path = string_new(dirname(dirname(external_path)));
+#endif
     string_append(webroot_path, s_subpath);
     return webroot_path;
 }
@@ -444,6 +453,7 @@ void* zedit_new(void)
 
     // set global
     s_root_dir = string_getptr(x->x_root_dir);
+    post("webroot: %s", s_root_dir);
 
     return (x);
 }
