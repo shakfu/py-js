@@ -5,8 +5,6 @@ CFLAGS=-std=c99 -Wall
 
 all: $(JS)/editor.min.js
 
-
-
 node_modules:
 	@npm i codemirror  
 	@npm i @codemirror/lang-python

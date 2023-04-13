@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,8 +8,8 @@
     .cm-editor { height: 380px; border: 1px solid #ddd}
     .cm-scroller { overflow: auto; }
     h4 {
-    	font-family: Helvetica, Arial, sans-serif;
-    	background-color: #CCCCCC;
+        font-family: Helvetica, Arial, sans-serif;
+        background-color: #CCCCCC;
         margin-top: 0.5rem;
         margin-bottom: 0.5rem;
         line-height: 1.6;
@@ -21,9 +20,11 @@
     <div id="msg"></div>
     <h4 style="background-color: #CCCCCC;">pyjs-editor</h4>
     <div id="editor"></div>
+    <button type="button" id="help_btn">Help</button>
     <button type="button" id="open_btn">Open</button>
     <button type="button" id="save_btn">Save</button>
     <button type="button" id="run_btn">Run</button>
     <script type=module src="js/editor.min.js"></script>
+    <div id="xterm-container"></div>
 </body>
 </html>

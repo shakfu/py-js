@@ -1,14 +1,38 @@
 import { EditorView, basicSetup } from "codemirror";
-import { keymap, highlightActiveLine } from "@codemirror/view";
-import { defaultKeymap } from "@codemirror/commands";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 
 let editor = new EditorView({
-    extensions: [basicSetup, python(), oneDark, highlightActiveLine()],
+    extensions: [basicSetup, python(), oneDark],
     doc: "# python code here\n",
     parent: document.body,
 });
+
+function helpMe() {
+    alert(`
+        Ctrl-ArrowLeft: cursorSyntaxLeft
+        Shift-Ctrl-ArrowLeft: selectSyntaxLeft
+        Ctrl-ArrowRight: cursorSyntaxRight
+        Shift-Ctrl-ArrowRight: selectSyntaxRight
+        Alt-ArrowUp: moveLineUp
+        Alt-ArrowDown: moveLineDown
+        Shift-Alt-ArrowUp: copyLineUp
+        Shift-Alt-ArrowDown: copyLineDown
+        Escape: simplifySelection
+        Cmd-Enter: insertBlankLine
+        Ctrl-l: selectLine
+        Cmd-i: selectParentSyntax
+        Cmd-[: indentLess
+        Cmd-]: indentMore
+        Cmd-Alt-\: indentSelection
+        Shift-Cmd-k: deleteLine
+        Shift-Cmd-\: cursorMatchingBracket
+        Cmd-/: toggleComment
+        Shift-Alt-a: toggleBlockComment
+    `);
+}
+var help_btn = document.getElementById("help_btn");
+help_btn.addEventListener("click", helpMe);
 
 function openCode() {
     var input = document.createElement("input");
