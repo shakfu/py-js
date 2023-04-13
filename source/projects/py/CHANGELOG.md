@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Added `py_mod.py` which is converted to `py_mod.h`, essentially an embedded python module which is loaded into all `py` instances.
+
 - Added another simpler method of retrieving the `t_py *x` object pointer in `api` module via `uintptr_t` round-trip conversion.
 
 - Added `patchers/py_external_editor.maxpat` prototype of using external editor with `filewatcher` and `py_load <path>` message.

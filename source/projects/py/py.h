@@ -29,6 +29,9 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+/* py default embedded module */
+#include "py_mod.h"
+
 /*--------------------------------------------------------------------------*/
 /* Constants */
 
@@ -163,7 +166,6 @@ void py_okclose(t_py* x, char *s, short *result);
 bool py_table_exists(t_py* x, char* table_name);
 t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist);
 PyObject* py_table_to_list(t_py* x, char* table_name);
-
 
 
 #endif // PY_H

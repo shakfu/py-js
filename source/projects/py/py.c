@@ -145,6 +145,7 @@ void py_init_builtins(t_py* x)
 {
     PyObject* p_name = NULL;
     PyObject* builtins = NULL;
+    PyObject* p_code_obj = NULL;
     int err = -1;
 
     p_name = PyUnicode_FromString(x->p_name->s_name);
@@ -163,7 +164,16 @@ void py_init_builtins(t_py* x)
     if (err == -1)
         goto error;
 
+    p_code_obj = PyRun_String(PY_DEFAULT_MODULE,
+        Py_file_input, x->p_globals, x->p_globals);
+
+    if (p_code_obj == NULL) {
+        py_error(x, "cannot import PY_DEFAULT_MODULE");
+        goto error;
+    }
+
     Py_XDECREF(p_name);
+    Py_XDECREF(p_code_obj);
     return;
 
 error:
@@ -1234,7 +1244,6 @@ error:
  */
 t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 {
-    PyObject* pfun_co = NULL;
     PyObject* pfun = NULL;
     PyObject* pval = NULL;
 
@@ -1244,24 +1253,7 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 
     if (PyDict_Check(pdict)) {
 
-        pfun_co = PyRun_String("def __py_maxmsp_out_dict(arg):\n"
-                               "\tres = []\n"
-                               "\tfor k,v in arg.items():\n"
-                               "\t\tres.append(k)\n"
-                               "\t\tres.append(':')\n"
-                               "\t\tif type(v) in [list, set, tuple]:\n"
-                               "\t\t\tfor i in v:\n"
-                               "\t\t\t\tres.append(i)\n"
-                               "\t\telse:\n"
-                               "\t\t\tres.append(v)\n"
-                               "\treturn res\n",
-                               Py_single_input, x->p_globals, x->p_globals);
-
-        if (pfun_co == NULL) {
-            py_error(x, "out_dict function code object is NULL");
-            goto error;
-        }
-
+        // depends on definition in py_mod.h
         pfun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_out_dict");
         if (pfun == NULL) {
             py_error(x, "retrieving out_dict func from globals failed");
@@ -1276,7 +1268,6 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 
         if (PyList_Check(pval)) {           // expecting a python list
             py_handle_list_output(x, pval); // this decrefs pval
-            Py_XDECREF(pfun_co);
             py_bang_success(x);
             return MAX_ERR_NONE;
         } else {
@@ -1287,7 +1278,6 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 
 error:
     py_handle_error(x, "py_handle_dict_output failed");
-    Py_XDECREF(pfun_co);
     Py_XDECREF(pval);
     // fail bang
     py_bang_failure(x);
@@ -1881,7 +1871,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
     long textsize = 0;
     char* text = NULL;
     t_max_err err;
-    PyObject* pipe_pre = NULL;
+    // PyObject* pipe_pre = NULL;
     PyObject* pipe_fun = NULL;
     PyObject* pval = NULL;
     PyObject* pstr = NULL;
@@ -1893,22 +1883,6 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    pipe_pre = PyRun_String(
-        "def __py_maxmsp_pipe(arg):\n"
-        "\targs = arg.split()\n"
-        "\tval = eval(args[0], locals(), globals())\n"
-        "\tfuncs = [eval(f, locals(), globals()) for f in args[1:]]\n"
-        "\tfor f in funcs:\n"
-        "\t\tval = f(val)\n"
-        "\treturn val\n",
-        Py_single_input, x->p_globals, x->p_globals);
-
-    if (pipe_pre == NULL)
-    {
-        py_error(x, "pipe func is NULL");
-        goto error;
-    }
-
     pstr = PyUnicode_FromString(text);
     if (pstr == NULL) {
         py_error(x, "cstr -> pyunicode conversion failed");
@@ -1917,6 +1891,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     sysmem_freeptr(text);
 
+    // depends on definition in py_mod.h
     pipe_fun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_pipe");
     if (pipe_fun == NULL) {
         py_error(x, "retrieving pipe func from globals failed");
@@ -1941,7 +1916,6 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
             Py_XDECREF(pval);
         }
 
-        Py_XDECREF(pipe_pre);
         Py_XDECREF(pstr);
         PyGILState_Release(gstate);
         py_bang_success(x);
@@ -1952,7 +1926,6 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 error:
     py_handle_error(x, "pipe failed");
-    Py_XDECREF(pipe_pre);
     Py_XDECREF(pstr);
     Py_XDECREF(pval);
     // fail bang
@@ -2410,9 +2383,6 @@ error:
     py_error(x, "table to list conversion failed");
     Py_RETURN_NONE;
 }
-
-
-
 
 
 
