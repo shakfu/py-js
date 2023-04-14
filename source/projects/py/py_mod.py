@@ -1,23 +1,28 @@
 import os
-# import subprocess
+import subprocess
+import shlex
 
-EDITOR = 'Sublime Text'
+EDITOR = 'Sublime Text' # can be changed of course
 
-# disabled by default for safety
-# 
-# def sysout(cmd):
-#     result = None
-#     try:
-#         result = subprocess.check_output(
-#             cmd.split(), encoding='utf8').strip()
-#     except:
-#         pass
-#     return result
+# can be be disabled by default for safety
+def shell(cmd, err_func=None):
+    result = None
+    try:
+        result = subprocess.check_output(
+            shlex.split(cmd), encoding='utf8').strip()
+    except subprocess.CalledProcessError as e:
+        if err_func:
+            err_func(e.stderr)
+    except FileNotFoundError as e:
+        if err_func:
+            err_func(e.strerror)
+    if result:
+        return result
 
 
 def edit(path):
     editor = os.getenv('EDITOR', EDITOR)
-    os.system(f'open -a "{editor}" "{path}"')
+    shell(f'open -a "{editor}" "{path}"')
 
 
 

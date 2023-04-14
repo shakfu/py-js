@@ -6,7 +6,7 @@ This is an experiment to use [pocketpy](https://github.com/blueloveTH/pocketpy),
 
 [pocketpy](https://github.com/blueloveTH/pocketpy) is a very cool early stage project to create an embeddable self-contained python implementation for game engines.
 
-A lot of language compatibility has been implemented but not a lot of infrastructure support (module coverage, user module support) yet.
+A lot of language compatibility has been implemented but not a lot of module coverage yet, although user modules have been recently implemented.
 
 So far it offers preliminary support for the following modules:
 
