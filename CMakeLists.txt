@@ -74,7 +74,7 @@ endforeach ()
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/shell)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/wbsrv)
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zpy)
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zthread)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
 

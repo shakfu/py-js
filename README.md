@@ -39,7 +39,9 @@ name       | sdk        | lang   | description
 [mamba]: source/projects/mamba
 [krait]: source/projects/krait
 [pktpy]: source/projects/pktpy
-[wbsrv]: source/projects/zedit
+[zedit]: source/projects/zedit
+[mpy]: source/projects/mpy
+
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
