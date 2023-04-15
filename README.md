@@ -26,6 +26,7 @@ name       | sdk        | lang   | description
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 [pktpy]    | max-sdk    | c++    | uses the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
 [zedit]    | max-sdk    | c      | a web-based python editor using the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
+[mpy]      | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
 
 [1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
 
