@@ -4,9 +4,36 @@
     <meta charset=utf8>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>pyjs-editor</title>
+    <link rel="stylesheet" href="css/xterm.css" />
+    <!-- <link rel="stylesheet" href="js/terminal.bundle.css" /> -->
     <style>
-    .cm-editor { height: 380px; border: 1px solid #ddd}
-    .cm-scroller { overflow: auto; }
+    .container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cm-editor { 
+        margin-top: 0px;
+        height: 480px; 
+        border: 1px solid #ddd;
+    }
+    .cm-scroller {
+        overflow: auto; 
+    }
+
+    #terminal {
+      margin-top: 4px;
+      height: 100px;
+    }
+    div#msg {
+        order: 1;
+    }
+    div#editor {
+        order: 2;
+    }
+    div#terminal {
+        order: 3;
+    }
     h4 {
         font-family: Helvetica, Arial, sans-serif;
         background-color: #CCCCCC;
@@ -17,13 +44,16 @@
     </style>
 </head>
 <body>
-    <div id="msg"></div>
     <h4 style="background-color: #CCCCCC;">pyjs-editor</h4>
-    <div id="editor"></div>
     <button type="button" id="help_btn">Help</button>
     <button type="button" id="open_btn">Open</button>
     <button type="button" id="save_btn">Save</button>
     <button type="button" id="run_btn">Run</button>
-    <script type=module src="js/editor.min.js"></script>
+    <div class="container">
+        <div id="msg"></div>
+        <div id="editor"></div>
+        <div id="terminal"></div>
+    </div>    
+    <script src="js/terminal.bundle.js"></script>
 </body>
 </html>

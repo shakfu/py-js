@@ -3,27 +3,26 @@ BUILD_DIR=public
 JS=$(BUILD_DIR)/js
 CFLAGS=-std=c99 -Wall
 
-all: $(JS)/terminal.min.js
+all: $(JS)/editor.min.js
 
 node_modules:
-	@npm i xterm  
-	@npm i xterm-readline
+	@npm i codemirror  
+	@npm i @codemirror/lang-python
+	@npm i @codemirror/theme-one-dark
 	@npm i rollup @rollup/plugin-node-resolve
-	@npm i rollup-plugin-import-css
-	@npm i @rollup/plugin-commonjs
 	@npm i terser
 
 
-terminal.mjs: node_modules
+editor.mjs: node_modules
 	@echo "OK"
 
-$(JS)/terminal.min.js: $(JS)/terminal.bundle.js
-	@node_modules/terser/bin/terser $(JS)/terminal.bundle.js -o $(JS)/terminal.min.js -c
+$(JS)/editor.min.js: $(JS)/editor.bundle.js
+	@node_modules/terser/bin/terser $(JS)/editor.bundle.js -o $(JS)/editor.min.js -c
 
-$(JS)/terminal.bundle.js: terminal.mjs $(BUILD_DIR)/index.html
+$(JS)/editor.bundle.js: editor.mjs $(BUILD_DIR)/index.html
 	@echo "Bundling js"
 	@node_modules/.bin/rollup -c
-	@npx prettier --tab-width 4 --write terminal.mjs
+	@npx prettier --tab-width 4 --write editor.mjs
 
 $(BUILD_DIR)/index.html: index.html
 	@echo "copy index.html -> ./public"

@@ -1,10 +1,17 @@
 import {nodeResolve} from "@rollup/plugin-node-resolve"
+import commonjs from '@rollup/plugin-commonjs';
+import css from "rollup-plugin-import-css";
+
 export default {
-  input: "./editor.mjs",
+  input: "./terminal.mjs",
   output: {
-    file: "./public/js/editor.bundle.js",
+    file: "./public/js/terminal.bundle.js",
     format: "iife"
   },
-  plugins: [nodeResolve()]
+  plugins: [
+    nodeResolve(), 
+    css(), 
+    commonjs(),
+  ]
 }
 

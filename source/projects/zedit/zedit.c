@@ -112,6 +112,21 @@ void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, v
 
     } else if (mg_http_match_uri(hm, "/api/code/run")) {
         object_post((t_object*)c->fn_data, "/api/code/run");
+    } else if (mg_http_match_uri(hm, "/api/repl/send")) {
+        object_post((t_object*)c->fn_data, "/api/repl/run");
+        char *code;
+
+        if ((code = mg_json_get_str(hm->body, "$.content"))) {
+            // Success! create JSON response
+            mg_http_reply(c, 200, "Content-Type: application/json\r\n",
+                          "{%Q:%Q}\n",
+                          "result", "OK");
+            post("code: %s", code);
+            free(code);
+        } else {
+            mg_http_reply(c, 500, NULL, "Parameters missing\n");
+        }
+
     } else if (mg_http_match_uri(hm, "/api/items/*")) {
         mg_http_reply(c, 200, "", "{\"result\": \"%.*s\"}\n", (int) hm->uri.len,
                 hm->uri.ptr);
