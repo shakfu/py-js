@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 3,
-			"revision" : 1,
+			"minor" : 5,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -40,12 +40,34 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-41",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 505.5, 402.0, 150.0, 20.0 ],
+					"text" : "requires numpy"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-35",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 505.5, 343.0, 119.0, 20.0 ],
+					"text" : "not yet implemented"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-38",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 276.0, 129.0, 22.0 ],
+					"patching_rect" : [ 502.0, 367.0, 129.0, 22.0 ],
 					"text" : "api.test_atom_create()"
 				}
 
@@ -189,7 +211,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 320.0, 87.0, 22.0 ],
+					"patching_rect" : [ 505.5, 238.0, 87.0, 22.0 ],
 					"text" : "eval api.send()"
 				}
 
@@ -201,7 +223,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 380.0, 138.0, 22.0 ],
+					"patching_rect" : [ 505.5, 298.0, 138.0, 22.0 ],
 					"text" : "eval api.lookup('mrfloat')"
 				}
 
@@ -213,7 +235,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 350.0, 34.0, 22.0 ],
+					"patching_rect" : [ 505.5, 268.0, 34.0, 22.0 ],
 					"text" : "scan"
 				}
 
@@ -225,7 +247,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 288.0, 95.0, 22.0 ],
+					"patching_rect" : [ 505.5, 206.0, 95.0, 22.0 ],
 					"text" : "send mrfloat 2.5"
 				}
 
@@ -356,7 +378,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 78.0, 127.0, 22.0 ],
+					"patching_rect" : [ 505.5, 425.0, 127.0, 22.0 ],
 					"text" : "eval api.np.__name__"
 				}
 
@@ -368,7 +390,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 115.0, 151.0, 22.0 ],
+					"patching_rect" : [ 505.5, 456.0, 151.0, 22.0 ],
 					"text" : "eval api.np.version.version"
 				}
 
@@ -380,7 +402,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 188.0, 102.0, 22.0 ],
+					"patching_rect" : [ 505.5, 106.0, 102.0, 22.0 ],
 					"text" : "call api.total 1 2 3"
 				}
 
@@ -392,7 +414,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 153.0, 105.0, 22.0 ],
+					"patching_rect" : [ 505.5, 71.0, 105.0, 22.0 ],
 					"text" : "call api.echo 1 2 3"
 				}
 
@@ -404,7 +426,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 220.0, 115.0, 22.0 ],
+					"patching_rect" : [ 505.5, 138.0, 115.0, 22.0 ],
 					"text" : "eval api.random(10)"
 				}
 
@@ -488,7 +510,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 255.0, 66.0, 22.0 ],
+					"patching_rect" : [ 505.5, 173.0, 66.0, 22.0 ],
 					"text" : "eval api.txt"
 				}
 
@@ -586,7 +608,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 176.5, 556.0, 187.0, 22.0 ]
+					"patching_rect" : [ 176.5, 556.0, 187.0, 22.0 ],
+					"text" : "44100."
 				}
 
 			}
@@ -604,8 +627,7 @@
 						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
-						"pythonpath" : "",
-						"run_on_save" : 0
+						"pythonpath" : ""
 					}
 ,
 					"text" : "py",

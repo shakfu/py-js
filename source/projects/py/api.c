@@ -1283,7 +1283,7 @@ struct __pyx_obj_3api_PyExternal {
 };
 
 
-/* "api.pyx":1660
+/* "api.pyx":1666
  * # Alternative external extension type (obj pointer retrieved via uintptr_t
  * 
  * cdef class PyMxObject:             # <<<<<<<<<<<<<<
@@ -1595,7 +1595,7 @@ struct __pyx_vtabstruct_3api_PyExternal {
   int (*cstring_to_atoms)(struct __pyx_obj_3api_PyExternal *, char *, long, t_atom *);
   PyObject *(*send)(struct __pyx_obj_3api_PyExternal *, PyObject *, PyObject *);
   t_object *(*create)(struct __pyx_obj_3api_PyExternal *, PyObject *, PyObject *);
-  int (*table_exists)(struct __pyx_obj_3api_PyExternal *, char *);
+  int (*table_exists)(struct __pyx_obj_3api_PyExternal *, PyObject *);
   t_max_err (*list_to_table)(struct __pyx_obj_3api_PyExternal *, char *, PyObject *);
   PyObject *(*table_to_list)(struct __pyx_obj_3api_PyExternal *, char *);
   PyObject *(*success_bang)(struct __pyx_obj_3api_PyExternal *);
@@ -1611,7 +1611,7 @@ struct __pyx_vtabstruct_3api_PyExternal {
 static struct __pyx_vtabstruct_3api_PyExternal *__pyx_vtabptr_3api_PyExternal;
 
 
-/* "api.pyx":1660
+/* "api.pyx":1666
  * # Alternative external extension type (obj pointer retrieved via uintptr_t
  * 
  * cdef class PyMxObject:             # <<<<<<<<<<<<<<
@@ -2338,7 +2338,7 @@ static int __pyx_f_3api_10PyExternal_pstring_to_atoms(CYTHON_UNUSED struct __pyx
 static int __pyx_f_3api_10PyExternal_cstring_to_atoms(CYTHON_UNUSED struct __pyx_obj_3api_PyExternal *__pyx_v_self, char *__pyx_v_parsestr, long __pyx_v_argc, t_atom *__pyx_v_argv); /* proto*/
 static PyObject *__pyx_f_3api_10PyExternal_send(struct __pyx_obj_3api_PyExternal *__pyx_v_self, PyObject *__pyx_v_name, PyObject *__pyx_v_args); /* proto*/
 static t_object *__pyx_f_3api_10PyExternal_create(CYTHON_UNUSED struct __pyx_obj_3api_PyExternal *__pyx_v_self, PyObject *__pyx_v_classname, PyObject *__pyx_v_args); /* proto*/
-static int __pyx_f_3api_10PyExternal_table_exists(struct __pyx_obj_3api_PyExternal *__pyx_v_self, char *__pyx_v_table_name); /* proto*/
+static int __pyx_f_3api_10PyExternal_table_exists(struct __pyx_obj_3api_PyExternal *__pyx_v_self, PyObject *__pyx_v_table_name); /* proto*/
 static t_max_err __pyx_f_3api_10PyExternal_list_to_table(struct __pyx_obj_3api_PyExternal *__pyx_v_self, char *__pyx_v_table_name, PyObject *__pyx_v_plist); /* proto*/
 static PyObject *__pyx_f_3api_10PyExternal_table_to_list(struct __pyx_obj_3api_PyExternal *__pyx_v_self, char *__pyx_v_table_name); /* proto*/
 static PyObject *__pyx_f_3api_10PyExternal_success_bang(struct __pyx_obj_3api_PyExternal *__pyx_v_self); /* proto*/
@@ -2512,6 +2512,7 @@ static const char __pyx_k_failure_bang[] = "failure_bang";
 static const char __pyx_k_found_object[] = "found object";
 static const char __pyx_k_hello_outlet[] = "hello outlet!";
 static const char __pyx_k_success_bang[] = "success_bang";
+static const char __pyx_k_table_exists[] = "table_exists";
 static const char __pyx_k_create_object[] = "create_object";
 static const char __pyx_k_doesn_t_exist[] = "' doesn't exist";
 static const char __pyx_k_getentrycount[] = "getentrycount";
@@ -2640,6 +2641,7 @@ static PyObject *__pyx_kp_u_string;
 static PyObject *__pyx_n_s_success_bang;
 static PyObject *__pyx_n_s_sum;
 static PyObject *__pyx_n_s_symbol;
+static PyObject *__pyx_n_s_table_exists;
 static PyObject *__pyx_kp_u_table_with_name;
 static PyObject *__pyx_n_s_tablename;
 static PyObject *__pyx_n_s_test;
@@ -2758,11 +2760,12 @@ static PyObject *__pyx_pf_3api_34hello(CYTHON_UNUSED PyObject *__pyx_self); /* p
 static PyObject *__pyx_pf_3api_36random(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_n); /* proto */
 static PyObject *__pyx_pf_3api_38echo(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
 static PyObject *__pyx_pf_3api_40total(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_args); /* proto */
+static PyObject *__pyx_pf_3api_42table_exists(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_name); /* proto */
 static int __pyx_pf_3api_10PyMxObject___cinit__(struct __pyx_obj_3api_PyMxObject *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_3api_10PyMxObject_2bang(struct __pyx_obj_3api_PyMxObject *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_3api_10PyMxObject_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_3api_PyMxObject *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_3api_10PyMxObject_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_3api_PyMxObject *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_3api_42test_ref(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_3api_44test_ref(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
 static PyObject *__pyx_tp_new_3api_Atom(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_3api_Table(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_3api_Buffer(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -2830,6 +2833,7 @@ static PyObject *__pyx_tuple__58;
 static PyObject *__pyx_tuple__60;
 static PyObject *__pyx_tuple__62;
 static PyObject *__pyx_tuple__64;
+static PyObject *__pyx_tuple__66;
 static PyObject *__pyx_codeobj__25;
 static PyObject *__pyx_codeobj__27;
 static PyObject *__pyx_codeobj__29;
@@ -2851,6 +2855,7 @@ static PyObject *__pyx_codeobj__59;
 static PyObject *__pyx_codeobj__61;
 static PyObject *__pyx_codeobj__63;
 static PyObject *__pyx_codeobj__65;
+static PyObject *__pyx_codeobj__67;
 /* Late includes */
 
 /* "api.pyx":148
@@ -17650,7 +17655,7 @@ static t_object *__pyx_f_3api_10PyExternal_create(CYTHON_UNUSED struct __pyx_obj
  *         cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
  *         return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)             # <<<<<<<<<<<<<<
  * 
- *     cdef bint table_exists(self, char* table_name):
+ *     cdef bint table_exists(self, str table_name):
  */
   __pyx_r = ((t_object *)newinstance(__pyx_v_sym, ((long)__pyx_v_atoms->size), ((t_atom *)__pyx_v_atoms->ptr)));
   goto __pyx_L0;
@@ -17678,42 +17683,59 @@ static t_object *__pyx_f_3api_10PyExternal_create(CYTHON_UNUSED struct __pyx_obj
 /* "api.pyx":1443
  *         return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
  * 
- *     cdef bint table_exists(self, char* table_name):             # <<<<<<<<<<<<<<
- *         return px.py_table_exists(self.obj, table_name)
+ *     cdef bint table_exists(self, str table_name):             # <<<<<<<<<<<<<<
+ *         return px.py_table_exists(self.obj, table_name.encode('utf-8'))
  * 
  */
 
-static int __pyx_f_3api_10PyExternal_table_exists(struct __pyx_obj_3api_PyExternal *__pyx_v_self, char *__pyx_v_table_name) {
+static int __pyx_f_3api_10PyExternal_table_exists(struct __pyx_obj_3api_PyExternal *__pyx_v_self, PyObject *__pyx_v_table_name) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  char *__pyx_t_2;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("table_exists", 0);
 
   /* "api.pyx":1444
  * 
- *     cdef bint table_exists(self, char* table_name):
- *         return px.py_table_exists(self.obj, table_name)             # <<<<<<<<<<<<<<
+ *     cdef bint table_exists(self, str table_name):
+ *         return px.py_table_exists(self.obj, table_name.encode('utf-8'))             # <<<<<<<<<<<<<<
  * 
  *     cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
  */
-  __pyx_r = py_table_exists(__pyx_v_self->obj, __pyx_v_table_name);
+  if (unlikely(__pyx_v_table_name == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
+    __PYX_ERR(0, 1444, __pyx_L1_error)
+  }
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_table_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1444, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyBytes_AsWritableString(__pyx_t_1); if (unlikely((!__pyx_t_2) && PyErr_Occurred())) __PYX_ERR(0, 1444, __pyx_L1_error)
+  __pyx_r = py_table_exists(__pyx_v_self->obj, __pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   goto __pyx_L0;
 
   /* "api.pyx":1443
  *         return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
  * 
- *     cdef bint table_exists(self, char* table_name):             # <<<<<<<<<<<<<<
- *         return px.py_table_exists(self.obj, table_name)
+ *     cdef bint table_exists(self, str table_name):             # <<<<<<<<<<<<<<
+ *         return px.py_table_exists(self.obj, table_name.encode('utf-8'))
  * 
  */
 
   /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_WriteUnraisable("api.PyExternal.table_exists", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
+  __pyx_r = 0;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
 /* "api.pyx":1446
- *         return px.py_table_exists(self.obj, table_name)
+ *         return px.py_table_exists(self.obj, table_name.encode('utf-8'))
  * 
  *     cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):             # <<<<<<<<<<<<<<
  *         return px.py_list_to_table(self.obj, table_name, plist)
@@ -17736,7 +17758,7 @@ static t_max_err __pyx_f_3api_10PyExternal_list_to_table(struct __pyx_obj_3api_P
   goto __pyx_L0;
 
   /* "api.pyx":1446
- *         return px.py_table_exists(self.obj, table_name)
+ *         return px.py_table_exists(self.obj, table_name.encode('utf-8'))
  * 
  *     cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):             # <<<<<<<<<<<<<<
  *         return px.py_list_to_table(self.obj, table_name, plist)
@@ -21074,7 +21096,93 @@ static PyObject *__pyx_pf_3api_40total(CYTHON_UNUSED PyObject *__pyx_self, PyObj
   return __pyx_r;
 }
 
-/* "api.pyx":1663
+/* "api.pyx":1657
+ * 
+ * 
+ * def table_exists(str name):             # <<<<<<<<<<<<<<
+ *     ext = PyExternal()
+ *     return ext.table_exists(name)
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_3api_43table_exists(PyObject *__pyx_self, PyObject *__pyx_v_name); /*proto*/
+static PyMethodDef __pyx_mdef_3api_43table_exists = {"table_exists", (PyCFunction)__pyx_pw_3api_43table_exists, METH_O, 0};
+static PyObject *__pyx_pw_3api_43table_exists(PyObject *__pyx_self, PyObject *__pyx_v_name) {
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("table_exists (wrapper)", 0);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_name), (&PyUnicode_Type), 1, "name", 1))) __PYX_ERR(0, 1657, __pyx_L1_error)
+  __pyx_r = __pyx_pf_3api_42table_exists(__pyx_self, ((PyObject*)__pyx_v_name));
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_3api_42table_exists(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_name) {
+  struct __pyx_obj_3api_PyExternal *__pyx_v_ext = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("table_exists", 0);
+
+  /* "api.pyx":1658
+ * 
+ * def table_exists(str name):
+ *     ext = PyExternal()             # <<<<<<<<<<<<<<
+ *     return ext.table_exists(name)
+ * 
+ */
+  __pyx_t_1 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_3api_PyExternal)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1658, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_ext = ((struct __pyx_obj_3api_PyExternal *)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "api.pyx":1659
+ * def table_exists(str name):
+ *     ext = PyExternal()
+ *     return ext.table_exists(name)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __Pyx_PyBool_FromLong(((struct __pyx_vtabstruct_3api_PyExternal *)__pyx_v_ext->__pyx_vtab)->table_exists(__pyx_v_ext, __pyx_v_name)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1659, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "api.pyx":1657
+ * 
+ * 
+ * def table_exists(str name):             # <<<<<<<<<<<<<<
+ *     ext = PyExternal()
+ *     return ext.table_exists(name)
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("api.table_exists", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF((PyObject *)__pyx_v_ext);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "api.pyx":1669
  *     cdef px.t_py *x
  * 
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
@@ -21103,7 +21211,7 @@ static int __pyx_pf_3api_10PyMxObject___cinit__(struct __pyx_obj_3api_PyMxObject
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "api.pyx":1664
+  /* "api.pyx":1670
  * 
  *     def __cinit__(self):
  *         self.x = <px.t_py*>px.py_get_object_ref()             # <<<<<<<<<<<<<<
@@ -21112,7 +21220,7 @@ static int __pyx_pf_3api_10PyMxObject___cinit__(struct __pyx_obj_3api_PyMxObject
  */
   __pyx_v_self->x = ((t_py *)py_get_object_ref());
 
-  /* "api.pyx":1663
+  /* "api.pyx":1669
  *     cdef px.t_py *x
  * 
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
@@ -21126,7 +21234,7 @@ static int __pyx_pf_3api_10PyMxObject___cinit__(struct __pyx_obj_3api_PyMxObject
   return __pyx_r;
 }
 
-/* "api.pyx":1666
+/* "api.pyx":1672
  *         self.x = <px.t_py*>px.py_get_object_ref()
  * 
  *     cpdef bang(self):             # <<<<<<<<<<<<<<
@@ -21155,7 +21263,7 @@ static PyObject *__pyx_f_3api_10PyMxObject_bang(struct __pyx_obj_3api_PyMxObject
     if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
       PY_UINT64_T __pyx_type_dict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
       #endif
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_bang); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1666, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_bang); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1672, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)(void*)__pyx_pw_3api_10PyMxObject_3bang)) {
         __Pyx_XDECREF(__pyx_r);
@@ -21172,7 +21280,7 @@ static PyObject *__pyx_f_3api_10PyMxObject_bang(struct __pyx_obj_3api_PyMxObject
         }
         __pyx_t_2 = (__pyx_t_4) ? __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_4) : __Pyx_PyObject_CallNoArg(__pyx_t_3);
         __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1666, __pyx_L1_error)
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1672, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
         __pyx_r = __pyx_t_2;
@@ -21193,7 +21301,7 @@ static PyObject *__pyx_f_3api_10PyMxObject_bang(struct __pyx_obj_3api_PyMxObject
     #endif
   }
 
-  /* "api.pyx":1667
+  /* "api.pyx":1673
  * 
  *     cpdef bang(self):
  *         px.py_bang(self.x)             # <<<<<<<<<<<<<<
@@ -21202,7 +21310,7 @@ static PyObject *__pyx_f_3api_10PyMxObject_bang(struct __pyx_obj_3api_PyMxObject
  */
   py_bang(__pyx_v_self->x);
 
-  /* "api.pyx":1666
+  /* "api.pyx":1672
  *         self.x = <px.t_py*>px.py_get_object_ref()
  * 
  *     cpdef bang(self):             # <<<<<<<<<<<<<<
@@ -21248,7 +21356,7 @@ static PyObject *__pyx_pf_3api_10PyMxObject_2bang(struct __pyx_obj_3api_PyMxObje
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("bang", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_3api_10PyMxObject_bang(__pyx_v_self, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1666, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3api_10PyMxObject_bang(__pyx_v_self, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1672, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -21378,7 +21486,7 @@ static PyObject *__pyx_pf_3api_10PyMxObject_6__setstate_cython__(CYTHON_UNUSED s
   return __pyx_r;
 }
 
-/* "api.pyx":1669
+/* "api.pyx":1675
  *         px.py_bang(self.x)
  * 
  * def test_ref():             # <<<<<<<<<<<<<<
@@ -21387,20 +21495,20 @@ static PyObject *__pyx_pf_3api_10PyMxObject_6__setstate_cython__(CYTHON_UNUSED s
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3api_43test_ref(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyMethodDef __pyx_mdef_3api_43test_ref = {"test_ref", (PyCFunction)__pyx_pw_3api_43test_ref, METH_NOARGS, 0};
-static PyObject *__pyx_pw_3api_43test_ref(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_3api_45test_ref(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_3api_45test_ref = {"test_ref", (PyCFunction)__pyx_pw_3api_45test_ref, METH_NOARGS, 0};
+static PyObject *__pyx_pw_3api_45test_ref(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("test_ref (wrapper)", 0);
-  __pyx_r = __pyx_pf_3api_42test_ref(__pyx_self);
+  __pyx_r = __pyx_pf_3api_44test_ref(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3api_42test_ref(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_3api_44test_ref(CYTHON_UNUSED PyObject *__pyx_self) {
   struct __pyx_obj_3api_PyMxObject *__pyx_v_ext = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -21410,27 +21518,27 @@ static PyObject *__pyx_pf_3api_42test_ref(CYTHON_UNUSED PyObject *__pyx_self) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("test_ref", 0);
 
-  /* "api.pyx":1670
+  /* "api.pyx":1676
  * 
  * def test_ref():
  *     ext = PyMxObject()             # <<<<<<<<<<<<<<
  *     ext.bang()
  */
-  __pyx_t_1 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_3api_PyMxObject)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1670, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_3api_PyMxObject)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1676, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_ext = ((struct __pyx_obj_3api_PyMxObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "api.pyx":1671
+  /* "api.pyx":1677
  * def test_ref():
  *     ext = PyMxObject()
  *     ext.bang()             # <<<<<<<<<<<<<<
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_3api_PyMxObject *)__pyx_v_ext->__pyx_vtab)->bang(__pyx_v_ext, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1671, __pyx_L1_error)
+  __pyx_t_1 = ((struct __pyx_vtabstruct_3api_PyMxObject *)__pyx_v_ext->__pyx_vtab)->bang(__pyx_v_ext, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1677, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "api.pyx":1669
+  /* "api.pyx":1675
  *         px.py_bang(self.x)
  * 
  * def test_ref():             # <<<<<<<<<<<<<<
@@ -22980,6 +23088,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_success_bang, __pyx_k_success_bang, sizeof(__pyx_k_success_bang), 0, 0, 1, 1},
   {&__pyx_n_s_sum, __pyx_k_sum, sizeof(__pyx_k_sum), 0, 0, 1, 1},
   {&__pyx_n_s_symbol, __pyx_k_symbol, sizeof(__pyx_k_symbol), 0, 0, 1, 1},
+  {&__pyx_n_s_table_exists, __pyx_k_table_exists, sizeof(__pyx_k_table_exists), 0, 0, 1, 1},
   {&__pyx_kp_u_table_with_name, __pyx_k_table_with_name, sizeof(__pyx_k_table_with_name), 0, 1, 0, 0},
   {&__pyx_n_s_tablename, __pyx_k_tablename, sizeof(__pyx_k_tablename), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
@@ -23472,17 +23581,29 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__62);
   __pyx_codeobj__63 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__62, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_source_projects_py_api_pyx, __pyx_n_s_total, 1653, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__63)) __PYX_ERR(0, 1653, __pyx_L1_error)
 
-  /* "api.pyx":1669
+  /* "api.pyx":1657
+ * 
+ * 
+ * def table_exists(str name):             # <<<<<<<<<<<<<<
+ *     ext = PyExternal()
+ *     return ext.table_exists(name)
+ */
+  __pyx_tuple__64 = PyTuple_Pack(2, __pyx_n_s_name, __pyx_n_s_ext); if (unlikely(!__pyx_tuple__64)) __PYX_ERR(0, 1657, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__64);
+  __Pyx_GIVEREF(__pyx_tuple__64);
+  __pyx_codeobj__65 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__64, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_source_projects_py_api_pyx, __pyx_n_s_table_exists, 1657, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__65)) __PYX_ERR(0, 1657, __pyx_L1_error)
+
+  /* "api.pyx":1675
  *         px.py_bang(self.x)
  * 
  * def test_ref():             # <<<<<<<<<<<<<<
  *     ext = PyMxObject()
  *     ext.bang()
  */
-  __pyx_tuple__64 = PyTuple_Pack(1, __pyx_n_s_ext); if (unlikely(!__pyx_tuple__64)) __PYX_ERR(0, 1669, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__64);
-  __Pyx_GIVEREF(__pyx_tuple__64);
-  __pyx_codeobj__65 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__64, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_source_projects_py_api_pyx, __pyx_n_s_test_ref, 1669, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__65)) __PYX_ERR(0, 1669, __pyx_L1_error)
+  __pyx_tuple__66 = PyTuple_Pack(1, __pyx_n_s_ext); if (unlikely(!__pyx_tuple__66)) __PYX_ERR(0, 1675, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__66);
+  __Pyx_GIVEREF(__pyx_tuple__66);
+  __pyx_codeobj__67 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__66, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_source_projects_py_api_pyx, __pyx_n_s_test_ref, 1675, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__67)) __PYX_ERR(0, 1675, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -23840,7 +23961,7 @@ static int __Pyx_modinit_type_init_code(void) {
   __pyx_vtable_3api_PyExternal.cstring_to_atoms = (int (*)(struct __pyx_obj_3api_PyExternal *, char *, long, t_atom *))__pyx_f_3api_10PyExternal_cstring_to_atoms;
   __pyx_vtable_3api_PyExternal.send = (PyObject *(*)(struct __pyx_obj_3api_PyExternal *, PyObject *, PyObject *))__pyx_f_3api_10PyExternal_send;
   __pyx_vtable_3api_PyExternal.create = (t_object *(*)(struct __pyx_obj_3api_PyExternal *, PyObject *, PyObject *))__pyx_f_3api_10PyExternal_create;
-  __pyx_vtable_3api_PyExternal.table_exists = (int (*)(struct __pyx_obj_3api_PyExternal *, char *))__pyx_f_3api_10PyExternal_table_exists;
+  __pyx_vtable_3api_PyExternal.table_exists = (int (*)(struct __pyx_obj_3api_PyExternal *, PyObject *))__pyx_f_3api_10PyExternal_table_exists;
   __pyx_vtable_3api_PyExternal.list_to_table = (t_max_err (*)(struct __pyx_obj_3api_PyExternal *, char *, PyObject *))__pyx_f_3api_10PyExternal_list_to_table;
   __pyx_vtable_3api_PyExternal.table_to_list = (PyObject *(*)(struct __pyx_obj_3api_PyExternal *, char *))__pyx_f_3api_10PyExternal_table_to_list;
   __pyx_vtable_3api_PyExternal.success_bang = (PyObject *(*)(struct __pyx_obj_3api_PyExternal *))__pyx_f_3api_10PyExternal_success_bang;
@@ -23865,16 +23986,16 @@ static int __Pyx_modinit_type_init_code(void) {
   __pyx_ptype_3api_PyExternal = &__pyx_type_3api_PyExternal;
   __pyx_vtabptr_3api_PyMxObject = &__pyx_vtable_3api_PyMxObject;
   __pyx_vtable_3api_PyMxObject.bang = (PyObject *(*)(struct __pyx_obj_3api_PyMxObject *, int __pyx_skip_dispatch))__pyx_f_3api_10PyMxObject_bang;
-  if (PyType_Ready(&__pyx_type_3api_PyMxObject) < 0) __PYX_ERR(0, 1660, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_3api_PyMxObject) < 0) __PYX_ERR(0, 1666, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
   __pyx_type_3api_PyMxObject.tp_print = 0;
   #endif
   if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_3api_PyMxObject.tp_dictoffset && __pyx_type_3api_PyMxObject.tp_getattro == PyObject_GenericGetAttr)) {
     __pyx_type_3api_PyMxObject.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (__Pyx_SetVtable(__pyx_type_3api_PyMxObject.tp_dict, __pyx_vtabptr_3api_PyMxObject) < 0) __PYX_ERR(0, 1660, __pyx_L1_error)
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_PyMxObject, (PyObject *)&__pyx_type_3api_PyMxObject) < 0) __PYX_ERR(0, 1660, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_3api_PyMxObject) < 0) __PYX_ERR(0, 1660, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_3api_PyMxObject.tp_dict, __pyx_vtabptr_3api_PyMxObject) < 0) __PYX_ERR(0, 1666, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_PyMxObject, (PyObject *)&__pyx_type_3api_PyMxObject) < 0) __PYX_ERR(0, 1666, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_3api_PyMxObject) < 0) __PYX_ERR(0, 1666, __pyx_L1_error)
   __pyx_ptype_3api_PyMxObject = &__pyx_type_3api_PyMxObject;
   __Pyx_RefNannyFinishContext();
   return 0;
@@ -24384,16 +24505,28 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_total, __pyx_t_1) < 0) __PYX_ERR(0, 1653, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "api.pyx":1669
+  /* "api.pyx":1657
+ * 
+ * 
+ * def table_exists(str name):             # <<<<<<<<<<<<<<
+ *     ext = PyExternal()
+ *     return ext.table_exists(name)
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_43table_exists, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1657, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_table_exists, __pyx_t_1) < 0) __PYX_ERR(0, 1657, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "api.pyx":1675
  *         px.py_bang(self.x)
  * 
  * def test_ref():             # <<<<<<<<<<<<<<
  *     ext = PyMxObject()
  *     ext.bang()
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_43test_ref, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1669, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_3api_45test_ref, NULL, __pyx_n_s_api); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1675, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test_ref, __pyx_t_1) < 0) __PYX_ERR(0, 1669, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test_ref, __pyx_t_1) < 0) __PYX_ERR(0, 1675, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "api.pyx":1

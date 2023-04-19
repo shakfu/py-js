@@ -3,9 +3,9 @@ import commonjs from '@rollup/plugin-commonjs';
 import css from "rollup-plugin-import-css";
 
 export default {
-  input: "./terminal.mjs",
+  input: "./editor.mjs",
   output: {
-    file: "./public/js/terminal.bundle.js",
+    file: "./public/js/editor.bundle.js",
     format: "iife"
   },
   plugins: [

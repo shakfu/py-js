@@ -1440,8 +1440,8 @@ cdef class PyExternal:
         cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
         return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
 
-    cdef bint table_exists(self, char* table_name):
-        return px.py_table_exists(self.obj, table_name)
+    cdef bint table_exists(self, str table_name):
+        return px.py_table_exists(self.obj, table_name.encode('utf-8'))
 
     cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
         return px.py_list_to_table(self.obj, table_name, plist)
@@ -1652,6 +1652,12 @@ def echo(*args):
 
 def total(*args):
     return sum(args)
+
+
+def table_exists(str name):
+    ext = PyExternal()
+    return ext.table_exists(name)
+
 
 
 # ----------------------------------------------------------------------------

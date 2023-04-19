@@ -71,278 +71,6 @@ struct t_py {
 
 };
 
-/*--------------------------------------------------------------------------*/
-/* Helpers */
-
-/**
- * @brief Get the outlet object
- *
- * @param x pointer to object struct
- * @return void*
- *
- * Returns a reference to the main object outlet
- */
-void* get_outlet(t_py* x)
-{
-    return (void*)x->p_outlet_left;
-}
-
-/**
- * @brief Post msg to Max console.
- *
- * @param x pointer to object struct
- * @param fmt character string with format codes
- * @param ... other arguments
- *
- * This log function is a variadic function which does not `post` its message
- * if the object struct member `x->p_debug` is 0.
- *
- * WARNING: if PY_MAX_ELEMS is less than
- * the length of the log or err message, Max will crash.
- */
-void py_log(t_py* x, char* fmt, ...)
-{
-    if (x->p_debug) {
-        char msg[PY_MAX_ELEMS];
-
-        va_list va;
-        va_start(va, fmt);
-        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
-        va_end(va);
-
-        post("[py %s]: %s", x->p_name->s_name, msg);
-    }
-}
-
-/**
- * @brief Post error message to Max console.
- *
- * @param x pointer to object struct
- * @param fmt character string with format codes
- * @param ... other arguments
- */
-void py_error(t_py* x, char* fmt, ...)
-{
-    char msg[PY_MAX_ELEMS];
-
-    va_list va;
-    va_start(va, fmt);
-    vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
-    va_end(va);
-
-    error("[py %s]: %s", x->p_name->s_name, msg);
-}
-
-/**
- * @brief Initialize python builtins
- *
- * @param x pointer to object struct
- *
- * Collects python builtin initialization steps. Meant to be called in
- * `py_init` which itself should be called inside `py_new`.
- */
-void py_init_builtins(t_py* x)
-{
-    PyObject* p_name = NULL;
-    PyObject* builtins = NULL;
-    PyObject* p_code_obj = NULL;
-    int err = -1;
-
-    p_name = PyUnicode_FromString(x->p_name->s_name);
-    if (p_name == NULL)
-        goto error;
-
-    builtins = PyEval_GetBuiltins();
-    if (builtins == NULL)
-        goto error;
-
-    err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
-    if (err == -1)
-        goto error;
-
-    err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
-    if (err == -1)
-        goto error;
-
-    p_code_obj = PyRun_String(PY_DEFAULT_MODULE,
-        Py_file_input, x->p_globals, x->p_globals);
-
-    if (p_code_obj == NULL) {
-        py_error(x, "cannot import PY_DEFAULT_MODULE");
-        goto error;
-    }
-
-    Py_XDECREF(p_name);
-    Py_XDECREF(p_code_obj);
-    return;
-
-error:
-    py_handle_error(x, "could not update object namespace with object name");
-    Py_XDECREF(p_name);
-}
-
-
-/**
- * @brief Get the global registry object
- *
- * @return t_hashtab*
- *
- * This is only used in the api module
- */
-t_hashtab* py_get_global_registry(void)
-{
-    return py_global_registry;
-}
-
-/**
- * @brief      Return a ref the t_py *x pointer via the global_ref
- *
- * @return     unitptr ref to the object struct
- * 
- * This is only used in the api module
- */
-uintptr_t py_get_object_ref(void) {
-    return py_global_obj_ref;
-}
-
-
-/**
- * @brief      Return path to external with optional subpath
- *
- * @param      c        t_class instance
- * @param      subpath  The subpath or NULL (if not)
- *
- * @return     path to external + (optional subpath)
- */
-t_string* py_get_path_from_external(t_class* c, char* subpath)
-{
-    char external_path[MAX_PATH_CHARS];
-    char external_name[MAX_PATH_CHARS];
-    char conform_path[MAX_PATH_CHARS];
-    short path_id = class_getpath(c);
-    t_string* result;
-
-#ifdef __APPLE__
-    const char* ext_filename = "%s.mxo";
-#else
-    const char* ext_filename = "%s.mxe64";
-#endif
-    snprintf_zero(external_name, PY_MAX_ELEMS, ext_filename, c->c_sym->s_name);
-    path_toabsolutesystempath(path_id, external_name, external_path);
-    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
-                     PATH_TYPE_TILDE);
-    result = string_new(external_path);
-    if (subpath != NULL) {
-        string_append(result, subpath);
-    }
-    return result;
-}
-
-/**
- * @brief      Return path to package with optional subpath
- *
- * @param      c        t_class instance
- * @param      subpath  The subpath or NULL (if not)
- *
- * @return     path to package + (optional subpath)
- */
-t_string* py_get_path_from_package(t_class* c, char* subpath)
-{
-    t_string* result;
-
-    t_string* external_path = py_get_path_from_external(c, NULL);
-
-    const char* ext_path_c = string_getptr(external_path);
-
-    result = string_new(dirname(dirname((char*)ext_path_c)));
-
-    if (subpath != NULL) {
-        string_append(result, subpath);
-    }
-
-    return result;
-}
-
-
-/**
- * @brief Searches the Max filesystem context for a file given by a symbol
- *
- * @param x pointer to object struct
- * @param s symbol to be searched
- * @return t_max_err
- *
- * If successful, this function will set `x->p_code_filepath` with
- * the Max readable path of the found file.
- */
-t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
-{
-    t_max_err ret = 0;
-
-    if (s == gensym("")) { /* if no arg supplied ask for file */
-        x->p_code_filename[0] = 0;
-
-        if (open_dialog(x->p_code_filename, &x->p_code_path,
-                        &x->p_code_outtype, &x->p_code_filetype, 1))
-            /* non-zero: cancelled */
-            ret = MAX_ERR_GENERIC;
-            goto finally;
-
-    } else {
-
-#if defined(__APPLE__)
-        /* depends on posix header wordexp.h for tilde expansion in path
-         * e.g. $HOME becomes /Users/<name>
-         */
-        wordexp_t exp_result;
-        wordexp(s->s_name, &exp_result, 0);
-        // must copy symbol before calling locatefile_extended
-        strncpy_zero(x->p_code_filename, exp_result.we_wordv[0], MAX_PATH_CHARS);
-        wordfree(&exp_result);
-#else
-        // must copy symbol before calling locatefile_extended
-        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
-#endif
-
-        if (locatefile_extended(x->p_code_filename, &x->p_code_path,
-                                &x->p_code_outtype, &x->p_code_filetype, 1)) {
-            // nozero: not found
-            py_error(x, "can't find file %s", s->s_name);
-            ret = MAX_ERR_GENERIC;
-            goto finally;
-        } else {
-            x->p_code_pathname[0] = 0;
-            ret = path_toabsolutesystempath(x->p_code_path, x->p_code_filename,
-                                            x->p_code_pathname);
-            if (ret != MAX_ERR_NONE) {
-                py_error(x, "can't convert %s to absolutepath", s->s_name);
-                goto finally;
-            }
-        }
-
-        // success
-        // set attribute from pathname symbol
-        x->p_code_filepath = gensym(x->p_code_pathname);
-        assert(ret == MAX_ERR_NONE);
-    }
-
-finally:
-    return ret;
-}
-
-/**
- * @brief Update the dict with the filepath and autoload option.
- *
- * @param x pointer to object struct
- * @param dict pointer to dict instance
- */
-void py_appendtodict(t_py* x, t_dictionary* dict)
-{
-    if (dict) {
-        dictionary_appendsym(dict, gensym("file"), x->p_code_filepath);
-        dictionary_appendlong(dict, gensym("autoload"), x->p_autoload);
-    }
-}
-
 
 /*--------------------------------------------------------------------------*/
 /* External main */
@@ -383,6 +111,7 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,   0);
     class_addmethod(c, (method)py_code,       "code",       A_GIMME,   0);
     class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,   0);
+    class_addmethod(c, (method)py_shell,      "shell",      A_GIMME,   0);
     class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,   0);
 
     // time-based
@@ -716,6 +445,272 @@ void py_free(t_py* x)
         Py_Finalize();
     }
 }
+
+
+/*--------------------------------------------------------------------------*/
+/* Helpers */
+
+/**
+ * @brief Get the outlet object
+ *
+ * @param x pointer to object struct
+ * @return void*
+ *
+ * Returns a reference to the main object outlet
+ */
+void* get_outlet(t_py* x)
+{
+    return (void*)x->p_outlet_left;
+}
+
+/**
+ * @brief Post msg to Max console.
+ *
+ * @param x pointer to object struct
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ *
+ * This log function is a variadic function which does not `post` its message
+ * if the object struct member `x->p_debug` is 0.
+ *
+ * WARNING: if PY_MAX_ELEMS is less than
+ * the length of the log or err message, Max will crash.
+ */
+void py_log(t_py* x, char* fmt, ...)
+{
+    if (x->p_debug) {
+        char msg[PY_MAX_ELEMS];
+
+        va_list va;
+        va_start(va, fmt);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
+        va_end(va);
+
+        post("[py %s]: %s", x->p_name->s_name, msg);
+    }
+}
+
+/**
+ * @brief Post error message to Max console.
+ *
+ * @param x pointer to object struct
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ */
+void py_error(t_py* x, char* fmt, ...)
+{
+    char msg[PY_MAX_ELEMS];
+
+    va_list va;
+    va_start(va, fmt);
+    vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
+    va_end(va);
+
+    error("[py %s]: %s", x->p_name->s_name, msg);
+}
+
+/**
+ * @brief Initialize python builtins
+ *
+ * @param x pointer to object struct
+ *
+ * Collects python builtin initialization steps. Meant to be called in
+ * `py_init` which itself should be called inside `py_new`.
+ */
+void py_init_builtins(t_py* x)
+{
+    PyObject* p_name = NULL;
+    PyObject* builtins = NULL;
+    PyObject* p_code_obj = NULL;
+    int err = -1;
+
+    p_name = PyUnicode_FromString(x->p_name->s_name);
+    if (p_name == NULL)
+        goto error;
+
+    builtins = PyEval_GetBuiltins();
+    if (builtins == NULL)
+        goto error;
+
+    err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
+    if (err == -1)
+        goto error;
+
+    err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
+    if (err == -1)
+        goto error;
+
+    p_code_obj = PyRun_String(PY_DEFAULT_MODULE,
+        Py_file_input, x->p_globals, x->p_globals);
+
+    if (p_code_obj == NULL) {
+        py_error(x, "cannot import PY_DEFAULT_MODULE");
+        goto error;
+    }
+
+    Py_XDECREF(p_name);
+    Py_XDECREF(p_code_obj);
+    return;
+
+error:
+    py_handle_error(x, "could not update object namespace with object name");
+    Py_XDECREF(p_name);
+}
+
+
+/**
+ * @brief Get the global registry object
+ *
+ * @return t_hashtab*
+ *
+ * This is only used in the api module
+ */
+t_hashtab* py_get_global_registry(void)
+{
+    return py_global_registry;
+}
+
+/**
+ * @brief      Return a ref the t_py *x pointer via the global_ref
+ *
+ * @return     unitptr ref to the object struct
+ * 
+ * This is only used in the api module
+ */
+uintptr_t py_get_object_ref(void) {
+    return py_global_obj_ref;
+}
+
+
+/**
+ * @brief      Return path to external with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to external + (optional subpath)
+ */
+t_string* py_get_path_from_external(t_class* c, char* subpath)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+    short path_id = class_getpath(c);
+    t_string* result;
+
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
+#endif
+    snprintf_zero(external_name, PY_MAX_ELEMS, ext_filename, c->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_MAX,
+                     PATH_TYPE_BOOT);
+    result = string_new(external_path);
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+    return result;
+}
+
+/**
+ * @brief      Return path to package with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to package + (optional subpath)
+ */
+t_string* py_get_path_from_package(t_class* c, char* subpath)
+{
+    t_string* result;
+
+    t_string* external_path = py_get_path_from_external(c, NULL);
+
+    const char* ext_path_c = string_getptr(external_path);
+
+    result = string_new(dirname(dirname((char*)ext_path_c)));
+
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+
+    return result;
+}
+
+
+
+
+/**
+ * @brief Searches the Max filesystem context for a file given by a symbol
+ *
+ * @param x pointer to object struct
+ * @param s symbol to be searched
+ * @return t_max_err
+ *
+ * If successful, this function will set `x->p_code_filepath` with
+ * the Max readable path of the found file.
+ */
+t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
+{
+    t_max_err ret = MAX_ERR_NONE;
+
+    if (s == gensym("")) {
+        x->p_code_filename[0] = 0;
+
+        if (open_dialog(x->p_code_filename, &x->p_code_path,
+                        &x->p_code_outtype, &x->p_code_filetype, 1))
+            /* non-zero: cancelled */
+            ret = MAX_ERR_GENERIC;
+            goto finally;
+
+    } else {
+
+        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
+
+        if (locatefile_extended(x->p_code_filename, &x->p_code_path,
+                                &x->p_code_outtype, &x->p_code_filetype, 1)) {
+            // nozero: not found
+            py_error(x, "can't find file %s", s->s_name);
+            ret = MAX_ERR_GENERIC;
+            goto finally;
+        } else {
+            x->p_code_pathname[0] = 0;
+            ret = path_toabsolutesystempath(x->p_code_path, x->p_code_filename,
+                                            x->p_code_pathname);
+            if (ret != MAX_ERR_NONE) {
+                py_error(x, "can't convert %s to absolutepath", s->s_name);
+                goto finally;
+            }
+        }
+
+        // success
+        // set attribute from pathname symbol
+        x->p_code_filepath = gensym(x->p_code_pathname);
+        assert(ret == MAX_ERR_NONE);
+    }
+
+finally:
+    return ret;
+}
+
+
+
+/**
+ * @brief Update the dict with the filepath and autoload option.
+ *
+ * @param x pointer to object struct
+ * @param dict pointer to dict instance
+ */
+void py_appendtodict(t_py* x, t_dictionary* dict)
+{
+    if (dict) {
+        dictionary_appendsym(dict, gensym("file"), x->p_code_filepath);
+        dictionary_appendlong(dict, gensym("autoload"), x->p_autoload);
+    }
+}
+
 
 /*--------------------------------------------------------------------------*/
 /* Documentation */
@@ -1254,7 +1249,7 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
     if (PyDict_Check(pdict)) {
 
         // depends on definition in py_mod.h
-        pfun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_out_dict");
+        pfun = PyDict_GetItemString(x->p_globals, "out_dict");
         if (pfun == NULL) {
             py_error(x, "retrieving out_dict func from globals failed");
             goto error;
@@ -1568,6 +1563,7 @@ error:
 /*--------------------------------------------------------------------------*/
 /* Extra Methods */
 
+
 /**
  * @brief Converts a Max list to call a python function with arguments
  *
@@ -1854,16 +1850,21 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
     return py_eval_text(x, argc, atoms, 1);
 }
 
+
+
+
 /**
- * @brief Create a function python pipeline from a Max list
+ * @brief      Apply a pure python function to atoms as text
  *
- * @param x pointer to object structure
- * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
- * @return t_max_err error code
+ * @param      x            pointer to object structure
+ * @param      pyfunc_name  python function name
+ * @param      s            symbol
+ * @param[in]  argc         atom argument count
+ * @param      argv         atom argument vector
+ *
+ * @return     t_max_err error code
  */
-t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_call_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1871,8 +1872,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
     long textsize = 0;
     char* text = NULL;
     t_max_err err;
-    // PyObject* pipe_pre = NULL;
-    PyObject* pipe_fun = NULL;
+    PyObject* pyfunc = NULL;
     PyObject* pval = NULL;
     PyObject* pstr = NULL;
 
@@ -1892,13 +1892,13 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
     sysmem_freeptr(text);
 
     // depends on definition in py_mod.h
-    pipe_fun = PyDict_GetItemString(x->p_globals, "__py_maxmsp_pipe");
-    if (pipe_fun == NULL) {
-        py_error(x, "retrieving pipe func from globals failed");
+    pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
+    if (pyfunc == NULL) {
+        py_error(x, "retrieving python func '%s' from globals failed", pyfunc_name);
         goto error;
     }
 
-    pval = PyObject_CallFunctionObjArgs(pipe_fun, pstr, NULL);
+    pval = PyObject_CallFunctionObjArgs(pyfunc, pstr, NULL);
 
     if (pval != NULL) {
 
@@ -1925,7 +1925,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
 error:
-    py_handle_error(x, "pipe failed");
+    py_handle_error(x, "%s call failed", pyfunc_name);
     Py_XDECREF(pstr);
     Py_XDECREF(pval);
     // fail bang
@@ -1933,6 +1933,39 @@ error:
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
+
+
+/**
+ * @brief Create a function python pipeline from a Max list
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
+t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_call_pyfunc(x, "pipe", s, argc, argv);
+}
+
+
+
+/**
+ * @brief Run shell command from Max list
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
+t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_call_pyfunc(x, "shell", s, argc, argv);
+}
+
+
 
 /*--------------------------------------------------------------------------*/
 /* Interobject Methods */

@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 3,
-			"revision" : 1,
+			"minor" : 5,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -80,13 +80,11 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-9",
-					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 179.333333333333485, 312.0, 50.0, 35.0 ],
-					"text" : "py why not"
+					"patching_rect" : [ 179.333333333333485, 312.0, 83.0, 22.0 ]
 				}
 
 			}
@@ -97,7 +95,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 210.333333333333485, 270.0, 69.0, 22.0 ],
+					"patching_rect" : [ 243.333333333333485, 269.0, 69.0, 22.0 ],
 					"text" : "prepend py"
 				}
 

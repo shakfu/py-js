@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 5,
-			"revision" : 3,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -40,24 +40,98 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-2",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 83.0, 95.0, 269.0, 22.0 ],
-					"text" : "shell open \"Sublime Text\" -a ~/Downloads/test.py"
+					"id" : "obj-10",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 15.0, 50.0, 524.0, 47.0 ],
+					"text" : "The 'shell' command, like the 'pipe' command, is implemented first as a python function and then converted to an external method using the 'py_call_pyfunc'. This means that it can be used as python function and also as a classic method."
 				}
 
 			}
 , 			{
 				"box" : 				{
+					"id" : "obj-5",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 280.0, 204.0, 60.0, 22.0 ],
+					"text" : "shell date"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-1",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 253.0, 169.0, 269.0, 22.0 ],
+					"text" : "shell open -a \"Sublime Text\" ~/Downloads/test.py"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-11",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 204.0, 135.0, 279.0, 22.0 ],
+					"text" : "shell('open -a \"Sublime Text\" ~/Downloads/test.py')"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-9",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 174.0, 233.0, 54.0, 22.0 ],
+					"text" : "shell('ls')"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-3",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 24.0, 170.0, 161.0, 22.0 ],
+					"text" : "call edit ~/Downloads/test.py"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-2",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 115.25, 204.0, 81.0, 22.0 ],
+					"text" : "call shell date"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 1,
+					"fontsize" : 16.0,
 					"id" : "obj-92",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 15.0, 16.0, 150.0, 20.0 ],
-					"text" : "py shell test"
+					"patching_rect" : [ 15.0, 16.0, 70.0, 24.0 ],
+					"text" : "py shell"
 				}
 
 			}
@@ -77,7 +151,7 @@
 					"numoutlets" : 1,
 					"offset" : [ 0.0, 0.0 ],
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 304.0, 135.0, 280.0, 26.0 ],
+					"patching_rect" : [ 303.0, 255.0, 280.0, 26.0 ],
 					"viewvisibility" : 1
 				}
 
@@ -91,7 +165,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 339.5, 253.0, 24.0, 24.0 ],
+					"patching_rect" : [ 338.5, 373.0, 24.0, 24.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 224.5, 311.0, 24.0, 24.0 ]
 				}
@@ -106,7 +180,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 375.0, 253.0, 24.0, 24.0 ],
+					"patching_rect" : [ 374.0, 373.0, 24.0, 24.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 194.5, 311.0, 24.0, 24.0 ]
 				}
@@ -119,7 +193,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 338.125, 294.0, 35.0, 22.0 ],
+					"patching_rect" : [ 337.125, 414.0, 35.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 213.5, 353.0, 35.0, 22.0 ],
 					"text" : "clear"
@@ -134,7 +208,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 163.0, 254.0, 29.5, 22.0 ],
+					"patching_rect" : [ 24.0, 374.0, 29.5, 22.0 ],
 					"text" : "set"
 				}
 
@@ -147,7 +221,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 163.0, 209.0, 58.0, 22.0 ],
+					"patching_rect" : [ 24.0, 329.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -159,10 +233,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 163.0, 294.0, 160.0, 22.0 ],
+					"patching_rect" : [ 24.0, 414.0, 192.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 76.0, 353.0, 132.0, 22.0 ],
-					"text" : "32512"
+					"presentation_rect" : [ 76.0, 353.0, 48.0, 22.0 ]
 				}
 
 			}
@@ -175,7 +248,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "bang", "bang" ],
-					"patching_rect" : [ 304.0, 209.0, 90.0, 22.0 ],
+					"patching_rect" : [ 303.0, 329.0, 90.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 195.0, 268.0, 54.0, 22.0 ],
 					"saved_object_attributes" : 					{
@@ -194,7 +267,28 @@
 		"lines" : [ 			{
 				"patchline" : 				{
 					"destination" : [ "obj-7", 0 ],
+					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-7", 0 ],
+					"source" : [ "obj-11", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-7", 0 ],
 					"source" : [ "obj-2", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-7", 0 ],
+					"source" : [ "obj-3", 0 ]
 				}
 
 			}
@@ -203,6 +297,13 @@
 					"destination" : [ "obj-21", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-32", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-7", 0 ],
+					"source" : [ "obj-5", 0 ]
 				}
 
 			}
@@ -217,6 +318,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-21", 1 ],
+					"midpoints" : [ 312.5, 399.0, 206.5, 399.0 ],
 					"source" : [ "obj-7", 0 ]
 				}
 
@@ -250,6 +352,13 @@
 				}
 
 			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-7", 0 ],
+					"source" : [ "obj-9", 0 ]
+				}
+
+			}
  ],
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
@@ -257,8 +366,8 @@
 			}
 , 			{
 				"name" : "py_repl.maxpat",
-				"bootpath" : "~/Downloads/projects/py-js/patchers",
-				"patcherrelativepath" : ".",
+				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers",
+				"patcherrelativepath" : "./bpatchers",
 				"type" : "JSON",
 				"implicit" : 1
 			}

@@ -2,14 +2,32 @@ import os
 import subprocess
 import shlex
 
+# ---------------------------------------------------------
+# global constants
+
 EDITOR = 'Sublime Text' # can be changed of course
 
-# can be be disabled by default for safety
+
+# ---------------------------------------------------------
+# misc funcs
+
+def edit(path):
+    editor = os.getenv('EDITOR', EDITOR)
+    path = os.path.expanduser(path)
+    shell(f'open -a "{editor}" "{path}"')
+
+
+
+# ---------------------------------------------------------
+# funcs are used by methods
+
 def shell(cmd, err_func=None):
     result = None
     try:
+        elems = shlex.split(cmd)
+        elems[-1] = os.path.expanduser(elems[-1]) # ~/a/b.c -> /Users/xx/a/b.c
         result = subprocess.check_output(
-            shlex.split(cmd), encoding='utf8').strip()
+            elems, encoding='utf8').strip()
     except subprocess.CalledProcessError as e:
         if err_func:
             err_func(e.stderr)
@@ -20,16 +38,7 @@ def shell(cmd, err_func=None):
         return result
 
 
-def edit(path):
-    editor = os.getenv('EDITOR', EDITOR)
-    shell(f'open -a "{editor}" "{path}"')
-
-
-
-# ---------------------------------------------------------
-# protected funcs 
-
-def __py_maxmsp_out_dict(py_dict):
+def out_dict(py_dict):
     res = []
     for k,v in py_dict.items():
         res.append(k)
@@ -41,7 +50,7 @@ def __py_maxmsp_out_dict(py_dict):
             res.append(v)
     return res
 
-def __py_maxmsp_pipe(arg):
+def pipe(arg):
     args = arg.split()
     val = eval(args[0], locals(), globals())
     funcs = [eval(f, locals(), globals()) for f in args[1:]]

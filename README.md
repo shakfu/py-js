@@ -12,7 +12,7 @@ repo - <https://github.com/shakfu/py-js>
 
 This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring different ways of using python3 in max.
 
-Along the way, a number of python3 externals have been developed for use in a live Max environment:
+Along the way, a number of python3 or python-related externals have been developed for use in a live Max environment:
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
@@ -61,7 +61,15 @@ The following will give you a sense of the feature differences between the two c
 
 ### `py` external
 
-General purpose python3 Max external.
+General purpose python3 Max external which is comprised of three integrated parts which make it quite straightforward to extend:
+
+1. The `py` Max external which is written in c using both the Max c-api and the Python3 c-api.
+
+2. A pure python module, `py_mod.py` which is converted to `py_mod.h` and compiled with `py` and then pre-loaded into the `globals()` namespace of every `py` instance.
+
+3. A builtin `api` module which is derived from a cython-wrapper of a subset of the Max c-api. 
+
+The following provides a brief view of key attributes and methods:
 
 ```text
 globals
@@ -123,7 +131,7 @@ py max external
 
 ### `pyjs` external
 
-General purpose python3 jsextension.
+General purpose python3 jsextension, which means that it is a c-based Max external which can only be accessed via the javascript `js` interface.
 
 ```text
 pyjs max external (jsextension)

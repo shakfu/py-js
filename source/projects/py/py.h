@@ -17,7 +17,6 @@
 
 /* posix */
 #if defined(__APPLE__)
-#include <wordexp.h>
 #include <libgen.h>
 #endif
 
@@ -62,6 +61,7 @@ typedef struct t_py t_py;
 
 /*--------------------------------------------------------------------------*/
 /* Object creation and destruction Methods */
+
 void* py_new(t_symbol* s, long argc, t_atom* argv);
 void py_free(t_py* x);
 void py_init(t_py* x);
@@ -124,6 +124,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /*--------------------------------------------------------------------------*/

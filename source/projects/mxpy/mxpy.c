@@ -370,18 +370,5 @@ void ext_main(void* moduleRef)
 
     mxpy_class = c;
 
-    // wchar_t* program;
-    // program = Py_DecodeLocale("mxpy", NULL);
-    // if (program == NULL) {
-    //     exit(1);
-    // }
-
-    // Py_SetProgramName(program);
-
     Py_Initialize();
-
-    // static wchar_t* arg0 = NULL;
-    // PySys_SetArgv(0, &arg0);
-
-    post("completed: ext_main");
 }
