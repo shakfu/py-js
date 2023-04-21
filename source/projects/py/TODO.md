@@ -22,7 +22,6 @@
 
 ### Core
 
-- [ ] enhance `call` to allow kwargs [call fn x1 x2 y1=z1 y2=z2]
 
 ### Usability
 
@@ -58,10 +57,6 @@
 - [ ] differentiate between class and object attributes!! (now everything is a class attribute)
 
 ### Editor
-
-- [ ] Add bpatcher for editing with external editor with filewatching and reloading on save (prototype done)
-
-- [ ] Workflow using the code-editor is not intuitive. The best implementation of this in the Thomas Grill's py/pyext project: double click on the external opens the preferred editor.
 
 - [ ] redo editor logic, set current default to run-on-close
 

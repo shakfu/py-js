@@ -6,8 +6,6 @@ CFLAGS=-std=c99 -Wall
 all: $(JS)/editor.min.js
 
 node_modules:
-	@npm i xterm  
-	@npm i xterm-readline
 	@npm i rollup @rollup/plugin-node-resolve
 	@npm i rollup-plugin-import-css
 	@npm i @rollup/plugin-commonjs

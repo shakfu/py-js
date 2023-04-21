@@ -29,7 +29,7 @@
 #include <Python.h>
 
 /* py default embedded module */
-#include "py_mod.h"
+#include "py_prelude.h"
 
 /*--------------------------------------------------------------------------*/
 /* Constants */

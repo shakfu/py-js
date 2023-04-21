@@ -3,9 +3,13 @@
 
 ## [0.2.x]
 
+- Changed `py_call` to a more versatile pure python function which can handle keyword arguments. Now `call` message can be [call fn x1 x2 y1=z1 y2=z2]
+
 - Added `py_mod.py` which is converted to `py_mod.h`, essentially an embedded python module which is loaded into all `py` instances.
 
 - Added another simpler method of retrieving the `t_py *x` object pointer in `api` module via `uintptr_t` round-trip conversion.
+
+- Add bpatcher for editing with external editor with filewatching and reloading on save
 
 - Added `patchers/py_external_editor.maxpat` prototype of using external editor with `filewatcher` and `py_load <path>` message.
 
@@ -92,6 +96,7 @@
 - Fixed: `_hashlib` and `_ssl` are now built for `static-ext` build.
 
 - Fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
+
 
 ## [0.0.1]
 

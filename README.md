@@ -657,6 +657,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [pocketpy](https://github.com/blueloveTH/pocketpy): C++17 header-only Python interpreter for game engines.
 
+- [micropython](https://github.com/micropython/micropython): a lean and efficient Python implementation for microcontrollers and constrained systems 
+
 ## Prior Art and Thanks
 
 ![py-js testing](./media/xkcd-python-environment.png)

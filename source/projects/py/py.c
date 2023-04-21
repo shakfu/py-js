@@ -9,8 +9,6 @@
 /* max/msp api */
 #include "api.h"
 
-
-
 /*--------------------------------------------------------------------------*/
 /* Globals */
 
@@ -266,7 +264,6 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_clock = clock_new((t_object*)x, (method)py_task);
         x->p_sched_atoms = NULL;
 
-        // create inlet(s)
         // create outlet(s)
         x->p_outlet_right = bangout((t_object*)x);
         x->p_outlet_middle = bangout((t_object*)x);
@@ -293,7 +290,6 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         py_init(x);
 
         post("initialized python version: %s", PY_VERSION);
-        // post("python version %s compatible", PY_VER);
 
         py_log(x, "object created");
         for (int i = 0; i < argc; i++) {
@@ -370,8 +366,7 @@ void py_init(t_py* x)
 
     PyConfig config;
     PyConfig_InitPythonConfig(&config);
-    // Disable parsing command line arguments
-    config.parse_argv = 0;
+    config.parse_argv = 0; // Disable parsing command line arguments
     config.home = python_home;
 
     status = Py_InitializeFromConfig(&config);
@@ -382,18 +377,6 @@ void py_init(t_py* x)
 
     PyConfig_Clear(&config);
 #endif
-
-    // { /* init module '%(module_name)s' as '__main__' */
-    //   PyObject* m = NULL;
-    //   %(module_is_main)s = 1;
-    //   m = PyImport_ImportModule("%(module_name)s");
-
-    //   if (!m && PyErr_Occurred()) {
-    //       PyErr_Print(); /* This exits with the right code if SystemExit. */
-    //       py_error(x, "could not set main module")
-    //   }
-    //   Py_XDECREF(m);
-    // }
 
     // python init
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
@@ -540,11 +523,11 @@ void py_init_builtins(t_py* x)
     if (err == -1)
         goto error;
 
-    p_code_obj = PyRun_String(PY_DEFAULT_MODULE,
+    p_code_obj = PyRun_String(PY_PRELUDE_MODULE,
         Py_file_input, x->p_globals, x->p_globals);
 
     if (p_code_obj == NULL) {
-        py_error(x, "cannot import PY_DEFAULT_MODULE");
+        py_error(x, "cannot import PY_PRELUDE_MODULE");
         goto error;
     }
 
@@ -640,8 +623,6 @@ t_string* py_get_path_from_package(t_class* c, char* subpath)
 }
 
 
-
-
 /**
  * @brief Searches the Max filesystem context for a file given by a symbol
  *
@@ -696,7 +677,6 @@ finally:
 }
 
 
-
 /**
  * @brief Update the dict with the filepath and autoload option.
  *
@@ -710,7 +690,6 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
         dictionary_appendlong(dict, gensym("autoload"), x->p_autoload);
     }
 }
-
 
 /*--------------------------------------------------------------------------*/
 /* Documentation */
@@ -733,6 +712,7 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
     }
 }
 
+
 /**
  * @brief Output global object count.
  *
@@ -742,6 +722,7 @@ void py_count(t_py* x)
 {
     outlet_int(x->p_outlet_left, py_global_obj_count);
 }
+
 
 /**
  * @brief      join parent path to child subpath
@@ -852,10 +833,6 @@ void py_info(t_py* x)
 
     post("external_resources_path: %s", external_resources_path);
     post("python_path: %s", python_path);
-
-    // char* package_path[MAX_PATH_CHARS];
-    // char* package_externals_path[MAX_PATH_CHARS];
-
 
 }
 
@@ -1565,96 +1542,6 @@ error:
 
 
 /**
- * @brief Converts a Max list to call a python function with arguments
- *
- * @param x pointer to object structure
- * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
- * @return t_max_err error code
- */
-t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
-{
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
-    char* callable_name = NULL;
-    PyObject* py_argslist = NULL;
-    PyObject* pval = NULL;
-    PyObject* py_callable = NULL;
-    // python list
-    PyObject* py_args = NULL; // python tuple
-
-    // first atom in argv must be a symbol
-    if (argv->a_type != A_SYM) {
-        py_error(x, "first atom must be a symbol!");
-        goto error;
-
-    } else {
-        callable_name = atom_getsym(argv)->s_name;
-        py_log(x, "callable_name: %s", callable_name);
-    }
-
-    py_callable = PyRun_String(callable_name, Py_eval_input, x->p_globals,
-                               x->p_globals);
-    if (py_callable == NULL) {
-        py_error(x, "could not evaluate %s", callable_name);
-        goto error;
-    }
-
-    py_argslist = py_atoms_to_list(x, argc, argv, 1);
-    if (py_argslist == NULL) {
-        py_error(x, "atom to py list conversion failed");
-        goto error;
-    }
-
-    py_log(x, "length of argc:%ld list: %d", argc, PyList_Size(py_argslist));
-
-    // convert py_args to tuple
-    py_args = PyList_AsTuple(py_argslist);
-    if (py_args == NULL) {
-        py_error(x, "unable to convert args list to tuple");
-        goto error;
-    }
-
-    pval = PyObject_CallObject(py_callable, py_args);
-    if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
-        if (pval == NULL) {
-            py_error(x, "unable to apply callable(*args)");
-            goto error;
-        }
-        goto handle_output;
-    }
-    PyErr_Clear();
-
-    pval = PyObject_CallFunctionObjArgs(py_callable, py_argslist, NULL);
-    if (pval == NULL) {
-        py_error(x, "could not retrieve result of callable(list)");
-        goto error;
-    }
-    goto handle_output; // this is redundant but safer in case code is added
-
-handle_output:
-    py_handle_output(x, pval);
-    // success cleanup
-    Py_XDECREF(py_callable);
-    Py_XDECREF(py_argslist);
-    PyGILState_Release(gstate);
-    py_bang_success(x);
-    return MAX_ERR_NONE;
-
-error:
-    py_handle_error(x, "anything %s", s->s_name);
-    // cleanup
-    Py_XDECREF(py_callable);
-    Py_XDECREF(py_argslist);
-    Py_XDECREF(pval);
-    PyGILState_Release(gstate);
-    py_bang_failure(x);
-    return MAX_ERR_GENERIC;
-}
-
-/**
  * @brief Converts an atom list to a python assignment
  *
  * @param x pointer to object structure
@@ -1963,6 +1850,21 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_call_pyfunc(x, "shell", s, argc, argv);
+}
+
+
+/**
+ * @brief Converts a Max list to call a python function with arguments
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ */
+t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_call_pyfunc(x, "call", s, argc, argv);
 }
 
 

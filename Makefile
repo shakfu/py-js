@@ -30,7 +30,7 @@ MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSION := 8
 MAX_DIR := "Max\ $(MAX_VERSION)"
 PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
-PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/py-js
+PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/$(PKG_NAME)
 PKG_DIRS = docs examples extensions externals help init \
            javascript jsextensions media misc patchers
 
@@ -357,8 +357,6 @@ fix-framework:
 	$(call call-builder,"fix" "framework")
 
 
-
-
 # Testing
 # -----------------------------------------------------------------------
 .PHONY: test \
@@ -432,16 +430,15 @@ style: clang-format
 clang-format:
 	$(call section,"clang-format")
 	@clang-format -i -style=file $(PYDIR)/py.c
-	@clang-format -i -style=file $(PYDIR)/py.h
 	@clang-format -i -style=file $(PYDIR)/pyjs.c
 
 lizard:
 	$(call section,"lizard complexity analysis")
-	@lizard -o report.html py.c
+	@lizard -o report.html $(PYDIR)/py.c
 
 duplo:
 	$(call section,"checking code duplication")
-	@find . -type f \( -iname "py.c" \) > files.lst
+	@find . -type f \( -iname "$(PYDIR)/py.c" \) > files.lst
 	@duplo files.lst duplicates.txt
 	@rm -f files.lst
 
@@ -575,8 +572,11 @@ clean-python-framework-ext:
 clean-python-framework-pkg: clean-externals clean-support
 	$(call xcleanlib,"Python.framework")
 
-demo:
-	echo $@
+demo: README.md FAQ.md CHANGELOG.md
+	@echo "target: '$@'"
+	@echo "first-prereq: '$<'"
+	@echo "all-prereqs: '$^'"
+	@echo "newer-prereqs:'$?'"
 
 
 
