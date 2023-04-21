@@ -2,7 +2,6 @@ import { EditorView, basicSetup } from "codemirror";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 
-
 let editor = new EditorView({
     extensions: [basicSetup, python(), oneDark],
     doc: "# python code here\n",
@@ -97,66 +96,107 @@ run_btn.addEventListener("click", runCode);
 // terminal
 
 $(function () {
+    var code = "";
+    var env = {};
+
+    let repl_respond = function (json, term) {
+        term.echo(JSON.stringify(json));
+    };
+
+    let repl_send = function (code, term) {
+        fetch("/api/repl/send", {
+            method: "POST",
+            body: JSON.stringify({
+                content: code,
+            }),
+
+            headers: {
+                "Content-type": "application/json; charset=UTF-8",
+            },
+        })
+            .then((response) => response.json())
+            // .then((json) => console.log(json));
+            .then((json) => repl_respond(json, term));
+    };
+
     $("#terminal").terminal(
-        {
-            hello: function (what) {
-                this.echo("Hello, " + what + ". Wellcome to this terminal.");
-            },
+        [
+            {
+                hello: function (what) {
+                    this.echo(
+                        "Hello, " + what + ". Wellcome to this terminal."
+                    );
+                },
 
-            cat: function (width, height) {
-                return $(
-                    '<img src="https://placekitten.com/' +
-                        width +
-                        "/" +
-                        height +
-                        '">'
-                );
-            },
+                cat: function (width, height) {
+                    return $(
+                        '<img src="https://placekitten.com/' +
+                            width +
+                            "/" +
+                            height +
+                            '">'
+                    );
+                },
 
-            title: function () {
-                return fetch("https://terminal.jcubic.pl")
-                    .then((r) => r.text())
-                    .then((html) => html.match(/<title>([^>]+)<\/title>/)[1]);
-            },
+                title: function () {
+                    return fetch("https://terminal.jcubic.pl")
+                        .then((r) => r.text())
+                        .then(
+                            (html) => html.match(/<title>([^>]+)<\/title>/)[1]
+                        );
+                },
 
-            // opts like argument parsing (-a / --a)
-            demo: function (...args) {
-                const options = $.terminal.parse_options(args);
-                return options;
-            },
+                // opts like argument parsing (-a / --a)
+                demo: function (...args) {
+                    const options = $.terminal.parse_options(args);
+                    return options;
+                },
 
-            py: {
-                eval: function (arg) {},
-                exec: function (arg) {},
-                run: function (arg) {},
-                load: function (arg) {},
-                save: function (arg) {},
-            },
+                clear: function () {
+                    this.clear;
+                },
 
-            name: function (name) {
-                this.push(
-                    function (last_name) {
-                        if (last_name) {
-                            this.echo(
-                                "Your name is " + name + " " + last_name
-                            ).pop();
+                py: {
+                    eval: function (arg) {},
+                    exec: function (arg) {},
+                    run: function (arg) {},
+                    load: function (arg) {},
+                    save: function (arg) {},
+                },
+
+                name: function (name) {
+                    this.push(
+                        function (last_name) {
+                            if (last_name) {
+                                this.echo(
+                                    "Your name is " + name + " " + last_name
+                                ).pop();
+                            }
+                        },
+                        {
+                            prompt: "last name: ",
                         }
-                    },
-                    {
-                        prompt: "last name: ",
-                    }
-                );
+                    );
+                },
             },
-        },
+            function (command) {
+                repl_send(command, this);
+                console.log(command);
+            },
+        ],
         {
             keymap: {
                 "CTRL-C": function (e, original) {
                     this.echo("my shortcut");
                 },
+                TAB: function (e, original) {
+                    this.insert("    ");
+                },
             },
             checkArity: false,
             completion: true,
             greetings: "Python 3.11.3\n",
+            prompt: ">>> ",
         }
     );
 });
