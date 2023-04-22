@@ -1,13 +1,11 @@
 """py_prelude.py: extends the `py` external with pure python functions
 
-
-
-
-
 """
 import os
 import subprocess
 import shlex
+import collections.abc
+from functools import reduce
 
 # ---------------------------------------------------------
 # global constants
@@ -15,9 +13,66 @@ import shlex
 EDITOR = "Sublime Text"  # can be changed of course
 
 
+
+# ---------------------------------------------------------
+# private utilities
+
+def is_sequence(obj):
+    if isinstance(obj, str):
+        return False
+    return isinstance(obj, collections.abc.Sequence)
+
+
+def __compose(f, g):
+    return lambda x: f(g(x))
+
+
+def __analyze(s: str):
+    fs = []
+    args = []
+    kwargs = []
+    str_args = s.split()
+    for str_arg in str_args:
+        if '=' in str_arg:
+            k, v = str_arg.split('=')
+            kwargs.append((
+                eval(repr(k), locals(), globals()),
+                eval(v, locals(), globals())
+            ))
+        else:
+            elem = eval(str_arg, locals(), globals())
+            if callable(elem):
+                fs.append(elem)
+            else:
+                args.append(elem)
+    return fs, args, kwargs
+
+
+# ---------------------------------------------------------
+# test funcs
+
+identity = lambda x: x
+
+add100 = lambda x: x+100
+
+sub20 = lambda x: x-20
+
+div2 = lambda x: x/2
+
+mul2 = lambda x: x*2
+
+mul10 = lambda x: x*10
+
+mul5 = lambda x: x*5
+
+mul6 = lambda x: x*7
+
+sumargs = lambda *args, **kwargs: sum(args)
+
+sumvals = lambda *args, **kwargs: sum(v for (k,v) in kwargs.items())
+
 # ---------------------------------------------------------
 # misc funcs
-
 
 def edit(path: str):
     editor = os.getenv("EDITOR", EDITOR)
@@ -27,7 +82,6 @@ def edit(path: str):
 
 # ---------------------------------------------------------
 # funcs are used by methods
-
 
 def shell(cmd: str, err_func=None):
     result = None
@@ -58,55 +112,46 @@ def out_dict(py_dict: dict):
     return res
 
 
+
 def pipe(s: str):
-    """pipe a variable through a list of functions
+    """pipe variable(s) through a list of functions
+
+    With a single variable a list of function:
 
     >>> pipe('10 math.sin math.cos')
     0.8556343548213665
 
-    :param      s:    { parameter_description }
-    :type       s:    { type_description }
-    """
-    str_args = s.split()
-    val = eval(str_args[0], locals(), globals())
-    funcs = [eval(f, locals(), globals()) for f in str_args[1:]]
-    for f in funcs:
-        val = f(val)
-    return val
+    Acts like a chain of maps With many variables
+    and many functions:
 
+    >>> pipe('math.sin math.cos 10 20 30')
+    [0.8556343548213665, 0.6114178044194122, 0.5503344099628433]
 
-def rpipe(s: str):
-    """pipe a list of variables through a list of functions
+    Consistent with the pipe function can apply several
+    variables to a single function like `sum` in this case:
 
-    >>> rpipe('math.sin math.cos 10 20 30')
-    0.8556343548213665
+    >>> pipe('math.sin math.cos sum 10 20 30')
+    2.017386569203622
 
     :param      s:    { parameter_description }
     :type       s:    { type_description }
     """
-    str_args = s.split()
-    fs = []
-    vs = []
-    objs = [eval(x, locals(), globals()) for x in str_args]
-    for i in objs:
-        if isinstance(i, (types.FunctionType, types.BuiltinFunctionType)):
-            fs.append(i)
+    fs, args, kwargs = __analyze(s)
+    if args and fs:
+        if len(args) == 1:
+            arg = args[:].pop()
+            for f in fs:
+                arg = f(arg)
+            return arg
         else:
-            vs.append(i)
-    for f in reversed(fs):
-        vs = list(map(f, vs))
-    return vs
+            for f in fs:
+                try:
+                    args = list(map(f, args))
+                except TypeError:
+                    args = f(args)
+            if args:
+                return args
 
-def sumrpipe(s):
-    """pipe a list of variables through a list of functions and sum the result
-
-    >>> sumrpipe('math.sin math.cos 10 20 30')
-    0.19353298442897152
-
-    :param      s:    { parameter_description }
-    :type       s:    { type_description }
-    """
-    return sum(rpipe(s))
 
 
 def call(s: str):
@@ -124,24 +169,34 @@ def call(s: str):
     :param      s:    { parameter_description }
     :type       s:    { type_description }
     """
-    str_args = s.split()
-    args = []
-    kwargs = []
-    # if len(str_args) > 2:
-    f = eval(str_args[0], locals(), globals())
-    for str_arg in str_args[1:]:
-        if '=' in str_arg:
-            k, v = str_arg.split('=')
-            kwargs.append((
-                eval(repr(k), locals(), globals()),
-                eval(v, locals(), globals())
-            ))
-        else:
-            args.append(eval(str_arg, locals(), globals()))
-    try:
-        return f(*args, **dict(kwargs))
-    except TypeError:
-        return f(args, **dict(kwargs))
-    except:
-        return f(args[0])
+    fs, args, kwargs = __analyze(s)
+    if len(fs) == 1:
+        f = fs[0]
+        try:
+            return f(*args, **dict(kwargs))
+        except TypeError:
+            return f(args, **dict(kwargs))
+        except:
+            return f(args[0])
+
+
+def foldl(s: str):
+    """
+    Apply function of two arguments cumulatively to the items of iterable,
+    from left to right, so as to reduce the iterable to a single value.
+
+    >>> foldl('add 0 10 20 30 40')
+    100
+    
+    :param      s:    { parameter_description }
+    :type       s:    { type_description }
+    """
+    fs, args, kwargs = __analyze(s)
+    if len(fs) == 1:
+        f = fs[0]
+        accum, seq = args[0], args[1:]
+        return reduce(f, seq, accum)
+
+
+
 

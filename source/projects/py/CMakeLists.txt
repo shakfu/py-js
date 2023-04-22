@@ -91,11 +91,13 @@ if(INCLUDE_NUMPY)
 endif()
 
 
+
 add_library( 
 	${PROJECT_NAME} 
 	MODULE
 	${PROJECT_SRC}
 )
+
 
 
 
@@ -153,6 +155,9 @@ target_compile_options(
 	-Wall
 )
 
+# ----------------------------------------------------------------------
+# api.pyx -> cython -> api.c
+
 add_custom_command(
 	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/api.c
 	COMMAND cython -3 -E INCLUDE_NUMPY=${CYTHON_INCL_NUMPY} api.pyx
@@ -161,11 +166,14 @@ add_custom_command(
 	COMMENT "Generating api.c"
 )
 
-add_custom_target(api.c
+add_custom_target(api_c
 	DEPENDS api.pyx
 )
 
-add_dependencies(${PROJECT_NAME} api.c)
+add_dependencies(${PROJECT_NAME} api_c)
+
+
+
 
 
 target_link_directories(

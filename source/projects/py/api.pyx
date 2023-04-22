@@ -1675,3 +1675,4 @@ cdef class PyMxObject:
 def test_ref():
     ext = PyMxObject()
     ext.bang()
+

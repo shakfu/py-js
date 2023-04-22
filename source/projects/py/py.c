@@ -1751,7 +1751,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
  *
  * @return     t_max_err error code
  */
-t_max_err py_call_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_apply_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1833,7 +1833,7 @@ error:
  */
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_call_pyfunc(x, "pipe", s, argc, argv);
+    return py_apply_pyfunc(x, "pipe", s, argc, argv);
 }
 
 
@@ -1849,7 +1849,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
  */
 t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_call_pyfunc(x, "shell", s, argc, argv);
+    return py_apply_pyfunc(x, "shell", s, argc, argv);
 }
 
 
@@ -1864,9 +1864,8 @@ t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv)
  */
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_call_pyfunc(x, "call", s, argc, argv);
+    return py_apply_pyfunc(x, "call", s, argc, argv);
 }
-
 
 
 /*--------------------------------------------------------------------------*/
