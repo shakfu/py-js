@@ -3,6 +3,10 @@
 
 ## [0.2.x]
 
+- Added mechanism to replace `\\` escape sequences to enable commas and multi-argument functions to work correctly.
+
+- `pipe` is now much more versatile and can handle multiple arguments and multiple functions.
+
 - Changed `py_call` to a more versatile pure python function which can handle keyword arguments. Now `call` message can be [call fn x1 x2 y1=z1 y2=z2]
 
 - Added `py_mod.py` which is converted to `py_mod.h`, essentially an embedded python module which is loaded into all `py` instances.

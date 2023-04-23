@@ -97,7 +97,6 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_bang,       "bang",                  0);
     class_addmethod(c, (method)py_info,       "info",                  0);
 
-
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
     class_addmethod(c, (method)py_eval,       "eval",       A_GIMME,   0);
@@ -690,6 +689,67 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
         dictionary_appendlong(dict, gensym("autoload"), x->p_autoload);
     }
 }
+
+
+/**
+ * @brief      replace a string with a string
+ *
+ * @param      orig  The original
+ * @param      rep   what to replace
+ * @param      with  what to replace with
+ *
+ * @return     a new string with replaced strings
+ * 
+ * NOTE: You must free the result if result is non-NULL.
+ * 
+ */
+char *str_replace(char *orig, char *rep, char *with) {
+    // from: https://stackoverflow.com/questions/779875
+    char *result; // the return string
+    char *ins;    // the next insert point
+    char *tmp;    // varies
+    int len_rep;  // length of rep (the string to remove)
+    int len_with; // length of with (the string to replace rep with)
+    int len_front; // distance between rep and end of last rep
+    int count;    // number of replacements
+
+    // sanity checks and initialization
+    if (!orig || !rep)
+        return NULL;
+    len_rep = strlen(rep);
+    if (len_rep == 0)
+        return NULL; // empty rep causes infinite loop during count
+    if (!with)
+        with = "";
+    len_with = strlen(with);
+
+    // count the number of replacements needed
+    ins = orig;
+    for (count = 0; (tmp = strstr(ins, rep)); ++count) {
+        ins = tmp + len_rep;
+    }
+
+    tmp = result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
+
+    if (!result)
+        return NULL;
+
+    // first time through the loop, all the variable are set correctly
+    // from here on,
+    //    tmp points to the end of the result string
+    //    ins points to the next occurrence of rep in orig
+    //    orig points to the remainder of orig after "end of rep"
+    while (count--) {
+        ins = strstr(orig, rep);
+        len_front = ins - orig;
+        tmp = strncpy(tmp, orig, len_front) + len_front;
+        tmp = strcpy(tmp, with) + len_with;
+        orig += len_front + len_rep; // move to next "end of rep"
+    }
+    strcpy(tmp, orig);
+    return result;
+}
+
 
 /*--------------------------------------------------------------------------*/
 /* Documentation */
@@ -1610,6 +1670,7 @@ error:
     return MAX_ERR_GENERIC;
 }
 
+
 /**
  * @brief A helper function to evaluate Max text as a Python expression.
  *
@@ -1637,13 +1698,20 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
         goto error;
     }
 
-    co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+    char* new_text = str_replace(text, "\\,", ",");
+
+    // co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
+    co = Py_CompileString(new_text, x->p_name->s_name, Py_eval_input);
+
 
     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
         PyErr_Clear();
-        co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+        co = Py_CompileString(new_text, x->p_name->s_name, Py_single_input);
+        // co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
         is_eval = 0;
     }
+
+    free(new_text);
 
     if (co == NULL) { // can be eval-co or exec-co or NULL here
         goto error;
@@ -1687,6 +1755,10 @@ t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_eval_text(x, argc, argv, 0);
 }
+
+
+
+
 
 /**
  * @brief Anything method converting all of the atom to text and evaluate as python code.
