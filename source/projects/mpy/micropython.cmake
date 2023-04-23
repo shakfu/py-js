@@ -7,7 +7,7 @@ set(EMBED_DIR "${MP_EMBEDDING}/micropython_embed")
 FetchContent_Declare(
 	micropython
 	GIT_REPOSITORY https://github.com/micropython/micropython.git
-	GIT_TAG b525f1c9ec8ffa9009754578932f3fad5f63026b
+	# GIT_TAG b525f1c9ec8ffa9009754578932f3fad5f63026b
 	GIT_SUBMODULES "docs" # hack to prevent recursive clone
 	GIT_SHALLOW TRUE
 	GIT_PROGRESS TRUE

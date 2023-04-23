@@ -133,8 +133,8 @@ def pipe(s: str):
     >>> pipe('math.sin math.cos sum 10 20 30')
     2.017386569203622
 
-    :param      s:    { parameter_description }
-    :type       s:    { type_description }
+    :param      s:    code string
+    :type       s:    str
     """
     fs, args, kwargs = __analyze(s)
     if args and fs:
@@ -166,8 +166,8 @@ def call(s: str):
     >>> call('f 10 20 a=1')
     (10, 20) {'a': 1}
     
-    :param      s:    { parameter_description }
-    :type       s:    { type_description }
+    :param      s:    code string
+    :type       s:    str
     """
     fs, args, kwargs = __analyze(s)
     if len(fs) == 1:
@@ -188,8 +188,8 @@ def foldl(s: str):
     >>> foldl('add 0 10 20 30 40')
     100
     
-    :param      s:    { parameter_description }
-    :type       s:    { type_description }
+    :param      s:    code string
+    :type       s:    str
     """
     fs, args, kwargs = __analyze(s)
     if len(fs) == 1:
