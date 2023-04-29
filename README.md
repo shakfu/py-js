@@ -59,13 +59,13 @@ Please feel free to ask questions or make suggestions via the project's github i
 
 The following will give you a sense of the feature differences between the two core python3 max externals:
 
-### `py` external
+### `py`
 
-General purpose python3 Max external which is comprised of three integrated parts which make it quite straightforward to extend:
+A general purpose Max external which embeds a python3 interpreter and is made up of three integrated parts which make it quite straightforward to extend:
 
 1. The `py` Max external which is written in c using both the Max c-api and the Python3 c-api.
 
-2. A pure python module, `py_mod.py` which is converted to `py_mod.h` and compiled with `py` and then pre-loaded into the `globals()` namespace of every `py` instance.
+2. A pure python module, `py_prelude.py` which is converted to `py_prelude.h` and compiled with `py` and then pre-loaded into the `globals()` namespace of every `py` instance.
 
 3. A builtin `api` module which is derived from a cython-wrapper of a subset of the Max c-api. 
 
@@ -99,7 +99,8 @@ py max external
         extra
             assign <var> [arg]   : max-friendly msg assignments to py object namespace
             call <pyfunc> [arg]  : max-friendly python function calling
-            pipe <arg> [pyfunc]  : process a py/max value via a pipe of py funcs
+            pipe <arg> [pyfunc]  : process py/max value(s) via a pipe of py funcs
+            fold <f> <n> [arg]   : applies a two-arg function cumulatively to a sequence
             code <expr|stmt>     : alternative way to eval or exec py code
             anything <expr|stmt> : anything version of the code method 
 
@@ -391,6 +392,7 @@ extra    | call     | var(s), data  | out    | no
 extra    | code     | expr or stmt  | out?   | yes
 extra    | anything | expr or stmt  | out?   | yes
 extra    | pipe     | var, funcs    | out    | no
+extra    | fold     | f, n, args    | out    | no
 time     | sched    | ms, fun, args | out    | no
 editor   | read     | file          | n/a    | no
 editor   | load     | file          | n/a    | no

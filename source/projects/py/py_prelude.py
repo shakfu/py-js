@@ -5,7 +5,8 @@ import os
 import subprocess
 import shlex
 import collections.abc
-from functools import reduce
+import functools
+
 
 # ---------------------------------------------------------
 # global constants
@@ -40,7 +41,10 @@ def __analyze(s: str):
                 eval(v, locals(), globals())
             ))
         else:
-            elem = eval(str_arg, locals(), globals())
+            try:
+                elem = eval(str_arg, locals(), globals())
+            except SyntaxError:
+                elem = eval(repr(str_arg), locals(), globals())
             if callable(elem):
                 fs.append(elem)
             else:
@@ -52,6 +56,10 @@ def __analyze(s: str):
 # test funcs
 
 identity = lambda x: x
+
+add = lambda x,y: x+y
+
+product = lambda x,y: x*y
 
 add100 = lambda x: x+100
 
@@ -70,14 +78,6 @@ mul6 = lambda x: x*7
 sumargs = lambda *args, **kwargs: sum(args)
 
 sumvals = lambda *args, **kwargs: sum(v for (k,v) in kwargs.items())
-
-# ---------------------------------------------------------
-# misc funcs
-
-def edit(path: str):
-    editor = os.getenv("EDITOR", EDITOR)
-    path = os.path.expanduser(path)
-    shell(f'open -a "{editor}" "{path}"')
 
 
 # ---------------------------------------------------------
@@ -160,9 +160,11 @@ def call(s: str):
 
     >>> call('sum 1 2 3')
     6
+
+    >>> call("add 'abc' 'def'")
+    abcdef
     
     >>> f = lambda *args, **kwargs: print(args, kwargs)
-
     >>> call('f 10 20 a=1')
     (10, 20) {'a': 1}
     
@@ -176,17 +178,25 @@ def call(s: str):
             return f(*args, **dict(kwargs))
         except TypeError:
             return f(args, **dict(kwargs))
-        except:
-            return f(args[0])
+        # except:
+        return f(args[0])
 
 
-def foldl(s: str):
+def fold(s: str):
     """
-    Apply function of two arguments cumulatively to the items of iterable,
-    from left to right, so as to reduce the iterable to a single value.
+    Uses functools.reduce internally, applies a left fold function of two 
+    arguments cumulatively to the items of the iterable, from left to right, 
+    so as to reduce the iterable to a single value.
 
-    >>> foldl('add 0 10 20 30 40')
+    >>> fold('add 0 10 20 30 40')
     100
+
+    >>> fold('product add 5 10 20 30 40')
+    [1200000, 105]
+
+    >>> txts = ['abc', 'def']
+    >>> fold('add "" txts')
+    abcdef
     
     :param      s:    code string
     :type       s:    str
@@ -195,7 +205,27 @@ def foldl(s: str):
     if len(fs) == 1:
         f = fs[0]
         accum, seq = args[0], args[1:]
-        return reduce(f, seq, accum)
+        if len(seq) == 1:
+            seq = seq[0]
+        return functools.reduce(f, seq, accum)
+    else:
+        res = []
+        for f in fs:
+            accum, seq = args[0], args[1:]
+            if len(seq) == 1:
+                seq = seq[0]
+            res.append(functools.reduce(f, seq, accum))
+        return res
+
+
+# ---------------------------------------------------------
+# misc funcs
+
+def edit(path: str):
+    """open the file in the editor"""
+    editor = os.getenv("EDITOR", EDITOR)
+    path = os.path.expanduser(path)
+    shell(f"open -a '{editor}' '{path}'")
 
 
 

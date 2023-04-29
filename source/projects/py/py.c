@@ -108,6 +108,7 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,   0);
     class_addmethod(c, (method)py_code,       "code",       A_GIMME,   0);
     class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,   0);
+    class_addmethod(c, (method)py_fold,       "fold",       A_GIMME,   0);
     class_addmethod(c, (method)py_shell,      "shell",      A_GIMME,   0);
     class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,   0);
 
@@ -1698,7 +1699,8 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
         goto error;
     }
 
-    char* new_text = str_replace(text, "\\,", ",");
+    // char* new_text = str_replace(text, "\\,", ",");
+    char* new_text = str_replace(text, "\\", "");
 
     // co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
     co = Py_CompileString(new_text, x->p_name->s_name, Py_eval_input);
@@ -1810,6 +1812,8 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 
+/*--------------------------------------------------------------------------*/
+/* Wrapped Python Methods */
 
 
 /**
@@ -1895,7 +1899,7 @@ error:
 
 
 /**
- * @brief Create a function python pipeline from a Max list
+ * @brief Pipe a max list through a functional pipeline
  *
  * @param x pointer to object structure
  * @param s symbol
@@ -1908,6 +1912,22 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
     return py_apply_pyfunc(x, "pipe", s, argc, argv);
 }
 
+
+/**
+ * @brief Applies a max list to a set of left fold functions
+ *
+ * @param x pointer to object structure
+ * @param s symbol
+ * @param argc atom argument count
+ * @param argv atom argument vector
+ * @return t_max_err error code
+ * 
+ * The first elem in the list is treated as the accumulator
+ */
+t_max_err py_fold(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_apply_pyfunc(x, "fold", s, argc, argv);
+}
 
 
 /**
@@ -2389,7 +2409,5 @@ error:
     py_error(x, "table to list conversion failed");
     Py_RETURN_NONE;
 }
-
-
 
 

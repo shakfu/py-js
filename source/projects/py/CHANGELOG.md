@@ -3,7 +3,9 @@
 
 ## [0.2.x]
 
-- Added mechanism to replace `\\` escape sequences to enable commas and multi-argument functions to work correctly.
+- Added `fold`, which wraps `functools.reduce`
+
+- Added mechanism to remove `\\` escape sequences to enable commas, double quotes and multi-argument functions to work correctly.
 
 - `pipe` is now much more versatile and can handle multiple arguments and multiple functions.
 

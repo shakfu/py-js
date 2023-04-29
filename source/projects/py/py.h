@@ -124,6 +124,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_fold(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
