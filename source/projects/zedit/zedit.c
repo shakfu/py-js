@@ -85,6 +85,11 @@ t_max_err zedit_code(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* out
 t_max_err zedit_anything(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 t_max_err zedit_pipe(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
+// code evaluation methods
+t_max_err zedit_exec_file_input(t_zedit* x, const char* code);
+t_max_err zedit_exec_single_input(t_zedit* x, const char* code);
+
+
 // web
 void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv);
 void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, void *fn_data);
@@ -132,6 +137,7 @@ void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, v
     } else if (mg_http_match_uri(hm, "/api/code/save")) {
         object_post((t_object*)c->fn_data, "/api/code/save");
 
+
         // Expecting JSON array in the HTTP body, e.g. [ 1, "..." ]
         long file_id;
         char *code;
@@ -142,6 +148,8 @@ void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, v
             mg_http_reply(c, 200, "Content-Type: application/json\r\n",
                           "{%Q:%g}\n",
                           "result", "OK SAVED");
+
+            zedit_exec_file_input((t_zedit*)c->fn_data, code);
             post("code: %s", code);
             free(code);
         } else {
@@ -159,6 +167,7 @@ void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, v
             mg_http_reply(c, 200, "Content-Type: application/json\r\n",
                           "{%Q:%Q}\n",
                           "result", "OK");
+            zedit_exec_single_input((t_zedit*)c->fn_data, code);
             post("code: %s", code);
             free(code);
         } else {
@@ -546,6 +555,18 @@ t_max_err zedit_eval(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
 t_max_err zedit_exec(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_exec(x->py, s, argc, argv);
+}
+
+
+t_max_err zedit_exec_file_input(t_zedit* x, const char* code)
+{
+    return py_exec_file_input(x->py, code);
+}
+
+
+t_max_err zedit_exec_single_input(t_zedit* x, const char* code)
+{
+    return py_exec_single_input(x->py, code);
 }
 
 

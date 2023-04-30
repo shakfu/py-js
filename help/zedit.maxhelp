@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 246.0, 102.0, 616.0, 585.0 ],
+		"rect" : [ 467.0, 180.0, 616.0, 585.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 10.0,
@@ -39,6 +39,27 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"bgmode" : 0,
+					"border" : 0,
+					"clickthrough" : 0,
+					"enablehscroll" : 0,
+					"enablevscroll" : 0,
+					"id" : "obj-37",
+					"lockeddragscroll" : 0,
+					"lockedsize" : 0,
+					"maxclass" : "bpatcher",
+					"name" : "py_repl.maxpat",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"offset" : [ 0.0, 0.0 ],
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 272.5, 195.0, 279.0, 28.0 ],
+					"viewvisibility" : 1
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-34",
 					"maxclass" : "message",
@@ -80,7 +101,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 207.0, 218.0, 58.0, 21.0 ],
+					"patching_rect" : [ 157.0, 180.0, 58.0, 21.0 ],
 					"text" : "pipe 5 g f"
 				}
 
@@ -104,7 +125,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 123.0, 164.0, 101.0, 21.0 ],
+					"patching_rect" : [ 45.0, 180.0, 101.0, 21.0 ],
 					"text" : "pipe 5 range sum"
 				}
 
@@ -152,7 +173,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 184.0, 122.0, 29.5, 21.0 ],
+					"patching_rect" : [ 45.0, 145.0, 29.5, 21.0 ],
 					"text" : "1+1"
 				}
 
@@ -164,7 +185,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 438.5, 97.0, 40.0, 21.0 ],
+					"patching_rect" : [ 115.0, 113.0, 40.0, 21.0 ],
 					"text" : "eval c"
 				}
 
@@ -176,7 +197,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 450.5, 127.0, 94.0, 21.0 ],
+					"patching_rect" : [ 45.0, 84.0, 94.0, 21.0 ],
 					"text" : "execfile hello.py"
 				}
 
@@ -188,7 +209,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 221.5, 92.0, 40.0, 21.0 ],
+					"patching_rect" : [ 157.0, 145.0, 40.0, 21.0 ],
 					"text" : "eval x"
 				}
 
@@ -200,7 +221,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 268.0, 122.0, 70.0, 21.0 ],
+					"patching_rect" : [ 79.5, 145.0, 70.0, 21.0 ],
 					"text" : "exec x=100"
 				}
 
@@ -212,7 +233,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 460.0, 207.0, 114.0, 21.0 ],
+					"patching_rect" : [ 233.0, 84.0, 114.0, 21.0 ],
 					"text" : "eval string.hexdigits"
 				}
 
@@ -224,7 +245,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 460.0, 173.0, 75.0, 21.0 ],
+					"patching_rect" : [ 148.5, 84.0, 75.0, 21.0 ],
 					"text" : "import string"
 				}
 
@@ -236,7 +257,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 323.0, 155.0, 62.0, 21.0 ],
+					"patching_rect" : [ 45.0, 113.0, 62.0, 21.0 ],
 					"text" : "eval str(2)"
 				}
 
@@ -692,6 +713,14 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-37", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-4", 0 ]
 				}
 
@@ -726,6 +755,13 @@
 			}
  ],
 		"dependency_cache" : [ 			{
+				"name" : "py_repl.maxpat",
+				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
+				"patcherrelativepath" : "../patchers/bpatchers_ui",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "zedit.mxo",
 				"type" : "iLaX"
 			}
