@@ -5,6 +5,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 # MAX EXTERNAL
 #############################################################
 
+find_package(Python3 COMPONENTS Interpreter Development)
+
 include_directories( 
 	"${MAX_SDK_INCLUDES}"
 	"${MAX_SDK_MSP_INCLUDES}"
@@ -25,9 +27,50 @@ add_library(
 )
 
 
+set(PY_INCLUDE "${Python3_INCLUDE_DIRS}")
+set(PY_LIBDIRS "${Python3_LIBRARY_DIRS}")
+
+
 target_compile_definitions(${PROJECT_NAME} 
 	PRIVATE	
 	$<$<CONFIG:Release>:RELEASE>
+)
+
+
+target_include_directories(
+	${PROJECT_NAME}
+	PRIVATE
+	${PY_INCLUDE}
+)
+
+
+target_compile_options(
+	${PROJECT_NAME}
+	PRIVATE
+	-Wno-unused-result
+	-Wsign-compare
+	-Wunreachable-code
+	-DNDEBUG
+	-g
+	-fwrapv
+	-O3
+	-Wall
+)
+
+
+target_link_directories(
+	${PROJECT_NAME} 
+	PRIVATE
+	${PY_LIBDIRS}
+)
+
+
+target_link_libraries(
+	${PROJECT_NAME} 
+	PRIVATE
+	"${Python3_LIBRARIES}"
+	"-ldl"
+	"-framework CoreFoundation"
 )
 
 

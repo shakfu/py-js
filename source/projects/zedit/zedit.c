@@ -15,6 +15,9 @@
 
 #include <libgen.h>
 
+#define PY_IMPLEMENTATION // <-- activate the implementation
+#include "py.h"           // <-- include this
+
 #include "mongoose.h"
 
 #define PY_MAX_ELEMS 1024
@@ -46,9 +49,15 @@ typedef struct _zedit {
     int x_sleeptime;           // how many milliseconds to sleep
     int x_is_running;          // status of zediter
     t_string* x_root_dir;      // root path to statically serve from
+    t_py* py;                  // python interpreter type instance
 } t_zedit;
 
-void zedit_bang(t_zedit* x);
+
+// *-structors
+void* zedit_new(void);
+void zedit_free(t_zedit* x);
+
+// thread
 void zedit_start(t_zedit* x);
 void zedit_foo(t_zedit* x, long foo);
 void zedit_sleeptime(t_zedit* x, long sleeptime);
@@ -56,12 +65,41 @@ void zedit_stop(t_zedit* x);
 void zedit_cancel(t_zedit* x);
 void* zedit_threadproc(t_zedit* x);
 void zedit_qfn(t_zedit* x);
+
+// doc
 void zedit_assist(t_zedit* x, void* b, long m, long a, char* s);
-void zedit_free(t_zedit* x);
-void* zedit_new(void);
+
+// message
+void zedit_bang(t_zedit* x);
+
+// core py methods
+t_max_err zedit_import(t_zedit* x, t_symbol* s);
+t_max_err zedit_eval(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err zedit_exec(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err zedit_execfile(t_zedit* x, t_symbol* s);
+
+// extra py methods
+t_max_err zedit_call(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err zedit_assign(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err zedit_code(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err zedit_anything(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err zedit_pipe(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+
+// web
+void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv);
+void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, void *fn_data);
+static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data);
+t_string* get_path_to_webroot(t_class* klass);
 
 
-void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv) {
+
+// -------------------------------------------------------------------------------------
+
+
+
+
+void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv)
+{
 
     t_object *patcher;
 
@@ -278,7 +316,6 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 // }
 
 
-
 t_string* get_path_to_webroot(t_class* klass)
 {
     char external_path[MAX_PATH_CHARS];
@@ -300,6 +337,7 @@ t_string* get_path_to_webroot(t_class* klass)
 }
 
 
+
 t_class* zedit_class;
 
 void ext_main(void* r)
@@ -309,12 +347,22 @@ void ext_main(void* r)
     c = class_new("zedit", (method)zedit_new, (method)zedit_free,
                   sizeof(t_zedit), 0L, 0);
 
-    class_addmethod(c, (method)zedit_bang, "bang", 0);
-    class_addmethod(c, (method)zedit_start, "start", 0);
-    class_addmethod(c, (method)zedit_foo, "foo", A_DEFLONG, 0);
+    class_addmethod(c, (method)zedit_bang,      "bang",                 0);
+    class_addmethod(c, (method)zedit_start,     "start",                0);
+    class_addmethod(c, (method)zedit_foo,       "foo",      A_DEFLONG,  0);
     class_addmethod(c, (method)zedit_sleeptime, "sleeptime", A_DEFLONG, 0);
-    class_addmethod(c, (method)zedit_cancel, "cancel", 0);
-    class_addmethod(c, (method)zedit_assist, "assist", A_CANT, 0);
+    class_addmethod(c, (method)zedit_cancel,    "cancel",               0);
+    class_addmethod(c, (method)zedit_assist,    "assist",   A_CANT,     0);
+
+    class_addmethod(c, (method)zedit_import,    "import",   A_SYM,      0);
+    class_addmethod(c, (method)zedit_eval,      "eval",     A_GIMME,    0);
+    class_addmethod(c, (method)zedit_exec,      "exec",     A_GIMME,    0);
+    class_addmethod(c, (method)zedit_execfile,  "execfile", A_DEFSYM,   0);
+
+    class_addmethod(c, (method)zedit_call,      "call",     A_GIMME,    0);
+    class_addmethod(c, (method)zedit_code,      "code",     A_GIMME,    0);
+    class_addmethod(c, (method)zedit_pipe,      "pipe",     A_GIMME,    0);
+    class_addmethod(c, (method)zedit_anything,  "anything", A_GIMME,    0);
 
     class_register(CLASS_BOX, c);
     zedit_class = c;
@@ -449,7 +497,11 @@ void zedit_free(t_zedit* x)
     // free out mutex
     if (x->x_mutex)
         systhread_mutex_free(x->x_mutex);
+
+    // cleanup python
+    py_free(x->py);
 }
+
 
 void* zedit_new(void)
 {
@@ -466,6 +518,8 @@ void* zedit_new(void)
     x->x_is_running = false;
     x->x_root_dir = get_path_to_webroot(zedit_class);
 
+    x->py = py_init(); // This is all that is need to init the `py` obj
+
     // set global
     s_root_dir = string_getptr(x->x_root_dir);
     post("webroot: %s", s_root_dir);
@@ -475,4 +529,57 @@ void* zedit_new(void)
 
 void zedit_bang(t_zedit* x) {
     outlet_bang(x->x_outlet); 
+}
+
+
+t_max_err zedit_import(t_zedit* x, t_symbol* s)
+{
+    return py_import(x->py, s); // returns t_max_err
+}
+
+t_max_err zedit_eval(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_eval(x->py, s, argc, argv, x->x_outlet);
+}
+
+
+t_max_err zedit_exec(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_exec(x->py, s, argc, argv);
+}
+
+
+t_max_err zedit_execfile(t_zedit* x, t_symbol* s)
+{
+    return py_execfile(x->py, s);
+}
+
+
+t_max_err zedit_call(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_call(x->py, s, argc, argv, x->x_outlet);
+}
+
+
+t_max_err zedit_assign(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_assign(x->py, s, argc, argv);
+}
+
+
+t_max_err zedit_code(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_code(x->py, s, argc, argv, x->x_outlet);
+}
+
+
+t_max_err zedit_anything(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_anything(x->py, s, argc, argv, x->x_outlet);
+}
+
+
+t_max_err zedit_pipe(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+{
+    return py_pipe(x->py, s, argc, argv, x->x_outlet);
 }

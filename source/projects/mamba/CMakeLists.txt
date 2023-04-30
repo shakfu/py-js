@@ -6,7 +6,7 @@ find_package(Python3 COMPONENTS Interpreter Development)
 
 file(GLOB PROJECT_SRC
      "*.h"
-	 "*.c"
+	"*.c"
      "*.cpp"
 )
 
