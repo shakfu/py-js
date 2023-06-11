@@ -8,6 +8,65 @@
 #define POCKETPY_H
 
 
+#ifdef PK_USER_CONFIG_H
+
+#include "user_config.h"
+
+#else
+
+/*************** feature settings ***************/
+
+// Whether to compile os-related modules or not
+#define PK_ENABLE_OS                1
+// Enable this if you are working with multi-threading (experimental)
+// This triggers necessary locks to make the VM thread-safe
+#define PK_ENABLE_THREAD            0
+
+// Whether to use `std::function` to do bindings or not
+// By default, functions to be binded must be a C function pointer without capture
+// However, someone thinks it's not convenient.
+// By setting this to 1, capturing lambdas can be binded,
+// but it's slower and may cause severe "code bloat", also needs more time to compile.
+#define PK_ENABLE_STD_FUNCTION      0
+
+/*************** debug settings ***************/
+
+// Enable this may help you find bugs
+#define DEBUG_EXTRA_CHECK           0
+
+// Do not edit the following settings unless you know what you are doing
+#define DEBUG_NO_BUILTIN_MODULES    0
+#define DEBUG_DIS_EXEC              0
+#define DEBUG_CEVAL_STEP            0
+#define DEBUG_FULL_EXCEPTION        0
+#define DEBUG_MEMORY_POOL           0
+#define DEBUG_NO_MEMORY_POOL        0
+#define DEBUG_NO_AUTO_GC            0
+#define DEBUG_GC_STATS              0
+
+/*************** internal settings ***************/
+
+// This is the maximum size of the value stack in void* units
+// The actual size in bytes equals `sizeof(void*) * PK_VM_STACK_SIZE`
+#define PK_VM_STACK_SIZE            32768
+
+// This is the maximum number of arguments in a function declaration
+// including positional arguments, keyword-only arguments, and varargs
+// (not recommended to change this)
+#define PK_MAX_CO_VARNAMES          255
+
+// Hash table load factor (smaller ones mean less collision but more memory)
+// For class instance
+inline const float kInstAttrLoadFactor = 0.67f;
+// For class itself
+inline const float kTypeAttrLoadFactor = 0.5f;
+
+#ifdef _WIN32
+    inline const char kPlatformSep = '\\';
+#else
+    inline const char kPlatformSep = '/';
+#endif
+
 #ifdef _MSC_VER
 #pragma warning (disable:4267)
 #pragma warning (disable:4101)
@@ -15,6 +74,31 @@
 #define _CRT_NONSTDC_NO_DEPRECATE
 #define strdup _strdup
 #endif
+
+#ifdef _MSC_VER
+#define PK_ENABLE_COMPUTED_GOTO		0
+#define UNREACHABLE()				__assume(0)
+#else
+#define PK_ENABLE_COMPUTED_GOTO		1
+#define UNREACHABLE()				__builtin_unreachable()
+#endif
+
+
+#if DEBUG_CEVAL_STEP && defined(PK_ENABLE_COMPUTED_GOTO)
+#undef PK_ENABLE_COMPUTED_GOTO
+#endif
+
+/*************** module settings ***************/
+
+#define PK_MODULE_RE                1
+#define PK_MODULE_RANDOM            1
+#define PK_MODULE_BASE64            1
+#define PK_MODULE_LINALG            1
+#define PK_MODULE_EASING            1
+#define PK_MODULE_REQUESTS          0
+
+#endif
+
 
 #include <cmath>
 #include <cstring>
@@ -32,41 +116,17 @@
 #include <map>
 #include <set>
 #include <algorithm>
-#include <random>
 #include <initializer_list>
 #include <variant>
 #include <type_traits>
 
-#define PK_VERSION				"1.0.2"
+#define PK_VERSION				"1.0.3"
 
-// debug macros
-#define DEBUG_NO_BUILTIN_MODULES    0
-#define DEBUG_EXTRA_CHECK           0
-#define DEBUG_DIS_EXEC              0
-#define DEBUG_CEVAL_STEP            0
-#define DEBUG_FULL_EXCEPTION        0
-#define DEBUG_MEMORY_POOL           0
-#define DEBUG_NO_MEMORY_POOL        0
-#define DEBUG_NO_AUTO_GC            0
-#define DEBUG_GC_STATS              0
-
-// config macros
-#ifndef PK_ENABLE_OS
-
-#ifdef __ANDROID__
-#include <android/ndk-version.h>
-
-#if __NDK_MAJOR__ <= 22
-#define PK_ENABLE_OS 			0
-#else
-#define PK_ENABLE_OS 			1
+/*******************************************************************************/
+#if PK_ENABLE_STD_FUNCTION
+#include <functional>
 #endif
-
-#else
-#define PK_ENABLE_OS 			1
-#endif
-
-#endif
+/*******************************************************************************/
 
 #if PK_ENABLE_THREAD
 #define THREAD_LOCAL thread_local
@@ -85,23 +145,6 @@ struct GIL {
 #endif
 
 /*******************************************************************************/
-
-// This is the maximum number of arguments in a function declaration
-// including positional arguments, keyword-only arguments, and varargs
-#define PK_MAX_CO_VARNAMES			255
-
-#if _MSC_VER
-#define PK_ENABLE_COMPUTED_GOTO		0
-#define UNREACHABLE()				__assume(0)
-#else
-#define PK_ENABLE_COMPUTED_GOTO		1
-#define UNREACHABLE()				__builtin_unreachable()
-
-#if DEBUG_CEVAL_STEP
-#undef PK_ENABLE_COMPUTED_GOTO
-#endif
-
-#endif
 
 namespace pkpy{
 
@@ -173,9 +216,6 @@ struct Type {
 
 #define PK_ASSERT(x) if(!(x)) FATAL_ERROR();
 
-inline const float kInstAttrLoadFactor = 0.67f;
-inline const float kTypeAttrLoadFactor = 0.5f;
-
 struct PyObject;
 #define BITS(p) (reinterpret_cast<i64>(p))
 inline bool is_tagged(PyObject* p) noexcept { return (BITS(p) & 0b11) != 0b00; }
@@ -196,11 +236,7 @@ inline PyObject* const PY_NULL = (PyObject*)0b000011;		// tagged null
 inline PyObject* const PY_OP_CALL = (PyObject*)0b100011;
 inline PyObject* const PY_OP_YIELD = (PyObject*)0b110011;
 
-#ifdef _WIN32
-    inline const char kPlatformSep = '\\';
-#else
-    inline const char kPlatformSep = '/';
-#endif
+#define ADD_MODULE_PLACEHOLDER(name) namespace pkpy { inline void add_module_##name(void* vm) { (void)vm; } }
 
 } // namespace pkpy
 
@@ -2054,7 +2090,12 @@ struct Frame;
 struct Function;
 class VM;
 
+#if PK_ENABLE_STD_FUNCTION
+using NativeFuncC = std::function<PyObject*(VM*, ArgsView)>;
+#else
 typedef PyObject* (*NativeFuncC)(VM*, ArgsView);
+#endif
+
 typedef int (*LuaStyleFuncC)(VM*);
 
 struct NativeFunc {
@@ -3046,7 +3087,7 @@ struct ValueStackImpl {
     ValueStackImpl& operator=(ValueStackImpl&&) = delete;
 };
 
-using ValueStack = ValueStackImpl<32768>;
+using ValueStack = ValueStackImpl<PK_VM_STACK_SIZE>;
 
 struct Frame {
     int _ip = -1;
@@ -3275,10 +3316,6 @@ namespace pkpy{
 #define POPX()            (s_data.popx())
 #define STACK_VIEW(n)     (s_data.view(n))
 
-typedef Bytes (*ReadFileCwdFunc)(const Str& name);
-inline ReadFileCwdFunc _read_file_cwd = [](const Str& name) { return Bytes(); };
-inline int set_read_file_cwd(ReadFileCwdFunc func) { _read_file_cwd = func; return 0; }
-
 #define DEF_NATIVE_2(ctype, ptype)                                      \
     template<> inline ctype py_cast<ctype>(VM* vm, PyObject* obj) {     \
         vm->check_non_tagged_type(obj, vm->ptype);                      \
@@ -3377,6 +3414,7 @@ public:
 
     PrintFunc _stdout;
     PrintFunc _stderr;
+    Bytes (*_import_handler)(const Str& name);
 
     // for quick access
     Type tp_object, tp_type, tp_int, tp_float, tp_bool, tp_str;
@@ -3395,6 +3433,7 @@ public:
         callstack.reserve(8);
         _main = nullptr;
         _last_exception = nullptr;
+        _import_handler = [](const Str& name) { return Bytes(); };
         init_builtin_types();
     }
 
@@ -3854,10 +3893,10 @@ public:
             Str source;
             auto it = _lazy_modules.find(name);
             if(it == _lazy_modules.end()){
-                Bytes b = _read_file_cwd(filename);
+                Bytes b = _import_handler(filename);
                 if(!relative && !b){
                     filename = fmt(name, kPlatformSep, "__init__.py");
-                    b = _read_file_cwd(filename);
+                    b = _import_handler(filename);
                     if(b) type = 1;
                 }
                 if(!b) _error("ImportError", fmt("module ", name.escape(), " not found"));
@@ -4765,7 +4804,7 @@ PyObject* PyArrayGetItem(VM* vm, PyObject* obj, PyObject* index){
     static_assert(std::is_same_v<T, List> || std::is_same_v<T, Tuple>);
     const T& self = _CAST(T&, obj);
 
-    if(is_type(index, vm->tp_slice)){
+    if(is_non_tagged_type(index, vm->tp_slice)){
         const Slice& s = _CAST(Slice&, index);
         int start, stop, step;
         vm->parse_int_slice(s, self.size(), start, stop, step);
@@ -5409,19 +5448,30 @@ __NEXT_STEP:;
         PUSH(_0);
         DISPATCH();
     TARGET(CALL_TP)
-        // [callable, <self>, args: tuple, kwargs: dict]
-        _2 = POPX();
-        _1 = POPX();
-        for(PyObject* obj: _CAST(Tuple&, _1)) PUSH(obj);
-        _CAST(Dict&, _2).apply([this](PyObject* k, PyObject* v){
-            PUSH(VAR(StrName(CAST(Str&, k)).index));
-            PUSH(v);
-        });
-        _0 = vectorcall(
-            _CAST(Tuple&, _1).size(),   // ARGC
-            _CAST(Dict&, _2).size(),    // KWARGC
-            true
-        );
+        // [callable, <self>, args: tuple, kwargs: dict | NULL]
+        if(byte.arg){
+            _2 = POPX();
+            _1 = POPX();
+            for(PyObject* obj: _CAST(Tuple&, _1)) PUSH(obj);
+            _CAST(Dict&, _2).apply([this](PyObject* k, PyObject* v){
+                PUSH(VAR(StrName(CAST(Str&, k)).index));
+                PUSH(v);
+            });
+            _0 = vectorcall(
+                _CAST(Tuple&, _1).size(),   // ARGC
+                _CAST(Dict&, _2).size(),    // KWARGC
+                true
+            );
+        }else{
+            // no **kwargs
+            _1 = POPX();
+            for(PyObject* obj: _CAST(Tuple&, _1)) PUSH(obj);
+            _0 = vectorcall(
+                _CAST(Tuple&, _1).size(),   // ARGC
+                0,                          // KWARGC
+                true
+            );
+        }
         if(_0 == PY_OP_CALL) DISPATCH_OP_CALL();
         PUSH(_0);
         DISPATCH();
@@ -6336,20 +6386,24 @@ struct CallExpr: Expr{
             for(auto& item: args) item->emit(ctx);
             ctx->emit(OP_BUILD_TUPLE_UNPACK, (int)args.size(), line);
 
-            for(auto& item: kwargs){
-                if(item.second->is_starred()){
-                    if(item.second->star_level() != 2) FATAL_ERROR();
-                    item.second->emit(ctx);
-                }else{
-                    // k=v
-                    int index = ctx->add_const(py_var(ctx->vm, item.first));
-                    ctx->emit(OP_LOAD_CONST, index, line);
-                    item.second->emit(ctx);
-                    ctx->emit(OP_BUILD_TUPLE, 2, line);
+            if(!kwargs.empty()){
+                for(auto& item: kwargs){
+                    if(item.second->is_starred()){
+                        if(item.second->star_level() != 2) FATAL_ERROR();
+                        item.second->emit(ctx);
+                    }else{
+                        // k=v
+                        int index = ctx->add_const(py_var(ctx->vm, item.first));
+                        ctx->emit(OP_LOAD_CONST, index, line);
+                        item.second->emit(ctx);
+                        ctx->emit(OP_BUILD_TUPLE, 2, line);
+                    }
                 }
+                ctx->emit(OP_BUILD_DICT_UNPACK, (int)kwargs.size(), line);
+                ctx->emit(OP_CALL_TP, 1, line);
+            }else{
+                ctx->emit(OP_CALL_TP, 0, line);
             }
-            ctx->emit(OP_BUILD_DICT_UNPACK, (int)kwargs.size(), line);
-            ctx->emit(OP_CALL_TP, BC_NOARG, line);
         }else{
             // vectorcall protocal
             for(auto& item: args) item->emit(ctx);
@@ -7641,7 +7695,7 @@ public:
 
 } // namespace pkpy
 
-// generated on 2023-06-10 07:24:12
+// generated on 2023-06-11 09:55:58
 #include <map>
 #include <string>
 
@@ -8271,6 +8325,8 @@ inline PyObject* VM::_py_generator(Frame&& frame, ArgsView buffer){
 } // namespace pkpy
 
 
+#if PK_MODULE_BASE64
+
 namespace pkpy {
 
 // https://github.com/zhicheng/base64/blob/master/base64.c
@@ -8461,7 +8517,168 @@ inline void add_module_base64(VM* vm){
 } // namespace pkpy
 
 
-#include <cmath>
+#else
+
+ADD_MODULE_PLACEHOLDER(base64)
+
+#endif
+
+
+#if PK_MODULE_RANDOM
+
+#include <random>
+
+namespace pkpy{
+
+struct Random{
+    PY_CLASS(Random, random, Random)
+    std::mt19937 gen;
+
+    Random(){
+        gen.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    }
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_default_constructor<Random>(type);
+
+        vm->bind_method<1>(type, "seed", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            self.gen.seed(CAST(i64, args[1]));
+            return vm->None;
+        });
+
+        vm->bind_method<2>(type, "randint", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            i64 a = CAST(i64, args[1]);
+            i64 b = CAST(i64, args[2]);
+            std::uniform_int_distribution<i64> dis(a, b);
+            return VAR(dis(self.gen));
+        });
+
+        vm->bind_method<0>(type, "random", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            std::uniform_real_distribution<f64> dis(0.0, 1.0);
+            return VAR(dis(self.gen));
+        });
+
+        vm->bind_method<2>(type, "uniform", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            f64 a = CAST(f64, args[1]);
+            f64 b = CAST(f64, args[2]);
+            std::uniform_real_distribution<f64> dis(a, b);
+            return VAR(dis(self.gen));
+        });
+    }
+};
+
+inline void add_module_random(VM* vm){
+    PyObject* mod = vm->new_module("random");
+    Random::register_class(vm, mod);
+    CodeObject_ code = vm->compile(kPythonLibs["random"], "random.py", EXEC_MODE);
+    vm->_exec(code, mod);
+}
+
+}   // namespace pkpy
+
+#else
+
+ADD_MODULE_PLACEHOLDER(random)
+
+#endif
+
+
+#if PK_MODULE_RE
+
+namespace pkpy{
+
+struct ReMatch {
+    PY_CLASS(ReMatch, re, Match)
+
+    i64 start;
+    i64 end;
+    std::cmatch m;
+    ReMatch(i64 start, i64 end, std::cmatch m) : start(start), end(end), m(m) {}
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_notimplemented_constructor<ReMatch>(type);
+        vm->bind_method<0>(type, "start", CPP_LAMBDA(VAR(_CAST(ReMatch&, args[0]).start)));
+        vm->bind_method<0>(type, "end", CPP_LAMBDA(VAR(_CAST(ReMatch&, args[0]).end)));
+
+        vm->bind_method<0>(type, "span", [](VM* vm, ArgsView args) {
+            auto& self = _CAST(ReMatch&, args[0]);
+            return VAR(Tuple({VAR(self.start), VAR(self.end)}));
+        });
+
+        vm->bind_method<1>(type, "group", [](VM* vm, ArgsView args) {
+            auto& self = _CAST(ReMatch&, args[0]);
+            int index = CAST(int, args[1]);
+            index = vm->normalized_index(index, self.m.size());
+            return VAR(self.m[index].str());
+        });
+    }
+};
+
+inline PyObject* _regex_search(const Str& pattern, const Str& string, bool from_start, VM* vm){
+    std::regex re(pattern.begin(), pattern.end());
+    std::cmatch m;
+    if(std::regex_search(string.begin(), string.end(), m, re)){
+        if(from_start && m.position() != 0) return vm->None;
+        i64 start = string._byte_index_to_unicode(m.position());
+        i64 end = string._byte_index_to_unicode(m.position() + m.length());
+        return VAR_T(ReMatch, start, end, m);
+    }
+    return vm->None;
+};
+
+inline void add_module_re(VM* vm){
+    PyObject* mod = vm->new_module("re");
+    ReMatch::register_class(vm, mod);
+
+    vm->bind_func<2>(mod, "match", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& string = CAST(Str&, args[1]);
+        return _regex_search(pattern, string, true, vm);
+    });
+
+    vm->bind_func<2>(mod, "search", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& string = CAST(Str&, args[1]);
+        return _regex_search(pattern, string, false, vm);
+    });
+
+    vm->bind_func<3>(mod, "sub", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& repl = CAST(Str&, args[1]);
+        const Str& string = CAST(Str&, args[2]);
+        std::regex re(pattern.begin(), pattern.end());
+        return VAR(std::regex_replace(string.str(), re, repl.str()));
+    });
+
+    vm->bind_func<2>(mod, "split", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& string = CAST(Str&, args[1]);
+        std::regex re(pattern.begin(), pattern.end());
+        std::cregex_token_iterator it(string.begin(), string.end(), re, -1);
+        std::cregex_token_iterator end;
+        List vec;
+        for(; it != end; ++it){
+            vec.push_back(VAR(it->str()));
+        }
+        return VAR(vec);
+    });
+}
+
+}   // namespace pkpy
+
+#else
+
+ADD_MODULE_PLACEHOLDER(re)
+
+#endif
+
+
+#if PK_MODULE_LINALG
+
 namespace pkpy{
 
 static constexpr float kEpsilon = 1e-4f;
@@ -9134,6 +9351,14 @@ static_assert(sizeof(Py_<PyMat3x3>) <= 64);
 
 }   // namespace pkpy
 
+#else
+
+ADD_MODULE_PLACEHOLDER(linalg)
+
+#endif
+
+
+#if PK_MODULE_EASING
 
 namespace pkpy{
 
@@ -9385,14 +9610,17 @@ inline void add_module_easing(VM* vm){
 #undef EASE
 }
 
-
 } // namespace pkpy
 
+#else
+
+ADD_MODULE_PLACEHOLDER(easing)
+
+#endif
 
 
-#if __has_include("httplib.h")
+#if PK_MODULE_REQUESTS
 #include "httplib.h"
-
 namespace pkpy {
 
 inline void add_module_requests(VM* vm){
@@ -9483,7 +9711,7 @@ inline void add_module_requests(VM* vm){
 
 #else
 
-inline void add_module_requests(void* vm){ }
+ADD_MODULE_PLACEHOLDER(requests)
 
 #endif
 
@@ -9495,7 +9723,7 @@ inline void add_module_requests(void* vm){ }
 
 namespace pkpy{
 
-inline int _ = set_read_file_cwd([](const Str& name){
+inline Bytes _default_import_handler(const Str& name){
     std::filesystem::path path(name.sv());
     bool exists = std::filesystem::exists(path);
     if(!exists) return Bytes();
@@ -9508,7 +9736,7 @@ inline int _ = set_read_file_cwd([](const Str& name){
     fread(buffer.data(), 1, buffer.size(), fp);
     fclose(fp);
     return Bytes(std::move(buffer));
-});
+};
 
 struct FileIO {
     PY_CLASS(FileIO, io, FileIO)
@@ -9667,6 +9895,7 @@ inline void add_module_os(VM* vm){
 namespace pkpy{
 inline void add_module_io(void* vm){}
 inline void add_module_os(void* vm){}
+inline Bytes _default_import_handler(const Str& name) { return Bytes(); }
 } // namespace pkpy
 
 #endif
@@ -10936,131 +11165,6 @@ inline void add_module_dis(VM* vm){
     });
 }
 
-struct ReMatch {
-    PY_CLASS(ReMatch, re, Match)
-
-    i64 start;
-    i64 end;
-    std::cmatch m;
-    ReMatch(i64 start, i64 end, std::cmatch m) : start(start), end(end), m(m) {}
-
-    static void _register(VM* vm, PyObject* mod, PyObject* type){
-        vm->bind_notimplemented_constructor<ReMatch>(type);
-        vm->bind_method<0>(type, "start", CPP_LAMBDA(VAR(_CAST(ReMatch&, args[0]).start)));
-        vm->bind_method<0>(type, "end", CPP_LAMBDA(VAR(_CAST(ReMatch&, args[0]).end)));
-
-        vm->bind_method<0>(type, "span", [](VM* vm, ArgsView args) {
-            auto& self = _CAST(ReMatch&, args[0]);
-            return VAR(Tuple({VAR(self.start), VAR(self.end)}));
-        });
-
-        vm->bind_method<1>(type, "group", [](VM* vm, ArgsView args) {
-            auto& self = _CAST(ReMatch&, args[0]);
-            int index = CAST(int, args[1]);
-            index = vm->normalized_index(index, self.m.size());
-            return VAR(self.m[index].str());
-        });
-    }
-};
-
-inline PyObject* _regex_search(const Str& pattern, const Str& string, bool from_start, VM* vm){
-    std::regex re(pattern.begin(), pattern.end());
-    std::cmatch m;
-    if(std::regex_search(string.begin(), string.end(), m, re)){
-        if(from_start && m.position() != 0) return vm->None;
-        i64 start = string._byte_index_to_unicode(m.position());
-        i64 end = string._byte_index_to_unicode(m.position() + m.length());
-        return VAR_T(ReMatch, start, end, m);
-    }
-    return vm->None;
-};
-
-inline void add_module_re(VM* vm){
-    PyObject* mod = vm->new_module("re");
-    ReMatch::register_class(vm, mod);
-
-    vm->bind_func<2>(mod, "match", [](VM* vm, ArgsView args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& string = CAST(Str&, args[1]);
-        return _regex_search(pattern, string, true, vm);
-    });
-
-    vm->bind_func<2>(mod, "search", [](VM* vm, ArgsView args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& string = CAST(Str&, args[1]);
-        return _regex_search(pattern, string, false, vm);
-    });
-
-    vm->bind_func<3>(mod, "sub", [](VM* vm, ArgsView args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& repl = CAST(Str&, args[1]);
-        const Str& string = CAST(Str&, args[2]);
-        std::regex re(pattern.begin(), pattern.end());
-        return VAR(std::regex_replace(string.str(), re, repl.str()));
-    });
-
-    vm->bind_func<2>(mod, "split", [](VM* vm, ArgsView args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& string = CAST(Str&, args[1]);
-        std::regex re(pattern.begin(), pattern.end());
-        std::cregex_token_iterator it(string.begin(), string.end(), re, -1);
-        std::cregex_token_iterator end;
-        List vec;
-        for(; it != end; ++it){
-            vec.push_back(VAR(it->str()));
-        }
-        return VAR(vec);
-    });
-}
-
-struct Random{
-    PY_CLASS(Random, random, Random)
-    std::mt19937 gen;
-
-    Random(){
-        gen.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count());
-    }
-
-    static void _register(VM* vm, PyObject* mod, PyObject* type){
-        vm->bind_default_constructor<Random>(type);
-
-        vm->bind_method<1>(type, "seed", [](VM* vm, ArgsView args) {
-            Random& self = _CAST(Random&, args[0]);
-            self.gen.seed(CAST(i64, args[1]));
-            return vm->None;
-        });
-
-        vm->bind_method<2>(type, "randint", [](VM* vm, ArgsView args) {
-            Random& self = _CAST(Random&, args[0]);
-            i64 a = CAST(i64, args[1]);
-            i64 b = CAST(i64, args[2]);
-            std::uniform_int_distribution<i64> dis(a, b);
-            return VAR(dis(self.gen));
-        });
-
-        vm->bind_method<0>(type, "random", [](VM* vm, ArgsView args) {
-            Random& self = _CAST(Random&, args[0]);
-            std::uniform_real_distribution<f64> dis(0.0, 1.0);
-            return VAR(dis(self.gen));
-        });
-
-        vm->bind_method<2>(type, "uniform", [](VM* vm, ArgsView args) {
-            Random& self = _CAST(Random&, args[0]);
-            f64 a = CAST(f64, args[1]);
-            f64 b = CAST(f64, args[2]);
-            std::uniform_real_distribution<f64> dis(a, b);
-            return VAR(dis(self.gen));
-        });
-    }
-};
-
-inline void add_module_random(VM* vm){
-    PyObject* mod = vm->new_module("random");
-    Random::register_class(vm, mod);
-    CodeObject_ code = vm->compile(kPythonLibs["random"], "random.py", EXEC_MODE);
-    vm->_exec(code, mod);
-}
-
 inline void add_module_gc(VM* vm){
     PyObject* mod = vm->new_module("gc");
     vm->bind_func<0>(mod, "collect", CPP_LAMBDA(VAR(vm->heap.collect())));
@@ -11131,6 +11235,7 @@ inline void VM::post_init(){
         add_module_io(this);
         add_module_os(this);
         add_module_requests(this);
+        _import_handler = _default_import_handler;
     }
 
     add_module_linalg(this);
@@ -11141,17 +11246,10 @@ inline void VM::post_init(){
 }   // namespace pkpy
 
 /*************************GLOBAL NAMESPACE*************************/
-static std::map<void*, void(*)(void*)> _pk_deleter_map;
-
 extern "C" {
     PK_LEGACY_EXPORT
-    void pkpy_delete(void* p){
-        auto it = _pk_deleter_map.find(p);
-        if(it != _pk_deleter_map.end()){
-            it->second(p);
-        }else{
-            free(p);
-        }
+    void pkpy_free(void* p){
+        free(p);
     }
 
     PK_LEGACY_EXPORT
@@ -11173,7 +11271,6 @@ extern "C" {
     PK_LEGACY_EXPORT
     pkpy::REPL* pkpy_new_repl(pkpy::VM* vm){
         pkpy::REPL* p = new pkpy::REPL(vm);
-        _pk_deleter_map[p] = [](void* p){ delete (pkpy::REPL*)p; };
         return p;
     }
 
@@ -11190,8 +11287,17 @@ extern "C" {
     PK_LEGACY_EXPORT
     pkpy::VM* pkpy_new_vm(bool enable_os=true){
         pkpy::VM* p = new pkpy::VM(enable_os);
-        _pk_deleter_map[p] = [](void* p){ delete (pkpy::VM*)p; };
         return p;
+    }
+
+    PK_LEGACY_EXPORT
+    void pkpy_delete_vm(pkpy::VM* vm){
+        delete vm;
+    }
+
+    PK_LEGACY_EXPORT
+    void pkpy_delete_repl(pkpy::REPL* repl){
+        delete repl;
     }
 
     PK_LEGACY_EXPORT

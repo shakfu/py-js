@@ -7,8 +7,8 @@
 #include <fstream>
 #include <wordexp.h>
 
+#define PK_USER_CONFIG_H
 #include "pocketpy.h"
-// #define PK_ENABLE_FILEIO 1
 
 using namespace pkpy;
 
@@ -109,14 +109,17 @@ PktpyInterpreter::PktpyInterpreter()
     this->path_code = 0;
     this->loglevel = log_level::PY_LOG_LEVEL;
     this->vm = new VM(false); // vm->enable_os = false
-    this->vm->_stdout = [](VM* vm, const Str& s) { 
-        const char* stdout_output = strdup(s.data);
-        post((char*)stdout_output);
-    };
-    this->vm->_stderr = [](VM* vm, const Str& s) { 
-        const char* stderr_output = strdup(s.data);
-        error((char*)stderr_output);
-    };
+    this->vm->_stdout = [](VM* vm, const Str& s) {};
+    this->vm->_stderr = [](VM* vm, const Str& s) {};
+
+    // this->vm->_stdout = [](VM* vm, const Str& s) { 
+    //     const char* stdout_output = strdup(s.data);
+    //     post((char*)stdout_output);
+    // };
+    // this->vm->_stderr = [](VM* vm, const Str& s) { 
+    //     const char* stderr_output = strdup(s.data);
+    //     error((char*)stderr_output);
+    // };
 }
 
 
