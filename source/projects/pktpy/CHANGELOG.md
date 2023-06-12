@@ -1,5 +1,12 @@
 # CHANGELOG
 
+
+## [0.0.2]
+
+- Updated code to [pocketpy](https://github.com/blueloveTH/pocketpy) to ver 1.0.3
+
+
+
 ## [0.0.1]
 
 - Added code-editor support

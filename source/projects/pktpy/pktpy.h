@@ -4,10 +4,11 @@
 #include "ext.h"
 #include "ext_obex.h"
 
+#include <fstream>
 #include <wordexp.h>
 
+#define PK_USER_CONFIG_H
 #include "pocketpy.h"
-// #define PK_ENABLE_FILEIO 1
 
 using namespace pkpy;
 
@@ -53,8 +54,7 @@ public:
     void print_atom(int argc, t_atom* argv);
 
     // error handling methods
-    void handle_error(void);
-    // void reset_error_buffer(void);
+
 
     // path handling methods
     // t_max_err syspath_append(char* path);
@@ -64,8 +64,8 @@ public:
     t_symbol* get_path_to_external(t_class* klass);
 
     // simple python <-> atom type translation helpers
-    PyVar atom_to_pobject(t_atom* atom);                  // used by atoms_to_ptuple
-    t_max_err pobject_to_atom(PyVar value, t_atom* atom); // used by plist_to_atoms
+    PyObject* atom_to_pobject(t_atom* atom);                  // used by atoms_to_ptuple
+    t_max_err pobject_to_atom(PyObject* value, t_atom* atom); // used by plist_to_atoms
 
     // complex python <-> atom type translation helpers
     List atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
@@ -74,9 +74,9 @@ public:
     // Tuple atoms_to_ptuple(int argc, t_atom* argv);
 
     // python value -> atom -> outlet
-    t_max_err handle_pyvar_output(PyVar pval, void* outlet);
+    t_max_err handle_pyvar_output(PyObject* pval, void* outlet);
     t_max_err handle_plist_output(List plist, void* outlet);
-    // t_max_err handle_dict_output(PyVar pval, void* outlet);
+    // t_max_err handle_dict_output(PyObject* pval, void* outlet);
 
     // core message method helpers
     t_max_err eval_pcode(char* pcode, void* outlet);
@@ -84,7 +84,7 @@ public:
     t_max_err execfile_path(char* path);
     
     // anything message method helpers
-    PyVar eval_text(char* text);
+    PyObject* eval_text(char* text);
     t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
 
     // core message methods
@@ -108,14 +108,25 @@ PktpyInterpreter::PktpyInterpreter()
     this->source_path = gensym("");
     this->path_code = 0;
     this->loglevel = log_level::PY_LOG_LEVEL;
-    this->vm = new VM(false); // vm->use_stdio = false
+    this->vm = new VM(false); // vm->enable_os = false
+    this->vm->_stdout = [](VM* vm, const Str& s) {};
+    this->vm->_stderr = [](VM* vm, const Str& s) {};
+
+    // this->vm->_stdout = [](VM* vm, const Str& s) { 
+    //     const char* stdout_output = s.c_str_dup();
+    //     post((char*)stdout_output);
+    // };
+    // this->vm->_stderr = [](VM* vm, const Str& s) { 
+    //     const char* stderr_output = s.c_str_dup();
+    //     error((char*)stderr_output);
+    // };
 }
 
 
 /**
  * @brief      PktpyInterpreter destructor method.
  */
-PktpyInterpreter::~PktpyInterpreter() { pkpy_delete(this->vm); }
+PktpyInterpreter::~PktpyInterpreter() { delete(this->vm); }
 
 
 // ---------------------------------------------------------------------------
@@ -217,27 +228,6 @@ void PktpyInterpreter::print_atom(int argc, t_atom* argv)
 
 // ---------------------------------------------------------------------------
 // error handling methods
-
-// void PktpyInterpreter::reset_error_buffer(void)
-// {
-//     delete this->vm->_stderr;
-//     this->vm->_stderr = new StrStream();   
-// }
-
-
-void PktpyInterpreter::handle_error(void)
-{
-    if (this->vm->use_stdio) {
-        this->log_error((char*)"cannot handle errors if vm->use_stdio is True");
-        return;
-    }
-    pkpy::StrStream* s_err = (pkpy::StrStream*)(this->vm->_stderr);
-    pkpy::Str _stderr = s_err->str();
-    s_err->str(""); // clear it
-    const char* stderr_output = strdup(_stderr.c_str());
-    this->log_error((char*)stderr_output);
-    // this->reset_error_buffer();
-}
 
 
 // ---------------------------------------------------------------------------
@@ -378,7 +368,7 @@ t_symbol* PktpyInterpreter::get_path_to_external(t_class* klass)
  *
  * @return     python object (int, float, string)
  */
-PyVar PktpyInterpreter::atom_to_pobject(t_atom* atom)
+PyObject* PktpyInterpreter::atom_to_pobject(t_atom* atom)
 {
     this->log_debug((char*)"py_atom_to_py_object start");
 
@@ -386,15 +376,15 @@ PyVar PktpyInterpreter::atom_to_pobject(t_atom* atom)
 
     case A_LONG:
         this->log_debug((char*)"int: %i", atom_getlong(atom));
-        return py_var<int>(this->vm, atom_getlong(atom));
+        return py_var(this->vm, atom_getlong(atom));
 
     case A_FLOAT:
         this->log_debug((char*)"float: %f", atom_getfloat(atom));
-        return py_var<float>(this->vm, atom_getfloat(atom));
+        return py_var(this->vm, atom_getfloat(atom));
 
     case A_SYM:
         this->log_debug((char*)"symbol: %s", atom_getsym(atom)->s_name);
-        return py_var<Str>(this->vm, atom_getsym(atom)->s_name);
+        return py_var(this->vm, atom_getsym(atom)->s_name);
 
     case A_NOTHING:
         return this->vm->None;
@@ -417,7 +407,7 @@ PyVar PktpyInterpreter::atom_to_pobject(t_atom* atom)
  * @param      value  Python value
  * @param[out] atom   Max atom
  */
-t_max_err PktpyInterpreter::pobject_to_atom(PyVar value, t_atom* atom)
+t_max_err PktpyInterpreter::pobject_to_atom(PyObject* value, t_atom* atom)
 {
     t_max_err err = MAX_ERR_NONE;
 
@@ -438,7 +428,7 @@ t_max_err PktpyInterpreter::pobject_to_atom(PyVar value, t_atom* atom)
 
     else if (is_type(value, this->vm->tp_str)) {
         Str str_value = py_cast<Str>(this->vm, value);
-        const char* cstr = strdup(str_value.c_str());
+        const char* cstr = str_value.c_str_dup();
         atom_setsym(atom, gensym(cstr));
     }
 
@@ -490,18 +480,17 @@ List PktpyInterpreter::atoms_to_plist_with_offset(long argc, t_atom* argv,
         switch ((argv + i)->a_type) {
         case A_FLOAT: {
             double c_float = atom_getfloat(argv + i);
-            PyVar p_float = py_var<float>(this->vm, c_float);
+            PyObject* p_float = py_var(this->vm, c_float);
             plist.push_back(p_float);
             break;
         }
         case A_LONG: {
-            PyVar p_int = py_var<int>(this->vm, atom_getlong(argv + i));
+            PyObject* p_int = py_var(this->vm, atom_getlong(argv + i));
             plist.push_back(p_int);
             break;
         }
         case A_SYM: {
-            PyVar p_str = py_var<Str>(this->vm,
-                                      atom_getsym(argv + i)->s_name);
+            PyObject* p_str = py_var(this->vm, atom_getsym(argv + i)->s_name);
             plist.push_back(p_str);
             break;
         }
@@ -531,7 +520,7 @@ t_max_err PktpyInterpreter::plist_to_atoms(List plist, int* argc,
 
     *argv = (t_atom*)malloc(len * sizeof(t_atom));
     for (int i = 0; i < len; i++) {
-        PyVar elem = plist[i];
+        PyObject* elem = plist[i];
         this->pobject_to_atom(elem, (*argv) + i);
     }
     *argc = (int)len;
@@ -575,7 +564,7 @@ t_max_err PktpyInterpreter:: handle_plist_output(List plist, void* outlet)
 
     this->log_debug((char*)"seq_size2: %d", seq_size);
 
-    for (PyVar obj : plist) {
+    for (PyObject* obj : plist) {
         if (is_int(obj)) {
             int int_obj = py_cast<int>(this->vm, obj);
             atom_setlong(atoms + i, int_obj);
@@ -592,7 +581,7 @@ t_max_err PktpyInterpreter:: handle_plist_output(List plist, void* outlet)
 
         if (is_type(obj, this->vm->tp_str)) {
             Str str_obj = py_cast<Str>(this->vm, obj);
-            const char* cstr = strdup(str_obj.c_str());
+            const char* cstr = str_obj.c_str_dup();
             atom_setsym(atoms + i, gensym(cstr));
             this->log_debug((char*)"%d string: %s\n", i, cstr);
             i += 1;
@@ -618,7 +607,7 @@ t_max_err PktpyInterpreter:: handle_plist_output(List plist, void* outlet)
  * @param pval python object
  * @return t_max_err error code
  */
-t_max_err PktpyInterpreter::handle_pyvar_output(PyVar pval, void* outlet)
+t_max_err PktpyInterpreter::handle_pyvar_output(PyObject* pval, void* outlet)
 {
     if (is_float(pval)) {
         float float_result = py_cast<float>(this->vm, pval);
@@ -634,7 +623,7 @@ t_max_err PktpyInterpreter::handle_pyvar_output(PyVar pval, void* outlet)
 
     else if (is_type(pval, this->vm->tp_str)) {
         Str str_result = py_cast<Str>(this->vm, pval);
-        const char* cstr = strdup(str_result.c_str());
+        const char* cstr = str_result.c_str_dup();
         outlet_anything(outlet, gensym(cstr), 0, (t_atom*)NIL);
         return MAX_ERR_NONE;
     }
@@ -673,7 +662,7 @@ t_max_err PktpyInterpreter::handle_pyvar_output(PyVar pval, void* outlet)
  */
 t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
 {
-    PyVar result = this->vm->exec(pcode, "<eval>", EVAL_MODE);
+    PyObject* result = this->vm->exec(pcode, "<eval>", EVAL_MODE);
 
     if (result != NULL) {
 
@@ -696,7 +685,7 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
 
         else if (is_type(result, this->vm->tp_str)) {
             Str str_result = py_cast<Str>(this->vm, result);
-            const char* cstr = strdup(str_result.c_str());
+            const char* cstr = str_result.c_str_dup();
             outlet_anything(outlet, gensym(cstr), 0, (t_atom*)NIL);
         }
 
@@ -738,7 +727,7 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
             outlet_anything(outlet, gensym("function"), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->vm->tp_native_function)) {
+        else if (is_type(result, this->vm->tp_native_func)) {
             NativeFunc func_result = py_cast<NativeFunc>(this->vm, result);
             outlet_anything(outlet, gensym("native_function"), 0,
                             (t_atom*)NIL);
@@ -757,7 +746,6 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
         }
         return MAX_ERR_NONE;
     }
-    // this->handle_error();
     this->log_error((char*)"eval %s", pcode);
     return MAX_ERR_GENERIC;
 }
@@ -774,7 +762,6 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
 t_max_err PktpyInterpreter::exec_pcode(char* pcode)
 {
     if (this->vm->exec(pcode, "main.py", EXEC_MODE) == NULL) {
-        // this->handle_error();
         this->log_error((char*)"exec %s", pcode);            
         return MAX_ERR_GENERIC;
     }
@@ -811,11 +798,11 @@ t_max_err PktpyInterpreter::execfile_path(char* path)
 /**
  * @brief A helper function to evaluate Max text as a Python expression.
  * 
- * @return PyVar python object
+ * @return PyObject* python object
  */
-PyVar PktpyInterpreter::eval_text(char* text)
+PyObject* PktpyInterpreter::eval_text(char* text)
 {
-    PyVar result = this->vm->exec(text, "<eval>", EVAL_MODE);
+    PyObject* result = this->vm->exec(text, "<eval>", EVAL_MODE);
  
     if (result == NULL) {
         if (this->vm->exec(text, "main.py", EXEC_MODE) != NULL) {
@@ -848,7 +835,7 @@ t_max_err PktpyInterpreter::eval_text_to_outlet(long argc, t_atom* argv,
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         this->log_debug((char*)">>> %s", text);
-        PyVar pval = this->eval_text(text);
+        PyObject* pval = this->eval_text(text);
         if (pval != NULL) {
             this->handle_pyvar_output(pval, outlet);
             return MAX_ERR_NONE;

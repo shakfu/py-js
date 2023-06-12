@@ -221,6 +221,19 @@ metro = newobject_sprintf(patcher,
     "@maxclass newobj @text \"metro 400\" @patching_position %.2f %.2f", x->metxpos, x->metypos);
 ```
 
+another way:
+
+```c
+    t_atom a;
+    atom_setsym(&a, gensym("toto"));
+    t_object *b = object_new_typed(CLASS_BOX, gensym("buffer~"), 1, &a);
+    atom_setsym(&a, gensym("anton.aif"));
+    // typedmess(b, gensym("replace"), 1, &a);
+    // object_method_typed(b, gensym("replace"), 1, &a, NULL);
+    // object_method(b, gensym("replace"));
+    // object_method(gensym("dsp")->s_thing, gensym("stop"));
+```
+
 #### connecting objects
 
 If you'd like to script the connections between two objects, you can do so via a message to the patcher. Assuming you have the patcher, toggle, and metro objects above, you'll create an array of atoms to send the message using `object_method_typed()`.
@@ -237,6 +250,16 @@ object_method_typed(patcher, gensym("connect"), 4, msg, &rv);
 If you want to have a hidden connection, pass an optional fifth argument that is any negative number.
 
 To delete an object in a patcher you call `object_free()` on the box. As of Max 5.0.6 this will properly redraw the patcher and remove any connected patch cords.
+
+The above is somewhat equivalent to sending the following message to `thispatcher`:
+
+```text
+[script connect t1 0 m1 0] --> [thispatcher]
+
+where
+    t1 is the script name of the toggle object
+    m1 is the script name of the metro object
+```
 
 #### Obtaining and Changing Patcher and Object Attributes
 

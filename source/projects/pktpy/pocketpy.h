@@ -8,121 +8,492 @@
 #define POCKETPY_H
 
 
+#ifdef PK_USER_CONFIG_H
+
+#include "user_config.h"
+
+#else
+
+/*************** feature settings ***************/
+
+// Whether to compile os-related modules or not
+#define PK_ENABLE_OS                1
+// Enable this if you are working with multi-threading (experimental)
+// This triggers necessary locks to make the VM thread-safe
+#define PK_ENABLE_THREAD            0
+
+// Whether to use `std::function` to do bindings or not
+// By default, functions to be binded must be a C function pointer without capture
+// However, someone thinks it's not convenient.
+// By setting this to 1, capturing lambdas can be binded,
+// but it's slower and may cause severe "code bloat", also needs more time to compile.
+#define PK_ENABLE_STD_FUNCTION      0
+
+/*************** debug settings ***************/
+
+// Enable this may help you find bugs
+#define DEBUG_EXTRA_CHECK           0
+
+// Do not edit the following settings unless you know what you are doing
+#define DEBUG_NO_BUILTIN_MODULES    0
+#define DEBUG_DIS_EXEC              0
+#define DEBUG_CEVAL_STEP            0
+#define DEBUG_FULL_EXCEPTION        0
+#define DEBUG_MEMORY_POOL           0
+#define DEBUG_NO_MEMORY_POOL        0
+#define DEBUG_NO_AUTO_GC            0
+#define DEBUG_GC_STATS              0
+
+/*************** internal settings ***************/
+
+// This is the maximum size of the value stack in void* units
+// The actual size in bytes equals `sizeof(void*) * PK_VM_STACK_SIZE`
+#define PK_VM_STACK_SIZE            32768
+
+// This is the maximum number of arguments in a function declaration
+// including positional arguments, keyword-only arguments, and varargs
+// (not recommended to change this)
+#define PK_MAX_CO_VARNAMES          255
+
+// Hash table load factor (smaller ones mean less collision but more memory)
+// For class instance
+inline const float kInstAttrLoadFactor = 0.67f;
+// For class itself
+inline const float kTypeAttrLoadFactor = 0.5f;
+
+#ifdef _WIN32
+    inline const char kPlatformSep = '\\';
+#else
+    inline const char kPlatformSep = '/';
+#endif
+
 #ifdef _MSC_VER
 #pragma warning (disable:4267)
 #pragma warning (disable:4101)
+#pragma warning (disable:4244)
 #define _CRT_NONSTDC_NO_DEPRECATE
 #define strdup _strdup
 #endif
 
+#ifdef _MSC_VER
+#define PK_ENABLE_COMPUTED_GOTO		0
+#define UNREACHABLE()				__assume(0)
+#else
+#define PK_ENABLE_COMPUTED_GOTO		1
+#define UNREACHABLE()				__builtin_unreachable()
+#endif
+
+
+#if DEBUG_CEVAL_STEP && defined(PK_ENABLE_COMPUTED_GOTO)
+#undef PK_ENABLE_COMPUTED_GOTO
+#endif
+
+/*************** module settings ***************/
+
+#define PK_MODULE_RE                1
+#define PK_MODULE_RANDOM            1
+#define PK_MODULE_BASE64            1
+#define PK_MODULE_LINALG            1
+#define PK_MODULE_EASING            1
+#define PK_MODULE_REQUESTS          0
+
+#endif
+
+
+#include <cmath>
+#include <cstring>
+
 #include <sstream>
 #include <regex>
-#include <stack>
-#include <cmath>
-#include <cstdlib>
 #include <stdexcept>
 #include <vector>
 #include <string>
-#include <cstring>
 #include <chrono>
 #include <string_view>
-#include <queue>
 #include <iomanip>
 #include <memory>
-#include <functional>
 #include <iostream>
 #include <map>
 #include <set>
 #include <algorithm>
-#include <random>
-#include <chrono>
+#include <initializer_list>
+#include <variant>
+#include <type_traits>
 
-#define PK_VERSION				"0.9.5"
-#define PK_EXTRA_CHECK 			0
+#define PK_VERSION				"1.0.3"
 
-#if (defined(__ANDROID__) && __ANDROID_API__ <= 22) || defined(__EMSCRIPTEN__)
-#define PK_ENABLE_FILEIO 		0
+/*******************************************************************************/
+#if PK_ENABLE_STD_FUNCTION
+#include <functional>
+#endif
+/*******************************************************************************/
+
+#if PK_ENABLE_THREAD
+#define THREAD_LOCAL thread_local
+#include <mutex>
+
+struct GIL {
+	inline static std::mutex _mutex;
+    explicit GIL() { _mutex.lock(); }
+    ~GIL() { _mutex.unlock(); }
+};
+#define GLOBAL_SCOPE_LOCK() auto _lock = GIL();
+
 #else
-#define PK_ENABLE_FILEIO 		1
+#define THREAD_LOCAL
+#define GLOBAL_SCOPE_LOCK()
 #endif
 
-#if defined(__EMSCRIPTEN__) || defined(__arm__) || defined(__i386__)
-typedef int32_t i64;
-typedef float f64;
-#define S_TO_INT std::stoi
-#define S_TO_FLOAT std::stof
-#else
-typedef int64_t i64;
-typedef double f64;
-#define S_TO_INT std::stoll
-#define S_TO_FLOAT std::stod
-#endif
+/*******************************************************************************/
 
 namespace pkpy{
 
 namespace std = ::std;
 
-struct Dummy {  };
-struct DummyInstance {  };
+template <size_t T>
+struct NumberTraits;
+
+template <>
+struct NumberTraits<4> {
+	using int_t = int32_t;
+	using float_t = float;
+
+	template<typename... Args>
+	static int_t stoi(Args&&... args) { return std::stoi(std::forward<Args>(args)...); }
+	template<typename... Args>
+	static float_t stof(Args&&... args) { return std::stof(std::forward<Args>(args)...); }
+
+	static constexpr int_t c0 = 0b00000000011111111111111111111100;
+	static constexpr int_t c1 = 0b11111111111111111111111111111100;
+	static constexpr int_t c2 = 0b00000000000000000000000000000011;
+};
+
+template <>
+struct NumberTraits<8> {
+	using int_t = int64_t;
+	using float_t = double;
+
+	template<typename... Args>
+	static int_t stoi(Args&&... args) { return std::stoll(std::forward<Args>(args)...); }
+	template<typename... Args>
+	static float_t stof(Args&&... args) { return std::stod(std::forward<Args>(args)...); }
+
+	static constexpr int_t c0 = 0b0000000000001111111111111111111111111111111111111111111111111100;
+	static constexpr int_t c1 = 0b1111111111111111111111111111111111111111111111111111111111111100;
+	static constexpr int_t c2 = 0b0000000000000000000000000000000000000000000000000000000000000011;
+};
+
+using Number = NumberTraits<sizeof(void*)>;
+using i64 = Number::int_t;
+using f64 = Number::float_t;
+
+static_assert(sizeof(i64) == sizeof(void*));
+static_assert(sizeof(f64) == sizeof(void*));
+static_assert(std::numeric_limits<f64>::is_iec559);
+
+struct Dummy { };
+struct DummyInstance { };
 struct DummyModule { };
-#define DUMMY_VAL Dummy()
+struct NoReturn { };
+struct Discarded { };
 
 struct Type {
 	int index;
 	Type(): index(-1) {}
 	Type(int index): index(index) {}
-	inline bool operator==(Type other) const noexcept {
-		return this->index == other.index;
-	}
-	inline bool operator!=(Type other) const noexcept {
-		return this->index != other.index;
-	}
+	bool operator==(Type other) const noexcept { return this->index == other.index; }
+	bool operator!=(Type other) const noexcept { return this->index != other.index; }
+	operator int() const noexcept { return this->index; }
 };
 
-//#define THREAD_LOCAL thread_local
-#define THREAD_LOCAL
-#define CPP_LAMBDA(x) ([](VM* vm, Args& args) { return x; })
-#define CPP_NOT_IMPLEMENTED() ([](VM* vm, Args& args) { vm->NotImplementedError(); return vm->None; })
+#define CPP_LAMBDA(x) ([](VM* vm, ArgsView args) { return x; })
 
 #ifdef POCKETPY_H
-#define UNREACHABLE() throw std::runtime_error( "L" + std::to_string(__LINE__) + " UNREACHABLE()!");
+#define FATAL_ERROR() throw std::runtime_error( "L" + std::to_string(__LINE__) + " FATAL_ERROR()!");
 #else
-#define UNREACHABLE() throw std::runtime_error( __FILE__ + std::string(":") + std::to_string(__LINE__) + " UNREACHABLE()!");
+#define FATAL_ERROR() throw std::runtime_error( __FILE__ + std::string(":") + std::to_string(__LINE__) + " FATAL_ERROR()!");
 #endif
 
-const float kLocalsLoadFactor = 0.67f;
-const float kInstAttrLoadFactor = 0.67f;
-const float kTypeAttrLoadFactor = 0.5f;
+#define PK_ASSERT(x) if(!(x)) FATAL_ERROR();
+
+struct PyObject;
+#define BITS(p) (reinterpret_cast<i64>(p))
+inline bool is_tagged(PyObject* p) noexcept { return (BITS(p) & 0b11) != 0b00; }
+inline bool is_int(PyObject* p) noexcept { return (BITS(p) & 0b11) == 0b01; }
+inline bool is_float(PyObject* p) noexcept { return (BITS(p) & 0b11) == 0b10; }
+inline bool is_special(PyObject* p) noexcept { return (BITS(p) & 0b11) == 0b11; }
+
+inline bool is_both_int_or_float(PyObject* a, PyObject* b) noexcept {
+    return is_tagged(a) && is_tagged(b);
+}
+
+inline bool is_both_int(PyObject* a, PyObject* b) noexcept {
+    return is_int(a) && is_int(b);
+}
+
+// special singals, is_tagged() for them is true
+inline PyObject* const PY_NULL = (PyObject*)0b000011;		// tagged null
+inline PyObject* const PY_OP_CALL = (PyObject*)0b100011;
+inline PyObject* const PY_OP_YIELD = (PyObject*)0b110011;
+
+#define ADD_MODULE_PLACEHOLDER(name) namespace pkpy { inline void add_module_##name(void* vm) { (void)vm; } }
+
 } // namespace pkpy
 
 
 namespace pkpy{
 
-struct PyObject;
+struct LinkedListNode{
+    LinkedListNode* prev;
+    LinkedListNode* next;
+};
 
 template<typename T>
-struct SpAllocator {
-    template<typename U>
-    inline static int* alloc(){
-        return (int*)malloc(sizeof(int) + sizeof(U));
+struct DoubleLinkedList{
+    static_assert(std::is_base_of_v<LinkedListNode, T>);
+    int _size;
+    LinkedListNode head;
+    LinkedListNode tail;
+    
+    DoubleLinkedList(): _size(0){
+        head.prev = nullptr;
+        head.next = &tail;
+        tail.prev = &head;
+        tail.next = nullptr;
     }
 
-    inline static void dealloc(int* counter){
-        ((T*)(counter + 1))->~T();
-        free(counter);
+    void push_back(T* node){
+        node->prev = tail.prev;
+        node->next = &tail;
+        tail.prev->next = node;
+        tail.prev = node;
+        _size++;
+    }
+
+    void push_front(T* node){
+        node->prev = &head;
+        node->next = head.next;
+        head.next->prev = node;
+        head.next = node;
+        _size++;
+    }
+
+    void pop_back(){
+#if DEBUG_MEMORY_POOL
+        if(empty()) throw std::runtime_error("DoubleLinkedList::pop_back() called on empty list");
+#endif
+        tail.prev->prev->next = &tail;
+        tail.prev = tail.prev->prev;
+        _size--;
+    }
+
+    void pop_front(){
+#if DEBUG_MEMORY_POOL
+        if(empty()) throw std::runtime_error("DoubleLinkedList::pop_front() called on empty list");
+#endif
+        head.next->next->prev = &head;
+        head.next = head.next->next;
+        _size--;
+    }
+
+    T* back() const {
+#if DEBUG_MEMORY_POOL
+        if(empty()) throw std::runtime_error("DoubleLinkedList::back() called on empty list");
+#endif
+        return static_cast<T*>(tail.prev);
+    }
+
+    T* front() const {
+#if DEBUG_MEMORY_POOL
+        if(empty()) throw std::runtime_error("DoubleLinkedList::front() called on empty list");
+#endif
+        return static_cast<T*>(head.next);
+    }
+
+    void erase(T* node){
+#if DEBUG_MEMORY_POOL
+        if(empty()) throw std::runtime_error("DoubleLinkedList::erase() called on empty list");
+        LinkedListNode* n = head.next;
+        while(n != &tail){
+            if(n == node) break;
+            n = n->next;
+        }
+        if(n != node) throw std::runtime_error("DoubleLinkedList::erase() called on node not in the list");
+#endif
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+        _size--;
+    }
+
+    void move_all_back(DoubleLinkedList<T>& other){
+        if(other.empty()) return;
+        other.tail.prev->next = &tail;
+        tail.prev->next = other.head.next;
+        other.head.next->prev = tail.prev;
+        tail.prev = other.tail.prev;
+        _size += other._size;
+        other.head.next = &other.tail;
+        other.tail.prev = &other.head;
+        other._size = 0;
+    }
+
+    bool empty() const {
+#if DEBUG_MEMORY_POOL
+        if(size() == 0){
+            if(head.next != &tail || tail.prev != &head){
+                throw std::runtime_error("DoubleLinkedList::size() returned 0 but the list is not empty");
+            }
+            return true;
+        }
+#endif
+        return _size == 0;
+    }
+
+    int size() const { return _size; }
+
+    template<typename Func>
+    void apply(Func func){
+        LinkedListNode* p = head.next;
+        while(p != &tail){
+            LinkedListNode* next = p->next;
+            func(static_cast<T*>(p));
+            p = next;
+        }
     }
 };
 
-template <typename T>
-struct shared_ptr {
-    union {
-        int* counter;
-        i64 bits;
+template<int __BlockSize=128>
+struct MemoryPool{
+    static const size_t __MaxBlocks = 256*1024 / __BlockSize;
+    struct Block{
+        void* arena;
+        char data[__BlockSize];
     };
 
-#define _t() (T*)(counter + 1)
-#define _inc_counter() if(!is_tagged() && counter) ++(*counter)
-#define _dec_counter() if(!is_tagged() && counter && --(*counter) == 0) SpAllocator<T>::dealloc(counter)
+    struct Arena: LinkedListNode{
+        Block _blocks[__MaxBlocks];
+        Block* _free_list[__MaxBlocks];
+        int _free_list_size;
+        bool dirty;
+        
+        Arena(): _free_list_size(__MaxBlocks), dirty(false){
+            for(int i=0; i<__MaxBlocks; i++){
+                _blocks[i].arena = this;
+                _free_list[i] = &_blocks[i];
+            }
+        }
+
+        bool empty() const { return _free_list_size == 0; }
+        bool full() const { return _free_list_size == __MaxBlocks; }
+
+        size_t allocated_size() const{
+            return __BlockSize * (__MaxBlocks - _free_list_size);
+        }
+
+        Block* alloc(){
+#if DEBUG_MEMORY_POOL
+            if(empty()) throw std::runtime_error("Arena::alloc() called on empty arena");
+#endif
+            _free_list_size--;
+            return _free_list[_free_list_size];
+        }
+
+        void dealloc(Block* block){
+#if DEBUG_MEMORY_POOL
+            if(full()) throw std::runtime_error("Arena::dealloc() called on full arena");
+#endif
+            _free_list[_free_list_size] = block;
+            _free_list_size++;
+        }
+    };
+
+    DoubleLinkedList<Arena> _arenas;
+    DoubleLinkedList<Arena> _empty_arenas;
+
+    template<typename __T>
+    void* alloc() { return alloc(sizeof(__T)); }
+
+    void* alloc(size_t size){
+        GLOBAL_SCOPE_LOCK();
+#if DEBUG_NO_MEMORY_POOL
+        return malloc(size);
+#endif
+        if(size > __BlockSize){
+            void* p = malloc(sizeof(void*) + size);
+            memset(p, 0, sizeof(void*));
+            return (char*)p + sizeof(void*);
+        }
+
+        if(_arenas.empty()){
+            // std::cout << _arenas.size() << ',' << _empty_arenas.size() << ',' << _full_arenas.size() << std::endl;
+            _arenas.push_back(new Arena());
+        }
+        Arena* arena = _arenas.back();
+        void* p = arena->alloc()->data;
+        if(arena->empty()){
+            _arenas.pop_back();
+            arena->dirty = true;
+            _empty_arenas.push_back(arena);
+        }
+        return p;
+    }
+
+    void dealloc(void* p){
+        GLOBAL_SCOPE_LOCK();
+#if DEBUG_NO_MEMORY_POOL
+        free(p);
+        return;
+#endif
+#if DEBUG_MEMORY_POOL
+        if(p == nullptr) throw std::runtime_error("MemoryPool::dealloc() called on nullptr");
+#endif
+        Block* block = (Block*)((char*)p - sizeof(void*));
+        if(block->arena == nullptr){
+            free(block);
+        }else{
+            Arena* arena = (Arena*)block->arena;
+            if(arena->empty()){
+                _empty_arenas.erase(arena);
+                _arenas.push_front(arena);
+                arena->dealloc(block);
+            }else{
+                arena->dealloc(block);
+                if(arena->full() && arena->dirty){
+                    _arenas.erase(arena);
+                    delete arena;
+                }
+            }
+        }
+    }
+
+    size_t allocated_size() {
+        size_t n = 0;
+        _arenas.apply([&n](Arena* arena){ n += arena->allocated_size(); });
+        _empty_arenas.apply([&n](Arena* arena){ n += arena->allocated_size(); });
+        return n;
+    }
+
+    ~MemoryPool(){
+        _arenas.apply([](Arena* arena){ delete arena; });
+        _empty_arenas.apply([](Arena* arena){ delete arena; });
+    }
+};
+
+inline MemoryPool<64> pool64;
+inline MemoryPool<128> pool128;
+
+// get the total memory usage of pkpy (across all VMs)
+inline size_t memory_usage(){
+    return pool64.allocated_size() + pool128.allocated_size();
+}
+
+template <typename T>
+struct shared_ptr {
+    int* counter;
+
+    T* _t() const noexcept { return (T*)(counter + 1); }
+    void _inc_counter() { if(counter) ++(*counter); }
+    void _dec_counter() { if(counter && --(*counter) == 0) {((T*)(counter + 1))->~T(); pool128.dealloc(counter);} }
 
 public:
     shared_ptr() : counter(nullptr) {}
@@ -163,7 +534,6 @@ public:
     T* get() const { return _t(); }
 
     int use_count() const { 
-        if(is_tagged()) return 0;
         return counter ? *counter : 0;
     }
 
@@ -171,144 +541,358 @@ public:
         _dec_counter();
         counter = nullptr;
     }
-
-    inline constexpr bool is_tagged() const {
-        if constexpr(!std::is_same_v<T, PyObject>) return false;
-        return (bits & 0b11) != 0b00;
-    }
-    inline bool is_tag_00() const { return (bits & 0b11) == 0b00; }
-    inline bool is_tag_01() const { return (bits & 0b11) == 0b01; }
-    inline bool is_tag_10() const { return (bits & 0b11) == 0b10; }
-    inline bool is_tag_11() const { return (bits & 0b11) == 0b11; }
 };
 
-#undef _t
-#undef _inc_counter
-#undef _dec_counter
-
-    template <typename T, typename U, typename... Args>
-    shared_ptr<T> make_sp(Args&&... args) {
-        static_assert(std::is_base_of_v<T, U>, "U must be derived from T");
-        static_assert(std::has_virtual_destructor_v<T>, "T must have virtual destructor");
-        static_assert(!std::is_same_v<T, PyObject> || (!std::is_same_v<U, i64> && !std::is_same_v<U, f64>));
-        int* p = SpAllocator<T>::template alloc<U>(); *p = 1;
-        new(p+1) U(std::forward<Args>(args)...);
-        return shared_ptr<T>(p);
-    }
-
-    template <typename T, typename... Args>
-    shared_ptr<T> make_sp(Args&&... args) {
-        int* p = SpAllocator<T>::template alloc<T>(); *p = 1;
-        new(p+1) T(std::forward<Args>(args)...);
-        return shared_ptr<T>(p);
-    }
-
-static_assert(sizeof(i64) == sizeof(int*));
-static_assert(sizeof(f64) == sizeof(int*));
-static_assert(sizeof(shared_ptr<PyObject>) == sizeof(int*));
-static_assert(std::numeric_limits<float>::is_iec559);
-static_assert(std::numeric_limits<double>::is_iec559);
-
-template<typename T, int __Bucket, int __BucketSize=32>
-struct SmallArrayPool {
-    std::vector<T*> buckets[__Bucket+1];
-
-    T* alloc(int n){
-        if(n == 0) return nullptr;
-        if(n > __Bucket || buckets[n].empty()){
-            return new T[n];
-        }else{
-            T* p = buckets[n].back();
-            buckets[n].pop_back();
-            return p;
-        }
-    }
-
-    void dealloc(T* p, int n){
-        if(n == 0) return;
-        if(n > __Bucket || buckets[n].size() >= __BucketSize){
-            delete[] p;
-        }else{
-            buckets[n].push_back(p);
-        }
-    }
-
-    ~SmallArrayPool(){
-        for(int i=1; i<=__Bucket; i++){
-            for(auto p: buckets[i]) delete[] p;
-        }
-    }
-};
-
-
-typedef shared_ptr<PyObject> PyVar;
-typedef PyVar PyVarOrNull;
-typedef PyVar PyVarRef;
+template <typename T, typename... Args>
+shared_ptr<T> make_sp(Args&&... args) {
+    int* p = (int*)pool128.alloc(sizeof(int) + sizeof(T));
+    *p = 1;
+    new(p+1) T(std::forward<Args>(args)...);
+    return shared_ptr<T>(p);
+}
 
 };  // namespace pkpy
 
 
 
+namespace pkpy{
+
+template<typename T>
+struct pod_vector{
+    static_assert(64 % sizeof(T) == 0);
+    static_assert(std::is_pod_v<T>);
+    static constexpr int N = 64 / sizeof(T);
+    static_assert(N >= 4);
+    int _size;
+    int _capacity;
+    T* _data;
+
+    pod_vector(): _size(0), _capacity(N) {
+        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+    }
+
+    pod_vector(int size): _size(size), _capacity(std::max(N, size)) {
+        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+    }
+
+    pod_vector(const pod_vector& other): _size(other._size), _capacity(other._capacity) {
+        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+        memcpy(_data, other._data, sizeof(T) * _size);
+    }
+
+    pod_vector(pod_vector&& other) noexcept {
+        _size = other._size;
+        _capacity = other._capacity;
+        _data = other._data;
+        other._data = nullptr;
+    }
+
+    pod_vector& operator=(pod_vector&& other) noexcept {
+        if(_data!=nullptr) pool64.dealloc(_data);
+        _size = other._size;
+        _capacity = other._capacity;
+        _data = other._data;
+        other._data = nullptr;
+        return *this;
+    }
+
+    // remove copy assignment
+    pod_vector& operator=(const pod_vector& other) = delete;
+
+    template<typename __ValueT>
+    void push_back(__ValueT&& t) {
+        if (_size == _capacity) reserve(_capacity*2);
+        _data[_size++] = std::forward<__ValueT>(t);
+    }
+
+    template<typename... Args>
+    void emplace_back(Args&&... args) {
+        if (_size == _capacity) reserve(_capacity*2);
+        new (&_data[_size++]) T(std::forward<Args>(args)...);
+    }
+
+    void reserve(int cap){
+        if(cap <= _capacity) return;
+        _capacity = cap;
+        T* old_data = _data;
+        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+        if(old_data!=nullptr){
+            memcpy(_data, old_data, sizeof(T) * _size);
+            pool64.dealloc(old_data);
+        }
+    }
+
+    void pop_back() { _size--; }
+    T popx_back() { T t = std::move(_data[_size-1]); _size--; return t; }
+    void extend(const pod_vector& other){
+        for(int i=0; i<other.size(); i++) push_back(other[i]);
+    }
+
+    T& operator[](int index) { return _data[index]; }
+    const T& operator[](int index) const { return _data[index]; }
+
+    T* begin() { return _data; }
+    T* end() { return _data + _size; }
+    const T* begin() const { return _data; }
+    const T* end() const { return _data + _size; }
+    T& back() { return _data[_size - 1]; }
+    const T& back() const { return _data[_size - 1]; }
+
+    bool empty() const { return _size == 0; }
+    int size() const { return _size; }
+    T* data() { return _data; }
+    const T* data() const { return _data; }
+    void clear() { _size=0; }
+
+    template<typename __ValueT>
+    void insert(int i, __ValueT&& val){
+        if (_size == _capacity) reserve(_capacity*2);
+        for(int j=_size; j>i; j--) _data[j] = _data[j-1];
+        _data[i] = std::forward<__ValueT>(val);
+        _size++;
+    }
+
+    void erase(int i){
+        for(int j=i; j<_size-1; j++) _data[j] = _data[j+1];
+        _size--;
+    }
+
+    void resize(int size){
+        if(size > _capacity) reserve(size);
+        _size = size;
+    }
+
+    ~pod_vector() {
+        if(_data!=nullptr) pool64.dealloc(_data);
+    }
+};
+
+
+template <typename T, typename Container=std::vector<T>>
+class stack{
+	Container vec;
+public:
+	void push(const T& t){ vec.push_back(t); }
+	void push(T&& t){ vec.push_back(std::move(t)); }
+    template<typename... Args>
+    void emplace(Args&&... args){
+        vec.emplace_back(std::forward<Args>(args)...);
+    }
+	void pop(){ vec.pop_back(); }
+	void clear(){ vec.clear(); }
+	bool empty() const { return vec.empty(); }
+	size_t size() const { return vec.size(); }
+	T& top(){ return vec.back(); }
+	const T& top() const { return vec.back(); }
+	T popx(){ T t = std::move(vec.back()); vec.pop_back(); return t; }
+    void reserve(int n){ vec.reserve(n); }
+	Container& data() { return vec; }
+};
+
+// template <typename T>
+// using pod_stack = stack<T, pod_vector<T>>;
+} // namespace pkpy
+
+
 namespace pkpy {
 
-typedef std::stringstream StrStream;
+inline int utf8len(unsigned char c, bool suppress=false){
+    if((c & 0b10000000) == 0) return 1;
+    if((c & 0b11100000) == 0b11000000) return 2;
+    if((c & 0b11110000) == 0b11100000) return 3;
+    if((c & 0b11111000) == 0b11110000) return 4;
+    if((c & 0b11111100) == 0b11111000) return 5;
+    if((c & 0b11111110) == 0b11111100) return 6;
+    if(!suppress) throw std::runtime_error("invalid utf8 char: " + std::to_string(c));
+    return 0;
+}
 
-class Str : public std::string {
-    mutable std::vector<uint16_t>* _u8_index = nullptr;
+struct Str{
+    int size;
+    bool is_ascii;
+    char* data;
 
-    void utf8_lazy_init() const{
-        if(_u8_index != nullptr) return;
-        _u8_index = new std::vector<uint16_t>();
-        _u8_index->reserve(size());
-        if(size() > 65535) throw std::runtime_error("str has more than 65535 bytes.");
-        for(uint16_t i = 0; i < size(); i++){
-            // https://stackoverflow.com/questions/3911536/utf-8-unicode-whats-with-0xc0-and-0x80
-            if((at(i) & 0xC0) != 0x80) _u8_index->push_back(i);
+    Str(): size(0), is_ascii(true), data(nullptr) {}
+
+    Str(int size, bool is_ascii): size(size), is_ascii(is_ascii) {
+        data = (char*)pool64.alloc(size);
+    }
+
+#define STR_INIT()                                  \
+        data = (char*)pool64.alloc(size);           \
+        for(int i=0; i<size; i++){                  \
+            data[i] = s[i];                         \
+            if(!isascii(s[i])) is_ascii = false;    \
         }
-    }
-public:
-    uint16_t _cached_sn_index = 0;
 
-    Str() : std::string() {}
-    Str(const char* s) : std::string(s) {}
-    Str(const char* s, size_t n) : std::string(s, n) {}
-    Str(const std::string& s) : std::string(s) {}
-    Str(const Str& s) : std::string(s) {
-        if(s._u8_index != nullptr){
-            _u8_index = new std::vector<uint16_t>(*s._u8_index);
-        }
-    }
-    Str(Str&& s) : std::string(std::move(s)) {
-        delete _u8_index;
-        _u8_index = s._u8_index;
-        s._u8_index = nullptr;
+    Str(const std::string& s): size(s.size()), is_ascii(true) {
+        STR_INIT()
     }
 
-    i64 _to_u8_index(i64 index) const{
-        utf8_lazy_init();
-        auto p = std::lower_bound(_u8_index->begin(), _u8_index->end(), index);
-        if(p != _u8_index->end() && *p != index) UNREACHABLE();
-        return p - _u8_index->begin();
+    Str(std::string_view s): size(s.size()), is_ascii(true) {
+        STR_INIT()
     }
 
-    int u8_length() const {
-        utf8_lazy_init();
-        return _u8_index->size();
+    Str(const char* s): size(strlen(s)), is_ascii(true) {
+        STR_INIT()
     }
 
-    Str u8_getitem(int i) const{
-        return u8_substr(i, i+1);
+    Str(const char* s, int len): size(len), is_ascii(true) {
+        STR_INIT()
     }
 
-    Str u8_substr(int start, int end) const{
-        utf8_lazy_init();
-        if(start >= end) return Str();
-        int c_end = end >= _u8_index->size() ? size() : _u8_index->at(end);
-        return substr(_u8_index->at(start), c_end - _u8_index->at(start));
+#undef STR_INIT
+
+    Str(const Str& other): size(other.size), is_ascii(other.is_ascii) {
+        data = (char*)pool64.alloc(size);
+        memcpy(data, other.data, size);
+    }
+
+    Str(Str&& other): size(other.size), is_ascii(other.is_ascii), data(other.data) {
+        other.data = nullptr;
+        other.size = 0;
+    }
+
+    const char* begin() const { return data; }
+    const char* end() const { return data + size; }
+    char operator[](int idx) const { return data[idx]; }
+    int length() const { return size; }
+    bool empty() const { return size == 0; }
+    size_t hash() const{ return std::hash<std::string_view>()(sv()); }
+
+    Str& operator=(const Str& other){
+        if(data!=nullptr) pool64.dealloc(data);
+        size = other.size;
+        is_ascii = other.is_ascii;
+        data = (char*)pool64.alloc(size);
+        memcpy(data, other.data, size);
+        return *this;
+    }
+
+    Str& operator=(Str&& other) noexcept{
+        if(data!=nullptr) pool64.dealloc(data);
+        size = other.size;
+        is_ascii = other.is_ascii;
+        data = other.data;
+        other.data = nullptr;
+        return *this;
+    }
+
+    ~Str(){
+        if(data!=nullptr) pool64.dealloc(data);
+    }
+
+    Str operator+(const Str& other) const {
+        Str ret(size + other.size, is_ascii && other.is_ascii);
+        memcpy(ret.data, data, size);
+        memcpy(ret.data + size, other.data, other.size);
+        return ret;
+    }
+
+    Str operator+(const char* p) const {
+        Str other(p);
+        return *this + other;
+    }
+
+    friend Str operator+(const char* p, const Str& str){
+        Str other(p);
+        return other + str;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Str& str){
+        if(str.data!=nullptr) os.write(str.data, str.size);
+        return os;
+    }
+
+    bool operator==(const Str& other) const {
+        if(size != other.size) return false;
+        return memcmp(data, other.data, size) == 0;
+    }
+
+    bool operator!=(const Str& other) const {
+        if(size != other.size) return true;
+        return memcmp(data, other.data, size) != 0;
+    }
+
+    bool operator==(const std::string_view other) const {
+        if(size != (int)other.size()) return false;
+        return memcmp(data, other.data(), size) == 0;
+    }
+
+    bool operator!=(const std::string_view other) const {
+        if(size != (int)other.size()) return true;
+        return memcmp(data, other.data(), size) != 0;
+    }
+
+    bool operator==(const char* p) const {
+        return *this == std::string_view(p);
+    }
+
+    bool operator!=(const char* p) const {
+        return *this != std::string_view(p);
+    }
+
+    bool operator<(const Str& other) const {
+        int ret = strncmp(data, other.data, std::min(size, other.size));
+        if(ret != 0) return ret < 0;
+        return size < other.size;
+    }
+
+    bool operator<(const std::string_view other) const {
+        int ret = strncmp(data, other.data(), std::min(size, (int)other.size()));
+        if(ret != 0) return ret < 0;
+        return size < (int)other.size();
+    }
+
+    friend bool operator<(const std::string_view other, const Str& str){
+        return str > other;
+    }
+
+    bool operator>(const Str& other) const {
+        int ret = strncmp(data, other.data, std::min(size, other.size));
+        if(ret != 0) return ret > 0;
+        return size > other.size;
+    }
+
+    bool operator<=(const Str& other) const {
+        int ret = strncmp(data, other.data, std::min(size, other.size));
+        if(ret != 0) return ret < 0;
+        return size <= other.size;
+    }
+
+    bool operator>=(const Str& other) const {
+        int ret = strncmp(data, other.data, std::min(size, other.size));
+        if(ret != 0) return ret > 0;
+        return size >= other.size;
+    }
+
+    Str substr(int start, int len) const {
+        Str ret(len, is_ascii);
+        memcpy(ret.data, data + start, len);
+        return ret;
+    }
+
+    Str substr(int start) const {
+        return substr(start, size - start);
+    }
+
+    char* c_str_dup() const {
+        char* p = (char*)malloc(size + 1);
+        memcpy(p, data, size);
+        p[size] = 0;
+        return p;
+    }
+
+    std::string_view sv() const {
+        return std::string_view(data, size);
+    }
+
+    std::string str() const {
+        return std::string(data, size);
     }
 
     Str lstrip() const {
-        Str copy(*this);
+        std::string copy(data, size);
         copy.erase(copy.begin(), std::find_if(copy.begin(), copy.end(), [](char c) {
             // std::isspace(c) does not working on windows (Debug)
             return c != ' ' && c != '\t' && c != '\r' && c != '\n';
@@ -316,12 +900,20 @@ public:
         return Str(copy);
     }
 
-    size_t hash() const {
-        return std::hash<std::string>()(*this);
+    Str lower() const{
+        std::string copy(data, size);
+        std::transform(copy.begin(), copy.end(), copy.begin(), [](unsigned char c){ return std::tolower(c); });
+        return Str(copy);
     }
 
-    Str escape(bool single_quote) const {
-        StrStream ss;
+    Str upper() const{
+        std::string copy(data, size);
+        std::transform(copy.begin(), copy.end(), copy.begin(), [](unsigned char c){ return std::toupper(c); });
+        return Str(copy);
+    }
+
+    Str escape(bool single_quote=true) const {
+        std::stringstream ss;
         ss << (single_quote ? '\'' : '"');
         for (int i=0; i<length(); i++) {
             char c = this->operator[](i);
@@ -340,8 +932,7 @@ public:
                 case '\t': ss << "\\t"; break;
                 default:
                     if ('\x00' <= c && c <= '\x1f') {
-                        ss << "\\u"
-                        << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(c);
+                        ss << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (int)c;
                     } else {
                         ss << c;
                     }
@@ -351,30 +942,79 @@ public:
         return ss.str();
     }
 
-    Str& operator=(const Str& s){
-        this->std::string::operator=(s);
-        delete _u8_index;
-        if(s._u8_index != nullptr){
-            _u8_index = new std::vector<uint16_t>(*s._u8_index);
+    int index(const Str& sub, int start=0) const {
+        auto p = std::search(data + start, data + size, sub.data, sub.data + sub.size);
+        if(p == data + size) return -1;
+        return p - data;
+    }
+
+    Str replace(const Str& old, const Str& new_, int count=-1) const {
+        std::stringstream ss;
+        int start = 0;
+        while(true){
+            int i = index(old, start);
+            if(i == -1) break;
+            ss << substr(start, i - start);
+            ss << new_;
+            start = i + old.size;
+            if(count != -1 && --count == 0) break;
         }
-        return *this;
+        ss << substr(start, size - start);
+        return ss.str();
     }
 
-    Str& operator=(Str&& s){
-        this->std::string::operator=(std::move(s));
-        delete _u8_index;
-        this->_u8_index = s._u8_index;
-        s._u8_index = nullptr;
-        return *this;
+    /*************unicode*************/
+
+    int _unicode_index_to_byte(int i) const{
+        if(is_ascii) return i;
+        int j = 0;
+        while(i > 0){
+            j += utf8len(data[j]);
+            i--;
+        }
+        return j;
     }
 
-    ~Str(){ delete _u8_index;}
+    int _byte_index_to_unicode(int n) const{
+        if(is_ascii) return n;
+        int cnt = 0;
+        for(int i=0; i<n; i++){
+            if((data[i] & 0xC0) != 0x80) cnt++;
+        }
+        return cnt;
+    }
+
+    Str u8_getitem(int i) const{
+        i = _unicode_index_to_byte(i);
+        return substr(i, utf8len(data[i]));
+    }
+
+    Str u8_slice(int start, int stop, int step) const{
+        std::stringstream ss;
+        if(is_ascii){
+            for(int i=start; step>0?i<stop:i>stop; i+=step) ss << data[i];
+        }else{
+            for(int i=start; step>0?i<stop:i>stop; i+=step) ss << u8_getitem(i);
+        }
+        return ss.str();
+    }
+
+    int u8_length() const {
+        return _byte_index_to_unicode(size);
+    }
 };
+
+template<typename... Args>
+inline std::string fmt(Args&&... args) {
+    std::stringstream ss;
+    (ss << ... << args);
+    return ss.str();
+}
 
 const uint32_t kLoRangeA[] = {170,186,443,448,660,1488,1519,1568,1601,1646,1649,1749,1774,1786,1791,1808,1810,1869,1969,1994,2048,2112,2144,2208,2230,2308,2365,2384,2392,2418,2437,2447,2451,2474,2482,2486,2493,2510,2524,2527,2544,2556,2565,2575,2579,2602,2610,2613,2616,2649,2654,2674,2693,2703,2707,2730,2738,2741,2749,2768,2784,2809,2821,2831,2835,2858,2866,2869,2877,2908,2911,2929,2947,2949,2958,2962,2969,2972,2974,2979,2984,2990,3024,3077,3086,3090,3114,3133,3160,3168,3200,3205,3214,3218,3242,3253,3261,3294,3296,3313,3333,3342,3346,3389,3406,3412,3423,3450,3461,3482,3507,3517,3520,3585,3634,3648,3713,3716,3718,3724,3749,3751,3762,3773,3776,3804,3840,3904,3913,3976,4096,4159,4176,4186,4193,4197,4206,4213,4238,4352,4682,4688,4696,4698,4704,4746,4752,4786,4792,4800,4802,4808,4824,4882,4888,4992,5121,5743,5761,5792,5873,5888,5902,5920,5952,5984,5998,6016,6108,6176,6212,6272,6279,6314,6320,6400,6480,6512,6528,6576,6656,6688,6917,6981,7043,7086,7098,7168,7245,7258,7401,7406,7413,7418,8501,11568,11648,11680,11688,11696,11704,11712,11720,11728,11736,12294,12348,12353,12447,12449,12543,12549,12593,12704,12784,13312,19968,40960,40982,42192,42240,42512,42538,42606,42656,42895,42999,43003,43011,43015,43020,43072,43138,43250,43259,43261,43274,43312,43360,43396,43488,43495,43514,43520,43584,43588,43616,43633,43642,43646,43697,43701,43705,43712,43714,43739,43744,43762,43777,43785,43793,43808,43816,43968,44032,55216,55243,63744,64112,64285,64287,64298,64312,64318,64320,64323,64326,64467,64848,64914,65008,65136,65142,65382,65393,65440,65474,65482,65490,65498,65536,65549,65576,65596,65599,65616,65664,66176,66208,66304,66349,66370,66384,66432,66464,66504,66640,66816,66864,67072,67392,67424,67584,67592,67594,67639,67644,67647,67680,67712,67808,67828,67840,67872,67968,68030,68096,68112,68117,68121,68192,68224,68288,68297,68352,68416,68448,68480,68608,68864,69376,69415,69424,69600,69635,69763,69840,69891,69956,69968,70006,70019,70081,70106,70108,70144,70163,70272,70280,70282,70287,70303,70320,70405,70415,70419,70442,70450,70453,70461,70480,70493,70656,70727,70751,70784,70852,70855,71040,71128,71168,71236,71296,71352,71424,71680,71935,72096,72106,72161,72163,72192,72203,72250,72272,72284,72349,72384,72704,72714,72768,72818,72960,72968,72971,73030,73056,73063,73066,73112,73440,73728,74880,77824,82944,92160,92736,92880,92928,93027,93053,93952,94032,94208,100352,110592,110928,110948,110960,113664,113776,113792,113808,123136,123214,123584,124928,126464,126469,126497,126500,126503,126505,126516,126521,126523,126530,126535,126537,126539,126541,126545,126548,126551,126553,126555,126557,126559,126561,126564,126567,126572,126580,126585,126590,126592,126603,126625,126629,126635,131072,173824,177984,178208,183984,194560};
 const uint32_t kLoRangeB[] = {170,186,443,451,660,1514,1522,1599,1610,1647,1747,1749,1775,1788,1791,1808,1839,1957,1969,2026,2069,2136,2154,2228,2237,2361,2365,2384,2401,2432,2444,2448,2472,2480,2482,2489,2493,2510,2525,2529,2545,2556,2570,2576,2600,2608,2611,2614,2617,2652,2654,2676,2701,2705,2728,2736,2739,2745,2749,2768,2785,2809,2828,2832,2856,2864,2867,2873,2877,2909,2913,2929,2947,2954,2960,2965,2970,2972,2975,2980,2986,3001,3024,3084,3088,3112,3129,3133,3162,3169,3200,3212,3216,3240,3251,3257,3261,3294,3297,3314,3340,3344,3386,3389,3406,3414,3425,3455,3478,3505,3515,3517,3526,3632,3635,3653,3714,3716,3722,3747,3749,3760,3763,3773,3780,3807,3840,3911,3948,3980,4138,4159,4181,4189,4193,4198,4208,4225,4238,4680,4685,4694,4696,4701,4744,4749,4784,4789,4798,4800,4805,4822,4880,4885,4954,5007,5740,5759,5786,5866,5880,5900,5905,5937,5969,5996,6000,6067,6108,6210,6264,6276,6312,6314,6389,6430,6509,6516,6571,6601,6678,6740,6963,6987,7072,7087,7141,7203,7247,7287,7404,7411,7414,7418,8504,11623,11670,11686,11694,11702,11710,11718,11726,11734,11742,12294,12348,12438,12447,12538,12543,12591,12686,12730,12799,19893,40943,40980,42124,42231,42507,42527,42539,42606,42725,42895,42999,43009,43013,43018,43042,43123,43187,43255,43259,43262,43301,43334,43388,43442,43492,43503,43518,43560,43586,43595,43631,43638,43642,43695,43697,43702,43709,43712,43714,43740,43754,43762,43782,43790,43798,43814,43822,44002,55203,55238,55291,64109,64217,64285,64296,64310,64316,64318,64321,64324,64433,64829,64911,64967,65019,65140,65276,65391,65437,65470,65479,65487,65495,65500,65547,65574,65594,65597,65613,65629,65786,66204,66256,66335,66368,66377,66421,66461,66499,66511,66717,66855,66915,67382,67413,67431,67589,67592,67637,67640,67644,67669,67702,67742,67826,67829,67861,67897,68023,68031,68096,68115,68119,68149,68220,68252,68295,68324,68405,68437,68466,68497,68680,68899,69404,69415,69445,69622,69687,69807,69864,69926,69956,70002,70006,70066,70084,70106,70108,70161,70187,70278,70280,70285,70301,70312,70366,70412,70416,70440,70448,70451,70457,70461,70480,70497,70708,70730,70751,70831,70853,70855,71086,71131,71215,71236,71338,71352,71450,71723,71935,72103,72144,72161,72163,72192,72242,72250,72272,72329,72349,72440,72712,72750,72768,72847,72966,72969,73008,73030,73061,73064,73097,73112,73458,74649,75075,78894,83526,92728,92766,92909,92975,93047,93071,94026,94032,100343,101106,110878,110930,110951,111355,113770,113788,113800,113817,123180,123214,123627,125124,126467,126495,126498,126500,126503,126514,126519,126521,126523,126530,126535,126537,126539,126543,126546,126548,126551,126553,126555,126557,126559,126562,126564,126570,126578,126583,126588,126590,126601,126619,126627,126633,126651,173782,177972,178205,183969,191456,195101};
 
-bool is_unicode_Lo_char(uint32_t c) {
+inline bool is_unicode_Lo_char(uint32_t c) {
     auto index = std::lower_bound(kLoRangeA, kLoRangeA + 476, c) - kLoRangeA;
     if(c == kLoRangeA[index]) return true;
     index -= 1;
@@ -382,21 +1022,24 @@ bool is_unicode_Lo_char(uint32_t c) {
     return c >= kLoRangeA[index] && c <= kLoRangeB[index];
 }
 
-
 struct StrName {
     uint16_t index;
     StrName(): index(0) {}
-    StrName(uint16_t index): index(index) {}
+    explicit StrName(uint16_t index): index(index) {}
     StrName(const char* s): index(get(s).index) {}
     StrName(const Str& s){
-        if(s._cached_sn_index != 0){
-            index = s._cached_sn_index;
-        } else {
-            index = get(s).index;
-        }
+        index = get(s.sv()).index;
     }
-    const Str& str() const { return _r_interned[index-1]; }
+    std::string_view sv() const { return _r_interned[index-1].sv(); }
     bool empty() const { return index == 0; }
+
+    friend std::ostream& operator<<(std::ostream& os, const StrName& sn){
+        return os << sn.sv();
+    }
+
+    Str escape() const {
+        return _r_interned[index-1].escape();
+    }
 
     bool operator==(const StrName& other) const noexcept {
         return this->index == other.index;
@@ -414,14 +1057,10 @@ struct StrName {
         return this->index > other.index;
     }
 
-    static std::map<Str, uint16_t, std::less<>> _interned;
-    static std::vector<Str> _r_interned;
+    inline static std::map<Str, uint16_t, std::less<>> _interned;
+    inline static std::vector<Str> _r_interned;
 
-    static StrName get(const Str& s){
-        return get(s.c_str());
-    }
-
-    static StrName get(const char* s){
+    static StrName get(std::string_view s){
         auto it = _interned.find(s);
         if(it != _interned.end()) return StrName(it->second);
         uint16_t index = (uint16_t)(_r_interned.size() + 1);
@@ -431,211 +1070,179 @@ struct StrName {
     }
 };
 
-std::map<Str, uint16_t, std::less<>> StrName::_interned;
-std::vector<Str> StrName::_r_interned;
+struct FastStrStream{
+    pod_vector<const Str*> parts;
 
-const StrName __class__ = StrName::get("__class__");
-const StrName __base__ = StrName::get("__base__");
-const StrName __new__ = StrName::get("__new__");
-const StrName __iter__ = StrName::get("__iter__");
-const StrName __str__ = StrName::get("__str__");
+    FastStrStream& operator<<(const Str& s){
+        parts.push_back(&s);
+        return *this;
+    }
+
+    bool empty() const { return parts.empty(); }
+
+    Str str() const{
+        int len = 0;
+        bool is_ascii = true;
+        for(auto& s: parts){
+            len += s->length();
+            is_ascii &= s->is_ascii;
+        }
+        Str result(len, is_ascii);
+        char* p = result.data;
+        for(auto& s: parts){
+            memcpy(p, s->data, s->length());
+            p += s->length();
+        }
+        return result;
+    }
+};
+
+// unary operators
 const StrName __repr__ = StrName::get("__repr__");
+const StrName __str__ = StrName::get("__str__");
+const StrName __hash__ = StrName::get("__hash__");      // unused
+const StrName __len__ = StrName::get("__len__");
+const StrName __iter__ = StrName::get("__iter__");
+const StrName __next__ = StrName::get("__next__");      // unused
+const StrName __json__ = StrName::get("__json__");
+const StrName __neg__ = StrName::get("__neg__");        // unused
+const StrName __bool__ = StrName::get("__bool__");      // unused
+// logical operators
+const StrName __eq__ = StrName::get("__eq__");
+const StrName __lt__ = StrName::get("__lt__");
+const StrName __le__ = StrName::get("__le__");
+const StrName __gt__ = StrName::get("__gt__");
+const StrName __ge__ = StrName::get("__ge__");
+const StrName __contains__ = StrName::get("__contains__");
+// binary operators
+const StrName __add__ = StrName::get("__add__");
+const StrName __sub__ = StrName::get("__sub__");
+const StrName __mul__ = StrName::get("__mul__");
+const StrName __truediv__ = StrName::get("__truediv__");
+const StrName __floordiv__ = StrName::get("__floordiv__");
+const StrName __mod__ = StrName::get("__mod__");
+const StrName __pow__ = StrName::get("__pow__");
+const StrName __matmul__ = StrName::get("__matmul__");
+const StrName __lshift__ = StrName::get("__lshift__");
+const StrName __rshift__ = StrName::get("__rshift__");
+const StrName __and__ = StrName::get("__and__");
+const StrName __or__ = StrName::get("__or__");
+const StrName __xor__ = StrName::get("__xor__");
+// indexer
 const StrName __getitem__ = StrName::get("__getitem__");
 const StrName __setitem__ = StrName::get("__setitem__");
 const StrName __delitem__ = StrName::get("__delitem__");
-const StrName __contains__ = StrName::get("__contains__");
-const StrName __init__ = StrName::get("__init__");
-const StrName __json__ = StrName::get("__json__");
-const StrName __name__ = StrName::get("__name__");
-const StrName __len__ = StrName::get("__len__");
-const StrName __get__ = StrName::get("__get__");
-const StrName __set__ = StrName::get("__set__");
-const StrName __getattr__ = StrName::get("__getattr__");
-const StrName __setattr__ = StrName::get("__setattr__");
-const StrName __call__ = StrName::get("__call__");
 
-const StrName m_eval = StrName::get("eval");
-const StrName m_self = StrName::get("self");
-const StrName __enter__ = StrName::get("__enter__");
-const StrName __exit__ = StrName::get("__exit__");
-
-const StrName CMP_SPECIAL_METHODS[] = {
-    StrName::get("__lt__"), StrName::get("__le__"), StrName::get("__eq__"),
-    StrName::get("__ne__"), StrName::get("__gt__"), StrName::get("__ge__")
-};
-
-const StrName BINARY_SPECIAL_METHODS[] = {
-    StrName::get("__add__"), StrName::get("__sub__"), StrName::get("__mul__"),
-    StrName::get("__truediv__"), StrName::get("__floordiv__"),
-    StrName::get("__mod__"), StrName::get("__pow__")
-};
-
-const StrName BITWISE_SPECIAL_METHODS[] = {
-    StrName::get("__lshift__"), StrName::get("__rshift__"),
-    StrName::get("__and__"), StrName::get("__or__"), StrName::get("__xor__")
-};
+#define DEF_SNAME(name) const static StrName name(#name)
 
 } // namespace pkpy
 
 
 namespace pkpy {
-    using List = std::vector<PyVar>;
 
-    class Args {
-        static THREAD_LOCAL SmallArrayPool<PyVar, 10> _pool;
+using List = pod_vector<PyObject*>;
 
-        PyVar* _args;
-        int _size;
+class Tuple {
+    PyObject** _args;
+    PyObject* _inlined[2];
+    int _size;
 
-        inline void _alloc(int n){
-            this->_args = _pool.alloc(n);
-            this->_size = n;
+    bool is_inlined() const { return _args == _inlined; }
+
+    void _alloc(int n){
+        if(n <= 2){
+            this->_args = _inlined;
+        }else{
+            this->_args = (PyObject**)pool64.alloc(n * sizeof(void*));
         }
+        this->_size = n;
+    }
 
-    public:
-        Args(int n){ _alloc(n); }
+public:
+    Tuple(int n){ _alloc(n); }
 
-        Args(const Args& other){
-            _alloc(other._size);
+    Tuple(const Tuple& other){
+        _alloc(other._size);
+        for(int i=0; i<_size; i++) _args[i] = other._args[i];
+    }
+
+    Tuple(Tuple&& other) noexcept {
+        _size = other._size;
+        if(other.is_inlined()){
+            _args = _inlined;
             for(int i=0; i<_size; i++) _args[i] = other._args[i];
-        }
-
-        Args(Args&& other) noexcept {
-            this->_args = other._args;
-            this->_size = other._size;
-            other._args = nullptr;
+        }else{
+            _args = other._args;
+            other._args = other._inlined;
             other._size = 0;
         }
+    }
 
-        static pkpy::Args from_list(List&& other) noexcept {
-            Args ret(other.size());
-            memcpy((void*)ret._args, (void*)other.data(), sizeof(PyVar)*ret.size());
-            memset((void*)other.data(), 0, sizeof(PyVar)*ret.size());
-            other.clear();
-            return ret;
-        }
+    Tuple(List&& other) noexcept {
+        _size = other.size();
+        _args = other._data;
+        other._data = nullptr;
+    }
 
-        PyVar& operator[](int i){ return _args[i]; }
-        const PyVar& operator[](int i) const { return _args[i]; }
+    Tuple(std::initializer_list<PyObject*> list) {
+        _alloc(list.size());
+        int i = 0;
+        for(PyObject* obj: list) _args[i++] = obj;
+    }
 
-        Args& operator=(Args&& other) noexcept {
-            _pool.dealloc(_args, _size);
-            this->_args = other._args;
-            this->_size = other._size;
-            other._args = nullptr;
-            other._size = 0;
-            return *this;
-        }
+    PyObject*& operator[](int i){ return _args[i]; }
+    PyObject* operator[](int i) const { return _args[i]; }
 
-        inline int size() const { return _size; }
+    int size() const { return _size; }
 
-        List move_to_list() noexcept {
-            List ret(_size);
-            memcpy((void*)ret.data(), (void*)_args, sizeof(PyVar)*_size);
-            memset((void*)_args, 0, sizeof(PyVar)*_size);
-            return ret;
-        }
+    PyObject** begin() const { return _args; }
+    PyObject** end() const { return _args + _size; }
 
-        void extend_self(const PyVar& self){
-            static_assert(std::is_standard_layout_v<PyVar>);
-            PyVar* old_args = _args;
-            int old_size = _size;
-            _alloc(old_size+1);
-            _args[0] = self;
-            if(old_size == 0) return;
+    ~Tuple(){ if(!is_inlined()) pool64.dealloc(_args); }
+};
 
-            memcpy((void*)(_args+1), (void*)old_args, sizeof(PyVar)*old_size);
-            memset((void*)old_args, 0, sizeof(PyVar)*old_size);
-            _pool.dealloc(old_args, old_size);
-        }
+// a lightweight view for function args, it does not own the memory
+struct ArgsView{
+    PyObject** _begin;
+    PyObject** _end;
 
-        ~Args(){ _pool.dealloc(_args, _size); }
-    };
+    ArgsView(PyObject** begin, PyObject** end) : _begin(begin), _end(end) {}
+    ArgsView(const Tuple& t) : _begin(t.begin()), _end(t.end()) {}
 
-    static const Args _zero(0);
-    inline const Args& no_arg() { return _zero; }
+    PyObject** begin() const { return _begin; }
+    PyObject** end() const { return _end; }
+    int size() const { return _end - _begin; }
+    bool empty() const { return _begin == _end; }
+    PyObject* operator[](int i) const { return _begin[i]; }
 
-    template<typename T>
-    Args one_arg(T&& a) {
-        Args ret(1);
-        ret[0] = std::forward<T>(a);
+    List to_list() const{
+        List ret(size());
+        for(int i=0; i<size(); i++) ret[i] = _begin[i];
         return ret;
     }
 
-    template<typename T1, typename T2>
-    Args two_args(T1&& a, T2&& b) {
-        Args ret(2);
-        ret[0] = std::forward<T1>(a);
-        ret[1] = std::forward<T2>(b);
+    Tuple to_tuple() const{
+        Tuple ret(size());
+        for(int i=0; i<size(); i++) ret[i] = _begin[i];
         return ret;
     }
-
-    template<typename T1, typename T2, typename T3>
-    Args three_args(T1&& a, T2&& b, T3&& c) {
-        Args ret(3);
-        ret[0] = std::forward<T1>(a);
-        ret[1] = std::forward<T2>(b);
-        ret[2] = std::forward<T3>(c);
-        return ret;
-    }
-
-    typedef Args Tuple;
-    THREAD_LOCAL SmallArrayPool<PyVar, 10> Args::_pool;
+};
 }   // namespace pkpy
 
 
 namespace pkpy{
 
-const int kNameDictNodeSize = sizeof(StrName) + sizeof(PyVar);
-
-template<int __Bucket, int __BucketSize=32>
-struct DictArrayPool {
-    std::vector<StrName*> buckets[__Bucket+1];
-
-    StrName* alloc(uint16_t n){
-        StrName* _keys;
-        if(n > __Bucket || buckets[n].empty()){
-            _keys = (StrName*)malloc(kNameDictNodeSize * n);
-            memset((void*)_keys, 0, kNameDictNodeSize * n);
-        }else{
-            _keys = buckets[n].back();
-            memset((void*)_keys, 0, sizeof(StrName) * n);
-            buckets[n].pop_back();
-        }
-        return _keys;
-    }
-
-    void dealloc(StrName* head, uint16_t n){
-        PyVar* _values = (PyVar*)(head + n);
-        if(n > __Bucket || buckets[n].size() >= __BucketSize){
-            for(int i=0; i<n; i++) _values[i].~PyVar();
-            free(head);
-        }else{
-            buckets[n].push_back(head);
-        }
-    }
-
-    ~DictArrayPool(){
-        // let it leak, since this object is static
-    }
-};
-
-const std::vector<uint16_t> kHashSeeds = {9629, 43049, 13267, 59509, 39251, 1249, 35803, 54469, 27689, 9719, 34897, 18973, 30661, 19913, 27919, 32143, 3467, 28019, 1051, 39419, 1361, 28547, 48197, 2609, 24317, 22861, 41467, 17623, 52837, 59053, 33589, 32117};
-static DictArrayPool<32> _dict_pool;
-
-uint16_t find_next_capacity(uint16_t n){
-    uint16_t x = 2;
-    while(x < n) x <<= 1;
-    return x;
-}
+const uint16_t kHashSeeds[] = {9629, 43049, 13267, 59509, 39251, 1249, 27689, 9719, 19913};
 
 #define _hash(key, mask, hash_seed) ( ( (key).index * (hash_seed) >> 8 ) & (mask) )
 
-uint16_t find_perfect_hash_seed(uint16_t capacity, const std::vector<StrName>& keys){
+inline uint16_t find_perfect_hash_seed(uint16_t capacity, const std::vector<StrName>& keys){
     if(keys.empty()) return kHashSeeds[0];
-    std::set<uint16_t> indices;
+    static std::set<uint16_t> indices;
+    indices.clear();
     std::pair<uint16_t, float> best_score = {kHashSeeds[0], 0.0f};
-    for(int i=0; i<kHashSeeds.size(); i++){
+    const int kHashSeedsSize = sizeof(kHashSeeds) / sizeof(kHashSeeds[0]);
+    for(int i=0; i<kHashSeedsSize; i++){
         indices.clear();
         for(auto key: keys){
             uint16_t index = _hash(key, capacity-1, kHashSeeds[i]);
@@ -647,78 +1254,67 @@ uint16_t find_perfect_hash_seed(uint16_t capacity, const std::vector<StrName>& k
     return best_score.first;
 }
 
-struct NameDict {
+template<typename T>
+struct NameDictImpl {
+    using Item = std::pair<StrName, T>;
+    static constexpr uint16_t __Capacity = 8;
+    // ensure the initial capacity is ok for memory pool
+    static_assert(std::is_pod_v<T>);
+    static_assert(sizeof(Item) * __Capacity <= 128);
+
+    float _load_factor;
     uint16_t _capacity;
     uint16_t _size;
-    float _load_factor;
     uint16_t _hash_seed;
     uint16_t _mask;
-    StrName* _keys;
+    Item* _items;
 
-    inline PyVar& value(uint16_t i){
-        return reinterpret_cast<PyVar*>(_keys + _capacity)[i];
+#define HASH_PROBE(key, ok, i)          \
+ok = false;                             \
+i = _hash(key, _mask, _hash_seed);      \
+while(!_items[i].first.empty()) {       \
+    if(_items[i].first == (key)) { ok = true; break; }  \
+    i = (i + 1) & _mask;                                \
+}
+
+#define NAMEDICT_ALLOC()                \
+    _items = (Item*)pool128.alloc(_capacity * sizeof(Item));    \
+    memset(_items, 0, _capacity * sizeof(Item));                \
+
+    NameDictImpl(float load_factor=0.67f):
+        _load_factor(load_factor), _capacity(__Capacity), _size(0), 
+        _hash_seed(kHashSeeds[0]), _mask(__Capacity-1) {
+        NAMEDICT_ALLOC()
     }
 
-    inline const PyVar& value(uint16_t i) const {
-        return reinterpret_cast<const PyVar*>(_keys + _capacity)[i];
+    NameDictImpl(const NameDictImpl& other) {
+        memcpy(this, &other, sizeof(NameDictImpl));
+        NAMEDICT_ALLOC()
+        for(int i=0; i<_capacity; i++) _items[i] = other._items[i];
     }
 
-    NameDict(uint16_t capacity=2, float load_factor=0.67, uint16_t hash_seed=kHashSeeds[0]):
-        _capacity(capacity), _size(0), _load_factor(load_factor),
-        _hash_seed(hash_seed), _mask(capacity-1) {
-            _keys = _dict_pool.alloc(capacity);
-        }
-
-    NameDict(const NameDict& other) {
-        memcpy(this, &other, sizeof(NameDict));
-        _keys = _dict_pool.alloc(_capacity);
-        for(int i=0; i<_capacity; i++){
-            _keys[i] = other._keys[i];
-            value(i) = other.value(i);
-        }
-    }
-
-    NameDict& operator=(const NameDict& other) {
-        _dict_pool.dealloc(_keys, _capacity);
-        memcpy(this, &other, sizeof(NameDict));
-        _keys = _dict_pool.alloc(_capacity);
-        for(int i=0; i<_capacity; i++){
-            _keys[i] = other._keys[i];
-            value(i) = other.value(i);
-        }
+    NameDictImpl& operator=(const NameDictImpl& other) {
+        pool128.dealloc(_items);
+        memcpy(this, &other, sizeof(NameDictImpl));
+        NAMEDICT_ALLOC()
+        for(int i=0; i<_capacity; i++) _items[i] = other._items[i];
         return *this;
     }
     
-    ~NameDict(){ _dict_pool.dealloc(_keys, _capacity); }
+    ~NameDictImpl(){ pool128.dealloc(_items); }
 
-    NameDict(NameDict&&) = delete;
-    NameDict& operator=(NameDict&&) = delete;
+    NameDictImpl(NameDictImpl&&) = delete;
+    NameDictImpl& operator=(NameDictImpl&&) = delete;
     uint16_t size() const { return _size; }
 
-#define HASH_PROBE(key, ok, i) \
-ok = false; \
-i = _hash(key, _mask, _hash_seed); \
-while(!_keys[i].empty()) { \
-    if(_keys[i] == (key)) { ok = true; break; } \
-    i = (i + 1) & _mask; \
-}
-
-    const PyVar& operator[](StrName key) const {
+    T operator[](StrName key) const {
         bool ok; uint16_t i;
         HASH_PROBE(key, ok, i);
-        if(!ok) throw std::out_of_range("NameDict key not found: " + key.str());
-        return value(i);
+        if(!ok) throw std::out_of_range(fmt("NameDict key not found: ", key));
+        return _items[i].second;
     }
 
-    PyVar& get(StrName key){
-        bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
-        if(!ok) throw std::out_of_range("NameDict key not found: " + key.str());
-        return value(i);
-    }
-
-    template<typename T>
-    void set(StrName key, T&& val){
+    void set(StrName key, T val){
         bool ok; uint16_t i;
         HASH_PROBE(key, ok, i);
         if(!ok) {
@@ -727,29 +1323,27 @@ while(!_keys[i].empty()) { \
                 _rehash(true);
                 HASH_PROBE(key, ok, i);
             }
-            _keys[i] = key;
+            _items[i].first = key;
         }
-        value(i) = std::forward<T>(val);
+        _items[i].second = val;
     }
 
     void _rehash(bool resize){
-        StrName* old_keys = _keys;
-        PyVar* old_values = &value(0);
+        Item* old_items = _items;
         uint16_t old_capacity = _capacity;
         if(resize){
-            _capacity = find_next_capacity(_capacity * 2);
+            _capacity *= 2;
             _mask = _capacity - 1;
         }
-        _keys = _dict_pool.alloc(_capacity);
+        NAMEDICT_ALLOC()
         for(uint16_t i=0; i<old_capacity; i++){
-            if(old_keys[i].empty()) continue;
+            if(old_items[i].first.empty()) continue;
             bool ok; uint16_t j;
-            HASH_PROBE(old_keys[i], ok, j);
-            if(ok) UNREACHABLE();
-            _keys[j] = old_keys[i];
-            value(j) = old_values[i]; // std::move makes a segfault
+            HASH_PROBE(old_items[i].first, ok, j);
+            if(ok) FATAL_ERROR();
+            _items[j] = old_items[i];
         }
-        _dict_pool.dealloc(old_keys, old_capacity);
+        pool128.dealloc(old_items);
     }
 
     void _try_perfect_rehash(){
@@ -757,62 +1351,95 @@ while(!_keys[i].empty()) { \
         _rehash(false); // do not resize
     }
 
-    inline PyVar* try_get(StrName key){
+    T try_get(StrName key) const{
+        bool ok; uint16_t i;
+        HASH_PROBE(key, ok, i);
+        if(!ok){
+            if constexpr(std::is_pointer_v<T>) return nullptr;
+            else if constexpr(std::is_same_v<int, T>) return -1;
+            else return Discarded();
+        }
+        return _items[i].second;
+    }
+
+    T* try_get_2(StrName key) {
         bool ok; uint16_t i;
         HASH_PROBE(key, ok, i);
         if(!ok) return nullptr;
-        return &value(i);
+        return &_items[i].second;
     }
 
-    inline bool try_set(StrName key, PyVar&& val){
+    bool try_set(StrName key, T val){
         bool ok; uint16_t i;
         HASH_PROBE(key, ok, i);
         if(!ok) return false;
-        value(i) = std::move(val);
+        _items[i].second = val;
         return true;
     }
 
-    inline bool contains(StrName key) const {
+    bool contains(StrName key) const {
         bool ok; uint16_t i;
         HASH_PROBE(key, ok, i);
         return ok;
     }
 
-    void update(const NameDict& other){
+    void update(const NameDictImpl& other){
         for(uint16_t i=0; i<other._capacity; i++){
-            if(other._keys[i].empty()) continue;
-            set(other._keys[i], other.value(i));
+            auto& item = other._items[i];
+            if(!item.first.empty()) set(item.first, item.second);
         }
     }
 
     void erase(StrName key){
         bool ok; uint16_t i;
         HASH_PROBE(key, ok, i);
-        if(!ok) throw std::out_of_range("NameDict key not found: " + key.str());
-        _keys[i] = StrName(); value(i).reset();
+        if(!ok) throw std::out_of_range(fmt("NameDict key not found: ", key));
+        _items[i].first = StrName();
+        _items[i].second = nullptr;
         _size--;
     }
 
-    std::vector<std::pair<StrName, PyVar>> items() const {
-        std::vector<std::pair<StrName, PyVar>> v;
+    std::vector<Item> items() const {
+        std::vector<Item> v;
         for(uint16_t i=0; i<_capacity; i++){
-            if(_keys[i].empty()) continue;
-            v.push_back(std::make_pair(_keys[i], value(i)));
+            if(_items[i].first.empty()) continue;
+            v.push_back(_items[i]);
         }
         return v;
+    }
+
+    template<typename __Func>
+    void apply(__Func func) const {
+        for(uint16_t i=0; i<_capacity; i++){
+            if(_items[i].first.empty()) continue;
+            func(_items[i].first, _items[i].second);
+        }
     }
 
     std::vector<StrName> keys() const {
         std::vector<StrName> v;
         for(uint16_t i=0; i<_capacity; i++){
-            if(_keys[i].empty()) continue;
-            v.push_back(_keys[i]);
+            if(_items[i].first.empty()) continue;
+            v.push_back(_items[i].first);
         }
         return v;
     }
+
+    void clear(){
+        for(uint16_t i=0; i<_capacity; i++){
+            _items[i].first = StrName();
+            _items[i].second = nullptr;
+        }
+        _size = 0;
+    }
 #undef HASH_PROBE
+#undef NAMEDICT_ALLOC
 #undef _hash
 };
+
+using NameDict = NameDictImpl<PyObject*>;
+using NameDict_ = shared_ptr<NameDict>;
+using NameDictInt = NameDictImpl<int>;
 
 } // namespace pkpy
 
@@ -833,10 +1460,11 @@ enum CompileMode {
     EVAL_MODE,
     REPL_MODE,
     JSON_MODE,
+    CELL_MODE
 };
 
 struct SourceData {
-    const char* source;
+    std::string source;
     Str filename;
     std::vector<const char*> line_starts;
     CompileMode mode;
@@ -851,25 +1479,32 @@ struct SourceData {
         return {_start, i};
     }
 
-    SourceData(const char* source, Str filename, CompileMode mode) {
-        source = strdup(source);
+    SourceData(const Str& source, const Str& filename, CompileMode mode) {
+        int index = 0;
         // Skip utf8 BOM if there is any.
-        if (strncmp(source, "\xEF\xBB\xBF", 3) == 0) source += 3;
+        if (strncmp(source.begin(), "\xEF\xBB\xBF", 3) == 0) index += 3;
+        // Remove all '\r'
+        std::stringstream ss;
+        while(index < source.length()){
+            if(source[index] != '\r') ss << source[index];
+            index++;
+        }
+
         this->filename = filename;
-        this->source = source;
-        line_starts.push_back(source);
+        this->source = ss.str();
+        line_starts.push_back(this->source.c_str());
         this->mode = mode;
     }
 
     Str snapshot(int lineno, const char* cursor=nullptr){
-        StrStream ss;
+        std::stringstream ss;
         ss << "  " << "File \"" << filename << "\", line " << lineno << '\n';
         std::pair<const char*,const char*> pair = get_line(lineno);
         Str line = "<?>";
         int removed_spaces = 0;
         if(pair.first && pair.second){
             line = Str(pair.first, pair.second-pair.first).lstrip();
-            removed_spaces = pair.second - pair.first - line.size();
+            removed_spaces = pair.second - pair.first - line.length();
             if(line.empty()) line = "<?>";
         }
         ss << "    " << line;
@@ -879,14 +1514,13 @@ struct SourceData {
         }
         return ss.str();
     }
-
-    ~SourceData() { free((void*)source); }
 };
 
 class Exception {
+    using StackTrace = stack<Str>;
     StrName type;
     Str msg;
-    std::stack<Str> stacktrace;
+    StackTrace stacktrace;
 public:
     Exception(StrName type, Str msg): type(type), msg(msg) {}
     bool match_type(StrName type) const { return this->type == type;}
@@ -898,233 +1532,15 @@ public:
     }
 
     Str summary() const {
-        std::stack<Str> st(stacktrace);
-        StrStream ss;
+        StackTrace st(stacktrace);
+        std::stringstream ss;
         if(is_re) ss << "Traceback (most recent call last):\n";
         while(!st.empty()) { ss << st.top() << '\n'; st.pop(); }
-        if (!msg.empty()) ss << type.str() << ": " << msg;
-        else ss << type.str();
+        if (!msg.empty()) ss << type.sv() << ": " << msg;
+        else ss << type.sv();
         return ss.str();
     }
 };
-
-}   // namespace pkpy
-
-
-#include <type_traits>
-
-namespace pkpy {
-    
-struct CodeObject;
-struct Frame;
-struct BaseRef;
-class VM;
-
-typedef std::function<PyVar(VM*, Args&)> NativeFuncRaw;
-typedef shared_ptr<CodeObject> CodeObject_;
-typedef shared_ptr<NameDict> NameDict_;
-
-struct NativeFunc {
-    NativeFuncRaw f;
-    int argc;       // DONOT include self
-    bool method;
-    
-    NativeFunc(NativeFuncRaw f, int argc, bool method) : f(f), argc(argc), method(method) {}
-    inline PyVar operator()(VM* vm, Args& args) const;
-};
-
-struct Function {
-    StrName name;
-    CodeObject_ code;
-    std::vector<StrName> args;
-    StrName starred_arg;                // empty if no *arg
-    NameDict kwargs;              // empty if no k=v
-    std::vector<StrName> kwargs_order;
-
-    // runtime settings
-    PyVar _module = nullptr;
-    NameDict_ _closure = nullptr;
-
-    bool has_name(StrName val) const {
-        bool _0 = std::find(args.begin(), args.end(), val) != args.end();
-        bool _1 = starred_arg == val;
-        bool _2 = kwargs.contains(val);
-        return _0 || _1 || _2;
-    }
-};
-
-struct BoundMethod {
-    PyVar obj;
-    PyVar method;
-    BoundMethod(const PyVar& obj, const PyVar& method) : obj(obj), method(method) {}
-};
-
-struct Range {
-    i64 start = 0;
-    i64 stop = -1;
-    i64 step = 1;
-};
-
-struct StarWrapper {
-    PyVar obj;
-    bool rvalue;
-    StarWrapper(const PyVar& obj, bool rvalue): obj(obj), rvalue(rvalue) {}
-};
-
-struct Slice {
-    int start = 0;
-    int stop = 0x7fffffff; 
-
-    void normalize(int len){
-        if(start < 0) start += len;
-        if(stop < 0) stop += len;
-        if(start < 0) start = 0;
-        if(stop > len) stop = len;
-        if(stop < start) stop = start;
-    }
-};
-
-class BaseIter {
-protected:
-    VM* vm;
-    PyVar _ref;     // keep a reference to the object so it will not be deleted while iterating
-public:
-    virtual PyVar next() = 0;
-    PyVarRef loop_var;
-    BaseIter(VM* vm, PyVar _ref) : vm(vm), _ref(_ref) {}
-    virtual ~BaseIter() = default;
-};
-
-struct PyObject {
-    Type type;
-    NameDict* _attr;
-
-    inline bool is_attr_valid() const noexcept { return _attr != nullptr; }
-    inline NameDict& attr() noexcept { return *_attr; }
-    inline const PyVar& attr(StrName name) const noexcept { return _attr->get(name); }
-    virtual void* value() = 0;
-
-    PyObject(Type type) : type(type) {}
-    virtual ~PyObject() { delete _attr; }
-};
-
-template <typename T>
-struct Py_ : PyObject {
-    T _value;
-
-    Py_(Type type, const T& val): PyObject(type), _value(val) { _init(); }
-    Py_(Type type, T&& val): PyObject(type), _value(std::move(val)) { _init(); }
-
-    inline void _init() noexcept {
-        if constexpr (std::is_same_v<T, Type> || std::is_same_v<T, DummyModule>) {
-            _attr = new NameDict(8, kTypeAttrLoadFactor);
-        }else if constexpr(std::is_same_v<T, DummyInstance>){
-            _attr = new NameDict(8, kInstAttrLoadFactor);
-        }else if constexpr(std::is_same_v<T, Function> || std::is_same_v<T, NativeFunc>){
-            _attr = new NameDict(8, kInstAttrLoadFactor);
-        }else{
-            _attr = nullptr;
-        }
-    }
-    void* value() override { return &_value; }
-};
-
-#define OBJ_GET(T, obj) (((Py_<T>*)((obj).get()))->_value)
-#define OBJ_NAME(obj) OBJ_GET(Str, vm->getattr(obj, __name__))
-
-const int kTpIntIndex = 2;
-const int kTpFloatIndex = 3;
-
-inline bool is_type(const PyVar& obj, Type type) noexcept {
-    switch(type.index){
-        case kTpIntIndex: return obj.is_tag_01();
-        case kTpFloatIndex: return obj.is_tag_10();
-        default: return !obj.is_tagged() && obj->type == type;
-    }
-}
-
-inline bool is_both_int_or_float(const PyVar& a, const PyVar& b) noexcept {
-    return a.is_tagged() && b.is_tagged();
-}
-
-inline bool is_both_int(const PyVar& a, const PyVar& b) noexcept {
-    return (a.bits & b.bits & 0b11) == 0b01;
-}
-
-inline bool is_int(const PyVar& obj) noexcept {
-    return obj.is_tag_01();
-}
-
-inline bool is_float(const PyVar& obj) noexcept {
-    return obj.is_tag_10();
-}
-
-#define PY_CLASS(T, mod, name) \
-    static Type _type(VM* vm) {  \
-        static const StrName __x0(#mod);      \
-        static const StrName __x1(#name);     \
-        return OBJ_GET(Type, vm->_modules[__x0]->attr(__x1));               \
-    }                                                                       \
-    static PyVar register_class(VM* vm, PyVar mod) {                        \
-        PyVar type = vm->new_type_object(mod, #name, vm->tp_object);        \
-        if(OBJ_NAME(mod) != #mod) UNREACHABLE();                            \
-        T::_register(vm, mod, type);                                        \
-        type->attr()._try_perfect_rehash();                                 \
-        return type;                                                        \
-    }                                                                       
-
-union __8B {
-    i64 _int;
-    f64 _float;
-    __8B(i64 val) : _int(val) {}
-    __8B(f64 val) : _float(val) {}
-};
-
-template <typename, typename = void> struct is_py_class : std::false_type {};
-template <typename T> struct is_py_class<T, std::void_t<decltype(T::_type)>> : std::true_type {};
-
-template<typename T>
-void _check_py_class(VM* vm, const PyVar& var);
-
-template<typename T>
-T py_pointer_cast(VM* vm, const PyVar& var);
-
-template<typename T>
-T py_value_cast(VM* vm, const PyVar& var);
-
-struct Discarded {};
-
-template<typename __T>
-__T py_cast(VM* vm, const PyVar& obj) {
-    using T = std::decay_t<__T>;
-    if constexpr(std::is_pointer_v<T>){
-        return py_pointer_cast<T>(vm, obj);
-    }else if constexpr(is_py_class<T>::value){
-        _check_py_class<T>(vm, obj);
-        return OBJ_GET(T, obj);
-    }else if constexpr(std::is_pod_v<T>){
-        return py_value_cast<T>(vm, obj);
-    }else{
-        return Discarded();
-    }
-}
-
-template<typename __T>
-__T _py_cast(VM* vm, const PyVar& obj) {
-    using T = std::decay_t<__T>;
-    if constexpr(std::is_pointer_v<__T>){
-        return py_pointer_cast<__T>(vm, obj);
-    }else if constexpr(is_py_class<T>::value){
-        return OBJ_GET(T, obj);
-    }else{
-        return Discarded();
-    }
-}
-
-#define VAR(x) py_var(vm, x)
-#define VAR_T(T, ...) vm->new_object(T::_type(vm), T(__VA_ARGS__))
-#define CAST(T, x) py_cast<T>(vm, x)
-#define _CAST(T, x) _py_cast<T>(vm, x)
 
 }   // namespace pkpy
 
@@ -1134,23 +1550,28 @@ namespace pkpy{
 typedef uint8_t TokenIndex;
 
 constexpr const char* kTokens[] = {
-    "@error", "@eof", "@eol", "@sof",
-    ".", ",", ":", ";", "#", "(", ")", "[", "]", "{", "}", "%", "::",
-    "+", "-", "*", "/", "//", "**", "=", ">", "<", "...", "->",
-    "<<", ">>", "&", "|", "^", "?", "@",
-    "==", "!=", ">=", "<=",
-    "+=", "-=", "*=", "/=", "//=", "%=", "&=", "|=", "^=", ">>=", "<<=",
+    "is not", "not in", "yield from",
+    "@eof", "@eol", "@sof",
+    "@id", "@num", "@str", "@fstr",
+    "@indent", "@dedent",
+    /*****************************************/
+    "+", "+=", "-", "-=",   // (INPLACE_OP - 1) can get '=' removed
+    "*", "*=", "/", "/=", "//", "//=", "%", "%=",
+    "&", "&=", "|", "|=", "^", "^=", 
+    "<<", "<<=", ">>", ">>=",
+    /*****************************************/
+    ".", ",", ":", ";", "#", "(", ")", "[", "]", "{", "}",
+    "**", "=", ">", "<", "...", "->", "?", "@", "==", "!=", ">=", "<=",
+    "++", "--",
+    /** SPEC_BEGIN **/
+    "$goto", "$label",
     /** KW_BEGIN **/
     "class", "import", "as", "def", "lambda", "pass", "del", "from", "with", "yield",
     "None", "in", "is", "and", "or", "not", "True", "False", "global", "try", "except", "finally",
-    "goto", "label",      // extended keywords, not available in cpython
-    "while", "for", "if", "elif", "else", "break", "continue", "return", "assert", "raise",
-    /** KW_END **/
-    "is not", "not in",
-    "@id", "@num", "@str", "@fstr",
-    "@indent", "@dedent"
+    "while", "for", "if", "elif", "else", "break", "continue", "return", "assert", "raise"
 };
 
+using TokenValue = std::variant<std::monostate, i64, f64, Str>;
 const TokenIndex kTokenCount = sizeof(kTokens) / sizeof(kTokens[0]);
 
 constexpr TokenIndex TK(const char token[]) {
@@ -1160,57 +1581,57 @@ constexpr TokenIndex TK(const char token[]) {
         while(*i && *j && *i == *j) { i++; j++;}
         if(*i == *j) return k;
     }
-    UNREACHABLE();
+    return 255;
 }
 
 #define TK_STR(t) kTokens[t]
-const TokenIndex kTokenKwBegin = TK("class");
-const TokenIndex kTokenKwEnd = TK("raise");
-
 const std::map<std::string_view, TokenIndex> kTokenKwMap = [](){
     std::map<std::string_view, TokenIndex> map;
-    for(int k=kTokenKwBegin; k<=kTokenKwEnd; k++) map[kTokens[k]] = k;
+    for(int k=TK("class"); k<kTokenCount; k++) map[kTokens[k]] = k;
     return map;
 }();
 
 
 struct Token{
   TokenIndex type;
-
   const char* start;
   int length;
   int line;
-  PyVar value;
+  TokenValue value;
 
   Str str() const { return Str(start, length);}
+  std::string_view sv() const { return std::string_view(start, length);}
 
-  Str info() const {
-    StrStream ss;
-    Str raw = str();
-    if (raw == Str("\n")) raw = "\\n";
-    ss << line << ": " << TK_STR(type) << " '" << raw << "'";
+  std::string info() const {
+    std::stringstream ss;
+    ss << line << ": " << TK_STR(type) << " '" << (
+        sv()=="\n" ? "\\n" : sv()
+    ) << "'";
     return ss.str();
   }
 };
 
-// https://docs.python.org/3/reference/expressions.html
+// https://docs.python.org/3/reference/expressions.html#operator-precedence
 enum Precedence {
   PREC_NONE,
-  PREC_ASSIGNMENT,    // =
-  PREC_COMMA,         // ,
+  PREC_TUPLE,         // ,
+  PREC_LAMBDA,        // lambda
   PREC_TERNARY,       // ?:
   PREC_LOGICAL_OR,    // or
   PREC_LOGICAL_AND,   // and
   PREC_LOGICAL_NOT,   // not
-  PREC_EQUALITY,      // == !=
-  PREC_TEST,          // in / is / is not / not in
-  PREC_COMPARISION,   // < > <= >=
+  /* https://docs.python.org/3/reference/expressions.html#comparisons
+   * Unlike C, all comparison operations in Python have the same priority,
+   * which is lower than that of any arithmetic, shifting or bitwise operation.
+   * Also unlike C, expressions like a < b < c have the interpretation that is conventional in mathematics.
+   */
+  PREC_COMPARISION,   // < > <= >= != ==, in / is / is not / not in
   PREC_BITWISE_OR,    // |
   PREC_BITWISE_XOR,   // ^
   PREC_BITWISE_AND,   // &
   PREC_BITWISE_SHIFT, // << >>
   PREC_TERM,          // + -
-  PREC_FACTOR,        // * / % //
+  PREC_FACTOR,        // * / % // @
   PREC_UNARY,         // - not
   PREC_EXPONENT,      // **
   PREC_CALL,          // ()
@@ -1219,34 +1640,19 @@ enum Precedence {
   PREC_PRIMARY,
 };
 
-// The context of the parsing phase for the compiler.
-struct Parser {
-    shared_ptr<SourceData> src;
+enum StringType { NORMAL_STRING, RAW_STRING, F_STRING };
 
+struct Lexer {
+    shared_ptr<SourceData> src;
     const char* token_start;
     const char* curr_char;
     int current_line = 1;
-    Token prev, curr;
-    std::queue<Token> nexts;
-    std::stack<int> indents;
-
+    std::vector<Token> nexts;
+    stack<int> indents;
     int brackets_level = 0;
+    bool used = false;
 
-    Token next_token(){
-        if(nexts.empty()){
-            return Token{TK("@error"), token_start, (int)(curr_char - token_start), current_line};
-        }
-        Token t = nexts.front();
-        if(t.type == TK("@eof") && indents.size()>1){
-            nexts.pop();
-            indents.pop();
-            return Token{TK("@dedent"), token_start, 0, current_line};
-        }
-        nexts.pop();
-        return t;
-    }
-
-    inline char peekchar() const{ return *curr_char; }
+    char peekchar() const{ return *curr_char; }
 
     bool match_n_chars(int n, char c0){
         const char* c = curr_char;
@@ -1257,6 +1663,13 @@ struct Parser {
         }
         for(int i=0; i<n; i++) eatchar_include_newline();
         return true;
+    }
+
+    bool match_string(const char* s){
+        int s_len = strlen(s);
+        bool ok = strncmp(curr_char, s, s_len) == 0;
+        if(ok) for(int i=0; i<s_len; i++) eatchar_include_newline();
+        return ok;
     }
 
     int eat_spaces(){
@@ -1275,15 +1688,15 @@ struct Parser {
         if(brackets_level > 0) return true;
         int spaces = eat_spaces();
         if(peekchar() == '#') skip_line_comment();
-        if(peekchar() == '\0' || peekchar() == '\n' || peekchar() == '\r') return true;
+        if(peekchar() == '\0' || peekchar() == '\n') return true;
         // https://docs.python.org/3/reference/lexical_analysis.html#indentation
         if(spaces > indents.top()){
             indents.push(spaces);
-            nexts.push(Token{TK("@indent"), token_start, 0, current_line});
+            nexts.push_back(Token{TK("@indent"), token_start, 0, current_line});
         } else if(spaces < indents.top()){
             while(spaces < indents.top()){
                 indents.pop();
-                nexts.push(Token{TK("@dedent"), token_start, 0, current_line});
+                nexts.push_back(Token{TK("@dedent"), token_start, 0, current_line});
             }
             if(spaces != indents.top()){
                 return false;
@@ -1312,13 +1725,9 @@ struct Parser {
     int eat_name() {
         curr_char--;
         while(true){
-            uint8_t c = peekchar();
-            int u8bytes = 0;
-            if((c & 0b10000000) == 0b00000000) u8bytes = 1;
-            else if((c & 0b11100000) == 0b11000000) u8bytes = 2;
-            else if((c & 0b11110000) == 0b11100000) u8bytes = 3;
-            else if((c & 0b11111000) == 0b11110000) u8bytes = 4;
-            else return 1;
+            unsigned char c = peekchar();
+            int u8bytes = utf8len(c, true);
+            if(u8bytes == 0) return 1;
             if(u8bytes == 1){
                 if(isalpha(c) || c=='_' || isdigit(c)) {
                     curr_char++;
@@ -1351,11 +1760,11 @@ struct Parser {
 
         if(src->mode == JSON_MODE){
             if(name == "true"){
-                set_next_token(TK("True"));
+                add_token(TK("True"));
             } else if(name == "false"){
-                set_next_token(TK("False"));
+                add_token(TK("False"));
             } else if(name == "null"){
-                set_next_token(TK("None"));
+                add_token(TK("None"));
             } else {
                 return 4;
             }
@@ -1363,22 +1772,9 @@ struct Parser {
         }
 
         if(kTokenKwMap.count(name)){
-            if(name == "not"){
-                if(strncmp(curr_char, " in", 3) == 0){
-                    curr_char += 3;
-                    set_next_token(TK("not in"));
-                    return 0;
-                }
-            }else if(name == "is"){
-                if(strncmp(curr_char, " not", 4) == 0){
-                    curr_char += 4;
-                    set_next_token(TK("is not"));
-                    return 0;
-                }
-            }
-            set_next_token(kTokenKwMap.at(name));
+            add_token(kTokenKwMap.at(name));
         } else {
-            set_next_token(TK("@id"));
+            add_token(TK("@id"));
         }
         return 0;
     }
@@ -1397,2086 +1793,56 @@ struct Parser {
         return true;
     }
 
-    void set_next_token(TokenIndex type, PyVar value=nullptr) {
+    void add_token(TokenIndex type, TokenValue value={}) {
         switch(type){
             case TK("{"): case TK("["): case TK("("): brackets_level++; break;
             case TK(")"): case TK("]"): case TK("}"): brackets_level--; break;
         }
-        nexts.push( Token{
+        auto token = Token{
             type,
             token_start,
             (int)(curr_char - token_start),
             current_line - ((type == TK("@eol")) ? 1 : 0),
             value
-        });
-    }
-
-    void set_next_token_2(char c, TokenIndex one, TokenIndex two) {
-        if (matchchar(c)) set_next_token(two);
-        else set_next_token(one);
-    }
-
-    Parser(shared_ptr<SourceData> src) {
-        this->src = src;
-        this->token_start = src->source;
-        this->curr_char = src->source;
-        this->nexts.push(Token{TK("@sof"), token_start, 0, current_line});
-        this->indents.push(0);
-    }
-};
-
-} // namespace pkpy
-
-
-namespace pkpy{
-
-enum NameScope {
-    NAME_LOCAL = 0,
-    NAME_GLOBAL,
-    NAME_ATTR,
-    NAME_SPECIAL,
-};
-
-enum Opcode {
-    #define OPCODE(name) OP_##name,
-    #ifdef OPCODE
-
-OPCODE(NO_OP)
-OPCODE(POP_TOP)
-OPCODE(DUP_TOP_VALUE)
-OPCODE(CALL)
-OPCODE(CALL_UNPACK)
-OPCODE(CALL_KWARGS)
-OPCODE(CALL_KWARGS_UNPACK)
-OPCODE(RETURN_VALUE)
-OPCODE(ROT_TWO)
-
-OPCODE(BINARY_OP)
-OPCODE(COMPARE_OP)
-OPCODE(BITWISE_OP)
-OPCODE(IS_OP)
-OPCODE(CONTAINS_OP)
-
-OPCODE(UNARY_NEGATIVE)
-OPCODE(UNARY_NOT)
-OPCODE(UNARY_STAR)
-
-OPCODE(BUILD_LIST)
-OPCODE(BUILD_MAP)
-OPCODE(BUILD_SET)
-OPCODE(BUILD_SLICE)
-OPCODE(BUILD_TUPLE)
-OPCODE(BUILD_TUPLE_REF)
-OPCODE(BUILD_STRING)
-
-OPCODE(LIST_APPEND)
-OPCODE(MAP_ADD)
-OPCODE(SET_ADD)
-OPCODE(IMPORT_NAME)
-OPCODE(PRINT_EXPR)
-
-OPCODE(GET_ITER)
-OPCODE(FOR_ITER)
-
-OPCODE(WITH_ENTER)
-OPCODE(WITH_EXIT)
-OPCODE(LOOP_BREAK)
-OPCODE(LOOP_CONTINUE)
-
-OPCODE(POP_JUMP_IF_FALSE)
-OPCODE(JUMP_ABSOLUTE)
-OPCODE(SAFE_JUMP_ABSOLUTE)
-OPCODE(JUMP_IF_TRUE_OR_POP)
-OPCODE(JUMP_IF_FALSE_OR_POP)
-
-OPCODE(GOTO)
-
-OPCODE(LOAD_CONST)
-OPCODE(LOAD_NONE)
-OPCODE(LOAD_TRUE)
-OPCODE(LOAD_FALSE)
-OPCODE(LOAD_EVAL_FN)
-OPCODE(LOAD_FUNCTION)
-OPCODE(LOAD_ELLIPSIS)
-OPCODE(LOAD_NAME)
-OPCODE(LOAD_NAME_REF)
-
-OPCODE(ASSERT)
-OPCODE(EXCEPTION_MATCH)
-OPCODE(RAISE)
-OPCODE(RE_RAISE)
-
-OPCODE(BUILD_INDEX)
-OPCODE(BUILD_ATTR)
-OPCODE(BUILD_ATTR_REF)
-OPCODE(STORE_NAME)
-OPCODE(STORE_FUNCTION)
-OPCODE(STORE_REF)
-OPCODE(DELETE_REF)
-
-OPCODE(TRY_BLOCK_ENTER)
-OPCODE(TRY_BLOCK_EXIT)
-
-OPCODE(YIELD_VALUE)
-
-OPCODE(FAST_INDEX)      // a[x]
-OPCODE(FAST_INDEX_REF)       // a[x]
-
-OPCODE(INPLACE_BINARY_OP)
-OPCODE(INPLACE_BITWISE_OP)
-
-OPCODE(SETUP_CLOSURE)
-OPCODE(SETUP_DECORATOR)
-OPCODE(STORE_ALL_NAMES)
-
-OPCODE(BEGIN_CLASS)
-OPCODE(END_CLASS)
-OPCODE(STORE_CLASS_ATTR)
-
-#endif
-    #undef OPCODE
-};
-
-static const char* OP_NAMES[] = {
-    #define OPCODE(name) #name,
-    #ifdef OPCODE
-
-OPCODE(NO_OP)
-OPCODE(POP_TOP)
-OPCODE(DUP_TOP_VALUE)
-OPCODE(CALL)
-OPCODE(CALL_UNPACK)
-OPCODE(CALL_KWARGS)
-OPCODE(CALL_KWARGS_UNPACK)
-OPCODE(RETURN_VALUE)
-OPCODE(ROT_TWO)
-
-OPCODE(BINARY_OP)
-OPCODE(COMPARE_OP)
-OPCODE(BITWISE_OP)
-OPCODE(IS_OP)
-OPCODE(CONTAINS_OP)
-
-OPCODE(UNARY_NEGATIVE)
-OPCODE(UNARY_NOT)
-OPCODE(UNARY_STAR)
-
-OPCODE(BUILD_LIST)
-OPCODE(BUILD_MAP)
-OPCODE(BUILD_SET)
-OPCODE(BUILD_SLICE)
-OPCODE(BUILD_TUPLE)
-OPCODE(BUILD_TUPLE_REF)
-OPCODE(BUILD_STRING)
-
-OPCODE(LIST_APPEND)
-OPCODE(MAP_ADD)
-OPCODE(SET_ADD)
-OPCODE(IMPORT_NAME)
-OPCODE(PRINT_EXPR)
-
-OPCODE(GET_ITER)
-OPCODE(FOR_ITER)
-
-OPCODE(WITH_ENTER)
-OPCODE(WITH_EXIT)
-OPCODE(LOOP_BREAK)
-OPCODE(LOOP_CONTINUE)
-
-OPCODE(POP_JUMP_IF_FALSE)
-OPCODE(JUMP_ABSOLUTE)
-OPCODE(SAFE_JUMP_ABSOLUTE)
-OPCODE(JUMP_IF_TRUE_OR_POP)
-OPCODE(JUMP_IF_FALSE_OR_POP)
-
-OPCODE(GOTO)
-
-OPCODE(LOAD_CONST)
-OPCODE(LOAD_NONE)
-OPCODE(LOAD_TRUE)
-OPCODE(LOAD_FALSE)
-OPCODE(LOAD_EVAL_FN)
-OPCODE(LOAD_FUNCTION)
-OPCODE(LOAD_ELLIPSIS)
-OPCODE(LOAD_NAME)
-OPCODE(LOAD_NAME_REF)
-
-OPCODE(ASSERT)
-OPCODE(EXCEPTION_MATCH)
-OPCODE(RAISE)
-OPCODE(RE_RAISE)
-
-OPCODE(BUILD_INDEX)
-OPCODE(BUILD_ATTR)
-OPCODE(BUILD_ATTR_REF)
-OPCODE(STORE_NAME)
-OPCODE(STORE_FUNCTION)
-OPCODE(STORE_REF)
-OPCODE(DELETE_REF)
-
-OPCODE(TRY_BLOCK_ENTER)
-OPCODE(TRY_BLOCK_EXIT)
-
-OPCODE(YIELD_VALUE)
-
-OPCODE(FAST_INDEX)      // a[x]
-OPCODE(FAST_INDEX_REF)       // a[x]
-
-OPCODE(INPLACE_BINARY_OP)
-OPCODE(INPLACE_BITWISE_OP)
-
-OPCODE(SETUP_CLOSURE)
-OPCODE(SETUP_DECORATOR)
-OPCODE(STORE_ALL_NAMES)
-
-OPCODE(BEGIN_CLASS)
-OPCODE(END_CLASS)
-OPCODE(STORE_CLASS_ATTR)
-
-#endif
-    #undef OPCODE
-};
-
-struct Bytecode{
-    uint8_t op;
-    int arg;
-    int line;
-    uint16_t block;
-};
-
-Str pad(const Str& s, const int n){
-    if(s.size() >= n) return s.substr(0, n);
-    return s + std::string(n - s.size(), ' ');
-}
-
-enum CodeBlockType {
-    NO_BLOCK,
-    FOR_LOOP,
-    WHILE_LOOP,
-    CONTEXT_MANAGER,
-    TRY_EXCEPT,
-};
-
-struct CodeBlock {
-    CodeBlockType type;
-    int parent;         // parent index in blocks
-    int start;          // start index of this block in codes, inclusive
-    int end;            // end index of this block in codes, exclusive
-
-    std::string to_string() const {
-        if(parent == -1) return "";
-        return "[B:" + std::to_string(type) + "]";
-    }
-};
-
-struct CodeObject {
-    shared_ptr<SourceData> src;
-    Str name;
-    bool is_generator = false;
-
-    CodeObject(shared_ptr<SourceData> src, Str name) {
-        this->src = src;
-        this->name = name;
-    }
-
-    std::vector<Bytecode> codes;
-    List consts;
-    std::vector<std::pair<StrName, NameScope>> names;
-    std::map<StrName, int> global_names;
-    std::vector<CodeBlock> blocks = { CodeBlock{NO_BLOCK, -1} };
-    std::map<StrName, int> labels;
-
-    uint32_t perfect_locals_capacity = 2;
-    uint32_t perfect_hash_seed = 0;
-
-    void optimize(VM* vm);
-
-    bool add_label(StrName label){
-        if(labels.count(label)) return false;
-        labels[label] = codes.size();
-        return true;
-    }
-
-    int add_name(StrName name, NameScope scope){
-        if(scope == NAME_LOCAL && global_names.count(name)) scope = NAME_GLOBAL;
-        auto p = std::make_pair(name, scope);
-        for(int i=0; i<names.size(); i++){
-            if(names[i] == p) return i;
-        }
-        names.push_back(p);
-        return names.size() - 1;
-    }
-
-    int add_const(PyVar v){
-        consts.push_back(v);
-        return consts.size() - 1;
-    }
-
-    /************************************************/
-    int _curr_block_i = 0;
-    int _rvalue = 0;
-    bool _is_compiling_class = false;
-    bool _is_curr_block_loop() const {
-        return blocks[_curr_block_i].type == FOR_LOOP || blocks[_curr_block_i].type == WHILE_LOOP;
-    }
-
-    void _enter_block(CodeBlockType type){
-        blocks.push_back(CodeBlock{type, _curr_block_i, (int)codes.size()});
-        _curr_block_i = blocks.size()-1;
-    }
-
-    void _exit_block(){
-        blocks[_curr_block_i].end = codes.size();
-        _curr_block_i = blocks[_curr_block_i].parent;
-        if(_curr_block_i < 0) UNREACHABLE();
-    }
-    /************************************************/
-};
-
-
-} // namespace pkpy
-
-
-namespace pkpy{
-
-static THREAD_LOCAL uint64_t kFrameGlobalId = 0;
-
-struct Frame {
-    std::vector<PyVar> _data;
-    int _ip = -1;
-    int _next_ip = 0;
-
-    const CodeObject* co;
-    PyVar _module;
-    NameDict_ _locals;
-    NameDict_ _closure;
-    const uint64_t id;
-    std::vector<std::pair<int, std::vector<PyVar>>> s_try_block;
-
-    inline NameDict& f_locals() noexcept { return _locals != nullptr ? *_locals : _module->attr(); }
-    inline NameDict& f_globals() noexcept { return _module->attr(); }
-
-    inline PyVar* f_closure_try_get(StrName name) noexcept {
-        if(_closure == nullptr) return nullptr;
-        return _closure->try_get(name);
-    }
-
-    Frame(const CodeObject_& co,
-        const PyVar& _module,
-        const NameDict_& _locals=nullptr,
-        const NameDict_& _closure=nullptr)
-            : co(co.get()), _module(_module), _locals(_locals), _closure(_closure), id(kFrameGlobalId++) { }
-
-    inline const Bytecode& next_bytecode() {
-        _ip = _next_ip++;
-        return co->codes[_ip];
-    }
-
-    Str snapshot(){
-        int line = co->codes[_ip].line;
-        return co->src->snapshot(line);
-    }
-
-    // Str stack_info(){
-    //     StrStream ss;
-    //     ss << "[";
-    //     for(int i=0; i<_data.size(); i++){
-    //         ss << OBJ_TP_NAME(_data[i]);
-    //         if(i != _data.size()-1) ss << ", ";
-    //     }
-    //     ss << "]";
-    //     return ss.str();
-    // }
-
-    inline bool has_next_bytecode() const {
-        return _next_ip < co->codes.size();
-    }
-
-    inline PyVar pop(){
-#if PK_EXTRA_CHECK
-        if(_data.empty()) throw std::runtime_error("_data.empty() is true");
-#endif
-        PyVar v = std::move(_data.back());
-        _data.pop_back();
-        return v;
-    }
-
-    inline void _pop(){
-#if PK_EXTRA_CHECK
-        if(_data.empty()) throw std::runtime_error("_data.empty() is true");
-#endif
-        _data.pop_back();
-    }
-
-    inline void try_deref(VM*, PyVar&);
-
-    inline PyVar pop_value(VM* vm){
-        PyVar value = pop();
-        try_deref(vm, value);
-        return value;
-    }
-
-    inline PyVar top_value(VM* vm){
-        PyVar value = top();
-        try_deref(vm, value);
-        return value;
-    }
-
-    inline PyVar& top(){
-#if PK_EXTRA_CHECK
-        if(_data.empty()) throw std::runtime_error("_data.empty() is true");
-#endif
-        return _data.back();
-    }
-
-    inline PyVar& top_1(){
-#if PK_EXTRA_CHECK
-        if(_data.size() < 2) throw std::runtime_error("_data.size() < 2");
-#endif
-        return _data[_data.size()-2];
-    }
-
-    template<typename T>
-    inline void push(T&& obj){ _data.push_back(std::forward<T>(obj)); }
-
-    inline void jump_abs(int i){ _next_ip = i; }
-    inline void jump_rel(int i){ _next_ip += i; }
-
-    inline void on_try_block_enter(){
-        s_try_block.emplace_back(co->codes[_ip].block, _data);
-    }
-
-    inline void on_try_block_exit(){
-        s_try_block.pop_back();
-    }
-
-    bool jump_to_exception_handler(){
-        if(s_try_block.empty()) return false;
-        PyVar obj = pop();
-        auto& p = s_try_block.back();
-        _data = std::move(p.second);
-        _data.push_back(obj);
-        _next_ip = co->blocks[p.first].end;
-        on_try_block_exit();
-        return true;
-    }
-
-    int _exit_block(int i){
-        if(co->blocks[i].type == FOR_LOOP) _pop();
-        else if(co->blocks[i].type == TRY_EXCEPT) on_try_block_exit();
-        return co->blocks[i].parent;
-    }
-
-    void jump_abs_safe(int target){
-        const Bytecode& prev = co->codes[_ip];
-        int i = prev.block;
-        _next_ip = target;
-        if(_next_ip >= co->codes.size()){
-            while(i>=0) i = _exit_block(i);
-        }else{
-            const Bytecode& next = co->codes[target];
-            while(i>=0 && i!=next.block) i = _exit_block(i);
-            if(i!=next.block) throw std::runtime_error("invalid jump");
-        }
-    }
-
-    Args pop_n_values_reversed(VM* vm, int n){
-        Args v(n);
-        for(int i=n-1; i>=0; i--){
-            v[i] = pop();
-            try_deref(vm, v[i]);
-        }
-        return v;
-    }
-
-    Args pop_n_reversed(int n){
-        Args v(n);
-        for(int i=n-1; i>=0; i--) v[i] = pop();
-        return v;
-    }
-};
-
-}; // namespace pkpy
-
-
-namespace pkpy{
-
-#define DEF_NATIVE_2(ctype, ptype)                                      \
-    template<> ctype py_cast<ctype>(VM* vm, const PyVar& obj) {         \
-        vm->check_type(obj, vm->ptype);                                 \
-        return OBJ_GET(ctype, obj);                                     \
-    }                                                                   \
-    template<> ctype _py_cast<ctype>(VM* vm, const PyVar& obj) {        \
-        return OBJ_GET(ctype, obj);                                     \
-    }                                                                   \
-    template<> ctype& py_cast<ctype&>(VM* vm, const PyVar& obj) {       \
-        vm->check_type(obj, vm->ptype);                                 \
-        return OBJ_GET(ctype, obj);                                     \
-    }                                                                   \
-    template<> ctype& _py_cast<ctype&>(VM* vm, const PyVar& obj) {      \
-        return OBJ_GET(ctype, obj);                                     \
-    }                                                                   \
-    PyVar py_var(VM* vm, const ctype& value) { return vm->new_object(vm->ptype, value);}     \
-    PyVar py_var(VM* vm, ctype&& value) { return vm->new_object(vm->ptype, std::move(value));}
-
-class Generator: public BaseIter {
-    std::unique_ptr<Frame> frame;
-    int state; // 0,1,2
-public:
-    Generator(VM* vm, std::unique_ptr<Frame>&& frame)
-        : BaseIter(vm, nullptr), frame(std::move(frame)), state(0) {}
-
-    PyVar next();
-};
-
-struct PyTypeInfo{
-    PyVar obj;
-    Type base;
-    Str name;
-};
-
-class VM {
-    VM* vm;     // self reference for simplify code
-public:
-    std::stack< std::unique_ptr<Frame> > callstack;
-    PyVar _py_op_call;
-    PyVar _py_op_yield;
-    std::vector<PyTypeInfo> _all_types;
-
-    PyVar run_frame(Frame* frame);
-
-    NameDict _modules;                          // loaded modules
-    std::map<StrName, Str> _lazy_modules;       // lazy loaded modules
-    PyVar None, True, False, Ellipsis;
-
-    bool use_stdio;
-    std::ostream* _stdout;
-    std::ostream* _stderr;
-    
-    PyVar builtins;         // builtins module
-    PyVar _main;            // __main__ module
-
-    int recursionlimit = 1000;
-
-    VM(bool use_stdio){
-        this->vm = this;
-        this->use_stdio = use_stdio;
-        if(use_stdio){
-            this->_stdout = &std::cout;
-            this->_stderr = &std::cerr;
-        }else{
-            this->_stdout = new StrStream();
-            this->_stderr = new StrStream();
-        }
-
-        init_builtin_types();
-        // for(int i=0; i<128; i++) _ascii_str_pool[i] = new_object(tp_str, std::string(1, (char)i));
-    }
-
-    PyVar asStr(const PyVar& obj){
-        PyVarOrNull f = getattr(obj, __str__, false, true);
-        if(f != nullptr) return call(f);
-        return asRepr(obj);
-    }
-
-    inline Frame* top_frame() const {
-#if PK_EXTRA_CHECK
-        if(callstack.empty()) UNREACHABLE();
-#endif
-        return callstack.top().get();
-    }
-
-    PyVar asIter(const PyVar& obj){
-        if(is_type(obj, tp_native_iterator)) return obj;
-        PyVarOrNull iter_f = getattr(obj, __iter__, false, true);
-        if(iter_f != nullptr) return call(iter_f);
-        TypeError(OBJ_NAME(_t(obj)).escape(true) + " object is not iterable");
-        return nullptr;
-    }
-
-    PyVar asList(const PyVar& iterable){
-        if(is_type(iterable, tp_list)) return iterable;
-        return call(_t(tp_list), one_arg(iterable));
-    }
-
-    PyVar* find_name_in_mro(PyObject* cls, StrName name){
-        PyVar* val;
-        do{
-            val = cls->attr().try_get(name);
-            if(val != nullptr) return val;
-            Type cls_t = static_cast<Py_<Type>*>(cls)->_value;
-            Type base = _all_types[cls_t.index].base;
-            if(base.index == -1) break;
-            cls = _all_types[base.index].obj.get();
-        }while(true);
-        return nullptr;
-    }
-
-    bool isinstance(const PyVar& obj, Type cls_t){
-        Type obj_t = OBJ_GET(Type, _t(obj));
-        do{
-            if(obj_t == cls_t) return true;
-            Type base = _all_types[obj_t.index].base;
-            if(base.index == -1) break;
-            obj_t = base;
-        }while(true);
-        return false;
-    }
-
-    PyVar fast_call(StrName name, Args&& args){
-        PyVar* val = find_name_in_mro(_t(args[0]).get(), name);
-        if(val != nullptr) return call(*val, std::move(args));
-        AttributeError(args[0], name);
-        return nullptr;
-    }
-
-    inline PyVar call(const PyVar& _callable){
-        return call(_callable, no_arg(), no_arg(), false);
-    }
-
-    template<typename ArgT>
-    inline std::enable_if_t<std::is_same_v<std::decay_t<ArgT>, Args>, PyVar>
-    call(const PyVar& _callable, ArgT&& args){
-        return call(_callable, std::forward<ArgT>(args), no_arg(), false);
-    }
-
-    template<typename ArgT>
-    inline std::enable_if_t<std::is_same_v<std::decay_t<ArgT>, Args>, PyVar>
-    call(const PyVar& obj, const StrName name, ArgT&& args){
-        return call(getattr(obj, name, true, true), std::forward<ArgT>(args), no_arg(), false);
-    }
-
-    inline PyVar call(const PyVar& obj, StrName name){
-        return call(getattr(obj, name, true, true), no_arg(), no_arg(), false);
-    }
-
-
-    // repl mode is only for setting `frame->id` to 0
-    PyVarOrNull exec(Str source, Str filename, CompileMode mode, PyVar _module=nullptr){
-        if(_module == nullptr) _module = _main;
-        try {
-            CodeObject_ code = compile(source, filename, mode);
-            return _exec(code, _module);
-        }catch (const Exception& e){
-            *_stderr << e.summary() << '\n';
-        }catch (const std::exception& e) {
-            *_stderr << "An std::exception occurred! It could be a bug.\n";
-            *_stderr << e.what() << '\n';
-        }
-        callstack = {};
-        return nullptr;
-    }
-
-    template<typename ...Args>
-    inline std::unique_ptr<Frame> _new_frame(Args&&... args){
-        if(callstack.size() > recursionlimit){
-            _error("RecursionError", "maximum recursion depth exceeded");
-        }
-        return std::make_unique<Frame>(std::forward<Args>(args)...);
-    }
-
-    template<typename ...Args>
-    inline PyVar _exec(Args&&... args){
-        callstack.push(_new_frame(std::forward<Args>(args)...));
-        return _exec();
-    }
-
-    PyVar property(NativeFuncRaw fget){
-        PyVar p = builtins->attr("property");
-        PyVar method = new_object(tp_native_function, NativeFunc(fget, 1, false));
-        return call(p, one_arg(method));
-    }
-
-    PyVar new_type_object(PyVar mod, StrName name, Type base){
-        PyVar obj = make_sp<PyObject, Py_<Type>>(tp_type, _all_types.size());
-        PyTypeInfo info{
-            .obj = obj,
-            .base = base,
-            .name = (mod!=nullptr && mod!=builtins) ? Str(OBJ_NAME(mod)+"."+name.str()): name.str()
         };
-        if(mod != nullptr) mod->attr().set(name, obj);
-        _all_types.push_back(info);
-        return obj;
-    }
-
-    Type _new_type_object(StrName name, Type base=0) {
-        PyVar obj = new_type_object(nullptr, name, base);
-        return OBJ_GET(Type, obj);
-    }
-
-    template<typename T>
-    inline PyVar new_object(const PyVar& type, const T& _value) {
-#if PK_EXTRA_CHECK
-        if(!is_type(type, tp_type)) UNREACHABLE();
-#endif
-        return make_sp<PyObject, Py_<std::decay_t<T>>>(OBJ_GET(Type, type), _value);
-    }
-    template<typename T>
-    inline PyVar new_object(const PyVar& type, T&& _value) {
-#if PK_EXTRA_CHECK
-        if(!is_type(type, tp_type)) UNREACHABLE();
-#endif
-        return make_sp<PyObject, Py_<std::decay_t<T>>>(OBJ_GET(Type, type), std::move(_value));
-    }
-
-    template<typename T>
-    inline PyVar new_object(Type type, const T& _value) {
-        return make_sp<PyObject, Py_<std::decay_t<T>>>(type, _value);
-    }
-    template<typename T>
-    inline PyVar new_object(Type type, T&& _value) {
-        return make_sp<PyObject, Py_<std::decay_t<T>>>(type, std::move(_value));
-    }
-
-    PyVar _find_type(const Str& type){
-        PyVar* obj = builtins->attr().try_get(type);
-        if(!obj){
-            for(auto& t: _all_types) if(t.name == type) return t.obj;
-            throw std::runtime_error("type not found: " + type);
-        }
-        return *obj;
-    }
-
-    template<int ARGC>
-    void bind_func(Str type, Str name, NativeFuncRaw fn) {
-        bind_func<ARGC>(_find_type(type), name, fn);
-    }
-
-    template<int ARGC>
-    void bind_method(Str type, Str name, NativeFuncRaw fn) {
-        bind_method<ARGC>(_find_type(type), name, fn);
-    }
-
-    template<int ARGC, typename... Args>
-    void bind_static_method(Args&&... args) {
-        bind_func<ARGC>(std::forward<Args>(args)...);
-    }
-
-    template<int ARGC>
-    void _bind_methods(std::vector<Str> types, Str name, NativeFuncRaw fn) {
-        for(auto& type: types) bind_method<ARGC>(type, name, fn);
-    }
-
-    template<int ARGC>
-    void bind_builtin_func(Str name, NativeFuncRaw fn) {
-        bind_func<ARGC>(builtins, name, fn);
-    }
-
-    int normalized_index(int index, int size){
-        if(index < 0) index += size;
-        if(index < 0 || index >= size){
-            IndexError(std::to_string(index) + " not in [0, " + std::to_string(size) + ")");
-        }
-        return index;
-    }
-
-    // for quick access
-    Type tp_object, tp_type, tp_int, tp_float, tp_bool, tp_str;
-    Type tp_list, tp_tuple;
-    Type tp_function, tp_native_function, tp_native_iterator, tp_bound_method;
-    Type tp_slice, tp_range, tp_module, tp_ref;
-    Type tp_super, tp_exception, tp_star_wrapper;
-
-    template<typename P>
-    inline PyVar PyIter(P&& value) {
-        static_assert(std::is_base_of_v<BaseIter, std::decay_t<P>>);
-        return new_object(tp_native_iterator, std::forward<P>(value));
-    }
-
-    inline BaseIter* PyIter_AS_C(const PyVar& obj)
-    {
-        check_type(obj, tp_native_iterator);
-        return static_cast<BaseIter*>(obj->value());
-    }
-    
-    /***** Error Reporter *****/
-    void _error(StrName name, const Str& msg){
-        _error(Exception(name, msg));
-    }
-
-    void _raise(){
-        bool ok = top_frame()->jump_to_exception_handler();
-        if(ok) throw HandledException();
-        else throw UnhandledException();
-    }
-
-public:
-    void IOError(const Str& msg) { _error("IOError", msg); }
-    void NotImplementedError(){ _error("NotImplementedError", ""); }
-    void TypeError(const Str& msg){ _error("TypeError", msg); }
-    void ZeroDivisionError(){ _error("ZeroDivisionError", "division by zero"); }
-    void IndexError(const Str& msg){ _error("IndexError", msg); }
-    void ValueError(const Str& msg){ _error("ValueError", msg); }
-    void NameError(StrName name){ _error("NameError", "name " + name.str().escape(true) + " is not defined"); }
-
-    void AttributeError(PyVar obj, StrName name){
-        _error("AttributeError", "type " +  OBJ_NAME(_t(obj)).escape(true) + " has no attribute " + name.str().escape(true));
-    }
-
-    void AttributeError(Str msg){ _error("AttributeError", msg); }
-
-    inline void check_type(const PyVar& obj, Type type){
-        if(is_type(obj, type)) return;
-        TypeError("expected " + OBJ_NAME(_t(type)).escape(true) + ", but got " + OBJ_NAME(_t(obj)).escape(true));
-    }
-
-    inline PyVar& _t(Type t){
-        return _all_types[t.index].obj;
-    }
-
-    inline PyVar& _t(const PyVar& obj){
-        if(is_int(obj)) return _t(tp_int);
-        if(is_float(obj)) return _t(tp_float);
-        return _all_types[OBJ_GET(Type, _t(obj->type)).index].obj;
-    }
-
-    ~VM() {
-        if(!use_stdio){
-            delete _stdout;
-            delete _stderr;
-        }
-    }
-
-    inline PyVarOrNull getattr(const PyVar& obj, StrName name, bool throw_err=true, bool class_only=false){
-        return getattr(&obj, name, throw_err, class_only);
-    }
-    template<typename T>
-    inline void setattr(PyVar& obj, StrName name, T&& value){
-        setattr(&obj, name, std::forward<T>(value));
-    }
-
-    CodeObject_ compile(Str source, Str filename, CompileMode mode);
-    void post_init();
-    PyVar num_negated(const PyVar& obj);
-    f64 num_to_float(const PyVar& obj);
-    const PyVar& asBool(const PyVar& obj);
-    i64 hash(const PyVar& obj);
-    PyVar asRepr(const PyVar& obj);
-    PyVar new_module(StrName name);
-    Str disassemble(CodeObject_ co);
-    void init_builtin_types();
-    PyVar call(const PyVar& _callable, Args args, const Args& kwargs, bool opCall);
-    void unpack_args(Args& args);
-    PyVarOrNull getattr(const PyVar* obj, StrName name, bool throw_err=true, bool class_only=false);
-    template<typename T>
-    void setattr(PyVar* obj, StrName name, T&& value);
-    template<int ARGC>
-    void bind_method(PyVar obj, Str funcName, NativeFuncRaw fn);
-    template<int ARGC>
-    void bind_func(PyVar obj, Str funcName, NativeFuncRaw fn);
-    void _error(Exception e);
-    PyVar _exec();
-
-    template<typename P>
-    PyVarRef PyRef(P&& value);
-    const BaseRef* PyRef_AS_C(const PyVar& obj);
-};
-
-PyVar NativeFunc::operator()(VM* vm, Args& args) const{
-    int args_size = args.size() - (int)method;  // remove self
-    if(argc != -1 && args_size != argc) {
-        vm->TypeError("expected " + std::to_string(argc) + " arguments, but got " + std::to_string(args_size));
-    }
-    return f(vm, args);
-}
-
-void CodeObject::optimize(VM* vm){
-    std::vector<StrName> keys;
-    for(auto& p: names) if(p.second == NAME_LOCAL) keys.push_back(p.first);
-    uint32_t base_n = (uint32_t)(keys.size() / kLocalsLoadFactor + 0.5);
-    perfect_locals_capacity = find_next_capacity(base_n);
-    perfect_hash_seed = find_perfect_hash_seed(perfect_locals_capacity, keys);
-
-    for(int i=1; i<codes.size(); i++){
-        if(codes[i].op == OP_UNARY_NEGATIVE && codes[i-1].op == OP_LOAD_CONST){
-            codes[i].op = OP_NO_OP;
-            int pos = codes[i-1].arg;
-            consts[pos] = vm->num_negated(consts[pos]);
-        }
-
-        if(i>=2 && codes[i].op == OP_BUILD_INDEX){
-            const Bytecode& a = codes[i-1];
-            const Bytecode& x = codes[i-2];
-            if(codes[i].arg == 1){
-                if(a.op == OP_LOAD_NAME && x.op == OP_LOAD_NAME){
-                    codes[i].op = OP_FAST_INDEX;
-                }else continue;
-            }else{
-                if(a.op == OP_LOAD_NAME_REF && x.op == OP_LOAD_NAME_REF){
-                    codes[i].op = OP_FAST_INDEX_REF;
-                }else continue;
-            }
-            codes[i].arg = (a.arg << 16) | x.arg;
-            codes[i-1].op = OP_NO_OP;
-            codes[i-2].op = OP_NO_OP;
-        }
-    }
-
-    // pre-compute sn in co_consts
-    for(int i=0; i<consts.size(); i++){
-        if(is_type(consts[i], vm->tp_str)){
-            Str& s = OBJ_GET(Str, consts[i]);
-            s._cached_sn_index = StrName::get(s.c_str()).index;
-        }
-    }
-}
-
-DEF_NATIVE_2(Str, tp_str)
-DEF_NATIVE_2(List, tp_list)
-DEF_NATIVE_2(Tuple, tp_tuple)
-DEF_NATIVE_2(Function, tp_function)
-DEF_NATIVE_2(NativeFunc, tp_native_function)
-DEF_NATIVE_2(BoundMethod, tp_bound_method)
-DEF_NATIVE_2(Range, tp_range)
-DEF_NATIVE_2(Slice, tp_slice)
-DEF_NATIVE_2(Exception, tp_exception)
-DEF_NATIVE_2(StarWrapper, tp_star_wrapper)
-
-#define PY_CAST_INT(T) \
-template<> T py_cast<T>(VM* vm, const PyVar& obj){ \
-    vm->check_type(obj, vm->tp_int); \
-    return (T)(obj.bits >> 2); \
-} \
-template<> T _py_cast<T>(VM* vm, const PyVar& obj){ \
-    return (T)(obj.bits >> 2); \
-}
-
-PY_CAST_INT(char)
-PY_CAST_INT(short)
-PY_CAST_INT(int)
-PY_CAST_INT(long)
-PY_CAST_INT(long long)
-PY_CAST_INT(unsigned char)
-PY_CAST_INT(unsigned short)
-PY_CAST_INT(unsigned int)
-PY_CAST_INT(unsigned long)
-PY_CAST_INT(unsigned long long)
-
-
-template<> float py_cast<float>(VM* vm, const PyVar& obj){
-    vm->check_type(obj, vm->tp_float);
-    i64 bits = obj.bits;
-    bits = (bits >> 2) << 2;
-    return __8B(bits)._float;
-}
-template<> float _py_cast<float>(VM* vm, const PyVar& obj){
-    i64 bits = obj.bits;
-    bits = (bits >> 2) << 2;
-    return __8B(bits)._float;
-}
-template<> double py_cast<double>(VM* vm, const PyVar& obj){
-    vm->check_type(obj, vm->tp_float);
-    i64 bits = obj.bits;
-    bits = (bits >> 2) << 2;
-    return __8B(bits)._float;
-}
-template<> double _py_cast<double>(VM* vm, const PyVar& obj){
-    i64 bits = obj.bits;
-    bits = (bits >> 2) << 2;
-    return __8B(bits)._float;
-}
-
-
-#define PY_VAR_INT(T) \
-    PyVar py_var(VM* vm, T _val){           \
-        i64 val = static_cast<i64>(_val);   \
-        if(((val << 2) >> 2) != val){       \
-            vm->_error("OverflowError", std::to_string(val) + " is out of range");  \
-        }                                                                           \
-        val = (val << 2) | 0b01;                                                    \
-        return PyVar(reinterpret_cast<int*>(val));                                  \
-    }
-
-PY_VAR_INT(char)
-PY_VAR_INT(short)
-PY_VAR_INT(int)
-PY_VAR_INT(long)
-PY_VAR_INT(long long)
-PY_VAR_INT(unsigned char)
-PY_VAR_INT(unsigned short)
-PY_VAR_INT(unsigned int)
-PY_VAR_INT(unsigned long)
-PY_VAR_INT(unsigned long long)
-
-#define PY_VAR_FLOAT(T) \
-    PyVar py_var(VM* vm, T _val){           \
-        f64 val = static_cast<f64>(_val);   \
-        i64 bits = __8B(val)._int;          \
-        bits = (bits >> 2) << 2;            \
-        bits |= 0b10;                       \
-        return PyVar(reinterpret_cast<int*>(bits)); \
-    }
-
-PY_VAR_FLOAT(float)
-PY_VAR_FLOAT(double)
-
-const PyVar& py_var(VM* vm, bool val){
-    return val ? vm->True : vm->False;
-}
-
-template<> bool py_cast<bool>(VM* vm, const PyVar& obj){
-    vm->check_type(obj, vm->tp_bool);
-    return obj == vm->True;
-}
-template<> bool _py_cast<bool>(VM* vm, const PyVar& obj){
-    return obj == vm->True;
-}
-
-PyVar py_var(VM* vm, const char val[]){
-    return VAR(Str(val));
-}
-
-PyVar py_var(VM* vm, std::string val){
-    return VAR(Str(std::move(val)));
-}
-
-template<typename T>
-void _check_py_class(VM* vm, const PyVar& obj){
-    vm->check_type(obj, T::_type(vm));
-}
-
-PyVar VM::num_negated(const PyVar& obj){
-    if (is_int(obj)){
-        return VAR(-CAST(i64, obj));
-    }else if(is_float(obj)){
-        return VAR(-CAST(f64, obj));
-    }
-    TypeError("expected 'int' or 'float', got " + OBJ_NAME(_t(obj)).escape(true));
-    return nullptr;
-}
-
-f64 VM::num_to_float(const PyVar& obj){
-    if(is_float(obj)){
-        return CAST(f64, obj);
-    } else if (is_int(obj)){
-        return (f64)CAST(i64, obj);
-    }
-    TypeError("expected 'int' or 'float', got " + OBJ_NAME(_t(obj)).escape(true));
-    return 0;
-}
-
-const PyVar& VM::asBool(const PyVar& obj){
-    if(is_type(obj, tp_bool)) return obj;
-    if(obj == None) return False;
-    if(is_type(obj, tp_int)) return VAR(CAST(i64, obj) != 0);
-    if(is_type(obj, tp_float)) return VAR(CAST(f64, obj) != 0.0);
-    PyVarOrNull len_fn = getattr(obj, __len__, false, true);
-    if(len_fn != nullptr){
-        PyVar ret = call(len_fn);
-        return VAR(CAST(i64, ret) > 0);
-    }
-    return True;
-}
-
-i64 VM::hash(const PyVar& obj){
-    if (is_type(obj, tp_str)) return CAST(Str&, obj).hash();
-    if (is_int(obj)) return CAST(i64, obj);
-    if (is_type(obj, tp_tuple)) {
-        i64 x = 1000003;
-        const Tuple& items = CAST(Tuple&, obj);
-        for (int i=0; i<items.size(); i++) {
-            i64 y = hash(items[i]);
-            x = x ^ (y + 0x9e3779b9 + (x << 6) + (x >> 2)); // recommended by Github Copilot
-        }
-        return x;
-    }
-    if (is_type(obj, tp_type)) return obj.bits;
-    if (is_type(obj, tp_bool)) return _CAST(bool, obj) ? 1 : 0;
-    if (is_float(obj)){
-        f64 val = CAST(f64, obj);
-        return (i64)std::hash<f64>()(val);
-    }
-    TypeError("unhashable type: " +  OBJ_NAME(_t(obj)).escape(true));
-    return 0;
-}
-
-PyVar VM::asRepr(const PyVar& obj){
-    return call(obj, __repr__);
-}
-
-PyVar VM::new_module(StrName name) {
-    PyVar obj = new_object(tp_module, DummyModule());
-    obj->attr().set(__name__, VAR(name.str()));
-    _modules.set(name, obj);
-    return obj;
-}
-
-Str VM::disassemble(CodeObject_ co){
-    std::vector<int> jumpTargets;
-    for(auto byte : co->codes){
-        if(byte.op == OP_JUMP_ABSOLUTE || byte.op == OP_SAFE_JUMP_ABSOLUTE || byte.op == OP_POP_JUMP_IF_FALSE){
-            jumpTargets.push_back(byte.arg);
-        }
-    }
-    StrStream ss;
-    ss << std::string(54, '-') << '\n';
-    ss << co->name << ":\n";
-    int prev_line = -1;
-    for(int i=0; i<co->codes.size(); i++){
-        const Bytecode& byte = co->codes[i];
-        if(byte.op == OP_NO_OP) continue;
-        Str line = std::to_string(byte.line);
-        if(byte.line == prev_line) line = "";
-        else{
-            if(prev_line != -1) ss << "\n";
-            prev_line = byte.line;
-        }
-
-        std::string pointer;
-        if(std::find(jumpTargets.begin(), jumpTargets.end(), i) != jumpTargets.end()){
-            pointer = "-> ";
-        }else{
-            pointer = "   ";
-        }
-        ss << pad(line, 8) << pointer << pad(std::to_string(i), 3);
-        ss << " " << pad(OP_NAMES[byte.op], 20) << " ";
-        // ss << pad(byte.arg == -1 ? "" : std::to_string(byte.arg), 5);
-        std::string argStr = byte.arg == -1 ? "" : std::to_string(byte.arg);
-        if(byte.op == OP_LOAD_CONST){
-            argStr += " (" + CAST(Str, asRepr(co->consts[byte.arg])) + ")";
-        }
-        if(byte.op == OP_LOAD_NAME_REF || byte.op == OP_LOAD_NAME || byte.op == OP_RAISE || byte.op == OP_STORE_NAME){
-            argStr += " (" + co->names[byte.arg].first.str().escape(true) + ")";
-        }
-        if(byte.op == OP_FAST_INDEX || byte.op == OP_FAST_INDEX_REF){
-            auto& a = co->names[byte.arg & 0xFFFF];
-            auto& x = co->names[(byte.arg >> 16) & 0xFFFF];
-            argStr += " (" + a.first.str() + '[' + x.first.str() + "])";
-        }
-        ss << pad(argStr, 20);      // may overflow
-        ss << co->blocks[byte.block].to_string();
-        if(i != co->codes.size() - 1) ss << '\n';
-    }
-    StrStream consts;
-    consts << "co_consts: ";
-    consts << CAST(Str, asRepr(VAR(co->consts)));
-
-    StrStream names;
-    names << "co_names: ";
-    List list;
-    for(int i=0; i<co->names.size(); i++){
-        list.push_back(VAR(co->names[i].first.str()));
-    }
-    names << CAST(Str, asRepr(VAR(list)));
-    ss << '\n' << consts.str() << '\n' << names.str() << '\n';
-
-    for(int i=0; i<co->consts.size(); i++){
-        PyVar obj = co->consts[i];
-        if(is_type(obj, tp_function)){
-            const auto& f = CAST(Function&, obj);
-            ss << disassemble(f.code);
-        }
-    }
-    return Str(ss.str());
-}
-
-void VM::init_builtin_types(){
-    // Py_(Type type, T&& val)
-    PyVar _tp_object = make_sp<PyObject, Py_<Type>>(Type(1), Type(0));
-    PyVar _tp_type = make_sp<PyObject, Py_<Type>>(Type(1), Type(1));
-    _all_types.push_back({.obj = _tp_object, .base = -1, .name = "object"});
-    _all_types.push_back({.obj = _tp_type, .base = 0, .name = "type"});
-    tp_object = 0; tp_type = 1;
-
-    tp_int = _new_type_object("int");
-    tp_float = _new_type_object("float");
-    if(tp_int.index != kTpIntIndex || tp_float.index != kTpFloatIndex) UNREACHABLE();
-
-    tp_bool = _new_type_object("bool");
-    tp_str = _new_type_object("str");
-    tp_list = _new_type_object("list");
-    tp_tuple = _new_type_object("tuple");
-    tp_slice = _new_type_object("slice");
-    tp_range = _new_type_object("range");
-    tp_module = _new_type_object("module");
-    tp_ref = _new_type_object("_ref");
-    tp_star_wrapper = _new_type_object("_star_wrapper");
-    
-    tp_function = _new_type_object("function");
-    tp_native_function = _new_type_object("native_function");
-    tp_native_iterator = _new_type_object("native_iterator");
-    tp_bound_method = _new_type_object("bound_method");
-    tp_super = _new_type_object("super");
-    tp_exception = _new_type_object("Exception");
-
-    this->None = new_object(_new_type_object("NoneType"), DUMMY_VAL);
-    this->Ellipsis = new_object(_new_type_object("ellipsis"), DUMMY_VAL);
-    this->True = new_object(tp_bool, true);
-    this->False = new_object(tp_bool, false);
-    this->_py_op_call = new_object(_new_type_object("_py_op_call"), DUMMY_VAL);
-    this->_py_op_yield = new_object(_new_type_object("_py_op_yield"), DUMMY_VAL);
-    this->builtins = new_module("builtins");
-    this->_main = new_module("__main__");
-    
-    // setup public types
-    builtins->attr().set("type", _t(tp_type));
-    builtins->attr().set("object", _t(tp_object));
-    builtins->attr().set("bool", _t(tp_bool));
-    builtins->attr().set("int", _t(tp_int));
-    builtins->attr().set("float", _t(tp_float));
-    builtins->attr().set("str", _t(tp_str));
-    builtins->attr().set("list", _t(tp_list));
-    builtins->attr().set("tuple", _t(tp_tuple));
-    builtins->attr().set("range", _t(tp_range));
-
-    post_init();
-    for(int i=0; i<_all_types.size(); i++){
-        auto& t = _all_types[i];
-        t.obj->attr()._try_perfect_rehash();
-    }
-    for(auto [k, v]: _modules.items()) v->attr()._try_perfect_rehash();
-}
-
-PyVar VM::call(const PyVar& _callable, Args args, const Args& kwargs, bool opCall){
-    if(is_type(_callable, tp_type)){
-        PyVar* new_f = _callable->attr().try_get(__new__);
-        PyVar obj;
-        if(new_f != nullptr){
-            obj = call(*new_f, std::move(args), kwargs, false);
-        }else{
-            obj = new_object(_callable, DummyInstance());
-            PyVarOrNull init_f = getattr(obj, __init__, false, true);
-            if (init_f != nullptr) call(init_f, std::move(args), kwargs, false);
-        }
-        return obj;
-    }
-
-    const PyVar* callable = &_callable;
-    if(is_type(*callable, tp_bound_method)){
-        auto& bm = CAST(BoundMethod&, *callable);
-        callable = &bm.method;      // get unbound method
-        args.extend_self(bm.obj);
-    }
-    
-    if(is_type(*callable, tp_native_function)){
-        const auto& f = OBJ_GET(NativeFunc, *callable);
-        if(kwargs.size() != 0) TypeError("native_function does not accept keyword arguments");
-        return f(this, args);
-    } else if(is_type(*callable, tp_function)){
-        const Function& fn = CAST(Function&, *callable);
-        NameDict_ locals = make_sp<NameDict>(
-            fn.code->perfect_locals_capacity,
-            kLocalsLoadFactor,
-            fn.code->perfect_hash_seed
-        );
-
-        int i = 0;
-        for(StrName name : fn.args){
-            if(i < args.size()){
-                locals->set(name, std::move(args[i++]));
-                continue;
-            }
-            TypeError("missing positional argument " + name.str().escape(true));
-        }
-
-        locals->update(fn.kwargs);
-
-        if(!fn.starred_arg.empty()){
-            List vargs;        // handle *args
-            while(i < args.size()) vargs.push_back(std::move(args[i++]));
-            locals->set(fn.starred_arg, VAR(Tuple::from_list(std::move(vargs))));
-        }else{
-            for(StrName key : fn.kwargs_order){
-                if(i < args.size()){
-                    locals->set(key, std::move(args[i++]));
-                }else{
-                    break;
-                }
-            }
-            if(i < args.size()) TypeError("too many arguments");
-        }
-        
-        for(int i=0; i<kwargs.size(); i+=2){
-            const Str& key = CAST(Str&, kwargs[i]);
-            if(!fn.kwargs.contains(key)){
-                TypeError(key.escape(true) + " is an invalid keyword argument for " + fn.name.str() + "()");
-            }
-            locals->set(key, kwargs[i+1]);
-        }
-        const PyVar& _module = fn._module != nullptr ? fn._module : top_frame()->_module;
-        auto _frame = _new_frame(fn.code, _module, locals, fn._closure);
-        if(fn.code->is_generator) return PyIter(Generator(this, std::move(_frame)));
-        callstack.push(std::move(_frame));
-        if(opCall) return _py_op_call;
-        return _exec();
-    }
-
-    PyVarOrNull call_f = getattr(_callable, __call__, false, true);
-    if(call_f != nullptr){
-        return call(call_f, std::move(args), kwargs, false);
-    }
-    TypeError(OBJ_NAME(_t(*callable)).escape(true) + " object is not callable");
-    return None;
-}
-
-void VM::unpack_args(Args& args){
-    List unpacked;
-    for(int i=0; i<args.size(); i++){
-        if(is_type(args[i], tp_star_wrapper)){
-            auto& star = _CAST(StarWrapper&, args[i]);
-            if(!star.rvalue) UNREACHABLE();
-            PyVar list = asList(star.obj);
-            List& list_c = CAST(List&, list);
-            unpacked.insert(unpacked.end(), list_c.begin(), list_c.end());
-        }else{
-            unpacked.push_back(args[i]);
-        }
-    }
-    args = Args::from_list(std::move(unpacked));
-}
-
-using Super = std::pair<PyVar, Type>;
-
-// https://docs.python.org/3/howto/descriptor.html#invocation-from-an-instance
-PyVarOrNull VM::getattr(const PyVar* obj, StrName name, bool throw_err, bool class_only){
-    PyObject* objtype = _t(*obj).get();
-    if(is_type(*obj, tp_super)){
-        const Super& super = OBJ_GET(Super, *obj);
-        obj = &super.first;
-        objtype = _t(super.second).get();
-    }
-    PyVar* cls_var = find_name_in_mro(objtype, name);
-    if(cls_var != nullptr){
-        // handle descriptor
-        PyVar* descr_get = _t(*cls_var)->attr().try_get(__get__);
-        if(descr_get != nullptr) return call(*descr_get, two_args(*cls_var, *obj));
-    }
-    // handle instance __dict__
-    if(!class_only && !(*obj).is_tagged() && (*obj)->is_attr_valid()){
-        PyVar* val = (*obj)->attr().try_get(name);
-        if(val != nullptr) return *val;
-    }
-    if(cls_var != nullptr){
-        // bound method is non-data descriptor
-        if(is_type(*cls_var, tp_function) || is_type(*cls_var, tp_native_function)){
-            return VAR(BoundMethod(*obj, *cls_var));
-        }
-        return *cls_var;
-    }
-    if(throw_err) AttributeError(*obj, name);
-    return nullptr;
-}
-
-template<typename T>
-void VM::setattr(PyVar* obj, StrName name, T&& value){
-    static_assert(std::is_same_v<std::decay_t<T>, PyVar>);
-    PyObject* objtype = _t(*obj).get();
-    if(is_type(*obj, tp_super)){
-        Super& super = OBJ_GET(Super, *obj);
-        obj = &super.first;
-        objtype = _t(super.second).get();
-    }
-    PyVar* cls_var = find_name_in_mro(objtype, name);
-    if(cls_var != nullptr){
-        // handle descriptor
-        const PyVar& cls_var_t = _t(*cls_var);
-        if(cls_var_t->attr().contains(__get__)){
-            PyVar* descr_set = cls_var_t->attr().try_get(__set__);
-            if(descr_set != nullptr){
-                call(*descr_set, three_args(*cls_var, *obj, std::forward<T>(value)));
-            }else{
-                TypeError("readonly attribute: " + name.str().escape(true));
-            }
-            return;
-        }
-    }
-    // handle instance __dict__
-    if((*obj).is_tagged() || !(*obj)->is_attr_valid()) TypeError("cannot set attribute");
-    (*obj)->attr().set(name, std::forward<T>(value));
-}
-
-template<int ARGC>
-void VM::bind_method(PyVar obj, Str name, NativeFuncRaw fn) {
-    check_type(obj, tp_type);
-    obj->attr().set(name, VAR(NativeFunc(fn, ARGC, true)));
-}
-
-template<int ARGC>
-void VM::bind_func(PyVar obj, Str name, NativeFuncRaw fn) {
-    obj->attr().set(name, VAR(NativeFunc(fn, ARGC, false)));
-}
-
-void VM::_error(Exception e){
-    if(callstack.empty()){
-        e.is_re = false;
-        throw e;
-    }
-    top_frame()->push(VAR(e));
-    _raise();
-}
-
-PyVar VM::_exec(){
-    Frame* frame = top_frame();
-    i64 base_id = frame->id;
-    PyVar ret = nullptr;
-    bool need_raise = false;
-
-    while(true){
-        if(frame->id < base_id) UNREACHABLE();
-        try{
-            if(need_raise){ need_raise = false; _raise(); }
-            ret = run_frame(frame);
-            if(ret == _py_op_yield) return _py_op_yield;
-            if(ret != _py_op_call){
-                if(frame->id == base_id){      // [ frameBase<- ]
-                    callstack.pop();
-                    return ret;
-                }else{
-                    callstack.pop();
-                    frame = callstack.top().get();
-                    frame->push(ret);
-                }
-            }else{
-                frame = callstack.top().get();  // [ frameBase, newFrame<- ]
-            }
-        }catch(HandledException& e){
-            continue;
-        }catch(UnhandledException& e){
-            PyVar obj = frame->pop();
-            Exception& _e = CAST(Exception&, obj);
-            _e.st_push(frame->snapshot());
-            callstack.pop();
-            if(callstack.empty()) throw _e;
-            frame = callstack.top().get();
-            frame->push(obj);
-            if(frame->id < base_id) throw ToBeRaisedException();
-            need_raise = true;
-        }catch(ToBeRaisedException& e){
-            need_raise = true;
-        }
-    }
-}
-
-}   // namespace pkpy
-
-
-namespace pkpy {
-
-struct BaseRef {
-    virtual PyVar get(VM*, Frame*) const = 0;
-    virtual void set(VM*, Frame*, PyVar) const = 0;
-    virtual void del(VM*, Frame*) const = 0;
-    virtual ~BaseRef() = default;
-};
-
-struct NameRef : BaseRef {
-    const std::pair<StrName, NameScope> pair;
-    inline StrName name() const { return pair.first; }
-    inline NameScope scope() const { return pair.second; }
-    NameRef(const std::pair<StrName, NameScope>& pair) : pair(pair) {}
-
-    PyVar get(VM* vm, Frame* frame) const{
-        PyVar* val;
-        val = frame->f_locals().try_get(name());
-        if(val != nullptr) return *val;
-        val = frame->f_closure_try_get(name());
-        if(val != nullptr) return *val;
-        val = frame->f_globals().try_get(name());
-        if(val != nullptr) return *val;
-        val = vm->builtins->attr().try_get(name());
-        if(val != nullptr) return *val;
-        vm->NameError(name());
-        return nullptr;
-    }
-
-    void set(VM* vm, Frame* frame, PyVar val) const{
-        switch(scope()) {
-            case NAME_LOCAL: frame->f_locals().set(name(), std::move(val)); break;
-            case NAME_GLOBAL:
-                if(frame->f_locals().try_set(name(), std::move(val))) return;
-                frame->f_globals().set(name(), std::move(val));
-                break;
-            default: UNREACHABLE();
-        }
-    }
-
-    void del(VM* vm, Frame* frame) const{
-        switch(scope()) {
-            case NAME_LOCAL: {
-                if(frame->f_locals().contains(name())){
-                    frame->f_locals().erase(name());
-                }else{
-                    vm->NameError(name());
-                }
-            } break;
-            case NAME_GLOBAL:
-            {
-                if(frame->f_locals().contains(name())){
-                    frame->f_locals().erase(name());
-                }else{
-                    if(frame->f_globals().contains(name())){
-                        frame->f_globals().erase(name());
-                    }else{
-                        vm->NameError(name());
-                    }
-                }
-            } break;
-            default: UNREACHABLE();
-        }
-    }
-};
-
-struct AttrRef : BaseRef {
-    mutable PyVar obj;
-    NameRef attr;
-    AttrRef(PyVar obj, NameRef attr) : obj(obj), attr(attr) {}
-
-    PyVar get(VM* vm, Frame* frame) const{
-        return vm->getattr(obj, attr.name());
-    }
-
-    void set(VM* vm, Frame* frame, PyVar val) const{
-        vm->setattr(obj, attr.name(), std::move(val));
-    }
-
-    void del(VM* vm, Frame* frame) const{
-        if(!obj->is_attr_valid()) vm->TypeError("cannot delete attribute");
-        if(!obj->attr().contains(attr.name())) vm->AttributeError(obj, attr.name());
-        obj->attr().erase(attr.name());
-    }
-};
-
-struct IndexRef : BaseRef {
-    mutable PyVar obj;
-    PyVar index;
-    IndexRef(PyVar obj, PyVar index) : obj(obj), index(index) {}
-
-    PyVar get(VM* vm, Frame* frame) const{
-        return vm->fast_call(__getitem__, two_args(obj, index));
-    }
-
-    void set(VM* vm, Frame* frame, PyVar val) const{
-        Args args(3);
-        args[0] = obj; args[1] = index; args[2] = std::move(val);
-        vm->fast_call(__setitem__, std::move(args));
-    }
-
-    void del(VM* vm, Frame* frame) const{
-        vm->fast_call(__delitem__, two_args(obj, index));
-    }
-};
-
-struct TupleRef : BaseRef {
-    Tuple objs;
-    TupleRef(Tuple&& objs) : objs(std::move(objs)) {}
-
-    PyVar get(VM* vm, Frame* frame) const{
-        Tuple args(objs.size());
-        for (int i = 0; i < objs.size(); i++) {
-            args[i] = vm->PyRef_AS_C(objs[i])->get(vm, frame);
-        }
-        return VAR(std::move(args));
-    }
-
-    void set(VM* vm, Frame* frame, PyVar val) const{
-        val = vm->asIter(val);
-        BaseIter* iter = vm->PyIter_AS_C(val);
-        for(int i=0; i<objs.size(); i++){
-            PyVarOrNull x;
-            if(is_type(objs[i], vm->tp_star_wrapper)){
-                auto& star = _CAST(StarWrapper&, objs[i]);
-                if(star.rvalue) vm->ValueError("can't use starred expression here");
-                if(i != objs.size()-1) vm->ValueError("* can only be used at the end");
-                auto ref = vm->PyRef_AS_C(star.obj);
-                List list;
-                while((x = iter->next()) != nullptr) list.push_back(x);
-                ref->set(vm, frame, VAR(std::move(list)));
+        // handle "not in", "is not", "yield from"
+        if(!nexts.empty()){
+            auto& back = nexts.back();
+            if(back.type == TK("not") && type == TK("in")){
+                back.type = TK("not in");
                 return;
-            }else{
-                x = iter->next();
-                if(x == nullptr) vm->ValueError("not enough values to unpack");
-                vm->PyRef_AS_C(objs[i])->set(vm, frame, x);
             }
-        }
-        PyVarOrNull x = iter->next();
-        if(x != nullptr) vm->ValueError("too many values to unpack");
-    }
-
-    void del(VM* vm, Frame* frame) const{
-        for(int i=0; i<objs.size(); i++) vm->PyRef_AS_C(objs[i])->del(vm, frame);
-    }
-};
-
-
-template<typename P>
-PyVarRef VM::PyRef(P&& value) {
-    static_assert(std::is_base_of_v<BaseRef, std::decay_t<P>>);
-    return new_object(tp_ref, std::forward<P>(value));
-}
-
-const BaseRef* VM::PyRef_AS_C(const PyVar& obj)
-{
-    if(!is_type(obj, tp_ref)) TypeError("expected an l-value");
-    return static_cast<const BaseRef*>(obj->value());
-}
-
-/***** Frame's Impl *****/
-inline void Frame::try_deref(VM* vm, PyVar& v){
-    if(is_type(v, vm->tp_ref)) v = vm->PyRef_AS_C(v)->get(vm, this);
-}
-
-}   // namespace pkpy
-
-
-namespace pkpy{
-
-Str _read_file_cwd(const Str& name, bool* ok);
-
-PyVar VM::run_frame(Frame* frame){
-    while(frame->has_next_bytecode()){
-        const Bytecode& byte = frame->next_bytecode();
-        switch (byte.op)
-        {
-        case OP_NO_OP: continue;
-        case OP_SETUP_DECORATOR: continue;
-        case OP_LOAD_CONST: frame->push(frame->co->consts[byte.arg]); continue;
-        case OP_LOAD_FUNCTION: {
-            const PyVar obj = frame->co->consts[byte.arg];
-            Function f = CAST(Function, obj);  // copy
-            f._module = frame->_module;
-            frame->push(VAR(f));
-        } continue;
-        case OP_SETUP_CLOSURE: {
-            Function& f = CAST(Function&, frame->top());    // reference
-            f._closure = frame->_locals;
-        } continue;
-        case OP_LOAD_NAME_REF: {
-            frame->push(PyRef(NameRef(frame->co->names[byte.arg])));
-        } continue;
-        case OP_LOAD_NAME: {
-            frame->push(NameRef(frame->co->names[byte.arg]).get(this, frame));
-        } continue;
-        case OP_STORE_NAME: {
-            auto& p = frame->co->names[byte.arg];
-            NameRef(p).set(this, frame, frame->pop());
-        } continue;
-        case OP_BUILD_ATTR_REF: case OP_BUILD_ATTR: {
-            auto& attr = frame->co->names[byte.arg];
-            PyVar obj = frame->pop_value(this);
-            AttrRef ref = AttrRef(obj, NameRef(attr));
-            if(byte.op == OP_BUILD_ATTR) frame->push(ref.get(this, frame));
-            else frame->push(PyRef(ref));
-        } continue;
-        case OP_BUILD_INDEX: {
-            PyVar index = frame->pop_value(this);
-            auto ref = IndexRef(frame->pop_value(this), index);
-            if(byte.arg > 0) frame->push(ref.get(this, frame));
-            else frame->push(PyRef(ref));
-        } continue;
-        case OP_FAST_INDEX: case OP_FAST_INDEX_REF: {
-            auto& a = frame->co->names[byte.arg & 0xFFFF];
-            auto& x = frame->co->names[(byte.arg >> 16) & 0xFFFF];
-            auto ref = IndexRef(NameRef(a).get(this, frame), NameRef(x).get(this, frame));
-            if(byte.op == OP_FAST_INDEX) frame->push(ref.get(this, frame));
-            else frame->push(PyRef(ref));
-        } continue;
-        case OP_ROT_TWO: ::std::swap(frame->top(), frame->top_1()); continue;
-        case OP_STORE_REF: {
-            // PyVar obj = frame->pop_value(this);
-            // PyVarRef r = frame->pop();
-            // PyRef_AS_C(r)->set(this, frame, std::move(obj));
-            PyRef_AS_C(frame->top_1())->set(this, frame, frame->top_value(this));
-            frame->_pop(); frame->_pop();
-        } continue;
-        case OP_DELETE_REF: 
-            PyRef_AS_C(frame->top())->del(this, frame);
-            frame->_pop();
-            continue;
-        case OP_BUILD_TUPLE: {
-            Args items = frame->pop_n_values_reversed(this, byte.arg);
-            frame->push(VAR(std::move(items)));
-        } continue;
-        case OP_BUILD_TUPLE_REF: {
-            Args items = frame->pop_n_reversed(byte.arg);
-            frame->push(PyRef(TupleRef(std::move(items))));
-        } continue;
-        case OP_BUILD_STRING: {
-            Args items = frame->pop_n_values_reversed(this, byte.arg);
-            StrStream ss;
-            for(int i=0; i<items.size(); i++) ss << CAST(Str, asStr(items[i]));
-            frame->push(VAR(ss.str()));
-        } continue;
-        case OP_LOAD_EVAL_FN: frame->push(builtins->attr(m_eval)); continue;
-        case OP_BEGIN_CLASS: {
-            auto& name = frame->co->names[byte.arg];
-            PyVar clsBase = frame->pop_value(this);
-            if(clsBase == None) clsBase = _t(tp_object);
-            check_type(clsBase, tp_type);
-            PyVar cls = new_type_object(frame->_module, name.first, OBJ_GET(Type, clsBase));
-            frame->push(cls);
-        } continue;
-        case OP_END_CLASS: {
-            PyVar cls = frame->pop();
-            cls->attr()._try_perfect_rehash();
-        }; continue;
-        case OP_STORE_CLASS_ATTR: {
-            auto& name = frame->co->names[byte.arg];
-            PyVar obj = frame->pop_value(this);
-            PyVar& cls = frame->top();
-            cls->attr().set(name.first, std::move(obj));
-        } continue;
-        case OP_RETURN_VALUE: return frame->pop_value(this);
-        case OP_PRINT_EXPR: {
-            const PyVar expr = frame->top_value(this);
-            if(expr != None) *_stdout << CAST(Str, asRepr(expr)) << '\n';
-        } continue;
-        case OP_POP_TOP: frame->_pop(); continue;
-        case OP_BINARY_OP: {
-            Args args(2);
-            args[1] = frame->pop_value(this);
-            args[0] = frame->top_value(this);
-            frame->top() = fast_call(BINARY_SPECIAL_METHODS[byte.arg], std::move(args));
-        } continue;
-        case OP_BITWISE_OP: {
-            Args args(2);
-            args[1] = frame->pop_value(this);
-            args[0] = frame->top_value(this);
-            frame->top() = fast_call(BITWISE_SPECIAL_METHODS[byte.arg], std::move(args));
-        } continue;
-        case OP_INPLACE_BINARY_OP: {
-            Args args(2);
-            args[1] = frame->pop();
-            args[0] = frame->top_value(this);
-            PyVar ret = fast_call(BINARY_SPECIAL_METHODS[byte.arg], std::move(args));
-            PyRef_AS_C(frame->top())->set(this, frame, std::move(ret));
-            frame->_pop();
-        } continue;
-        case OP_INPLACE_BITWISE_OP: {
-            Args args(2);
-            args[1] = frame->pop_value(this);
-            args[0] = frame->top_value(this);
-            PyVar ret = fast_call(BITWISE_SPECIAL_METHODS[byte.arg], std::move(args));
-            PyRef_AS_C(frame->top())->set(this, frame, std::move(ret));
-            frame->_pop();
-        } continue;
-        case OP_COMPARE_OP: {
-            Args args(2);
-            args[1] = frame->pop_value(this);
-            args[0] = frame->top_value(this);
-            frame->top() = fast_call(CMP_SPECIAL_METHODS[byte.arg], std::move(args));
-        } continue;
-        case OP_IS_OP: {
-            PyVar rhs = frame->pop_value(this);
-            bool ret_c = rhs == frame->top_value(this);
-            if(byte.arg == 1) ret_c = !ret_c;
-            frame->top() = VAR(ret_c);
-        } continue;
-        case OP_CONTAINS_OP: {
-            PyVar rhs = frame->pop_value(this);
-            bool ret_c = CAST(bool, call(rhs, __contains__, one_arg(frame->pop_value(this))));
-            if(byte.arg == 1) ret_c = !ret_c;
-            frame->push(VAR(ret_c));
-        } continue;
-        case OP_UNARY_NEGATIVE:
-            frame->top() = num_negated(frame->top_value(this));
-            continue;
-        case OP_UNARY_NOT: {
-            PyVar obj = frame->pop_value(this);
-            const PyVar& obj_bool = asBool(obj);
-            frame->push(VAR(!_CAST(bool, obj_bool)));
-        } continue;
-        case OP_POP_JUMP_IF_FALSE:
-            if(!_CAST(bool, asBool(frame->pop_value(this)))) frame->jump_abs(byte.arg);
-            continue;
-        case OP_LOAD_NONE: frame->push(None); continue;
-        case OP_LOAD_TRUE: frame->push(True); continue;
-        case OP_LOAD_FALSE: frame->push(False); continue;
-        case OP_LOAD_ELLIPSIS: frame->push(Ellipsis); continue;
-        case OP_ASSERT: {
-            PyVar _msg = frame->pop_value(this);
-            Str msg = CAST(Str, asStr(_msg));
-            PyVar expr = frame->pop_value(this);
-            if(asBool(expr) != True) _error("AssertionError", msg);
-        } continue;
-        case OP_EXCEPTION_MATCH: {
-            const auto& e = CAST(Exception&, frame->top());
-            StrName name = frame->co->names[byte.arg].first;
-            frame->push(VAR(e.match_type(name)));
-        } continue;
-        case OP_RAISE: {
-            PyVar obj = frame->pop_value(this);
-            Str msg = obj == None ? "" : CAST(Str, asStr(obj));
-            StrName type = frame->co->names[byte.arg].first;
-            _error(type, msg);
-        } continue;
-        case OP_RE_RAISE: _raise(); continue;
-        case OP_BUILD_LIST:
-            frame->push(VAR(frame->pop_n_values_reversed(this, byte.arg).move_to_list()));
-            continue;
-        case OP_BUILD_MAP: {
-            Args items = frame->pop_n_values_reversed(this, byte.arg*2);
-            PyVar obj = call(builtins->attr("dict"));
-            for(int i=0; i<items.size(); i+=2){
-                call(obj, __setitem__, two_args(items[i], items[i+1]));
+            if(back.type == TK("is") && type == TK("not")){
+                back.type = TK("is not");
+                return;
             }
-            frame->push(obj);
-        } continue;
-        case OP_BUILD_SET: {
-            PyVar list = VAR(
-                frame->pop_n_values_reversed(this, byte.arg).move_to_list()
-            );
-            PyVar obj = call(builtins->attr("set"), one_arg(list));
-            frame->push(obj);
-        } continue;
-        case OP_LIST_APPEND: {
-            PyVar obj = frame->pop_value(this);
-            List& list = CAST(List&, frame->top_1());
-            list.push_back(std::move(obj));
-        } continue;
-        case OP_MAP_ADD: {
-            PyVar value = frame->pop_value(this);
-            PyVar key = frame->pop_value(this);
-            call(frame->top_1(), __setitem__, two_args(key, value));
-        } continue;
-        case OP_SET_ADD: {
-            PyVar obj = frame->pop_value(this);
-            call(frame->top_1(), "add", one_arg(obj));
-        } continue;
-        case OP_DUP_TOP_VALUE: frame->push(frame->top_value(this)); continue;
-        case OP_UNARY_STAR: {
-            if(byte.arg > 0){   // rvalue
-                frame->top() = VAR(StarWrapper(frame->top_value(this), true));
-            }else{
-                PyRef_AS_C(frame->top()); // check ref
-                frame->top() = VAR(StarWrapper(frame->top(), false));
+            if(back.type == TK("yield") && type == TK("from")){
+                back.type = TK("yield from");
+                return;
             }
-        } continue;
-        case OP_CALL_KWARGS_UNPACK: case OP_CALL_KWARGS: {
-            int ARGC = byte.arg & 0xFFFF;
-            int KWARGC = (byte.arg >> 16) & 0xFFFF;
-            Args kwargs = frame->pop_n_values_reversed(this, KWARGC*2);
-            Args args = frame->pop_n_values_reversed(this, ARGC);
-            if(byte.op == OP_CALL_KWARGS_UNPACK) unpack_args(args);
-            PyVar callable = frame->pop_value(this);
-            PyVar ret = call(callable, std::move(args), kwargs, true);
-            if(ret == _py_op_call) return ret;
-            frame->push(std::move(ret));
-        } continue;
-        case OP_CALL_UNPACK: case OP_CALL: {
-            Args args = frame->pop_n_values_reversed(this, byte.arg);
-            if(byte.op == OP_CALL_UNPACK) unpack_args(args);
-            PyVar callable = frame->pop_value(this);
-            PyVar ret = call(callable, std::move(args), no_arg(), true);
-            if(ret == _py_op_call) return ret;
-            frame->push(std::move(ret));
-        } continue;
-        case OP_JUMP_ABSOLUTE: frame->jump_abs(byte.arg); continue;
-        case OP_SAFE_JUMP_ABSOLUTE: frame->jump_abs_safe(byte.arg); continue;
-        case OP_GOTO: {
-            StrName label = frame->co->names[byte.arg].first;
-            auto it = frame->co->labels.find(label);
-            if(it == frame->co->labels.end()) _error("KeyError", "label " + label.str().escape(true) + " not found");
-            frame->jump_abs_safe(it->second);
-        } continue;
-        case OP_GET_ITER: {
-            PyVar obj = frame->pop_value(this);
-            PyVar iter = asIter(obj);
-            check_type(frame->top(), tp_ref);
-            PyIter_AS_C(iter)->loop_var = frame->pop();
-            frame->push(std::move(iter));
-        } continue;
-        case OP_FOR_ITER: {
-            BaseIter* it = PyIter_AS_C(frame->top());
-            PyVar obj = it->next();
-            if(obj != nullptr){
-                PyRef_AS_C(it->loop_var)->set(this, frame, std::move(obj));
-            }else{
-                int blockEnd = frame->co->blocks[byte.block].end;
-                frame->jump_abs_safe(blockEnd);
-            }
-        } continue;
-        case OP_LOOP_CONTINUE: {
-            int blockStart = frame->co->blocks[byte.block].start;
-            frame->jump_abs(blockStart);
-        } continue;
-        case OP_LOOP_BREAK: {
-            int blockEnd = frame->co->blocks[byte.block].end;
-            frame->jump_abs_safe(blockEnd);
-        } continue;
-        case OP_JUMP_IF_FALSE_OR_POP: {
-            const PyVar expr = frame->top_value(this);
-            if(asBool(expr)==False) frame->jump_abs(byte.arg);
-            else frame->pop_value(this);
-        } continue;
-        case OP_JUMP_IF_TRUE_OR_POP: {
-            const PyVar expr = frame->top_value(this);
-            if(asBool(expr)==True) frame->jump_abs(byte.arg);
-            else frame->pop_value(this);
-        } continue;
-        case OP_BUILD_SLICE: {
-            PyVar stop = frame->pop_value(this);
-            PyVar start = frame->pop_value(this);
-            Slice s;
-            if(start != None) { s.start = CAST(int, start);}
-            if(stop != None) { s.stop = CAST(int, stop);}
-            frame->push(VAR(s));
-        } continue;
-        case OP_IMPORT_NAME: {
-            StrName name = frame->co->names[byte.arg].first;
-            PyVar* ext_mod = _modules.try_get(name);
-            if(ext_mod == nullptr){
-                Str source;
-                auto it2 = _lazy_modules.find(name);
-                if(it2 == _lazy_modules.end()){
-                    bool ok = false;
-                    source = _read_file_cwd(name.str() + ".py", &ok);
-                    if(!ok) _error("ImportError", "module " + name.str().escape(true) + " not found");
-                }else{
-                    source = it2->second;
-                    _lazy_modules.erase(it2);
-                }
-                CodeObject_ code = compile(source, name.str(), EXEC_MODE);
-                PyVar new_mod = new_module(name);
-                _exec(code, new_mod);
-                frame->push(new_mod);
-                new_mod->attr()._try_perfect_rehash();
-            }else{
-                frame->push(*ext_mod);
-            }
-        } continue;
-        case OP_STORE_ALL_NAMES: {
-            PyVar obj = frame->pop_value(this);
-            for(auto& [name, value]: obj->attr().items()){
-                Str s = name.str();
-                if(s.empty() || s[0] == '_') continue;
-                frame->f_globals().set(name, value);
-            }
-        }; continue;
-        case OP_YIELD_VALUE: return _py_op_yield;
-        // TODO: using "goto" inside with block may cause __exit__ not called
-        case OP_WITH_ENTER: call(frame->pop_value(this), __enter__); continue;
-        case OP_WITH_EXIT: call(frame->pop_value(this), __exit__); continue;
-        case OP_TRY_BLOCK_ENTER: frame->on_try_block_enter(); continue;
-        case OP_TRY_BLOCK_EXIT: frame->on_try_block_exit(); continue;
-        default: throw std::runtime_error(Str("opcode ") + OP_NAMES[byte.op] + " is not implemented");
+            nexts.push_back(token);
         }
     }
 
-    if(frame->co->src->mode == EVAL_MODE || frame->co->src->mode == JSON_MODE){
-        if(frame->_data.size() != 1) throw std::runtime_error("_data.size() != 1 in EVAL/JSON_MODE");
-        return frame->pop_value(this);
-    }
-#if PK_EXTRA_CHECK
-    if(!frame->_data.empty()) throw std::runtime_error("_data.size() != 0 in EXEC_MODE");
-#endif
-    return None;
-}
-
-} // namespace pkpy
-
-
-namespace pkpy{
-
-class Compiler;
-typedef void (Compiler::*GrammarFn)();
-typedef void (Compiler::*CompilerAction)();
-
-struct GrammarRule{
-    GrammarFn prefix;
-    GrammarFn infix;
-    Precedence precedence;
-};
-
-enum StringType { NORMAL_STRING, RAW_STRING, F_STRING };
-
-class Compiler {
-    std::unique_ptr<Parser> parser;
-    std::stack<CodeObject_> codes;
-    int lexing_count = 0;
-    bool used = false;
-    VM* vm;
-    std::map<TokenIndex, GrammarRule> rules;
-
-    CodeObject_ co() const{ return codes.top(); }
-    CompileMode mode() const{ return parser->src->mode; }
-    NameScope name_scope() const { return codes.size()>1 ? NAME_LOCAL : NAME_GLOBAL; }
-
-public:
-    Compiler(VM* vm, const char* source, Str filename, CompileMode mode){
-        this->vm = vm;
-        this->parser = std::make_unique<Parser>(
-            make_sp<SourceData>(source, filename, mode)
-        );
-
-// http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
-#define METHOD(name) &Compiler::name
-#define NO_INFIX nullptr, PREC_NONE
-        for(TokenIndex i=0; i<kTokenCount; i++) rules[i] = { nullptr, NO_INFIX };
-        rules[TK(".")] =    { nullptr,               METHOD(exprAttrib),         PREC_ATTRIB };
-        rules[TK("(")] =    { METHOD(exprGrouping),  METHOD(exprCall),           PREC_CALL };
-        rules[TK("[")] =    { METHOD(exprList),      METHOD(exprSubscript),      PREC_SUBSCRIPT };
-        rules[TK("{")] =    { METHOD(exprMap),       NO_INFIX };
-        rules[TK("%")] =    { nullptr,               METHOD(exprBinaryOp),       PREC_FACTOR };
-        rules[TK("+")] =    { nullptr,               METHOD(exprBinaryOp),       PREC_TERM };
-        rules[TK("-")] =    { METHOD(exprUnaryOp),   METHOD(exprBinaryOp),       PREC_TERM };
-        rules[TK("*")] =    { METHOD(exprUnaryOp),   METHOD(exprBinaryOp),       PREC_FACTOR };
-        rules[TK("/")] =    { nullptr,               METHOD(exprBinaryOp),       PREC_FACTOR };
-        rules[TK("//")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_FACTOR };
-        rules[TK("**")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_EXPONENT };
-        rules[TK(">")] =    { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
-        rules[TK("<")] =    { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
-        rules[TK("==")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_EQUALITY };
-        rules[TK("!=")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_EQUALITY };
-        rules[TK(">=")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
-        rules[TK("<=")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
-        rules[TK("in")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_TEST };
-        rules[TK("is")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_TEST };
-        rules[TK("not in")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_TEST };
-        rules[TK("is not")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_TEST };
-        rules[TK("and") ] =     { nullptr,               METHOD(exprAnd),            PREC_LOGICAL_AND };
-        rules[TK("or")] =       { nullptr,               METHOD(exprOr),             PREC_LOGICAL_OR };
-        rules[TK("not")] =      { METHOD(exprNot),       nullptr,                    PREC_LOGICAL_NOT };
-        rules[TK("True")] =     { METHOD(exprValue),     NO_INFIX };
-        rules[TK("False")] =    { METHOD(exprValue),     NO_INFIX };
-        rules[TK("lambda")] =   { METHOD(exprLambda),    NO_INFIX };
-        rules[TK("None")] =     { METHOD(exprValue),     NO_INFIX };
-        rules[TK("...")] =      { METHOD(exprValue),     NO_INFIX };
-        rules[TK("@id")] =      { METHOD(exprName),      NO_INFIX };
-        rules[TK("@num")] =     { METHOD(exprLiteral),   NO_INFIX };
-        rules[TK("@str")] =     { METHOD(exprLiteral),   NO_INFIX };
-        rules[TK("@fstr")] =    { METHOD(exprFString),   NO_INFIX };
-        rules[TK("?")] =        { nullptr,               METHOD(exprTernary),        PREC_TERNARY };
-        rules[TK("=")] =        { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("+=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("-=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("*=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("/=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("//=")] =      { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("%=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("&=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("|=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("^=")] =       { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK(">>=")] =      { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK("<<=")] =      { nullptr,               METHOD(exprAssign),         PREC_ASSIGNMENT };
-        rules[TK(",")] =        { nullptr,               METHOD(exprComma),          PREC_COMMA };
-        rules[TK("<<")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_SHIFT };
-        rules[TK(">>")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_SHIFT };
-        rules[TK("&")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_AND };
-        rules[TK("|")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_OR };
-        rules[TK("^")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_XOR };
-#undef METHOD
-#undef NO_INFIX
-
-#define EXPR() parse_expression(PREC_TERNARY)             // no '=' and ',' just a simple expression
-#define EXPR_TUPLE() parse_expression(PREC_COMMA)         // no '=', but ',' is allowed
-#define EXPR_ANY() parse_expression(PREC_ASSIGNMENT)
+    void add_token_2(char c, TokenIndex one, TokenIndex two) {
+        if (matchchar(c)) add_token(two);
+        else add_token(one);
     }
 
-private:
     Str eat_string_until(char quote, bool raw) {
-        bool quote3 = parser->match_n_chars(2, quote);
+        bool quote3 = match_n_chars(2, quote);
         std::vector<char> buff;
         while (true) {
-            char c = parser->eatchar_include_newline();
+            char c = eatchar_include_newline();
             if (c == quote){
-                if(quote3 && !parser->match_n_chars(2, quote)){
+                if(quote3 && !match_n_chars(2, quote)){
                     buff.push_back(c);
                     continue;
                 }
                 break;
             }
             if (c == '\0'){
-                if(quote3 && parser->src->mode == REPL_MODE){
+                if(quote3 && src->mode == REPL_MODE){
                     throw NeedMoreLines(false);
                 }
                 SyntaxError("EOL while scanning string literal");
@@ -3489,7 +1855,7 @@ private:
                 }
             }
             if (!raw && c == '\\') {
-                switch (parser->eatchar_include_newline()) {
+                switch (eatchar_include_newline()) {
                     case '"':  buff.push_back('"');  break;
                     case '\'': buff.push_back('\''); break;
                     case '\\': buff.push_back('\\'); break;
@@ -3508,9 +1874,9 @@ private:
     void eat_string(char quote, StringType type) {
         Str s = eat_string_until(quote, type == RAW_STRING);
         if(type == F_STRING){
-            parser->set_next_token(TK("@fstr"), VAR(s));
+            add_token(TK("@fstr"), s);
         }else{
-            parser->set_next_token(TK("@str"), VAR(s));
+            add_token(TK("@str"), s);
         }
     }
 
@@ -3518,193 +1884,4801 @@ private:
         static const std::regex pattern("^(0x)?[0-9a-fA-F]+(\\.[0-9]+)?");
         std::smatch m;
 
-        const char* i = parser->token_start;
+        const char* i = token_start;
         while(*i != '\n' && *i != '\0') i++;
-        std::string s = std::string(parser->token_start, i);
+        std::string s = std::string(token_start, i);
 
         try{
             if (std::regex_search(s, m, pattern)) {
                 // here is m.length()-1, since the first char was eaten by lex_token()
-                for(int j=0; j<m.length()-1; j++) parser->eatchar();
+                for(int j=0; j<m.length()-1; j++) eatchar();
 
                 int base = 10;
                 size_t size;
                 if (m[1].matched) base = 16;
                 if (m[2].matched) {
                     if(base == 16) SyntaxError("hex literal should not contain a dot");
-                    parser->set_next_token(TK("@num"), VAR(S_TO_FLOAT(m[0], &size)));
+                    add_token(TK("@num"), Number::stof(m[0], &size));
                 } else {
-                    parser->set_next_token(TK("@num"), VAR(S_TO_INT(m[0], &size, base)));
+                    add_token(TK("@num"), Number::stoi(m[0], &size, base));
                 }
-                if (size != m.length()) UNREACHABLE();
+                if (size != m.length()) FATAL_ERROR();
             }
         }catch(std::exception& _){
             SyntaxError("invalid number literal");
         } 
     }
 
-    void lex_token(){
-        lexing_count++;
-        _lex_token();
-        lexing_count--;
-    }
-
-    // Lex the next token and set it as the next token.
-    void _lex_token() {
-        parser->prev = parser->curr;
-        parser->curr = parser->next_token();
-        //std::cout << parser->curr.info() << std::endl;
-
-        while (parser->peekchar() != '\0') {
-            parser->token_start = parser->curr_char;
-            char c = parser->eatchar_include_newline();
+    bool lex_one_token() {
+        while (peekchar() != '\0') {
+            token_start = curr_char;
+            char c = eatchar_include_newline();
             switch (c) {
-                case '\'': case '"': eat_string(c, NORMAL_STRING); return;
-                case '#': parser->skip_line_comment(); break;
-                case '{': parser->set_next_token(TK("{")); return;
-                case '}': parser->set_next_token(TK("}")); return;
-                case ',': parser->set_next_token(TK(",")); return;
-                case ':': parser->set_next_token_2(':', TK(":"), TK("::")); return;
-                case ';': parser->set_next_token(TK(";")); return;
-                case '(': parser->set_next_token(TK("(")); return;
-                case ')': parser->set_next_token(TK(")")); return;
-                case '[': parser->set_next_token(TK("[")); return;
-                case ']': parser->set_next_token(TK("]")); return;
-                case '@': parser->set_next_token(TK("@")); return;
-                case '%': parser->set_next_token_2('=', TK("%"), TK("%=")); return;
-                case '&': parser->set_next_token_2('=', TK("&"), TK("&=")); return;
-                case '|': parser->set_next_token_2('=', TK("|"), TK("|=")); return;
-                case '^': parser->set_next_token_2('=', TK("^"), TK("^=")); return;
-                case '?': parser->set_next_token(TK("?")); return;
+                case '\'': case '"': eat_string(c, NORMAL_STRING); return true;
+                case '#': skip_line_comment(); break;
+                case '{': add_token(TK("{")); return true;
+                case '}': add_token(TK("}")); return true;
+                case ',': add_token(TK(",")); return true;
+                case ':': add_token(TK(":")); return true;
+                case ';': add_token(TK(";")); return true;
+                case '(': add_token(TK("(")); return true;
+                case ')': add_token(TK(")")); return true;
+                case '[': add_token(TK("[")); return true;
+                case ']': add_token(TK("]")); return true;
+                case '@': add_token(TK("@")); return true;
+                case '$': {
+                    for(int i=TK("$goto"); i<=TK("$label"); i++){
+                        // +1 to skip the '$'
+                        if(match_string(TK_STR(i) + 1)){
+                            add_token((TokenIndex)i);
+                            return true;
+                        }
+                    }
+                    SyntaxError("invalid special token");
+                }
+                case '%': add_token_2('=', TK("%"), TK("%=")); return true;
+                case '&': add_token_2('=', TK("&"), TK("&=")); return true;
+                case '|': add_token_2('=', TK("|"), TK("|=")); return true;
+                case '^': add_token_2('=', TK("^"), TK("^=")); return true;
+                case '?': add_token(TK("?")); return true;
                 case '.': {
-                    if(parser->matchchar('.')) {
-                        if(parser->matchchar('.')) {
-                            parser->set_next_token(TK("..."));
+                    if(matchchar('.')) {
+                        if(matchchar('.')) {
+                            add_token(TK("..."));
                         } else {
                             SyntaxError("invalid token '..'");
                         }
                     } else {
-                        parser->set_next_token(TK("."));
+                        add_token(TK("."));
                     }
-                    return;
+                    return true;
                 }
-                case '=': parser->set_next_token_2('=', TK("="), TK("==")); return;
-                case '+': parser->set_next_token_2('=', TK("+"), TK("+=")); return;
+                case '=': add_token_2('=', TK("="), TK("==")); return true;
+                case '+':
+                    if(matchchar('+')){
+                        add_token(TK("++"));
+                    }else{
+                        add_token_2('=', TK("+"), TK("+="));
+                    }
+                    return true;
                 case '>': {
-                    if(parser->matchchar('=')) parser->set_next_token(TK(">="));
-                    else if(parser->matchchar('>')) parser->set_next_token_2('=', TK(">>"), TK(">>="));
-                    else parser->set_next_token(TK(">"));
-                    return;
+                    if(matchchar('=')) add_token(TK(">="));
+                    else if(matchchar('>')) add_token_2('=', TK(">>"), TK(">>="));
+                    else add_token(TK(">"));
+                    return true;
                 }
                 case '<': {
-                    if(parser->matchchar('=')) parser->set_next_token(TK("<="));
-                    else if(parser->matchchar('<')) parser->set_next_token_2('=', TK("<<"), TK("<<="));
-                    else parser->set_next_token(TK("<"));
-                    return;
+                    if(matchchar('=')) add_token(TK("<="));
+                    else if(matchchar('<')) add_token_2('=', TK("<<"), TK("<<="));
+                    else add_token(TK("<"));
+                    return true;
                 }
                 case '-': {
-                    if(parser->matchchar('=')) parser->set_next_token(TK("-="));
-                    else if(parser->matchchar('>')) parser->set_next_token(TK("->"));
-                    else parser->set_next_token(TK("-"));
-                    return;
+                    if(matchchar('-')){
+                        add_token(TK("--"));
+                    }else{
+                        if(matchchar('=')) add_token(TK("-="));
+                        else if(matchchar('>')) add_token(TK("->"));
+                        else add_token(TK("-"));
+                    }
+                    return true;
                 }
                 case '!':
-                    if(parser->matchchar('=')) parser->set_next_token(TK("!="));
+                    if(matchchar('=')) add_token(TK("!="));
                     else SyntaxError("expected '=' after '!'");
                     break;
                 case '*':
-                    if (parser->matchchar('*')) {
-                        parser->set_next_token(TK("**"));  // '**'
+                    if (matchchar('*')) {
+                        add_token(TK("**"));  // '**'
                     } else {
-                        parser->set_next_token_2('=', TK("*"), TK("*="));
+                        add_token_2('=', TK("*"), TK("*="));
                     }
-                    return;
+                    return true;
                 case '/':
-                    if(parser->matchchar('/')) {
-                        parser->set_next_token_2('=', TK("//"), TK("//="));
+                    if(matchchar('/')) {
+                        add_token_2('=', TK("//"), TK("//="));
                     } else {
-                        parser->set_next_token_2('=', TK("/"), TK("/="));
+                        add_token_2('=', TK("/"), TK("/="));
                     }
-                    return;
-                case '\r': break;       // just ignore '\r'
-                case ' ': case '\t': parser->eat_spaces(); break;
+                    return true;
+                case ' ': case '\t': eat_spaces(); break;
                 case '\n': {
-                    parser->set_next_token(TK("@eol"));
-                    if(!parser->eat_indentation()) IndentationError("unindent does not match any outer indentation level");
-                    return;
+                    add_token(TK("@eol"));
+                    if(!eat_indentation()) IndentationError("unindent does not match any outer indentation level");
+                    return true;
                 }
                 default: {
                     if(c == 'f'){
-                        if(parser->matchchar('\'')) {eat_string('\'', F_STRING); return;}
-                        if(parser->matchchar('"')) {eat_string('"', F_STRING); return;}
+                        if(matchchar('\'')) {eat_string('\'', F_STRING); return true;}
+                        if(matchchar('"')) {eat_string('"', F_STRING); return true;}
                     }else if(c == 'r'){
-                        if(parser->matchchar('\'')) {eat_string('\'', RAW_STRING); return;}
-                        if(parser->matchchar('"')) {eat_string('"', RAW_STRING); return;}
+                        if(matchchar('\'')) {eat_string('\'', RAW_STRING); return true;}
+                        if(matchchar('"')) {eat_string('"', RAW_STRING); return true;}
                     }
-
                     if (c >= '0' && c <= '9') {
                         eat_number();
-                        return;
+                        return true;
                     }
-                    
-                    switch (parser->eat_name())
+                    switch (eat_name())
                     {
                         case 0: break;
                         case 1: SyntaxError("invalid char: " + std::string(1, c));
                         case 2: SyntaxError("invalid utf8 sequence: " + std::string(1, c));
                         case 3: SyntaxError("@id contains invalid char"); break;
                         case 4: SyntaxError("invalid JSON token"); break;
-                        default: UNREACHABLE();
+                        default: FATAL_ERROR();
                     }
-                    return;
+                    return true;
                 }
             }
         }
 
-        parser->token_start = parser->curr_char;
-        parser->set_next_token(TK("@eof"));
+        token_start = curr_char;
+        while(indents.size() > 1){
+            indents.pop();
+            add_token(TK("@dedent"));
+            return true;
+        }
+        add_token(TK("@eof"));
+        return false;
     }
 
-    inline TokenIndex peek() {
-        return parser->curr.type;
+    /***** Error Reporter *****/
+    void throw_err(Str type, Str msg){
+        int lineno = current_line;
+        const char* cursor = curr_char;
+        if(peekchar() == '\n'){
+            lineno--;
+            cursor--;
+        }
+        throw_err(type, msg, lineno, cursor);
     }
 
-    // not sure this will work
-    TokenIndex peek_next() {
-        if(parser->nexts.empty()) return TK("@eof");
-        return parser->nexts.front().type;
+    void throw_err(Str type, Str msg, int lineno, const char* cursor){
+        auto e = Exception(type, msg);
+        e.st_push(src->snapshot(lineno, cursor));
+        throw e;
+    }
+    void SyntaxError(Str msg){ throw_err("SyntaxError", msg); }
+    void SyntaxError(){ throw_err("SyntaxError", "invalid syntax"); }
+    void IndentationError(Str msg){ throw_err("IndentationError", msg); }
+
+    Lexer(shared_ptr<SourceData> src) {
+        this->src = src;
+        this->token_start = src->source.c_str();
+        this->curr_char = src->source.c_str();
+        this->nexts.push_back(Token{TK("@sof"), token_start, 0, current_line});
+        this->indents.push(0);
+    }
+
+    std::vector<Token> run() {
+        if(used) FATAL_ERROR();
+        used = true;
+        while (lex_one_token());
+        return std::move(nexts);
+    }
+};
+
+} // namespace pkpy
+
+
+
+namespace pkpy {
+    
+struct CodeObject;
+struct Frame;
+struct Function;
+class VM;
+
+#if PK_ENABLE_STD_FUNCTION
+using NativeFuncC = std::function<PyObject*(VM*, ArgsView)>;
+#else
+typedef PyObject* (*NativeFuncC)(VM*, ArgsView);
+#endif
+
+typedef int (*LuaStyleFuncC)(VM*);
+
+struct NativeFunc {
+    NativeFuncC f;
+    int argc;       // DONOT include self
+    bool method;
+
+    // this is designed for lua style C bindings
+    // access it via `_CAST(NativeFunc&, args[-2])._lua_f`
+    // (-2) or (-1) depends on the calling convention
+    LuaStyleFuncC _lua_f;
+
+    using UserData = char[32];
+    UserData _userdata;
+    bool _has_userdata;
+
+    template <typename T>
+    void set_userdata(T data) {
+        static_assert(std::is_trivially_copyable_v<T>);
+        static_assert(sizeof(T) <= sizeof(UserData));
+        if(_has_userdata) throw std::runtime_error("userdata already set");
+        _has_userdata = true;
+        memcpy(_userdata, &data, sizeof(T));
+    }
+
+    template <typename T>
+    T get_userdata() const {
+        static_assert(std::is_trivially_copyable_v<T>);
+        static_assert(sizeof(T) <= sizeof(UserData));
+#if DEBUG_EXTRA_CHECK
+        if(!_has_userdata) throw std::runtime_error("userdata not set");
+#endif
+        return reinterpret_cast<const T&>(_userdata);
+    }
+    
+    NativeFunc(NativeFuncC f, int argc, bool method) : f(f), argc(argc), method(method), _has_userdata(false) {}
+    PyObject* operator()(VM* vm, ArgsView args) const;
+};
+
+typedef shared_ptr<CodeObject> CodeObject_;
+
+struct FuncDecl {
+    struct KwArg {
+        int key;                // index in co->varnames
+        PyObject* value;        // default value
+    };
+    CodeObject_ code;           // code object of this function
+    pod_vector<int> args;       // indices in co->varnames
+    pod_vector<KwArg> kwargs;   // indices in co->varnames
+    int starred_arg = -1;       // index in co->varnames, -1 if no *arg
+    int starred_kwarg = -1;     // index in co->varnames, -1 if no **kwarg
+    bool nested = false;        // whether this function is nested
+    void _gc_mark() const;
+};
+
+using FuncDecl_ = shared_ptr<FuncDecl>;
+
+struct Function{
+    FuncDecl_ decl;
+    bool is_simple;
+    int argc;   // cached argc
+    PyObject* _module;
+    NameDict_ _closure;
+};
+
+struct BoundMethod {
+    PyObject* self;
+    PyObject* func;
+    BoundMethod(PyObject* self, PyObject* func) : self(self), func(func) {}
+    
+    bool operator==(const BoundMethod& rhs) const noexcept {
+        return self == rhs.self && func == rhs.func;
+    }
+    bool operator!=(const BoundMethod& rhs) const noexcept {
+        return self != rhs.self || func != rhs.func;
+    }
+};
+
+struct Property{
+    PyObject* getter;
+    PyObject* setter;
+    Property(PyObject* getter, PyObject* setter) : getter(getter), setter(setter) {}
+};
+
+struct Range {
+    i64 start = 0;
+    i64 stop = -1;
+    i64 step = 1;
+};
+
+struct StarWrapper{
+    int level;      // either 1 or 2
+    PyObject* obj;
+    StarWrapper(int level, PyObject* obj) : level(level), obj(obj) {}
+};
+
+struct Bytes{
+    std::vector<char> _data;
+    bool _ok;
+
+    int size() const noexcept { return _data.size(); }
+    int operator[](int i) const noexcept { return (int)(uint8_t)_data[i]; }
+    const char* data() const noexcept { return _data.data(); }
+
+    bool operator==(const Bytes& rhs) const noexcept {
+        return _data == rhs._data;
+    }
+    bool operator!=(const Bytes& rhs) const noexcept {
+        return _data != rhs._data;
+    }
+
+    std::string str() const noexcept { return std::string(_data.begin(), _data.end()); }
+
+    Bytes() : _data(), _ok(false) {}
+    Bytes(std::vector<char>&& data) : _data(std::move(data)), _ok(true) {}
+    Bytes(const std::string& data) : _data(data.begin(), data.end()), _ok(true) {}
+    operator bool() const noexcept { return _ok; }
+};
+
+using Super = std::pair<PyObject*, Type>;
+
+struct Slice {
+    PyObject* start;
+    PyObject* stop;
+    PyObject* step;
+    Slice(PyObject* start, PyObject* stop, PyObject* step) : start(start), stop(stop), step(step) {}
+};
+
+struct GCHeader {
+    bool enabled;   // whether this object is managed by GC
+    bool marked;    // whether this object is marked
+    GCHeader() : enabled(true), marked(false) {}
+};
+
+struct PyObject{
+    GCHeader gc;
+    Type type;
+    NameDict* _attr;
+
+    bool is_attr_valid() const noexcept { return _attr != nullptr; }
+    NameDict& attr() noexcept { return *_attr; }
+    PyObject* attr(StrName name) const noexcept { return (*_attr)[name]; }
+    virtual void _obj_gc_mark() = 0;
+
+    PyObject(Type type) : type(type), _attr(nullptr) {}
+
+    virtual ~PyObject() {
+        if(_attr == nullptr) return;
+        _attr->~NameDict();
+        pool64.dealloc(_attr);
+    }
+
+    void enable_instance_dict(float lf=kInstAttrLoadFactor) noexcept {
+        _attr = new(pool64.alloc<NameDict>()) NameDict(lf);
+    }
+};
+
+template <typename, typename=void> struct has_gc_marker : std::false_type {};
+template <typename T> struct has_gc_marker<T, std::void_t<decltype(&T::_gc_mark)>> : std::true_type {};
+
+template <typename T>
+struct Py_ final: PyObject {
+    T _value;
+    void _obj_gc_mark() override {
+        if constexpr (has_gc_marker<T>::value) {
+            _value._gc_mark();
+        }
+    }
+    Py_(Type type, const T& value) : PyObject(type), _value(value) {}
+    Py_(Type type, T&& value) : PyObject(type), _value(std::move(value)) {}
+};
+
+struct MappingProxy{
+    PyObject* obj;
+    MappingProxy(PyObject* obj) : obj(obj) {}
+    NameDict& attr() noexcept { return obj->attr(); }
+};
+
+#define OBJ_GET(T, obj) (((Py_<T>*)(obj))->_value)
+
+#define OBJ_MARK(obj) \
+    if(!is_tagged(obj) && !(obj)->gc.marked) {                      \
+        (obj)->gc.marked = true;                                    \
+        (obj)->_obj_gc_mark();                                      \
+        if((obj)->is_attr_valid()) gc_mark_namedict((obj)->attr()); \
+    }
+
+inline void gc_mark_namedict(NameDict& t){
+    if(t.size() == 0) return;
+    for(uint16_t i=0; i<t._capacity; i++){
+        if(t._items[i].first.empty()) continue;
+        OBJ_MARK(t._items[i].second);
+    }
+}
+
+Str obj_type_name(VM* vm, Type type);
+
+#if DEBUG_NO_BUILTIN_MODULES
+#define OBJ_NAME(obj) Str("<?>")
+#else
+DEF_SNAME(__name__);
+#define OBJ_NAME(obj) OBJ_GET(Str, vm->getattr(obj, __name__))
+#endif
+
+const int kTpIntIndex = 2;
+const int kTpFloatIndex = 3;
+
+inline bool is_type(PyObject* obj, Type type) {
+#if DEBUG_EXTRA_CHECK
+    if(obj == nullptr) throw std::runtime_error("is_type() called with nullptr");
+    if(is_special(obj)) throw std::runtime_error("is_type() called with special object");
+#endif
+    switch(type.index){
+        case kTpIntIndex: return is_int(obj);
+        case kTpFloatIndex: return is_float(obj);
+        default: return !is_tagged(obj) && obj->type == type;
+    }
+}
+
+inline bool is_non_tagged_type(PyObject* obj, Type type) {
+#if DEBUG_EXTRA_CHECK
+    if(obj == nullptr) throw std::runtime_error("is_non_tagged_type() called with nullptr");
+    if(is_special(obj)) throw std::runtime_error("is_non_tagged_type() called with special object");
+#endif
+    return !is_tagged(obj) && obj->type == type;
+}
+
+union BitsCvt {
+    i64 _int;
+    f64 _float;
+    BitsCvt(i64 val) : _int(val) {}
+    BitsCvt(f64 val) : _float(val) {}
+};
+
+template <typename, typename=void> struct is_py_class : std::false_type {};
+template <typename T> struct is_py_class<T, std::void_t<decltype(T::_type)>> : std::true_type {};
+
+template<typename T> T to_void_p(VM*, PyObject*);
+template<typename T> T to_c99_struct(VM*, PyObject*);
+
+template<typename __T>
+__T py_cast(VM* vm, PyObject* obj) {
+    using T = std::decay_t<__T>;
+    if constexpr(std::is_enum_v<T>){
+        return (__T)py_cast<i64>(vm, obj);
+    }else if constexpr(std::is_pointer_v<T>){
+        return to_void_p<T>(vm, obj);
+    }else if constexpr(is_py_class<T>::value){
+        T::_check_type(vm, obj);
+        return OBJ_GET(T, obj);
+    }else if constexpr(std::is_pod_v<T>){
+        return to_c99_struct<T>(vm, obj);
+    }else {
+        return Discarded();
+    }
+}
+
+template<typename __T>
+__T _py_cast(VM* vm, PyObject* obj) {
+    using T = std::decay_t<__T>;
+    if constexpr(std::is_enum_v<T>){
+        return (__T)_py_cast<i64>(vm, obj);
+    }else if constexpr(std::is_pointer_v<__T>){
+        return to_void_p<__T>(vm, obj);
+    }else if constexpr(is_py_class<T>::value){
+        return OBJ_GET(T, obj);
+    }else if constexpr(std::is_pod_v<T>){
+        return to_c99_struct<T>(vm, obj);
+    }else {
+        return Discarded();
+    }
+}
+
+#define VAR(x) py_var(vm, x)
+#define CAST(T, x) py_cast<T>(vm, x)
+#define _CAST(T, x) _py_cast<T>(vm, x)
+
+#define CAST_F(x) vm->num_to_float(x)
+
+/*****************************************************************/
+template<>
+struct Py_<List> final: PyObject {
+    List _value;
+    Py_(Type type, List&& val): PyObject(type), _value(std::move(val)) {}
+    Py_(Type type, const List& val): PyObject(type), _value(val) {}
+
+    void _obj_gc_mark() override {
+        for(PyObject* obj: _value) OBJ_MARK(obj);
+    }
+};
+
+template<>
+struct Py_<Tuple> final: PyObject {
+    Tuple _value;
+    Py_(Type type, Tuple&& val): PyObject(type), _value(std::move(val)) {}
+    Py_(Type type, const Tuple& val): PyObject(type), _value(val) {}
+
+    void _obj_gc_mark() override {
+        for(PyObject* obj: _value) OBJ_MARK(obj);
+    }
+};
+
+template<>
+struct Py_<MappingProxy> final: PyObject {
+    MappingProxy _value;
+    Py_(Type type, MappingProxy val): PyObject(type), _value(val) {}
+    void _obj_gc_mark() override {
+        OBJ_MARK(_value.obj);
+    }
+};
+
+template<>
+struct Py_<BoundMethod> final: PyObject {
+    BoundMethod _value;
+    Py_(Type type, BoundMethod val): PyObject(type), _value(val) {}
+    void _obj_gc_mark() override {
+        OBJ_MARK(_value.self);
+        OBJ_MARK(_value.func);
+    }
+};
+
+template<>
+struct Py_<StarWrapper> final: PyObject {
+    StarWrapper _value;
+    Py_(Type type, StarWrapper val): PyObject(type), _value(val) {}
+    void _obj_gc_mark() override {
+        OBJ_MARK(_value.obj);
+    }
+};
+
+template<>
+struct Py_<Property> final: PyObject {
+    Property _value;
+    Py_(Type type, Property val): PyObject(type), _value(val) {}
+    void _obj_gc_mark() override {
+        OBJ_MARK(_value.getter);
+        OBJ_MARK(_value.setter);
+    }
+};
+
+template<>
+struct Py_<Slice> final: PyObject {
+    Slice _value;
+    Py_(Type type, Slice val): PyObject(type), _value(val) {}
+    void _obj_gc_mark() override {
+        OBJ_MARK(_value.start);
+        OBJ_MARK(_value.stop);
+        OBJ_MARK(_value.step);
+    }
+};
+
+template<>
+struct Py_<Function> final: PyObject {
+    Function _value;
+    Py_(Type type, Function val): PyObject(type), _value(val) {
+        enable_instance_dict();
+    }
+    void _obj_gc_mark() override {
+        _value.decl->_gc_mark();
+        if(_value._module != nullptr) OBJ_MARK(_value._module);
+        if(_value._closure != nullptr) gc_mark_namedict(*_value._closure);
+    }
+};
+
+template<>
+struct Py_<NativeFunc> final: PyObject {
+    NativeFunc _value;
+    Py_(Type type, NativeFunc val): PyObject(type), _value(val) {
+        enable_instance_dict();
+    }
+    void _obj_gc_mark() override {}
+};
+
+template<>
+struct Py_<Super> final: PyObject {
+    Super _value;
+    Py_(Type type, Super val): PyObject(type), _value(val) {}
+    void _obj_gc_mark() override {
+        OBJ_MARK(_value.first);
+    }
+};
+
+template<>
+struct Py_<DummyInstance> final: PyObject {
+    Py_(Type type, DummyInstance val): PyObject(type) {
+        enable_instance_dict();
+    }
+    void _obj_gc_mark() override {}
+};
+
+template<>
+struct Py_<Type> final: PyObject {
+    Type _value;
+    Py_(Type type, Type val): PyObject(type), _value(val) {
+        enable_instance_dict(kTypeAttrLoadFactor);
+    }
+    void _obj_gc_mark() override {}
+};
+
+template<>
+struct Py_<DummyModule> final: PyObject {
+    Py_(Type type, DummyModule val): PyObject(type) {
+        enable_instance_dict(kTypeAttrLoadFactor);
+    }
+    void _obj_gc_mark() override {}
+};
+
+template<typename T>
+inline T lambda_get_userdata(PyObject** p){
+    if(p[-1] != PY_NULL) return OBJ_GET(NativeFunc, p[-1]).get_userdata<T>();
+    else return OBJ_GET(NativeFunc, p[-2]).get_userdata<T>();
+}
+
+
+
+}   // namespace pkpy
+
+
+namespace pkpy{
+
+struct Dict{
+    using Item = std::pair<PyObject*, PyObject*>;
+    static constexpr int __Capacity = 8;
+    static constexpr float __LoadFactor = 0.67f;
+    static_assert(sizeof(Item) * __Capacity <= 128);
+
+    VM* vm;
+    int _capacity;
+    int _mask;
+    int _size;
+    int _critical_size;
+    Item* _items;
+    
+    Dict(VM* vm): vm(vm), _capacity(__Capacity),
+            _mask(__Capacity-1),
+            _size(0), _critical_size(__Capacity*__LoadFactor+0.5f){
+        _items = (Item*)pool128.alloc(_capacity * sizeof(Item));
+        memset(_items, 0, _capacity * sizeof(Item));
+    }
+
+    int size() const { return _size; }
+
+    Dict(Dict&& other){
+        vm = other.vm;
+        _capacity = other._capacity;
+        _mask = other._mask;
+        _size = other._size;
+        _critical_size = other._critical_size;
+        _items = other._items;
+        other._items = nullptr;
+    }
+
+    Dict(const Dict& other){
+        vm = other.vm;
+        _capacity = other._capacity;
+        _mask = other._mask;
+        _size = other._size;
+        _critical_size = other._critical_size;
+        _items = (Item*)pool128.alloc(_capacity * sizeof(Item));
+        memcpy(_items, other._items, _capacity * sizeof(Item));
+    }
+
+    Dict& operator=(const Dict&) = delete;
+    Dict& operator=(Dict&&) = delete;
+
+    void _probe(PyObject* key, bool& ok, int& i) const;
+
+    void set(PyObject* key, PyObject* val){
+        bool ok; int i;
+        _probe(key, ok, i);
+        if(!ok) {
+            _size++;
+            if(_size > _critical_size){
+                _rehash();
+                _probe(key, ok, i);
+            }
+            _items[i].first = key;
+        }
+        _items[i].second = val;
+    }
+
+    void _rehash(){
+        Item* old_items = _items;
+        int old_capacity = _capacity;
+        _capacity *= 2;
+        _mask = _capacity - 1;
+        _critical_size = _capacity * __LoadFactor + 0.5f;
+        _items = (Item*)pool128.alloc(_capacity * sizeof(Item));
+        memset(_items, 0, _capacity * sizeof(Item));
+        for(int i=0; i<old_capacity; i++){
+            if(old_items[i].first == nullptr) continue;
+            bool ok; int j;
+            _probe(old_items[i].first, ok, j);
+            if(ok) FATAL_ERROR();
+            _items[j] = old_items[i];
+        }
+        pool128.dealloc(old_items);
+    }
+
+    PyObject* try_get(PyObject* key) const{
+        bool ok; int i;
+        _probe(key, ok, i);
+        if(!ok) return nullptr;
+        return _items[i].second;
+    }
+
+    bool contains(PyObject* key) const{
+        bool ok; int i;
+        _probe(key, ok, i);
+        return ok;
+    }
+
+    void erase(PyObject* key){
+        bool ok; int i;
+        _probe(key, ok, i);
+        if(!ok) return;
+        _items[i].first = nullptr;
+        _items[i].second = nullptr;
+        _size--;
+    }
+
+    void update(const Dict& other){
+        for(int i=0; i<other._capacity; i++){
+            if(other._items[i].first == nullptr) continue;
+            set(other._items[i].first, other._items[i].second);
+        }
+    }
+
+    std::vector<Item> items() const {
+        std::vector<Item> v;
+        for(int i=0; i<_capacity; i++){
+            if(_items[i].first == nullptr) continue;
+            v.push_back(_items[i]);
+        }
+        return v;
+    }
+
+    template<typename __Func>
+    void apply(__Func f) const {
+        for(int i=0; i<_capacity; i++){
+            if(_items[i].first == nullptr) continue;
+            f(_items[i].first, _items[i].second);
+        }
+    }
+
+    void clear(){
+        memset(_items, 0, _capacity * sizeof(Item));
+        _size = 0;
+    }
+
+    ~Dict(){ if(_items!=nullptr) pool128.dealloc(_items); }
+
+    void _gc_mark() const{
+        for(int i=0; i<_capacity; i++){
+            if(_items[i].first == nullptr) continue;
+            OBJ_MARK(_items[i].first);
+            OBJ_MARK(_items[i].second);
+        }
+    }
+};
+
+} // namespace pkpy
+
+
+namespace pkpy{
+
+enum NameScope { NAME_LOCAL, NAME_GLOBAL, NAME_GLOBAL_UNKNOWN };
+
+enum Opcode {
+    #define OPCODE(name) OP_##name,
+    #ifdef OPCODE
+
+/**************************/
+OPCODE(NO_OP)
+/**************************/
+OPCODE(POP_TOP)
+OPCODE(DUP_TOP)
+OPCODE(ROT_TWO)
+OPCODE(ROT_THREE)
+OPCODE(PRINT_EXPR)
+/**************************/
+OPCODE(LOAD_CONST)
+OPCODE(LOAD_NONE)
+OPCODE(LOAD_TRUE)
+OPCODE(LOAD_FALSE)
+OPCODE(LOAD_INTEGER)
+OPCODE(LOAD_ELLIPSIS)
+OPCODE(LOAD_FUNCTION)
+OPCODE(LOAD_NULL)
+/**************************/
+OPCODE(LOAD_FAST)
+OPCODE(LOAD_NAME)
+OPCODE(LOAD_NONLOCAL)
+OPCODE(LOAD_GLOBAL)
+OPCODE(LOAD_ATTR)
+OPCODE(LOAD_METHOD)
+OPCODE(LOAD_SUBSCR)
+
+OPCODE(STORE_FAST)
+OPCODE(STORE_NAME)
+OPCODE(STORE_GLOBAL)
+OPCODE(STORE_ATTR)
+OPCODE(STORE_SUBSCR)
+
+OPCODE(DELETE_FAST)
+OPCODE(DELETE_NAME)
+OPCODE(DELETE_GLOBAL)
+OPCODE(DELETE_ATTR)
+OPCODE(DELETE_SUBSCR)
+/**************************/
+OPCODE(BUILD_TUPLE)
+OPCODE(BUILD_LIST)
+OPCODE(BUILD_DICT)
+OPCODE(BUILD_SET)
+OPCODE(BUILD_SLICE)
+OPCODE(BUILD_STRING)
+/**************************/
+OPCODE(BUILD_TUPLE_UNPACK)
+OPCODE(BUILD_LIST_UNPACK)
+OPCODE(BUILD_DICT_UNPACK)
+OPCODE(BUILD_SET_UNPACK)
+/**************************/
+OPCODE(BINARY_TRUEDIV)
+OPCODE(BINARY_POW)
+
+OPCODE(BINARY_ADD)
+OPCODE(BINARY_SUB)
+OPCODE(BINARY_MUL)
+OPCODE(BINARY_FLOORDIV)
+OPCODE(BINARY_MOD)
+
+OPCODE(COMPARE_LT)
+OPCODE(COMPARE_LE)
+OPCODE(COMPARE_EQ)
+OPCODE(COMPARE_NE)
+OPCODE(COMPARE_GT)
+OPCODE(COMPARE_GE)
+
+OPCODE(BITWISE_LSHIFT)
+OPCODE(BITWISE_RSHIFT)
+OPCODE(BITWISE_AND)
+OPCODE(BITWISE_OR)
+OPCODE(BITWISE_XOR)
+
+OPCODE(BINARY_MATMUL)
+
+OPCODE(IS_OP)
+OPCODE(CONTAINS_OP)
+/**************************/
+OPCODE(JUMP_ABSOLUTE)
+OPCODE(POP_JUMP_IF_FALSE)
+OPCODE(JUMP_IF_TRUE_OR_POP)
+OPCODE(JUMP_IF_FALSE_OR_POP)
+OPCODE(SHORTCUT_IF_FALSE_OR_POP)
+OPCODE(LOOP_CONTINUE)
+OPCODE(LOOP_BREAK)
+OPCODE(GOTO)
+/**************************/
+OPCODE(CALL)
+OPCODE(CALL_TP)
+OPCODE(RETURN_VALUE)
+OPCODE(YIELD_VALUE)
+/**************************/
+OPCODE(LIST_APPEND)
+OPCODE(DICT_ADD)
+OPCODE(SET_ADD)
+/**************************/
+OPCODE(UNARY_NEGATIVE)
+OPCODE(UNARY_NOT)
+OPCODE(UNARY_STAR)
+/**************************/
+OPCODE(GET_ITER)
+OPCODE(FOR_ITER)
+/**************************/
+OPCODE(IMPORT_NAME)
+OPCODE(IMPORT_NAME_REL)
+OPCODE(IMPORT_STAR)
+/**************************/
+OPCODE(UNPACK_SEQUENCE)
+OPCODE(UNPACK_EX)
+/**************************/
+OPCODE(BEGIN_CLASS)
+OPCODE(END_CLASS)
+OPCODE(STORE_CLASS_ATTR)
+/**************************/
+OPCODE(WITH_ENTER)
+OPCODE(WITH_EXIT)
+/**************************/
+OPCODE(ASSERT)
+OPCODE(EXCEPTION_MATCH)
+OPCODE(RAISE)
+OPCODE(RE_RAISE)
+OPCODE(POP_EXCEPTION)
+/**************************/
+OPCODE(SETUP_DOCSTRING)
+OPCODE(FORMAT_STRING)
+/**************************/
+OPCODE(INC_FAST)
+OPCODE(DEC_FAST)
+OPCODE(INC_GLOBAL)
+OPCODE(DEC_GLOBAL)
+#endif
+    #undef OPCODE
+};
+
+inline const char* OP_NAMES[] = {
+    #define OPCODE(name) #name,
+    #ifdef OPCODE
+
+/**************************/
+OPCODE(NO_OP)
+/**************************/
+OPCODE(POP_TOP)
+OPCODE(DUP_TOP)
+OPCODE(ROT_TWO)
+OPCODE(ROT_THREE)
+OPCODE(PRINT_EXPR)
+/**************************/
+OPCODE(LOAD_CONST)
+OPCODE(LOAD_NONE)
+OPCODE(LOAD_TRUE)
+OPCODE(LOAD_FALSE)
+OPCODE(LOAD_INTEGER)
+OPCODE(LOAD_ELLIPSIS)
+OPCODE(LOAD_FUNCTION)
+OPCODE(LOAD_NULL)
+/**************************/
+OPCODE(LOAD_FAST)
+OPCODE(LOAD_NAME)
+OPCODE(LOAD_NONLOCAL)
+OPCODE(LOAD_GLOBAL)
+OPCODE(LOAD_ATTR)
+OPCODE(LOAD_METHOD)
+OPCODE(LOAD_SUBSCR)
+
+OPCODE(STORE_FAST)
+OPCODE(STORE_NAME)
+OPCODE(STORE_GLOBAL)
+OPCODE(STORE_ATTR)
+OPCODE(STORE_SUBSCR)
+
+OPCODE(DELETE_FAST)
+OPCODE(DELETE_NAME)
+OPCODE(DELETE_GLOBAL)
+OPCODE(DELETE_ATTR)
+OPCODE(DELETE_SUBSCR)
+/**************************/
+OPCODE(BUILD_TUPLE)
+OPCODE(BUILD_LIST)
+OPCODE(BUILD_DICT)
+OPCODE(BUILD_SET)
+OPCODE(BUILD_SLICE)
+OPCODE(BUILD_STRING)
+/**************************/
+OPCODE(BUILD_TUPLE_UNPACK)
+OPCODE(BUILD_LIST_UNPACK)
+OPCODE(BUILD_DICT_UNPACK)
+OPCODE(BUILD_SET_UNPACK)
+/**************************/
+OPCODE(BINARY_TRUEDIV)
+OPCODE(BINARY_POW)
+
+OPCODE(BINARY_ADD)
+OPCODE(BINARY_SUB)
+OPCODE(BINARY_MUL)
+OPCODE(BINARY_FLOORDIV)
+OPCODE(BINARY_MOD)
+
+OPCODE(COMPARE_LT)
+OPCODE(COMPARE_LE)
+OPCODE(COMPARE_EQ)
+OPCODE(COMPARE_NE)
+OPCODE(COMPARE_GT)
+OPCODE(COMPARE_GE)
+
+OPCODE(BITWISE_LSHIFT)
+OPCODE(BITWISE_RSHIFT)
+OPCODE(BITWISE_AND)
+OPCODE(BITWISE_OR)
+OPCODE(BITWISE_XOR)
+
+OPCODE(BINARY_MATMUL)
+
+OPCODE(IS_OP)
+OPCODE(CONTAINS_OP)
+/**************************/
+OPCODE(JUMP_ABSOLUTE)
+OPCODE(POP_JUMP_IF_FALSE)
+OPCODE(JUMP_IF_TRUE_OR_POP)
+OPCODE(JUMP_IF_FALSE_OR_POP)
+OPCODE(SHORTCUT_IF_FALSE_OR_POP)
+OPCODE(LOOP_CONTINUE)
+OPCODE(LOOP_BREAK)
+OPCODE(GOTO)
+/**************************/
+OPCODE(CALL)
+OPCODE(CALL_TP)
+OPCODE(RETURN_VALUE)
+OPCODE(YIELD_VALUE)
+/**************************/
+OPCODE(LIST_APPEND)
+OPCODE(DICT_ADD)
+OPCODE(SET_ADD)
+/**************************/
+OPCODE(UNARY_NEGATIVE)
+OPCODE(UNARY_NOT)
+OPCODE(UNARY_STAR)
+/**************************/
+OPCODE(GET_ITER)
+OPCODE(FOR_ITER)
+/**************************/
+OPCODE(IMPORT_NAME)
+OPCODE(IMPORT_NAME_REL)
+OPCODE(IMPORT_STAR)
+/**************************/
+OPCODE(UNPACK_SEQUENCE)
+OPCODE(UNPACK_EX)
+/**************************/
+OPCODE(BEGIN_CLASS)
+OPCODE(END_CLASS)
+OPCODE(STORE_CLASS_ATTR)
+/**************************/
+OPCODE(WITH_ENTER)
+OPCODE(WITH_EXIT)
+/**************************/
+OPCODE(ASSERT)
+OPCODE(EXCEPTION_MATCH)
+OPCODE(RAISE)
+OPCODE(RE_RAISE)
+OPCODE(POP_EXCEPTION)
+/**************************/
+OPCODE(SETUP_DOCSTRING)
+OPCODE(FORMAT_STRING)
+/**************************/
+OPCODE(INC_FAST)
+OPCODE(DEC_FAST)
+OPCODE(INC_GLOBAL)
+OPCODE(DEC_GLOBAL)
+#endif
+    #undef OPCODE
+};
+
+struct Bytecode{
+    uint16_t op;
+    uint16_t block;
+    int arg;
+};
+
+enum CodeBlockType {
+    NO_BLOCK,
+    FOR_LOOP,
+    WHILE_LOOP,
+    CONTEXT_MANAGER,
+    TRY_EXCEPT,
+};
+
+#define BC_NOARG        -1
+#define BC_KEEPLINE     -1
+
+struct CodeBlock {
+    CodeBlockType type;
+    int parent;         // parent index in blocks
+    int for_loop_depth; // this is used for exception handling
+    int start;          // start index of this block in codes, inclusive
+    int end;            // end index of this block in codes, exclusive
+
+    CodeBlock(CodeBlockType type, int parent, int for_loop_depth, int start):
+        type(type), parent(parent), for_loop_depth(for_loop_depth), start(start), end(-1) {}
+};
+
+struct CodeObject {
+    shared_ptr<SourceData> src;
+    Str name;
+    bool is_generator = false;
+
+    CodeObject(shared_ptr<SourceData> src, const Str& name):
+        src(src), name(name) {}
+
+    std::vector<Bytecode> codes;
+    std::vector<int> lines; // line number for each bytecode
+    List consts;
+    std::vector<StrName> varnames;      // local variables
+    NameDictInt varnames_inv;
+    std::set<Str> global_names;
+    std::vector<CodeBlock> blocks = { CodeBlock(NO_BLOCK, -1, 0, 0) };
+    NameDictInt labels;
+    std::vector<FuncDecl_> func_decls;
+
+    void _gc_mark() const {
+        for(PyObject* v : consts) OBJ_MARK(v);
+        for(auto& decl: func_decls) decl->_gc_mark();
+    }
+};
+
+} // namespace pkpy
+
+
+namespace pkpy{
+
+// weak reference fast locals
+struct FastLocals{
+    // this is a weak reference
+    const NameDictInt* varnames_inv;
+    PyObject** a;
+
+    int size() const{
+        return varnames_inv->size();
+    }
+
+    PyObject*& operator[](int i){ return a[i]; }
+    PyObject* operator[](int i) const { return a[i]; }
+
+    FastLocals(const CodeObject* co, PyObject** a): varnames_inv(&co->varnames_inv), a(a) {}
+    FastLocals(const FastLocals& other): varnames_inv(other.varnames_inv), a(other.a) {}
+
+    PyObject* try_get(StrName name){
+        int index = varnames_inv->try_get(name);
+        if(index == -1) return nullptr;
+        return a[index];
+    }
+
+    bool contains(StrName name){
+        return varnames_inv->contains(name);
+    }
+
+    void erase(StrName name){
+        int index = varnames_inv->try_get(name);
+        if(index == -1) FATAL_ERROR();
+        a[index] = nullptr;
+    }
+
+    bool try_set(StrName name, PyObject* value){
+        int index = varnames_inv->try_get(name);
+        if(index == -1) return false;
+        a[index] = value;
+        return true;
+    }
+
+    NameDict_ to_namedict(){
+        NameDict_ dict = make_sp<NameDict>();
+        varnames_inv->apply([&](StrName name, int index){
+            PyObject* value = a[index];
+            if(value != PY_NULL) dict->set(name, value);
+        });
+        return dict;
+    }
+};
+
+template<size_t MAX_SIZE>
+struct ValueStackImpl {
+    // We allocate extra MAX_SIZE/128 places to keep `_sp` valid when `is_overflow() == true`.
+    PyObject* _begin[MAX_SIZE + MAX_SIZE/128];
+    PyObject** _sp;
+    PyObject** _max_end;
+
+    static constexpr size_t max_size() { return MAX_SIZE; }
+
+    ValueStackImpl(): _sp(_begin), _max_end(_begin + MAX_SIZE) {}
+
+    PyObject*& top(){ return _sp[-1]; }
+    PyObject* top() const { return _sp[-1]; }
+    PyObject*& second(){ return _sp[-2]; }
+    PyObject* second() const { return _sp[-2]; }
+    PyObject*& third(){ return _sp[-3]; }
+    PyObject* third() const { return _sp[-3]; }
+    PyObject*& peek(int n){ return _sp[-n]; }
+    PyObject* peek(int n) const { return _sp[-n]; }
+    void push(PyObject* v){ *_sp++ = v; }
+    void pop(){ --_sp; }
+    PyObject* popx(){ return *--_sp; }
+    ArgsView view(int n){ return ArgsView(_sp-n, _sp); }
+    void shrink(int n){ _sp -= n; }
+    int size() const { return _sp - _begin; }
+    bool empty() const { return _sp == _begin; }
+    PyObject** begin() { return _begin; }
+    PyObject** end() { return _sp; }
+    void reset(PyObject** sp) {
+#if DEBUG_EXTRA_CHECK
+        if(sp < _begin || sp > _begin + MAX_SIZE) FATAL_ERROR();
+#endif
+        _sp = sp;
+    }
+    void clear() { _sp = _begin; }
+    bool is_overflow() const { return _sp >= _max_end; }
+    
+    ValueStackImpl(const ValueStackImpl&) = delete;
+    ValueStackImpl(ValueStackImpl&&) = delete;
+    ValueStackImpl& operator=(const ValueStackImpl&) = delete;
+    ValueStackImpl& operator=(ValueStackImpl&&) = delete;
+};
+
+using ValueStack = ValueStackImpl<PK_VM_STACK_SIZE>;
+
+struct Frame {
+    int _ip = -1;
+    int _next_ip = 0;
+    ValueStack* _s;
+    // This is for unwinding only, use `actual_sp_base()` for value stack access
+    PyObject** _sp_base;
+
+    const CodeObject* co;
+    PyObject* _module;
+    PyObject* _callable;    // weak ref
+    FastLocals _locals;
+
+    NameDict& f_globals() noexcept { return _module->attr(); }
+    
+    PyObject* f_closure_try_get(StrName name){
+        if(_callable == nullptr) return nullptr;
+        Function& fn = OBJ_GET(Function, _callable);
+        if(fn._closure == nullptr) return nullptr;
+        return fn._closure->try_get(name);
+    }
+
+    Frame(ValueStack* _s, PyObject** p0, const CodeObject* co, PyObject* _module, PyObject* _callable)
+            : _s(_s), _sp_base(p0), co(co), _module(_module), _callable(_callable), _locals(co, p0) { }
+
+    Frame(ValueStack* _s, PyObject** p0, const CodeObject* co, PyObject* _module, PyObject* _callable, FastLocals _locals)
+            : _s(_s), _sp_base(p0), co(co), _module(_module), _callable(_callable), _locals(_locals) { }
+
+    Frame(ValueStack* _s, PyObject** p0, const CodeObject_& co, PyObject* _module)
+            : _s(_s), _sp_base(p0), co(co.get()), _module(_module), _callable(nullptr), _locals(co.get(), p0) {}
+
+    Bytecode next_bytecode() {
+        _ip = _next_ip++;
+#if DEBUG_EXTRA_CHECK
+        if(_ip >= co->codes.size()) FATAL_ERROR();
+#endif
+        return co->codes[_ip];
+    }
+
+    Str snapshot(){
+        int line = co->lines[_ip];
+        return co->src->snapshot(line);
+    }
+
+    PyObject** actual_sp_base() const { return _locals.a; }
+    int stack_size() const { return _s->_sp - actual_sp_base(); }
+    ArgsView stack_view() const { return ArgsView(actual_sp_base(), _s->_sp); }
+
+    void jump_abs(int i){ _next_ip = i; }
+    // void jump_rel(int i){ _next_ip += i; }
+
+    bool jump_to_exception_handler(){
+        // try to find a parent try block
+        int block = co->codes[_ip].block;
+        while(block >= 0){
+            if(co->blocks[block].type == TRY_EXCEPT) break;
+            block = co->blocks[block].parent;
+        }
+        if(block < 0) return false;
+        PyObject* obj = _s->popx();         // pop exception object
+        // get the stack size of the try block (depth of for loops)
+        int _stack_size = co->blocks[block].for_loop_depth;
+        if(stack_size() < _stack_size) throw std::runtime_error("invalid stack size");
+        _s->reset(actual_sp_base() + _locals.size() + _stack_size);          // rollback the stack   
+        _s->push(obj);                                      // push exception object
+        _next_ip = co->blocks[block].end;
+        return true;
+    }
+
+    int _exit_block(int i){
+        if(co->blocks[i].type == FOR_LOOP) _s->pop();
+        return co->blocks[i].parent;
+    }
+
+    void jump_abs_break(int target){
+        const Bytecode& prev = co->codes[_ip];
+        int i = prev.block;
+        _next_ip = target;
+        if(_next_ip >= co->codes.size()){
+            while(i>=0) i = _exit_block(i);
+        }else{
+            const Bytecode& next = co->codes[target];
+            while(i>=0 && i!=next.block) i = _exit_block(i);
+            if(i!=next.block) throw std::runtime_error("invalid jump");
+        }
+    }
+
+    void _gc_mark() const {
+        OBJ_MARK(_module);
+        co->_gc_mark();
+    }
+};
+
+}; // namespace pkpy
+
+
+namespace pkpy {
+struct ManagedHeap{
+    std::vector<PyObject*> _no_gc;
+    std::vector<PyObject*> gen;
+    VM* vm;
+    void (*_gc_on_delete)(VM*, PyObject*) = nullptr;
+    void (*_gc_marker_ex)(VM*) = nullptr;
+
+    ManagedHeap(VM* vm): vm(vm) {}
+    
+    static const int kMinGCThreshold = 3072;
+    int gc_threshold = kMinGCThreshold;
+    int gc_counter = 0;
+
+    /********************/
+    int _gc_lock_counter = 0;
+    struct ScopeLock{
+        ManagedHeap* heap;
+        ScopeLock(ManagedHeap* heap): heap(heap){
+            heap->_gc_lock_counter++;
+        }
+        ~ScopeLock(){
+            heap->_gc_lock_counter--;
+        }
+    };
+
+    ScopeLock gc_scope_lock(){
+        return ScopeLock(this);
+    }
+    /********************/
+
+    template<typename T>
+    PyObject* gcnew(Type type, T&& val){
+        using __T = Py_<std::decay_t<T>>;
+        PyObject* obj = new(pool64.alloc<__T>()) __T(type, std::forward<T>(val));
+        gen.push_back(obj);
+        gc_counter++;
+        return obj;
+    }
+
+    template<typename T>
+    PyObject* _new(Type type, T&& val){
+        using __T = Py_<std::decay_t<T>>;
+        PyObject* obj = new(pool64.alloc<__T>()) __T(type, std::forward<T>(val));
+        obj->gc.enabled = false;
+        _no_gc.push_back(obj);
+        return obj;
+    }
+
+#if DEBUG_GC_STATS
+    inline static std::map<Type, int> deleted;
+#endif
+
+    int sweep(){
+        std::vector<PyObject*> alive;
+        for(PyObject* obj: gen){
+            if(obj->gc.marked){
+                obj->gc.marked = false;
+                alive.push_back(obj);
+            }else{
+#if DEBUG_GC_STATS
+                deleted[obj->type] += 1;
+#endif
+                if(_gc_on_delete) _gc_on_delete(vm, obj);
+                obj->~PyObject();
+                pool64.dealloc(obj);
+            }
+        }
+
+        // clear _no_gc marked flag
+        for(PyObject* obj: _no_gc) obj->gc.marked = false;
+
+        int freed = gen.size() - alive.size();
+        // std::cout << "GC: " << alive.size() << "/" << gen.size() << " (" << freed << " freed)" << std::endl;
+        gen.clear();
+        gen.swap(alive);
+        return freed;
+    }
+
+    void _auto_collect(){
+#if !DEBUG_NO_AUTO_GC
+        if(_gc_lock_counter > 0) return;
+        if(gc_counter < gc_threshold) return;
+        gc_counter = 0;
+        collect();
+        gc_threshold = gen.size() * 2;
+        if(gc_threshold < kMinGCThreshold) gc_threshold = kMinGCThreshold;
+#endif
+    }
+
+    int collect(){
+        if(_gc_lock_counter > 0) FATAL_ERROR();
+        mark();
+        int freed = sweep();
+        return freed;
+    }
+
+    void mark();
+
+    ~ManagedHeap(){
+        for(PyObject* obj: _no_gc) { obj->~PyObject(); pool64.dealloc(obj); }
+        for(PyObject* obj: gen) { obj->~PyObject(); pool64.dealloc(obj); }
+#if DEBUG_GC_STATS
+        for(auto& [type, count]: deleted){
+            std::cout << "GC: " << obj_type_name(vm, type) << "=" << count << std::endl;
+        }
+#endif
+    }
+};
+
+inline void FuncDecl::_gc_mark() const{
+    code->_gc_mark();
+    for(int i=0; i<kwargs.size(); i++) OBJ_MARK(kwargs[i].value);
+}
+
+}   // namespace pkpy
+
+
+namespace pkpy{
+
+/* Stack manipulation macros */
+// https://github.com/python/cpython/blob/3.9/Python/ceval.c#L1123
+#define TOP()             (s_data.top())
+#define SECOND()          (s_data.second())
+#define THIRD()           (s_data.third())
+#define PEEK(n)           (s_data.peek(n))
+#define STACK_SHRINK(n)   (s_data.shrink(n))
+#define PUSH(v)           (s_data.push(v))
+#define POP()             (s_data.pop())
+#define POPX()            (s_data.popx())
+#define STACK_VIEW(n)     (s_data.view(n))
+
+#define DEF_NATIVE_2(ctype, ptype)                                      \
+    template<> inline ctype py_cast<ctype>(VM* vm, PyObject* obj) {     \
+        vm->check_non_tagged_type(obj, vm->ptype);                      \
+        return OBJ_GET(ctype, obj);                                     \
+    }                                                                   \
+    template<> inline ctype _py_cast<ctype>(VM* vm, PyObject* obj) {    \
+        return OBJ_GET(ctype, obj);                                     \
+    }                                                                   \
+    template<> inline ctype& py_cast<ctype&>(VM* vm, PyObject* obj) {   \
+        vm->check_non_tagged_type(obj, vm->ptype);                      \
+        return OBJ_GET(ctype, obj);                                     \
+    }                                                                   \
+    template<> inline ctype& _py_cast<ctype&>(VM* vm, PyObject* obj) {  \
+        return OBJ_GET(ctype, obj);                                     \
+    }                                                                   \
+    inline PyObject* py_var(VM* vm, const ctype& value) { return vm->heap.gcnew(vm->ptype, value);}     \
+    inline PyObject* py_var(VM* vm, ctype&& value) { return vm->heap.gcnew(vm->ptype, std::move(value));}
+
+
+struct PyTypeInfo{
+    PyObject* obj;
+    Type base;
+    Str name;
+    bool subclass_enabled;
+
+    // cached special methods
+    // unary operators
+    PyObject* (*m__repr__)(VM* vm, PyObject*) = nullptr;
+    PyObject* (*m__str__)(VM* vm, PyObject*) = nullptr;
+    i64 (*m__hash__)(VM* vm, PyObject*) = nullptr;
+    i64 (*m__len__)(VM* vm, PyObject*) = nullptr;
+    PyObject* (*m__iter__)(VM* vm, PyObject*) = nullptr;
+    PyObject* (*m__next__)(VM* vm, PyObject*) = nullptr;
+    PyObject* (*m__json__)(VM* vm, PyObject*) = nullptr;
+    PyObject* (*m__neg__)(VM* vm, PyObject*) = nullptr;
+    PyObject* (*m__bool__)(VM* vm, PyObject*) = nullptr;
+
+    bool (*m__eq__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    bool (*m__lt__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    bool (*m__le__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    bool (*m__gt__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    bool (*m__ge__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    bool (*m__contains__)(VM* vm, PyObject*, PyObject*) = nullptr;
+
+    // binary operators
+    PyObject* (*m__add__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__sub__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__mul__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__truediv__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__floordiv__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__mod__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__pow__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__matmul__)(VM* vm, PyObject*, PyObject*) = nullptr;
+
+    PyObject* (*m__lshift__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__rshift__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__and__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__or__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    PyObject* (*m__xor__)(VM* vm, PyObject*, PyObject*) = nullptr;
+
+    // indexer
+    PyObject* (*m__getitem__)(VM* vm, PyObject*, PyObject*) = nullptr;
+    void (*m__setitem__)(VM* vm, PyObject*, PyObject*, PyObject*) = nullptr;
+    void (*m__delitem__)(VM* vm, PyObject*, PyObject*) = nullptr;
+};
+
+struct FrameId{
+    std::vector<pkpy::Frame>* data;
+    int index;
+    FrameId(std::vector<pkpy::Frame>* data, int index) : data(data), index(index) {}
+    Frame* operator->() const { return &data->operator[](index); }
+};
+
+typedef void(*PrintFunc)(VM*, const Str&);
+
+class VM {
+    VM* vm;     // self reference for simplify code
+public:
+    ManagedHeap heap;
+    ValueStack s_data;
+    stack< Frame > callstack;
+    std::vector<PyTypeInfo> _all_types;
+    
+    NameDict _modules;                                 // loaded modules
+    std::map<StrName, Str> _lazy_modules;              // lazy loaded modules
+
+    PyObject* None;
+    PyObject* True;
+    PyObject* False;
+    PyObject* Ellipsis;
+    PyObject* builtins;         // builtins module
+    PyObject* StopIteration;
+    PyObject* _main;            // __main__ module
+
+    PyObject* _last_exception;
+
+    PrintFunc _stdout;
+    PrintFunc _stderr;
+    Bytes (*_import_handler)(const Str& name);
+
+    // for quick access
+    Type tp_object, tp_type, tp_int, tp_float, tp_bool, tp_str;
+    Type tp_list, tp_tuple;
+    Type tp_function, tp_native_func, tp_bound_method;
+    Type tp_slice, tp_range, tp_module;
+    Type tp_super, tp_exception, tp_bytes, tp_mappingproxy;
+    Type tp_dict, tp_property, tp_star_wrapper;
+
+    const bool enable_os;
+
+    VM(bool enable_os=true) : heap(this), enable_os(enable_os) {
+        this->vm = this;
+        _stdout = [](VM* vm, const Str& s) { std::cout << s; };
+        _stderr = [](VM* vm, const Str& s) { std::cerr << s; };
+        callstack.reserve(8);
+        _main = nullptr;
+        _last_exception = nullptr;
+        _import_handler = [](const Str& name) { return Bytes(); };
+        init_builtin_types();
+    }
+
+    FrameId top_frame() {
+#if DEBUG_EXTRA_CHECK
+        if(callstack.empty()) FATAL_ERROR();
+#endif
+        return FrameId(&callstack.data(), callstack.size()-1);
+    }
+
+    PyObject* py_str(PyObject* obj){
+        const PyTypeInfo* ti = _inst_type_info(obj);
+        if(ti->m__str__) return ti->m__str__(this, obj);
+        PyObject* self;
+        PyObject* f = get_unbound_method(obj, __str__, &self, false);
+        if(self != PY_NULL) return call_method(self, f);
+        return py_repr(obj);
+    }
+
+    PyObject* py_repr(PyObject* obj){
+        const PyTypeInfo* ti = _inst_type_info(obj);
+        if(ti->m__repr__) return ti->m__repr__(this, obj);
+        return call_method(obj, __repr__);
+    }
+
+    PyObject* py_json(PyObject* obj){
+        const PyTypeInfo* ti = _inst_type_info(obj);
+        if(ti->m__json__) return ti->m__json__(this, obj);
+        return call_method(obj, __json__);
+    }
+
+    PyObject* py_iter(PyObject* obj){
+        const PyTypeInfo* ti = _inst_type_info(obj);
+        if(ti->m__iter__) return ti->m__iter__(this, obj);
+        PyObject* self;
+        PyObject* iter_f = get_unbound_method(obj, __iter__, &self, false);
+        if(self != PY_NULL) return call_method(self, iter_f);
+        TypeError(OBJ_NAME(_t(obj)).escape() + " object is not iterable");
+        return nullptr;
+    }
+
+    PyObject* find_name_in_mro(PyObject* cls, StrName name){
+        PyObject* val;
+        do{
+            val = cls->attr().try_get(name);
+            if(val != nullptr) return val;
+            Type base = _all_types[OBJ_GET(Type, cls)].base;
+            if(base.index == -1) break;
+            cls = _all_types[base].obj;
+        }while(true);
+        return nullptr;
+    }
+
+    bool isinstance(PyObject* obj, Type cls_t){
+        Type obj_t = OBJ_GET(Type, _t(obj));
+        do{
+            if(obj_t == cls_t) return true;
+            Type base = _all_types[obj_t].base;
+            if(base.index == -1) break;
+            obj_t = base;
+        }while(true);
+        return false;
+    }
+
+    PyObject* exec(Str source, Str filename, CompileMode mode, PyObject* _module=nullptr){
+        if(_module == nullptr) _module = _main;
+        try {
+            CodeObject_ code = compile(source, filename, mode);
+#if DEBUG_DIS_EXEC
+            if(_module == _main) std::cout << disassemble(code) << '\n';
+#endif
+            return _exec(code, _module);
+        }catch (const Exception& e){
+            _stderr(this, e.summary() + "\n");
+        }
+#if !DEBUG_FULL_EXCEPTION
+        catch (const std::exception& e) {
+            Str msg = "An std::exception occurred! It could be a bug.\n";
+            msg = msg + e.what();
+            _stderr(this, msg + "\n");
+        }
+#endif
+        callstack.clear();
+        s_data.clear();
+        return nullptr;
+    }
+
+    template<typename ...Args>
+    PyObject* _exec(Args&&... args){
+        callstack.emplace(&s_data, s_data._sp, std::forward<Args>(args)...);
+        return _run_top_frame();
+    }
+
+    void _pop_frame(){
+        Frame* frame = &callstack.top();
+        s_data.reset(frame->_sp_base);
+        callstack.pop();
+    }
+
+    void _push_varargs(){ }
+    void _push_varargs(PyObject* _0){ PUSH(_0); }
+    void _push_varargs(PyObject* _0, PyObject* _1){ PUSH(_0); PUSH(_1); }
+    void _push_varargs(PyObject* _0, PyObject* _1, PyObject* _2){ PUSH(_0); PUSH(_1); PUSH(_2); }
+    void _push_varargs(PyObject* _0, PyObject* _1, PyObject* _2, PyObject* _3){ PUSH(_0); PUSH(_1); PUSH(_2); PUSH(_3); }
+
+    template<typename... Args>
+    PyObject* call(PyObject* callable, Args&&... args){
+        PUSH(callable);
+        PUSH(PY_NULL);
+        _push_varargs(args...);
+        return vectorcall(sizeof...(args));
+    }
+
+    template<typename... Args>
+    PyObject* call_method(PyObject* self, PyObject* callable, Args&&... args){
+        PUSH(callable);
+        PUSH(self);
+        _push_varargs(args...);
+        return vectorcall(sizeof...(args));
+    }
+
+    template<typename... Args>
+    PyObject* call_method(PyObject* self, StrName name, Args&&... args){
+        PyObject* callable = get_unbound_method(self, name, &self);
+        return call_method(self, callable, args...);
+    }
+
+    PyObject* property(NativeFuncC fget, NativeFuncC fset=nullptr){
+        PyObject* _0 = heap.gcnew(tp_native_func, NativeFunc(fget, 1, false));
+        PyObject* _1 = vm->None;
+        if(fset != nullptr) _1 = heap.gcnew(tp_native_func, NativeFunc(fset, 2, false));
+        return call(_t(tp_property), _0, _1);
+    }
+
+    PyObject* new_type_object(PyObject* mod, StrName name, Type base, bool subclass_enabled=true){
+        PyObject* obj = heap._new<Type>(tp_type, _all_types.size());
+        const PyTypeInfo& base_info = _all_types[base];
+        if(!base_info.subclass_enabled){
+            TypeError(fmt("type ", base_info.name.escape(), " is not `subclass_enabled`"));
+        }
+        PyTypeInfo info{
+            obj,
+            base,
+            (mod!=nullptr && mod!=builtins) ? Str(OBJ_NAME(mod)+"."+name.sv()): name.sv(),
+            subclass_enabled,
+        };
+        if(mod != nullptr) mod->attr().set(name, obj);
+        _all_types.push_back(info);
+        return obj;
+    }
+
+    Type _new_type_object(StrName name, Type base=0) {
+        PyObject* obj = new_type_object(nullptr, name, base, false);
+        return OBJ_GET(Type, obj);
+    }
+
+    PyObject* _find_type_object(const Str& type){
+        PyObject* obj = builtins->attr().try_get(type);
+        if(obj == nullptr){
+            for(auto& t: _all_types) if(t.name == type) return t.obj;
+            throw std::runtime_error(fmt("type not found: ", type));
+        }
+        check_non_tagged_type(obj, tp_type);
+        return obj;
+    }
+
+    Type _type(const Str& type){
+        PyObject* obj = _find_type_object(type);
+        return OBJ_GET(Type, obj);
+    }
+
+    PyTypeInfo* _type_info(const Str& type){
+        PyObject* obj = builtins->attr().try_get(type);
+        if(obj == nullptr){
+            for(auto& t: _all_types) if(t.name == type) return &t;
+            FATAL_ERROR();
+        }
+        return &_all_types[OBJ_GET(Type, obj)];
+    }
+
+    PyTypeInfo* _type_info(Type type){
+        return &_all_types[type];
+    }
+
+    const PyTypeInfo* _inst_type_info(PyObject* obj){
+        if(is_int(obj)) return &_all_types[tp_int];
+        if(is_float(obj)) return &_all_types[tp_float];
+        return &_all_types[obj->type];
+    }
+
+#define BIND_UNARY_SPECIAL(name)                                                        \
+    void bind##name(Type type, PyObject* (*f)(VM*, PyObject*)){                         \
+        _all_types[type].m##name = f;                                                   \
+        PyObject* nf = bind_method<0>(_t(type), #name, [](VM* vm, ArgsView args){       \
+            return lambda_get_userdata<PyObject*(*)(VM*, PyObject*)>(args.begin())(vm, args[0]);\
+        });                                                                             \
+        OBJ_GET(NativeFunc, nf).set_userdata(f);                                        \
+    }
+
+    BIND_UNARY_SPECIAL(__repr__)
+    BIND_UNARY_SPECIAL(__str__)
+    BIND_UNARY_SPECIAL(__iter__)
+    BIND_UNARY_SPECIAL(__next__)
+    BIND_UNARY_SPECIAL(__json__)
+    BIND_UNARY_SPECIAL(__neg__)
+    BIND_UNARY_SPECIAL(__bool__)
+
+    void bind__hash__(Type type, i64 (*f)(VM* vm, PyObject*));
+    void bind__len__(Type type, i64 (*f)(VM* vm, PyObject*));
+#undef BIND_UNARY_SPECIAL
+
+
+#define BIND_LOGICAL_SPECIAL(name)                                                      \
+    void bind##name(Type type, bool (*f)(VM*, PyObject*, PyObject*)){                   \
+        PyObject* obj = _t(type);                                                       \
+        _all_types[type].m##name = f;                                                   \
+        PyObject* nf = bind_method<1>(obj, #name, [](VM* vm, ArgsView args){            \
+            bool ok = lambda_get_userdata<bool(*)(VM*, PyObject*, PyObject*)>(args.begin())(vm, args[0], args[1]); \
+            return ok ? vm->True : vm->False;                                           \
+        });                                                                             \
+        OBJ_GET(NativeFunc, nf).set_userdata(f);                                        \
+    }
+
+    BIND_LOGICAL_SPECIAL(__eq__)
+    BIND_LOGICAL_SPECIAL(__lt__)
+    BIND_LOGICAL_SPECIAL(__le__)
+    BIND_LOGICAL_SPECIAL(__gt__)
+    BIND_LOGICAL_SPECIAL(__ge__)
+    BIND_LOGICAL_SPECIAL(__contains__)
+
+#undef BIND_LOGICAL_SPECIAL
+
+
+#define BIND_BINARY_SPECIAL(name)                                                       \
+    void bind##name(Type type, PyObject* (*f)(VM*, PyObject*, PyObject*)){              \
+        PyObject* obj = _t(type);                                                       \
+        _all_types[type].m##name = f;                                                   \
+        PyObject* nf = bind_method<1>(obj, #name, [](VM* vm, ArgsView args){            \
+            return lambda_get_userdata<PyObject*(*)(VM*, PyObject*, PyObject*)>(args.begin())(vm, args[0], args[1]); \
+        });                                                                             \
+        OBJ_GET(NativeFunc, nf).set_userdata(f);                                        \
+    }
+
+    BIND_BINARY_SPECIAL(__add__)
+    BIND_BINARY_SPECIAL(__sub__)
+    BIND_BINARY_SPECIAL(__mul__)
+    BIND_BINARY_SPECIAL(__truediv__)
+    BIND_BINARY_SPECIAL(__floordiv__)
+    BIND_BINARY_SPECIAL(__mod__)
+    BIND_BINARY_SPECIAL(__pow__)
+    BIND_BINARY_SPECIAL(__matmul__)
+
+    BIND_BINARY_SPECIAL(__lshift__)
+    BIND_BINARY_SPECIAL(__rshift__)
+    BIND_BINARY_SPECIAL(__and__)
+    BIND_BINARY_SPECIAL(__or__)
+    BIND_BINARY_SPECIAL(__xor__)
+
+#undef BIND_BINARY_SPECIAL
+
+    void bind__getitem__(Type type, PyObject* (*f)(VM*, PyObject*, PyObject*)){
+        PyObject* obj = _t(type);
+        _all_types[type].m__getitem__ = f;
+        PyObject* nf = bind_method<1>(obj, "__getitem__", [](VM* vm, ArgsView args){
+            return lambda_get_userdata<PyObject*(*)(VM*, PyObject*, PyObject*)>(args.begin())(vm, args[0], args[1]);
+        });
+        OBJ_GET(NativeFunc, nf).set_userdata(f);
+    }
+
+    void bind__setitem__(Type type, void (*f)(VM*, PyObject*, PyObject*, PyObject*)){
+        PyObject* obj = _t(type);
+        _all_types[type].m__setitem__ = f;
+        PyObject* nf = bind_method<2>(obj, "__setitem__", [](VM* vm, ArgsView args){
+            lambda_get_userdata<void(*)(VM* vm, PyObject*, PyObject*, PyObject*)>(args.begin())(vm, args[0], args[1], args[2]);
+            return vm->None;
+        });
+        OBJ_GET(NativeFunc, nf).set_userdata(f);
+    }
+
+    void bind__delitem__(Type type, void (*f)(VM*, PyObject*, PyObject*)){
+        PyObject* obj = _t(type);
+        _all_types[type].m__delitem__ = f;
+        PyObject* nf = bind_method<1>(obj, "__delitem__", [](VM* vm, ArgsView args){
+            lambda_get_userdata<void(*)(VM*, PyObject*, PyObject*)>(args.begin())(vm, args[0], args[1]);
+            return vm->None;
+        });
+        OBJ_GET(NativeFunc, nf).set_userdata(f);
+    }
+
+    bool py_equals(PyObject* lhs, PyObject* rhs){
+        if(lhs == rhs) return true;
+        const PyTypeInfo* ti = _inst_type_info(lhs);
+        if(ti->m__eq__) return ti->m__eq__(this, lhs, rhs);
+        return call_method(lhs, __eq__, rhs) == True;
+    }
+
+    template<int ARGC>
+    PyObject* bind_func(Str type, Str name, NativeFuncC fn) {
+        return bind_func<ARGC>(_find_type_object(type), name, fn);
+    }
+
+    template<int ARGC>
+    PyObject* bind_method(Str type, Str name, NativeFuncC fn) {
+        return bind_method<ARGC>(_find_type_object(type), name, fn);
+    }
+
+    template<int ARGC, typename __T>
+    PyObject* bind_constructor(__T&& type, NativeFuncC fn) {
+        static_assert(ARGC==-1 || ARGC>=1);
+        return bind_func<ARGC>(std::forward<__T>(type), "__new__", fn);
+    }
+
+    template<typename T, typename __T>
+    PyObject* bind_default_constructor(__T&& type) {
+        return bind_constructor<1>(std::forward<__T>(type), [](VM* vm, ArgsView args){
+            Type t = OBJ_GET(Type, args[0]);
+            return vm->heap.gcnew<T>(t, T());
+        });
+    }
+
+    template<typename T, typename __T>
+    PyObject* bind_notimplemented_constructor(__T&& type) {
+        return bind_constructor<-1>(std::forward<__T>(type), [](VM* vm, ArgsView args){
+            vm->NotImplementedError();
+            return vm->None;
+        });
+    }
+
+    template<int ARGC>
+    PyObject* bind_builtin_func(Str name, NativeFuncC fn) {
+        return bind_func<ARGC>(builtins, name, fn);
+    }
+
+    int normalized_index(int index, int size){
+        if(index < 0) index += size;
+        if(index < 0 || index >= size){
+            IndexError(std::to_string(index) + " not in [0, " + std::to_string(size) + ")");
+        }
+        return index;
+    }
+
+    PyObject* py_next(PyObject* obj){
+        const PyTypeInfo* ti = _inst_type_info(obj);
+        if(ti->m__next__) return ti->m__next__(this, obj);
+        return call_method(obj, __next__);
+    }
+    
+    /***** Error Reporter *****/
+    void _error(StrName name, const Str& msg){
+        _error(Exception(name, msg));
+    }
+
+    void _raise(){
+        bool ok = top_frame()->jump_to_exception_handler();
+        if(ok) throw HandledException();
+        else throw UnhandledException();
+    }
+
+    void StackOverflowError() { _error("StackOverflowError", ""); }
+    void IOError(const Str& msg) { _error("IOError", msg); }
+    void NotImplementedError(){ _error("NotImplementedError", ""); }
+    void TypeError(const Str& msg){ _error("TypeError", msg); }
+    void IndexError(const Str& msg){ _error("IndexError", msg); }
+    void ValueError(const Str& msg){ _error("ValueError", msg); }
+    void NameError(StrName name){ _error("NameError", fmt("name ", name.escape() + " is not defined")); }
+    void KeyError(PyObject* obj){ _error("KeyError", OBJ_GET(Str, py_repr(obj))); }
+
+    void AttributeError(PyObject* obj, StrName name){
+        // OBJ_NAME calls getattr, which may lead to a infinite recursion
+        _error("AttributeError", fmt("type ", OBJ_NAME(_t(obj)).escape(), " has no attribute ", name.escape()));
+    }
+
+    void AttributeError(Str msg){ _error("AttributeError", msg); }
+
+    void check_type(PyObject* obj, Type type){
+        if(is_type(obj, type)) return;
+        TypeError("expected " + OBJ_NAME(_t(type)).escape() + ", but got " + OBJ_NAME(_t(obj)).escape());
+    }
+
+    void check_non_tagged_type(PyObject* obj, Type type){
+        if(is_non_tagged_type(obj, type)) return;
+        TypeError("expected " + OBJ_NAME(_t(type)).escape() + ", but got " + OBJ_NAME(_t(obj)).escape());
+    }
+
+    void check_int(PyObject* obj){
+        if(is_int(obj)) return;
+        check_type(obj, tp_int);    // if failed, redirect to check_type to raise TypeError
+    }
+
+    void check_float(PyObject* obj){
+        if(is_float(obj)) return;
+        check_type(obj, tp_float);  // if failed, redirect to check_type to raise TypeError
+    }
+
+    PyObject* _t(Type t){
+        return _all_types[t.index].obj;
+    }
+
+    PyObject* _t(PyObject* obj){
+        if(is_int(obj)) return _t(tp_int);
+        if(is_float(obj)) return _t(tp_float);
+        return _all_types[obj->type].obj;
+    }
+
+    struct ImportContext{
+        // 0: normal; 1: __init__.py; 2: relative
+        std::vector<std::pair<StrName, int>> pending;
+
+        struct Temp{
+            VM* vm;
+            StrName name;
+
+            Temp(VM* vm, StrName name, int type): vm(vm), name(name){
+                ImportContext* ctx = &vm->_import_context;
+                ctx->pending.emplace_back(name, type);
+            }
+
+            ~Temp(){
+                ImportContext* ctx = &vm->_import_context;
+                ctx->pending.pop_back();
+            }
+        };
+
+        Temp temp(VM* vm, StrName name, int type){
+            return Temp(vm, name, type);
+        }
+    };
+
+    ImportContext _import_context;
+
+    PyObject* py_import(StrName name, bool relative=false){
+        Str filename;
+        int type;
+        if(relative){
+            ImportContext* ctx = &_import_context;
+            type = 2;
+            for(auto it=ctx->pending.rbegin(); it!=ctx->pending.rend(); ++it){
+                if(it->second == 2) continue;
+                if(it->second == 1){
+                    filename = fmt(it->first, kPlatformSep, name, ".py");
+                    name = fmt(it->first, '.', name).c_str();
+                    break;
+                }
+            }
+            if(filename.length() == 0) _error("ImportError", "relative import outside of package");
+        }else{
+            type = 0;
+            filename = fmt(name, ".py");
+        }
+        for(auto& [k, v]: _import_context.pending){
+            if(k == name){
+                vm->_error("ImportError", fmt("circular import ", name.escape()));
+            }
+        }
+        PyObject* ext_mod = _modules.try_get(name);
+        if(ext_mod == nullptr){
+            Str source;
+            auto it = _lazy_modules.find(name);
+            if(it == _lazy_modules.end()){
+                Bytes b = _import_handler(filename);
+                if(!relative && !b){
+                    filename = fmt(name, kPlatformSep, "__init__.py");
+                    b = _import_handler(filename);
+                    if(b) type = 1;
+                }
+                if(!b) _error("ImportError", fmt("module ", name.escape(), " not found"));
+                source = Str(b.str());
+            }else{
+                source = it->second;
+                _lazy_modules.erase(it);
+            }
+            auto _ = _import_context.temp(this, name, type);
+            CodeObject_ code = compile(source, filename, EXEC_MODE);
+            PyObject* new_mod = new_module(name);
+            _exec(code, new_mod);
+            new_mod->attr()._try_perfect_rehash();
+            return new_mod;
+        }else{
+            return ext_mod;
+        }
+    }
+
+    ~VM() {
+        callstack.clear();
+        s_data.clear();
+        _all_types.clear();
+        _modules.clear();
+        _lazy_modules.clear();
+    }
+#if DEBUG_CEVAL_STEP
+    void _log_s_data(const char* title = nullptr);
+#endif
+    void _unpack_as_list(ArgsView args, List& list);
+    void _unpack_as_dict(ArgsView args, Dict& dict);
+    PyObject* vectorcall(int ARGC, int KWARGC=0, bool op_call=false);
+    CodeObject_ compile(Str source, Str filename, CompileMode mode, bool unknown_global_scope=false);
+    PyObject* py_negate(PyObject* obj);
+    f64 num_to_float(PyObject* obj);
+    bool py_bool(PyObject* obj);
+    i64 py_hash(PyObject* obj);
+    PyObject* py_list(PyObject*);
+    PyObject* new_module(StrName name);
+    Str disassemble(CodeObject_ co);
+    void init_builtin_types();
+    PyObject* getattr(PyObject* obj, StrName name, bool throw_err=true);
+    PyObject* get_unbound_method(PyObject* obj, StrName name, PyObject** self, bool throw_err=true, bool fallback=false);
+    void parse_int_slice(const Slice& s, int length, int& start, int& stop, int& step);
+    PyObject* format(Str, PyObject*);
+    void setattr(PyObject* obj, StrName name, PyObject* value);
+    template<int ARGC>
+    PyObject* bind_method(PyObject*, Str, NativeFuncC);
+    template<int ARGC>
+    PyObject* bind_func(PyObject*, Str, NativeFuncC);
+    void _error(Exception);
+    PyObject* _run_top_frame();
+    void post_init();
+    PyObject* _py_generator(Frame&& frame, ArgsView buffer);
+};
+
+inline PyObject* NativeFunc::operator()(VM* vm, ArgsView args) const{
+    int args_size = args.size() - (int)method;  // remove self
+    if(args_size != argc && argc != -1) {
+        vm->TypeError(fmt("expected ", argc, " arguments, but got ", args_size));
+    }
+#if DEBUG_EXTRA_CHECK
+    if(f == nullptr) FATAL_ERROR();
+#endif
+    return f(vm, args);
+}
+
+DEF_NATIVE_2(Str, tp_str)
+DEF_NATIVE_2(List, tp_list)
+DEF_NATIVE_2(Tuple, tp_tuple)
+DEF_NATIVE_2(Function, tp_function)
+DEF_NATIVE_2(NativeFunc, tp_native_func)
+DEF_NATIVE_2(BoundMethod, tp_bound_method)
+DEF_NATIVE_2(Range, tp_range)
+DEF_NATIVE_2(Slice, tp_slice)
+DEF_NATIVE_2(Exception, tp_exception)
+DEF_NATIVE_2(Bytes, tp_bytes)
+DEF_NATIVE_2(MappingProxy, tp_mappingproxy)
+DEF_NATIVE_2(Dict, tp_dict)
+DEF_NATIVE_2(Property, tp_property)
+DEF_NATIVE_2(StarWrapper, tp_star_wrapper)
+
+#undef DEF_NATIVE_2
+
+#define PY_CAST_INT(T)                                  \
+template<> inline T py_cast<T>(VM* vm, PyObject* obj){  \
+    vm->check_int(obj);                                 \
+    return (T)(BITS(obj) >> 2);                         \
+}                                                       \
+template<> inline T _py_cast<T>(VM* vm, PyObject* obj){ \
+    return (T)(BITS(obj) >> 2);                         \
+}
+
+PY_CAST_INT(char)
+PY_CAST_INT(short)
+PY_CAST_INT(int)
+PY_CAST_INT(long)
+PY_CAST_INT(long long)
+PY_CAST_INT(unsigned char)
+PY_CAST_INT(unsigned short)
+PY_CAST_INT(unsigned int)
+PY_CAST_INT(unsigned long)
+PY_CAST_INT(unsigned long long)
+
+
+template<> inline float py_cast<float>(VM* vm, PyObject* obj){
+    vm->check_float(obj);
+    i64 bits = BITS(obj) & Number::c1;
+    return BitsCvt(bits)._float;
+}
+template<> inline float _py_cast<float>(VM* vm, PyObject* obj){
+    i64 bits = BITS(obj) & Number::c1;
+    return BitsCvt(bits)._float;
+}
+template<> inline double py_cast<double>(VM* vm, PyObject* obj){
+    vm->check_float(obj);
+    i64 bits = BITS(obj) & Number::c1;
+    return BitsCvt(bits)._float;
+}
+template<> inline double _py_cast<double>(VM* vm, PyObject* obj){
+    i64 bits = BITS(obj) & Number::c1;
+    return BitsCvt(bits)._float;
+}
+
+
+#define PY_VAR_INT(T)                                       \
+    inline PyObject* py_var(VM* vm, T _val){                \
+        i64 val = static_cast<i64>(_val);                   \
+        if(((val << 2) >> 2) != val){                       \
+            vm->_error("OverflowError", std::to_string(val) + " is out of range");  \
+        }                                                                           \
+        val = (val << 2) | 0b01;                                                    \
+        return reinterpret_cast<PyObject*>(val);                                    \
+    }
+
+PY_VAR_INT(char)
+PY_VAR_INT(short)
+PY_VAR_INT(int)
+PY_VAR_INT(long)
+PY_VAR_INT(long long)
+PY_VAR_INT(unsigned char)
+PY_VAR_INT(unsigned short)
+PY_VAR_INT(unsigned int)
+PY_VAR_INT(unsigned long)
+PY_VAR_INT(unsigned long long)
+
+
+#define PY_VAR_FLOAT(T)                             \
+    inline PyObject* py_var(VM* vm, T _val){        \
+        BitsCvt val(static_cast<f64>(_val));        \
+        i64 bits = val._int & Number::c1;           \
+        i64 tail = val._int & Number::c2;           \
+        if(tail == 0b10){                           \
+            if(bits&0b100) bits += 0b100;           \
+        }else if(tail == 0b11){                     \
+            bits += 0b100;                          \
+        }                                           \
+        bits |= 0b10;                               \
+        return reinterpret_cast<PyObject*>(bits);   \
+    }
+
+PY_VAR_FLOAT(float)
+PY_VAR_FLOAT(double)
+
+#undef PY_VAR_INT
+#undef PY_VAR_FLOAT
+
+inline PyObject* py_var(VM* vm, bool val){
+    return val ? vm->True : vm->False;
+}
+
+template<> inline bool py_cast<bool>(VM* vm, PyObject* obj){
+    if(obj == vm->True) return true;
+    if(obj == vm->False) return false;
+    vm->check_non_tagged_type(obj, vm->tp_bool);
+    return false;
+}
+template<> inline bool _py_cast<bool>(VM* vm, PyObject* obj){
+    return obj == vm->True;
+}
+
+inline PyObject* py_var(VM* vm, const char val[]){
+    return VAR(Str(val));
+}
+
+inline PyObject* py_var(VM* vm, std::string val){
+    return VAR(Str(std::move(val)));
+}
+
+inline PyObject* py_var(VM* vm, std::string_view val){
+    return VAR(Str(val));
+}
+
+inline PyObject* py_var(VM* vm, NoReturn val){
+    return vm->None;
+}
+
+inline PyObject* py_var(VM* vm, PyObject* val){
+    return val;
+}
+
+inline PyObject* VM::py_negate(PyObject* obj){
+    const PyTypeInfo* ti = _inst_type_info(obj);
+    if(ti->m__neg__) return ti->m__neg__(this, obj);
+    return call_method(obj, __neg__);
+}
+
+inline f64 VM::num_to_float(PyObject* obj){
+    if(is_float(obj)){
+        return _CAST(f64, obj);
+    } else if (is_int(obj)){
+        return (f64)_CAST(i64, obj);
+    }
+    TypeError("expected 'int' or 'float', got " + OBJ_NAME(_t(obj)).escape());
+    return 0;
+}
+
+inline bool VM::py_bool(PyObject* obj){
+    if(is_non_tagged_type(obj, tp_bool)) return obj == True;
+    if(obj == None) return false;
+    if(is_int(obj)) return _CAST(i64, obj) != 0;
+    if(is_float(obj)) return _CAST(f64, obj) != 0.0;
+    PyObject* self;
+    PyObject* len_f = get_unbound_method(obj, __len__, &self, false);
+    if(self != PY_NULL){
+        PyObject* ret = call_method(self, len_f);
+        return CAST(i64, ret) > 0;
+    }
+    return true;
+}
+
+inline PyObject* VM::py_list(PyObject* it){
+    auto _lock = heap.gc_scope_lock();
+    it = py_iter(it);
+    List list;
+    PyObject* obj = py_next(it);
+    while(obj != StopIteration){
+        list.push_back(obj);
+        obj = py_next(it);
+    }
+    return VAR(std::move(list));
+}
+
+inline void VM::parse_int_slice(const Slice& s, int length, int& start, int& stop, int& step){
+    auto clip = [](int value, int min, int max){
+        if(value < min) return min;
+        if(value > max) return max;
+        return value;
+    };
+    if(s.step == None) step = 1;
+    else step = CAST(int, s.step);
+    if(step == 0) ValueError("slice step cannot be zero");
+    if(step > 0){
+        if(s.start == None){
+            start = 0;
+        }else{
+            start = CAST(int, s.start);
+            if(start < 0) start += length;
+            start = clip(start, 0, length);
+        }
+        if(s.stop == None){
+            stop = length;
+        }else{
+            stop = CAST(int, s.stop);
+            if(stop < 0) stop += length;
+            stop = clip(stop, 0, length);
+        }
+    }else{
+        if(s.start == None){
+            start = length - 1;
+        }else{
+            start = CAST(int, s.start);
+            if(start < 0) start += length;
+            start = clip(start, -1, length - 1);
+        }
+        if(s.stop == None){
+            stop = -1;
+        }else{
+            stop = CAST(int, s.stop);
+            if(stop < 0) stop += length;
+            stop = clip(stop, -1, length - 1);
+        }
+    }
+}
+
+inline i64 VM::py_hash(PyObject* obj){
+    const PyTypeInfo* ti = _inst_type_info(obj);
+    if(ti->m__hash__) return ti->m__hash__(this, obj);
+    PyObject* ret = call_method(obj, __hash__);
+    return CAST(i64, ret);
+}
+
+inline PyObject* VM::format(Str spec, PyObject* obj){
+    if(spec.empty()) return py_str(obj);
+    char type;
+    switch(spec.end()[-1]){
+        case 'f': case 'd': case 's':
+            type = spec.end()[-1];
+            spec = spec.substr(0, spec.length() - 1);
+            break;
+        default: type = ' '; break;
+    }
+
+    char pad_c = ' ';
+    if(spec[0] == '0'){
+        pad_c = '0';
+        spec = spec.substr(1);
+    }
+    char align;
+    if(spec[0] == '>'){
+        align = '>';
+        spec = spec.substr(1);
+    }else if(spec[0] == '<'){
+        align = '<';
+        spec = spec.substr(1);
+    }else{
+        if(is_int(obj) || is_float(obj)) align = '>';
+        else align = '<';
+    }
+
+    int dot = spec.index(".");
+    int width, precision;
+    try{
+        if(dot >= 0){
+            width = Number::stoi(spec.substr(0, dot).str());
+            precision = Number::stoi(spec.substr(dot+1).str());
+        }else{
+            width = Number::stoi(spec.str());
+            precision = -1;
+        }
+    }catch(...){
+        ValueError("invalid format specifer");
+    }
+
+    if(type != 'f' && dot >= 0) ValueError("precision not allowed in the format specifier");
+    Str ret;
+    if(type == 'f'){
+        f64 val = num_to_float(obj);
+        if(precision < 0) precision = 6;
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(precision) << val;
+        ret = ss.str();
+    }else if(type == 'd'){
+        ret = std::to_string(CAST(i64, obj));
+    }else if(type == 's'){
+        ret = CAST(Str&, obj);
+    }else{
+        ret = CAST(Str&, py_str(obj));
+    }
+    if(width > ret.length()){
+        int pad = width - ret.length();
+        std::string padding(pad, pad_c);
+        if(align == '>') ret = padding.c_str() + ret;
+        else ret = ret + padding.c_str();
+    }
+    return VAR(ret);
+}
+
+inline PyObject* VM::new_module(StrName name) {
+    PyObject* obj = heap._new<DummyModule>(tp_module, DummyModule());
+    obj->attr().set("__name__", VAR(name.sv()));
+    // we do not allow override in order to avoid memory leak
+    // it is because Module objects are not garbage collected
+    if(_modules.contains(name)) throw std::runtime_error("module already exists");
+    _modules.set(name, obj);
+    return obj;
+}
+
+inline std::string _opcode_argstr(VM* vm, Bytecode byte, const CodeObject* co){
+    std::string argStr = byte.arg == -1 ? "" : std::to_string(byte.arg);
+    switch(byte.op){
+        case OP_LOAD_CONST:
+            if(vm != nullptr){
+                argStr += fmt(" (", CAST(Str, vm->py_repr(co->consts[byte.arg])), ")");
+            }
+            break;
+        case OP_LOAD_NAME: case OP_LOAD_GLOBAL: case OP_LOAD_NONLOCAL: case OP_STORE_GLOBAL:
+        case OP_LOAD_ATTR: case OP_LOAD_METHOD: case OP_STORE_ATTR: case OP_DELETE_ATTR:
+        case OP_IMPORT_NAME: case OP_BEGIN_CLASS: case OP_RAISE:
+        case OP_DELETE_GLOBAL: case OP_INC_GLOBAL: case OP_DEC_GLOBAL:
+            argStr += fmt(" (", StrName(byte.arg).sv(), ")");
+            break;
+        case OP_LOAD_FAST: case OP_STORE_FAST: case OP_DELETE_FAST: case OP_INC_FAST: case OP_DEC_FAST:
+            argStr += fmt(" (", co->varnames[byte.arg].sv(), ")");
+            break;
+        case OP_LOAD_FUNCTION:
+            argStr += fmt(" (", co->func_decls[byte.arg]->code->name, ")");
+            break;
+    }
+    return argStr;
+}
+
+inline Str VM::disassemble(CodeObject_ co){
+    auto pad = [](const Str& s, const int n){
+        if(s.length() >= n) return s.substr(0, n);
+        return s + std::string(n - s.length(), ' ');
+    };
+
+    std::vector<int> jumpTargets;
+    for(auto byte : co->codes){
+        if(byte.op == OP_JUMP_ABSOLUTE || byte.op == OP_POP_JUMP_IF_FALSE || byte.op == OP_POP_JUMP_IF_FALSE || byte.op == OP_SHORTCUT_IF_FALSE_OR_POP){
+            jumpTargets.push_back(byte.arg);
+        }
+    }
+    std::stringstream ss;
+    int prev_line = -1;
+    for(int i=0; i<co->codes.size(); i++){
+        const Bytecode& byte = co->codes[i];
+        Str line = std::to_string(co->lines[i]);
+        if(co->lines[i] == prev_line) line = "";
+        else{
+            if(prev_line != -1) ss << "\n";
+            prev_line = co->lines[i];
+        }
+
+        std::string pointer;
+        if(std::find(jumpTargets.begin(), jumpTargets.end(), i) != jumpTargets.end()){
+            pointer = "-> ";
+        }else{
+            pointer = "   ";
+        }
+        ss << pad(line, 8) << pointer << pad(std::to_string(i), 3);
+        ss << " " << pad(OP_NAMES[byte.op], 25) << " ";
+        // ss << pad(byte.arg == -1 ? "" : std::to_string(byte.arg), 5);
+        std::string argStr = _opcode_argstr(this, byte, co.get());
+        ss << argStr;
+        // ss << pad(argStr, 40);      // may overflow
+        // ss << co->blocks[byte.block].type;
+        if(i != co->codes.size() - 1) ss << '\n';
+    }
+
+    for(auto& decl: co->func_decls){
+        ss << "\n\n" << "Disassembly of " << decl->code->name << ":\n";
+        ss << disassemble(decl->code);
+    }
+    ss << "\n";
+    return Str(ss.str());
+}
+
+#if DEBUG_CEVAL_STEP
+inline void VM::_log_s_data(const char* title) {
+    if(_main == nullptr) return;
+    if(callstack.empty()) return;
+    std::stringstream ss;
+    if(title) ss << title << " | ";
+    std::map<PyObject**, int> sp_bases;
+    for(Frame& f: callstack.data()){
+        if(f._sp_base == nullptr) FATAL_ERROR();
+        sp_bases[f._sp_base] += 1;
+    }
+    FrameId frame = top_frame();
+    int line = frame->co->lines[frame->_ip];
+    ss << frame->co->name << ":" << line << " [";
+    for(PyObject** p=s_data.begin(); p!=s_data.end(); p++){
+        ss << std::string(sp_bases[p], '|');
+        if(sp_bases[p] > 0) ss << " ";
+        PyObject* obj = *p;
+        if(obj == nullptr) ss << "(nil)";
+        else if(obj == PY_NULL) ss << "NULL";
+        else if(is_int(obj)) ss << CAST(i64, obj);
+        else if(is_float(obj)) ss << CAST(f64, obj);
+        else if(is_type(obj, tp_str)) ss << CAST(Str, obj).escape();
+        else if(obj == None) ss << "None";
+        else if(obj == True) ss << "True";
+        else if(obj == False) ss << "False";
+        else if(is_type(obj, tp_function)){
+            auto& f = CAST(Function&, obj);
+            ss << f.decl->code->name << "(...)";
+        } else if(is_type(obj, tp_type)){
+            Type t = OBJ_GET(Type, obj);
+            ss << "<class " + _all_types[t].name.escape() + ">";
+        } else if(is_type(obj, tp_list)){
+            auto& t = CAST(List&, obj);
+            ss << "list(size=" << t.size() << ")";
+        } else if(is_type(obj, tp_tuple)){
+            auto& t = CAST(Tuple&, obj);
+            ss << "tuple(size=" << t.size() << ")";
+        } else ss << "(" << obj_type_name(this, obj->type) << ")";
+        ss << ", ";
+    }
+    std::string output = ss.str();
+    if(!s_data.empty()) {
+        output.pop_back(); output.pop_back();
+    }
+    output.push_back(']');
+    Bytecode byte = frame->co->codes[frame->_ip];
+    std::cout << output << " " << OP_NAMES[byte.op] << " " << _opcode_argstr(nullptr, byte, frame->co) << std::endl;
+}
+#endif
+
+inline void VM::init_builtin_types(){
+    _all_types.push_back({heap._new<Type>(Type(1), Type(0)), -1, "object", true});
+    _all_types.push_back({heap._new<Type>(Type(1), Type(1)), 0, "type", false});
+    tp_object = 0; tp_type = 1;
+
+    tp_int = _new_type_object("int");
+    tp_float = _new_type_object("float");
+    if(tp_int.index != kTpIntIndex || tp_float.index != kTpFloatIndex) FATAL_ERROR();
+
+    tp_bool = _new_type_object("bool");
+    tp_str = _new_type_object("str");
+    tp_list = _new_type_object("list");
+    tp_tuple = _new_type_object("tuple");
+    tp_slice = _new_type_object("slice");
+    tp_range = _new_type_object("range");
+    tp_module = _new_type_object("module");
+    tp_function = _new_type_object("function");
+    tp_native_func = _new_type_object("native_func");
+    tp_bound_method = _new_type_object("bound_method");
+    tp_super = _new_type_object("super");
+    tp_exception = _new_type_object("Exception");
+    tp_bytes = _new_type_object("bytes");
+    tp_mappingproxy = _new_type_object("mappingproxy");
+    tp_dict = _new_type_object("dict");
+    tp_property = _new_type_object("property");
+    tp_star_wrapper = _new_type_object("_star_wrapper");
+
+    this->None = heap._new<Dummy>(_new_type_object("NoneType"), {});
+    this->Ellipsis = heap._new<Dummy>(_new_type_object("ellipsis"), {});
+    this->True = heap._new<Dummy>(tp_bool, {});
+    this->False = heap._new<Dummy>(tp_bool, {});
+    this->StopIteration = heap._new<Dummy>(_new_type_object("StopIterationType"), {});
+
+    this->builtins = new_module("builtins");
+    
+    // setup public types
+    builtins->attr().set("type", _t(tp_type));
+    builtins->attr().set("object", _t(tp_object));
+    builtins->attr().set("bool", _t(tp_bool));
+    builtins->attr().set("int", _t(tp_int));
+    builtins->attr().set("float", _t(tp_float));
+    builtins->attr().set("str", _t(tp_str));
+    builtins->attr().set("list", _t(tp_list));
+    builtins->attr().set("tuple", _t(tp_tuple));
+    builtins->attr().set("range", _t(tp_range));
+    builtins->attr().set("bytes", _t(tp_bytes));
+    builtins->attr().set("dict", _t(tp_dict));
+    builtins->attr().set("property", _t(tp_property));
+    builtins->attr().set("StopIteration", StopIteration);
+    builtins->attr().set("slice", _t(tp_slice));
+
+    post_init();
+    for(int i=0; i<_all_types.size(); i++){
+        _all_types[i].obj->attr()._try_perfect_rehash();
+    }
+    for(auto [k, v]: _modules.items()) v->attr()._try_perfect_rehash();
+    this->_main = new_module("__main__");
+}
+
+// `heap.gc_scope_lock();` needed before calling this function
+inline void VM::_unpack_as_list(ArgsView args, List& list){
+    for(PyObject* obj: args){
+        if(is_non_tagged_type(obj, tp_star_wrapper)){
+            const StarWrapper& w = _CAST(StarWrapper&, obj);
+            // maybe this check should be done in the compile time
+            if(w.level != 1) TypeError("expected level 1 star wrapper");
+            PyObject* _0 = py_iter(w.obj);
+            PyObject* _1 = py_next(_0);
+            while(_1 != StopIteration){
+                list.push_back(_1);
+                _1 = py_next(_0);
+            }
+        }else{
+            list.push_back(obj);
+        }
+    }
+}
+
+// `heap.gc_scope_lock();` needed before calling this function
+inline void VM::_unpack_as_dict(ArgsView args, Dict& dict){
+    for(PyObject* obj: args){
+        if(is_non_tagged_type(obj, tp_star_wrapper)){
+            const StarWrapper& w = _CAST(StarWrapper&, obj);
+            // maybe this check should be done in the compile time
+            if(w.level != 2) TypeError("expected level 2 star wrapper");
+            const Dict& other = CAST(Dict&, w.obj);
+            dict.update(other);
+        }else{
+            const Tuple& t = CAST(Tuple&, obj);
+            if(t.size() != 2) TypeError("expected tuple of length 2");
+            dict.set(t[0], t[1]);
+        }
+    }
+}
+
+inline PyObject* VM::vectorcall(int ARGC, int KWARGC, bool op_call){
+    PyObject** p1 = s_data._sp - KWARGC*2;
+    PyObject** p0 = p1 - ARGC - 2;
+    // [callable, <self>, args..., kwargs...]
+    //      ^p0                    ^p1      ^_sp
+    PyObject* callable = p1[-(ARGC + 2)];
+    bool method_call = p1[-(ARGC + 1)] != PY_NULL;
+
+    // handle boundmethod, do a patch
+    if(is_non_tagged_type(callable, tp_bound_method)){
+        if(method_call) FATAL_ERROR();
+        auto& bm = CAST(BoundMethod&, callable);
+        callable = bm.func;      // get unbound method
+        p1[-(ARGC + 2)] = bm.func;
+        p1[-(ARGC + 1)] = bm.self;
+        method_call = true;
+        // [unbound, self, args..., kwargs...]
+    }
+
+    ArgsView args(p1 - ARGC - int(method_call), p1);
+
+    if(is_non_tagged_type(callable, tp_native_func)){
+        const auto& f = OBJ_GET(NativeFunc, callable);
+        if(KWARGC != 0) TypeError("native_func does not accept keyword arguments");
+        PyObject* ret = f(this, args);
+        s_data.reset(p0);
+        return ret;
+    }
+
+    ArgsView kwargs(p1, s_data._sp);
+
+    if(is_non_tagged_type(callable, tp_function)){
+        /*****************_py_call*****************/
+        // callable must be a `function` object
+        if(s_data.is_overflow()) StackOverflowError();
+
+        const Function& fn = CAST(Function&, callable);
+        const CodeObject* co = fn.decl->code.get();
+        int co_nlocals = co->varnames.size();
+
+        if(args.size() < fn.argc){
+            vm->TypeError(fmt(
+                "expected ",
+                fn.argc - (int)method_call,
+                " positional arguments, but got ",
+                args.size() - (int)method_call,
+                " (", fn.decl->code->name, ')'
+            ));
+        }
+
+        // if this function is simple, a.k.a, no kwargs and no *args and not a generator
+        // we can use a fast path to avoid using buffer copy
+        if(fn.is_simple){
+            if(args.size() > fn.argc) TypeError("too many positional arguments");
+            int spaces = co_nlocals - fn.argc;
+            for(int j=0; j<spaces; j++) PUSH(PY_NULL);
+            callstack.emplace(&s_data, p0, co, fn._module, callable, FastLocals(co, args.begin()));
+            if(op_call) return PY_OP_CALL;
+            return _run_top_frame();
+        }
+
+        int i = 0;
+        static THREAD_LOCAL PyObject* buffer[PK_MAX_CO_VARNAMES];
+
+        // prepare args
+        for(int index: fn.decl->args) buffer[index] = args[i++];
+        // set extra varnames to nullptr
+        for(int j=i; j<co_nlocals; j++) buffer[j] = PY_NULL;
+        // prepare kwdefaults
+        for(auto& kv: fn.decl->kwargs) buffer[kv.key] = kv.value;
+        
+        // handle *args
+        if(fn.decl->starred_arg != -1){
+            ArgsView vargs(args.begin() + i, args.end());
+            buffer[fn.decl->starred_arg] = VAR(vargs.to_tuple());
+            i += vargs.size();
+        }else{
+            // kwdefaults override
+            for(auto& kv: fn.decl->kwargs){
+                if(i >= args.size()) break;
+                buffer[kv.key] = args[i++];
+            }
+            if(i < args.size()) TypeError(fmt("too many arguments", " (", fn.decl->code->name, ')'));
+        }
+        
+        PyObject* vkwargs;
+        if(fn.decl->starred_kwarg != -1){
+            vkwargs = VAR(Dict(this));
+            buffer[fn.decl->starred_kwarg] = vkwargs;
+        }else{
+            vkwargs = nullptr;
+        }
+
+        for(int i=0; i<kwargs.size(); i+=2){
+            StrName key(CAST(int, kwargs[i]));
+            int index = co->varnames_inv.try_get(key);
+            if(index < 0){
+                if(vkwargs == nullptr){
+                    TypeError(fmt(key.escape(), " is an invalid keyword argument for ", co->name, "()"));
+                }else{
+                    Dict& dict = _CAST(Dict&, vkwargs);
+                    dict.set(VAR(key.sv()), kwargs[i+1]);
+                }
+            }else{
+                buffer[index] = kwargs[i+1];
+            }
+        }
+        
+        if(co->is_generator){
+            s_data.reset(p0);
+            return _py_generator(
+                Frame(&s_data, nullptr, co, fn._module, callable),
+                ArgsView(buffer, buffer + co_nlocals)
+            );
+        }
+
+        // copy buffer back to stack
+        s_data.reset(args.begin());
+        for(int i=0; i<co_nlocals; i++) PUSH(buffer[i]);
+        callstack.emplace(&s_data, p0, co, fn._module, callable, FastLocals(co, args.begin()));
+        if(op_call) return PY_OP_CALL;
+        return _run_top_frame();
+        /*****************_py_call*****************/
+    }
+
+    if(is_non_tagged_type(callable, tp_type)){
+        if(method_call) FATAL_ERROR();
+        // [type, NULL, args..., kwargs...]
+
+        DEF_SNAME(__new__);
+        PyObject* new_f = find_name_in_mro(callable, __new__);
+        PyObject* obj;
+        if(new_f != nullptr){
+            PUSH(new_f);
+            PUSH(PY_NULL);
+            PUSH(callable);    // cls
+            for(PyObject* obj: args) PUSH(obj);
+            for(PyObject* obj: kwargs) PUSH(obj);
+            // if obj is not an instance of callable, the behavior is undefined
+            obj = vectorcall(ARGC+1, KWARGC);
+        }else{
+            // fast path for object.__new__
+            Type t = OBJ_GET(Type, callable);
+            obj= vm->heap.gcnew<DummyInstance>(t, {});
+        }
+
+        // __init__
+        PyObject* self;
+        DEF_SNAME(__init__);
+        callable = get_unbound_method(obj, __init__, &self, false);
+        if (self != PY_NULL) {
+            // replace `NULL` with `self`
+            p1[-(ARGC + 2)] = callable;
+            p1[-(ARGC + 1)] = self;
+            // [init_f, self, args..., kwargs...]
+            vectorcall(ARGC, KWARGC);
+            // We just discard the return value of `__init__`
+            // in cpython it raises a TypeError if the return value is not None
+        }else{
+            // manually reset the stack
+            s_data.reset(p0);
+        }
+        return obj;
+    }
+
+    // handle `__call__` overload
+    PyObject* self;
+    DEF_SNAME(__call__);
+    PyObject* call_f = get_unbound_method(callable, __call__, &self, false);
+    if(self != PY_NULL){
+        p1[-(ARGC + 2)] = call_f;
+        p1[-(ARGC + 1)] = self;
+        // [call_f, self, args..., kwargs...]
+        return vectorcall(ARGC, KWARGC, false);
+    }
+    TypeError(OBJ_NAME(_t(callable)).escape() + " object is not callable");
+    return nullptr;
+}
+
+// https://docs.python.org/3/howto/descriptor.html#invocation-from-an-instance
+inline PyObject* VM::getattr(PyObject* obj, StrName name, bool throw_err){
+    PyObject* objtype = _t(obj);
+    // handle super() proxy
+    if(is_non_tagged_type(obj, tp_super)){
+        const Super& super = OBJ_GET(Super, obj);
+        obj = super.first;
+        objtype = _t(super.second);
+    }
+    PyObject* cls_var = find_name_in_mro(objtype, name);
+    if(cls_var != nullptr){
+        // handle descriptor
+        if(is_non_tagged_type(cls_var, tp_property)){
+            const Property& prop = _CAST(Property&, cls_var);
+            return call(prop.getter, obj);
+        }
+    }
+    // handle instance __dict__
+    if(!is_tagged(obj) && obj->is_attr_valid()){
+        PyObject* val = obj->attr().try_get(name);
+        if(val != nullptr) return val;
+    }
+    if(cls_var != nullptr){
+        // bound method is non-data descriptor
+        if(is_non_tagged_type(cls_var, tp_function) || is_non_tagged_type(cls_var, tp_native_func)){
+            return VAR(BoundMethod(obj, cls_var));
+        }
+        return cls_var;
+    }
+    if(throw_err) AttributeError(obj, name);
+    return nullptr;
+}
+
+// used by OP_LOAD_METHOD
+// try to load a unbound method (fallback to `getattr` if not found)
+inline PyObject* VM::get_unbound_method(PyObject* obj, StrName name, PyObject** self, bool throw_err, bool fallback){
+    *self = PY_NULL;
+    PyObject* objtype = _t(obj);
+    // handle super() proxy
+    if(is_non_tagged_type(obj, tp_super)){
+        const Super& super = OBJ_GET(Super, obj);
+        obj = super.first;
+        objtype = _t(super.second);
+    }
+    PyObject* cls_var = find_name_in_mro(objtype, name);
+
+    if(fallback){
+        if(cls_var != nullptr){
+            // handle descriptor
+            if(is_non_tagged_type(cls_var, tp_property)){
+                const Property& prop = _CAST(Property&, cls_var);
+                return call(prop.getter, obj);
+            }
+        }
+        // handle instance __dict__
+        if(!is_tagged(obj) && obj->is_attr_valid()){
+            PyObject* val = obj->attr().try_get(name);
+            if(val != nullptr) return val;
+        }
+    }
+
+    if(cls_var != nullptr){
+        if(is_non_tagged_type(cls_var, tp_function) || is_non_tagged_type(cls_var, tp_native_func)){
+            *self = obj;
+        }
+        return cls_var;
+    }
+    if(throw_err) AttributeError(obj, name);
+    return nullptr;
+}
+
+inline void VM::setattr(PyObject* obj, StrName name, PyObject* value){
+    PyObject* objtype = _t(obj);
+    // handle super() proxy
+    if(is_non_tagged_type(obj, tp_super)){
+        Super& super = OBJ_GET(Super, obj);
+        obj = super.first;
+        objtype = _t(super.second);
+    }
+    PyObject* cls_var = find_name_in_mro(objtype, name);
+    if(cls_var != nullptr){
+        // handle descriptor
+        if(is_non_tagged_type(cls_var, tp_property)){
+            const Property& prop = _CAST(Property&, cls_var);
+            if(prop.setter != vm->None){
+                call(prop.setter, obj, value);
+            }else{
+                TypeError(fmt("readonly attribute: ", name.escape()));
+            }
+            return;
+        }
+    }
+    // handle instance __dict__
+    if(is_tagged(obj) || !obj->is_attr_valid()) TypeError("cannot set attribute");
+    obj->attr().set(name, value);
+}
+
+template<int ARGC>
+PyObject* VM::bind_method(PyObject* obj, Str name, NativeFuncC fn) {
+    check_non_tagged_type(obj, tp_type);
+    PyObject* nf = VAR(NativeFunc(fn, ARGC, true));
+    obj->attr().set(name, nf);
+    return nf;
+}
+
+template<int ARGC>
+PyObject* VM::bind_func(PyObject* obj, Str name, NativeFuncC fn) {
+    PyObject* nf = VAR(NativeFunc(fn, ARGC, false));
+    obj->attr().set(name, nf);
+    return nf;
+}
+
+inline void VM::_error(Exception e){
+    if(callstack.empty()){
+        e.is_re = false;
+        throw e;
+    }
+    PUSH(VAR(e));
+    _raise();
+}
+
+inline void ManagedHeap::mark() {
+    for(PyObject* obj: _no_gc) OBJ_MARK(obj);
+    for(auto& frame : vm->callstack.data()) frame._gc_mark();
+    for(PyObject* obj: vm->s_data) OBJ_MARK(obj);
+    if(_gc_marker_ex) _gc_marker_ex(vm);
+    if(vm->_last_exception) OBJ_MARK(vm->_last_exception);
+}
+
+inline Str obj_type_name(VM *vm, Type type){
+    return vm->_all_types[type].name;
+}
+
+#undef PY_VAR_INT
+#undef PY_VAR_FLOAT
+
+/***************************************************/
+
+template<typename T>
+PyObject* PyArrayGetItem(VM* vm, PyObject* obj, PyObject* index){
+    static_assert(std::is_same_v<T, List> || std::is_same_v<T, Tuple>);
+    const T& self = _CAST(T&, obj);
+
+    if(is_non_tagged_type(index, vm->tp_slice)){
+        const Slice& s = _CAST(Slice&, index);
+        int start, stop, step;
+        vm->parse_int_slice(s, self.size(), start, stop, step);
+        List new_list;
+        for(int i=start; step>0?i<stop:i>stop; i+=step) new_list.push_back(self[i]);
+        return VAR(T(std::move(new_list)));
+    }
+
+    int i = CAST(int, index);
+    i = vm->normalized_index(i, self.size());
+    return self[i];
+}
+
+inline void VM::bind__hash__(Type type, i64 (*f)(VM*, PyObject*)){
+    PyObject* obj = _t(type);
+    _all_types[type].m__hash__ = f;
+    PyObject* nf = bind_method<0>(obj, "__hash__", [](VM* vm, ArgsView args){
+        i64 ret = lambda_get_userdata<i64(*)(VM*, PyObject*)>(args.begin())(vm, args[0]);
+        return VAR(ret);
+    });
+    OBJ_GET(NativeFunc, nf).set_userdata(f);
+}
+
+inline void VM::bind__len__(Type type, i64 (*f)(VM*, PyObject*)){
+    PyObject* obj = _t(type);
+    _all_types[type].m__len__ = f;
+    PyObject* nf = bind_method<0>(obj, "__len__", [](VM* vm, ArgsView args){
+        i64 ret = lambda_get_userdata<i64(*)(VM*, PyObject*)>(args.begin())(vm, args[0]);
+        return VAR(ret);
+    });
+    OBJ_GET(NativeFunc, nf).set_userdata(f);
+}
+
+
+inline void Dict::_probe(PyObject *key, bool &ok, int &i) const{
+    ok = false;
+    i = vm->py_hash(key) & _mask;
+    while(_items[i].first != nullptr) {
+        if(vm->py_equals(_items[i].first, key)) { ok = true; break; }
+        i = (i + 1) & _mask;
+    }
+}
+
+}   // namespace pkpy
+
+
+namespace pkpy{
+
+inline PyObject* VM::_run_top_frame(){
+    DEF_SNAME(add);
+    DEF_SNAME(set);
+    DEF_SNAME(__enter__);
+    DEF_SNAME(__exit__);
+    DEF_SNAME(__doc__);
+
+    FrameId frame = top_frame();
+    const int base_id = frame.index;
+    bool need_raise = false;
+
+    // shared registers
+    PyObject *_0, *_1, *_2;
+    const PyTypeInfo* _ti;
+    StrName _name;
+
+    while(true){
+#if DEBUG_EXTRA_CHECK
+        if(frame.index < base_id) FATAL_ERROR();
+#endif
+        try{
+            if(need_raise){ need_raise = false; _raise(); }
+/**********************************************************************/
+/* NOTE: 
+ * Be aware of accidental gc!
+ * DO NOT leave any strong reference of PyObject* in the C stack
+ */
+{
+#define DISPATCH_OP_CALL() { frame = top_frame(); goto __NEXT_FRAME; }
+__NEXT_FRAME:
+    Bytecode byte = frame->next_bytecode();
+    // cache
+    const CodeObject* co = frame->co;
+    const auto& co_consts = co->consts;
+    const auto& co_blocks = co->blocks;
+
+#if PK_ENABLE_COMPUTED_GOTO
+static void* OP_LABELS[] = {
+    #define OPCODE(name) &&CASE_OP_##name,
+    #ifdef OPCODE
+
+/**************************/
+OPCODE(NO_OP)
+/**************************/
+OPCODE(POP_TOP)
+OPCODE(DUP_TOP)
+OPCODE(ROT_TWO)
+OPCODE(ROT_THREE)
+OPCODE(PRINT_EXPR)
+/**************************/
+OPCODE(LOAD_CONST)
+OPCODE(LOAD_NONE)
+OPCODE(LOAD_TRUE)
+OPCODE(LOAD_FALSE)
+OPCODE(LOAD_INTEGER)
+OPCODE(LOAD_ELLIPSIS)
+OPCODE(LOAD_FUNCTION)
+OPCODE(LOAD_NULL)
+/**************************/
+OPCODE(LOAD_FAST)
+OPCODE(LOAD_NAME)
+OPCODE(LOAD_NONLOCAL)
+OPCODE(LOAD_GLOBAL)
+OPCODE(LOAD_ATTR)
+OPCODE(LOAD_METHOD)
+OPCODE(LOAD_SUBSCR)
+
+OPCODE(STORE_FAST)
+OPCODE(STORE_NAME)
+OPCODE(STORE_GLOBAL)
+OPCODE(STORE_ATTR)
+OPCODE(STORE_SUBSCR)
+
+OPCODE(DELETE_FAST)
+OPCODE(DELETE_NAME)
+OPCODE(DELETE_GLOBAL)
+OPCODE(DELETE_ATTR)
+OPCODE(DELETE_SUBSCR)
+/**************************/
+OPCODE(BUILD_TUPLE)
+OPCODE(BUILD_LIST)
+OPCODE(BUILD_DICT)
+OPCODE(BUILD_SET)
+OPCODE(BUILD_SLICE)
+OPCODE(BUILD_STRING)
+/**************************/
+OPCODE(BUILD_TUPLE_UNPACK)
+OPCODE(BUILD_LIST_UNPACK)
+OPCODE(BUILD_DICT_UNPACK)
+OPCODE(BUILD_SET_UNPACK)
+/**************************/
+OPCODE(BINARY_TRUEDIV)
+OPCODE(BINARY_POW)
+
+OPCODE(BINARY_ADD)
+OPCODE(BINARY_SUB)
+OPCODE(BINARY_MUL)
+OPCODE(BINARY_FLOORDIV)
+OPCODE(BINARY_MOD)
+
+OPCODE(COMPARE_LT)
+OPCODE(COMPARE_LE)
+OPCODE(COMPARE_EQ)
+OPCODE(COMPARE_NE)
+OPCODE(COMPARE_GT)
+OPCODE(COMPARE_GE)
+
+OPCODE(BITWISE_LSHIFT)
+OPCODE(BITWISE_RSHIFT)
+OPCODE(BITWISE_AND)
+OPCODE(BITWISE_OR)
+OPCODE(BITWISE_XOR)
+
+OPCODE(BINARY_MATMUL)
+
+OPCODE(IS_OP)
+OPCODE(CONTAINS_OP)
+/**************************/
+OPCODE(JUMP_ABSOLUTE)
+OPCODE(POP_JUMP_IF_FALSE)
+OPCODE(JUMP_IF_TRUE_OR_POP)
+OPCODE(JUMP_IF_FALSE_OR_POP)
+OPCODE(SHORTCUT_IF_FALSE_OR_POP)
+OPCODE(LOOP_CONTINUE)
+OPCODE(LOOP_BREAK)
+OPCODE(GOTO)
+/**************************/
+OPCODE(CALL)
+OPCODE(CALL_TP)
+OPCODE(RETURN_VALUE)
+OPCODE(YIELD_VALUE)
+/**************************/
+OPCODE(LIST_APPEND)
+OPCODE(DICT_ADD)
+OPCODE(SET_ADD)
+/**************************/
+OPCODE(UNARY_NEGATIVE)
+OPCODE(UNARY_NOT)
+OPCODE(UNARY_STAR)
+/**************************/
+OPCODE(GET_ITER)
+OPCODE(FOR_ITER)
+/**************************/
+OPCODE(IMPORT_NAME)
+OPCODE(IMPORT_NAME_REL)
+OPCODE(IMPORT_STAR)
+/**************************/
+OPCODE(UNPACK_SEQUENCE)
+OPCODE(UNPACK_EX)
+/**************************/
+OPCODE(BEGIN_CLASS)
+OPCODE(END_CLASS)
+OPCODE(STORE_CLASS_ATTR)
+/**************************/
+OPCODE(WITH_ENTER)
+OPCODE(WITH_EXIT)
+/**************************/
+OPCODE(ASSERT)
+OPCODE(EXCEPTION_MATCH)
+OPCODE(RAISE)
+OPCODE(RE_RAISE)
+OPCODE(POP_EXCEPTION)
+/**************************/
+OPCODE(SETUP_DOCSTRING)
+OPCODE(FORMAT_STRING)
+/**************************/
+OPCODE(INC_FAST)
+OPCODE(DEC_FAST)
+OPCODE(INC_GLOBAL)
+OPCODE(DEC_GLOBAL)
+#endif
+    #undef OPCODE
+};
+
+#define DISPATCH() { byte = frame->next_bytecode(); goto *OP_LABELS[byte.op];}
+#define TARGET(op) CASE_OP_##op:
+goto *OP_LABELS[byte.op];
+
+#else
+#define TARGET(op) case OP_##op:
+#define DISPATCH() { byte = frame->next_bytecode(); goto __NEXT_STEP;}
+
+__NEXT_STEP:;
+#if DEBUG_CEVAL_STEP
+    _log_s_data();
+#endif
+    switch (byte.op)
+    {
+#endif
+    TARGET(NO_OP) DISPATCH();
+    /*****************************************/
+    TARGET(POP_TOP) POP(); DISPATCH();
+    TARGET(DUP_TOP) PUSH(TOP()); DISPATCH();
+    TARGET(ROT_TWO) std::swap(TOP(), SECOND()); DISPATCH();
+    TARGET(ROT_THREE)
+        _0 = TOP();
+        TOP() = SECOND();
+        SECOND() = THIRD();
+        THIRD() = _0;
+        DISPATCH();
+    TARGET(PRINT_EXPR)
+        if(TOP() != None) _stdout(this, CAST(Str&, py_repr(TOP())) + "\n");
+        POP();
+        DISPATCH();
+    /*****************************************/
+    TARGET(LOAD_CONST)
+        heap._auto_collect();
+        PUSH(co_consts[byte.arg]);
+        DISPATCH();
+    TARGET(LOAD_NONE) PUSH(None); DISPATCH();
+    TARGET(LOAD_TRUE) PUSH(True); DISPATCH();
+    TARGET(LOAD_FALSE) PUSH(False); DISPATCH();
+    TARGET(LOAD_INTEGER) PUSH(VAR(byte.arg)); DISPATCH();
+    TARGET(LOAD_ELLIPSIS) PUSH(Ellipsis); DISPATCH();
+    TARGET(LOAD_FUNCTION) {
+        FuncDecl_ decl = co->func_decls[byte.arg];
+        bool is_simple = decl->starred_kwarg==-1 && decl->starred_arg==-1 && decl->kwargs.size()==0 && !decl->code->is_generator;
+        int argc = decl->args.size();
+        PyObject* obj;
+        if(decl->nested){
+            NameDict_ captured = frame->_locals.to_namedict();
+            obj = VAR(Function({decl, is_simple, argc, frame->_module, captured}));
+            captured->set(decl->code->name, obj);
+        }else{
+            obj = VAR(Function({decl, is_simple, argc, frame->_module}));
+        }
+        PUSH(obj);
+    } DISPATCH();
+    TARGET(LOAD_NULL) PUSH(PY_NULL); DISPATCH();
+    /*****************************************/
+    TARGET(LOAD_FAST) {
+        heap._auto_collect();
+        _0 = frame->_locals[byte.arg];
+        if(_0 == PY_NULL) vm->NameError(co->varnames[byte.arg]);
+        PUSH(_0);
+    } DISPATCH();
+    TARGET(LOAD_NAME)
+        heap._auto_collect();
+        _name = StrName(byte.arg);
+        _0 = frame->_locals.try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        _0 = frame->f_closure_try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        _0 = frame->f_globals().try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        _0 = vm->builtins->attr().try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        vm->NameError(_name);
+        DISPATCH();
+    TARGET(LOAD_NONLOCAL) {
+        heap._auto_collect();
+        _name = StrName(byte.arg);
+        _0 = frame->f_closure_try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        _0 = frame->f_globals().try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        _0 = vm->builtins->attr().try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        vm->NameError(_name);
+        DISPATCH();
+    } DISPATCH();
+    TARGET(LOAD_GLOBAL)
+        heap._auto_collect();
+        _name = StrName(byte.arg);
+        _0 = frame->f_globals().try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        _0 = vm->builtins->attr().try_get(_name);
+        if(_0 != nullptr) { PUSH(_0); DISPATCH(); }
+        vm->NameError(_name);
+        DISPATCH();
+    TARGET(LOAD_ATTR)
+        TOP() = getattr(TOP(), StrName(byte.arg));
+        DISPATCH();
+    TARGET(LOAD_METHOD)
+        TOP() = get_unbound_method(TOP(), StrName(byte.arg), &_0, true, true);
+        PUSH(_0);
+        DISPATCH();
+    TARGET(LOAD_SUBSCR)
+        _1 = POPX();    // b
+        _0 = TOP();     // a
+        _ti = _inst_type_info(_0);
+        if(_ti->m__getitem__){
+            TOP() = _ti->m__getitem__(this, _0, _1);
+        }else{
+            TOP() = call_method(_0, __getitem__, _1);
+        }
+        DISPATCH();
+    TARGET(STORE_FAST)
+        frame->_locals[byte.arg] = POPX();
+        DISPATCH();
+    TARGET(STORE_NAME)
+        _name = StrName(byte.arg);
+        _0 = POPX();
+        if(frame->_callable != nullptr){
+            bool ok = frame->_locals.try_set(_name, _0);
+            if(!ok) vm->NameError(_name);
+        }else{
+            frame->f_globals().set(_name, _0);
+        }
+        DISPATCH();
+    TARGET(STORE_GLOBAL)
+        frame->f_globals().set(StrName(byte.arg), POPX());
+        DISPATCH();
+    TARGET(STORE_ATTR) {
+        _0 = TOP();         // a
+        _1 = SECOND();      // val
+        setattr(_0, StrName(byte.arg), _1);
+        STACK_SHRINK(2);
+    } DISPATCH();
+    TARGET(STORE_SUBSCR)
+        _2 = POPX();        // b
+        _1 = POPX();        // a
+        _0 = POPX();        // val
+        _ti = _inst_type_info(_1);
+        if(_ti->m__setitem__){
+            _ti->m__setitem__(this, _1, _2, _0);
+        }else{
+            call_method(_1, __setitem__, _2, _0);
+        }
+        DISPATCH();
+    TARGET(DELETE_FAST)
+        _0 = frame->_locals[byte.arg];
+        if(_0 == PY_NULL) vm->NameError(co->varnames[byte.arg]);
+        frame->_locals[byte.arg] = PY_NULL;
+        DISPATCH();
+    TARGET(DELETE_NAME)
+        _name = StrName(byte.arg);
+        if(frame->_callable != nullptr){
+            if(!frame->_locals.contains(_name)) vm->NameError(_name);
+            frame->_locals.erase(_name);
+        }else{
+            if(!frame->f_globals().contains(_name)) vm->NameError(_name);
+            frame->f_globals().erase(_name);
+        }
+        DISPATCH();
+    TARGET(DELETE_GLOBAL)
+        _name = StrName(byte.arg);
+        if(frame->f_globals().contains(_name)){
+            frame->f_globals().erase(_name);
+        }else{
+            NameError(_name);
+        }
+        DISPATCH();
+    TARGET(DELETE_ATTR)
+        _0 = POPX();
+        _name = StrName(byte.arg);
+        if(is_tagged(_0) || !_0->is_attr_valid()) TypeError("cannot delete attribute");
+        if(!_0->attr().contains(_name)) AttributeError(_0, _name);
+        _0->attr().erase(_name);
+        DISPATCH();
+    TARGET(DELETE_SUBSCR)
+        _1 = POPX();
+        _0 = POPX();
+        _ti = _inst_type_info(_0);
+        if(_ti->m__delitem__){
+            _ti->m__delitem__(this, _0, _1);
+        }else{
+            call_method(_0, __delitem__, _1);
+        }
+        DISPATCH();
+    /*****************************************/
+    TARGET(BUILD_TUPLE)
+        _0 = VAR(STACK_VIEW(byte.arg).to_tuple());
+        STACK_SHRINK(byte.arg);
+        PUSH(_0);
+        DISPATCH();
+    TARGET(BUILD_LIST)
+        _0 = VAR(STACK_VIEW(byte.arg).to_list());
+        STACK_SHRINK(byte.arg);
+        PUSH(_0);
+        DISPATCH();
+    TARGET(BUILD_DICT)
+        if(byte.arg == 0){
+            PUSH(VAR(Dict(this)));
+            DISPATCH();
+        }
+        _0 = VAR(STACK_VIEW(byte.arg).to_list());
+        _0 = call(_t(tp_dict), _0);
+        STACK_SHRINK(byte.arg);
+        PUSH(_0);
+        DISPATCH();
+    TARGET(BUILD_SET)
+        _0 = VAR(STACK_VIEW(byte.arg).to_list());
+        _0 = call(builtins->attr(set), _0);
+        STACK_SHRINK(byte.arg);
+        PUSH(_0);
+        DISPATCH();
+    TARGET(BUILD_SLICE)
+        _2 = POPX();    // step
+        _1 = POPX();    // stop
+        _0 = POPX();    // start
+        PUSH(VAR(Slice(_0, _1, _2)));
+        DISPATCH();
+    TARGET(BUILD_STRING) {
+        std::stringstream ss;
+        ArgsView view = STACK_VIEW(byte.arg);
+        for(PyObject* obj : view) ss << CAST(Str&, py_str(obj));
+        STACK_SHRINK(byte.arg);
+        PUSH(VAR(ss.str()));
+    } DISPATCH();
+    /*****************************************/
+    TARGET(BUILD_TUPLE_UNPACK) {
+        auto _lock = heap.gc_scope_lock();
+        List list;
+        _unpack_as_list(STACK_VIEW(byte.arg), list);
+        STACK_SHRINK(byte.arg);
+        _0 = VAR(Tuple(std::move(list)));
+        PUSH(_0);
+    } DISPATCH();
+    TARGET(BUILD_LIST_UNPACK) {
+        auto _lock = heap.gc_scope_lock();
+        List list;
+        _unpack_as_list(STACK_VIEW(byte.arg), list);
+        STACK_SHRINK(byte.arg);
+        _0 = VAR(std::move(list));
+        PUSH(_0);
+    } DISPATCH();
+    TARGET(BUILD_DICT_UNPACK) {
+        auto _lock = heap.gc_scope_lock();
+        Dict dict(this);
+        _unpack_as_dict(STACK_VIEW(byte.arg), dict);
+        STACK_SHRINK(byte.arg);
+        _0 = VAR(std::move(dict));
+        PUSH(_0);
+    } DISPATCH();
+    TARGET(BUILD_SET_UNPACK) {
+        auto _lock = heap.gc_scope_lock();
+        List list;
+        _unpack_as_list(STACK_VIEW(byte.arg), list);
+        STACK_SHRINK(byte.arg);
+        _0 = VAR(std::move(list));
+        _0 = call(builtins->attr(set), _0);
+        PUSH(_0);
+    } DISPATCH();
+    /*****************************************/
+#define PREDICT_INT_OP(op)                              \
+    if(is_both_int(TOP(), SECOND())){                   \
+        _1 = POPX();                                    \
+        _0 = TOP();                                     \
+        TOP() = VAR(_CAST(i64, _0) op _CAST(i64, _1));  \
+        DISPATCH();                                     \
+    }
+
+#define BINARY_OP_SPECIAL(func)                         \
+        _1 = POPX();                                    \
+        _0 = TOP();                                     \
+        _ti = _inst_type_info(_0);                      \
+        if(_ti->m##func){                               \
+            TOP() = VAR(_ti->m##func(this, _0, _1));    \
+        }else{                                          \
+            TOP() = call_method(_0, func, _1);          \
+        }
+
+    TARGET(BINARY_TRUEDIV)
+        if(is_tagged(SECOND())){
+            f64 lhs = num_to_float(SECOND());
+            f64 rhs = num_to_float(TOP());
+            POP();
+            TOP() = VAR(lhs / rhs);
+            DISPATCH();
+        }
+        BINARY_OP_SPECIAL(__truediv__);
+        DISPATCH();
+    TARGET(BINARY_POW)
+        BINARY_OP_SPECIAL(__pow__);
+        DISPATCH();
+    TARGET(BINARY_ADD)
+        PREDICT_INT_OP(+);
+        BINARY_OP_SPECIAL(__add__);
+        DISPATCH()
+    TARGET(BINARY_SUB)
+        PREDICT_INT_OP(-);
+        BINARY_OP_SPECIAL(__sub__);
+        DISPATCH()
+    TARGET(BINARY_MUL)
+        BINARY_OP_SPECIAL(__mul__);
+        DISPATCH()
+    TARGET(BINARY_FLOORDIV)
+        PREDICT_INT_OP(/);
+        BINARY_OP_SPECIAL(__floordiv__);
+        DISPATCH()
+    TARGET(BINARY_MOD)
+        PREDICT_INT_OP(%);
+        BINARY_OP_SPECIAL(__mod__);
+        DISPATCH()
+    TARGET(COMPARE_LT)
+        BINARY_OP_SPECIAL(__lt__);
+        DISPATCH()
+    TARGET(COMPARE_LE)
+        BINARY_OP_SPECIAL(__le__);
+        DISPATCH()
+    TARGET(COMPARE_EQ)
+        _1 = POPX();
+        _0 = TOP();
+        TOP() = VAR(py_equals(_0, _1));
+        DISPATCH()
+    TARGET(COMPARE_NE)
+        _1 = POPX();
+        _0 = TOP();
+        TOP() = VAR(!py_equals(_0, _1));
+        DISPATCH()
+    TARGET(COMPARE_GT)
+        BINARY_OP_SPECIAL(__gt__);
+        DISPATCH()
+    TARGET(COMPARE_GE)
+        BINARY_OP_SPECIAL(__ge__);
+        DISPATCH()
+    TARGET(BITWISE_LSHIFT)
+        PREDICT_INT_OP(<<);
+        BINARY_OP_SPECIAL(__lshift__);
+        DISPATCH()
+    TARGET(BITWISE_RSHIFT)
+        PREDICT_INT_OP(>>);
+        BINARY_OP_SPECIAL(__rshift__);
+        DISPATCH()
+    TARGET(BITWISE_AND)
+        PREDICT_INT_OP(&);
+        BINARY_OP_SPECIAL(__and__);
+        DISPATCH()
+    TARGET(BITWISE_OR)
+        PREDICT_INT_OP(|);
+        BINARY_OP_SPECIAL(__or__);
+        DISPATCH()
+    TARGET(BITWISE_XOR)
+        PREDICT_INT_OP(^);
+        BINARY_OP_SPECIAL(__xor__);
+        DISPATCH()
+    TARGET(BINARY_MATMUL)
+        BINARY_OP_SPECIAL(__matmul__);
+        DISPATCH();
+
+#undef BINARY_OP_SPECIAL
+#undef PREDICT_INT_OP
+
+    TARGET(IS_OP)
+        _1 = POPX();    // rhs
+        _0 = TOP();     // lhs
+        TOP() = VAR(static_cast<bool>((_0==_1) ^ byte.arg));
+        DISPATCH();
+    TARGET(CONTAINS_OP)
+        // a in b -> b __contains__ a
+        _ti = _inst_type_info(TOP());
+        if(_ti->m__contains__){
+            _0 = VAR(_ti->m__contains__(this, TOP(), SECOND()));
+        }else{
+            _0 = call_method(TOP(), __contains__, SECOND());
+        }
+        POP();
+        TOP() = VAR(static_cast<bool>(CAST(bool, _0) ^ byte.arg));
+        DISPATCH();
+    /*****************************************/
+    TARGET(JUMP_ABSOLUTE)
+        frame->jump_abs(byte.arg);
+        DISPATCH();
+    TARGET(POP_JUMP_IF_FALSE)
+        if(!py_bool(POPX())) frame->jump_abs(byte.arg);
+        DISPATCH();
+    TARGET(JUMP_IF_TRUE_OR_POP)
+        if(py_bool(TOP()) == true) frame->jump_abs(byte.arg);
+        else POP();
+        DISPATCH();
+    TARGET(JUMP_IF_FALSE_OR_POP)
+        if(py_bool(TOP()) == false) frame->jump_abs(byte.arg);
+        else POP();
+        DISPATCH();
+    TARGET(SHORTCUT_IF_FALSE_OR_POP)
+        if(py_bool(TOP()) == false){        // [b, False]
+            STACK_SHRINK(2);                // []
+            PUSH(vm->False);                // [False]
+            frame->jump_abs(byte.arg);
+        } else POP();                       // [b]
+        DISPATCH();
+    TARGET(LOOP_CONTINUE)
+        frame->jump_abs(co_blocks[byte.block].start);
+        DISPATCH();
+    TARGET(LOOP_BREAK)
+        frame->jump_abs_break(co_blocks[byte.block].end);
+        DISPATCH();
+    TARGET(GOTO) {
+        _name = StrName(byte.arg);
+        int index = co->labels.try_get(_name);
+        if(index < 0) _error("KeyError", fmt("label ", _name.escape(), " not found"));
+        frame->jump_abs_break(index);
+    } DISPATCH();
+    /*****************************************/
+    TARGET(CALL)
+        _0 = vectorcall(
+            byte.arg & 0xFFFF,          // ARGC
+            (byte.arg>>16) & 0xFFFF,    // KWARGC
+            true
+        );
+        if(_0 == PY_OP_CALL) DISPATCH_OP_CALL();
+        PUSH(_0);
+        DISPATCH();
+    TARGET(CALL_TP)
+        // [callable, <self>, args: tuple, kwargs: dict | NULL]
+        if(byte.arg){
+            _2 = POPX();
+            _1 = POPX();
+            for(PyObject* obj: _CAST(Tuple&, _1)) PUSH(obj);
+            _CAST(Dict&, _2).apply([this](PyObject* k, PyObject* v){
+                PUSH(VAR(StrName(CAST(Str&, k)).index));
+                PUSH(v);
+            });
+            _0 = vectorcall(
+                _CAST(Tuple&, _1).size(),   // ARGC
+                _CAST(Dict&, _2).size(),    // KWARGC
+                true
+            );
+        }else{
+            // no **kwargs
+            _1 = POPX();
+            for(PyObject* obj: _CAST(Tuple&, _1)) PUSH(obj);
+            _0 = vectorcall(
+                _CAST(Tuple&, _1).size(),   // ARGC
+                0,                          // KWARGC
+                true
+            );
+        }
+        if(_0 == PY_OP_CALL) DISPATCH_OP_CALL();
+        PUSH(_0);
+        DISPATCH();
+    TARGET(RETURN_VALUE)
+        _0 = POPX();
+        _pop_frame();
+        if(frame.index == base_id){       // [ frameBase<- ]
+            return _0;
+        }else{
+            frame = top_frame();
+            PUSH(_0);
+            goto __NEXT_FRAME;
+        }
+    TARGET(YIELD_VALUE)
+        return PY_OP_YIELD;
+    /*****************************************/
+    TARGET(LIST_APPEND)
+        _0 = POPX();
+        CAST(List&, SECOND()).push_back(_0);
+        DISPATCH();
+    TARGET(DICT_ADD) {
+        _0 = POPX();
+        Tuple& t = CAST(Tuple&, _0);
+        call_method(SECOND(), __setitem__, t[0], t[1]);
+    } DISPATCH();
+    TARGET(SET_ADD)
+        _0 = POPX();
+        call_method(SECOND(), add, _0);
+        DISPATCH();
+    /*****************************************/
+    TARGET(UNARY_NEGATIVE)
+        TOP() = py_negate(TOP());
+        DISPATCH();
+    TARGET(UNARY_NOT)
+        TOP() = VAR(!py_bool(TOP()));
+        DISPATCH();
+    TARGET(UNARY_STAR)
+        TOP() = VAR(StarWrapper(byte.arg, TOP()));
+        DISPATCH();
+    /*****************************************/
+    TARGET(GET_ITER)
+        TOP() = py_iter(TOP());
+        DISPATCH();
+    TARGET(FOR_ITER)
+        _0 = py_next(TOP());
+        if(_0 != StopIteration){
+            PUSH(_0);
+        }else{
+            frame->jump_abs_break(co_blocks[byte.block].end);
+        }
+        DISPATCH();
+    /*****************************************/
+    TARGET(IMPORT_NAME)
+        _name = StrName(byte.arg);
+        PUSH(py_import(_name));
+        DISPATCH();
+    TARGET(IMPORT_NAME_REL)
+        _name = StrName(byte.arg);
+        PUSH(py_import(_name, true));
+        DISPATCH();
+    TARGET(IMPORT_STAR)
+        _0 = POPX();
+        for(auto& [name, value]: _0->attr().items()){
+            std::string_view s = name.sv();
+            if(s.empty() || s[0] == '_') continue;
+            frame->f_globals().set(name, value);
+        }
+        frame->f_globals()._try_perfect_rehash();
+        DISPATCH();
+    /*****************************************/
+    TARGET(UNPACK_SEQUENCE){
+        auto _lock = heap.gc_scope_lock();  // lock the gc via RAII!!
+        _0 = py_iter(POPX());
+        for(int i=0; i<byte.arg; i++){
+            _1 = py_next(_0);
+            if(_1 == StopIteration) ValueError("not enough values to unpack");
+            PUSH(_1);
+        }
+        if(py_next(_0) != StopIteration) ValueError("too many values to unpack");
+    } DISPATCH();
+    TARGET(UNPACK_EX) {
+        auto _lock = heap.gc_scope_lock();  // lock the gc via RAII!!
+        _0 = py_iter(POPX());
+        for(int i=0; i<byte.arg; i++){
+            _1 = py_next(_0);
+            if(_1 == StopIteration) ValueError("not enough values to unpack");
+            PUSH(_1);
+        }
+        List extras;
+        while(true){
+            _1 = py_next(_0);
+            if(_1 == StopIteration) break;
+            extras.push_back(_1);
+        }
+        PUSH(VAR(extras));
+    } DISPATCH();
+    /*****************************************/
+    TARGET(BEGIN_CLASS)
+        _name = StrName(byte.arg);
+        _0 = POPX();   // super
+        if(_0 == None) _0 = _t(tp_object);
+        check_non_tagged_type(_0, tp_type);
+        _1 = new_type_object(frame->_module, _name, OBJ_GET(Type, _0));
+        PUSH(_1);
+        DISPATCH();
+    TARGET(END_CLASS)
+        _0 = POPX();
+        _0->attr()._try_perfect_rehash();
+        DISPATCH();
+    TARGET(STORE_CLASS_ATTR)
+        _name = StrName(byte.arg);
+        _0 = POPX();
+        TOP()->attr().set(_name, _0);
+        DISPATCH();
+    /*****************************************/
+    TARGET(WITH_ENTER)
+        call_method(POPX(), __enter__);
+        DISPATCH();
+    TARGET(WITH_EXIT)
+        call_method(POPX(), __exit__);
+        DISPATCH();
+    /*****************************************/
+    TARGET(ASSERT) {
+        _0 = TOP();
+        Str msg;
+        if(is_type(_0, tp_tuple)){
+            auto& t = CAST(Tuple&, _0);
+            if(t.size() != 2) ValueError("assert tuple must have 2 elements");
+            _0 = t[0];
+            msg = CAST(Str&, py_str(t[1]));
+        }
+        bool ok = py_bool(_0);
+        POP();
+        if(!ok) _error("AssertionError", msg);
+    } DISPATCH();
+    TARGET(EXCEPTION_MATCH) {
+        const auto& e = CAST(Exception&, TOP());
+        _name = StrName(byte.arg);
+        PUSH(VAR(e.match_type(_name)));
+    } DISPATCH();
+    TARGET(RAISE) {
+        _0 = POPX();
+        Str msg = _0 == None ? "" : CAST(Str, py_str(_0));
+        _error(StrName(byte.arg), msg);
+    } DISPATCH();
+    TARGET(RE_RAISE) _raise(); DISPATCH();
+    TARGET(POP_EXCEPTION) _last_exception = POPX(); DISPATCH();
+    /*****************************************/
+    TARGET(SETUP_DOCSTRING)
+        TOP()->attr().set(__doc__, co_consts[byte.arg]);
+        DISPATCH();
+    TARGET(FORMAT_STRING) {
+        _0 = POPX();
+        const Str& spec = CAST(Str&, co_consts[byte.arg]);
+        PUSH(format(spec, _0));
+    } DISPATCH();
+    /*****************************************/
+    TARGET(INC_FAST){
+        PyObject** p = &frame->_locals[byte.arg];
+        if(*p == PY_NULL) vm->NameError(co->varnames[byte.arg]);
+        *p = VAR(CAST(i64, *p) + 1);
+    } DISPATCH();
+    TARGET(DEC_FAST){
+        PyObject** p = &frame->_locals[byte.arg];
+        if(*p == PY_NULL) vm->NameError(co->varnames[byte.arg]);
+        *p = VAR(CAST(i64, *p) - 1);
+    } DISPATCH();
+    TARGET(INC_GLOBAL){
+        _name = StrName(byte.arg);
+        PyObject** p = frame->f_globals().try_get_2(_name);
+        if(p == nullptr) vm->NameError(_name);
+        *p = VAR(CAST(i64, *p) + 1);
+    } DISPATCH();
+    TARGET(DEC_GLOBAL){
+        _name = StrName(byte.arg);
+        PyObject** p = frame->f_globals().try_get_2(_name);
+        if(p == nullptr) vm->NameError(_name);
+        *p = VAR(CAST(i64, *p) - 1);
+    } DISPATCH();
+
+#if !PK_ENABLE_COMPUTED_GOTO
+#if DEBUG_EXTRA_CHECK
+    default: throw std::runtime_error(fmt(OP_NAMES[byte.op], " is not implemented"));
+#else
+    default: UNREACHABLE();
+#endif
+    }
+#endif
+}
+
+#undef DISPATCH
+#undef TARGET
+#undef DISPATCH_OP_CALL
+/**********************************************************************/
+            UNREACHABLE();
+        }catch(HandledException& e){
+            continue;
+        }catch(UnhandledException& e){
+            PyObject* obj = POPX();
+            Exception& _e = CAST(Exception&, obj);
+            _e.st_push(frame->snapshot());
+            _pop_frame();
+            if(callstack.empty()){
+#if DEBUG_FULL_EXCEPTION
+                std::cerr << _e.summary() << std::endl;
+#endif
+                throw _e;
+            }
+            frame = top_frame();
+            PUSH(obj);
+            if(frame.index < base_id) throw ToBeRaisedException();
+            need_raise = true;
+        }catch(ToBeRaisedException& e){
+            need_raise = true;
+        }
+    }
+}
+
+#undef TOP
+#undef SECOND
+#undef THIRD
+#undef PEEK
+#undef STACK_SHRINK
+#undef PUSH
+#undef POP
+#undef POPX
+#undef STACK_VIEW
+
+#undef DISPATCH
+#undef TARGET
+#undef DISPATCH_OP_CALL
+
+} // namespace pkpy
+
+
+namespace pkpy{
+
+struct CodeEmitContext;
+struct Expr;
+typedef std::unique_ptr<Expr> Expr_;
+
+struct Expr{
+    int line = 0;
+    virtual ~Expr() = default;
+    virtual void emit(CodeEmitContext* ctx) = 0;
+    virtual std::string str() const = 0;
+
+    virtual bool is_literal() const { return false; }
+    virtual bool is_json_object() const { return false; }
+    virtual bool is_attrib() const { return false; }
+    virtual bool is_compare() const { return false; }
+    virtual int star_level() const { return 0; }
+    bool is_starred() const { return star_level() > 0; }
+
+    // for OP_DELETE_XXX
+    [[nodiscard]] virtual bool emit_del(CodeEmitContext* ctx) { return false; }
+
+    // for OP_STORE_XXX
+    [[nodiscard]] virtual bool emit_store(CodeEmitContext* ctx) { return false; }
+};
+
+struct CodeEmitContext{
+    VM* vm;
+    CodeObject_ co;
+    stack<Expr_> s_expr;
+    int level;
+    CodeEmitContext(VM* vm, CodeObject_ co, int level): vm(vm), co(co), level(level) {}
+
+    int curr_block_i = 0;
+    bool is_compiling_class = false;
+    int for_loop_depth = 0;
+
+    bool is_curr_block_loop() const {
+        return co->blocks[curr_block_i].type == FOR_LOOP || co->blocks[curr_block_i].type == WHILE_LOOP;
+    }
+
+    void enter_block(CodeBlockType type){
+        if(type == FOR_LOOP) for_loop_depth++;
+        co->blocks.push_back(CodeBlock(
+            type, curr_block_i, for_loop_depth, (int)co->codes.size()
+        ));
+        curr_block_i = co->blocks.size()-1;
+    }
+
+    void exit_block(){
+        if(co->blocks[curr_block_i].type == FOR_LOOP) for_loop_depth--;
+        co->blocks[curr_block_i].end = co->codes.size();
+        curr_block_i = co->blocks[curr_block_i].parent;
+        if(curr_block_i < 0) FATAL_ERROR();
+    }
+
+    // clear the expression stack and generate bytecode
+    void emit_expr(){
+        if(s_expr.size() != 1){
+            throw std::runtime_error("s_expr.size() != 1\n" + _log_s_expr());
+        }
+        Expr_ expr = s_expr.popx();
+        expr->emit(this);
+    }
+
+    std::string _log_s_expr(){
+        std::stringstream ss;
+        for(auto& e: s_expr.data()) ss << e->str() << " ";
+        return ss.str();
+    }
+
+    int emit(Opcode opcode, int arg, int line) {
+        co->codes.push_back(
+            Bytecode{(uint16_t)opcode, (uint16_t)curr_block_i, arg}
+        );
+        co->lines.push_back(line);
+        int i = co->codes.size() - 1;
+        if(line==BC_KEEPLINE){
+            if(i>=1) co->lines[i] = co->lines[i-1];
+            else co->lines[i] = 1;
+        }
+        return i;
+    }
+
+    void patch_jump(int index) {
+        int target = co->codes.size();
+        co->codes[index].arg = target;
+    }
+
+    bool add_label(StrName name){
+        if(co->labels.contains(name)) return false;
+        co->labels.set(name, co->codes.size());
+        return true;
+    }
+
+    int add_varname(StrName name){
+        int index = co->varnames_inv.try_get(name);
+        if(index >= 0) return index;
+        co->varnames.push_back(name);
+        index = co->varnames.size() - 1;
+        co->varnames_inv.set(name, index);
+        return index;
+    }
+
+    int add_const(PyObject* v){
+        // simple deduplication, only works for int/float
+        for(int i=0; i<co->consts.size(); i++){
+            if(co->consts[i] == v) return i;
+        }
+        co->consts.push_back(v);
+        return co->consts.size() - 1;
+    }
+
+    int add_func_decl(FuncDecl_ decl){
+        co->func_decls.push_back(decl);
+        return co->func_decls.size() - 1;
+    }
+};
+
+struct NameExpr: Expr{
+    StrName name;
+    NameScope scope;
+    NameExpr(StrName name, NameScope scope): name(name), scope(scope) {}
+
+    std::string str() const override { return fmt("Name(", name.escape(), ")"); }
+
+    void emit(CodeEmitContext* ctx) override {
+        int index = ctx->co->varnames_inv.try_get(name);
+        if(scope == NAME_LOCAL && index >= 0){
+            ctx->emit(OP_LOAD_FAST, index, line);
+        }else{
+            Opcode op = ctx->level <= 1 ? OP_LOAD_GLOBAL : OP_LOAD_NONLOCAL;
+            // we cannot determine the scope when calling exec()/eval()
+            if(scope == NAME_GLOBAL_UNKNOWN) op = OP_LOAD_NAME;
+            ctx->emit(op, StrName(name).index, line);
+        }
+    }
+
+    bool emit_del(CodeEmitContext* ctx) override {
+        switch(scope){
+            case NAME_LOCAL:
+                ctx->emit(OP_DELETE_FAST, ctx->add_varname(name), line);
+                break;
+            case NAME_GLOBAL:
+                ctx->emit(OP_DELETE_GLOBAL, StrName(name).index, line);
+                break;
+            case NAME_GLOBAL_UNKNOWN:
+                ctx->emit(OP_DELETE_NAME, StrName(name).index, line);
+                break;
+            default: FATAL_ERROR(); break;
+        }
+        return true;
+    }
+
+    bool emit_store(CodeEmitContext* ctx) override {
+        if(ctx->is_compiling_class){
+            int index = StrName(name).index;
+            ctx->emit(OP_STORE_CLASS_ATTR, index, line);
+            return true;
+        }
+        switch(scope){
+            case NAME_LOCAL:
+                ctx->emit(OP_STORE_FAST, ctx->add_varname(name), line);
+                break;
+            case NAME_GLOBAL:
+                ctx->emit(OP_STORE_GLOBAL, StrName(name).index, line);
+                break;
+            case NAME_GLOBAL_UNKNOWN:
+                ctx->emit(OP_STORE_NAME, StrName(name).index, line);
+                break;
+            default: FATAL_ERROR(); break;
+        }
+        return true;
+    }
+};
+
+struct StarredExpr: Expr{
+    int level;
+    Expr_ child;
+    StarredExpr(int level, Expr_&& child): level(level), child(std::move(child)) {}
+    std::string str() const override { return fmt("Starred(level=", level, ")"); }
+
+    int star_level() const override { return level; }
+
+    void emit(CodeEmitContext* ctx) override {
+        child->emit(ctx);
+        ctx->emit(OP_UNARY_STAR, level, line);
+    }
+
+    bool emit_store(CodeEmitContext* ctx) override {
+        if(level != 1) return false;
+        // simply proxy to child
+        return child->emit_store(ctx);
+    }
+};
+
+struct NotExpr: Expr{
+    Expr_ child;
+    NotExpr(Expr_&& child): child(std::move(child)) {}
+    std::string str() const override { return "Not()"; }
+
+    void emit(CodeEmitContext* ctx) override {
+        child->emit(ctx);
+        ctx->emit(OP_UNARY_NOT, BC_NOARG, line);
+    }
+};
+
+struct AndExpr: Expr{
+    Expr_ lhs;
+    Expr_ rhs;
+    std::string str() const override { return "And()"; }
+
+    void emit(CodeEmitContext* ctx) override {
+        lhs->emit(ctx);
+        int patch = ctx->emit(OP_JUMP_IF_FALSE_OR_POP, BC_NOARG, line);
+        rhs->emit(ctx);
+        ctx->patch_jump(patch);
+    }
+};
+
+struct OrExpr: Expr{
+    Expr_ lhs;
+    Expr_ rhs;
+    std::string str() const override { return "Or()"; }
+
+    void emit(CodeEmitContext* ctx) override {
+        lhs->emit(ctx);
+        int patch = ctx->emit(OP_JUMP_IF_TRUE_OR_POP, BC_NOARG, line);
+        rhs->emit(ctx);
+        ctx->patch_jump(patch);
+    }
+};
+
+// [None, True, False, ...]
+struct Literal0Expr: Expr{
+    TokenIndex token;
+    Literal0Expr(TokenIndex token): token(token) {}
+    std::string str() const override { return TK_STR(token); }
+
+    void emit(CodeEmitContext* ctx) override {
+        switch (token) {
+            case TK("None"):    ctx->emit(OP_LOAD_NONE, BC_NOARG, line); break;
+            case TK("True"):    ctx->emit(OP_LOAD_TRUE, BC_NOARG, line); break;
+            case TK("False"):   ctx->emit(OP_LOAD_FALSE, BC_NOARG, line); break;
+            case TK("..."):     ctx->emit(OP_LOAD_ELLIPSIS, BC_NOARG, line); break;
+            default: FATAL_ERROR();
+        }
+    }
+
+    bool is_json_object() const override { return true; }
+};
+
+// @num, @str which needs to invoke OP_LOAD_CONST
+struct LiteralExpr: Expr{
+    TokenValue value;
+    LiteralExpr(TokenValue value): value(value) {}
+    std::string str() const override {
+        if(std::holds_alternative<i64>(value)){
+            return std::to_string(std::get<i64>(value));
+        }
+        if(std::holds_alternative<f64>(value)){
+            return std::to_string(std::get<f64>(value));
+        }
+        if(std::holds_alternative<Str>(value)){
+            Str s = std::get<Str>(value).escape();
+            return s.str();
+        }
+        FATAL_ERROR();
+    }
+
+    void emit(CodeEmitContext* ctx) override {
+        VM* vm = ctx->vm;
+        PyObject* obj = nullptr;
+        if(std::holds_alternative<i64>(value)){
+            i64 _val = std::get<i64>(value);
+            if(_val >= INT16_MIN && _val <= INT16_MAX){
+                ctx->emit(OP_LOAD_INTEGER, (int)_val, line);
+                return;
+            }
+            obj = VAR(_val);
+        }
+        if(std::holds_alternative<f64>(value)){
+            obj = VAR(std::get<f64>(value));
+        }
+        if(std::holds_alternative<Str>(value)){
+            obj = VAR(std::get<Str>(value));
+        }
+        if(obj == nullptr) FATAL_ERROR();
+        ctx->emit(OP_LOAD_CONST, ctx->add_const(obj), line);
+    }
+
+    bool is_literal() const override { return true; }
+    bool is_json_object() const override { return true; }
+};
+
+struct NegatedExpr: Expr{
+    Expr_ child;
+    NegatedExpr(Expr_&& child): child(std::move(child)) {}
+    std::string str() const override { return "Negated()"; }
+
+    void emit(CodeEmitContext* ctx) override {
+        VM* vm = ctx->vm;
+        // if child is a int of float, do constant folding
+        if(child->is_literal()){
+            LiteralExpr* lit = static_cast<LiteralExpr*>(child.get());
+            if(std::holds_alternative<i64>(lit->value)){
+                i64 _val = -std::get<i64>(lit->value);
+                if(_val >= INT16_MIN && _val <= INT16_MAX){
+                    ctx->emit(OP_LOAD_INTEGER, (int)_val, line);
+                }else{
+                    ctx->emit(OP_LOAD_CONST, ctx->add_const(VAR(_val)), line);
+                }
+                return;
+            }
+            if(std::holds_alternative<f64>(lit->value)){
+                PyObject* obj = VAR(-std::get<f64>(lit->value));
+                ctx->emit(OP_LOAD_CONST, ctx->add_const(obj), line);
+                return;
+            }
+        }
+        child->emit(ctx);
+        ctx->emit(OP_UNARY_NEGATIVE, BC_NOARG, line);
+    }
+
+    bool is_json_object() const override {
+        return child->is_literal();
+    }
+};
+
+struct SliceExpr: Expr{
+    Expr_ start;
+    Expr_ stop;
+    Expr_ step;
+    std::string str() const override { return "Slice()"; }
+
+    void emit(CodeEmitContext* ctx) override {
+        if(start){
+            start->emit(ctx);
+        }else{
+            ctx->emit(OP_LOAD_NONE, BC_NOARG, line);
+        }
+
+        if(stop){
+            stop->emit(ctx);
+        }else{
+            ctx->emit(OP_LOAD_NONE, BC_NOARG, line);
+        }
+
+        if(step){
+            step->emit(ctx);
+        }else{
+            ctx->emit(OP_LOAD_NONE, BC_NOARG, line);
+        }
+
+        ctx->emit(OP_BUILD_SLICE, BC_NOARG, line);
+    }
+};
+
+struct DictItemExpr: Expr{
+    Expr_ key;      // maybe nullptr if it is **kwargs
+    Expr_ value;
+    std::string str() const override { return "DictItem()"; }
+
+    int star_level() const override { return value->star_level(); }
+
+    void emit(CodeEmitContext* ctx) override {
+        if(is_starred()){
+            PK_ASSERT(key == nullptr);
+            value->emit(ctx);
+        }else{
+            value->emit(ctx);
+            key->emit(ctx);     // reverse order
+            ctx->emit(OP_BUILD_TUPLE, 2, line);
+        }
+    }
+};
+
+struct SequenceExpr: Expr{
+    std::vector<Expr_> items;
+    SequenceExpr(std::vector<Expr_>&& items): items(std::move(items)) {}
+    virtual Opcode opcode() const = 0;
+
+    void emit(CodeEmitContext* ctx) override {
+        for(auto& item: items) item->emit(ctx);
+        ctx->emit(opcode(), items.size(), line);
+    }
+};
+
+struct ListExpr: SequenceExpr{
+    using SequenceExpr::SequenceExpr;
+    std::string str() const override { return "List()"; }
+
+    Opcode opcode() const override {
+        for(auto& e: items) if(e->is_starred()) return OP_BUILD_LIST_UNPACK;
+        return OP_BUILD_LIST;
+    }
+
+    bool is_json_object() const override { return true; }
+};
+
+struct DictExpr: SequenceExpr{
+    using SequenceExpr::SequenceExpr;
+    std::string str() const override { return "Dict()"; }
+    Opcode opcode() const override {
+        for(auto& e: items) if(e->is_starred()) return OP_BUILD_DICT_UNPACK;
+        return OP_BUILD_DICT;
+    }
+
+    bool is_json_object() const override { return true; }
+};
+
+struct SetExpr: SequenceExpr{
+    using SequenceExpr::SequenceExpr;
+    std::string str() const override { return "Set()"; }
+    Opcode opcode() const override {
+        for(auto& e: items) if(e->is_starred()) return OP_BUILD_SET_UNPACK;
+        return OP_BUILD_SET;
+    }
+};
+
+struct TupleExpr: SequenceExpr{
+    using SequenceExpr::SequenceExpr;
+    std::string str() const override { return "Tuple()"; }
+    Opcode opcode() const override {
+        for(auto& e: items) if(e->is_starred()) return OP_BUILD_TUPLE_UNPACK;
+        return OP_BUILD_TUPLE;
+    }
+
+    bool emit_store(CodeEmitContext* ctx) override {
+        // TOS is an iterable
+        // items may contain StarredExpr, we should check it
+        int starred_i = -1;
+        for(int i=0; i<items.size(); i++){
+            if(!items[i]->is_starred()) continue;
+            if(starred_i == -1) starred_i = i;
+            else return false;  // multiple StarredExpr not allowed
+        }
+
+        if(starred_i == -1){
+            Bytecode& prev = ctx->co->codes.back();
+            if(prev.op == OP_BUILD_TUPLE && prev.arg == items.size()){
+                // build tuple and unpack it is meaningless
+                prev.op = OP_NO_OP;
+                prev.arg = BC_NOARG;
+            }else{
+                ctx->emit(OP_UNPACK_SEQUENCE, items.size(), line);
+            }
+        }else{
+            // starred assignment target must be in a tuple
+            if(items.size() == 1) return false;
+            // starred assignment target must be the last one (differ from cpython)
+            if(starred_i != items.size()-1) return false;
+            // a,*b = [1,2,3]
+            // stack is [1,2,3] -> [1,[2,3]]
+            ctx->emit(OP_UNPACK_EX, items.size()-1, line);
+        }
+        // do reverse emit
+        for(int i=items.size()-1; i>=0; i--){
+            bool ok = items[i]->emit_store(ctx);
+            if(!ok) return false;
+        }
+        return true;
+    }
+
+    bool emit_del(CodeEmitContext* ctx) override{
+        for(auto& e: items){
+            bool ok = e->emit_del(ctx);
+            if(!ok) return false;
+        }
+        return true;
+    }
+};
+
+struct CompExpr: Expr{
+    Expr_ expr;       // loop expr
+    Expr_ vars;       // loop vars
+    Expr_ iter;       // loop iter
+    Expr_ cond;       // optional if condition
+
+    virtual Opcode op0() = 0;
+    virtual Opcode op1() = 0;
+
+    void emit(CodeEmitContext* ctx){
+        ctx->emit(op0(), 0, line);
+        iter->emit(ctx);
+        ctx->emit(OP_GET_ITER, BC_NOARG, BC_KEEPLINE);
+        ctx->enter_block(FOR_LOOP);
+        ctx->emit(OP_FOR_ITER, BC_NOARG, BC_KEEPLINE);
+        bool ok = vars->emit_store(ctx);
+        // this error occurs in `vars` instead of this line, but...nevermind
+        PK_ASSERT(ok);  // TODO: raise a SyntaxError instead
+        if(cond){
+            cond->emit(ctx);
+            int patch = ctx->emit(OP_POP_JUMP_IF_FALSE, BC_NOARG, BC_KEEPLINE);
+            expr->emit(ctx);
+            ctx->emit(op1(), BC_NOARG, BC_KEEPLINE);
+            ctx->patch_jump(patch);
+        }else{
+            expr->emit(ctx);
+            ctx->emit(op1(), BC_NOARG, BC_KEEPLINE);
+        }
+        ctx->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+        ctx->exit_block();
+    }
+};
+
+struct ListCompExpr: CompExpr{
+    Opcode op0() override { return OP_BUILD_LIST; }
+    Opcode op1() override { return OP_LIST_APPEND; }
+    std::string str() const override { return "ListComp()"; }
+};
+
+struct DictCompExpr: CompExpr{
+    Opcode op0() override { return OP_BUILD_DICT; }
+    Opcode op1() override { return OP_DICT_ADD; }
+    std::string str() const override { return "DictComp()"; }
+};
+
+struct SetCompExpr: CompExpr{
+    Opcode op0() override { return OP_BUILD_SET; }
+    Opcode op1() override { return OP_SET_ADD; }
+    std::string str() const override { return "SetComp()"; }
+};
+
+struct LambdaExpr: Expr{
+    FuncDecl_ decl;
+    std::string str() const override { return "Lambda()"; }
+
+    LambdaExpr(FuncDecl_ decl): decl(decl) {}
+
+    void emit(CodeEmitContext* ctx) override {
+        int index = ctx->add_func_decl(decl);
+        ctx->emit(OP_LOAD_FUNCTION, index, line);
+    }
+};
+
+struct FStringExpr: Expr{
+    Str src;
+    FStringExpr(const Str& src): src(src) {}
+    std::string str() const override {
+        return fmt("f", src.escape());
+    }
+
+    void _load_simple_expr(CodeEmitContext* ctx, Str expr){
+        // TODO: pre compile this into a function
+        int dot = expr.index(".");
+        if(dot < 0){
+            ctx->emit(OP_LOAD_NAME, StrName(expr.sv()).index, line);
+        }else{
+            StrName name(expr.substr(0, dot).sv());
+            StrName attr(expr.substr(dot+1).sv());
+            ctx->emit(OP_LOAD_NAME, name.index, line);
+            ctx->emit(OP_LOAD_ATTR, attr.index, line);
+        }
+    }
+
+    void emit(CodeEmitContext* ctx) override {
+        VM* vm = ctx->vm;
+        static const std::regex pattern(R"(\{(.*?)\})");
+        std::cregex_iterator begin(src.begin(), src.end(), pattern);
+        std::cregex_iterator end;
+        int size = 0;
+        int i = 0;
+        for(auto it = begin; it != end; it++) {
+            std::cmatch m = *it;
+            if (i < m.position()) {
+                Str literal = src.substr(i, m.position() - i);
+                ctx->emit(OP_LOAD_CONST, ctx->add_const(VAR(literal)), line);
+                size++;
+            }
+            Str expr = m[1].str();
+            int conon = expr.index(":");
+            if(conon >= 0){
+                _load_simple_expr(ctx, expr.substr(0, conon));
+                Str spec = expr.substr(conon+1);
+                ctx->emit(OP_FORMAT_STRING, ctx->add_const(VAR(spec)), line);
+            }else{
+                _load_simple_expr(ctx, expr);
+            }
+            size++;
+            i = (int)(m.position() + m.length());
+        }
+        if (i < src.length()) {
+            Str literal = src.substr(i, src.length() - i);
+            ctx->emit(OP_LOAD_CONST, ctx->add_const(VAR(literal)), line);
+            size++;
+        }
+        ctx->emit(OP_BUILD_STRING, size, line);
+    }
+};
+
+struct SubscrExpr: Expr{
+    Expr_ a;
+    Expr_ b;
+    std::string str() const override { return "Subscr()"; }
+
+    void emit(CodeEmitContext* ctx) override{
+        a->emit(ctx);
+        b->emit(ctx);
+        ctx->emit(OP_LOAD_SUBSCR, BC_NOARG, line);
+    }
+
+    bool emit_del(CodeEmitContext* ctx) override {
+        a->emit(ctx);
+        b->emit(ctx);
+        ctx->emit(OP_DELETE_SUBSCR, BC_NOARG, line);
+        return true;
+    }
+
+    bool emit_store(CodeEmitContext* ctx) override {
+        a->emit(ctx);
+        b->emit(ctx);
+        ctx->emit(OP_STORE_SUBSCR, BC_NOARG, line);
+        return true;
+    }
+};
+
+struct AttribExpr: Expr{
+    Expr_ a;
+    Str b;
+    AttribExpr(Expr_ a, const Str& b): a(std::move(a)), b(b) {}
+    AttribExpr(Expr_ a, Str&& b): a(std::move(a)), b(std::move(b)) {}
+    std::string str() const override { return "Attrib()"; }
+
+    void emit(CodeEmitContext* ctx) override{
+        a->emit(ctx);
+        int index = StrName(b).index;
+        ctx->emit(OP_LOAD_ATTR, index, line);
+    }
+
+    bool emit_del(CodeEmitContext* ctx) override {
+        a->emit(ctx);
+        int index = StrName(b).index;
+        ctx->emit(OP_DELETE_ATTR, index, line);
+        return true;
+    }
+
+    bool emit_store(CodeEmitContext* ctx) override {
+        a->emit(ctx);
+        int index = StrName(b).index;
+        ctx->emit(OP_STORE_ATTR, index, line);
+        return true;
+    }
+
+    void emit_method(CodeEmitContext* ctx) {
+        a->emit(ctx);
+        int index = StrName(b).index;
+        ctx->emit(OP_LOAD_METHOD, index, line);
+    }
+
+    bool is_attrib() const override { return true; }
+};
+
+struct CallExpr: Expr{
+    Expr_ callable;
+    std::vector<Expr_> args;
+    // **a will be interpreted as a special keyword argument: {"**": a}
+    std::vector<std::pair<Str, Expr_>> kwargs;
+    std::string str() const override { return "Call()"; }
+
+    void emit(CodeEmitContext* ctx) override {
+        bool vargs = false;
+        bool vkwargs = false;
+        for(auto& arg: args) if(arg->is_starred()) vargs = true;
+        for(auto& item: kwargs) if(item.second->is_starred()) vkwargs = true;
+
+        // if callable is a AttrExpr, we should try to use `fast_call` instead of use `boundmethod` proxy
+        if(callable->is_attrib()){
+            auto p = static_cast<AttribExpr*>(callable.get());
+            p->emit_method(ctx);    // OP_LOAD_METHOD
+        }else{
+            callable->emit(ctx);
+            ctx->emit(OP_LOAD_NULL, BC_NOARG, BC_KEEPLINE);
+        }
+
+        if(vargs || vkwargs){
+            for(auto& item: args) item->emit(ctx);
+            ctx->emit(OP_BUILD_TUPLE_UNPACK, (int)args.size(), line);
+
+            if(!kwargs.empty()){
+                for(auto& item: kwargs){
+                    if(item.second->is_starred()){
+                        if(item.second->star_level() != 2) FATAL_ERROR();
+                        item.second->emit(ctx);
+                    }else{
+                        // k=v
+                        int index = ctx->add_const(py_var(ctx->vm, item.first));
+                        ctx->emit(OP_LOAD_CONST, index, line);
+                        item.second->emit(ctx);
+                        ctx->emit(OP_BUILD_TUPLE, 2, line);
+                    }
+                }
+                ctx->emit(OP_BUILD_DICT_UNPACK, (int)kwargs.size(), line);
+                ctx->emit(OP_CALL_TP, 1, line);
+            }else{
+                ctx->emit(OP_CALL_TP, 0, line);
+            }
+        }else{
+            // vectorcall protocal
+            for(auto& item: args) item->emit(ctx);
+            for(auto& item: kwargs){
+                int index = StrName(item.first.sv()).index;
+                ctx->emit(OP_LOAD_INTEGER, index, line);
+                item.second->emit(ctx);
+            }
+            int KWARGC = (int)kwargs.size();
+            int ARGC = (int)args.size();
+            ctx->emit(OP_CALL, (KWARGC<<16)|ARGC, line);
+        }
+    }
+};
+
+struct BinaryExpr: Expr{
+    TokenIndex op;
+    Expr_ lhs;
+    Expr_ rhs;
+    std::string str() const override { return TK_STR(op); }
+
+    bool is_compare() const override {
+        switch(op){
+            case TK("<"): case TK("<="): case TK("=="):
+            case TK("!="): case TK(">"): case TK(">="): return true;
+            default: return false;
+        }
+    }
+
+    void _emit_compare(CodeEmitContext* ctx, std::vector<int>& jmps){
+        if(lhs->is_compare()){
+            static_cast<BinaryExpr*>(lhs.get())->_emit_compare(ctx, jmps);
+        }else{
+            lhs->emit(ctx); // [a]
+        }
+        rhs->emit(ctx); // [a, b]
+        ctx->emit(OP_DUP_TOP, BC_NOARG, line);      // [a, b, b]
+        ctx->emit(OP_ROT_THREE, BC_NOARG, line);    // [b, a, b]
+        switch(op){
+            case TK("<"):   ctx->emit(OP_COMPARE_LT, BC_NOARG, line);  break;
+            case TK("<="):  ctx->emit(OP_COMPARE_LE, BC_NOARG, line);  break;
+            case TK("=="):  ctx->emit(OP_COMPARE_EQ, BC_NOARG, line);  break;
+            case TK("!="):  ctx->emit(OP_COMPARE_NE, BC_NOARG, line);  break;
+            case TK(">"):   ctx->emit(OP_COMPARE_GT, BC_NOARG, line);  break;
+            case TK(">="):  ctx->emit(OP_COMPARE_GE, BC_NOARG, line);  break;
+            default: UNREACHABLE();
+        }
+        // [b, RES]
+        int index = ctx->emit(OP_SHORTCUT_IF_FALSE_OR_POP, BC_NOARG, line);
+        jmps.push_back(index);
+    }
+
+    void emit(CodeEmitContext* ctx) override {
+        std::vector<int> jmps;
+        if(is_compare() && lhs->is_compare()){
+            // (a < b) < c
+            static_cast<BinaryExpr*>(lhs.get())->_emit_compare(ctx, jmps);
+            // [b, RES]
+        }else{
+            // (1 + 2) < c
+            lhs->emit(ctx);
+        }
+
+        rhs->emit(ctx);
+        switch (op) {
+            case TK("+"):   ctx->emit(OP_BINARY_ADD, BC_NOARG, line);  break;
+            case TK("-"):   ctx->emit(OP_BINARY_SUB, BC_NOARG, line);  break;
+            case TK("*"):   ctx->emit(OP_BINARY_MUL, BC_NOARG, line);  break;
+            case TK("/"):   ctx->emit(OP_BINARY_TRUEDIV, BC_NOARG, line);  break;
+            case TK("//"):  ctx->emit(OP_BINARY_FLOORDIV, BC_NOARG, line);  break;
+            case TK("%"):   ctx->emit(OP_BINARY_MOD, BC_NOARG, line);  break;
+            case TK("**"):  ctx->emit(OP_BINARY_POW, BC_NOARG, line);  break;
+
+            case TK("<"):   ctx->emit(OP_COMPARE_LT, BC_NOARG, line);  break;
+            case TK("<="):  ctx->emit(OP_COMPARE_LE, BC_NOARG, line);  break;
+            case TK("=="):  ctx->emit(OP_COMPARE_EQ, BC_NOARG, line);  break;
+            case TK("!="):  ctx->emit(OP_COMPARE_NE, BC_NOARG, line);  break;
+            case TK(">"):   ctx->emit(OP_COMPARE_GT, BC_NOARG, line);  break;
+            case TK(">="):  ctx->emit(OP_COMPARE_GE, BC_NOARG, line);  break;
+
+            case TK("in"):      ctx->emit(OP_CONTAINS_OP, 0, line);   break;
+            case TK("not in"):  ctx->emit(OP_CONTAINS_OP, 1, line);   break;
+            case TK("is"):      ctx->emit(OP_IS_OP, 0, line);         break;
+            case TK("is not"):  ctx->emit(OP_IS_OP, 1, line);         break;
+
+            case TK("<<"):  ctx->emit(OP_BITWISE_LSHIFT, BC_NOARG, line);  break;
+            case TK(">>"):  ctx->emit(OP_BITWISE_RSHIFT, BC_NOARG, line);  break;
+            case TK("&"):   ctx->emit(OP_BITWISE_AND, BC_NOARG, line);  break;
+            case TK("|"):   ctx->emit(OP_BITWISE_OR, BC_NOARG, line);  break;
+            case TK("^"):   ctx->emit(OP_BITWISE_XOR, BC_NOARG, line);  break;
+
+            case TK("@"):   ctx->emit(OP_BINARY_MATMUL, BC_NOARG, line);  break;
+            default: FATAL_ERROR();
+        }
+
+        for(int i: jmps) ctx->patch_jump(i);
+    }
+};
+
+
+struct TernaryExpr: Expr{
+    Expr_ cond;
+    Expr_ true_expr;
+    Expr_ false_expr;
+    std::string str() const override { return "Ternary()"; }
+
+    void emit(CodeEmitContext* ctx) override {
+        cond->emit(ctx);
+        int patch = ctx->emit(OP_POP_JUMP_IF_FALSE, BC_NOARG, cond->line);
+        true_expr->emit(ctx);
+        int patch_2 = ctx->emit(OP_JUMP_ABSOLUTE, BC_NOARG, true_expr->line);
+        ctx->patch_jump(patch);
+        false_expr->emit(ctx);
+        ctx->patch_jump(patch_2);
+    }
+};
+
+
+} // namespace pkpy
+
+
+namespace pkpy{
+
+class Compiler;
+typedef void (Compiler::*PrattCallback)();
+
+struct PrattRule{
+    PrattCallback prefix;
+    PrattCallback infix;
+    Precedence precedence;
+};
+
+class Compiler {
+    inline static PrattRule rules[kTokenCount];
+    std::unique_ptr<Lexer> lexer;
+    stack<CodeEmitContext> contexts;
+    VM* vm;
+    bool unknown_global_scope;     // for eval/exec() call
+    bool used;
+    // for parsing token stream
+    int i = 0;
+    std::vector<Token> tokens;
+
+    const Token& prev() const{ return tokens.at(i-1); }
+    const Token& curr() const{ return tokens.at(i); }
+    const Token& next() const{ return tokens.at(i+1); }
+    const Token& err() const{
+        if(i >= tokens.size()) return prev();
+        return curr();
+    }
+    void advance(int delta=1) { i += delta; }
+
+    CodeEmitContext* ctx() { return &contexts.top(); }
+    CompileMode mode() const{ return lexer->src->mode; }
+    NameScope name_scope() const {
+        auto s = contexts.size()>1 ? NAME_LOCAL : NAME_GLOBAL;
+        if(unknown_global_scope && s == NAME_GLOBAL) s = NAME_GLOBAL_UNKNOWN;
+        return s;
+    }
+
+    CodeObject_ push_global_context(){
+        CodeObject_ co = make_sp<CodeObject>(lexer->src, lexer->src->filename);
+        contexts.push(CodeEmitContext(vm, co, contexts.size()));
+        return co;
+    }
+
+    FuncDecl_ push_f_context(Str name){
+        FuncDecl_ decl = make_sp<FuncDecl>();
+        decl->code = make_sp<CodeObject>(lexer->src, name);
+        decl->nested = name_scope() == NAME_LOCAL;
+        contexts.push(CodeEmitContext(vm, decl->code, contexts.size()));
+        return decl;
+    }
+
+    void pop_context(){
+        if(!ctx()->s_expr.empty()){
+            throw std::runtime_error("!ctx()->s_expr.empty()\n" + ctx()->_log_s_expr());
+        }
+        // add a `return None` in the end as a guard
+        // previously, we only do this if the last opcode is not a return
+        // however, this is buggy...since there may be a jump to the end (out of bound) even if the last opcode is a return
+        ctx()->emit(OP_LOAD_NONE, BC_NOARG, BC_KEEPLINE);
+        ctx()->emit(OP_RETURN_VALUE, BC_NOARG, BC_KEEPLINE);
+        // ctx()->co->optimize(vm);
+        if(ctx()->co->varnames.size() > PK_MAX_CO_VARNAMES){
+            SyntaxError("maximum number of local variables exceeded");
+        }
+        contexts.pop();
+    }
+
+    static void init_pratt_rules(){
+        if(rules[TK(".")].precedence != PREC_NONE) return;
+// http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
+#define METHOD(name) &Compiler::name
+#define NO_INFIX nullptr, PREC_NONE
+        for(TokenIndex i=0; i<kTokenCount; i++) rules[i] = { nullptr, NO_INFIX };
+        rules[TK(".")] =        { nullptr,               METHOD(exprAttrib),         PREC_ATTRIB };
+        rules[TK("(")] =        { METHOD(exprGroup),     METHOD(exprCall),           PREC_CALL };
+        rules[TK("[")] =        { METHOD(exprList),      METHOD(exprSubscr),         PREC_SUBSCRIPT };
+        rules[TK("{")] =        { METHOD(exprMap),       NO_INFIX };
+        rules[TK("%")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_FACTOR };
+        rules[TK("+")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_TERM };
+        rules[TK("-")] =        { METHOD(exprUnaryOp),   METHOD(exprBinaryOp),       PREC_TERM };
+        rules[TK("*")] =        { METHOD(exprUnaryOp),   METHOD(exprBinaryOp),       PREC_FACTOR };
+        rules[TK("/")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_FACTOR };
+        rules[TK("//")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_FACTOR };
+        rules[TK("**")] =       { METHOD(exprUnaryOp),   METHOD(exprBinaryOp),       PREC_EXPONENT };
+        rules[TK(">")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("<")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("==")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("!=")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK(">=")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("<=")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("in")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("is")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("<<")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_SHIFT };
+        rules[TK(">>")] =       { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_SHIFT };
+        rules[TK("&")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_AND };
+        rules[TK("|")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_OR };
+        rules[TK("^")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_BITWISE_XOR };
+        rules[TK("@")] =        { nullptr,               METHOD(exprBinaryOp),       PREC_FACTOR };
+        rules[TK("if")] =       { nullptr,               METHOD(exprTernary),        PREC_TERNARY };
+        rules[TK(",")] =        { nullptr,               METHOD(exprTuple),          PREC_TUPLE };
+        rules[TK("not in")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("is not")] =   { nullptr,               METHOD(exprBinaryOp),       PREC_COMPARISION };
+        rules[TK("and") ] =     { nullptr,               METHOD(exprAnd),            PREC_LOGICAL_AND };
+        rules[TK("or")] =       { nullptr,               METHOD(exprOr),             PREC_LOGICAL_OR };
+        rules[TK("not")] =      { METHOD(exprNot),       nullptr,                    PREC_LOGICAL_NOT };
+        rules[TK("True")] =     { METHOD(exprLiteral0),  NO_INFIX };
+        rules[TK("False")] =    { METHOD(exprLiteral0),  NO_INFIX };
+        rules[TK("None")] =     { METHOD(exprLiteral0),  NO_INFIX };
+        rules[TK("...")] =      { METHOD(exprLiteral0),  NO_INFIX };
+        rules[TK("lambda")] =   { METHOD(exprLambda),    NO_INFIX };
+        rules[TK("@id")] =      { METHOD(exprName),      NO_INFIX };
+        rules[TK("@num")] =     { METHOD(exprLiteral),   NO_INFIX };
+        rules[TK("@str")] =     { METHOD(exprLiteral),   NO_INFIX };
+        rules[TK("@fstr")] =    { METHOD(exprFString),   NO_INFIX };
+#undef METHOD
+#undef NO_INFIX
     }
 
     bool match(TokenIndex expected) {
-        if (peek() != expected) return false;
-        lex_token();
+        if (curr().type != expected) return false;
+        advance();
         return true;
     }
 
     void consume(TokenIndex expected) {
         if (!match(expected)){
-            StrStream ss;
-            ss << "expected '" << TK_STR(expected) << "', but got '" << TK_STR(peek()) << "'";
-            SyntaxError(ss.str());
+            SyntaxError(
+                fmt("expected '", TK_STR(expected), "', but got '", TK_STR(curr().type), "'")
+            );
         }
+    }
+
+    bool match_newlines_repl(){
+        return match_newlines(mode()==REPL_MODE);
     }
 
     bool match_newlines(bool repl_throw=false) {
         bool consumed = false;
-        if (peek() == TK("@eol")) {
-            while (peek() == TK("@eol")) lex_token();
+        if (curr().type == TK("@eol")) {
+            while (curr().type == TK("@eol")) advance();
             consumed = true;
         }
-        if (repl_throw && peek() == TK("@eof")){
-            throw NeedMoreLines(co()->_is_compiling_class);
+        if (repl_throw && curr().type == TK("@eof")){
+            throw NeedMoreLines(ctx()->is_compiling_class);
         }
         return consumed;
     }
 
     bool match_end_stmt() {
         if (match(TK(";"))) { match_newlines(); return true; }
-        if (match_newlines() || peek()==TK("@eof")) return true;
-        if (peek() == TK("@dedent")) return true;
+        if (match_newlines() || curr().type == TK("@eof")) return true;
+        if (curr().type == TK("@dedent")) return true;
         return false;
     }
 
@@ -3712,688 +6686,730 @@ private:
         if (!match_end_stmt()) SyntaxError("expected statement end");
     }
 
-    void exprLiteral() {
-        PyVar value = parser->prev.value;
-        int index = co()->add_const(value);
-        emit(OP_LOAD_CONST, index);
+    /*************************************************/
+
+    void EXPR(bool push_stack=true) {
+        parse_expression(PREC_TUPLE+1, push_stack);
     }
 
-    void exprFString() {
-        static const std::regex pattern(R"(\{(.*?)\})");
-        PyVar value = parser->prev.value;
-        Str s = CAST(Str, value);
-        std::sregex_iterator begin(s.begin(), s.end(), pattern);
-        std::sregex_iterator end;
-        int size = 0;
-        int i = 0;
-        for(auto it = begin; it != end; it++) {
-            std::smatch m = *it;
-            if (i < m.position()) {
-                std::string literal = s.substr(i, m.position() - i);
-                emit(OP_LOAD_CONST, co()->add_const(VAR(literal)));
-                size++;
-            }
-            emit(OP_LOAD_EVAL_FN);
-            emit(OP_LOAD_CONST, co()->add_const(VAR(m[1].str())));
-            emit(OP_CALL, 1);
-            size++;
-            i = (int)(m.position() + m.length());
-        }
-        if (i < s.size()) {
-            std::string literal = s.substr(i, s.size() - i);
-            emit(OP_LOAD_CONST, co()->add_const(VAR(literal)));
-            size++;
-        }
-        emit(OP_BUILD_STRING, size);
+    void EXPR_TUPLE(bool push_stack=true) {
+        parse_expression(PREC_TUPLE, push_stack);
     }
 
-    void exprLambda() {
-        Function func;
-        func.name = "<lambda>";
+    // special case for `for loop` and `comp`
+    Expr_ EXPR_VARS(){
+        std::vector<Expr_> items;
+        do {
+            consume(TK("@id"));
+            items.push_back(make_expr<NameExpr>(prev().str(), name_scope()));
+        } while(match(TK(",")));
+        if(items.size()==1) return std::move(items[0]);
+        return make_expr<TupleExpr>(std::move(items));
+    }
+
+    template <typename T, typename... Args>
+    std::unique_ptr<T> make_expr(Args&&... args) {
+        std::unique_ptr<T> expr = std::make_unique<T>(std::forward<Args>(args)...);
+        expr->line = prev().line;
+        return expr;
+    }
+
+    
+    void exprLiteral(){
+        ctx()->s_expr.push(make_expr<LiteralExpr>(prev().value));
+    }
+
+    void exprFString(){
+        ctx()->s_expr.push(make_expr<FStringExpr>(std::get<Str>(prev().value)));
+    }
+
+    void exprLambda(){
+        FuncDecl_ decl = push_f_context("<lambda>");
+        auto e = make_expr<LambdaExpr>(decl);
         if(!match(TK(":"))){
-            _compile_f_args(func, false);
+            _compile_f_args(e->decl, false);
             consume(TK(":"));
         }
-        func.code = make_sp<CodeObject>(parser->src, func.name.str());
-        this->codes.push(func.code);
-        co()->_rvalue += 1; EXPR(); co()->_rvalue -= 1;
-        emit(OP_RETURN_VALUE);
-        func.code->optimize(vm);
-        this->codes.pop();
-        emit(OP_LOAD_FUNCTION, co()->add_const(VAR(func)));
-        if(name_scope() == NAME_LOCAL) emit(OP_SETUP_CLOSURE);
+        // https://github.com/blueloveTH/pocketpy/issues/37
+        parse_expression(PREC_LAMBDA + 1, false);
+        ctx()->emit(OP_RETURN_VALUE, BC_NOARG, BC_KEEPLINE);
+        pop_context();
+        ctx()->s_expr.push(std::move(e));
     }
 
-    void exprAssign() {
-        int lhs = co()->codes.empty() ? -1 : co()->codes.size() - 1;
-        co()->_rvalue += 1;
-        TokenIndex op = parser->prev.type;
-        if(op == TK("=")) {     // a = (expr)
-            EXPR_TUPLE();
-            if(lhs!=-1 && co()->codes[lhs].op == OP_LOAD_NAME_REF){
-                if(co()->_is_compiling_class){
-                    emit(OP_STORE_CLASS_ATTR, co()->codes[lhs].arg);
-                }else{
-                    emit(OP_STORE_NAME, co()->codes[lhs].arg);
-                }
-                co()->codes[lhs].op = OP_NO_OP;
-                co()->codes[lhs].arg = -1;
-            }else{
-                if(co()->_is_compiling_class) SyntaxError();
-                emit(OP_STORE_REF);
-            }
-        }else{                  // a += (expr) -> a = a + (expr)
-            if(co()->_is_compiling_class) SyntaxError();
-            EXPR();
-            switch (op) {
-                case TK("+="):      emit(OP_INPLACE_BINARY_OP, 0);  break;
-                case TK("-="):      emit(OP_INPLACE_BINARY_OP, 1);  break;
-                case TK("*="):      emit(OP_INPLACE_BINARY_OP, 2);  break;
-                case TK("/="):      emit(OP_INPLACE_BINARY_OP, 3);  break;
-                case TK("//="):     emit(OP_INPLACE_BINARY_OP, 4);  break;
-                case TK("%="):      emit(OP_INPLACE_BINARY_OP, 5);  break;
-                case TK("<<="):     emit(OP_INPLACE_BITWISE_OP, 0);  break;
-                case TK(">>="):     emit(OP_INPLACE_BITWISE_OP, 1);  break;
-                case TK("&="):      emit(OP_INPLACE_BITWISE_OP, 2);  break;
-                case TK("|="):      emit(OP_INPLACE_BITWISE_OP, 3);  break;
-                case TK("^="):      emit(OP_INPLACE_BITWISE_OP, 4);  break;
-                default: UNREACHABLE();
-            }
-        }
-        co()->_rvalue -= 1;
-    }
-
-    void exprComma() {
-        int size = 1;       // an expr is in the stack now
+    void exprTuple(){
+        std::vector<Expr_> items;
+        items.push_back(ctx()->s_expr.popx());
         do {
             EXPR();         // NOTE: "1," will fail, "1,2" will be ok
-            size++;
+            items.push_back(ctx()->s_expr.popx());
         } while(match(TK(",")));
-        emit(co()->_rvalue ? OP_BUILD_TUPLE : OP_BUILD_TUPLE_REF, size);
+        ctx()->s_expr.push(make_expr<TupleExpr>(
+            std::move(items)
+        ));
     }
 
-    void exprOr() {
-        int patch = emit(OP_JUMP_IF_TRUE_OR_POP);
-        parse_expression(PREC_LOGICAL_OR);
-        patch_jump(patch);
+    void exprOr(){
+        auto e = make_expr<OrExpr>();
+        e->lhs = ctx()->s_expr.popx();
+        parse_expression(PREC_LOGICAL_OR + 1);
+        e->rhs = ctx()->s_expr.popx();
+        ctx()->s_expr.push(std::move(e));
     }
-
-    void exprAnd() {
-        int patch = emit(OP_JUMP_IF_FALSE_OR_POP);
-        parse_expression(PREC_LOGICAL_AND);
-        patch_jump(patch);
+    
+    void exprAnd(){
+        auto e = make_expr<AndExpr>();
+        e->lhs = ctx()->s_expr.popx();
+        parse_expression(PREC_LOGICAL_AND + 1);
+        e->rhs = ctx()->s_expr.popx();
+        ctx()->s_expr.push(std::move(e));
     }
-
-    void exprTernary() {
-        int patch = emit(OP_POP_JUMP_IF_FALSE);
-        EXPR();         // if true
-        int patch2 = emit(OP_JUMP_ABSOLUTE);
-        consume(TK(":"));
-        patch_jump(patch);
-        EXPR();         // if false
-        patch_jump(patch2);
+    
+    void exprTernary(){
+        auto e = make_expr<TernaryExpr>();
+        e->true_expr = ctx()->s_expr.popx();
+        // cond
+        parse_expression(PREC_TERNARY + 1);
+        e->cond = ctx()->s_expr.popx();
+        consume(TK("else"));
+        // if false
+        parse_expression(PREC_TERNARY + 1);
+        e->false_expr = ctx()->s_expr.popx();
+        ctx()->s_expr.push(std::move(e));
     }
-
-    void exprBinaryOp() {
-        TokenIndex op = parser->prev.type;
-        parse_expression((Precedence)(rules[op].precedence + 1));
-
-        switch (op) {
-            case TK("+"):   emit(OP_BINARY_OP, 0);  break;
-            case TK("-"):   emit(OP_BINARY_OP, 1);  break;
-            case TK("*"):   emit(OP_BINARY_OP, 2);  break;
-            case TK("/"):   emit(OP_BINARY_OP, 3);  break;
-            case TK("//"):  emit(OP_BINARY_OP, 4);  break;
-            case TK("%"):   emit(OP_BINARY_OP, 5);  break;
-            case TK("**"):  emit(OP_BINARY_OP, 6);  break;
-
-            case TK("<"):   emit(OP_COMPARE_OP, 0);    break;
-            case TK("<="):  emit(OP_COMPARE_OP, 1);    break;
-            case TK("=="):  emit(OP_COMPARE_OP, 2);    break;
-            case TK("!="):  emit(OP_COMPARE_OP, 3);    break;
-            case TK(">"):   emit(OP_COMPARE_OP, 4);    break;
-            case TK(">="):  emit(OP_COMPARE_OP, 5);    break;
-            case TK("in"):      emit(OP_CONTAINS_OP, 0);   break;
-            case TK("not in"):  emit(OP_CONTAINS_OP, 1);   break;
-            case TK("is"):      emit(OP_IS_OP, 0);         break;
-            case TK("is not"):  emit(OP_IS_OP, 1);         break;
-
-            case TK("<<"):  emit(OP_BITWISE_OP, 0);    break;
-            case TK(">>"):  emit(OP_BITWISE_OP, 1);    break;
-            case TK("&"):   emit(OP_BITWISE_OP, 2);    break;
-            case TK("|"):   emit(OP_BITWISE_OP, 3);    break;
-            case TK("^"):   emit(OP_BITWISE_OP, 4);    break;
-            default: UNREACHABLE();
-        }
+    
+    void exprBinaryOp(){
+        auto e = make_expr<BinaryExpr>();
+        e->op = prev().type;
+        e->lhs = ctx()->s_expr.popx();
+        parse_expression(rules[e->op].precedence + 1);
+        e->rhs = ctx()->s_expr.popx();
+        ctx()->s_expr.push(std::move(e));
     }
 
     void exprNot() {
-        parse_expression((Precedence)(PREC_LOGICAL_NOT + 1));
-        emit(OP_UNARY_NOT);
+        parse_expression(PREC_LOGICAL_NOT + 1);
+        ctx()->s_expr.push(make_expr<NotExpr>(ctx()->s_expr.popx()));
     }
-
-    void exprUnaryOp() {
-        TokenIndex op = parser->prev.type;
-        parse_expression((Precedence)(PREC_UNARY + 1));
-        switch (op) {
-            case TK("-"):     emit(OP_UNARY_NEGATIVE); break;
-            case TK("*"):     emit(OP_UNARY_STAR, co()->_rvalue);   break;
-            default: UNREACHABLE();
+    
+    void exprUnaryOp(){
+        TokenIndex op = prev().type;
+        parse_expression(PREC_UNARY + 1);
+        switch(op){
+            case TK("-"):
+                ctx()->s_expr.push(make_expr<NegatedExpr>(ctx()->s_expr.popx()));
+                break;
+            case TK("*"):
+                ctx()->s_expr.push(make_expr<StarredExpr>(1, ctx()->s_expr.popx()));
+                break;
+            case TK("**"):
+                ctx()->s_expr.push(make_expr<StarredExpr>(2, ctx()->s_expr.popx()));
+                break;
+            default: FATAL_ERROR();
         }
     }
 
-    void exprGrouping() {
-        match_newlines(mode()==REPL_MODE);
-        EXPR_TUPLE();
-        match_newlines(mode()==REPL_MODE);
+    void exprGroup(){
+        match_newlines_repl();
+        EXPR_TUPLE();   // () is just for change precedence
+        match_newlines_repl();
         consume(TK(")"));
     }
 
-    void _consume_comp(Opcode op0, Opcode op1, int _patch, int _body_start){
-        int _body_end_return = emit(OP_JUMP_ABSOLUTE, -1);
-        int _body_end = co()->codes.size();
-        co()->codes[_patch].op = OP_JUMP_ABSOLUTE;
-        co()->codes[_patch].arg = _body_end;
-        emit(op0, 0);
-        EXPR_FOR_VARS();consume(TK("in"));EXPR_TUPLE();
-        match_newlines(mode()==REPL_MODE);
-        
-        int _skipPatch = emit(OP_JUMP_ABSOLUTE);
-        int _cond_start = co()->codes.size();
-        int _cond_end_return = -1;
-        if(match(TK("if"))) {
-            EXPR_TUPLE();
-            _cond_end_return = emit(OP_JUMP_ABSOLUTE, -1);
+    template<typename T>
+    void _consume_comp(Expr_ expr){
+        static_assert(std::is_base_of<CompExpr, T>::value);
+        std::unique_ptr<CompExpr> ce = make_expr<T>();
+        ce->expr = std::move(expr);
+        ce->vars = EXPR_VARS();
+        consume(TK("in"));
+        parse_expression(PREC_TERNARY + 1);
+        ce->iter = ctx()->s_expr.popx();
+        match_newlines_repl();
+        if(match(TK("if"))){
+            parse_expression(PREC_TERNARY + 1);
+            ce->cond = ctx()->s_expr.popx();
         }
-        patch_jump(_skipPatch);
-
-        emit(OP_GET_ITER);
-        co()->_enter_block(FOR_LOOP);
-        emit(OP_FOR_ITER);
-
-        if(_cond_end_return != -1) {      // there is an if condition
-            emit(OP_JUMP_ABSOLUTE, _cond_start);
-            patch_jump(_cond_end_return);
-            int ifpatch = emit(OP_POP_JUMP_IF_FALSE);
-            emit(OP_JUMP_ABSOLUTE, _body_start);
-            patch_jump(_body_end_return);
-            emit(op1);
-            patch_jump(ifpatch);
-        }else{
-            emit(OP_JUMP_ABSOLUTE, _body_start);
-            patch_jump(_body_end_return);
-            emit(op1);
-        }
-
-        emit(OP_LOOP_CONTINUE, -1, true);
-        co()->_exit_block();
-        match_newlines(mode()==REPL_MODE);
+        ctx()->s_expr.push(std::move(ce));
+        match_newlines_repl();
     }
 
     void exprList() {
-        int _patch = emit(OP_NO_OP);
-        int _body_start = co()->codes.size();
-        int ARGC = 0;
+        int line = prev().line;
+        std::vector<Expr_> items;
         do {
-            match_newlines(mode()==REPL_MODE);
-            if (peek() == TK("]")) break;
-            EXPR(); ARGC++;
-            match_newlines(mode()==REPL_MODE);
-            if(ARGC == 1 && match(TK("for"))){
-                _consume_comp(OP_BUILD_LIST, OP_LIST_APPEND, _patch, _body_start);
+            match_newlines_repl();
+            if (curr().type == TK("]")) break;
+            EXPR();
+            items.push_back(ctx()->s_expr.popx());
+            match_newlines_repl();
+            if(items.size()==1 && match(TK("for"))){
+                _consume_comp<ListCompExpr>(std::move(items[0]));
                 consume(TK("]"));
                 return;
             }
+            match_newlines_repl();
         } while (match(TK(",")));
-        match_newlines(mode()==REPL_MODE);
         consume(TK("]"));
-        emit(OP_BUILD_LIST, ARGC);
+        auto e = make_expr<ListExpr>(std::move(items));
+        e->line = line;     // override line
+        ctx()->s_expr.push(std::move(e));
     }
 
     void exprMap() {
-        int _patch = emit(OP_NO_OP);
-        int _body_start = co()->codes.size();
-        bool parsing_dict = false;
-        int ARGC = 0;
+        bool parsing_dict = false;  // {...} may be dict or set
+        std::vector<Expr_> items;
         do {
-            match_newlines(mode()==REPL_MODE);
-            if (peek() == TK("}")) break;
+            match_newlines_repl();
+            if (curr().type == TK("}")) break;
             EXPR();
-            if(peek() == TK(":")) parsing_dict = true;
-            if(parsing_dict){
-                consume(TK(":"));
-                EXPR();
+            int star_level = ctx()->s_expr.top()->star_level();
+            if(star_level==2 || curr().type == TK(":")){
+                parsing_dict = true;
             }
-            ARGC++;
-            match_newlines(mode()==REPL_MODE);
-            if(ARGC == 1 && match(TK("for"))){
-                if(parsing_dict) _consume_comp(OP_BUILD_MAP, OP_MAP_ADD, _patch, _body_start);
-                else _consume_comp(OP_BUILD_SET, OP_SET_ADD, _patch, _body_start);
+            if(parsing_dict){
+                auto dict_item = make_expr<DictItemExpr>();
+                if(star_level == 2){
+                    dict_item->key = nullptr;
+                    dict_item->value = ctx()->s_expr.popx();
+                }else{
+                    consume(TK(":"));
+                    EXPR();
+                    dict_item->key = ctx()->s_expr.popx();
+                    dict_item->value = ctx()->s_expr.popx();
+                }
+                items.push_back(std::move(dict_item));
+            }else{
+                items.push_back(ctx()->s_expr.popx());
+            }
+            match_newlines_repl();
+            if(items.size()==1 && match(TK("for"))){
+                if(parsing_dict) _consume_comp<DictCompExpr>(std::move(items[0]));
+                else _consume_comp<SetCompExpr>(std::move(items[0]));
                 consume(TK("}"));
                 return;
             }
+            match_newlines_repl();
         } while (match(TK(",")));
         consume(TK("}"));
-
-        if(ARGC == 0 || parsing_dict) emit(OP_BUILD_MAP, ARGC);
-        else emit(OP_BUILD_SET, ARGC);
-    }
-
-    void exprCall() {
-        int ARGC = 0;
-        int KWARGC = 0;
-        bool need_unpack = false;
-        do {
-            match_newlines(mode()==REPL_MODE);
-            if (peek() == TK(")")) break;
-            if(peek() == TK("@id") && peek_next() == TK("=")) {
-                consume(TK("@id"));
-                const Str& key = parser->prev.str();
-                emit(OP_LOAD_CONST, co()->add_const(VAR(key)));
-                consume(TK("="));
-                co()->_rvalue += 1; EXPR(); co()->_rvalue -= 1;
-                KWARGC++;
-            } else{
-                if(KWARGC > 0) SyntaxError("positional argument follows keyword argument");
-                co()->_rvalue += 1; EXPR(); co()->_rvalue -= 1;
-                if(co()->codes.back().op == OP_UNARY_STAR) need_unpack = true;
-                ARGC++;
-            }
-            match_newlines(mode()==REPL_MODE);
-        } while (match(TK(",")));
-        consume(TK(")"));
-        if(ARGC > 32767) SyntaxError("too many positional arguments");
-        if(KWARGC > 32767) SyntaxError("too many keyword arguments");
-        if(KWARGC > 0){
-            emit(need_unpack ? OP_CALL_KWARGS_UNPACK : OP_CALL_KWARGS, (KWARGC << 16) | ARGC);
+        if(items.size()==0 || parsing_dict){
+            auto e = make_expr<DictExpr>(std::move(items));
+            ctx()->s_expr.push(std::move(e));
         }else{
-            emit(need_unpack ? OP_CALL_UNPACK : OP_CALL, ARGC);
+            auto e = make_expr<SetExpr>(std::move(items));
+            ctx()->s_expr.push(std::move(e));
         }
     }
 
-    void exprName(){ _exprName(false); }
+    void exprCall() {
+        auto e = make_expr<CallExpr>();
+        e->callable = ctx()->s_expr.popx();
+        do {
+            match_newlines_repl();
+            if (curr().type==TK(")")) break;
+            if(curr().type==TK("@id") && next().type==TK("=")) {
+                consume(TK("@id"));
+                Str key = prev().str();
+                consume(TK("="));
+                EXPR();
+                e->kwargs.push_back({key, ctx()->s_expr.popx()});
+            } else{
+                EXPR();
+                if(ctx()->s_expr.top()->star_level() == 2){
+                    // **kwargs
+                    e->kwargs.push_back({"**", ctx()->s_expr.popx()});
+                }else{
+                    // positional argument
+                    if(!e->kwargs.empty()) SyntaxError("positional argument follows keyword argument");
+                    e->args.push_back(ctx()->s_expr.popx());
+                }
+            }
+            match_newlines_repl();
+        } while (match(TK(",")));
+        consume(TK(")"));
+        if(e->args.size() > 32767) SyntaxError("too many positional arguments");
+        if(e->kwargs.size() > 32767) SyntaxError("too many keyword arguments");
+        ctx()->s_expr.push(std::move(e));
+    }
 
-    void _exprName(bool force_lvalue) {
-        Token tkname = parser->prev;
-        int index = co()->add_name(tkname.str(), name_scope());
-        bool fast_load = !force_lvalue && co()->_rvalue>0;
-        emit(fast_load ? OP_LOAD_NAME : OP_LOAD_NAME_REF, index);
+    void exprName(){
+        Str name = prev().str();
+        NameScope scope = name_scope();
+        if(ctx()->co->global_names.count(name)){
+            scope = NAME_GLOBAL;
+        }
+        ctx()->s_expr.push(make_expr<NameExpr>(name, scope));
     }
 
     void exprAttrib() {
         consume(TK("@id"));
-        const Str& name = parser->prev.str();
-        int index = co()->add_name(name, NAME_ATTR);
-        emit(co()->_rvalue ? OP_BUILD_ATTR : OP_BUILD_ATTR_REF, index);
-    }
-
-    // [:], [:b]
-    // [a], [a:], [a:b]
-    void exprSubscript() {
-        if(match(TK(":"))){
-            emit(OP_LOAD_NONE);
-            if(match(TK("]"))){
-                emit(OP_LOAD_NONE);
-            }else{
-                EXPR_TUPLE();
-                consume(TK("]"));
-            }
-            emit(OP_BUILD_SLICE);
-        }else{
-            EXPR_TUPLE();
-            if(match(TK(":"))){
-                if(match(TK("]"))){
-                    emit(OP_LOAD_NONE);
-                }else{
-                    EXPR_TUPLE();
-                    consume(TK("]"));
-                }
-                emit(OP_BUILD_SLICE);
-            }else{
-                consume(TK("]"));
-            }
-        }
-
-        emit(OP_BUILD_INDEX, (int)(co()->_rvalue>0));
-    }
-
-    void exprValue() {
-        TokenIndex op = parser->prev.type;
-        switch (op) {
-            case TK("None"):    emit(OP_LOAD_NONE);  break;
-            case TK("True"):    emit(OP_LOAD_TRUE);  break;
-            case TK("False"):   emit(OP_LOAD_FALSE); break;
-            case TK("..."):     emit(OP_LOAD_ELLIPSIS); break;
-            default: UNREACHABLE();
-        }
-    }
-
-    int emit(Opcode opcode, int arg=-1, bool keepline=false) {
-        int line = parser->prev.line;
-        co()->codes.push_back(
-            Bytecode{(uint8_t)opcode, arg, line, (uint16_t)co()->_curr_block_i}
+        ctx()->s_expr.push(
+            make_expr<AttribExpr>(ctx()->s_expr.popx(), prev().str())
         );
-        int i = co()->codes.size() - 1;
-        if(keepline && i>=1) co()->codes[i].line = co()->codes[i-1].line;
-        return i;
+    }
+    
+    void exprSubscr() {
+        auto e = make_expr<SubscrExpr>();
+        e->a = ctx()->s_expr.popx();
+        auto slice = make_expr<SliceExpr>();
+        bool is_slice = false;
+        // a[<0> <state:1> : state<3> : state<5>]
+        int state = 0;
+        do{
+            switch(state){
+                case 0:
+                    if(match(TK(":"))){
+                        is_slice=true;
+                        state=2;
+                        break;
+                    }
+                    if(match(TK("]"))) SyntaxError();
+                    EXPR_TUPLE();
+                    slice->start = ctx()->s_expr.popx();
+                    state=1;
+                    break;
+                case 1:
+                    if(match(TK(":"))){
+                        is_slice=true;
+                        state=2;
+                        break;
+                    }
+                    if(match(TK("]"))) goto __SUBSCR_END;
+                    SyntaxError("expected ':' or ']'");
+                    break;
+                case 2:
+                    if(match(TK(":"))){
+                        state=4;
+                        break;
+                    }
+                    if(match(TK("]"))) goto __SUBSCR_END;
+                    EXPR_TUPLE();
+                    slice->stop = ctx()->s_expr.popx();
+                    state=3;
+                    break;
+                case 3:
+                    if(match(TK(":"))){
+                        state=4;
+                        break;
+                    }
+                    if(match(TK("]"))) goto __SUBSCR_END;
+                    SyntaxError("expected ':' or ']'");
+                    break;
+                case 4:
+                    if(match(TK("]"))) goto __SUBSCR_END;
+                    EXPR_TUPLE();
+                    slice->step = ctx()->s_expr.popx();
+                    state=5;
+                    break;
+                case 5: consume(TK("]")); goto __SUBSCR_END;
+            }
+        }while(true);
+__SUBSCR_END:
+        if(is_slice){
+            e->b = std::move(slice);
+        }else{
+            if(state != 1) FATAL_ERROR();
+            e->b = std::move(slice->start);
+        }
+        ctx()->s_expr.push(std::move(e));
     }
 
-    inline void patch_jump(int addr_index) {
-        int target = co()->codes.size();
-        co()->codes[addr_index].arg = target;
+    void exprLiteral0() {
+        ctx()->s_expr.push(make_expr<Literal0Expr>(prev().type));
     }
 
-    void compile_block_body(CompilerAction action=nullptr) {
-        if(action == nullptr) action = &Compiler::compile_stmt;
+    void compile_block_body() {
         consume(TK(":"));
-        if(peek()!=TK("@eol") && peek()!=TK("@eof")){
-            (this->*action)();  // inline block
+        if(curr().type!=TK("@eol") && curr().type!=TK("@eof")){
+            compile_stmt();     // inline block
             return;
         }
         if(!match_newlines(mode()==REPL_MODE)){
             SyntaxError("expected a new line after ':'");
         }
         consume(TK("@indent"));
-        while (peek() != TK("@dedent")) {
+        while (curr().type != TK("@dedent")) {
             match_newlines();
-            (this->*action)();
+            compile_stmt();
             match_newlines();
         }
         consume(TK("@dedent"));
     }
 
-    Token _compile_import() {
+    Str _compile_import() {
+        if(name_scope() != NAME_GLOBAL) SyntaxError("import statement should be used in global scope");
+        Opcode op = OP_IMPORT_NAME;
+        if(match(TK("."))) op = OP_IMPORT_NAME_REL;
         consume(TK("@id"));
-        Token tkmodule = parser->prev;
-        int index = co()->add_name(tkmodule.str(), NAME_SPECIAL);
-        emit(OP_IMPORT_NAME, index);
-        return tkmodule;
+        Str name = prev().str();
+        ctx()->emit(op, StrName(name).index, prev().line);
+        return name;
     }
 
     // import a as b
     void compile_normal_import() {
         do {
-            Token tkmodule = _compile_import();
+            Str name = _compile_import();
             if (match(TK("as"))) {
                 consume(TK("@id"));
-                tkmodule = parser->prev;
+                name = prev().str();
             }
-            int index = co()->add_name(tkmodule.str(), name_scope());
-            emit(OP_STORE_NAME, index);
+            ctx()->emit(OP_STORE_GLOBAL, StrName(name).index, prev().line);
         } while (match(TK(",")));
         consume_end_stmt();
     }
 
     // from a import b as c, d as e
     void compile_from_import() {
-        Token tkmodule = _compile_import();
+        _compile_import();
         consume(TK("import"));
         if (match(TK("*"))) {
-            if(name_scope() != NAME_GLOBAL) SyntaxError("import * can only be used in global scope");
-            emit(OP_STORE_ALL_NAMES);
+            ctx()->emit(OP_IMPORT_STAR, BC_NOARG, prev().line);
             consume_end_stmt();
             return;
         }
         do {
-            emit(OP_DUP_TOP_VALUE);
+            ctx()->emit(OP_DUP_TOP, BC_NOARG, BC_KEEPLINE);
             consume(TK("@id"));
-            Token tkname = parser->prev;
-            int index = co()->add_name(tkname.str(), NAME_ATTR);
-            emit(OP_BUILD_ATTR, index);
+            Str name = prev().str();
+            ctx()->emit(OP_LOAD_ATTR, StrName(name).index, prev().line);
             if (match(TK("as"))) {
                 consume(TK("@id"));
-                tkname = parser->prev;
+                name = prev().str();
             }
-            index = co()->add_name(tkname.str(), name_scope());
-            emit(OP_STORE_NAME, index);
+            ctx()->emit(OP_STORE_GLOBAL, StrName(name).index, prev().line);
         } while (match(TK(",")));
-        emit(OP_POP_TOP);
+        ctx()->emit(OP_POP_TOP, BC_NOARG, BC_KEEPLINE);
         consume_end_stmt();
     }
 
-    void parse_expression(Precedence precedence) {
-        lex_token();
-        GrammarFn prefix = rules[parser->prev.type].prefix;
-        if (prefix == nullptr) SyntaxError(Str("expected an expression, but got ") + TK_STR(parser->prev.type));
+    void parse_expression(int precedence, bool push_stack=true) {
+        advance();
+        PrattCallback prefix = rules[prev().type].prefix;
+        if (prefix == nullptr) SyntaxError(Str("expected an expression, but got ") + TK_STR(prev().type));
         (this->*prefix)();
-        bool meet_assign_token = false;
-        while (rules[peek()].precedence >= precedence) {
-            lex_token();
-            TokenIndex op = parser->prev.type;
-            if (op == TK("=")){
-                if(meet_assign_token) SyntaxError();
-                meet_assign_token = true;
-            }
-            GrammarFn infix = rules[op].infix;
+        while (rules[curr().type].precedence >= precedence) {
+            TokenIndex op = curr().type;
+            advance();
+            PrattCallback infix = rules[op].infix;
             if(infix == nullptr) throw std::runtime_error("(infix == nullptr) is true");
             (this->*infix)();
         }
+        if(!push_stack) ctx()->emit_expr();
     }
 
     void compile_if_stmt() {
-        match_newlines();
-        co()->_rvalue += 1;
-        EXPR_TUPLE();   // condition
-        co()->_rvalue -= 1;
-        int ifpatch = emit(OP_POP_JUMP_IF_FALSE);
+        EXPR(false);   // condition
+        int patch = ctx()->emit(OP_POP_JUMP_IF_FALSE, BC_NOARG, prev().line);
         compile_block_body();
-
         if (match(TK("elif"))) {
-            int exit_jump = emit(OP_JUMP_ABSOLUTE);
-            patch_jump(ifpatch);
+            int exit_patch = ctx()->emit(OP_JUMP_ABSOLUTE, BC_NOARG, prev().line);
+            ctx()->patch_jump(patch);
             compile_if_stmt();
-            patch_jump(exit_jump);
+            ctx()->patch_jump(exit_patch);
         } else if (match(TK("else"))) {
-            int exit_jump = emit(OP_JUMP_ABSOLUTE);
-            patch_jump(ifpatch);
+            int exit_patch = ctx()->emit(OP_JUMP_ABSOLUTE, BC_NOARG, prev().line);
+            ctx()->patch_jump(patch);
             compile_block_body();
-            patch_jump(exit_jump);
+            ctx()->patch_jump(exit_patch);
         } else {
-            patch_jump(ifpatch);
+            ctx()->patch_jump(patch);
         }
     }
 
     void compile_while_loop() {
-        co()->_enter_block(WHILE_LOOP);
-        co()->_rvalue += 1;
-        EXPR_TUPLE();   // condition
-        co()->_rvalue -= 1;
-        int patch = emit(OP_POP_JUMP_IF_FALSE);
+        ctx()->enter_block(WHILE_LOOP);
+        EXPR(false);   // condition
+        int patch = ctx()->emit(OP_POP_JUMP_IF_FALSE, BC_NOARG, prev().line);
         compile_block_body();
-        emit(OP_LOOP_CONTINUE, -1, true);
-        patch_jump(patch);
-        co()->_exit_block();
-    }
-
-    void EXPR_FOR_VARS(){
-        int size = 0;
-        do {
-            consume(TK("@id"));
-            _exprName(true); size++;
-        } while (match(TK(",")));
-        if(size > 1) emit(OP_BUILD_TUPLE_REF, size);
+        ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+        ctx()->patch_jump(patch);
+        ctx()->exit_block();
     }
 
     void compile_for_loop() {
-        EXPR_FOR_VARS();consume(TK("in"));
-        co()->_rvalue += 1; EXPR_TUPLE(); co()->_rvalue -= 1;
-        emit(OP_GET_ITER);
-        co()->_enter_block(FOR_LOOP);
-        emit(OP_FOR_ITER);
+        Expr_ vars = EXPR_VARS();
+        consume(TK("in"));
+        EXPR_TUPLE(false);
+        ctx()->emit(OP_GET_ITER, BC_NOARG, BC_KEEPLINE);
+        ctx()->enter_block(FOR_LOOP);
+        ctx()->emit(OP_FOR_ITER, BC_NOARG, BC_KEEPLINE);
+        bool ok = vars->emit_store(ctx());
+        if(!ok) SyntaxError();  // this error occurs in `vars` instead of this line, but...nevermind
         compile_block_body();
-        emit(OP_LOOP_CONTINUE, -1, true);
-        co()->_exit_block();
+        ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+        ctx()->exit_block();
     }
 
     void compile_try_except() {
-        co()->_enter_block(TRY_EXCEPT);
-        emit(OP_TRY_BLOCK_ENTER);
+        ctx()->enter_block(TRY_EXCEPT);
         compile_block_body();
-        emit(OP_TRY_BLOCK_EXIT);
-        std::vector<int> patches = { emit(OP_JUMP_ABSOLUTE) };
-        co()->_exit_block();
-
+        std::vector<int> patches = {
+            ctx()->emit(OP_JUMP_ABSOLUTE, BC_NOARG, BC_KEEPLINE)
+        };
+        ctx()->exit_block();
         do {
             consume(TK("except"));
             if(match(TK("@id"))){
-                int name_idx = co()->add_name(parser->prev.str(), NAME_SPECIAL);
-                emit(OP_EXCEPTION_MATCH, name_idx);
+                ctx()->emit(OP_EXCEPTION_MATCH, StrName(prev().str()).index, prev().line);
             }else{
-                emit(OP_LOAD_TRUE);
+                ctx()->emit(OP_LOAD_TRUE, BC_NOARG, BC_KEEPLINE);
             }
-            int patch = emit(OP_POP_JUMP_IF_FALSE);
-            emit(OP_POP_TOP);       // pop the exception on match
+            int patch = ctx()->emit(OP_POP_JUMP_IF_FALSE, BC_NOARG, BC_KEEPLINE);
+            // pop the exception on match
+            ctx()->emit(OP_POP_EXCEPTION, BC_NOARG, BC_KEEPLINE);
             compile_block_body();
-            patches.push_back(emit(OP_JUMP_ABSOLUTE));
-            patch_jump(patch);
-        }while(peek() == TK("except"));
-        emit(OP_RE_RAISE);      // no match, re-raise
-        for (int patch : patches) patch_jump(patch);
+            patches.push_back(ctx()->emit(OP_JUMP_ABSOLUTE, BC_NOARG, BC_KEEPLINE));
+            ctx()->patch_jump(patch);
+        }while(curr().type == TK("except"));
+        // no match, re-raise
+        ctx()->emit(OP_RE_RAISE, BC_NOARG, BC_KEEPLINE);
+        for (int patch : patches) ctx()->patch_jump(patch);
+    }
+
+    void compile_decorated(){
+        std::vector<Expr_> decorators;
+        do{
+            EXPR();
+            decorators.push_back(ctx()->s_expr.popx());
+            if(!match_newlines_repl()) SyntaxError();
+        }while(match(TK("@")));
+        consume(TK("def"));
+        compile_function(decorators);
+    }
+
+    bool try_compile_assignment(){
+        switch (curr().type) {
+            case TK("+="): case TK("-="): case TK("*="): case TK("/="): case TK("//="): case TK("%="):
+            case TK("<<="): case TK(">>="): case TK("&="): case TK("|="): case TK("^="): {
+                Expr* lhs_p = ctx()->s_expr.top().get();
+                if(lhs_p->is_starred()) SyntaxError();
+                if(ctx()->is_compiling_class) SyntaxError();
+                advance();
+                auto e = make_expr<BinaryExpr>();
+                e->op = prev().type - 1; // -1 to remove =
+                e->lhs = ctx()->s_expr.popx();
+                EXPR_TUPLE();
+                e->rhs = ctx()->s_expr.popx();
+                if(e->is_starred()) SyntaxError();
+                e->emit(ctx());
+                bool ok = lhs_p->emit_store(ctx());
+                if(!ok) SyntaxError();
+            } return true;
+            case TK("="): {
+                int n = 0;
+                while(match(TK("="))){
+                    EXPR_TUPLE();
+                    n += 1;
+                }
+                // stack size is n+1
+                Expr_ val = ctx()->s_expr.popx();
+                val->emit(ctx());
+                for(int i=1; i<n; i++) ctx()->emit(OP_DUP_TOP, BC_NOARG, BC_KEEPLINE);
+                for(int i=0; i<n; i++){
+                    auto e = ctx()->s_expr.popx();
+                    if(e->is_starred()) SyntaxError();
+                    bool ok = e->emit_store(ctx());
+                    if(!ok) SyntaxError();
+                }
+            } return true;
+            default: return false;
+        }
     }
 
     void compile_stmt() {
-        if (match(TK("break"))) {
-            if (!co()->_is_curr_block_loop()) SyntaxError("'break' outside loop");
-            consume_end_stmt();
-            emit(OP_LOOP_BREAK);
-        } else if (match(TK("continue"))) {
-            if (!co()->_is_curr_block_loop()) SyntaxError("'continue' not properly in loop");
-            consume_end_stmt();
-            emit(OP_LOOP_CONTINUE);
-        } else if (match(TK("yield"))) {
-            if (codes.size() == 1) SyntaxError("'yield' outside function");
-            co()->_rvalue += 1;
-            EXPR_TUPLE();
-            co()->_rvalue -= 1;
-            consume_end_stmt();
-            co()->is_generator = true;
-            emit(OP_YIELD_VALUE, -1, true);
-        } else if (match(TK("return"))) {
-            if (codes.size() == 1) SyntaxError("'return' outside function");
-            if(match_end_stmt()){
-                emit(OP_LOAD_NONE);
-            }else{
-                co()->_rvalue += 1;
-                EXPR_TUPLE();   // return value
-                co()->_rvalue -= 1;
+        advance();
+        int kw_line = prev().line;  // backup line number
+        switch(prev().type){
+            case TK("break"):
+                if (!ctx()->is_curr_block_loop()) SyntaxError("'break' outside loop");
+                ctx()->emit(OP_LOOP_BREAK, BC_NOARG, kw_line);
+                consume_end_stmt();
+                break;
+            case TK("continue"):
+                if (!ctx()->is_curr_block_loop()) SyntaxError("'continue' not properly in loop");
+                ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, kw_line);
+                consume_end_stmt();
+                break;
+            case TK("yield"): 
+                if (contexts.size() <= 1) SyntaxError("'yield' outside function");
+                EXPR_TUPLE(false);
+                // if yield present, mark the function as generator
+                ctx()->co->is_generator = true;
+                ctx()->emit(OP_YIELD_VALUE, BC_NOARG, kw_line);
+                consume_end_stmt();
+                break;
+            case TK("yield from"):
+                if (contexts.size() <= 1) SyntaxError("'yield from' outside function");
+                EXPR_TUPLE(false);
+                // if yield from present, mark the function as generator
+                ctx()->co->is_generator = true;
+                ctx()->emit(OP_GET_ITER, BC_NOARG, kw_line);
+                ctx()->enter_block(FOR_LOOP);
+                ctx()->emit(OP_FOR_ITER, BC_NOARG, BC_KEEPLINE);
+                ctx()->emit(OP_YIELD_VALUE, BC_NOARG, BC_KEEPLINE);
+                ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+                ctx()->exit_block();
+                consume_end_stmt();
+                break;
+            case TK("return"):
+                if (contexts.size() <= 1) SyntaxError("'return' outside function");
+                if(match_end_stmt()){
+                    ctx()->emit(OP_LOAD_NONE, BC_NOARG, kw_line);
+                }else{
+                    EXPR_TUPLE(false);
+                    consume_end_stmt();
+                }
+                ctx()->emit(OP_RETURN_VALUE, BC_NOARG, kw_line);
+                break;
+            /*************************************************/
+            case TK("if"): compile_if_stmt(); break;
+            case TK("while"): compile_while_loop(); break;
+            case TK("for"): compile_for_loop(); break;
+            case TK("import"): compile_normal_import(); break;
+            case TK("from"): compile_from_import(); break;
+            case TK("def"): compile_function(); break;
+            case TK("@"): compile_decorated(); break;
+            case TK("try"): compile_try_except(); break;
+            case TK("pass"): consume_end_stmt(); break;
+            /*************************************************/
+            case TK("++"):{
+                consume(TK("@id"));
+                StrName name(prev().sv());
+                switch(name_scope()){
+                    case NAME_LOCAL:
+                        ctx()->emit(OP_INC_FAST, ctx()->add_varname(name), prev().line);
+                        break;
+                    case NAME_GLOBAL:
+                        ctx()->emit(OP_INC_GLOBAL, name.index, prev().line);
+                        break;
+                    default: SyntaxError(); break;
+                }
+                consume_end_stmt();
+                break;
+            }
+            case TK("--"):{
+                consume(TK("@id"));
+                StrName name(prev().sv());
+                switch(name_scope()){
+                    case NAME_LOCAL:
+                        ctx()->emit(OP_DEC_FAST, ctx()->add_varname(name), prev().line);
+                        break;
+                    case NAME_GLOBAL:
+                        ctx()->emit(OP_DEC_GLOBAL, name.index, prev().line);
+                        break;
+                    default: SyntaxError(); break;
+                }
+                consume_end_stmt();
+                break;
+            }
+            case TK("assert"):
+                EXPR_TUPLE(false);
+                ctx()->emit(OP_ASSERT, BC_NOARG, kw_line);
+                consume_end_stmt();
+                break;
+            case TK("global"):
+                do {
+                    consume(TK("@id"));
+                    ctx()->co->global_names.insert(prev().str());
+                } while (match(TK(",")));
+                consume_end_stmt();
+                break;
+            case TK("raise"): {
+                consume(TK("@id"));
+                int dummy_t = StrName(prev().str()).index;
+                if(match(TK("(")) && !match(TK(")"))){
+                    EXPR(false); consume(TK(")"));
+                }else{
+                    ctx()->emit(OP_LOAD_NONE, BC_NOARG, kw_line);
+                }
+                ctx()->emit(OP_RAISE, dummy_t, kw_line);
+                consume_end_stmt();
+            } break;
+            case TK("del"): {
+                EXPR_TUPLE();
+                Expr_ e = ctx()->s_expr.popx();
+                bool ok = e->emit_del(ctx());
+                if(!ok) SyntaxError();
+                consume_end_stmt();
+            } break;
+            case TK("with"): {
+                EXPR(false);
+                consume(TK("as"));
+                consume(TK("@id"));
+                StrName name(prev().str());
+                ctx()->emit(OP_STORE_NAME, name.index, prev().line);
+                ctx()->emit(OP_LOAD_NAME, name.index, prev().line);
+                ctx()->emit(OP_WITH_ENTER, BC_NOARG, prev().line);
+                compile_block_body();
+                ctx()->emit(OP_LOAD_NAME, name.index, prev().line);
+                ctx()->emit(OP_WITH_EXIT, BC_NOARG, prev().line);
+            } break;
+            /*************************************************/
+            case TK("$label"): {
+                if(mode()!=EXEC_MODE) SyntaxError("'label' is only available in EXEC_MODE");
+                consume(TK("@id"));
+                bool ok = ctx()->add_label(prev().str());
+                if(!ok) SyntaxError("label " + prev().str().escape() + " already exists");
+                consume_end_stmt();
+            } break;
+            case TK("$goto"):
+                if(mode()!=EXEC_MODE) SyntaxError("'goto' is only available in EXEC_MODE");
+                consume(TK("@id"));
+                ctx()->emit(OP_GOTO, StrName(prev().str()).index, prev().line);
+                consume_end_stmt();
+                break;
+            /*************************************************/
+            // handle dangling expression or assignment
+            default: {
+                advance(-1);    // do revert since we have pre-called advance() at the beginning
+                EXPR_TUPLE();
+                // eat variable's type hint
+                if(match(TK(":"))) consume_type_hints();
+                if(!try_compile_assignment()){
+                    if(!ctx()->s_expr.empty() && ctx()->s_expr.top()->is_starred()){
+                        SyntaxError();
+                    }
+                    ctx()->emit_expr();
+                    if((mode()==CELL_MODE || mode()==REPL_MODE) && name_scope()==NAME_GLOBAL){
+                        ctx()->emit(OP_PRINT_EXPR, BC_NOARG, BC_KEEPLINE);
+                    }else{
+                        ctx()->emit(OP_POP_TOP, BC_NOARG, BC_KEEPLINE);
+                    }
+                }
                 consume_end_stmt();
             }
-            emit(OP_RETURN_VALUE, -1, true);
-        } else if (match(TK("if"))) {
-            compile_if_stmt();
-        } else if (match(TK("while"))) {
-            compile_while_loop();
-        } else if (match(TK("for"))) {
-            compile_for_loop();
-        } else if (match(TK("import"))){
-            compile_normal_import();
-        } else if (match(TK("from"))){
-            compile_from_import();
-        } else if (match(TK("def"))){
-            compile_function();
-        } else if (match(TK("@"))){
-            EXPR();
-            if(!match_newlines(mode()==REPL_MODE)){
-                SyntaxError("expected a new line after '@'");
-            }
-            emit(OP_SETUP_DECORATOR);
-            consume(TK("def"));
-            compile_function();
-        } else if (match(TK("try"))) {
-            compile_try_except();
-        } else if(match(TK("assert"))) {
-            co()->_rvalue += 1;
-            EXPR();
-            if (match(TK(","))) EXPR();
-            else emit(OP_LOAD_CONST, co()->add_const(VAR("")));
-            co()->_rvalue -= 1;
-            emit(OP_ASSERT);
-            consume_end_stmt();
-        } else if(match(TK("with"))){
-            EXPR();
-            consume(TK("as"));
-            consume(TK("@id"));
-            Token tkname = parser->prev;
-            int index = co()->add_name(tkname.str(), name_scope());
-            emit(OP_STORE_NAME, index);
-            emit(OP_LOAD_NAME_REF, index);
-            emit(OP_WITH_ENTER);
-            compile_block_body();
-            emit(OP_LOAD_NAME_REF, index);
-            emit(OP_WITH_EXIT);
-        } else if(match(TK("label"))){
-            if(mode() != EXEC_MODE) SyntaxError("'label' is only available in EXEC_MODE");
-            consume(TK(".")); consume(TK("@id"));
-            Str label = parser->prev.str();
-            bool ok = co()->add_label(label);
-            if(!ok) SyntaxError("label '" + label + "' already exists");
-            consume_end_stmt();
-        } else if(match(TK("goto"))){ // https://entrian.com/goto/
-            if(mode() != EXEC_MODE) SyntaxError("'goto' is only available in EXEC_MODE");
-            consume(TK(".")); consume(TK("@id"));
-            emit(OP_GOTO, co()->add_name(parser->prev.str(), NAME_SPECIAL));
-            consume_end_stmt();
-        } else if(match(TK("raise"))){
-            consume(TK("@id"));
-            int dummy_t = co()->add_name(parser->prev.str(), NAME_SPECIAL);
-            if(match(TK("(")) && !match(TK(")"))){
-                EXPR(); consume(TK(")"));
-            }else{
-                emit(OP_LOAD_NONE);
-            }
-            emit(OP_RAISE, dummy_t);
-            consume_end_stmt();
-        } else if(match(TK("del"))){
-            EXPR_TUPLE();
-            emit(OP_DELETE_REF);
-            consume_end_stmt();
-        } else if(match(TK("global"))){
-            do {
-                consume(TK("@id"));
-                co()->global_names[parser->prev.str()] = 1;
-            } while (match(TK(",")));
-            consume_end_stmt();
-        } else if(match(TK("pass"))){
-            consume_end_stmt();
-        } else {
-            int begin = co()->codes.size();
-            EXPR_ANY();
-            int end = co()->codes.size();
-            consume_end_stmt();
-            // If last op is not an assignment, pop the result.
-            uint8_t last_op = co()->codes.back().op;
-            if( last_op!=OP_STORE_NAME && last_op!=OP_STORE_REF &&
-            last_op!=OP_INPLACE_BINARY_OP && last_op!=OP_INPLACE_BITWISE_OP &&
-            last_op!=OP_STORE_ALL_NAMES && last_op!=OP_STORE_CLASS_ATTR){
-                for(int i=begin; i<end; i++){
-                    if(co()->codes[i].op==OP_BUILD_TUPLE_REF) co()->codes[i].op = OP_BUILD_TUPLE;
-                }
-                if(mode()==REPL_MODE && name_scope() == NAME_GLOBAL) emit(OP_PRINT_EXPR, -1, true);
-                emit(OP_POP_TOP, -1, true);
-            }
         }
+    }
+
+    void consume_type_hints(){
+        EXPR();
+        ctx()->s_expr.pop();
     }
 
     void compile_class(){
         consume(TK("@id"));
-        int cls_name_idx = co()->add_name(parser->prev.str(), NAME_GLOBAL);
-        int super_cls_name_idx = -1;
-        if(match(TK("(")) && match(TK("@id"))){
-            super_cls_name_idx = co()->add_name(parser->prev.str(), NAME_GLOBAL);
+        int namei = StrName(prev().str()).index;
+        int super_namei = -1;
+        if(match(TK("("))){
+            if(match(TK("@id"))){
+                super_namei = StrName(prev().str()).index;
+            }
             consume(TK(")"));
         }
-        if(super_cls_name_idx == -1) emit(OP_LOAD_NONE);
-        else emit(OP_LOAD_NAME, super_cls_name_idx);
-        emit(OP_BEGIN_CLASS, cls_name_idx);
-        co()->_is_compiling_class = true;
+        if(super_namei == -1) ctx()->emit(OP_LOAD_NONE, BC_NOARG, prev().line);
+        else ctx()->emit(OP_LOAD_GLOBAL, super_namei, prev().line);
+        ctx()->emit(OP_BEGIN_CLASS, namei, BC_KEEPLINE);
+        ctx()->is_compiling_class = true;
         compile_block_body();
-        co()->_is_compiling_class = false;
-        emit(OP_END_CLASS);
+        ctx()->is_compiling_class = false;
+        ctx()->emit(OP_END_CLASS, BC_NOARG, BC_KEEPLINE);
     }
 
-    void _compile_f_args(Function& func, bool enable_type_hints){
+    void _compile_f_args(FuncDecl_ decl, bool enable_type_hints){
         int state = 0;      // 0 for args, 1 for *args, 2 for k=v, 3 for **kwargs
         do {
+            if(state > 3) SyntaxError();
             if(state == 3) SyntaxError("**kwargs should be the last argument");
             match_newlines();
             if(match(TK("*"))){
@@ -4403,136 +7419,178 @@ private:
             else if(match(TK("**"))){
                 state = 3;
             }
-
             consume(TK("@id"));
-            const Str& name = parser->prev.str();
-            if(func.has_name(name)) SyntaxError("duplicate argument name");
+            StrName name = prev().str();
+
+            // check duplicate argument name
+            for(int i: decl->args){
+                if(decl->code->varnames[i] == name) {
+                    SyntaxError("duplicate argument name");
+                }
+            }
+            for(auto& kv: decl->kwargs){
+                if(decl->code->varnames[kv.key] == name){
+                    SyntaxError("duplicate argument name");
+                }
+            }
+            if(decl->starred_arg!=-1 && decl->code->varnames[decl->starred_arg] == name){
+                SyntaxError("duplicate argument name");
+            }
+            if(decl->starred_kwarg!=-1 && decl->code->varnames[decl->starred_kwarg] == name){
+                SyntaxError("duplicate argument name");
+            }
 
             // eat type hints
-            if(enable_type_hints && match(TK(":"))) consume(TK("@id"));
-
-            if(state == 0 && peek() == TK("=")) state = 2;
-
+            if(enable_type_hints && match(TK(":"))) consume_type_hints();
+            if(state == 0 && curr().type == TK("=")) state = 2;
+            int index = ctx()->add_varname(name);
             switch (state)
             {
-                case 0: func.args.push_back(name); break;
-                case 1: func.starred_arg = name; state+=1; break;
+                case 0:
+                    decl->args.push_back(index);
+                    break;
+                case 1:
+                    decl->starred_arg = index;
+                    state+=1;
+                    break;
                 case 2: {
                     consume(TK("="));
-                    PyVarOrNull value = read_literal();
+                    PyObject* value = read_literal();
                     if(value == nullptr){
-                        SyntaxError(Str("expect a literal, not ") + TK_STR(parser->curr.type));
+                        SyntaxError(Str("expect a literal, not ") + TK_STR(curr().type));
                     }
-                    func.kwargs.set(name, value);
-                    func.kwargs_order.push_back(name);
+                    decl->kwargs.push_back(FuncDecl::KwArg{index, value});
                 } break;
-                case 3: SyntaxError("**kwargs is not supported yet"); break;
+                case 3:
+                    decl->starred_kwarg = index;
+                    state+=1;
+                    break;
             }
         } while (match(TK(",")));
     }
 
-    void compile_function(){
-        bool has_decorator = !co()->codes.empty() && co()->codes.back().op == OP_SETUP_DECORATOR;
-        Function func;
-        StrName obj_name;
+    void compile_function(const std::vector<Expr_>& decorators={}){
+        Str decl_name;
         consume(TK("@id"));
-        func.name = parser->prev.str();
-        if(!co()->_is_compiling_class && match(TK("::"))){
-            consume(TK("@id"));
-            obj_name = func.name;
-            func.name = parser->prev.str();
-        }
+        decl_name = prev().str();
+        FuncDecl_ decl = push_f_context(decl_name);
         consume(TK("("));
         if (!match(TK(")"))) {
-            _compile_f_args(func, true);
+            _compile_f_args(decl, true);
             consume(TK(")"));
         }
-        if(match(TK("->"))){
-            if(!match(TK("None"))) consume(TK("@id"));
-        }
-        func.code = make_sp<CodeObject>(parser->src, func.name.str());
-        this->codes.push(func.code);
+        if(match(TK("->"))) consume_type_hints();
         compile_block_body();
-        func.code->optimize(vm);
-        this->codes.pop();
-        emit(OP_LOAD_FUNCTION, co()->add_const(VAR(func)));
-        if(name_scope() == NAME_LOCAL) emit(OP_SETUP_CLOSURE);
-        if(!co()->_is_compiling_class){
-            if(obj_name.empty()){
-                if(has_decorator) emit(OP_CALL, 1);
-                emit(OP_STORE_NAME, co()->add_name(func.name, name_scope()));
-            } else {
-                if(has_decorator) SyntaxError("decorator is not supported here");
-                emit(OP_LOAD_NAME, co()->add_name(obj_name, name_scope()));
-                int index = co()->add_name(func.name, NAME_ATTR);
-                emit(OP_BUILD_ATTR_REF, index);
-                emit(OP_ROT_TWO);
-                emit(OP_STORE_REF);
+        pop_context();
+
+        PyObject* docstring = nullptr;
+        if(decl->code->codes.size()>=2 && decl->code->codes[0].op == OP_LOAD_CONST && decl->code->codes[1].op == OP_POP_TOP){
+            PyObject* c = decl->code->consts[decl->code->codes[0].arg];
+            if(is_type(c, vm->tp_str)){
+                decl->code->codes[0].op = OP_NO_OP;
+                decl->code->codes[1].op = OP_NO_OP;
+                docstring = c;
             }
+        }
+        ctx()->emit(OP_LOAD_FUNCTION, ctx()->add_func_decl(decl), prev().line);
+        if(docstring != nullptr){
+            ctx()->emit(OP_SETUP_DOCSTRING, ctx()->add_const(docstring), prev().line);
+        }
+        // add decorators
+        for(auto it=decorators.rbegin(); it!=decorators.rend(); ++it){
+            (*it)->emit(ctx());
+            ctx()->emit(OP_ROT_TWO, BC_NOARG, (*it)->line);
+            ctx()->emit(OP_LOAD_NULL, BC_NOARG, BC_KEEPLINE);
+            ctx()->emit(OP_ROT_TWO, BC_NOARG, BC_KEEPLINE);
+            ctx()->emit(OP_CALL, 1, (*it)->line);
+        }
+        if(!ctx()->is_compiling_class){
+            auto e = make_expr<NameExpr>(decl_name, name_scope());
+            e->emit_store(ctx());
         }else{
-            if(has_decorator) emit(OP_CALL, 1);
-            emit(OP_STORE_CLASS_ATTR, co()->add_name(func.name, name_scope()));
+            int index = StrName(decl_name).index;
+            ctx()->emit(OP_STORE_CLASS_ATTR, index, prev().line);
         }
     }
 
-    PyVarOrNull read_literal(){
-        if(match(TK("-"))){
-            consume(TK("@num"));
-            PyVar val = parser->prev.value;
-            return vm->num_negated(val);
+    PyObject* to_object(const TokenValue& value){
+        PyObject* obj = nullptr;
+        if(std::holds_alternative<i64>(value)){
+            obj = VAR(std::get<i64>(value));
         }
-        if(match(TK("@num"))) return parser->prev.value;
-        if(match(TK("@str"))) return parser->prev.value;
-        if(match(TK("True"))) return VAR(true);
-        if(match(TK("False"))) return VAR(false);
-        if(match(TK("None"))) return vm->None;
-        if(match(TK("..."))) return vm->Ellipsis;
+        if(std::holds_alternative<f64>(value)){
+            obj = VAR(std::get<f64>(value));
+        }
+        if(std::holds_alternative<Str>(value)){
+            obj = VAR(std::get<Str>(value));
+        }
+        if(obj == nullptr) FATAL_ERROR();
+        return obj;
+    }
+
+    PyObject* read_literal(){
+        advance();
+        switch(prev().type){
+            case TK("-"): {
+                consume(TK("@num"));
+                PyObject* val = to_object(prev().value);
+                return vm->py_negate(val);
+            }
+            case TK("@num"): return to_object(prev().value);
+            case TK("@str"): return to_object(prev().value);
+            case TK("True"): return VAR(true);
+            case TK("False"): return VAR(false);
+            case TK("None"): return vm->None;
+            case TK("..."): return vm->Ellipsis;
+            default: break;
+        }
         return nullptr;
     }
 
-    /***** Error Reporter *****/
-    void throw_err(Str type, Str msg){
-        int lineno = parser->curr.line;
-        const char* cursor = parser->curr.start;
-        // if error occurs in lexing, lineno should be `parser->current_line`
-        if(lexing_count > 0){
-            lineno = parser->current_line;
-            cursor = parser->curr_char;
-        }
-        if(parser->peekchar() == '\n') lineno--;
-        auto e = Exception("SyntaxError", msg);
-        e.st_push(parser->src->snapshot(lineno, cursor));
-        throw e;
-    }
-    void SyntaxError(Str msg){ throw_err("SyntaxError", msg); }
-    void SyntaxError(){ throw_err("SyntaxError", "invalid syntax"); }
-    void IndentationError(Str msg){ throw_err("IndentationError", msg); }
+    void SyntaxError(Str msg){ lexer->throw_err("SyntaxError", msg, err().line, err().start); }
+    void SyntaxError(){ lexer->throw_err("SyntaxError", "invalid syntax", err().line, err().start); }
+    void IndentationError(Str msg){ lexer->throw_err("IndentationError", msg, err().line, err().start); }
 
 public:
+    Compiler(VM* vm, const Str& source, const Str& filename, CompileMode mode, bool unknown_global_scope=false){
+        this->vm = vm;
+        this->used = false;
+        this->unknown_global_scope = unknown_global_scope;
+        this->lexer = std::make_unique<Lexer>(
+            make_sp<SourceData>(source, filename, mode)
+        );
+        init_pratt_rules();
+    }
+
     CodeObject_ compile(){
-        // can only be called once
-        if(used) UNREACHABLE();
+        if(used) FATAL_ERROR();
         used = true;
 
-        CodeObject_ code = make_sp<CodeObject>(parser->src, Str("<module>"));
-        codes.push(code);
+        tokens = lexer->run();
+        // if(lexer->src->filename == "<stdin>"){
+        //     for(auto& t: tokens) std::cout << t.info() << std::endl;
+        // }
 
-        lex_token(); lex_token();
-        match_newlines();
+        CodeObject_ code = push_global_context();
+
+        advance();          // skip @sof, so prev() is always valid
+        match_newlines();   // skip possible leading '\n'
 
         if(mode()==EVAL_MODE) {
-            EXPR_TUPLE();
+            EXPR_TUPLE(false);
             consume(TK("@eof"));
-            code->optimize(vm);
+            ctx()->emit(OP_RETURN_VALUE, BC_NOARG, BC_KEEPLINE);
+            pop_context();
             return code;
         }else if(mode()==JSON_MODE){
-            PyVarOrNull value = read_literal();
-            if(value != nullptr) emit(OP_LOAD_CONST, code->add_const(value));
-            else if(match(TK("{"))) exprMap();
-            else if(match(TK("["))) exprList();
-            else SyntaxError("expect a JSON object or array");
+            EXPR();
+            Expr_ e = ctx()->s_expr.popx();
+            if(!e->is_json_object()) SyntaxError("expect a JSON object, literal or array");
             consume(TK("@eof"));
-            return code;    // no need to optimize for JSON decoding
+            e->emit(ctx());
+            ctx()->emit(OP_RETURN_VALUE, BC_NOARG, BC_KEEPLINE);
+            pop_context();
+            return code;
         }
 
         while (!match(TK("@eof"))) {
@@ -4543,7 +7601,7 @@ public:
             }
             match_newlines();
         }
-        code->optimize(vm);
+        pop_context();
         return code;
     }
 };
@@ -4551,7 +7609,44 @@ public:
 } // namespace pkpy
 
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+
 namespace pkpy{
+
+#ifdef _WIN32
+
+inline std::string getline(bool* eof=nullptr) {
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    std::wstringstream wss;
+    WCHAR buf;
+    DWORD read;
+    while (ReadConsoleW(hStdin, &buf, 1, &read, NULL) && buf != L'\n') {
+        if(eof && buf == L'\x1A') *eof = true;  // Ctrl+Z
+        wss << buf;
+    }
+    std::wstring wideInput = wss.str();
+    int length = WideCharToMultiByte(CP_UTF8, 0, wideInput.c_str(), (int)wideInput.length(), NULL, 0, NULL, NULL);
+    std::string output;
+    output.resize(length);
+    WideCharToMultiByte(CP_UTF8, 0, wideInput.c_str(), (int)wideInput.length(), &output[0], length, NULL, NULL);
+    if(!output.empty() && output.back() == '\r') output.pop_back();
+    return output;
+}
+
+#else
+
+inline std::string getline(bool* eof=nullptr){
+    std::string line;
+    if(!std::getline(std::cin, line)){
+        if(eof) *eof = true;
+    }
+    return line;
+}
+
+#endif
 
 class REPL {
 protected:
@@ -4560,9 +7655,10 @@ protected:
     VM* vm;
 public:
     REPL(VM* vm) : vm(vm){
-        (*vm->_stdout) << ("pocketpy " PK_VERSION " (" __DATE__ ", " __TIME__ ")\n");
-        (*vm->_stdout) << ("https://github.com/blueloveTH/pocketpy" "\n");
-        (*vm->_stdout) << ("Type \"exit()\" to exit." "\n");
+        vm->_stdout(vm, "pocketpy " PK_VERSION " (" __DATE__ ", " __TIME__ ") ");
+        vm->_stdout(vm, fmt("[", sizeof(void*)*8, " bit]" "\n"));
+        vm->_stdout(vm, "https://github.com/blueloveTH/pocketpy" "\n");
+        vm->_stdout(vm, "Type \"exit()\" to exit." "\n");
     }
 
     bool input(std::string line){
@@ -4579,7 +7675,7 @@ public:
                 need_more_lines = 0;
                 line = buffer;
                 buffer.clear();
-                mode = EXEC_MODE;
+                mode = CELL_MODE;
             }else{
                 return true;
             }
@@ -4599,667 +7695,2108 @@ public:
 
 } // namespace pkpy
 
+// generated on 2023-06-11 09:55:58
+#include <map>
+#include <string>
 
 namespace pkpy{
+    inline static std::map<std::string, const char*> kPythonLibs = {
+        {"_set", "\x63\x6c\x61\x73\x73\x20\x73\x65\x74\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x20\x3d\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x20\x6f\x72\x20\x5b\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x20\x3d\x20\x7b\x7d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x74\x65\x6d\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x61\x64\x64\x28\x69\x74\x65\x6d\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x61\x64\x64\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x65\x6c\x65\x6d\x5d\x20\x3d\x20\x4e\x6f\x6e\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x64\x69\x73\x63\x61\x72\x64\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x64\x65\x6c\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x65\x6c\x65\x6d\x5d\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x72\x65\x6d\x6f\x76\x65\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x64\x65\x6c\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x65\x6c\x65\x6d\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6c\x65\x61\x72\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x63\x6c\x65\x61\x72\x28\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x75\x70\x64\x61\x74\x65\x28\x73\x65\x6c\x66\x2c\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x2e\x5f\x61\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6f\x70\x79\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x74\x28\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x6b\x65\x79\x73\x28\x29\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x61\x6e\x64\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x74\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6f\x72\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x6c\x66\x2e\x63\x6f\x70\x79\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x73\x75\x62\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x74\x28\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x6e\x6f\x74\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x78\x6f\x72\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x74\x28\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x6e\x6f\x74\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20" "\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x6e\x6f\x74\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x75\x6e\x69\x6f\x6e\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x7c\x20\x6f\x74\x68\x65\x72\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x6e\x74\x65\x72\x73\x65\x63\x74\x69\x6f\x6e\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x26\x20\x6f\x74\x68\x65\x72\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x64\x69\x66\x66\x65\x72\x65\x6e\x63\x65\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x2d\x20\x6f\x74\x68\x65\x72\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x73\x79\x6d\x6d\x65\x74\x72\x69\x63\x5f\x64\x69\x66\x66\x65\x72\x65\x6e\x63\x65\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x5e\x20\x6f\x74\x68\x65\x72\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x65\x71\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x78\x6f\x72\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x73\x64\x69\x73\x6a\x6f\x69\x6e\x74\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x61\x6e\x64\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x73\x73\x75\x62\x73\x65\x74\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x73\x75\x62\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x73\x73\x75\x70\x65\x72\x73\x65\x74\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6f\x74\x68\x65\x72\x2e\x5f\x5f\x73\x75\x62\x5f\x5f\x28\x73\x65\x6c\x66\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x63\x6f\x6e\x74\x61\x69\x6e\x73\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x3d\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x27\x73\x65\x74\x28\x29\x27\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x27\x7b\x27\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x72\x65\x70\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x6b\x65\x79\x73\x28\x29\x5d\x29\x20\x2b\x20\x27\x7d\x27\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x74\x65\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x74\x65\x72\x28\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x6b\x65\x79\x73\x28\x29\x29" },
+        {"bisect", "\x22\x22\x22\x42\x69\x73\x65\x63\x74\x69\x6f\x6e\x20\x61\x6c\x67\x6f\x72\x69\x74\x68\x6d\x73\x2e\x22\x22\x22\x0a\x0a\x64\x65\x66\x20\x69\x6e\x73\x6f\x72\x74\x5f\x72\x69\x67\x68\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x49\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x6e\x64\x20\x6b\x65\x65\x70\x20\x69\x74\x20\x73\x6f\x72\x74\x65\x64\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x49\x66\x20\x78\x20\x69\x73\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x69\x6e\x20\x61\x2c\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x20\x74\x6f\x20\x74\x68\x65\x20\x72\x69\x67\x68\x74\x20\x6f\x66\x20\x74\x68\x65\x20\x72\x69\x67\x68\x74\x6d\x6f\x73\x74\x20\x78\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x6c\x6f\x20\x3d\x20\x62\x69\x73\x65\x63\x74\x5f\x72\x69\x67\x68\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x2c\x20\x68\x69\x29\x0a\x20\x20\x20\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x6c\x6f\x2c\x20\x78\x29\x0a\x0a\x64\x65\x66\x20\x62\x69\x73\x65\x63\x74\x5f\x72\x69\x67\x68\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x52\x65\x74\x75\x72\x6e\x20\x74\x68\x65\x20\x69\x6e\x64\x65\x78\x20\x77\x68\x65\x72\x65\x20\x74\x6f\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x54\x68\x65\x20\x72\x65\x74\x75\x72\x6e\x20\x76\x61\x6c\x75\x65\x20\x69\x20\x69\x73\x20\x73\x75\x63\x68\x20\x74\x68\x61\x74\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x20\x61\x5b\x3a\x69\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3c\x3d\x20\x78\x2c\x20\x61\x6e\x64\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x0a\x20\x20\x20\x20\x61\x5b\x69\x3a\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3e\x20\x78\x2e\x20\x20\x53\x6f\x20\x69\x66\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x61\x70\x70\x65\x61\x72\x73\x20\x69\x6e\x20\x74\x68\x65\x20\x6c\x69\x73\x74\x2c\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x78\x29\x20\x77\x69\x6c\x6c\x0a\x20\x20\x20\x20\x69\x6e\x73\x65\x72\x74\x20\x6a\x75\x73\x74\x20\x61\x66\x74\x65\x72\x20\x74\x68\x65\x20\x72\x69\x67\x68\x74\x6d\x6f\x73\x74\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x74\x68\x65\x72\x65\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x6f\x20\x3c\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x56\x61\x6c\x75\x65\x45\x72\x72\x6f\x72\x28\x27\x6c\x6f\x20\x6d\x75\x73\x74\x20\x62\x65\x20\x6e\x6f\x6e\x2d\x6e\x65\x67\x61\x74\x69\x76\x65\x27\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x69\x20\x69\x73\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x69\x20\x3d\x20\x6c\x65\x6e\x28\x61\x29\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6c\x6f\x20\x3c\x20\x68\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6d\x69\x64\x20\x3d\x20\x28\x6c\x6f\x2b\x68\x69\x29\x2f\x2f\x32\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x78\x20\x3c\x20\x61\x5b\x6d\x69\x64\x5d\x3a\x20\x68\x69\x20\x3d\x20\x6d\x69\x64\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x20\x6c\x6f\x20\x3d\x20\x6d\x69\x64\x2b\x31\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x6f\x0a\x0a\x64\x65\x66\x20\x69\x6e\x73\x6f\x72\x74\x5f\x6c\x65\x66\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x49\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x6e\x64\x20\x6b\x65\x65\x70\x20\x69\x74\x20\x73\x6f\x72\x74\x65\x64\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x49\x66\x20\x78\x20\x69\x73\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x69\x6e\x20\x61\x2c\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x20\x74\x6f\x20\x74\x68\x65\x20\x6c\x65\x66\x74\x20\x6f\x66\x20\x74\x68\x65\x20\x6c\x65\x66\x74\x6d\x6f\x73\x74\x20\x78\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20" "\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x6c\x6f\x20\x3d\x20\x62\x69\x73\x65\x63\x74\x5f\x6c\x65\x66\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x2c\x20\x68\x69\x29\x0a\x20\x20\x20\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x6c\x6f\x2c\x20\x78\x29\x0a\x0a\x0a\x64\x65\x66\x20\x62\x69\x73\x65\x63\x74\x5f\x6c\x65\x66\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x52\x65\x74\x75\x72\x6e\x20\x74\x68\x65\x20\x69\x6e\x64\x65\x78\x20\x77\x68\x65\x72\x65\x20\x74\x6f\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x54\x68\x65\x20\x72\x65\x74\x75\x72\x6e\x20\x76\x61\x6c\x75\x65\x20\x69\x20\x69\x73\x20\x73\x75\x63\x68\x20\x74\x68\x61\x74\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x20\x61\x5b\x3a\x69\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3c\x20\x78\x2c\x20\x61\x6e\x64\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x0a\x20\x20\x20\x20\x61\x5b\x69\x3a\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3e\x3d\x20\x78\x2e\x20\x20\x53\x6f\x20\x69\x66\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x61\x70\x70\x65\x61\x72\x73\x20\x69\x6e\x20\x74\x68\x65\x20\x6c\x69\x73\x74\x2c\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x78\x29\x20\x77\x69\x6c\x6c\x0a\x20\x20\x20\x20\x69\x6e\x73\x65\x72\x74\x20\x6a\x75\x73\x74\x20\x62\x65\x66\x6f\x72\x65\x20\x74\x68\x65\x20\x6c\x65\x66\x74\x6d\x6f\x73\x74\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x74\x68\x65\x72\x65\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x6f\x20\x3c\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x56\x61\x6c\x75\x65\x45\x72\x72\x6f\x72\x28\x27\x6c\x6f\x20\x6d\x75\x73\x74\x20\x62\x65\x20\x6e\x6f\x6e\x2d\x6e\x65\x67\x61\x74\x69\x76\x65\x27\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x69\x20\x69\x73\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x69\x20\x3d\x20\x6c\x65\x6e\x28\x61\x29\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6c\x6f\x20\x3c\x20\x68\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6d\x69\x64\x20\x3d\x20\x28\x6c\x6f\x2b\x68\x69\x29\x2f\x2f\x32\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x61\x5b\x6d\x69\x64\x5d\x20\x3c\x20\x78\x3a\x20\x6c\x6f\x20\x3d\x20\x6d\x69\x64\x2b\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x20\x68\x69\x20\x3d\x20\x6d\x69\x64\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x6f\x0a\x0a\x23\x20\x43\x72\x65\x61\x74\x65\x20\x61\x6c\x69\x61\x73\x65\x73\x0a\x62\x69\x73\x65\x63\x74\x20\x3d\x20\x62\x69\x73\x65\x63\x74\x5f\x72\x69\x67\x68\x74\x0a\x69\x6e\x73\x6f\x72\x74\x20\x3d\x20\x69\x6e\x73\x6f\x72\x74\x5f\x72\x69\x67\x68\x74\x0a" },
+        {"heapq", "\x23\x20\x48\x65\x61\x70\x20\x71\x75\x65\x75\x65\x20\x61\x6c\x67\x6f\x72\x69\x74\x68\x6d\x20\x28\x61\x2e\x6b\x2e\x61\x2e\x20\x70\x72\x69\x6f\x72\x69\x74\x79\x20\x71\x75\x65\x75\x65\x29\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x70\x75\x73\x68\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x50\x75\x73\x68\x20\x69\x74\x65\x6d\x20\x6f\x6e\x74\x6f\x20\x68\x65\x61\x70\x2c\x20\x6d\x61\x69\x6e\x74\x61\x69\x6e\x69\x6e\x67\x20\x74\x68\x65\x20\x68\x65\x61\x70\x20\x69\x6e\x76\x61\x72\x69\x61\x6e\x74\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x2e\x61\x70\x70\x65\x6e\x64\x28\x69\x74\x65\x6d\x29\x0a\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x64\x6f\x77\x6e\x28\x68\x65\x61\x70\x2c\x20\x30\x2c\x20\x6c\x65\x6e\x28\x68\x65\x61\x70\x29\x2d\x31\x29\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x70\x6f\x70\x28\x68\x65\x61\x70\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x50\x6f\x70\x20\x74\x68\x65\x20\x73\x6d\x61\x6c\x6c\x65\x73\x74\x20\x69\x74\x65\x6d\x20\x6f\x66\x66\x20\x74\x68\x65\x20\x68\x65\x61\x70\x2c\x20\x6d\x61\x69\x6e\x74\x61\x69\x6e\x69\x6e\x67\x20\x74\x68\x65\x20\x68\x65\x61\x70\x20\x69\x6e\x76\x61\x72\x69\x61\x6e\x74\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x6c\x61\x73\x74\x65\x6c\x74\x20\x3d\x20\x68\x65\x61\x70\x2e\x70\x6f\x70\x28\x29\x20\x20\x20\x20\x23\x20\x72\x61\x69\x73\x65\x73\x20\x61\x70\x70\x72\x6f\x70\x72\x69\x61\x74\x65\x20\x49\x6e\x64\x65\x78\x45\x72\x72\x6f\x72\x20\x69\x66\x20\x68\x65\x61\x70\x20\x69\x73\x20\x65\x6d\x70\x74\x79\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x65\x61\x70\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x5b\x30\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3d\x20\x6c\x61\x73\x74\x65\x6c\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x30\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x61\x73\x74\x65\x6c\x74\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x72\x65\x70\x6c\x61\x63\x65\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x50\x6f\x70\x20\x61\x6e\x64\x20\x72\x65\x74\x75\x72\x6e\x20\x74\x68\x65\x20\x63\x75\x72\x72\x65\x6e\x74\x20\x73\x6d\x61\x6c\x6c\x65\x73\x74\x20\x76\x61\x6c\x75\x65\x2c\x20\x61\x6e\x64\x20\x61\x64\x64\x20\x74\x68\x65\x20\x6e\x65\x77\x20\x69\x74\x65\x6d\x2e\x0a\x0a\x20\x20\x20\x20\x54\x68\x69\x73\x20\x69\x73\x20\x6d\x6f\x72\x65\x20\x65\x66\x66\x69\x63\x69\x65\x6e\x74\x20\x74\x68\x61\x6e\x20\x68\x65\x61\x70\x70\x6f\x70\x28\x29\x20\x66\x6f\x6c\x6c\x6f\x77\x65\x64\x20\x62\x79\x20\x68\x65\x61\x70\x70\x75\x73\x68\x28\x29\x2c\x20\x61\x6e\x64\x20\x63\x61\x6e\x20\x62\x65\x0a\x20\x20\x20\x20\x6d\x6f\x72\x65\x20\x61\x70\x70\x72\x6f\x70\x72\x69\x61\x74\x65\x20\x77\x68\x65\x6e\x20\x75\x73\x69\x6e\x67\x20\x61\x20\x66\x69\x78\x65\x64\x2d\x73\x69\x7a\x65\x20\x68\x65\x61\x70\x2e\x20\x20\x4e\x6f\x74\x65\x20\x74\x68\x61\x74\x20\x74\x68\x65\x20\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x65\x64\x20\x6d\x61\x79\x20\x62\x65\x20\x6c\x61\x72\x67\x65\x72\x20\x74\x68\x61\x6e\x20\x69\x74\x65\x6d\x21\x20\x20\x54\x68\x61\x74\x20\x63\x6f\x6e\x73\x74\x72\x61\x69\x6e\x73\x20\x72\x65\x61\x73\x6f\x6e\x61\x62\x6c\x65\x20\x75\x73\x65\x73\x20\x6f\x66\x0a\x20\x20\x20\x20\x74\x68\x69\x73\x20\x72\x6f\x75\x74\x69\x6e\x65\x20\x75\x6e\x6c\x65\x73\x73\x20\x77\x72\x69\x74\x74\x65\x6e\x20\x61\x73\x20\x70\x61\x72\x74\x20\x6f\x66\x20\x61\x20\x63\x6f\x6e\x64\x69\x74\x69\x6f\x6e\x61\x6c\x20\x72\x65\x70\x6c\x61\x63\x65\x6d\x65\x6e\x74\x3a\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x74\x65\x6d\x20\x3e\x20\x68\x65\x61\x70\x5b\x30\x5d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x72\x65\x70\x6c\x61\x63\x65\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x20\x20\x20\x23\x20\x72\x61\x69\x73\x65\x73\x20\x61\x70\x70\x72\x6f\x70\x72\x69\x61\x74\x65\x20\x49\x6e\x64\x65\x78\x45\x72\x72\x6f\x72\x20\x69\x66\x20\x68\x65\x61\x70\x20\x69\x73\x20\x65\x6d\x70\x74\x79\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3d\x20\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x30\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x70\x75\x73\x68\x70\x6f\x70\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x46\x61\x73\x74\x20\x76\x65\x72\x73\x69\x6f\x6e\x20\x6f\x66\x20\x61\x20\x68\x65\x61\x70\x70\x75\x73\x68\x20\x66\x6f\x6c\x6c\x6f\x77\x65\x64\x20\x62\x79\x20\x61\x20\x68\x65\x61\x70\x70\x6f\x70\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x65\x61\x70\x20\x61\x6e\x64\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3c\x20\x69\x74\x65\x6d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20" "\x20\x69\x74\x65\x6d\x2c\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3d\x20\x68\x65\x61\x70\x5b\x30\x5d\x2c\x20\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x30\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x74\x65\x6d\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x69\x66\x79\x28\x78\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x54\x72\x61\x6e\x73\x66\x6f\x72\x6d\x20\x6c\x69\x73\x74\x20\x69\x6e\x74\x6f\x20\x61\x20\x68\x65\x61\x70\x2c\x20\x69\x6e\x2d\x70\x6c\x61\x63\x65\x2c\x20\x69\x6e\x20\x4f\x28\x6c\x65\x6e\x28\x78\x29\x29\x20\x74\x69\x6d\x65\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x6e\x20\x3d\x20\x6c\x65\x6e\x28\x78\x29\x0a\x20\x20\x20\x20\x23\x20\x54\x72\x61\x6e\x73\x66\x6f\x72\x6d\x20\x62\x6f\x74\x74\x6f\x6d\x2d\x75\x70\x2e\x20\x20\x54\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x20\x69\x6e\x64\x65\x78\x20\x74\x68\x65\x72\x65\x27\x73\x20\x61\x6e\x79\x20\x70\x6f\x69\x6e\x74\x20\x74\x6f\x20\x6c\x6f\x6f\x6b\x69\x6e\x67\x20\x61\x74\x0a\x20\x20\x20\x20\x23\x20\x69\x73\x20\x74\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x20\x77\x69\x74\x68\x20\x61\x20\x63\x68\x69\x6c\x64\x20\x69\x6e\x64\x65\x78\x20\x69\x6e\x2d\x72\x61\x6e\x67\x65\x2c\x20\x73\x6f\x20\x6d\x75\x73\x74\x20\x68\x61\x76\x65\x20\x32\x2a\x69\x20\x2b\x20\x31\x20\x3c\x20\x6e\x2c\x0a\x20\x20\x20\x20\x23\x20\x6f\x72\x20\x69\x20\x3c\x20\x28\x6e\x2d\x31\x29\x2f\x32\x2e\x20\x20\x49\x66\x20\x6e\x20\x69\x73\x20\x65\x76\x65\x6e\x20\x3d\x20\x32\x2a\x6a\x2c\x20\x74\x68\x69\x73\x20\x69\x73\x20\x28\x32\x2a\x6a\x2d\x31\x29\x2f\x32\x20\x3d\x20\x6a\x2d\x31\x2f\x32\x20\x73\x6f\x0a\x20\x20\x20\x20\x23\x20\x6a\x2d\x31\x20\x69\x73\x20\x74\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x2c\x20\x77\x68\x69\x63\x68\x20\x69\x73\x20\x6e\x2f\x2f\x32\x20\x2d\x20\x31\x2e\x20\x20\x49\x66\x20\x6e\x20\x69\x73\x20\x6f\x64\x64\x20\x3d\x20\x32\x2a\x6a\x2b\x31\x2c\x20\x74\x68\x69\x73\x20\x69\x73\x0a\x20\x20\x20\x20\x23\x20\x28\x32\x2a\x6a\x2b\x31\x2d\x31\x29\x2f\x32\x20\x3d\x20\x6a\x20\x73\x6f\x20\x6a\x2d\x31\x20\x69\x73\x20\x74\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x2c\x20\x61\x6e\x64\x20\x74\x68\x61\x74\x27\x73\x20\x61\x67\x61\x69\x6e\x20\x6e\x2f\x2f\x32\x2d\x31\x2e\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x65\x76\x65\x72\x73\x65\x64\x28\x72\x61\x6e\x67\x65\x28\x6e\x2f\x2f\x32\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x78\x2c\x20\x69\x29\x0a\x0a\x23\x20\x27\x68\x65\x61\x70\x27\x20\x69\x73\x20\x61\x20\x68\x65\x61\x70\x20\x61\x74\x20\x61\x6c\x6c\x20\x69\x6e\x64\x69\x63\x65\x73\x20\x3e\x3d\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x2c\x20\x65\x78\x63\x65\x70\x74\x20\x70\x6f\x73\x73\x69\x62\x6c\x79\x20\x66\x6f\x72\x20\x70\x6f\x73\x2e\x20\x20\x70\x6f\x73\x0a\x23\x20\x69\x73\x20\x74\x68\x65\x20\x69\x6e\x64\x65\x78\x20\x6f\x66\x20\x61\x20\x6c\x65\x61\x66\x20\x77\x69\x74\x68\x20\x61\x20\x70\x6f\x73\x73\x69\x62\x6c\x79\x20\x6f\x75\x74\x2d\x6f\x66\x2d\x6f\x72\x64\x65\x72\x20\x76\x61\x6c\x75\x65\x2e\x20\x20\x52\x65\x73\x74\x6f\x72\x65\x20\x74\x68\x65\x0a\x23\x20\x68\x65\x61\x70\x20\x69\x6e\x76\x61\x72\x69\x61\x6e\x74\x2e\x0a\x64\x65\x66\x20\x5f\x73\x69\x66\x74\x64\x6f\x77\x6e\x28\x68\x65\x61\x70\x2c\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x2c\x20\x70\x6f\x73\x29\x3a\x0a\x20\x20\x20\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x23\x20\x46\x6f\x6c\x6c\x6f\x77\x20\x74\x68\x65\x20\x70\x61\x74\x68\x20\x74\x6f\x20\x74\x68\x65\x20\x72\x6f\x6f\x74\x2c\x20\x6d\x6f\x76\x69\x6e\x67\x20\x70\x61\x72\x65\x6e\x74\x73\x20\x64\x6f\x77\x6e\x20\x75\x6e\x74\x69\x6c\x20\x66\x69\x6e\x64\x69\x6e\x67\x20\x61\x20\x70\x6c\x61\x63\x65\x0a\x20\x20\x20\x20\x23\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x66\x69\x74\x73\x2e\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x70\x6f\x73\x20\x3e\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x61\x72\x65\x6e\x74\x70\x6f\x73\x20\x3d\x20\x28\x70\x6f\x73\x20\x2d\x20\x31\x29\x20\x3e\x3e\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x61\x72\x65\x6e\x74\x20\x3d\x20\x68\x65\x61\x70\x5b\x70\x61\x72\x65\x6e\x74\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x3c\x20\x70\x61\x72\x65\x6e\x74\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x70\x61\x72\x65\x6e\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x70\x6f\x73\x20\x3d\x20\x70\x61\x72\x65\x6e\x74\x70\x6f\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x63\x6f\x6e\x74\x69\x6e\x75\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x62\x72\x65\x61\x6b\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x6e\x65\x77\x69\x74\x65\x6d\x0a\x0a\x64\x65\x66\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x70\x6f\x73\x29\x3a\x0a\x20\x20\x20\x20\x65\x6e\x64\x70\x6f\x73\x20\x3d\x20\x6c\x65\x6e\x28\x68\x65\x61\x70\x29\x0a\x20\x20\x20\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x20\x3d\x20\x70\x6f\x73\x0a\x20\x20\x20\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x3d\x20\x68" "\x65\x61\x70\x5b\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x23\x20\x42\x75\x62\x62\x6c\x65\x20\x75\x70\x20\x74\x68\x65\x20\x73\x6d\x61\x6c\x6c\x65\x72\x20\x63\x68\x69\x6c\x64\x20\x75\x6e\x74\x69\x6c\x20\x68\x69\x74\x74\x69\x6e\x67\x20\x61\x20\x6c\x65\x61\x66\x2e\x0a\x20\x20\x20\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3d\x20\x32\x2a\x70\x6f\x73\x20\x2b\x20\x31\x20\x20\x20\x20\x23\x20\x6c\x65\x66\x74\x6d\x6f\x73\x74\x20\x63\x68\x69\x6c\x64\x20\x70\x6f\x73\x69\x74\x69\x6f\x6e\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3c\x20\x65\x6e\x64\x70\x6f\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x23\x20\x53\x65\x74\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x74\x6f\x20\x69\x6e\x64\x65\x78\x20\x6f\x66\x20\x73\x6d\x61\x6c\x6c\x65\x72\x20\x63\x68\x69\x6c\x64\x2e\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x69\x67\x68\x74\x70\x6f\x73\x20\x3d\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x2b\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x72\x69\x67\x68\x74\x70\x6f\x73\x20\x3c\x20\x65\x6e\x64\x70\x6f\x73\x20\x61\x6e\x64\x20\x6e\x6f\x74\x20\x68\x65\x61\x70\x5b\x63\x68\x69\x6c\x64\x70\x6f\x73\x5d\x20\x3c\x20\x68\x65\x61\x70\x5b\x72\x69\x67\x68\x74\x70\x6f\x73\x5d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3d\x20\x72\x69\x67\x68\x74\x70\x6f\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x23\x20\x4d\x6f\x76\x65\x20\x74\x68\x65\x20\x73\x6d\x61\x6c\x6c\x65\x72\x20\x63\x68\x69\x6c\x64\x20\x75\x70\x2e\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x68\x65\x61\x70\x5b\x63\x68\x69\x6c\x64\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x6f\x73\x20\x3d\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3d\x20\x32\x2a\x70\x6f\x73\x20\x2b\x20\x31\x0a\x20\x20\x20\x20\x23\x20\x54\x68\x65\x20\x6c\x65\x61\x66\x20\x61\x74\x20\x70\x6f\x73\x20\x69\x73\x20\x65\x6d\x70\x74\x79\x20\x6e\x6f\x77\x2e\x20\x20\x50\x75\x74\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x74\x68\x65\x72\x65\x2c\x20\x61\x6e\x64\x20\x62\x75\x62\x62\x6c\x65\x20\x69\x74\x20\x75\x70\x0a\x20\x20\x20\x20\x23\x20\x74\x6f\x20\x69\x74\x73\x20\x66\x69\x6e\x61\x6c\x20\x72\x65\x73\x74\x69\x6e\x67\x20\x70\x6c\x61\x63\x65\x20\x28\x62\x79\x20\x73\x69\x66\x74\x69\x6e\x67\x20\x69\x74\x73\x20\x70\x61\x72\x65\x6e\x74\x73\x20\x64\x6f\x77\x6e\x29\x2e\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x6e\x65\x77\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x64\x6f\x77\x6e\x28\x68\x65\x61\x70\x2c\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x2c\x20\x70\x6f\x73\x29" },
+        {"functools", "\x64\x65\x66\x20\x63\x61\x63\x68\x65\x28\x66\x29\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x77\x72\x61\x70\x70\x65\x72\x28\x2a\x61\x72\x67\x73\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x68\x61\x73\x61\x74\x74\x72\x28\x66\x2c\x20\x27\x5f\x5f\x63\x61\x63\x68\x65\x5f\x5f\x27\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x66\x2e\x5f\x5f\x63\x61\x63\x68\x65\x5f\x5f\x20\x3d\x20\x7b\x7d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6b\x65\x79\x20\x3d\x20\x61\x72\x67\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x65\x79\x20\x6e\x6f\x74\x20\x69\x6e\x20\x66\x2e\x5f\x5f\x63\x61\x63\x68\x65\x5f\x5f\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x66\x2e\x5f\x5f\x63\x61\x63\x68\x65\x5f\x5f\x5b\x6b\x65\x79\x5d\x20\x3d\x20\x66\x28\x2a\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x66\x2e\x5f\x5f\x63\x61\x63\x68\x65\x5f\x5f\x5b\x6b\x65\x79\x5d\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x77\x72\x61\x70\x70\x65\x72" },
+        {"builtins", "\x69\x6d\x70\x6f\x72\x74\x20\x73\x79\x73\x20\x61\x73\x20\x5f\x73\x79\x73\x0a\x0a\x64\x65\x66\x20\x70\x72\x69\x6e\x74\x28\x2a\x61\x72\x67\x73\x2c\x20\x73\x65\x70\x3d\x27\x20\x27\x2c\x20\x65\x6e\x64\x3d\x27\x5c\x6e\x27\x29\x3a\x0a\x20\x20\x20\x20\x73\x20\x3d\x20\x73\x65\x70\x2e\x6a\x6f\x69\x6e\x28\x5b\x73\x74\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x61\x72\x67\x73\x5d\x29\x0a\x20\x20\x20\x20\x5f\x73\x79\x73\x2e\x73\x74\x64\x6f\x75\x74\x2e\x77\x72\x69\x74\x65\x28\x73\x20\x2b\x20\x65\x6e\x64\x29\x0a\x0a\x64\x65\x66\x20\x72\x6f\x75\x6e\x64\x28\x78\x2c\x20\x6e\x64\x69\x67\x69\x74\x73\x3d\x30\x29\x3a\x0a\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x6e\x64\x69\x67\x69\x74\x73\x20\x3e\x3d\x20\x30\x0a\x20\x20\x20\x20\x69\x66\x20\x6e\x64\x69\x67\x69\x74\x73\x20\x3d\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x6e\x74\x28\x78\x20\x2b\x20\x30\x2e\x35\x29\x20\x69\x66\x20\x78\x20\x3e\x3d\x20\x30\x20\x65\x6c\x73\x65\x20\x69\x6e\x74\x28\x78\x20\x2d\x20\x30\x2e\x35\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x78\x20\x3e\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x6e\x74\x28\x78\x20\x2a\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x20\x2b\x20\x30\x2e\x35\x29\x20\x2f\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x0a\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x6e\x74\x28\x78\x20\x2a\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x20\x2d\x20\x30\x2e\x35\x29\x20\x2f\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x0a\x0a\x64\x65\x66\x20\x61\x62\x73\x28\x78\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x2d\x78\x20\x69\x66\x20\x78\x20\x3c\x20\x30\x20\x65\x6c\x73\x65\x20\x78\x0a\x0a\x64\x65\x66\x20\x6d\x61\x78\x28\x2a\x61\x72\x67\x73\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x61\x72\x67\x73\x29\x20\x3d\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x54\x79\x70\x65\x45\x72\x72\x6f\x72\x28\x27\x6d\x61\x78\x20\x65\x78\x70\x65\x63\x74\x65\x64\x20\x31\x20\x61\x72\x67\x75\x6d\x65\x6e\x74\x73\x2c\x20\x67\x6f\x74\x20\x30\x27\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x61\x72\x67\x73\x29\x20\x3d\x3d\x20\x31\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x72\x67\x73\x20\x3d\x20\x61\x72\x67\x73\x5b\x30\x5d\x0a\x20\x20\x20\x20\x61\x72\x67\x73\x20\x3d\x20\x69\x74\x65\x72\x28\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x6e\x65\x78\x74\x28\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x72\x65\x73\x20\x69\x73\x20\x53\x74\x6f\x70\x49\x74\x65\x72\x61\x74\x69\x6f\x6e\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x56\x61\x6c\x75\x65\x45\x72\x72\x6f\x72\x28\x27\x6d\x61\x78\x28\x29\x20\x61\x72\x67\x20\x69\x73\x20\x61\x6e\x20\x65\x6d\x70\x74\x79\x20\x73\x65\x71\x75\x65\x6e\x63\x65\x27\x29\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x54\x72\x75\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x3d\x20\x6e\x65\x78\x74\x28\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x69\x73\x20\x53\x74\x6f\x70\x49\x74\x65\x72\x61\x74\x69\x6f\x6e\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x62\x72\x65\x61\x6b\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x3e\x20\x72\x65\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x69\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x0a\x64\x65\x66\x20\x6d\x69\x6e\x28\x2a\x61\x72\x67\x73\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x61\x72\x67\x73\x29\x20\x3d\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x54\x79\x70\x65\x45\x72\x72\x6f\x72\x28\x27\x6d\x69\x6e\x20\x65\x78\x70\x65\x63\x74\x65\x64\x20\x31\x20\x61\x72\x67\x75\x6d\x65\x6e\x74\x73\x2c\x20\x67\x6f\x74\x20\x30\x27\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x61\x72\x67\x73\x29\x20\x3d\x3d\x20\x31\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x72\x67\x73\x20\x3d\x20\x61\x72\x67\x73\x5b\x30\x5d\x0a\x20\x20\x20\x20\x61\x72\x67\x73\x20\x3d\x20\x69\x74\x65\x72\x28\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x6e\x65\x78\x74\x28\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x72\x65\x73\x20\x69\x73\x20\x53\x74\x6f\x70\x49\x74\x65\x72\x61\x74\x69\x6f\x6e\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x56\x61\x6c\x75\x65\x45\x72\x72\x6f\x72\x28\x27\x6d\x69\x6e\x28\x29\x20\x61\x72\x67\x20\x69\x73\x20\x61\x6e\x20\x65\x6d\x70\x74\x79\x20\x73\x65\x71\x75\x65\x6e\x63\x65\x27\x29\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x54\x72\x75\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x3d\x20\x6e\x65\x78\x74\x28\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x69\x73\x20\x53\x74\x6f\x70\x49\x74\x65\x72\x61\x74\x69\x6f\x6e\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x62\x72\x65\x61\x6b\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x3c\x20\x72\x65\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20" "\x20\x72\x65\x73\x20\x3d\x20\x69\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x0a\x64\x65\x66\x20\x61\x6c\x6c\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x0a\x64\x65\x66\x20\x61\x6e\x79\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x0a\x64\x65\x66\x20\x65\x6e\x75\x6d\x65\x72\x61\x74\x65\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x2c\x20\x73\x74\x61\x72\x74\x3d\x30\x29\x3a\x0a\x20\x20\x20\x20\x6e\x20\x3d\x20\x73\x74\x61\x72\x74\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x6e\x2c\x20\x65\x6c\x65\x6d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x2b\x2b\x6e\x0a\x0a\x64\x65\x66\x20\x73\x75\x6d\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x73\x20\x2b\x3d\x20\x69\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x0a\x64\x65\x66\x20\x6d\x61\x70\x28\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x66\x28\x69\x29\x0a\x0a\x64\x65\x66\x20\x66\x69\x6c\x74\x65\x72\x28\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x66\x28\x69\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x69\x0a\x0a\x64\x65\x66\x20\x7a\x69\x70\x28\x61\x2c\x20\x62\x29\x3a\x0a\x20\x20\x20\x20\x61\x20\x3d\x20\x69\x74\x65\x72\x28\x61\x29\x0a\x20\x20\x20\x20\x62\x20\x3d\x20\x69\x74\x65\x72\x28\x62\x29\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x54\x72\x75\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x69\x20\x3d\x20\x6e\x65\x78\x74\x28\x61\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x62\x69\x20\x3d\x20\x6e\x65\x78\x74\x28\x62\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x61\x69\x20\x69\x73\x20\x53\x74\x6f\x70\x49\x74\x65\x72\x61\x74\x69\x6f\x6e\x20\x6f\x72\x20\x62\x69\x20\x69\x73\x20\x53\x74\x6f\x70\x49\x74\x65\x72\x61\x74\x69\x6f\x6e\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x62\x72\x65\x61\x6b\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x61\x69\x2c\x20\x62\x69\x0a\x0a\x64\x65\x66\x20\x72\x65\x76\x65\x72\x73\x65\x64\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x61\x20\x3d\x20\x6c\x69\x73\x74\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x0a\x20\x20\x20\x20\x61\x2e\x72\x65\x76\x65\x72\x73\x65\x28\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61\x0a\x0a\x64\x65\x66\x20\x73\x6f\x72\x74\x65\x64\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x2c\x20\x72\x65\x76\x65\x72\x73\x65\x3d\x46\x61\x6c\x73\x65\x2c\x20\x6b\x65\x79\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x61\x20\x3d\x20\x6c\x69\x73\x74\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x0a\x20\x20\x20\x20\x61\x2e\x73\x6f\x72\x74\x28\x72\x65\x76\x65\x72\x73\x65\x3d\x72\x65\x76\x65\x72\x73\x65\x2c\x20\x6b\x65\x79\x3d\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61\x0a\x0a\x23\x23\x23\x23\x23\x20\x73\x74\x72\x20\x23\x23\x23\x23\x23\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x73\x65\x70\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x73\x65\x70\x20\x3d\x20\x73\x65\x70\x20\x6f\x72\x20\x27\x20\x27\x0a\x20\x20\x20\x20\x69\x66\x20\x73\x65\x70\x20\x3d\x3d\x20\x22\x22\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x69\x73\x74\x28\x73\x65\x6c\x66\x29\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x5b\x5d\x0a\x20\x20\x20\x20\x69\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x69\x20\x3c\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x5b\x69\x3a\x69\x2b\x6c\x65\x6e\x28\x73\x65\x70\x29\x5d\x20\x3d\x3d\x20\x73\x65\x70\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x73\x2e\x61\x70\x70\x65\x6e\x64\x28\x73\x65\x6c\x66\x5b\x3a\x69\x5d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x20\x3d\x20\x73\x65\x6c\x66\x5b\x69\x2b\x6c\x65\x6e\x28\x73\x65\x70\x29\x3a\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x3d\x20\x30\x0a" "\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2b\x2b\x69\x0a\x20\x20\x20\x20\x72\x65\x73\x2e\x61\x70\x70\x65\x6e\x64\x28\x73\x65\x6c\x66\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x73\x74\x72\x2e\x73\x70\x6c\x69\x74\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x2a\x61\x72\x67\x73\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x27\x7b\x7d\x27\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x61\x72\x67\x73\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x20\x3d\x20\x73\x65\x6c\x66\x2e\x72\x65\x70\x6c\x61\x63\x65\x28\x27\x7b\x7d\x27\x2c\x20\x73\x74\x72\x28\x61\x72\x67\x73\x5b\x69\x5d\x29\x2c\x20\x31\x29\x0a\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x61\x72\x67\x73\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x20\x3d\x20\x73\x65\x6c\x66\x2e\x72\x65\x70\x6c\x61\x63\x65\x28\x27\x7b\x27\x2b\x73\x74\x72\x28\x69\x29\x2b\x27\x7d\x27\x2c\x20\x73\x74\x72\x28\x61\x72\x67\x73\x5b\x69\x5d\x29\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x0a\x73\x74\x72\x2e\x66\x6f\x72\x6d\x61\x74\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x63\x68\x61\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x63\x68\x61\x72\x73\x20\x3d\x20\x63\x68\x61\x72\x73\x20\x6f\x72\x20\x27\x20\x5c\x74\x5c\x6e\x5c\x72\x27\x0a\x20\x20\x20\x20\x69\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x69\x20\x3c\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x61\x6e\x64\x20\x73\x65\x6c\x66\x5b\x69\x5d\x20\x69\x6e\x20\x63\x68\x61\x72\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x2b\x2b\x69\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x5b\x69\x3a\x5d\x0a\x73\x74\x72\x2e\x6c\x73\x74\x72\x69\x70\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x63\x68\x61\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x63\x68\x61\x72\x73\x20\x3d\x20\x63\x68\x61\x72\x73\x20\x6f\x72\x20\x27\x20\x5c\x74\x5c\x6e\x5c\x72\x27\x0a\x20\x20\x20\x20\x6a\x20\x3d\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x2d\x20\x31\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6a\x20\x3e\x3d\x20\x30\x20\x61\x6e\x64\x20\x73\x65\x6c\x66\x5b\x6a\x5d\x20\x69\x6e\x20\x63\x68\x61\x72\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x2d\x2d\x6a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x5b\x3a\x6a\x2b\x31\x5d\x0a\x73\x74\x72\x2e\x72\x73\x74\x72\x69\x70\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x63\x68\x61\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x63\x68\x61\x72\x73\x20\x3d\x20\x63\x68\x61\x72\x73\x20\x6f\x72\x20\x27\x20\x5c\x74\x5c\x6e\x5c\x72\x27\x0a\x20\x20\x20\x20\x69\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x69\x20\x3c\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x61\x6e\x64\x20\x73\x65\x6c\x66\x5b\x69\x5d\x20\x69\x6e\x20\x63\x68\x61\x72\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x2b\x2b\x69\x0a\x20\x20\x20\x20\x6a\x20\x3d\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x2d\x20\x31\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6a\x20\x3e\x3d\x20\x30\x20\x61\x6e\x64\x20\x73\x65\x6c\x66\x5b\x6a\x5d\x20\x69\x6e\x20\x63\x68\x61\x72\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x2d\x2d\x6a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x5b\x69\x3a\x6a\x2b\x31\x5d\x0a\x73\x74\x72\x2e\x73\x74\x72\x69\x70\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x23\x23\x23\x23\x23\x20\x6c\x69\x73\x74\x20\x23\x23\x23\x23\x23\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x5b\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x72\x65\x70\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x5d\x27\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x28\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x72\x65\x70\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x29\x27\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x5b\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x69\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x28\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x5d\x27\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x5b\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x69\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x28\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e" "\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x5d\x27\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x61\x3a\x20\x6c\x69\x73\x74\x2c\x20\x4c\x3a\x20\x69\x6e\x74\x2c\x20\x52\x3a\x20\x69\x6e\x74\x2c\x20\x6b\x65\x79\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x4c\x20\x3e\x3d\x20\x52\x3a\x20\x72\x65\x74\x75\x72\x6e\x3b\x0a\x20\x20\x20\x20\x6d\x69\x64\x20\x3d\x20\x61\x5b\x28\x52\x2b\x4c\x29\x2f\x2f\x32\x5d\x3b\x0a\x20\x20\x20\x20\x6d\x69\x64\x20\x3d\x20\x6b\x65\x79\x28\x6d\x69\x64\x29\x0a\x20\x20\x20\x20\x69\x2c\x20\x6a\x20\x3d\x20\x4c\x2c\x20\x52\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x69\x3c\x3d\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6b\x65\x79\x28\x61\x5b\x69\x5d\x29\x3c\x6d\x69\x64\x3a\x20\x2b\x2b\x69\x3b\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6b\x65\x79\x28\x61\x5b\x6a\x5d\x29\x3e\x6d\x69\x64\x3a\x20\x2d\x2d\x6a\x3b\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x3c\x3d\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x61\x5b\x69\x5d\x2c\x20\x61\x5b\x6a\x5d\x20\x3d\x20\x61\x5b\x6a\x5d\x2c\x20\x61\x5b\x69\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2b\x2b\x69\x3b\x20\x2d\x2d\x6a\x3b\x0a\x20\x20\x20\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x61\x2c\x20\x4c\x2c\x20\x6a\x2c\x20\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x61\x2c\x20\x69\x2c\x20\x52\x2c\x20\x6b\x65\x79\x29\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x72\x65\x76\x65\x72\x73\x65\x3d\x46\x61\x6c\x73\x65\x2c\x20\x6b\x65\x79\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x6b\x65\x79\x20\x69\x73\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6b\x65\x79\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x78\x3a\x78\x0a\x20\x20\x20\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x73\x65\x6c\x66\x2c\x20\x30\x2c\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x2d\x31\x2c\x20\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x72\x65\x76\x65\x72\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x72\x65\x76\x65\x72\x73\x65\x28\x29\x0a\x6c\x69\x73\x74\x2e\x73\x6f\x72\x74\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x2c\x20\x6a\x20\x69\x6e\x20\x7a\x69\x70\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x21\x3d\x20\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x20\x3c\x20\x6a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x3c\x20\x6c\x65\x6e\x28\x6f\x74\x68\x65\x72\x29\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x6c\x74\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x6c\x74\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x2c\x20\x6a\x20\x69\x6e\x20\x7a\x69\x70\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x21\x3d\x20\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x20\x3e\x20\x6a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x3e\x20\x6c\x65\x6e\x28\x6f\x74\x68\x65\x72\x29\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x67\x74\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x67\x74\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x2c\x20\x6a\x20\x69\x6e\x20\x7a\x69\x70\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x21\x3d\x20\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x20\x3c\x3d\x20\x6a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x3c\x3d\x20\x6c\x65\x6e\x28\x6f\x74\x68\x65\x72\x29\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x6c\x65\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x6c\x65\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x66\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x2c\x20\x6a\x20\x69\x6e\x20\x7a\x69\x70\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x21\x3d\x20\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x20\x3e\x3d\x20\x6a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x3e\x3d\x20\x6c\x65\x6e\x28\x6f\x74\x68\x65\x72\x29\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x67\x65\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x67\x65\x5f\x5f\x20\x3d\x20\x5f\x5f\x66\x0a\x0a\x74\x79\x70\x65\x2e\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66" "\x3a\x20\x22\x3c\x63\x6c\x61\x73\x73\x20\x27\x22\x20\x2b\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x6e\x61\x6d\x65\x5f\x5f\x20\x2b\x20\x22\x27\x3e\x22\x0a\x0a\x64\x65\x66\x20\x68\x65\x6c\x70\x28\x6f\x62\x6a\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x61\x73\x61\x74\x74\x72\x28\x6f\x62\x6a\x2c\x20\x27\x5f\x5f\x66\x75\x6e\x63\x5f\x5f\x27\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6f\x62\x6a\x20\x3d\x20\x6f\x62\x6a\x2e\x5f\x5f\x66\x75\x6e\x63\x5f\x5f\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x61\x73\x61\x74\x74\x72\x28\x6f\x62\x6a\x2c\x20\x27\x5f\x5f\x64\x6f\x63\x5f\x5f\x27\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x72\x69\x6e\x74\x28\x6f\x62\x6a\x2e\x5f\x5f\x64\x6f\x63\x5f\x5f\x29\x0a\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x72\x69\x6e\x74\x28\x22\x4e\x6f\x20\x64\x6f\x63\x73\x74\x72\x69\x6e\x67\x20\x66\x6f\x75\x6e\x64\x22\x29\x0a\x0a\x0a\x64\x65\x6c\x20\x5f\x5f\x66" },
+        {"this", "\x70\x72\x69\x6e\x74\x28\x22\x22\x22\x54\x68\x65\x20\x5a\x65\x6e\x20\x6f\x66\x20\x50\x79\x74\x68\x6f\x6e\x2c\x20\x62\x79\x20\x54\x69\x6d\x20\x50\x65\x74\x65\x72\x73\x0a\x0a\x42\x65\x61\x75\x74\x69\x66\x75\x6c\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x75\x67\x6c\x79\x2e\x0a\x45\x78\x70\x6c\x69\x63\x69\x74\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x69\x6d\x70\x6c\x69\x63\x69\x74\x2e\x0a\x53\x69\x6d\x70\x6c\x65\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x63\x6f\x6d\x70\x6c\x65\x78\x2e\x0a\x43\x6f\x6d\x70\x6c\x65\x78\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x63\x6f\x6d\x70\x6c\x69\x63\x61\x74\x65\x64\x2e\x0a\x46\x6c\x61\x74\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x6e\x65\x73\x74\x65\x64\x2e\x0a\x53\x70\x61\x72\x73\x65\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x64\x65\x6e\x73\x65\x2e\x0a\x52\x65\x61\x64\x61\x62\x69\x6c\x69\x74\x79\x20\x63\x6f\x75\x6e\x74\x73\x2e\x0a\x53\x70\x65\x63\x69\x61\x6c\x20\x63\x61\x73\x65\x73\x20\x61\x72\x65\x6e\x27\x74\x20\x73\x70\x65\x63\x69\x61\x6c\x20\x65\x6e\x6f\x75\x67\x68\x20\x74\x6f\x20\x62\x72\x65\x61\x6b\x20\x74\x68\x65\x20\x72\x75\x6c\x65\x73\x2e\x0a\x41\x6c\x74\x68\x6f\x75\x67\x68\x20\x70\x72\x61\x63\x74\x69\x63\x61\x6c\x69\x74\x79\x20\x62\x65\x61\x74\x73\x20\x70\x75\x72\x69\x74\x79\x2e\x0a\x45\x72\x72\x6f\x72\x73\x20\x73\x68\x6f\x75\x6c\x64\x20\x6e\x65\x76\x65\x72\x20\x70\x61\x73\x73\x20\x73\x69\x6c\x65\x6e\x74\x6c\x79\x2e\x0a\x55\x6e\x6c\x65\x73\x73\x20\x65\x78\x70\x6c\x69\x63\x69\x74\x6c\x79\x20\x73\x69\x6c\x65\x6e\x63\x65\x64\x2e\x0a\x49\x6e\x20\x74\x68\x65\x20\x66\x61\x63\x65\x20\x6f\x66\x20\x61\x6d\x62\x69\x67\x75\x69\x74\x79\x2c\x20\x72\x65\x66\x75\x73\x65\x20\x74\x68\x65\x20\x74\x65\x6d\x70\x74\x61\x74\x69\x6f\x6e\x20\x74\x6f\x20\x67\x75\x65\x73\x73\x2e\x0a\x54\x68\x65\x72\x65\x20\x73\x68\x6f\x75\x6c\x64\x20\x62\x65\x20\x6f\x6e\x65\x2d\x2d\x20\x61\x6e\x64\x20\x70\x72\x65\x66\x65\x72\x61\x62\x6c\x79\x20\x6f\x6e\x6c\x79\x20\x6f\x6e\x65\x20\x2d\x2d\x6f\x62\x76\x69\x6f\x75\x73\x20\x77\x61\x79\x20\x74\x6f\x20\x64\x6f\x20\x69\x74\x2e\x0a\x41\x6c\x74\x68\x6f\x75\x67\x68\x20\x74\x68\x61\x74\x20\x77\x61\x79\x20\x6d\x61\x79\x20\x6e\x6f\x74\x20\x62\x65\x20\x6f\x62\x76\x69\x6f\x75\x73\x20\x61\x74\x20\x66\x69\x72\x73\x74\x20\x75\x6e\x6c\x65\x73\x73\x20\x79\x6f\x75\x27\x72\x65\x20\x44\x75\x74\x63\x68\x2e\x0a\x4e\x6f\x77\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x6e\x65\x76\x65\x72\x2e\x0a\x41\x6c\x74\x68\x6f\x75\x67\x68\x20\x6e\x65\x76\x65\x72\x20\x69\x73\x20\x6f\x66\x74\x65\x6e\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x2a\x72\x69\x67\x68\x74\x2a\x20\x6e\x6f\x77\x2e\x0a\x49\x66\x20\x74\x68\x65\x20\x69\x6d\x70\x6c\x65\x6d\x65\x6e\x74\x61\x74\x69\x6f\x6e\x20\x69\x73\x20\x68\x61\x72\x64\x20\x74\x6f\x20\x65\x78\x70\x6c\x61\x69\x6e\x2c\x20\x69\x74\x27\x73\x20\x61\x20\x62\x61\x64\x20\x69\x64\x65\x61\x2e\x0a\x49\x66\x20\x74\x68\x65\x20\x69\x6d\x70\x6c\x65\x6d\x65\x6e\x74\x61\x74\x69\x6f\x6e\x20\x69\x73\x20\x65\x61\x73\x79\x20\x74\x6f\x20\x65\x78\x70\x6c\x61\x69\x6e\x2c\x20\x69\x74\x20\x6d\x61\x79\x20\x62\x65\x20\x61\x20\x67\x6f\x6f\x64\x20\x69\x64\x65\x61\x2e\x0a\x4e\x61\x6d\x65\x73\x70\x61\x63\x65\x73\x20\x61\x72\x65\x20\x6f\x6e\x65\x20\x68\x6f\x6e\x6b\x69\x6e\x67\x20\x67\x72\x65\x61\x74\x20\x69\x64\x65\x61\x20\x2d\x2d\x20\x6c\x65\x74\x27\x73\x20\x64\x6f\x20\x6d\x6f\x72\x65\x20\x6f\x66\x20\x74\x68\x6f\x73\x65\x21\x22\x22\x22\x29" },
+        {"random", "\x5f\x69\x6e\x73\x74\x20\x3d\x20\x52\x61\x6e\x64\x6f\x6d\x28\x29\x0a\x0a\x73\x65\x65\x64\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x73\x65\x65\x64\x0a\x72\x61\x6e\x64\x6f\x6d\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x72\x61\x6e\x64\x6f\x6d\x0a\x75\x6e\x69\x66\x6f\x72\x6d\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x75\x6e\x69\x66\x6f\x72\x6d\x0a\x72\x61\x6e\x64\x69\x6e\x74\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x72\x61\x6e\x64\x69\x6e\x74\x0a\x0a\x64\x65\x66\x20\x73\x68\x75\x66\x66\x6c\x65\x28\x4c\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x4c\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6a\x20\x3d\x20\x72\x61\x6e\x64\x69\x6e\x74\x28\x69\x2c\x20\x6c\x65\x6e\x28\x4c\x29\x20\x2d\x20\x31\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x4c\x5b\x69\x5d\x2c\x20\x4c\x5b\x6a\x5d\x20\x3d\x20\x4c\x5b\x6a\x5d\x2c\x20\x4c\x5b\x69\x5d\x0a\x0a\x64\x65\x66\x20\x63\x68\x6f\x69\x63\x65\x28\x4c\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x4c\x5b\x72\x61\x6e\x64\x69\x6e\x74\x28\x30\x2c\x20\x6c\x65\x6e\x28\x4c\x29\x20\x2d\x20\x31\x29\x5d" },
+        {"collections", "\x63\x6c\x61\x73\x73\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x70\x72\x65\x76\x2c\x20\x6e\x65\x78\x74\x2c\x20\x76\x61\x6c\x75\x65\x29\x20\x2d\x3e\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x70\x72\x65\x76\x20\x3d\x20\x70\x72\x65\x76\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x76\x61\x6c\x75\x65\x20\x3d\x20\x76\x61\x6c\x75\x65\x0a\x0a\x63\x6c\x61\x73\x73\x20\x64\x65\x71\x75\x65\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3d\x4e\x6f\x6e\x65\x29\x20\x2d\x3e\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x20\x3d\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x76\x61\x6c\x75\x65\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x61\x70\x70\x65\x6e\x64\x28\x76\x61\x6c\x75\x65\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x61\x70\x70\x65\x6e\x64\x28\x73\x65\x6c\x66\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x2c\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2c\x20\x76\x61\x6c\x75\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x61\x70\x70\x65\x6e\x64\x6c\x65\x66\x74\x28\x73\x65\x6c\x66\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2c\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x2c\x20\x76\x61\x6c\x75\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x2e\x70\x72\x65\x76\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2b\x3d\x20\x31\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x70\x6f\x70\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x3e\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x2e\x70\x72\x65\x76\x2e\x6e\x65\x78\x74\x20\x3d\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x20\x3d\x20\x6e\x6f\x64\x65\x2e\x70\x72\x65\x76\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2d\x3d\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x6f\x64\x65\x2e\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x70\x6f\x70\x6c\x65\x66\x74\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x3e\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x2e\x6e\x65\x78\x74\x2e\x70\x72\x65\x76\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x6f\x64\x65\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20" "\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2d\x3d\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x6f\x64\x65\x2e\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6f\x70\x79\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x65\x77\x5f\x6c\x69\x73\x74\x20\x3d\x20\x64\x65\x71\x75\x65\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x76\x61\x6c\x75\x65\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x65\x77\x5f\x6c\x69\x73\x74\x2e\x61\x70\x70\x65\x6e\x64\x28\x76\x61\x6c\x75\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x65\x77\x5f\x6c\x69\x73\x74\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x74\x65\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6e\x6f\x64\x65\x20\x69\x73\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x6e\x6f\x64\x65\x2e\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x6e\x6f\x64\x65\x2e\x6e\x65\x78\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x20\x2d\x3e\x20\x73\x74\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x66\x22\x64\x65\x71\x75\x65\x28\x7b\x6c\x69\x73\x74\x28\x73\x65\x6c\x66\x29\x7d\x29\x22\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x65\x71\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x5f\x5f\x6f\x3a\x20\x6f\x62\x6a\x65\x63\x74\x29\x20\x2d\x3e\x20\x62\x6f\x6f\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x69\x73\x69\x6e\x73\x74\x61\x6e\x63\x65\x28\x5f\x5f\x6f\x2c\x20\x64\x65\x71\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x21\x3d\x20\x6c\x65\x6e\x28\x5f\x5f\x6f\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x74\x31\x2c\x20\x74\x32\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x2c\x20\x5f\x5f\x6f\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x74\x31\x20\x69\x73\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x74\x31\x2e\x76\x61\x6c\x75\x65\x20\x21\x3d\x20\x74\x32\x2e\x76\x61\x6c\x75\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x74\x31\x2c\x20\x74\x32\x20\x3d\x20\x74\x31\x2e\x6e\x65\x78\x74\x2c\x20\x74\x32\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x0a\x64\x65\x66\x20\x43\x6f\x75\x6e\x74\x65\x72\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x61\x20\x3d\x20\x7b\x7d\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x78\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x78\x20\x69\x6e\x20\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x61\x5b\x78\x5d\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x61\x5b\x78\x5d\x20\x3d\x20\x31\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61\x0a\x0a\x63\x6c\x61\x73\x73\x20\x64\x65\x66\x61\x75\x6c\x74\x64\x69\x63\x74\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x64\x65\x66\x61\x75\x6c\x74\x5f\x66\x61\x63\x74\x6f\x72\x79\x29\x20\x2d\x3e\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x64\x65\x66\x61\x75\x6c\x74\x5f\x66\x61\x63\x74\x6f\x72\x79\x20\x3d\x20\x64\x65\x66\x61\x75\x6c\x74\x5f\x66\x61\x63\x74\x6f\x72\x79\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x20\x3d\x20\x7b\x7d\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x67\x65\x74\x69\x74\x65\x6d\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x65\x79\x20\x6e\x6f\x74\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x6b\x65\x79\x5d\x20\x3d\x20\x73\x65\x6c\x66\x2e\x64\x65\x66\x61\x75\x6c\x74\x5f\x66\x61\x63\x74\x6f\x72\x79\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65" "\x6c\x66\x2e\x5f\x61\x5b\x6b\x65\x79\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x73\x65\x74\x69\x74\x65\x6d\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x6b\x65\x79\x5d\x20\x3d\x20\x76\x61\x6c\x75\x65\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x20\x2d\x3e\x20\x73\x74\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x66\x22\x64\x65\x66\x61\x75\x6c\x74\x64\x69\x63\x74\x28\x7b\x73\x65\x6c\x66\x2e\x64\x65\x66\x61\x75\x6c\x74\x5f\x66\x61\x63\x74\x6f\x72\x79\x7d\x2c\x20\x7b\x73\x65\x6c\x66\x2e\x5f\x61\x7d\x29\x22\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x65\x71\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x5f\x5f\x6f\x3a\x20\x6f\x62\x6a\x65\x63\x74\x29\x20\x2d\x3e\x20\x62\x6f\x6f\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x69\x73\x69\x6e\x73\x74\x61\x6e\x63\x65\x28\x5f\x5f\x6f\x2c\x20\x64\x65\x66\x61\x75\x6c\x74\x64\x69\x63\x74\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x2e\x64\x65\x66\x61\x75\x6c\x74\x5f\x66\x61\x63\x74\x6f\x72\x79\x20\x21\x3d\x20\x5f\x5f\x6f\x2e\x64\x65\x66\x61\x75\x6c\x74\x5f\x66\x61\x63\x74\x6f\x72\x79\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x20\x3d\x3d\x20\x5f\x5f\x6f\x2e\x5f\x61\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x2e\x5f\x61\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x6b\x65\x79\x73\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x6b\x65\x79\x73\x28\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x76\x61\x6c\x75\x65\x73\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x76\x61\x6c\x75\x65\x73\x28\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x74\x65\x6d\x73\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x69\x74\x65\x6d\x73\x28\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x70\x6f\x70\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x70\x6f\x70\x28\x6b\x65\x79\x29\x0a" },
+        {"requests", "\x63\x6c\x61\x73\x73\x20\x52\x65\x73\x70\x6f\x6e\x73\x65\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x73\x74\x61\x74\x75\x73\x5f\x63\x6f\x64\x65\x2c\x20\x72\x65\x61\x73\x6f\x6e\x2c\x20\x63\x6f\x6e\x74\x65\x6e\x74\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x74\x61\x74\x75\x73\x5f\x63\x6f\x64\x65\x20\x3d\x20\x73\x74\x61\x74\x75\x73\x5f\x63\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x72\x65\x61\x73\x6f\x6e\x20\x3d\x20\x72\x65\x61\x73\x6f\x6e\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x63\x6f\x6e\x74\x65\x6e\x74\x20\x3d\x20\x63\x6f\x6e\x74\x65\x6e\x74\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x74\x79\x70\x65\x28\x73\x65\x6c\x66\x2e\x73\x74\x61\x74\x75\x73\x5f\x63\x6f\x64\x65\x29\x20\x69\x73\x20\x69\x6e\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x74\x79\x70\x65\x28\x73\x65\x6c\x66\x2e\x72\x65\x61\x73\x6f\x6e\x29\x20\x69\x73\x20\x73\x74\x72\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x74\x79\x70\x65\x28\x73\x65\x6c\x66\x2e\x63\x6f\x6e\x74\x65\x6e\x74\x29\x20\x69\x73\x20\x62\x79\x74\x65\x73\x0a\x0a\x20\x20\x20\x20\x40\x70\x72\x6f\x70\x65\x72\x74\x79\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x74\x65\x78\x74\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x63\x6f\x6e\x74\x65\x6e\x74\x2e\x64\x65\x63\x6f\x64\x65\x28\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x63\x6f\x64\x65\x20\x3d\x20\x73\x65\x6c\x66\x2e\x73\x74\x61\x74\x75\x73\x5f\x63\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x66\x27\x3c\x52\x65\x73\x70\x6f\x6e\x73\x65\x20\x5b\x7b\x63\x6f\x64\x65\x7d\x5d\x3e\x27\x0a\x0a\x64\x65\x66\x20\x5f\x70\x61\x72\x73\x65\x5f\x68\x28\x68\x65\x61\x64\x65\x72\x73\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x65\x61\x64\x65\x72\x73\x20\x69\x73\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x5b\x5d\x0a\x20\x20\x20\x20\x69\x66\x20\x74\x79\x70\x65\x28\x68\x65\x61\x64\x65\x72\x73\x29\x20\x69\x73\x20\x64\x69\x63\x74\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x69\x73\x74\x28\x68\x65\x61\x64\x65\x72\x73\x2e\x69\x74\x65\x6d\x73\x28\x29\x29\x0a\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x56\x61\x6c\x75\x65\x45\x72\x72\x6f\x72\x28\x27\x68\x65\x61\x64\x65\x72\x73\x20\x6d\x75\x73\x74\x20\x62\x65\x20\x64\x69\x63\x74\x20\x6f\x72\x20\x4e\x6f\x6e\x65\x27\x29\x0a\x0a\x64\x65\x66\x20\x67\x65\x74\x28\x75\x72\x6c\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x68\x65\x61\x64\x65\x72\x73\x20\x3d\x20\x5f\x70\x61\x72\x73\x65\x5f\x68\x28\x68\x65\x61\x64\x65\x72\x73\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x5f\x72\x65\x71\x75\x65\x73\x74\x28\x27\x47\x45\x54\x27\x2c\x20\x75\x72\x6c\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x2c\x20\x4e\x6f\x6e\x65\x29\x0a\x0a\x64\x65\x66\x20\x70\x6f\x73\x74\x28\x75\x72\x6c\x2c\x20\x64\x61\x74\x61\x3a\x20\x62\x79\x74\x65\x73\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x68\x65\x61\x64\x65\x72\x73\x20\x3d\x20\x5f\x70\x61\x72\x73\x65\x5f\x68\x28\x68\x65\x61\x64\x65\x72\x73\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x5f\x72\x65\x71\x75\x65\x73\x74\x28\x27\x50\x4f\x53\x54\x27\x2c\x20\x75\x72\x6c\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x2c\x20\x64\x61\x74\x61\x29\x0a\x0a\x64\x65\x66\x20\x70\x75\x74\x28\x75\x72\x6c\x2c\x20\x64\x61\x74\x61\x3a\x20\x62\x79\x74\x65\x73\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x68\x65\x61\x64\x65\x72\x73\x20\x3d\x20\x5f\x70\x61\x72\x73\x65\x5f\x68\x28\x68\x65\x61\x64\x65\x72\x73\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x5f\x72\x65\x71\x75\x65\x73\x74\x28\x27\x50\x55\x54\x27\x2c\x20\x75\x72\x6c\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x2c\x20\x64\x61\x74\x61\x29\x0a\x0a\x64\x65\x66\x20\x64\x65\x6c\x65\x74\x65\x28\x75\x72\x6c\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x68\x65\x61\x64\x65\x72\x73\x20\x3d\x20\x5f\x70\x61\x72\x73\x65\x5f\x68\x28\x68\x65\x61\x64\x65\x72\x73\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x5f\x72\x65\x71\x75\x65\x73\x74\x28\x27\x44\x45\x4c\x45\x54\x45\x27\x2c\x20\x75\x72\x6c\x2c\x20\x68\x65\x61\x64\x65\x72\x73\x2c\x20\x4e\x6f\x6e\x65\x29" },
 
-class RangeIter : public BaseIter {
-    i64 current;
-    Range r;
-public:
-    RangeIter(VM* vm, PyVar _ref) : BaseIter(vm, _ref) {
-        this->r = OBJ_GET(Range, _ref);
-        this->current = r.start;
-    }
-
-    inline bool _has_next(){
-        return r.step > 0 ? current < r.stop : current > r.stop;
-    }
-
-    PyVar next(){
-        if(!_has_next()) return nullptr;
-        current += r.step;
-        return VAR(current-r.step);
-    }
-};
-
-template <typename T>
-class ArrayIter : public BaseIter {
-    size_t index = 0;
-    const T* p;
-public:
-    ArrayIter(VM* vm, PyVar _ref) : BaseIter(vm, _ref) { p = &OBJ_GET(T, _ref);}
-    PyVar next(){
-        if(index == p->size()) return nullptr;
-        return p->operator[](index++); 
-    }
-};
-
-class StringIter : public BaseIter {
-    int index = 0;
-    Str* str;
-public:
-    StringIter(VM* vm, PyVar _ref) : BaseIter(vm, _ref) {
-        str = &OBJ_GET(Str, _ref);
-    }
-
-    PyVar next() {
-        if(index == str->u8_length()) return nullptr;
-        return VAR(str->u8_getitem(index++));
-    }
-};
-
-PyVar Generator::next(){
-    if(state == 2) return nullptr;
-    vm->callstack.push(std::move(frame));
-    PyVar ret = vm->_exec();
-    if(ret == vm->_py_op_yield){
-        frame = std::move(vm->callstack.top());
-        vm->callstack.pop();
-        state = 1;
-        return frame->pop_value(vm);
-    }else{
-        state = 2;
-        return nullptr;
-    }
-}
-
-} // namespace pkpy
+    };
+}   // namespace pkpy
 
 
-#include <type_traits>
-#include <vector>
 
 namespace pkpy {
 
-template<typename Ret, typename... Params>
-struct NativeProxyFunc {
-    static constexpr int N = sizeof...(Params);
-    using _Fp = Ret(*)(Params...);
-    _Fp func;
-    NativeProxyFunc(_Fp func) : func(func) {}
+#define PY_CLASS(T, mod, name)                  \
+    static Type _type(VM* vm) {                 \
+        static const StrName __x0(#mod);        \
+        static const StrName __x1(#name);       \
+        return OBJ_GET(Type, vm->_modules[__x0]->attr(__x1));               \
+    }                                                                       \
+    static void _check_type(VM* vm, PyObject* val){                         \
+        if(!vm->isinstance(val, T::_type(vm))){                             \
+            vm->TypeError("expected '" #mod "." #name "', got " + OBJ_NAME(vm->_t(val)).escape());  \
+        }                                                                   \
+    }                                                                       \
+    static PyObject* register_class(VM* vm, PyObject* mod) {                \
+        if(OBJ_NAME(mod) != #mod) {                                         \
+            auto msg = fmt("register_class() failed: ", OBJ_NAME(mod), " != ", #mod); \
+            throw std::runtime_error(msg);                                  \
+        }                                                                   \
+        PyObject* type = vm->new_type_object(mod, #name, vm->tp_object);    \
+        T::_register(vm, mod, type);                                        \
+        type->attr()._try_perfect_rehash();                                 \
+        return type;                                                        \
+    }                                                                       
 
-    PyVar operator()(VM* vm, Args& args) {
-        if (args.size() != N) {
-            vm->TypeError("expected " + std::to_string(N) + " arguments, but got " + std::to_string(args.size()));
-        }
-        return call<Ret>(vm, args, std::make_index_sequence<N>());
+#define VAR_T(T, ...) vm->heap.gcnew<T>(T::_type(vm), T(__VA_ARGS__))
+
+static int c99_sizeof(VM*, const Str&);
+
+struct VoidP{
+    PY_CLASS(VoidP, c, void_p)
+
+    void* ptr;
+    int base_offset;
+    VoidP(void* ptr): ptr(ptr), base_offset(1){}
+    VoidP(): ptr(nullptr), base_offset(1){}
+
+    bool operator==(const VoidP& other) const {
+        return ptr == other.ptr && base_offset == other.base_offset;
+    }
+    bool operator!=(const VoidP& other) const {
+        return ptr != other.ptr || base_offset != other.base_offset;
     }
 
-    template<typename __Ret, size_t... Is>
-    std::enable_if_t<std::is_void_v<__Ret>, PyVar> call(VM* vm, Args& args, std::index_sequence<Is...>) {
-        func(py_cast<Params>(vm, args[Is])...);
-        return vm->None;
+    Str hex() const{
+        std::stringstream ss;
+        ss << std::hex << reinterpret_cast<intptr_t>(ptr);
+        return "0x" + ss.str();
     }
 
-    template<typename __Ret, size_t... Is>
-    std::enable_if_t<!std::is_void_v<__Ret>, PyVar> call(VM* vm, Args& args, std::index_sequence<Is...>) {
-        __Ret ret = func(py_cast<Params>(vm, args[Is])...);
-        return VAR(std::move(ret));
-    }
-};
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_default_constructor<VoidP>(type);
 
-template<typename Ret, typename T, typename... Params>
-struct NativeProxyMethod {
-    static constexpr int N = sizeof...(Params);
-    using _Fp = Ret(T::*)(Params...);
-    _Fp func;
-    NativeProxyMethod(_Fp func) : func(func) {}
+        vm->bind_func<1>(type, "from_hex", [](VM* vm, ArgsView args){
+            std::string s = CAST(Str&, args[0]).str();
+            size_t size;
+            intptr_t ptr = std::stoll(s, &size, 16);
+            if(size != s.size()) vm->ValueError("invalid literal for void_p(): " + s);
+            return VAR_T(VoidP, (void*)ptr);
+        });
+        vm->bind_method<0>(type, "hex", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            return VAR(self.hex());
+        });
 
-    PyVar operator()(VM* vm, Args& args) {
-        int actual_size = args.size() - 1;
-        if (actual_size != N) {
-            vm->TypeError("expected " + std::to_string(N) + " arguments, but got " + std::to_string(actual_size));
-        }
-        return call<Ret>(vm, args, std::make_index_sequence<N>());
-    }
-
-    template<typename __Ret, size_t... Is>
-    std::enable_if_t<std::is_void_v<__Ret>, PyVar> call(VM* vm, Args& args, std::index_sequence<Is...>) {
-        T& self = py_cast<T&>(vm, args[0]);
-        (self.*func)(py_cast<Params>(vm, args[Is+1])...);
-        return vm->None;
-    }
-
-    template<typename __Ret, size_t... Is>
-    std::enable_if_t<!std::is_void_v<__Ret>, PyVar> call(VM* vm, Args& args, std::index_sequence<Is...>) {
-        T& self = py_cast<T&>(vm, args[0]);
-        __Ret ret = (self.*func)(py_cast<Params>(vm, args[Is+1])...);
-        return VAR(std::move(ret));
-    }
-};
-
-template<typename Ret, typename... Params>
-auto native_proxy_callable(Ret(*func)(Params...)) {
-    return NativeProxyFunc<Ret, Params...>(func);
-}
-
-template<typename Ret, typename T, typename... Params>
-auto native_proxy_callable(Ret(T::*func)(Params...)) {
-    return NativeProxyMethod<Ret, T, Params...>(func);
-}
-
-
-template<typename T>
-constexpr int type_index() { return 0; }
-template<> constexpr int type_index<void>() { return 1; }
-template<> constexpr int type_index<char>() { return 2; }
-template<> constexpr int type_index<short>() { return 3; }
-template<> constexpr int type_index<int>() { return 4; }
-template<> constexpr int type_index<long>() { return 5; }
-template<> constexpr int type_index<long long>() { return 6; }
-template<> constexpr int type_index<unsigned char>() { return 7; }
-template<> constexpr int type_index<unsigned short>() { return 8; }
-template<> constexpr int type_index<unsigned int>() { return 9; }
-template<> constexpr int type_index<unsigned long>() { return 10; }
-template<> constexpr int type_index<unsigned long long>() { return 11; }
-template<> constexpr int type_index<float>() { return 12; }
-template<> constexpr int type_index<double>() { return 13; }
-template<> constexpr int type_index<bool>() { return 14; }
-
-template<typename T>
-struct TypeId{ inline static int id; };
-
-struct TypeInfo;
-
-struct MemberInfo{
-    const TypeInfo* type;
-    int offset;
-};
-
-struct TypeInfo{
-    const char* name;
-    int size;
-    int index;
-    std::map<StrName, MemberInfo> members;
-};
-
-struct Vec2 {
-    float x, y;
-};
-
-struct TypeDB{
-    std::vector<TypeInfo> _by_index;
-    std::map<std::string_view, int> _by_name;
-
-    template<typename T>
-    void register_type(const char name[], std::map<StrName, MemberInfo>&& members){
-        TypeInfo ti;
-        ti.name = name;
-        if constexpr(std::is_same_v<T, void>) ti.size = 1;
-        else ti.size = sizeof(T);
-        ti.members = std::move(members);
-        TypeId<T>::id = ti.index = _by_index.size()+1;    // 0 is reserved for NULL
-        _by_name[name] = ti.index;
-        _by_index.push_back(ti);
-    }
-
-    const TypeInfo* get(int index) const {
-        return index == 0 ? nullptr : &_by_index[index-1];
-    }
-
-    const TypeInfo* get(const char name[]) const {
-        auto it = _by_name.find(name);
-        if(it == _by_name.end()) return nullptr;
-        return get(it->second);
-    }
-
-    const TypeInfo* get(const Str& s) const {
-        return get(s.c_str());
-    }
-
-    template<typename T>
-    const TypeInfo* get() const {
-        return get(TypeId<std::decay_t<T>>::id);
-    }
-};
-
-static TypeDB _type_db;
-
-
-auto _ = [](){
-    #define REGISTER_BASIC_TYPE(T) _type_db.register_type<T>(#T, {});
-    _type_db.register_type<void>("void", {});
-    REGISTER_BASIC_TYPE(char);
-    REGISTER_BASIC_TYPE(short);
-    REGISTER_BASIC_TYPE(int);
-    REGISTER_BASIC_TYPE(long);
-    REGISTER_BASIC_TYPE(long long);
-    REGISTER_BASIC_TYPE(unsigned char);
-    REGISTER_BASIC_TYPE(unsigned short);
-    REGISTER_BASIC_TYPE(unsigned int);
-    REGISTER_BASIC_TYPE(unsigned long);
-    REGISTER_BASIC_TYPE(unsigned long long);
-    REGISTER_BASIC_TYPE(float);
-    REGISTER_BASIC_TYPE(double);
-    REGISTER_BASIC_TYPE(bool);
-    #undef REGISTER_BASIC_TYPE
-
-    _type_db.register_type<Vec2>("Vec2", {
-        {"x", { _type_db.get<float>(), offsetof(Vec2, x) }},
-        {"y", { _type_db.get<float>(), offsetof(Vec2, y) }},
-    });
-    return 0;
-}();
-
-struct Pointer{
-    PY_CLASS(Pointer, c, _ptr)
-
-    const TypeInfo* ctype;      // this is immutable
-    int level;                  // level of pointer
-    char* ptr;
-
-    i64 unit_size() const {
-        return level == 1 ? ctype->size : sizeof(void*);
-    }
-
-    Pointer() : ctype(_type_db.get<void>()), level(1), ptr(nullptr) {}
-    Pointer(const TypeInfo* ctype, int level, char* ptr): ctype(ctype), level(level), ptr(ptr) {}
-    Pointer(const TypeInfo* ctype, char* ptr): ctype(ctype), level(1), ptr(ptr) {}
-
-    Pointer operator+(i64 offset) const { 
-        return Pointer(ctype, level, ptr+offset*unit_size());
-    }
-
-    Pointer operator-(i64 offset) const { 
-        return Pointer(ctype, level, ptr-offset*unit_size());
-    }
-
-    static void _register(VM* vm, PyVar mod, PyVar type){
-        vm->bind_static_method<-1>(type, "__new__", CPP_NOT_IMPLEMENTED());
-
-        vm->bind_method<0>(type, "__repr__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            StrStream ss;
-            ss << "<" << self.ctype->name;
-            for(int i=0; i<self.level; i++) ss << "*";
-            ss << " at " << (i64)self.ptr << ">";
+        vm->bind__repr__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            VoidP& self = _CAST(VoidP&, obj);
+            std::stringstream ss;
+            ss << "<void* at " << self.hex();
+            if(self.base_offset != 1) ss << ", base_offset=" << self.base_offset;
+            ss << ">";
             return VAR(ss.str());
         });
 
-        vm->bind_method<1>(type, "__add__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            return VAR_T(Pointer, self + CAST(i64, args[1]));
+        vm->bind__eq__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            if(!is_non_tagged_type(rhs, VoidP::_type(vm))) return false;
+            return _CAST(VoidP&, lhs) == _CAST(VoidP&, rhs);
+        });
+        vm->bind__gt__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            return _CAST(VoidP&, lhs).ptr > CAST(VoidP&, rhs).ptr;
+        });
+        vm->bind__lt__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            return _CAST(VoidP&, lhs).ptr < CAST(VoidP&, rhs).ptr;
+        });
+        vm->bind__ge__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            return _CAST(VoidP&, lhs).ptr >= CAST(VoidP&, rhs).ptr;
+        });
+        vm->bind__le__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            return _CAST(VoidP&, lhs).ptr <= CAST(VoidP&, rhs).ptr;
         });
 
-        vm->bind_method<1>(type, "__sub__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            return VAR_T(Pointer, self - CAST(i64, args[1]));
+        vm->bind__hash__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            VoidP& self = _CAST(VoidP&, obj);
+            return reinterpret_cast<i64>(self.ptr);
         });
 
-        vm->bind_method<1>(type, "__eq__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            Pointer& other = CAST(Pointer&, args[1]);
-            return VAR(self.ptr == other.ptr);
-        });
-
-        vm->bind_method<1>(type, "__ne__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            Pointer& other = CAST(Pointer&, args[1]);
-            return VAR(self.ptr != other.ptr);
-        });
-
-        vm->bind_method<1>(type, "__getitem__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            i64 index = CAST(i64, args[1]);
-            return (self+index).get(vm);
-        });
-
-        vm->bind_method<2>(type, "__setitem__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            i64 index = CAST(i64, args[1]);
-            (self+index).set(vm, args[2]);
+        vm->bind_method<1>(type, "set_base_offset", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            if(is_non_tagged_type(args[1], vm->tp_str)){
+                const Str& type = _CAST(Str&, args[1]);
+                self.base_offset = c99_sizeof(vm, type);
+            }else{
+                self.base_offset = CAST(int, args[1]);
+            }
             return vm->None;
         });
 
-        vm->bind_method<1>(type, "__getattr__", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            const Str& name = CAST(Str&, args[1]);
-            return VAR_T(Pointer, self._to(vm, name));
+        vm->bind_method<0>(type, "get_base_offset", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            return VAR(self.base_offset);
         });
 
-        vm->bind_method<0>(type, "get", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            return self.get(vm);
+        vm->bind_method<1>(type, "offset", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            i64 offset = CAST(i64, args[1]);
+            return VAR_T(VoidP, (char*)self.ptr + offset * self.base_offset);
         });
 
-        vm->bind_method<1>(type, "set", [](VM* vm, Args& args) {
-            Pointer& self = CAST(Pointer&, args[0]);
-            self.set(vm, args[1]);
+        vm->bind__add__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            VoidP& self = _CAST(VoidP&, lhs);
+            i64 offset = CAST(i64, rhs);
+            return VAR_T(VoidP, (char*)self.ptr + offset);
+        });
+
+        vm->bind__sub__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            VoidP& self = _CAST(VoidP&, lhs);
+            i64 offset = CAST(i64, rhs);
+            return VAR_T(VoidP, (char*)self.ptr - offset);
+        });
+
+#define BIND_SETGET(T, name) \
+        vm->bind_method<0>(type, "read_" name, [](VM* vm, ArgsView args){   \
+            VoidP& self = _CAST(VoidP&, args[0]);                   \
+            return VAR(*(T*)self.ptr);                              \
+        });                                                         \
+        vm->bind_method<1>(type, "write_" name, [](VM* vm, ArgsView args){   \
+            VoidP& self = _CAST(VoidP&, args[0]);                   \
+            *(T*)self.ptr = CAST(T, args[1]);                       \
+            return vm->None;                                        \
+        });
+
+        BIND_SETGET(char, "char")
+        BIND_SETGET(unsigned char, "uchar")
+        BIND_SETGET(short, "short")
+        BIND_SETGET(unsigned short, "ushort")
+        BIND_SETGET(int, "int")
+        BIND_SETGET(unsigned int, "uint")
+        BIND_SETGET(long, "long")
+        BIND_SETGET(unsigned long, "ulong")
+        BIND_SETGET(long long, "longlong")
+        BIND_SETGET(unsigned long long, "ulonglong")
+        BIND_SETGET(float, "float")
+        BIND_SETGET(double, "double")
+        BIND_SETGET(bool, "bool")
+
+        vm->bind_method<0>(type, "read_void_p", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            return VAR_T(VoidP, *(void**)self.ptr);
+        });
+        vm->bind_method<1>(type, "write_void_p", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            VoidP& other = CAST(VoidP&, args[0]);
+            self.ptr = other.ptr;
             return vm->None;
         });
+
+        vm->bind_method<1>(type, "read_bytes", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            i64 size = CAST(i64, args[1]);
+            std::vector<char> buffer(size);
+            memcpy(buffer.data(), self.ptr, size);
+            return VAR(Bytes(std::move(buffer)));
+        });
+
+        vm->bind_method<1>(type, "write_bytes", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            Bytes& bytes = CAST(Bytes&, args[1]);
+            memcpy(self.ptr, bytes.data(), bytes.size());
+            return vm->None;
+        });
+    }
+};
+
+struct C99Struct{
+    PY_CLASS(C99Struct, c, struct)
+
+    static constexpr int INLINE_SIZE = 24;
+
+    char _inlined[INLINE_SIZE];
+    char* p;
+    int size;
+
+    void _init(int size){
+        this->size = size;
+        if(size <= INLINE_SIZE){
+            p = _inlined;
+        }else{
+            p = (char*)malloc(size);
+        }
     }
 
     template<typename T>
-    inline T& ref() noexcept { return *reinterpret_cast<T*>(ptr); }
-
-    PyVar get(VM* vm){
-        if(level > 1) return VAR_T(Pointer, ctype, level-1, ref<char*>());
-        switch(ctype->index){
-#define CASE(T) case type_index<T>(): return VAR(ref<T>())
-            case type_index<void>(): vm->ValueError("cannot get void*"); break;
-            CASE(char);
-            CASE(short);
-            CASE(int);
-            CASE(long);
-            CASE(long long);
-            CASE(unsigned char);
-            CASE(unsigned short);
-            CASE(unsigned int);
-            CASE(unsigned long);
-            CASE(unsigned long long);
-            CASE(float);
-            CASE(double);
-            CASE(bool);
-#undef CASE
-        }
-        return VAR_T(Pointer, *this);
+    C99Struct(const T& data){
+        static_assert(std::is_pod_v<T>);
+        static_assert(!std::is_pointer_v<T>);
+        _init(sizeof(T));
+        memcpy(p, &data, this->size);
     }
 
-    void set(VM* vm, const PyVar& val){
-        if(level > 1) {
-            Pointer& p = CAST(Pointer&, val);
-            ref<char*>() = p.ptr;   // We don't check the type, just copy the underlying address
-            return;
-        }
-        switch(ctype->index){
-#define CASE(T1, T2) case type_index<T1>(): ref<T1>() = CAST(T2, val); break
-            case type_index<void>(): vm->ValueError("cannot set void*"); break;
-            CASE(char, i64);
-            CASE(short, i64);
-            CASE(int, i64);
-            CASE(long, i64);
-            CASE(long long, i64);
-            CASE(unsigned char, i64);
-            CASE(unsigned short, i64);
-            CASE(unsigned int, i64);
-            CASE(unsigned long, i64);
-            CASE(unsigned long long, i64);
-            CASE(float, f64);
-            CASE(double, f64);
-            CASE(bool, bool);
-#undef CASE
-            default: UNREACHABLE();
-        }
+    C99Struct() { p = _inlined; }
+    C99Struct(void* p, int size){
+        _init(size);
+        if(p!=nullptr) memcpy(this->p, p, size);
+    }
+    ~C99Struct(){ if(p!=_inlined) free(p); }
+
+    C99Struct(const C99Struct& other){
+        _init(other.size);
+        memcpy(p, other.p, size);
     }
 
-    Pointer _to(VM* vm, StrName name){
-        auto it = ctype->members.find(name);
-        if(it == ctype->members.end()){
-            vm->AttributeError(Str("struct '") + ctype->name + "' has no member " + name.str().escape(true));
-        }
-        const MemberInfo& info = it->second;
-        return {info.type, level, ptr+info.offset};
-    }
-};
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_default_constructor<C99Struct>(type);
 
-
-struct Value {
-    PY_CLASS(Value, c, _value)
-
-    char* data;
-    Pointer head;
-
-    const TypeInfo* ctype() const { return head.ctype; }
-
-    Value(const TypeInfo* type) {
-        data = new char[type->size];
-        memset(data, 0, type->size);
-        this->head = Pointer(type, data);
-    }
-
-    Value(const TypeInfo* type, void* src) {
-        data = new char[type->size];
-        memcpy(data, src, type->size);
-        this->head = Pointer(type, data);
-    }
-
-    Value(Value&& other) noexcept {
-        data = other.data;
-        head = other.head;
-        other.data = nullptr;
-    }
-
-    Value& operator=(Value&& other) noexcept = delete;
-    Value& operator=(const Value& other) = delete;
-    Value(const Value& other) = delete;
-    
-    static void _register(VM* vm, PyVar mod, PyVar type){
-        vm->bind_static_method<-1>(type, "__new__", CPP_NOT_IMPLEMENTED());
-
-        vm->bind_method<0>(type, "ptr", [](VM* vm, Args& args) {
-            Value& self = CAST(Value&, args[0]);
-            return VAR_T(Pointer, self.head);
+        vm->bind_method<0>(type, "addr", [](VM* vm, ArgsView args){
+            C99Struct& self = _CAST(C99Struct&, args[0]);
+            return VAR_T(VoidP, self.p);
         });
 
-        vm->bind_method<1>(type, "__getattr__", [](VM* vm, Args& args) {
-            Value& self = CAST(Value&, args[0]);
-            const Str& name = CAST(Str&, args[1]);
-            return self.head._to(vm, name).get(vm);
-        });
-    }
-
-    ~Value(){
-        delete[] data;
-    }
-};
-
-
-struct CType{
-    PY_CLASS(CType, c, ctype)
-
-    const TypeInfo* type;
-
-    CType() : type(_type_db.get<void>()) {}
-    CType(const TypeInfo* type) : type(type) {}
-
-    static void _register(VM* vm, PyVar mod, PyVar type){
-        vm->bind_static_method<1>(type, "__new__", [](VM* vm, Args& args) {
-            const Str& name = CAST(Str&, args[0]);
-            const TypeInfo* type = _type_db.get(name);
-            if(type == nullptr) vm->TypeError("unknown type: " + name.escape(true));
-            return VAR_T(CType, type);
+        vm->bind_method<0>(type, "size", [](VM* vm, ArgsView args){
+            C99Struct& self = _CAST(C99Struct&, args[0]);
+            return VAR(self.size);
         });
 
-        vm->bind_method<0>(type, "__call__", [](VM* vm, Args& args) {
-            CType& self = CAST(CType&, args[0]);
-            return VAR_T(Value, self.type);
+        vm->bind_method<0>(type, "copy", [](VM* vm, ArgsView args){
+            const C99Struct& self = _CAST(C99Struct&, args[0]);
+            return VAR_T(C99Struct, self);
+        });
+
+        vm->bind__eq__(OBJ_GET(Type, type), [](VM* vm, PyObject* lhs, PyObject* rhs){
+            C99Struct& self = _CAST(C99Struct&, lhs);
+            if(!is_non_tagged_type(rhs, C99Struct::_type(vm))) return false;
+            C99Struct& other = _CAST(C99Struct&, rhs);
+            return self.size == other.size && memcmp(self.p, other.p, self.size) == 0;
+        });
+
+        // patch VoidP
+        type = vm->_t(VoidP::_type(vm));
+
+        vm->bind_method<1>(type, "read_struct", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            const Str& type = CAST(Str&, args[1]);
+            int size = c99_sizeof(vm, type);
+            return VAR_T(C99Struct, self.ptr, size);
+        });
+
+        vm->bind_method<1>(type, "write_struct", [](VM* vm, ArgsView args){
+            VoidP& self = _CAST(VoidP&, args[0]);
+            C99Struct& other = CAST(C99Struct&, args[1]);
+            memcpy(self.ptr, other.p, other.size);
+            return vm->None;
         });
     }
 };
 
-void add_module_c(VM* vm){
-    PyVar mod = vm->new_module("c");
-    PyVar ptr_t = Pointer::register_class(vm, mod);
-    Value::register_class(vm, mod);
-    CType::register_class(vm, mod);
+struct ReflField{
+    std::string_view name;
+    int offset;
+    bool operator<(const ReflField& other) const{ return name < other.name; }
+    bool operator==(const ReflField& other) const{ return name == other.name; }
+    bool operator!=(const ReflField& other) const{ return name != other.name; }
+    bool operator<(std::string_view other) const{ return name < other; }
+    bool operator==(std::string_view other) const{ return name == other; }
+    bool operator!=(std::string_view other) const{ return name != other; }
+};
 
-    vm->setattr(mod, "nullptr", VAR_T(Pointer));
+struct ReflType{
+    std::string_view name;
+    size_t size;
+    std::vector<ReflField> fields;
+};
+inline static std::map<std::string_view, ReflType> _refl_types;
 
-    vm->bind_func<1>(mod, "malloc", [](VM* vm, Args& args) {
-        i64 size = CAST(i64, args[0]);
-        return VAR_T(Pointer, _type_db.get<void>(), (char*)malloc(size));
-    });
-
-    vm->bind_func<1>(mod, "free", [](VM* vm, Args& args) {
-        Pointer& self = CAST(Pointer&, args[0]);
-        free(self.ptr);
-        return vm->None;
-    });
-
-    vm->bind_func<3>(mod, "memcpy", [](VM* vm, Args& args) {
-        Pointer& dst = CAST(Pointer&, args[0]);
-        Pointer& src = CAST(Pointer&, args[1]);
-        i64 size = CAST(i64, args[2]);
-        memcpy(dst.ptr, src.ptr, size);
-        return vm->None;
-    });
-
-    vm->bind_func<2>(mod, "cast", [](VM* vm, Args& args) {
-        Pointer& self = CAST(Pointer&, args[0]);
-        const Str& name = CAST(Str&, args[1]);
-        int level = 0;
-        for(int i=name.size()-1; i>=0; i--){
-            if(name[i] == '*') level++;
-            else break;
-        }
-        if(level == 0) vm->TypeError("expect a pointer type, such as 'int*'");
-        Str type_s = name.substr(0, name.size()-level);
-        const TypeInfo* type = _type_db.get(type_s);
-        if(type == nullptr) vm->TypeError("unknown type: " + type_s.escape(true));
-        return VAR_T(Pointer, type, level, self.ptr);
-    });
-
-    vm->bind_func<1>(mod, "sizeof", [](VM* vm, Args& args) {
-        const Str& name = CAST(Str&, args[0]);
-        if(name.find('*') != Str::npos) return VAR(sizeof(void*));
-        const TypeInfo* type = _type_db.get(name);
-        if(type == nullptr) vm->TypeError("unknown type: " + name.escape(true));
-        return VAR(type->size);
-    });
-
-    vm->bind_func<3>(mod, "memset", [](VM* vm, Args& args) {
-        Pointer& dst = CAST(Pointer&, args[0]);
-        i64 val = CAST(i64, args[1]);
-        i64 size = CAST(i64, args[2]);
-        memset(dst.ptr, (int)val, size);
-        return vm->None;
-    });
+inline void add_refl_type(std::string_view name, size_t size, std::vector<ReflField> fields){
+    ReflType type{name, size, std::move(fields)};
+    std::sort(type.fields.begin(), type.fields.end());
+    _refl_types[name] = std::move(type);
 }
 
-PyVar py_var(VM* vm, void* p){
-    return VAR_T(Pointer, _type_db.get<void>(), (char*)p);
+inline static int c99_sizeof(VM* vm, const Str& type){
+    auto it = _refl_types.find(type.sv());
+    if(it != _refl_types.end()) return it->second.size;
+    vm->ValueError("not a valid c99 type");
+    return 0;
 }
 
-PyVar py_var(VM* vm, char* p){
-    return VAR_T(Pointer, _type_db.get<char>(), (char*)p);
+struct C99ReflType final: ReflType{
+    PY_CLASS(C99ReflType, c, _refl)
+
+    C99ReflType(const ReflType& type){
+        this->name = type.name;
+        this->size = type.size;
+        this->fields = type.fields;
+    }
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_notimplemented_constructor<C99ReflType>(type);
+
+        vm->bind_method<0>(type, "__call__", [](VM* vm, ArgsView args){
+            C99ReflType& self = _CAST(C99ReflType&, args[0]);
+            return VAR_T(C99Struct, nullptr, self.size);
+        });
+
+        vm->bind_method<0>(type, "name", [](VM* vm, ArgsView args){
+            C99ReflType& self = _CAST(C99ReflType&, args[0]);
+            return VAR(self.name);
+        });
+
+        vm->bind_method<0>(type, "size", [](VM* vm, ArgsView args){
+            C99ReflType& self = _CAST(C99ReflType&, args[0]);
+            return VAR(self.size);
+        });
+
+        vm->bind__getitem__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj, PyObject* key){
+            C99ReflType& self = _CAST(C99ReflType&, obj);
+            const Str& name = CAST(Str&, key);
+            auto it = std::lower_bound(self.fields.begin(), self.fields.end(), name.sv());
+            if(it == self.fields.end() || it->name != name.sv()){
+                vm->KeyError(key);
+                return vm->None;
+            }
+            return VAR(it->offset);
+        });
+    }
+};
+
+static_assert(sizeof(Py_<C99Struct>) <= 64);
+static_assert(sizeof(Py_<Tuple>) <= 64);
+
+inline PyObject* py_var(VM* vm, void* p){
+    return VAR_T(VoidP, p);
 }
 
+inline PyObject* py_var(VM* vm, char* p){
+    return VAR_T(VoidP, p);
+}
 /***********************************************/
-
 template<typename T>
-struct _pointer {
-    static constexpr int level = 0;
-    using baseT = T;
-};
-
-template<typename T>
-struct _pointer<T*> {
-    static constexpr int level = _pointer<T>::level + 1;
-    using baseT = typename _pointer<T>::baseT;
-};
-
-template<typename T>
-struct pointer {
-    static constexpr int level = _pointer<std::decay_t<T>>::level;
-    using baseT = typename _pointer<std::decay_t<T>>::baseT;
-};
-
-template<typename T>
-T py_pointer_cast(VM* vm, const PyVar& var){
+T to_void_p(VM* vm, PyObject* var){
     static_assert(std::is_pointer_v<T>);
-    Pointer& p = CAST(Pointer&, var);
-    const TypeInfo* type = _type_db.get<typename pointer<T>::baseT>();
-    const int level = pointer<T>::level;
-    if(p.ctype != type || p.level != level){
-        vm->TypeError("invalid pointer cast");
-    }
+    VoidP& p = CAST(VoidP&, var);
     return reinterpret_cast<T>(p.ptr);
 }
 
 template<typename T>
-T py_value_cast(VM* vm, const PyVar& var){
+T to_c99_struct(VM* vm, PyObject* var){
     static_assert(std::is_pod_v<T>);
-    Value& v = CAST(Value&, var);
-    return *reinterpret_cast<T*>(v.data);
+    C99Struct& pod = CAST(C99Struct&, var);
+    return *reinterpret_cast<T*>(pod.p);
 }
 
 template<typename T>
-std::enable_if_t<std::is_pointer_v<std::decay_t<T>>, PyVar>
-py_var(VM* vm, T p){
-    const TypeInfo* type = _type_db.get<typename pointer<T>::baseT>();
-    if(type == nullptr) type = _type_db.get<void>();
-    return VAR_T(Pointer, type, pointer<T>::level, (char*)p);
+std::enable_if_t<std::is_pod_v<T> && !std::is_pointer_v<T>, PyObject*> py_var(VM* vm, const T& data){
+    return VAR_T(C99Struct, data);
+}
+/*****************************************************************/
+struct NativeProxyFuncCBase {
+    virtual PyObject* operator()(VM* vm, ArgsView args) = 0;
+
+    static void check_args_size(VM* vm, ArgsView args, int n){
+        if (args.size() != n){
+            vm->TypeError("expected " + std::to_string(n) + " arguments, but got " + std::to_string(args.size()));
+        }
+    }
+};
+
+template<typename Ret, typename... Params>
+struct NativeProxyFuncC final: NativeProxyFuncCBase {
+    static constexpr int N = sizeof...(Params);
+    using _Fp = Ret(*)(Params...);
+    _Fp func;
+    NativeProxyFuncC(_Fp func) : func(func) {}
+
+    PyObject* operator()(VM* vm, ArgsView args) override {
+        check_args_size(vm, args, N);
+        return call<Ret>(vm, args, std::make_index_sequence<N>());
+    }
+
+    template<typename __Ret, size_t... Is>
+    PyObject* call(VM* vm, ArgsView args, std::index_sequence<Is...>){
+        if constexpr(std::is_void_v<__Ret>){
+            func(py_cast<Params>(vm, args[Is])...);
+            return vm->None;
+        }else{
+            __Ret ret = func(py_cast<Params>(vm, args[Is])...);
+            return VAR(std::move(ret));
+        }
+    }
+};
+
+inline PyObject* _any_c_wrapper(VM* vm, ArgsView args){
+    NativeProxyFuncCBase* pf = lambda_get_userdata<NativeProxyFuncCBase*>(args.begin());
+    return (*pf)(vm, args);
 }
 
 template<typename T>
-std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>, PyVar>
-py_var(VM* vm, T p){
-    if constexpr(std::is_same_v<T, PyVar>) return p;
-    const TypeInfo* type = _type_db.get<T>();
-    return VAR_T(Value, type, &p);
+inline void bind_any_c_fp(VM* vm, PyObject* obj, Str name, T fp){
+    static_assert(std::is_pod_v<T>);
+    static_assert(std::is_pointer_v<T>);
+    auto proxy = new NativeProxyFuncC(fp);
+    PyObject* func = VAR(NativeFunc(_any_c_wrapper, proxy->N, false));
+    _CAST(NativeFunc&, func).set_userdata(proxy);
+    obj->attr().set(name, func);
+}
+
+inline void add_module_c(VM* vm){
+    PyObject* mod = vm->new_module("c");
+    
+    vm->bind_func<1>(mod, "malloc", [](VM* vm, ArgsView args){
+        i64 size = CAST(i64, args[0]);
+        return VAR(malloc(size));
+    });
+
+    vm->bind_func<1>(mod, "free", [](VM* vm, ArgsView args){
+        void* p = CAST(void*, args[0]);
+        free(p);
+        return vm->None;
+    });
+
+    vm->bind_func<1>(mod, "sizeof", [](VM* vm, ArgsView args){
+        const Str& type = CAST(Str&, args[0]);
+        i64 size = c99_sizeof(vm, type);
+        return VAR(size);
+    });
+
+    vm->bind_func<1>(mod, "refl", [](VM* vm, ArgsView args){
+        const Str& key = CAST(Str&, args[0]);
+        auto it = _refl_types.find(key.sv());
+        if(it == _refl_types.end()) vm->ValueError("reflection type not found");
+        const ReflType& rt = it->second;
+        return VAR_T(C99ReflType, rt);
+    });
+
+    vm->bind_func<3>(mod, "memset", [](VM* vm, ArgsView args){
+        void* p = CAST(void*, args[0]);
+        i64 c = CAST(i64, args[1]);
+        i64 size = CAST(i64, args[2]);
+        memset(p, c, size);
+        return vm->None;
+    });
+
+    vm->bind_func<3>(mod, "memcpy", [](VM* vm, ArgsView args){
+        void* dst = CAST(void*, args[0]);
+        void* src = CAST(void*, args[1]);
+        i64 size = CAST(i64, args[2]);
+        memcpy(dst, src, size);
+        return vm->None;
+    });
+
+    VoidP::register_class(vm, mod);
+    C99Struct::register_class(vm, mod);
+    C99ReflType::register_class(vm, mod);
+    mod->attr().set("NULL", VAR_T(VoidP, nullptr));
+
+    add_refl_type("char", sizeof(char), {});
+    add_refl_type("uchar", sizeof(unsigned char), {});
+    add_refl_type("short", sizeof(short), {});
+    add_refl_type("ushort", sizeof(unsigned short), {});
+    add_refl_type("int", sizeof(int), {});
+    add_refl_type("uint", sizeof(unsigned int), {});
+    add_refl_type("long", sizeof(long), {});
+    add_refl_type("ulong", sizeof(unsigned long), {});
+    add_refl_type("longlong", sizeof(long long), {});
+    add_refl_type("ulonglong", sizeof(unsigned long long), {});
+    add_refl_type("float", sizeof(float), {});
+    add_refl_type("double", sizeof(double), {});
+    add_refl_type("bool", sizeof(bool), {});
+    add_refl_type("void_p", sizeof(void*), {});
 }
 
 }   // namespace pkpy
 
 
-#if PK_ENABLE_FILEIO
+namespace pkpy{
 
-#include <fstream>
-#include <filesystem>
+struct RangeIter{
+    PY_CLASS(RangeIter, builtins, "_range_iterator")
+    Range r;
+    i64 current;
+    RangeIter(Range r) : r(r), current(r.start) {}
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->_all_types[OBJ_GET(Type, type)].subclass_enabled = false;
+        vm->bind_notimplemented_constructor<RangeIter>(type);
+        vm->bind__iter__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){ return obj; });
+        vm->bind__next__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            RangeIter& self = _CAST(RangeIter&, obj);
+            bool has_next = self.r.step > 0 ? self.current < self.r.stop : self.current > self.r.stop;
+            if(!has_next) return vm->StopIteration;
+            self.current += self.r.step;
+            return VAR(self.current - self.r.step);
+        });
+    }
+};
+
+struct ArrayIter{
+    PY_CLASS(ArrayIter, builtins, "_array_iterator")
+    PyObject* ref;
+    PyObject** begin;
+    PyObject** end;
+    PyObject** current;
+
+    ArrayIter(PyObject* ref, PyObject** begin, PyObject** end)
+        : ref(ref), begin(begin), end(end), current(begin) {}
+
+    void _gc_mark() const{ OBJ_MARK(ref); }
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->_all_types[OBJ_GET(Type, type)].subclass_enabled = false;
+        vm->bind_notimplemented_constructor<ArrayIter>(type);
+        vm->bind__iter__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){ return obj; });
+        vm->bind__next__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            ArrayIter& self = _CAST(ArrayIter&, obj);
+            if(self.current == self.end) return vm->StopIteration;
+            return *self.current++;
+        });
+    }
+};
+
+struct StringIter{
+    PY_CLASS(StringIter, builtins, "_string_iterator")
+    PyObject* ref;
+    Str* str;
+    int index;
+
+    StringIter(PyObject* ref) : ref(ref), str(&OBJ_GET(Str, ref)), index(0) {}
+
+    void _gc_mark() const{ OBJ_MARK(ref); }
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->_all_types[OBJ_GET(Type, type)].subclass_enabled = false;
+        vm->bind_notimplemented_constructor<StringIter>(type);
+        vm->bind__iter__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){ return obj; });
+        vm->bind__next__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            StringIter& self = _CAST(StringIter&, obj);
+            // TODO: optimize this... operator[] is of O(n) complexity
+            if(self.index == self.str->u8_length()) return vm->StopIteration;
+            return VAR(self.str->u8_getitem(self.index++));
+        });
+    }
+};
+
+struct Generator{
+    PY_CLASS(Generator, builtins, "_generator")
+    Frame frame;
+    int state;      // 0,1,2
+    List s_backup;
+
+    Generator(Frame&& frame, ArgsView buffer): frame(std::move(frame)), state(0) {
+        for(PyObject* obj: buffer) s_backup.push_back(obj);
+    }
+
+    void _gc_mark() const{
+        frame._gc_mark();
+        for(PyObject* obj: s_backup) OBJ_MARK(obj);
+    }
+
+    PyObject* next(VM* vm){
+        if(state == 2) return vm->StopIteration;
+        // reset frame._sp_base
+        frame._sp_base = frame._s->_sp;
+        frame._locals.a = frame._s->_sp;
+        // restore the context
+        for(PyObject* obj: s_backup) frame._s->push(obj);
+        s_backup.clear();
+        vm->callstack.push(std::move(frame));
+        PyObject* ret = vm->_run_top_frame();
+        if(ret == PY_OP_YIELD){
+            // backup the context
+            frame = std::move(vm->callstack.top());
+            PyObject* ret = frame._s->popx();
+            for(PyObject* obj: frame.stack_view()) s_backup.push_back(obj);
+            vm->_pop_frame();
+            state = 1;
+            if(ret == vm->StopIteration) state = 2;
+            return ret;
+        }else{
+            state = 2;
+            return vm->StopIteration;
+        }
+    }
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->_all_types[OBJ_GET(Type, type)].subclass_enabled = false;
+        vm->bind_notimplemented_constructor<Generator>(type);
+        vm->bind__iter__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){ return obj; });
+        vm->bind__next__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            Generator& self = _CAST(Generator&, obj);
+            return self.next(vm);
+        });
+    }
+};
+
+inline PyObject* VM::_py_generator(Frame&& frame, ArgsView buffer){
+    return VAR_T(Generator, std::move(frame), buffer);
+}
+
+} // namespace pkpy
+
+
+#if PK_MODULE_BASE64
+
+namespace pkpy {
+
+// https://github.com/zhicheng/base64/blob/master/base64.c
+
+const char BASE64_PAD = '=';
+const char BASE64DE_FIRST = '+';
+const char BASE64DE_LAST = 'z';
+
+/* BASE 64 encode table */
+const char base64en[] = {
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+	'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+	'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+	'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+	'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+	'w', 'x', 'y', 'z', '0', '1', '2', '3',
+	'4', '5', '6', '7', '8', '9', '+', '/',
+};
+
+/* ASCII order for BASE 64 decode, 255 in unused character */
+const unsigned char base64de[] = {
+	/* nul, soh, stx, etx, eot, enq, ack, bel, */
+	   255, 255, 255, 255, 255, 255, 255, 255,
+
+	/*  bs,  ht,  nl,  vt,  np,  cr,  so,  si, */
+	   255, 255, 255, 255, 255, 255, 255, 255,
+
+	/* dle, dc1, dc2, dc3, dc4, nak, syn, etb, */
+	   255, 255, 255, 255, 255, 255, 255, 255,
+
+	/* can,  em, sub, esc,  fs,  gs,  rs,  us, */
+	   255, 255, 255, 255, 255, 255, 255, 255,
+
+	/*  sp, '!', '"', '#', '$', '%', '&', ''', */
+	   255, 255, 255, 255, 255, 255, 255, 255,
+
+	/* '(', ')', '*', '+', ',', '-', '.', '/', */
+	   255, 255, 255,  62, 255, 255, 255,  63,
+
+	/* '0', '1', '2', '3', '4', '5', '6', '7', */
+	    52,  53,  54,  55,  56,  57,  58,  59,
+
+	/* '8', '9', ':', ';', '<', '=', '>', '?', */
+	    60,  61, 255, 255, 255, 255, 255, 255,
+
+	/* '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', */
+	   255,   0,   1,  2,   3,   4,   5,    6,
+
+	/* 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', */
+	     7,   8,   9,  10,  11,  12,  13,  14,
+
+	/* 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', */
+	    15,  16,  17,  18,  19,  20,  21,  22,
+
+	/* 'X', 'Y', 'Z', '[', '\', ']', '^', '_', */
+	    23,  24,  25, 255, 255, 255, 255, 255,
+
+	/* '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', */
+	   255,  26,  27,  28,  29,  30,  31,  32,
+
+	/* 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', */
+	    33,  34,  35,  36,  37,  38,  39,  40,
+
+	/* 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', */
+	    41,  42,  43,  44,  45,  46,  47,  48,
+
+	/* 'x', 'y', 'z', '{', '|', '}', '~', del, */
+	    49,  50,  51, 255, 255, 255, 255, 255
+};
+
+inline static unsigned int
+base64_encode(const unsigned char *in, unsigned int inlen, char *out)
+{
+	int s;
+	unsigned int i;
+	unsigned int j;
+	unsigned char c;
+	unsigned char l;
+
+	s = 0;
+	l = 0;
+	for (i = j = 0; i < inlen; i++) {
+		c = in[i];
+
+		switch (s) {
+		case 0:
+			s = 1;
+			out[j++] = base64en[(c >> 2) & 0x3F];
+			break;
+		case 1:
+			s = 2;
+			out[j++] = base64en[((l & 0x3) << 4) | ((c >> 4) & 0xF)];
+			break;
+		case 2:
+			s = 0;
+			out[j++] = base64en[((l & 0xF) << 2) | ((c >> 6) & 0x3)];
+			out[j++] = base64en[c & 0x3F];
+			break;
+		}
+		l = c;
+	}
+
+	switch (s) {
+	case 1:
+		out[j++] = base64en[(l & 0x3) << 4];
+		out[j++] = BASE64_PAD;
+		out[j++] = BASE64_PAD;
+		break;
+	case 2:
+		out[j++] = base64en[(l & 0xF) << 2];
+		out[j++] = BASE64_PAD;
+		break;
+	}
+
+	out[j] = 0;
+
+	return j;
+}
+
+inline static unsigned int
+base64_decode(const char *in, unsigned int inlen, unsigned char *out)
+{
+	unsigned int i;
+	unsigned int j;
+	unsigned char c;
+
+	if (inlen & 0x3) {
+		return 0;
+	}
+
+	for (i = j = 0; i < inlen; i++) {
+		if (in[i] == BASE64_PAD) {
+			break;
+		}
+		if (in[i] < BASE64DE_FIRST || in[i] > BASE64DE_LAST) {
+			return 0;
+		}
+
+		c = base64de[(unsigned char)in[i]];
+		if (c == 255) {
+			return 0;
+		}
+
+		switch (i & 0x3) {
+		case 0:
+			out[j] = (c << 2) & 0xFF;
+			break;
+		case 1:
+			out[j++] |= (c >> 4) & 0x3;
+			out[j] = (c & 0xF) << 4; 
+			break;
+		case 2:
+			out[j++] |= (c >> 2) & 0xF;
+			out[j] = (c & 0x3) << 6;
+			break;
+		case 3:
+			out[j++] |= c;
+			break;
+		}
+	}
+
+	return j;
+}
+
+inline void add_module_base64(VM* vm){
+    PyObject* mod = vm->new_module("base64");
+
+    // b64encode
+    vm->bind_func<1>(mod, "b64encode", [](VM* vm, ArgsView args){
+        Bytes& b = CAST(Bytes&, args[0]);
+        std::vector<char> out(b.size() * 2);
+        int size = base64_encode((const unsigned char*)b.data(), b.size(), out.data());
+        out.resize(size);
+        return VAR(Bytes(std::move(out)));
+    });
+
+    // b64decode
+    vm->bind_func<1>(mod, "b64decode", [](VM* vm, ArgsView args){
+        Bytes& b = CAST(Bytes&, args[0]);
+        std::vector<char> out(b.size());
+        int size = base64_decode(b.data(), b.size(), (unsigned char*)out.data());
+        out.resize(size);
+        return VAR(Bytes(std::move(out)));
+    });
+}
+
+} // namespace pkpy
+
+
+#else
+
+ADD_MODULE_PLACEHOLDER(base64)
+
+#endif
+
+
+#if PK_MODULE_RANDOM
+
+#include <random>
 
 namespace pkpy{
 
-Str _read_file_cwd(const Str& name, bool* ok){
-    std::filesystem::path path(name.c_str());
-    bool exists = std::filesystem::exists(path);
-    if(!exists){
-        *ok = false;
-        return Str();
+struct Random{
+    PY_CLASS(Random, random, Random)
+    std::mt19937 gen;
+
+    Random(){
+        gen.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count());
     }
-    std::ifstream ifs(path);
-    std::string buffer((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-    ifs.close();
-    *ok = true;
-    return Str(std::move(buffer));
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_default_constructor<Random>(type);
+
+        vm->bind_method<1>(type, "seed", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            self.gen.seed(CAST(i64, args[1]));
+            return vm->None;
+        });
+
+        vm->bind_method<2>(type, "randint", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            i64 a = CAST(i64, args[1]);
+            i64 b = CAST(i64, args[2]);
+            std::uniform_int_distribution<i64> dis(a, b);
+            return VAR(dis(self.gen));
+        });
+
+        vm->bind_method<0>(type, "random", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            std::uniform_real_distribution<f64> dis(0.0, 1.0);
+            return VAR(dis(self.gen));
+        });
+
+        vm->bind_method<2>(type, "uniform", [](VM* vm, ArgsView args) {
+            Random& self = _CAST(Random&, args[0]);
+            f64 a = CAST(f64, args[1]);
+            f64 b = CAST(f64, args[2]);
+            std::uniform_real_distribution<f64> dis(a, b);
+            return VAR(dis(self.gen));
+        });
+    }
+};
+
+inline void add_module_random(VM* vm){
+    PyObject* mod = vm->new_module("random");
+    Random::register_class(vm, mod);
+    CodeObject_ code = vm->compile(kPythonLibs["random"], "random.py", EXEC_MODE);
+    vm->_exec(code, mod);
 }
+
+}   // namespace pkpy
+
+#else
+
+ADD_MODULE_PLACEHOLDER(random)
+
+#endif
+
+
+#if PK_MODULE_RE
+
+namespace pkpy{
+
+struct ReMatch {
+    PY_CLASS(ReMatch, re, Match)
+
+    i64 start;
+    i64 end;
+    std::cmatch m;
+    ReMatch(i64 start, i64 end, std::cmatch m) : start(start), end(end), m(m) {}
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_notimplemented_constructor<ReMatch>(type);
+        vm->bind_method<0>(type, "start", CPP_LAMBDA(VAR(_CAST(ReMatch&, args[0]).start)));
+        vm->bind_method<0>(type, "end", CPP_LAMBDA(VAR(_CAST(ReMatch&, args[0]).end)));
+
+        vm->bind_method<0>(type, "span", [](VM* vm, ArgsView args) {
+            auto& self = _CAST(ReMatch&, args[0]);
+            return VAR(Tuple({VAR(self.start), VAR(self.end)}));
+        });
+
+        vm->bind_method<1>(type, "group", [](VM* vm, ArgsView args) {
+            auto& self = _CAST(ReMatch&, args[0]);
+            int index = CAST(int, args[1]);
+            index = vm->normalized_index(index, self.m.size());
+            return VAR(self.m[index].str());
+        });
+    }
+};
+
+inline PyObject* _regex_search(const Str& pattern, const Str& string, bool from_start, VM* vm){
+    std::regex re(pattern.begin(), pattern.end());
+    std::cmatch m;
+    if(std::regex_search(string.begin(), string.end(), m, re)){
+        if(from_start && m.position() != 0) return vm->None;
+        i64 start = string._byte_index_to_unicode(m.position());
+        i64 end = string._byte_index_to_unicode(m.position() + m.length());
+        return VAR_T(ReMatch, start, end, m);
+    }
+    return vm->None;
+};
+
+inline void add_module_re(VM* vm){
+    PyObject* mod = vm->new_module("re");
+    ReMatch::register_class(vm, mod);
+
+    vm->bind_func<2>(mod, "match", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& string = CAST(Str&, args[1]);
+        return _regex_search(pattern, string, true, vm);
+    });
+
+    vm->bind_func<2>(mod, "search", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& string = CAST(Str&, args[1]);
+        return _regex_search(pattern, string, false, vm);
+    });
+
+    vm->bind_func<3>(mod, "sub", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& repl = CAST(Str&, args[1]);
+        const Str& string = CAST(Str&, args[2]);
+        std::regex re(pattern.begin(), pattern.end());
+        return VAR(std::regex_replace(string.str(), re, repl.str()));
+    });
+
+    vm->bind_func<2>(mod, "split", [](VM* vm, ArgsView args) {
+        const Str& pattern = CAST(Str&, args[0]);
+        const Str& string = CAST(Str&, args[1]);
+        std::regex re(pattern.begin(), pattern.end());
+        std::cregex_token_iterator it(string.begin(), string.end(), re, -1);
+        std::cregex_token_iterator end;
+        List vec;
+        for(; it != end; ++it){
+            vec.push_back(VAR(it->str()));
+        }
+        return VAR(vec);
+    });
+}
+
+}   // namespace pkpy
+
+#else
+
+ADD_MODULE_PLACEHOLDER(re)
+
+#endif
+
+
+#if PK_MODULE_LINALG
+
+namespace pkpy{
+
+static constexpr float kEpsilon = 1e-4f;
+inline static bool isclose(float a, float b){ return fabsf(a - b) < kEpsilon; }
+
+struct Vec2{
+    float x, y;
+    Vec2() : x(0.0f), y(0.0f) {}
+    Vec2(float x, float y) : x(x), y(y) {}
+    Vec2(const Vec2& v) : x(v.x), y(v.y) {}
+
+    Vec2 operator+(const Vec2& v) const { return Vec2(x + v.x, y + v.y); }
+    Vec2& operator+=(const Vec2& v) { x += v.x; y += v.y; return *this; }
+    Vec2 operator-(const Vec2& v) const { return Vec2(x - v.x, y - v.y); }
+    Vec2& operator-=(const Vec2& v) { x -= v.x; y -= v.y; return *this; }
+    Vec2 operator*(float s) const { return Vec2(x * s, y * s); }
+    Vec2& operator*=(float s) { x *= s; y *= s; return *this; }
+    Vec2 operator/(float s) const { return Vec2(x / s, y / s); }
+    Vec2& operator/=(float s) { x /= s; y /= s; return *this; }
+    Vec2 operator-() const { return Vec2(-x, -y); }
+    bool operator==(const Vec2& v) const { return isclose(x, v.x) && isclose(y, v.y); }
+    bool operator!=(const Vec2& v) const { return !isclose(x, v.x) || !isclose(y, v.y); }
+    float dot(const Vec2& v) const { return x * v.x + y * v.y; }
+    float cross(const Vec2& v) const { return x * v.y - y * v.x; }
+    float length() const { return sqrtf(x * x + y * y); }
+    float length_squared() const { return x * x + y * y; }
+    Vec2 normalize() const { float l = length(); return Vec2(x / l, y / l); }
+};
+
+struct Vec3{
+    float x, y, z;
+    Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
+    Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
+    Vec3(const Vec3& v) : x(v.x), y(v.y), z(v.z) {}
+
+    Vec3 operator+(const Vec3& v) const { return Vec3(x + v.x, y + v.y, z + v.z); }
+    Vec3& operator+=(const Vec3& v) { x += v.x; y += v.y; z += v.z; return *this; }
+    Vec3 operator-(const Vec3& v) const { return Vec3(x - v.x, y - v.y, z - v.z); }
+    Vec3& operator-=(const Vec3& v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
+    Vec3 operator*(float s) const { return Vec3(x * s, y * s, z * s); }
+    Vec3& operator*=(float s) { x *= s; y *= s; z *= s; return *this; }
+    Vec3 operator/(float s) const { return Vec3(x / s, y / s, z / s); }
+    Vec3& operator/=(float s) { x /= s; y /= s; z /= s; return *this; }
+    Vec3 operator-() const { return Vec3(-x, -y, -z); }
+    bool operator==(const Vec3& v) const { return isclose(x, v.x) && isclose(y, v.y) && isclose(z, v.z); }
+    bool operator!=(const Vec3& v) const { return !isclose(x, v.x) || !isclose(y, v.y) || !isclose(z, v.z); }
+    float dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
+    Vec3 cross(const Vec3& v) const { return Vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
+    float length() const { return sqrtf(x * x + y * y + z * z); }
+    float length_squared() const { return x * x + y * y + z * z; }
+    Vec3 normalize() const { float l = length(); return Vec3(x / l, y / l, z / l); }
+};
+
+struct Mat3x3{    
+    union {
+        struct {
+            float        _11, _12, _13;
+            float        _21, _22, _23;
+            float        _31, _32, _33;
+        };
+        float m[3][3];
+        float v[9];
+    };
+
+    Mat3x3() {}
+    Mat3x3(float _11, float _12, float _13,
+           float _21, float _22, float _23,
+           float _31, float _32, float _33)
+        : _11(_11), _12(_12), _13(_13)
+        , _21(_21), _22(_22), _23(_23)
+        , _31(_31), _32(_32), _33(_33) {}
+
+    void set_zeros(){ for (int i=0; i<9; ++i) v[i] = 0.0f; }
+    void set_ones(){ for (int i=0; i<9; ++i) v[i] = 1.0f; }
+    void set_identity(){ set_zeros(); _11 = _22 = _33 = 1.0f; }
+
+    static Mat3x3 zeros(){
+        static Mat3x3 ret(0, 0, 0, 0, 0, 0, 0, 0, 0);
+        return ret;
+    }
+
+    static Mat3x3 ones(){
+        static Mat3x3 ret(1, 1, 1, 1, 1, 1, 1, 1, 1);
+        return ret;
+    }
+
+    static Mat3x3 identity(){
+        static Mat3x3 ret(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        return ret;
+    }
+
+    Mat3x3 operator+(const Mat3x3& other) const{ 
+        Mat3x3 ret;
+        for (int i=0; i<9; ++i) ret.v[i] = v[i] + other.v[i];
+        return ret;
+    }
+
+    Mat3x3 operator-(const Mat3x3& other) const{ 
+        Mat3x3 ret;
+        for (int i=0; i<9; ++i) ret.v[i] = v[i] - other.v[i];
+        return ret;
+    }
+
+    Mat3x3 operator*(float scalar) const{ 
+        Mat3x3 ret;
+        for (int i=0; i<9; ++i) ret.v[i] = v[i] * scalar;
+        return ret;
+    }
+
+    Mat3x3 operator/(float scalar) const{ 
+        Mat3x3 ret;
+        for (int i=0; i<9; ++i) ret.v[i] = v[i] / scalar;
+        return ret;
+    }
+
+    Mat3x3& operator+=(const Mat3x3& other){ 
+        for (int i=0; i<9; ++i) v[i] += other.v[i];
+        return *this;
+    }
+
+    Mat3x3& operator-=(const Mat3x3& other){ 
+        for (int i=0; i<9; ++i) v[i] -= other.v[i];
+        return *this;
+    }
+
+    Mat3x3& operator*=(float scalar){ 
+        for (int i=0; i<9; ++i) v[i] *= scalar;
+        return *this;
+    }
+
+    Mat3x3& operator/=(float scalar){ 
+        for (int i=0; i<9; ++i) v[i] /= scalar;
+        return *this;
+    }
+
+    Mat3x3 matmul(const Mat3x3& other) const{
+        Mat3x3 ret;
+        ret._11 = _11 * other._11 + _12 * other._21 + _13 * other._31;
+        ret._12 = _11 * other._12 + _12 * other._22 + _13 * other._32;
+        ret._13 = _11 * other._13 + _12 * other._23 + _13 * other._33;
+        ret._21 = _21 * other._11 + _22 * other._21 + _23 * other._31;
+        ret._22 = _21 * other._12 + _22 * other._22 + _23 * other._32;
+        ret._23 = _21 * other._13 + _22 * other._23 + _23 * other._33;
+        ret._31 = _31 * other._11 + _32 * other._21 + _33 * other._31;
+        ret._32 = _31 * other._12 + _32 * other._22 + _33 * other._32;
+        ret._33 = _31 * other._13 + _32 * other._23 + _33 * other._33;
+        return ret;
+    }
+
+    Vec3 matmul(const Vec3& other) const{
+        Vec3 ret;
+        ret.x = _11 * other.x + _12 * other.y + _13 * other.z;
+        ret.y = _21 * other.x + _22 * other.y + _23 * other.z;
+        ret.z = _31 * other.x + _32 * other.y + _33 * other.z;
+        return ret;
+    }
+
+    bool operator==(const Mat3x3& other) const{
+        for (int i=0; i<9; ++i){
+            if (!isclose(v[i], other.v[i])) return false;
+        }
+        return true;
+    }
+
+    bool operator!=(const Mat3x3& other) const{
+        for (int i=0; i<9; ++i){
+            if (!isclose(v[i], other.v[i])) return true;
+        }
+        return false;
+    }
+
+    float determinant() const{
+        return _11 * _22 * _33 + _12 * _23 * _31 + _13 * _21 * _32
+             - _11 * _23 * _32 - _12 * _21 * _33 - _13 * _22 * _31;
+    }
+
+    Mat3x3 transpose() const{
+        Mat3x3 ret;
+        ret._11 = _11;  ret._12 = _21;  ret._13 = _31;
+        ret._21 = _12;  ret._22 = _22;  ret._23 = _32;
+        ret._31 = _13;  ret._32 = _23;  ret._33 = _33;
+        return ret;
+    }
+
+    bool inverse(Mat3x3& ret) const{
+        float det = determinant();
+        if (fabsf(det) < kEpsilon) return false;
+        float inv_det = 1.0f / det;
+        ret._11 = (_22 * _33 - _23 * _32) * inv_det;
+        ret._12 = (_13 * _32 - _12 * _33) * inv_det;
+        ret._13 = (_12 * _23 - _13 * _22) * inv_det;
+        ret._21 = (_23 * _31 - _21 * _33) * inv_det;
+        ret._22 = (_11 * _33 - _13 * _31) * inv_det;
+        ret._23 = (_13 * _21 - _11 * _23) * inv_det;
+        ret._31 = (_21 * _32 - _22 * _31) * inv_det;
+        ret._32 = (_12 * _31 - _11 * _32) * inv_det;
+        ret._33 = (_11 * _22 - _12 * _21) * inv_det;
+        return true;
+    }
+
+    /*************** affine transformations ***************/
+    static Mat3x3 trs(Vec2 t, float radian, Vec2 s){
+        float cr = cosf(radian);
+        float sr = sinf(radian);
+        return Mat3x3(s.x * cr,   -s.y * sr,  t.x,
+                      s.x * sr,   s.y * cr,   t.y,
+                      0.0f,       0.0f,       1.0f);
+    }
+
+    bool is_affine() const{
+        float det = _11 * _22 - _12 * _21;
+        if(fabsf(det) < kEpsilon) return false;
+        return _31 == 0.0f && _32 == 0.0f && _33 == 1.0f;
+    }
+
+    Mat3x3 inverse_affine() const{
+        Mat3x3 ret;
+        float det = _11 * _22 - _12 * _21;
+        float inv_det = 1.0f / det;
+        ret._11 = _22 * inv_det;
+        ret._12 = -_12 * inv_det;
+        ret._13 = (_12 * _23 - _13 * _22) * inv_det;
+        ret._21 = -_21 * inv_det;
+        ret._22 = _11 * inv_det;
+        ret._23 = (_13 * _21 - _11 * _23) * inv_det;
+        ret._31 = 0.0f;
+        ret._32 = 0.0f;
+        ret._33 = 1.0f;
+        return ret;
+    }
+
+    Mat3x3 matmul_affine(const Mat3x3& other) const{
+        Mat3x3 ret;
+        ret._11 = _11 * other._11 + _12 * other._21;
+        ret._12 = _11 * other._12 + _12 * other._22;
+        ret._13 = _11 * other._13 + _12 * other._23 + _13;
+        ret._21 = _21 * other._11 + _22 * other._21;
+        ret._22 = _21 * other._12 + _22 * other._22;
+        ret._23 = _21 * other._13 + _22 * other._23 + _23;
+        ret._31 = 0.0f;
+        ret._32 = 0.0f;
+        ret._33 = 1.0f;
+        return ret;
+    }
+
+    Vec2 translation() const { return Vec2(_13, _23); }
+    float rotation() const { return atan2f(_21, _11); }
+    Vec2 scale() const {
+        return Vec2(
+            sqrtf(_11 * _11 + _21 * _21),
+            sqrtf(_12 * _12 + _22 * _22)
+        );
+    }
+
+    Vec2 transform_point(Vec2 v) const {
+        return Vec2(_11 * v.x + _12 * v.y + _13, _21 * v.x + _22 * v.y + _23);
+    }
+
+    Vec2 transform_vector(Vec2 v) const {
+        return Vec2(_11 * v.x + _12 * v.y, _21 * v.x + _22 * v.y);
+    }
+};
+
+struct PyVec2;
+struct PyVec3;
+struct PyMat3x3;
+PyObject* py_var(VM*, Vec2);
+PyObject* py_var(VM*, const PyVec2&);
+PyObject* py_var(VM*, Vec3);
+PyObject* py_var(VM*, const PyVec3&);
+PyObject* py_var(VM*, const Mat3x3&);
+PyObject* py_var(VM*, const PyMat3x3&);
+
+#define BIND_VEC_VEC_OP(D, name, op)                                        \
+        vm->bind_method<1>(type, #name, [](VM* vm, ArgsView args){          \
+            PyVec##D& self = _CAST(PyVec##D&, args[0]);                     \
+            PyVec##D& other = CAST(PyVec##D&, args[1]);                     \
+            return VAR(self op other);                                      \
+        });
+
+#define BIND_VEC_FLOAT_OP(D, name, op)  \
+        vm->bind_method<1>(type, #name, [](VM* vm, ArgsView args){          \
+            PyVec##D& self = _CAST(PyVec##D&, args[0]);                     \
+            f64 other = vm->num_to_float(args[1]);                          \
+            return VAR(self op other);                                      \
+        });
+
+#define BIND_VEC_FUNCTION_0(D, name)        \
+        vm->bind_method<0>(type, #name, [](VM* vm, ArgsView args){          \
+            PyVec##D& self = _CAST(PyVec##D&, args[0]);                     \
+            return VAR(self.name());                                        \
+        });
+
+#define BIND_VEC_FUNCTION_1(D, name)        \
+        vm->bind_method<0>(type, #name, [](VM* vm, ArgsView args){          \
+            PyVec##D& self = _CAST(PyVec##D&, args[0]);                     \
+            PyVec##D& other = CAST(PyVec##D&, args[1]);                     \
+            return VAR(self.name(other));                                   \
+        });
+
+#define BIND_VEC_FIELD(D, name)  \
+        type->attr().set(#name, vm->property([](VM* vm, ArgsView args){     \
+            PyVec##D& self = _CAST(PyVec##D&, args[0]);                     \
+            return VAR(self.name);                                          \
+        }, [](VM* vm, ArgsView args){                                       \
+            PyVec##D& self = _CAST(PyVec##D&, args[0]);                     \
+            self.name = vm->num_to_float(args[1]);                          \
+            return vm->None;                                                \
+        }));
+
+struct PyVec2: Vec2 {
+    PY_CLASS(PyVec2, linalg, vec2)
+
+    PyVec2() : Vec2() {}
+    PyVec2(const Vec2& v) : Vec2(v) {}
+    PyVec2(const PyVec2& v) : Vec2(v) {}
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_constructor<3>(type, [](VM* vm, ArgsView args){
+            float x = CAST_F(args[1]);
+            float y = CAST_F(args[2]);
+            return VAR(Vec2(x, y));
+        });
+
+        vm->bind__repr__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            PyVec2& self = _CAST(PyVec2&, obj);
+            std::stringstream ss;
+            ss << "vec2(" << self.x << ", " << self.y << ")";
+            return VAR(ss.str());
+        });
+
+        vm->bind_method<0>(type, "copy", [](VM* vm, ArgsView args){
+            PyVec2& self = _CAST(PyVec2&, args[0]);
+            return VAR_T(PyVec2, self);
+        });
+
+        vm->bind_method<1>(type, "rotate", [](VM* vm, ArgsView args){
+            Vec2 self = _CAST(PyVec2&, args[0]);
+            float radian = vm->num_to_float(args[1]);
+            float cr = cosf(radian);
+            float sr = sinf(radian);
+            Mat3x3 rotate(cr,   -sr,  0.0f,
+                          sr,   cr,   0.0f,
+                          0.0f, 0.0f, 1.0f);
+            self = rotate.transform_vector(self);
+            return VAR(self);
+        });
+
+        BIND_VEC_VEC_OP(2, __add__, +)
+        BIND_VEC_VEC_OP(2, __sub__, -)
+        BIND_VEC_FLOAT_OP(2, __mul__, *)
+        BIND_VEC_FLOAT_OP(2, __truediv__, /)
+        BIND_VEC_VEC_OP(2, __eq__, ==)
+        BIND_VEC_FIELD(2, x)
+        BIND_VEC_FIELD(2, y)
+        BIND_VEC_FUNCTION_1(2, dot)
+        BIND_VEC_FUNCTION_1(2, cross)
+        BIND_VEC_FUNCTION_0(2, length)
+        BIND_VEC_FUNCTION_0(2, length_squared)
+        BIND_VEC_FUNCTION_0(2, normalize)
+    }
+};
+
+struct PyVec3: Vec3 {
+    PY_CLASS(PyVec3, linalg, vec3)
+
+    PyVec3() : Vec3() {}
+    PyVec3(const Vec3& v) : Vec3(v) {}
+    PyVec3(const PyVec3& v) : Vec3(v) {}
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_constructor<4>(type, [](VM* vm, ArgsView args){
+            float x = CAST_F(args[1]);
+            float y = CAST_F(args[2]);
+            float z = CAST_F(args[3]);
+            return VAR(Vec3(x, y, z));
+        });
+
+        vm->bind__repr__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            PyVec3& self = _CAST(PyVec3&, obj);
+            std::stringstream ss;
+            ss << "vec3(" << self.x << ", " << self.y << ", " << self.z << ")";
+            return VAR(ss.str());
+        });
+
+        vm->bind_method<0>(type, "copy", [](VM* vm, ArgsView args){
+            PyVec3& self = _CAST(PyVec3&, args[0]);
+            return VAR_T(PyVec3, self);
+        });
+
+        BIND_VEC_VEC_OP(3, __add__, +)
+        BIND_VEC_VEC_OP(3, __sub__, -)
+        BIND_VEC_FLOAT_OP(3, __mul__, *)
+        BIND_VEC_FLOAT_OP(3, __truediv__, /)
+        BIND_VEC_VEC_OP(3, __eq__, ==)
+        BIND_VEC_FIELD(3, x)
+        BIND_VEC_FIELD(3, y)
+        BIND_VEC_FIELD(3, z)
+        BIND_VEC_FUNCTION_1(3, dot)
+        BIND_VEC_FUNCTION_1(3, cross)
+        BIND_VEC_FUNCTION_0(3, length)
+        BIND_VEC_FUNCTION_0(3, length_squared)
+        BIND_VEC_FUNCTION_0(3, normalize)
+    }
+};
+
+struct PyMat3x3: Mat3x3{
+    PY_CLASS(PyMat3x3, linalg, mat3x3)
+
+    PyMat3x3(): Mat3x3(){}
+    PyMat3x3(const Mat3x3& other): Mat3x3(other){}
+    PyMat3x3(const PyMat3x3& other): Mat3x3(other){}
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_constructor<-1>(type, [](VM* vm, ArgsView args){
+            if(args.size() == 1+0) return VAR_T(PyMat3x3, Mat3x3::zeros());
+            if(args.size() == 1+9){
+                Mat3x3 mat;
+                for(int i=0; i<9; i++) mat.v[i] = CAST_F(args[1+i]);
+                return VAR_T(PyMat3x3, mat);
+            }
+            if(args.size() == 1+1){
+                List& a = CAST(List&, args[1]);
+                if(a.size() != 3) vm->ValueError("Mat3x3.__new__ takes 3x3 list");
+                Mat3x3 mat;
+                for(int i=0; i<3; i++){
+                    List& b = CAST(List&, a[i]);
+                    if(b.size() != 3) vm->ValueError("Mat3x3.__new__ takes 3x3 list");
+                    for(int j=0; j<3; j++){
+                        mat.m[i][j] = CAST_F(b[j]);
+                    }
+                }
+                return VAR_T(PyMat3x3, mat);
+            }
+            vm->TypeError("Mat3x3.__new__ takes 0 or 1 arguments");
+            return vm->None;
+        });
+
+#define METHOD_PROXY_NONE(name)  \
+        vm->bind_method<0>(type, #name, [](VM* vm, ArgsView args){    \
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);               \
+            self.name();                                              \
+            return vm->None;                                          \
+        });
+
+        METHOD_PROXY_NONE(set_zeros)
+        METHOD_PROXY_NONE(set_ones)
+        METHOD_PROXY_NONE(set_identity)
+
+#undef METHOD_PROXY_NONE
+
+        vm->bind__repr__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
+            PyMat3x3& self = _CAST(PyMat3x3&, obj);
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(4);
+            ss << "mat3x3([[" << self._11 << ", " << self._12 << ", " << self._13 << "],\n";
+            ss << "        [" << self._21 << ", " << self._22 << ", " << self._23 << "],\n";
+            ss << "        [" << self._31 << ", " << self._32 << ", " << self._33 << "]])";
+            return VAR(ss.str());
+        });
+
+        vm->bind_method<0>(type, "copy", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR_T(PyMat3x3, self);
+        });
+
+        vm->bind__getitem__(OBJ_GET(Type, type), [](VM* vm, PyObject* obj, PyObject* index){
+            PyMat3x3& self = _CAST(PyMat3x3&, obj);
+            Tuple& t = CAST(Tuple&, index);
+            if(t.size() != 2){
+                vm->TypeError("Mat3x3.__getitem__ takes a tuple of 2 integers");
+                return vm->None;
+            }
+            i64 i = CAST(i64, t[0]);
+            i64 j = CAST(i64, t[1]);
+            if(i < 0 || i >= 3 || j < 0 || j >= 3){
+                vm->IndexError("index out of range");
+                return vm->None;
+            }
+            return VAR(self.m[i][j]);
+        });
+
+        vm->bind_method<2>(type, "__setitem__", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            Tuple& t = CAST(Tuple&, args[1]);
+            if(t.size() != 2){
+                vm->TypeError("Mat3x3.__setitem__ takes a tuple of 2 integers");
+                return vm->None;
+            }
+            i64 i = CAST(i64, t[0]);
+            i64 j = CAST(i64, t[1]);
+            if(i < 0 || i >= 3 || j < 0 || j >= 3){
+                vm->IndexError("index out of range");
+                return vm->None;
+            }
+            self.m[i][j] = CAST_F(args[2]);
+            return vm->None;
+        });
+
+#define PROPERTY_FIELD(field) \
+        type->attr().set(#field, vm->property([](VM* vm, ArgsView args){    \
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);                     \
+            return VAR(self.field);                                         \
+        }, [](VM* vm, ArgsView args){                                       \
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);                     \
+            self.field = vm->num_to_float(args[1]);                         \
+            return vm->None;                                                \
+        }));
+
+        PROPERTY_FIELD(_11)
+        PROPERTY_FIELD(_12)
+        PROPERTY_FIELD(_13)
+        PROPERTY_FIELD(_21)
+        PROPERTY_FIELD(_22)
+        PROPERTY_FIELD(_23)
+        PROPERTY_FIELD(_31)
+        PROPERTY_FIELD(_32)
+        PROPERTY_FIELD(_33)
+
+#undef PROPERTY_FIELD
+
+        vm->bind_method<1>(type, "__add__", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            PyMat3x3& other = CAST(PyMat3x3&, args[1]);
+            return VAR_T(PyMat3x3, self + other);
+        });
+
+        vm->bind_method<1>(type, "__sub__", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            PyMat3x3& other = CAST(PyMat3x3&, args[1]);
+            return VAR_T(PyMat3x3, self - other);
+        });
+
+        vm->bind_method<1>(type, "__mul__", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            f64 other = CAST_F(args[1]);
+            return VAR_T(PyMat3x3, self * other);
+        });
+
+        vm->bind_method<1>(type, "__truediv__", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            f64 other = CAST_F(args[1]);
+            return VAR_T(PyMat3x3, self / other);
+        });
+
+        auto f_mm = [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            if(is_non_tagged_type(args[1], PyMat3x3::_type(vm))){
+                PyMat3x3& other = _CAST(PyMat3x3&, args[1]);
+                return VAR_T(PyMat3x3, self.matmul(other));
+            }
+            if(is_non_tagged_type(args[1], PyVec3::_type(vm))){
+                PyVec3& other = _CAST(PyVec3&, args[1]);
+                return VAR_T(PyVec3, self.matmul(other));
+            }
+            vm->TypeError("unsupported operand type(s) for @");
+            return vm->None;
+        };
+
+        vm->bind_method<1>(type, "__matmul__", f_mm);
+        vm->bind_method<1>(type, "matmul", f_mm);
+
+        vm->bind_method<1>(type, "__eq__", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            PyMat3x3& other = CAST(PyMat3x3&, args[1]);
+            return VAR(self == other);
+        });
+
+        vm->bind_method<0>(type, "determinant", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR(self.determinant());
+        });
+
+        vm->bind_method<0>(type, "transpose", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR_T(PyMat3x3, self.transpose());
+        });
+
+        vm->bind_method<0>(type, "inverse", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            Mat3x3 ret;
+            bool ok = self.inverse(ret);
+            if(!ok) vm->ValueError("matrix is not invertible");
+            return VAR_T(PyMat3x3, ret);
+        });
+
+        vm->bind_func<0>(type, "zeros", [](VM* vm, ArgsView args){
+            return VAR_T(PyMat3x3, Mat3x3::zeros());
+        });
+
+        vm->bind_func<0>(type, "ones", [](VM* vm, ArgsView args){
+            return VAR_T(PyMat3x3, Mat3x3::ones());
+        });
+
+        vm->bind_func<0>(type, "identity", [](VM* vm, ArgsView args){
+            return VAR_T(PyMat3x3, Mat3x3::identity());
+        });
+
+        /*************** affine transformations ***************/
+        vm->bind_func<3>(type, "trs", [](VM* vm, ArgsView args){
+            PyVec2& t = CAST(PyVec2&, args[0]);
+            f64 r = CAST_F(args[1]);
+            PyVec2& s = CAST(PyVec2&, args[2]);
+            return VAR_T(PyMat3x3, Mat3x3::trs(t, r, s));
+        });
+
+        vm->bind_method<0>(type, "is_affine", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR(self.is_affine());
+        });
+
+        vm->bind_method<0>(type, "inverse_affine", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR_T(PyMat3x3, self.inverse_affine());
+        });
+
+        vm->bind_method<1>(type, "matmul_affine", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            PyMat3x3& other = CAST(PyMat3x3&, args[1]);
+            return VAR_T(PyMat3x3, self.matmul_affine(other));
+        });
+
+
+        vm->bind_method<0>(type, "translation", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR_T(PyVec2, self.translation());
+        });
+
+        vm->bind_method<0>(type, "rotation", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR(self.rotation());
+        });
+
+        vm->bind_method<0>(type, "scale", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            return VAR_T(PyVec2, self.scale());
+        });
+
+        vm->bind_method<1>(type, "transform_point", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            PyVec2& v = CAST(PyVec2&, args[1]);
+            return VAR_T(PyVec2, self.transform_point(v));
+        });
+
+        vm->bind_method<1>(type, "transform_vector", [](VM* vm, ArgsView args){
+            PyMat3x3& self = _CAST(PyMat3x3&, args[0]);
+            PyVec2& v = CAST(PyVec2&, args[1]);
+            return VAR_T(PyVec2, self.transform_vector(v));
+        });
+    }
+};
+
+inline PyObject* py_var(VM* vm, Vec2 obj){ return VAR_T(PyVec2, obj); }
+inline PyObject* py_var(VM* vm, const PyVec2& obj){ return VAR_T(PyVec2, obj);}
+
+inline PyObject* py_var(VM* vm, Vec3 obj){ return VAR_T(PyVec3, obj); }
+inline PyObject* py_var(VM* vm, const PyVec3& obj){ return VAR_T(PyVec3, obj);}
+
+inline PyObject* py_var(VM* vm, const Mat3x3& obj){ return VAR_T(PyMat3x3, obj); }
+inline PyObject* py_var(VM* vm, const PyMat3x3& obj){ return VAR_T(PyMat3x3, obj); }
+
+inline void add_module_linalg(VM* vm){
+    PyObject* linalg = vm->new_module("linalg");
+    PyVec2::register_class(vm, linalg);
+    PyVec3::register_class(vm, linalg);
+    PyMat3x3::register_class(vm, linalg);
+}
+
+static_assert(sizeof(Py_<PyMat3x3>) <= 64);
+
+}   // namespace pkpy
+
+#else
+
+ADD_MODULE_PLACEHOLDER(linalg)
+
+#endif
+
+
+#if PK_MODULE_EASING
+
+namespace pkpy{
+
+// https://easings.net/
+
+static const double PI = 3.1415926545;
+
+inline static double easeLinear( double x ) {
+    return x;
+}
+
+inline static double easeInSine( double x ) {
+    return 1.0 - std::cos( x * PI / 2 );
+}
+
+inline static double easeOutSine( double x ) {
+	return std::sin( x * PI / 2 );
+}
+
+inline static double easeInOutSine( double x ) {
+	return -( std::cos( PI * x ) - 1 ) / 2;
+}
+
+inline static double easeInQuad( double x ) {
+    return x * x;
+}
+
+inline static double easeOutQuad( double x ) {
+    return 1 - std::pow( 1 - x, 2 );
+}
+
+inline static double easeInOutQuad( double x ) {
+    if( x < 0.5 ) {
+        return 2 * x * x;
+    } else {
+        return 1 - std::pow( -2 * x + 2, 2 ) / 2;
+    }
+}
+
+inline static double easeInCubic( double x ) {
+    return x * x * x;
+}
+
+inline static double easeOutCubic( double x ) {
+    return 1 - std::pow( 1 - x, 3 );
+}
+
+inline static double easeInOutCubic( double x ) {
+    if( x < 0.5 ) {
+        return 4 * x * x * x;
+    } else {
+        return 1 - std::pow( -2 * x + 2, 3 ) / 2;
+    }
+}
+
+inline static double easeInQuart( double x ) {
+    return std::pow( x, 4 );
+}
+
+inline static double easeOutQuart( double x ) {
+    return 1 - std::pow( 1 - x, 4 );
+}
+
+inline static double easeInOutQuart( double x ) {
+    if( x < 0.5 ) {
+        return 8 * std::pow( x, 4 );
+    } else {
+        return 1 - std::pow( -2 * x + 2, 4 ) / 2;
+    }
+}
+
+inline static double easeInQuint( double x ) {
+    return std::pow( x, 5 );
+}
+
+inline static double easeOutQuint( double x ) {
+    return 1 - std::pow( 1 - x, 5 );
+}
+
+inline static double easeInOutQuint( double x ) {
+    if( x < 0.5 ) {
+        return 16 * std::pow( x, 5 );
+    } else {
+        return 1 - std::pow( -2 * x + 2, 5 ) / 2;
+    }
+}
+
+inline static double easeInExpo( double x ) {
+    return x == 0 ? 0 : std::pow( 2, 10 * x - 10 );
+}
+
+inline static double easeOutExpo( double x ) {
+    return x == 1 ? 1 : 1 - std::pow( 2, -10 * x );
+}
+
+inline double easeInOutExpo( double x ) {
+    if( x == 0 ) {
+        return 0;
+    } else if( x == 1 ) {
+        return 1;
+    } else if( x < 0.5 ) {
+        return std::pow( 2, 20 * x - 10 ) / 2;
+    } else {
+        return (2 - std::pow( 2, -20 * x + 10 )) / 2;
+    }
+}
+
+inline static double easeInCirc( double x ) {
+    return 1 - std::sqrt( 1 - std::pow( x, 2 ) );
+}
+
+inline static double easeOutCirc( double x ) {
+    return std::sqrt( 1 - std::pow( x - 1, 2 ) );
+}
+
+inline static double easeInOutCirc( double x ) {
+    if( x < 0.5 ) {
+        return (1 - std::sqrt( 1 - std::pow( 2 * x, 2 ) )) / 2;
+    } else {
+        return (std::sqrt( 1 - std::pow( -2 * x + 2, 2 ) ) + 1) / 2;
+    }
+}
+
+inline static double easeInBack( double x ) {
+    const double c1 = 1.70158;
+    const double c3 = c1 + 1;
+    return c3 * x * x * x - c1 * x * x;
+}
+
+inline static double easeOutBack( double x ) {
+    const double c1 = 1.70158;
+    const double c3 = c1 + 1;
+    return 1 + c3 * std::pow( x - 1, 3 ) + c1 * std::pow( x - 1, 2 );
+}
+
+inline static double easeInOutBack( double x ) {
+    const double c1 = 1.70158;
+    const double c2 = c1 * 1.525;
+    if( x < 0.5 ) {
+        return (std::pow( 2 * x, 2 ) * ((c2 + 1) * 2 * x - c2)) / 2;
+    } else {
+        return (std::pow( 2 * x - 2, 2 ) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+    }
+}
+
+inline static double easeInElastic( double x ) {
+    const double c4 = (2 * PI) / 3;
+    if( x == 0 ) {
+        return 0;
+    } else if( x == 1 ) {
+        return 1;
+    } else {
+        return -std::pow( 2, 10 * x - 10 ) * std::sin( (x * 10 - 10.75) * c4 );
+    }
+}
+
+inline static double easeOutElastic( double x ) {
+    const double c4 = (2 * PI) / 3;
+    if( x == 0 ) {
+        return 0;
+    } else if( x == 1 ) {
+        return 1;
+    } else {
+        return std::pow( 2, -10 * x ) * std::sin( (x * 10 - 0.75) * c4 ) + 1;
+    }
+}
+
+inline double easeInOutElastic( double x ) {
+    const double c5 = (2 * PI) / 4.5;
+    if( x == 0 ) {
+        return 0;
+    } else if( x == 1 ) {
+        return 1;
+    } else if( x < 0.5 ) {
+        return -(std::pow( 2, 20 * x - 10 ) * std::sin( (20 * x - 11.125) * c5 )) / 2;
+    } else {
+        return (std::pow( 2, -20 * x + 10 ) * std::sin( (20 * x - 11.125) * c5 )) / 2 + 1;
+    }
+}
+
+inline static double easeOutBounce( double x ) {
+    const double n1 = 7.5625;
+    const double d1 = 2.75;
+    if( x < 1 / d1 ) {
+        return n1 * x * x;
+    } else if( x < 2 / d1 ) {
+        x -= 1.5 / d1;
+        return n1 * x * x + 0.75;
+    } else if( x < 2.5 / d1 ) {
+        x -= 2.25 / d1;
+        return n1 * x * x + 0.9375;
+    } else {
+        x -= 2.625 / d1;
+        return n1 * x * x + 0.984375;
+    }
+}
+
+inline double easeInBounce( double x ) {
+    return 1 - easeOutBounce(1 - x);
+}
+
+inline static double easeInOutBounce( double x ) {
+    return x < 0.5
+    ? (1 - easeOutBounce(1 - 2 * x)) / 2
+    : (1 + easeOutBounce(2 * x - 1)) / 2;
+}
+
+inline void add_module_easing(VM* vm){
+    PyObject* mod = vm->new_module("easing");
+
+#define EASE(name)  \
+    vm->bind_func<1>(mod, "Ease"#name, [](VM* vm, ArgsView args){  \
+        f64 t = CAST(f64, args[0]); \
+        return VAR(ease##name(t));   \
+    });
+
+    EASE(Linear)
+    EASE(InSine)
+    EASE(OutSine)
+    EASE(InOutSine)
+    EASE(InQuad)
+    EASE(OutQuad)
+    EASE(InOutQuad)
+    EASE(InCubic)
+    EASE(OutCubic)
+    EASE(InOutCubic)
+    EASE(InQuart)
+    EASE(OutQuart)
+    EASE(InOutQuart)
+    EASE(InQuint)
+    EASE(OutQuint)
+    EASE(InOutQuint)
+    EASE(InExpo)
+    EASE(OutExpo)
+    EASE(InOutExpo)
+    EASE(InCirc)
+    EASE(OutCirc)
+    EASE(InOutCirc)
+    EASE(InBack)
+    EASE(OutBack)
+    EASE(InOutBack)
+    EASE(InElastic)
+    EASE(OutElastic)
+    EASE(InOutElastic)
+    EASE(InBounce)
+    EASE(OutBounce)
+    EASE(InOutBounce)
+
+#undef EASE
+}
+
+} // namespace pkpy
+
+#else
+
+ADD_MODULE_PLACEHOLDER(easing)
+
+#endif
+
+
+#if PK_MODULE_REQUESTS
+#include "httplib.h"
+namespace pkpy {
+
+inline void add_module_requests(VM* vm){
+    static StrName m_requests("requests");
+    static StrName m_Response("Response");
+    PyObject* mod = vm->new_module(m_requests);
+    CodeObject_ code = vm->compile(kPythonLibs["requests"], "requests.py", EXEC_MODE);
+    vm->_exec(code, mod);
+
+    vm->bind_func<4>(mod, "_request", [](VM* vm, ArgsView args){
+        Str method = CAST(Str&, args[0]);
+        Str url = CAST(Str&, args[1]);
+        PyObject* headers = args[2];            // a dict object
+        PyObject* body = args[3];               // a bytes object
+
+        if(url.index("http://") != 0){
+            vm->ValueError("url must start with http://");
+        }
+
+        for(char c: url){
+            switch(c){
+                case '.':
+                case '-':
+                case '_':
+                case '~':
+                case ':':
+                case '/':
+                break;
+                default:
+                    if(!isalnum(c)){
+                        vm->ValueError(fmt("invalid character in url: '", c, "'"));
+                    }
+            }
+        }
+
+        int slash = url.index("/", 7);
+        Str path = "/";
+        if(slash != -1){
+            path = url.substr(slash);
+            url = url.substr(0, slash);
+            if(path.empty()) path = "/";
+        }
+
+        httplib::Client client(url.str());
+
+        httplib::Headers h;
+        if(headers != vm->None){
+            List list = CAST(List&, headers);
+            for(auto& item : list){
+                Tuple t = CAST(Tuple&, item);
+                Str key = CAST(Str&, t[0]);
+                Str value = CAST(Str&, t[1]);
+                h.emplace(key.str(), value.str());
+            }
+        }
+
+        auto _to_resp = [=](const httplib::Result& res){
+            return vm->call(
+                vm->_modules[m_requests]->attr(m_Response),
+                VAR(res->status),
+                VAR(res->reason),
+                VAR(Bytes(res->body))
+            );
+        };
+
+        if(method == "GET"){
+            httplib::Result res = client.Get(path.str(), h);
+            return _to_resp(res);
+        }else if(method == "POST"){
+            Bytes b = CAST(Bytes&, body);
+            httplib::Result res = client.Post(path.str(), h, b.data(), b.size(), "application/octet-stream");
+            return _to_resp(res);
+        }else if(method == "PUT"){
+            Bytes b = CAST(Bytes&, body);
+            httplib::Result res = client.Put(path.str(), h, b.data(), b.size(), "application/octet-stream");
+            return _to_resp(res);
+        }else if(method == "DELETE"){
+            httplib::Result res = client.Delete(path.str(), h);
+            return _to_resp(res);
+        }else{
+            vm->ValueError("invalid method");
+        }
+        UNREACHABLE();
+    });
+}
+
+}   // namespace pkpy
+
+#else
+
+ADD_MODULE_PLACEHOLDER(requests)
+
+#endif
+
+
+#if PK_ENABLE_OS
+
+#include <filesystem>
+#include <cstdio>
+
+namespace pkpy{
+
+inline Bytes _default_import_handler(const Str& name){
+    std::filesystem::path path(name.sv());
+    bool exists = std::filesystem::exists(path);
+    if(!exists) return Bytes();
+    std::string cname = name.str();
+    FILE* fp = fopen(cname.c_str(), "rb");
+    if(!fp) return Bytes();
+    fseek(fp, 0, SEEK_END);
+    std::vector<char> buffer(ftell(fp));
+    fseek(fp, 0, SEEK_SET);
+    fread(buffer.data(), 1, buffer.size(), fp);
+    fclose(fp);
+    return Bytes(std::move(buffer));
+};
 
 struct FileIO {
     PY_CLASS(FileIO, io, FileIO)
 
     Str file;
     Str mode;
-    std::fstream _fs;
+    FILE* fp;
 
-    FileIO(VM* vm, Str file, Str mode): file(file), mode(mode) {
-        if(mode == "rt" || mode == "r"){
-            _fs.open(file, std::ios::in);
-        }else if(mode == "wt" || mode == "w"){
-            _fs.open(file, std::ios::out);
-        }else if(mode == "at" || mode == "a"){
-            _fs.open(file, std::ios::app);
-        }
-        if(!_fs.is_open()) vm->IOError(strerror(errno));
+    bool is_text() const { return mode != "rb" && mode != "wb" && mode != "ab"; }
+
+    FileIO(VM* vm, std::string file, std::string mode): file(file), mode(mode) {
+        fp = fopen(file.c_str(), mode.c_str());
+        if(!fp) vm->IOError(strerror(errno));
     }
 
-    static void _register(VM* vm, PyVar mod, PyVar type){
-        vm->bind_static_method<2>(type, "__new__", [](VM* vm, Args& args){
+    void close(){
+        if(fp == nullptr) return;
+        fclose(fp);
+        fp = nullptr;
+    }
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_constructor<3>(type, [](VM* vm, ArgsView args){
             return VAR_T(FileIO, 
-                vm, CAST(Str, args[0]), CAST(Str, args[1])
+                vm, CAST(Str&, args[1]).str(), CAST(Str&, args[2]).str()
             );
         });
 
-        vm->bind_method<0>(type, "read", [](VM* vm, Args& args){
+        vm->bind_method<0>(type, "read", [](VM* vm, ArgsView args){
             FileIO& io = CAST(FileIO&, args[0]);
-            std::string buffer;
-            io._fs >> buffer;
-            return VAR(buffer);
+            fseek(io.fp, 0, SEEK_END);
+            std::vector<char> buffer(ftell(io.fp));
+            fseek(io.fp, 0, SEEK_SET);
+            fread(buffer.data(), 1, buffer.size(), io.fp);
+            Bytes b(std::move(buffer));
+            if(io.is_text()) return VAR(Str(b.str()));
+            return VAR(std::move(b));
         });
 
-        vm->bind_method<1>(type, "write", [](VM* vm, Args& args){
+        vm->bind_method<1>(type, "write", [](VM* vm, ArgsView args){
             FileIO& io = CAST(FileIO&, args[0]);
-            io._fs << CAST(Str&, args[1]);
+            if(io.is_text()){
+                Str& s = CAST(Str&, args[1]);
+                fwrite(s.data, 1, s.length(), io.fp);
+            }else{
+                Bytes& buffer = CAST(Bytes&, args[1]);
+                fwrite(buffer.data(), 1, buffer.size(), io.fp);
+            }
             return vm->None;
         });
 
-        vm->bind_method<0>(type, "close", [](VM* vm, Args& args){
+        vm->bind_method<0>(type, "close", [](VM* vm, ArgsView args){
             FileIO& io = CAST(FileIO&, args[0]);
-            io._fs.close();
+            io.close();
             return vm->None;
         });
 
-        vm->bind_method<0>(type, "__exit__", [](VM* vm, Args& args){
+        vm->bind_method<0>(type, "__exit__", [](VM* vm, ArgsView args){
             FileIO& io = CAST(FileIO&, args[0]);
-            io._fs.close();
+            io.close();
             return vm->None;
         });
 
@@ -5267,76 +9804,86 @@ struct FileIO {
     }
 };
 
-void add_module_io(VM* vm){
-    PyVar mod = vm->new_module("io");
-    PyVar type = FileIO::register_class(vm, mod);
-    vm->bind_builtin_func<2>("open", [type](VM* vm, const Args& args){
-        return vm->call(type, args);
+inline void add_module_io(VM* vm){
+    PyObject* mod = vm->new_module("io");
+    FileIO::register_class(vm, mod);
+    vm->bind_builtin_func<2>("open", [](VM* vm, ArgsView args){
+        static StrName m_io("io");
+        static StrName m_FileIO("FileIO");
+        return vm->call(vm->_modules[m_io]->attr(m_FileIO), args[0], args[1]);
     });
 }
 
-void add_module_os(VM* vm){
-    PyVar mod = vm->new_module("os");
+inline void add_module_os(VM* vm){
+    PyObject* mod = vm->new_module("os");
+    PyObject* path_obj = vm->heap.gcnew<DummyInstance>(vm->tp_object, {});
+    mod->attr().set("path", path_obj);
+    
     // Working directory is shared by all VMs!!
-    vm->bind_func<0>(mod, "getcwd", [](VM* vm, const Args& args){
+    vm->bind_func<0>(mod, "getcwd", [](VM* vm, ArgsView args){
         return VAR(std::filesystem::current_path().string());
     });
 
-    vm->bind_func<1>(mod, "chdir", [](VM* vm, const Args& args){
-        std::filesystem::path path(CAST(Str&, args[0]).c_str());
+    vm->bind_func<1>(mod, "chdir", [](VM* vm, ArgsView args){
+        std::filesystem::path path(CAST(Str&, args[0]).sv());
         std::filesystem::current_path(path);
         return vm->None;
     });
 
-    vm->bind_func<1>(mod, "listdir", [](VM* vm, const Args& args){
-        std::filesystem::path path(CAST(Str&, args[0]).c_str());
+    vm->bind_func<1>(mod, "listdir", [](VM* vm, ArgsView args){
+        std::filesystem::path path(CAST(Str&, args[0]).sv());
         std::filesystem::directory_iterator di;
         try{
             di = std::filesystem::directory_iterator(path);
         }catch(std::filesystem::filesystem_error& e){
-            Str msg = e.what();
+            std::string msg = e.what();
             auto pos = msg.find_last_of(":");
-            if(pos != Str::npos) msg = msg.substr(pos + 1);
-            vm->IOError(msg.lstrip());
+            if(pos != std::string::npos) msg = msg.substr(pos + 1);
+            vm->IOError(Str(msg).lstrip());
         }
         List ret;
         for(auto& p: di) ret.push_back(VAR(p.path().filename().string()));
         return VAR(ret);
     });
 
-    vm->bind_func<1>(mod, "remove", [](VM* vm, const Args& args){
-        std::filesystem::path path(CAST(Str&, args[0]).c_str());
+    vm->bind_func<1>(mod, "remove", [](VM* vm, ArgsView args){
+        std::filesystem::path path(CAST(Str&, args[0]).sv());
         bool ok = std::filesystem::remove(path);
         if(!ok) vm->IOError("operation failed");
         return vm->None;
     });
 
-    vm->bind_func<1>(mod, "mkdir", [](VM* vm, const Args& args){
-        std::filesystem::path path(CAST(Str&, args[0]).c_str());
+    vm->bind_func<1>(mod, "mkdir", [](VM* vm, ArgsView args){
+        std::filesystem::path path(CAST(Str&, args[0]).sv());
         bool ok = std::filesystem::create_directory(path);
         if(!ok) vm->IOError("operation failed");
         return vm->None;
     });
 
-    vm->bind_func<1>(mod, "rmdir", [](VM* vm, const Args& args){
-        std::filesystem::path path(CAST(Str&, args[0]).c_str());
+    vm->bind_func<1>(mod, "rmdir", [](VM* vm, ArgsView args){
+        std::filesystem::path path(CAST(Str&, args[0]).sv());
         bool ok = std::filesystem::remove(path);
         if(!ok) vm->IOError("operation failed");
         return vm->None;
     });
 
-    vm->bind_func<-1>(mod, "path_join", [](VM* vm, const Args& args){
+    vm->bind_func<-1>(path_obj, "join", [](VM* vm, ArgsView args){
         std::filesystem::path path;
         for(int i=0; i<args.size(); i++){
-            path /= CAST(Str&, args[i]).c_str();
+            path /= CAST(Str&, args[i]).sv();
         }
         return VAR(path.string());
     });
 
-    vm->bind_func<1>(mod, "path_exists", [](VM* vm, const Args& args){
-        std::filesystem::path path(CAST(Str&, args[0]).c_str());
+    vm->bind_func<1>(path_obj, "exists", [](VM* vm, ArgsView args){
+        std::filesystem::path path(CAST(Str&, args[0]).sv());
         bool exists = std::filesystem::exists(path);
         return VAR(exists);
+    });
+
+    vm->bind_func<1>(path_obj, "basename", [](VM* vm, ArgsView args){
+        std::filesystem::path path(CAST(Str&, args[0]).sv());
+        return VAR(path.filename().string());
     });
 }
 
@@ -5346,188 +9893,210 @@ void add_module_os(VM* vm){
 #else
 
 namespace pkpy{
-void add_module_io(VM* vm){}
-void add_module_os(VM* vm){}
-
-Str _read_file_cwd(const Str& name, bool* ok){
-    *ok = false;
-    return Str();
-}
-
+inline void add_module_io(void* vm){}
+inline void add_module_os(void* vm){}
+inline Bytes _default_import_handler(const Str& name) { return Bytes(); }
 } // namespace pkpy
 
 #endif
+#ifndef PK_EXPORT
 
-// generated on 2023-03-27 15:28:54
-#include <map>
-#include <string>
+#ifdef _WIN32
+#define PK_EXPORT __declspec(dllexport)
+#elif __APPLE__
+#define PK_EXPORT __attribute__((visibility("default"))) __attribute__((used))
+#elif __EMSCRIPTEN__
+#include <emscripten.h>
+#define PK_EXPORT EMSCRIPTEN_KEEPALIVE
+#else
+#define PK_EXPORT
+#endif
 
-namespace pkpy{
-    std::map<std::string, const char*> kPythonLibs = {
-        {"bisect", "\x22\x22\x22\x42\x69\x73\x65\x63\x74\x69\x6f\x6e\x20\x61\x6c\x67\x6f\x72\x69\x74\x68\x6d\x73\x2e\x22\x22\x22\x0a\x0a\x64\x65\x66\x20\x69\x6e\x73\x6f\x72\x74\x5f\x72\x69\x67\x68\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x49\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x6e\x64\x20\x6b\x65\x65\x70\x20\x69\x74\x20\x73\x6f\x72\x74\x65\x64\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x49\x66\x20\x78\x20\x69\x73\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x69\x6e\x20\x61\x2c\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x20\x74\x6f\x20\x74\x68\x65\x20\x72\x69\x67\x68\x74\x20\x6f\x66\x20\x74\x68\x65\x20\x72\x69\x67\x68\x74\x6d\x6f\x73\x74\x20\x78\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x6c\x6f\x20\x3d\x20\x62\x69\x73\x65\x63\x74\x5f\x72\x69\x67\x68\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x2c\x20\x68\x69\x29\x0a\x20\x20\x20\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x6c\x6f\x2c\x20\x78\x29\x0a\x0a\x64\x65\x66\x20\x62\x69\x73\x65\x63\x74\x5f\x72\x69\x67\x68\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x52\x65\x74\x75\x72\x6e\x20\x74\x68\x65\x20\x69\x6e\x64\x65\x78\x20\x77\x68\x65\x72\x65\x20\x74\x6f\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x54\x68\x65\x20\x72\x65\x74\x75\x72\x6e\x20\x76\x61\x6c\x75\x65\x20\x69\x20\x69\x73\x20\x73\x75\x63\x68\x20\x74\x68\x61\x74\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x20\x61\x5b\x3a\x69\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3c\x3d\x20\x78\x2c\x20\x61\x6e\x64\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x0a\x20\x20\x20\x20\x61\x5b\x69\x3a\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3e\x20\x78\x2e\x20\x20\x53\x6f\x20\x69\x66\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x61\x70\x70\x65\x61\x72\x73\x20\x69\x6e\x20\x74\x68\x65\x20\x6c\x69\x73\x74\x2c\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x78\x29\x20\x77\x69\x6c\x6c\x0a\x20\x20\x20\x20\x69\x6e\x73\x65\x72\x74\x20\x6a\x75\x73\x74\x20\x61\x66\x74\x65\x72\x20\x74\x68\x65\x20\x72\x69\x67\x68\x74\x6d\x6f\x73\x74\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x74\x68\x65\x72\x65\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x6f\x20\x3c\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x56\x61\x6c\x75\x65\x45\x72\x72\x6f\x72\x28\x27\x6c\x6f\x20\x6d\x75\x73\x74\x20\x62\x65\x20\x6e\x6f\x6e\x2d\x6e\x65\x67\x61\x74\x69\x76\x65\x27\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x69\x20\x69\x73\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x69\x20\x3d\x20\x6c\x65\x6e\x28\x61\x29\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6c\x6f\x20\x3c\x20\x68\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6d\x69\x64\x20\x3d\x20\x28\x6c\x6f\x2b\x68\x69\x29\x2f\x2f\x32\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x78\x20\x3c\x20\x61\x5b\x6d\x69\x64\x5d\x3a\x20\x68\x69\x20\x3d\x20\x6d\x69\x64\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x20\x6c\x6f\x20\x3d\x20\x6d\x69\x64\x2b\x31\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x6f\x0a\x0a\x64\x65\x66\x20\x69\x6e\x73\x6f\x72\x74\x5f\x6c\x65\x66\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x49\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x6e\x64\x20\x6b\x65\x65\x70\x20\x69\x74\x20\x73\x6f\x72\x74\x65\x64\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x49\x66\x20\x78\x20\x69\x73\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x69\x6e\x20\x61\x2c\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x20\x74\x6f\x20\x74\x68\x65\x20\x6c\x65\x66\x74\x20\x6f\x66\x20\x74\x68\x65\x20\x6c\x65\x66\x74\x6d\x6f\x73\x74\x20\x78\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x6c\x6f\x20\x3d\x20\x62\x69\x73\x65\x63\x74\x5f\x6c\x65\x66\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x2c\x20\x68\x69\x29\x0a\x20\x20\x20\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x6c\x6f\x2c\x20\x78\x29\x0a\x0a\x0a\x64\x65\x66\x20\x62\x69\x73\x65\x63\x74\x5f\x6c\x65\x66\x74\x28\x61\x2c\x20\x78\x2c\x20\x6c\x6f\x3d\x30\x2c\x20\x68\x69\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x52\x65\x74\x75\x72\x6e\x20\x74\x68\x65\x20\x69\x6e\x64\x65\x78\x20\x77\x68\x65\x72\x65\x20\x74\x6f\x20\x69\x6e\x73\x65\x72\x74\x20\x69\x74\x65\x6d\x20\x78\x20\x69\x6e\x20\x6c\x69\x73\x74\x20\x61\x2c\x20\x61\x73\x73\x75\x6d\x69\x6e\x67\x20\x61\x20\x69\x73\x20\x73\x6f\x72\x74\x65\x64\x2e\x0a\x0a\x20\x20\x20\x20\x54\x68\x65\x20\x72\x65\x74\x75\x72\x6e\x20\x76\x61\x6c\x75\x65\x20\x69\x20\x69\x73\x20\x73\x75\x63\x68\x20\x74\x68\x61\x74\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x20\x61\x5b\x3a\x69\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3c\x20\x78\x2c\x20\x61\x6e\x64\x20\x61\x6c\x6c\x20\x65\x20\x69\x6e\x0a\x20\x20\x20\x20\x61\x5b\x69\x3a\x5d\x20\x68\x61\x76\x65\x20\x65\x20\x3e\x3d\x20\x78\x2e\x20\x20\x53\x6f\x20\x69\x66\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x61\x70\x70\x65\x61\x72\x73\x20\x69\x6e\x20\x74\x68\x65\x20\x6c\x69\x73\x74\x2c\x20\x61\x2e\x69\x6e\x73\x65\x72\x74\x28\x78\x29\x20\x77\x69\x6c\x6c\x0a\x20\x20\x20\x20\x69\x6e\x73\x65\x72\x74\x20\x6a\x75\x73\x74\x20\x62\x65\x66\x6f\x72\x65\x20\x74\x68\x65\x20\x6c\x65\x66\x74\x6d\x6f\x73\x74\x20\x78\x20\x61\x6c\x72\x65\x61\x64\x79\x20\x74\x68\x65\x72\x65\x2e\x0a\x0a\x20\x20\x20\x20\x4f\x70\x74\x69\x6f\x6e\x61\x6c\x20\x61\x72\x67\x73\x20\x6c\x6f\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x30\x29\x20\x61\x6e\x64\x20\x68\x69\x20\x28\x64\x65\x66\x61\x75\x6c\x74\x20\x6c\x65\x6e\x28\x61\x29\x29\x20\x62\x6f\x75\x6e\x64\x20\x74\x68\x65\x0a\x20\x20\x20\x20\x73\x6c\x69\x63\x65\x20\x6f\x66\x20\x61\x20\x74\x6f\x20\x62\x65\x20\x73\x65\x61\x72\x63\x68\x65\x64\x2e\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x6f\x20\x3c\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x56\x61\x6c\x75\x65\x45\x72\x72\x6f\x72\x28\x27\x6c\x6f\x20\x6d\x75\x73\x74\x20\x62\x65\x20\x6e\x6f\x6e\x2d\x6e\x65\x67\x61\x74\x69\x76\x65\x27\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x69\x20\x69\x73\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x69\x20\x3d\x20\x6c\x65\x6e\x28\x61\x29\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6c\x6f\x20\x3c\x20\x68\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6d\x69\x64\x20\x3d\x20\x28\x6c\x6f\x2b\x68\x69\x29\x2f\x2f\x32\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x61\x5b\x6d\x69\x64\x5d\x20\x3c\x20\x78\x3a\x20\x6c\x6f\x20\x3d\x20\x6d\x69\x64\x2b\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x20\x68\x69\x20\x3d\x20\x6d\x69\x64\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x6f\x0a\x0a\x23\x20\x43\x72\x65\x61\x74\x65\x20\x61\x6c\x69\x61\x73\x65\x73\x0a\x62\x69\x73\x65\x63\x74\x20\x3d\x20\x62\x69\x73\x65\x63\x74\x5f\x72\x69\x67\x68\x74\x0a\x69\x6e\x73\x6f\x72\x74\x20\x3d\x20\x69\x6e\x73\x6f\x72\x74\x5f\x72\x69\x67\x68\x74\x0a"},
-        {"heapq", "\x23\x20\x48\x65\x61\x70\x20\x71\x75\x65\x75\x65\x20\x61\x6c\x67\x6f\x72\x69\x74\x68\x6d\x20\x28\x61\x2e\x6b\x2e\x61\x2e\x20\x70\x72\x69\x6f\x72\x69\x74\x79\x20\x71\x75\x65\x75\x65\x29\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x70\x75\x73\x68\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x50\x75\x73\x68\x20\x69\x74\x65\x6d\x20\x6f\x6e\x74\x6f\x20\x68\x65\x61\x70\x2c\x20\x6d\x61\x69\x6e\x74\x61\x69\x6e\x69\x6e\x67\x20\x74\x68\x65\x20\x68\x65\x61\x70\x20\x69\x6e\x76\x61\x72\x69\x61\x6e\x74\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x2e\x61\x70\x70\x65\x6e\x64\x28\x69\x74\x65\x6d\x29\x0a\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x64\x6f\x77\x6e\x28\x68\x65\x61\x70\x2c\x20\x30\x2c\x20\x6c\x65\x6e\x28\x68\x65\x61\x70\x29\x2d\x31\x29\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x70\x6f\x70\x28\x68\x65\x61\x70\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x50\x6f\x70\x20\x74\x68\x65\x20\x73\x6d\x61\x6c\x6c\x65\x73\x74\x20\x69\x74\x65\x6d\x20\x6f\x66\x66\x20\x74\x68\x65\x20\x68\x65\x61\x70\x2c\x20\x6d\x61\x69\x6e\x74\x61\x69\x6e\x69\x6e\x67\x20\x74\x68\x65\x20\x68\x65\x61\x70\x20\x69\x6e\x76\x61\x72\x69\x61\x6e\x74\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x6c\x61\x73\x74\x65\x6c\x74\x20\x3d\x20\x68\x65\x61\x70\x2e\x70\x6f\x70\x28\x29\x20\x20\x20\x20\x23\x20\x72\x61\x69\x73\x65\x73\x20\x61\x70\x70\x72\x6f\x70\x72\x69\x61\x74\x65\x20\x49\x6e\x64\x65\x78\x45\x72\x72\x6f\x72\x20\x69\x66\x20\x68\x65\x61\x70\x20\x69\x73\x20\x65\x6d\x70\x74\x79\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x65\x61\x70\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x5b\x30\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3d\x20\x6c\x61\x73\x74\x65\x6c\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x30\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x61\x73\x74\x65\x6c\x74\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x72\x65\x70\x6c\x61\x63\x65\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x50\x6f\x70\x20\x61\x6e\x64\x20\x72\x65\x74\x75\x72\x6e\x20\x74\x68\x65\x20\x63\x75\x72\x72\x65\x6e\x74\x20\x73\x6d\x61\x6c\x6c\x65\x73\x74\x20\x76\x61\x6c\x75\x65\x2c\x20\x61\x6e\x64\x20\x61\x64\x64\x20\x74\x68\x65\x20\x6e\x65\x77\x20\x69\x74\x65\x6d\x2e\x0a\x0a\x20\x20\x20\x20\x54\x68\x69\x73\x20\x69\x73\x20\x6d\x6f\x72\x65\x20\x65\x66\x66\x69\x63\x69\x65\x6e\x74\x20\x74\x68\x61\x6e\x20\x68\x65\x61\x70\x70\x6f\x70\x28\x29\x20\x66\x6f\x6c\x6c\x6f\x77\x65\x64\x20\x62\x79\x20\x68\x65\x61\x70\x70\x75\x73\x68\x28\x29\x2c\x20\x61\x6e\x64\x20\x63\x61\x6e\x20\x62\x65\x0a\x20\x20\x20\x20\x6d\x6f\x72\x65\x20\x61\x70\x70\x72\x6f\x70\x72\x69\x61\x74\x65\x20\x77\x68\x65\x6e\x20\x75\x73\x69\x6e\x67\x20\x61\x20\x66\x69\x78\x65\x64\x2d\x73\x69\x7a\x65\x20\x68\x65\x61\x70\x2e\x20\x20\x4e\x6f\x74\x65\x20\x74\x68\x61\x74\x20\x74\x68\x65\x20\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x65\x64\x20\x6d\x61\x79\x20\x62\x65\x20\x6c\x61\x72\x67\x65\x72\x20\x74\x68\x61\x6e\x20\x69\x74\x65\x6d\x21\x20\x20\x54\x68\x61\x74\x20\x63\x6f\x6e\x73\x74\x72\x61\x69\x6e\x73\x20\x72\x65\x61\x73\x6f\x6e\x61\x62\x6c\x65\x20\x75\x73\x65\x73\x20\x6f\x66\x0a\x20\x20\x20\x20\x74\x68\x69\x73\x20\x72\x6f\x75\x74\x69\x6e\x65\x20\x75\x6e\x6c\x65\x73\x73\x20\x77\x72\x69\x74\x74\x65\x6e\x20\x61\x73\x20\x70\x61\x72\x74\x20\x6f\x66\x20\x61\x20\x63\x6f\x6e\x64\x69\x74\x69\x6f\x6e\x61\x6c\x20\x72\x65\x70\x6c\x61\x63\x65\x6d\x65\x6e\x74\x3a\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x74\x65\x6d\x20\x3e\x20\x68\x65\x61\x70\x5b\x30\x5d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x72\x65\x70\x6c\x61\x63\x65\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x0a\x20\x20\x20\x20\x22\x22\x22\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x20\x20\x20\x23\x20\x72\x61\x69\x73\x65\x73\x20\x61\x70\x70\x72\x6f\x70\x72\x69\x61\x74\x65\x20\x49\x6e\x64\x65\x78\x45\x72\x72\x6f\x72\x20\x69\x66\x20\x68\x65\x61\x70\x20\x69\x73\x20\x65\x6d\x70\x74\x79\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3d\x20\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x30\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x75\x72\x6e\x69\x74\x65\x6d\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x70\x75\x73\x68\x70\x6f\x70\x28\x68\x65\x61\x70\x2c\x20\x69\x74\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x46\x61\x73\x74\x20\x76\x65\x72\x73\x69\x6f\x6e\x20\x6f\x66\x20\x61\x20\x68\x65\x61\x70\x70\x75\x73\x68\x20\x66\x6f\x6c\x6c\x6f\x77\x65\x64\x20\x62\x79\x20\x61\x20\x68\x65\x61\x70\x70\x6f\x70\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x69\x66\x20\x68\x65\x61\x70\x20\x61\x6e\x64\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3c\x20\x69\x74\x65\x6d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x74\x65\x6d\x2c\x20\x68\x65\x61\x70\x5b\x30\x5d\x20\x3d\x20\x68\x65\x61\x70\x5b\x30\x5d\x2c\x20\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x30\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x74\x65\x6d\x0a\x0a\x64\x65\x66\x20\x68\x65\x61\x70\x69\x66\x79\x28\x78\x29\x3a\x0a\x20\x20\x20\x20\x22\x22\x22\x54\x72\x61\x6e\x73\x66\x6f\x72\x6d\x20\x6c\x69\x73\x74\x20\x69\x6e\x74\x6f\x20\x61\x20\x68\x65\x61\x70\x2c\x20\x69\x6e\x2d\x70\x6c\x61\x63\x65\x2c\x20\x69\x6e\x20\x4f\x28\x6c\x65\x6e\x28\x78\x29\x29\x20\x74\x69\x6d\x65\x2e\x22\x22\x22\x0a\x20\x20\x20\x20\x6e\x20\x3d\x20\x6c\x65\x6e\x28\x78\x29\x0a\x20\x20\x20\x20\x23\x20\x54\x72\x61\x6e\x73\x66\x6f\x72\x6d\x20\x62\x6f\x74\x74\x6f\x6d\x2d\x75\x70\x2e\x20\x20\x54\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x20\x69\x6e\x64\x65\x78\x20\x74\x68\x65\x72\x65\x27\x73\x20\x61\x6e\x79\x20\x70\x6f\x69\x6e\x74\x20\x74\x6f\x20\x6c\x6f\x6f\x6b\x69\x6e\x67\x20\x61\x74\x0a\x20\x20\x20\x20\x23\x20\x69\x73\x20\x74\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x20\x77\x69\x74\x68\x20\x61\x20\x63\x68\x69\x6c\x64\x20\x69\x6e\x64\x65\x78\x20\x69\x6e\x2d\x72\x61\x6e\x67\x65\x2c\x20\x73\x6f\x20\x6d\x75\x73\x74\x20\x68\x61\x76\x65\x20\x32\x2a\x69\x20\x2b\x20\x31\x20\x3c\x20\x6e\x2c\x0a\x20\x20\x20\x20\x23\x20\x6f\x72\x20\x69\x20\x3c\x20\x28\x6e\x2d\x31\x29\x2f\x32\x2e\x20\x20\x49\x66\x20\x6e\x20\x69\x73\x20\x65\x76\x65\x6e\x20\x3d\x20\x32\x2a\x6a\x2c\x20\x74\x68\x69\x73\x20\x69\x73\x20\x28\x32\x2a\x6a\x2d\x31\x29\x2f\x32\x20\x3d\x20\x6a\x2d\x31\x2f\x32\x20\x73\x6f\x0a\x20\x20\x20\x20\x23\x20\x6a\x2d\x31\x20\x69\x73\x20\x74\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x2c\x20\x77\x68\x69\x63\x68\x20\x69\x73\x20\x6e\x2f\x2f\x32\x20\x2d\x20\x31\x2e\x20\x20\x49\x66\x20\x6e\x20\x69\x73\x20\x6f\x64\x64\x20\x3d\x20\x32\x2a\x6a\x2b\x31\x2c\x20\x74\x68\x69\x73\x20\x69\x73\x0a\x20\x20\x20\x20\x23\x20\x28\x32\x2a\x6a\x2b\x31\x2d\x31\x29\x2f\x32\x20\x3d\x20\x6a\x20\x73\x6f\x20\x6a\x2d\x31\x20\x69\x73\x20\x74\x68\x65\x20\x6c\x61\x72\x67\x65\x73\x74\x2c\x20\x61\x6e\x64\x20\x74\x68\x61\x74\x27\x73\x20\x61\x67\x61\x69\x6e\x20\x6e\x2f\x2f\x32\x2d\x31\x2e\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x65\x76\x65\x72\x73\x65\x64\x28\x72\x61\x6e\x67\x65\x28\x6e\x2f\x2f\x32\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x78\x2c\x20\x69\x29\x0a\x0a\x23\x20\x27\x68\x65\x61\x70\x27\x20\x69\x73\x20\x61\x20\x68\x65\x61\x70\x20\x61\x74\x20\x61\x6c\x6c\x20\x69\x6e\x64\x69\x63\x65\x73\x20\x3e\x3d\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x2c\x20\x65\x78\x63\x65\x70\x74\x20\x70\x6f\x73\x73\x69\x62\x6c\x79\x20\x66\x6f\x72\x20\x70\x6f\x73\x2e\x20\x20\x70\x6f\x73\x0a\x23\x20\x69\x73\x20\x74\x68\x65\x20\x69\x6e\x64\x65\x78\x20\x6f\x66\x20\x61\x20\x6c\x65\x61\x66\x20\x77\x69\x74\x68\x20\x61\x20\x70\x6f\x73\x73\x69\x62\x6c\x79\x20\x6f\x75\x74\x2d\x6f\x66\x2d\x6f\x72\x64\x65\x72\x20\x76\x61\x6c\x75\x65\x2e\x20\x20\x52\x65\x73\x74\x6f\x72\x65\x20\x74\x68\x65\x0a\x23\x20\x68\x65\x61\x70\x20\x69\x6e\x76\x61\x72\x69\x61\x6e\x74\x2e\x0a\x64\x65\x66\x20\x5f\x73\x69\x66\x74\x64\x6f\x77\x6e\x28\x68\x65\x61\x70\x2c\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x2c\x20\x70\x6f\x73\x29\x3a\x0a\x20\x20\x20\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x23\x20\x46\x6f\x6c\x6c\x6f\x77\x20\x74\x68\x65\x20\x70\x61\x74\x68\x20\x74\x6f\x20\x74\x68\x65\x20\x72\x6f\x6f\x74\x2c\x20\x6d\x6f\x76\x69\x6e\x67\x20\x70\x61\x72\x65\x6e\x74\x73\x20\x64\x6f\x77\x6e\x20\x75\x6e\x74\x69\x6c\x20\x66\x69\x6e\x64\x69\x6e\x67\x20\x61\x20\x70\x6c\x61\x63\x65\x0a\x20\x20\x20\x20\x23\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x66\x69\x74\x73\x2e\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x70\x6f\x73\x20\x3e\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x61\x72\x65\x6e\x74\x70\x6f\x73\x20\x3d\x20\x28\x70\x6f\x73\x20\x2d\x20\x31\x29\x20\x3e\x3e\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x61\x72\x65\x6e\x74\x20\x3d\x20\x68\x65\x61\x70\x5b\x70\x61\x72\x65\x6e\x74\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x3c\x20\x70\x61\x72\x65\x6e\x74\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x70\x61\x72\x65\x6e\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x70\x6f\x73\x20\x3d\x20\x70\x61\x72\x65\x6e\x74\x70\x6f\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x63\x6f\x6e\x74\x69\x6e\x75\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x62\x72\x65\x61\x6b\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x6e\x65\x77\x69\x74\x65\x6d\x0a\x0a\x64\x65\x66\x20\x5f\x73\x69\x66\x74\x75\x70\x28\x68\x65\x61\x70\x2c\x20\x70\x6f\x73\x29\x3a\x0a\x20\x20\x20\x20\x65\x6e\x64\x70\x6f\x73\x20\x3d\x20\x6c\x65\x6e\x28\x68\x65\x61\x70\x29\x0a\x20\x20\x20\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x20\x3d\x20\x70\x6f\x73\x0a\x20\x20\x20\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x3d\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x23\x20\x42\x75\x62\x62\x6c\x65\x20\x75\x70\x20\x74\x68\x65\x20\x73\x6d\x61\x6c\x6c\x65\x72\x20\x63\x68\x69\x6c\x64\x20\x75\x6e\x74\x69\x6c\x20\x68\x69\x74\x74\x69\x6e\x67\x20\x61\x20\x6c\x65\x61\x66\x2e\x0a\x20\x20\x20\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3d\x20\x32\x2a\x70\x6f\x73\x20\x2b\x20\x31\x20\x20\x20\x20\x23\x20\x6c\x65\x66\x74\x6d\x6f\x73\x74\x20\x63\x68\x69\x6c\x64\x20\x70\x6f\x73\x69\x74\x69\x6f\x6e\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3c\x20\x65\x6e\x64\x70\x6f\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x23\x20\x53\x65\x74\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x74\x6f\x20\x69\x6e\x64\x65\x78\x20\x6f\x66\x20\x73\x6d\x61\x6c\x6c\x65\x72\x20\x63\x68\x69\x6c\x64\x2e\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x69\x67\x68\x74\x70\x6f\x73\x20\x3d\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x2b\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x72\x69\x67\x68\x74\x70\x6f\x73\x20\x3c\x20\x65\x6e\x64\x70\x6f\x73\x20\x61\x6e\x64\x20\x6e\x6f\x74\x20\x68\x65\x61\x70\x5b\x63\x68\x69\x6c\x64\x70\x6f\x73\x5d\x20\x3c\x20\x68\x65\x61\x70\x5b\x72\x69\x67\x68\x74\x70\x6f\x73\x5d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3d\x20\x72\x69\x67\x68\x74\x70\x6f\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x23\x20\x4d\x6f\x76\x65\x20\x74\x68\x65\x20\x73\x6d\x61\x6c\x6c\x65\x72\x20\x63\x68\x69\x6c\x64\x20\x75\x70\x2e\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x68\x65\x61\x70\x5b\x63\x68\x69\x6c\x64\x70\x6f\x73\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x70\x6f\x73\x20\x3d\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x63\x68\x69\x6c\x64\x70\x6f\x73\x20\x3d\x20\x32\x2a\x70\x6f\x73\x20\x2b\x20\x31\x0a\x20\x20\x20\x20\x23\x20\x54\x68\x65\x20\x6c\x65\x61\x66\x20\x61\x74\x20\x70\x6f\x73\x20\x69\x73\x20\x65\x6d\x70\x74\x79\x20\x6e\x6f\x77\x2e\x20\x20\x50\x75\x74\x20\x6e\x65\x77\x69\x74\x65\x6d\x20\x74\x68\x65\x72\x65\x2c\x20\x61\x6e\x64\x20\x62\x75\x62\x62\x6c\x65\x20\x69\x74\x20\x75\x70\x0a\x20\x20\x20\x20\x23\x20\x74\x6f\x20\x69\x74\x73\x20\x66\x69\x6e\x61\x6c\x20\x72\x65\x73\x74\x69\x6e\x67\x20\x70\x6c\x61\x63\x65\x20\x28\x62\x79\x20\x73\x69\x66\x74\x69\x6e\x67\x20\x69\x74\x73\x20\x70\x61\x72\x65\x6e\x74\x73\x20\x64\x6f\x77\x6e\x29\x2e\x0a\x20\x20\x20\x20\x68\x65\x61\x70\x5b\x70\x6f\x73\x5d\x20\x3d\x20\x6e\x65\x77\x69\x74\x65\x6d\x0a\x20\x20\x20\x20\x5f\x73\x69\x66\x74\x64\x6f\x77\x6e\x28\x68\x65\x61\x70\x2c\x20\x73\x74\x61\x72\x74\x70\x6f\x73\x2c\x20\x70\x6f\x73\x29"},
-        {"functools", "\x64\x65\x66\x20\x63\x61\x63\x68\x65\x28\x66\x29\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x77\x72\x61\x70\x70\x65\x72\x28\x2a\x61\x72\x67\x73\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x68\x61\x73\x61\x74\x74\x72\x28\x66\x2c\x20\x27\x63\x61\x63\x68\x65\x27\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x66\x2e\x63\x61\x63\x68\x65\x20\x3d\x20\x7b\x7d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6b\x65\x79\x20\x3d\x20\x61\x72\x67\x73\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x65\x79\x20\x6e\x6f\x74\x20\x69\x6e\x20\x66\x2e\x63\x61\x63\x68\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x66\x2e\x63\x61\x63\x68\x65\x5b\x6b\x65\x79\x5d\x20\x3d\x20\x66\x28\x2a\x61\x72\x67\x73\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x66\x2e\x63\x61\x63\x68\x65\x5b\x6b\x65\x79\x5d\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x77\x72\x61\x70\x70\x65\x72"},
-        {"builtins", "\x64\x65\x66\x20\x70\x72\x69\x6e\x74\x28\x2a\x61\x72\x67\x73\x2c\x20\x73\x65\x70\x3d\x27\x20\x27\x2c\x20\x65\x6e\x64\x3d\x27\x5c\x6e\x27\x29\x3a\x0a\x20\x20\x20\x20\x73\x20\x3d\x20\x73\x65\x70\x2e\x6a\x6f\x69\x6e\x28\x5b\x73\x74\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x61\x72\x67\x73\x5d\x29\x0a\x20\x20\x20\x20\x5f\x5f\x73\x79\x73\x5f\x73\x74\x64\x6f\x75\x74\x5f\x77\x72\x69\x74\x65\x28\x73\x20\x2b\x20\x65\x6e\x64\x29\x0a\x0a\x64\x65\x66\x20\x72\x6f\x75\x6e\x64\x28\x78\x2c\x20\x6e\x64\x69\x67\x69\x74\x73\x3d\x30\x29\x3a\x0a\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x6e\x64\x69\x67\x69\x74\x73\x20\x3e\x3d\x20\x30\x0a\x20\x20\x20\x20\x69\x66\x20\x6e\x64\x69\x67\x69\x74\x73\x20\x3d\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x78\x20\x3e\x3d\x20\x30\x20\x3f\x20\x69\x6e\x74\x28\x78\x20\x2b\x20\x30\x2e\x35\x29\x20\x3a\x20\x69\x6e\x74\x28\x78\x20\x2d\x20\x30\x2e\x35\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x78\x20\x3e\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x6e\x74\x28\x78\x20\x2a\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x20\x2b\x20\x30\x2e\x35\x29\x20\x2f\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x0a\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x6e\x74\x28\x78\x20\x2a\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x20\x2d\x20\x30\x2e\x35\x29\x20\x2f\x20\x31\x30\x2a\x2a\x6e\x64\x69\x67\x69\x74\x73\x0a\x0a\x64\x65\x66\x20\x61\x62\x73\x28\x78\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x78\x20\x3c\x20\x30\x20\x3f\x20\x2d\x78\x20\x3a\x20\x78\x0a\x0a\x64\x65\x66\x20\x6d\x61\x78\x28\x61\x2c\x20\x62\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61\x20\x3e\x20\x62\x20\x3f\x20\x61\x20\x3a\x20\x62\x0a\x0a\x64\x65\x66\x20\x6d\x69\x6e\x28\x61\x2c\x20\x62\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61\x20\x3c\x20\x62\x20\x3f\x20\x61\x20\x3a\x20\x62\x0a\x0a\x64\x65\x66\x20\x61\x6c\x6c\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x0a\x64\x65\x66\x20\x61\x6e\x79\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x0a\x64\x65\x66\x20\x65\x6e\x75\x6d\x65\x72\x61\x74\x65\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x2c\x20\x73\x74\x61\x72\x74\x3d\x30\x29\x3a\x0a\x20\x20\x20\x20\x6e\x20\x3d\x20\x73\x74\x61\x72\x74\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x6e\x2c\x20\x65\x6c\x65\x6d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x20\x2b\x3d\x20\x31\x0a\x0a\x64\x65\x66\x20\x73\x75\x6d\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x73\x20\x2b\x3d\x20\x69\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x0a\x64\x65\x66\x20\x6d\x61\x70\x28\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x66\x28\x69\x29\x0a\x0a\x64\x65\x66\x20\x66\x69\x6c\x74\x65\x72\x28\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x66\x28\x69\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x69\x0a\x0a\x64\x65\x66\x20\x7a\x69\x70\x28\x61\x2c\x20\x62\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6d\x69\x6e\x28\x6c\x65\x6e\x28\x61\x29\x2c\x20\x6c\x65\x6e\x28\x62\x29\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x28\x61\x5b\x69\x5d\x2c\x20\x62\x5b\x69\x5d\x29\x0a\x0a\x64\x65\x66\x20\x72\x65\x76\x65\x72\x73\x65\x64\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x61\x20\x3d\x20\x6c\x69\x73\x74\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x0a\x20\x20\x20\x20\x61\x2e\x72\x65\x76\x65\x72\x73\x65\x28\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61\x0a\x0a\x64\x65\x66\x20\x73\x6f\x72\x74\x65\x64\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x2c\x20\x72\x65\x76\x65\x72\x73\x65\x3d\x46\x61\x6c\x73\x65\x29\x3a\x0a\x20\x20\x20\x20\x61\x20\x3d\x20\x6c\x69\x73\x74\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x0a\x20\x20\x20\x20\x61\x2e\x73\x6f\x72\x74\x28\x72\x65\x76\x65\x72\x73\x65\x3d\x72\x65\x76\x65\x72\x73\x65\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61\x0a\x0a\x23\x23\x23\x23\x23\x20\x73\x74\x72\x20\x23\x23\x23\x23\x23\x0a\x0a\x73\x74\x72\x2e\x5f\x5f\x6d\x75\x6c\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x2c\x20\x6e\x3a\x20\x27\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x73\x65\x6c\x66\x20\x66\x6f\x72\x20\x5f\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6e\x29\x5d\x29\x0a\x0a\x64\x65\x66\x20\x73\x74\x72\x3a\x3a\x73\x70\x6c\x69\x74\x28\x73\x65\x6c\x66\x2c\x20\x73\x65\x70\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x73\x65\x70\x20\x3d\x3d\x20\x22\x22\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x69\x73\x74\x28\x73\x65\x6c\x66\x29\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x5b\x5d\x0a\x20\x20\x20\x20\x69\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x69\x20\x3c\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x5b\x69\x3a\x69\x2b\x6c\x65\x6e\x28\x73\x65\x70\x29\x5d\x20\x3d\x3d\x20\x73\x65\x70\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x73\x2e\x61\x70\x70\x65\x6e\x64\x28\x73\x65\x6c\x66\x5b\x3a\x69\x5d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x20\x3d\x20\x73\x65\x6c\x66\x5b\x69\x2b\x6c\x65\x6e\x28\x73\x65\x70\x29\x3a\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x72\x65\x73\x2e\x61\x70\x70\x65\x6e\x64\x28\x73\x65\x6c\x66\x29\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x0a\x64\x65\x66\x20\x73\x74\x72\x3a\x3a\x69\x6e\x64\x65\x78\x28\x73\x65\x6c\x66\x2c\x20\x73\x75\x62\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x5b\x69\x3a\x69\x2b\x6c\x65\x6e\x28\x73\x75\x62\x29\x5d\x20\x3d\x3d\x20\x73\x75\x62\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x2d\x31\x0a\x0a\x64\x65\x66\x20\x73\x74\x72\x3a\x3a\x73\x74\x72\x69\x70\x28\x73\x65\x6c\x66\x2c\x20\x63\x68\x61\x72\x73\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x63\x68\x61\x72\x73\x20\x3d\x20\x63\x68\x61\x72\x73\x20\x6f\x72\x20\x27\x20\x5c\x74\x5c\x6e\x5c\x72\x27\x0a\x20\x20\x20\x20\x69\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x69\x20\x3c\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x61\x6e\x64\x20\x73\x65\x6c\x66\x5b\x69\x5d\x20\x69\x6e\x20\x63\x68\x61\x72\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x6a\x20\x3d\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x2d\x20\x31\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6a\x20\x3e\x3d\x20\x30\x20\x61\x6e\x64\x20\x73\x65\x6c\x66\x5b\x6a\x5d\x20\x69\x6e\x20\x63\x68\x61\x72\x73\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6a\x20\x2d\x3d\x20\x31\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x5b\x69\x3a\x6a\x2b\x31\x5d\x0a\x0a\x23\x23\x23\x23\x23\x20\x6c\x69\x73\x74\x20\x23\x23\x23\x23\x23\x0a\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x6e\x65\x77\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x20\x5b\x78\x20\x66\x6f\x72\x20\x78\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x5d\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x5b\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x72\x65\x70\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x5d\x27\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x28\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x72\x65\x70\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x29\x27\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x5b\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x69\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x28\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x5d\x27\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x3a\x20\x27\x5b\x27\x20\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x69\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x28\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x5d\x29\x20\x2b\x20\x27\x5d\x27\x0a\x0a\x64\x65\x66\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x61\x3a\x20\x6c\x69\x73\x74\x2c\x20\x4c\x3a\x20\x69\x6e\x74\x2c\x20\x52\x3a\x20\x69\x6e\x74\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x4c\x20\x3e\x3d\x20\x52\x3a\x20\x72\x65\x74\x75\x72\x6e\x3b\x0a\x20\x20\x20\x20\x6d\x69\x64\x20\x3d\x20\x61\x5b\x28\x52\x2b\x4c\x29\x2f\x2f\x32\x5d\x3b\x0a\x20\x20\x20\x20\x69\x2c\x20\x6a\x20\x3d\x20\x4c\x2c\x20\x52\x0a\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x69\x3c\x3d\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x61\x5b\x69\x5d\x3c\x6d\x69\x64\x3a\x20\x69\x2b\x3d\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x61\x5b\x6a\x5d\x3e\x6d\x69\x64\x3a\x20\x6a\x2d\x3d\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x3c\x3d\x6a\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x61\x5b\x69\x5d\x2c\x20\x61\x5b\x6a\x5d\x20\x3d\x20\x61\x5b\x6a\x5d\x2c\x20\x61\x5b\x69\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x2b\x3d\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x6a\x2d\x3d\x31\x0a\x20\x20\x20\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x61\x2c\x20\x4c\x2c\x20\x6a\x29\x0a\x20\x20\x20\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x61\x2c\x20\x69\x2c\x20\x52\x29\x0a\x0a\x64\x65\x66\x20\x6c\x69\x73\x74\x3a\x3a\x73\x6f\x72\x74\x28\x73\x65\x6c\x66\x2c\x20\x72\x65\x76\x65\x72\x73\x65\x3d\x46\x61\x6c\x73\x65\x29\x3a\x0a\x20\x20\x20\x20\x5f\x5f\x71\x73\x6f\x72\x74\x28\x73\x65\x6c\x66\x2c\x20\x30\x2c\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x2d\x31\x29\x0a\x20\x20\x20\x20\x69\x66\x20\x72\x65\x76\x65\x72\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x72\x65\x76\x65\x72\x73\x65\x28\x29\x0a\x0a\x64\x65\x66\x20\x6c\x69\x73\x74\x3a\x3a\x72\x65\x6d\x6f\x76\x65\x28\x73\x65\x6c\x66\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x5b\x69\x5d\x20\x3d\x3d\x20\x76\x61\x6c\x75\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x64\x65\x6c\x20\x73\x65\x6c\x66\x5b\x69\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x0a\x64\x65\x66\x20\x6c\x69\x73\x74\x3a\x3a\x69\x6e\x64\x65\x78\x28\x73\x65\x6c\x66\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x5b\x69\x5d\x20\x3d\x3d\x20\x76\x61\x6c\x75\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x69\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x2d\x31\x0a\x0a\x64\x65\x66\x20\x6c\x69\x73\x74\x3a\x3a\x70\x6f\x70\x28\x73\x65\x6c\x66\x2c\x20\x69\x3d\x2d\x31\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x73\x65\x6c\x66\x5b\x69\x5d\x0a\x20\x20\x20\x20\x64\x65\x6c\x20\x73\x65\x6c\x66\x5b\x69\x5d\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x0a\x64\x65\x66\x20\x6c\x69\x73\x74\x3a\x3a\x5f\x5f\x65\x71\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x69\x66\x20\x74\x79\x70\x65\x28\x73\x65\x6c\x66\x29\x20\x69\x73\x20\x6e\x6f\x74\x20\x74\x79\x70\x65\x28\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x21\x3d\x20\x6c\x65\x6e\x28\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x5b\x69\x5d\x20\x21\x3d\x20\x6f\x74\x68\x65\x72\x5b\x69\x5d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x65\x71\x5f\x5f\x20\x3d\x20\x6c\x69\x73\x74\x2e\x5f\x5f\x65\x71\x5f\x5f\x0a\x6c\x69\x73\x74\x2e\x5f\x5f\x6e\x65\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x3a\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x65\x71\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x6e\x65\x5f\x5f\x20\x3d\x20\x6c\x61\x6d\x62\x64\x61\x20\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x3a\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x65\x71\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x0a\x0a\x64\x65\x66\x20\x6c\x69\x73\x74\x3a\x3a\x63\x6f\x75\x6e\x74\x28\x73\x65\x6c\x66\x2c\x20\x78\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x73\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x3d\x3d\x20\x78\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x73\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x73\x0a\x74\x75\x70\x6c\x65\x2e\x63\x6f\x75\x6e\x74\x20\x3d\x20\x6c\x69\x73\x74\x2e\x63\x6f\x75\x6e\x74\x0a\x0a\x64\x65\x66\x20\x6c\x69\x73\x74\x3a\x3a\x5f\x5f\x63\x6f\x6e\x74\x61\x69\x6e\x73\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x69\x74\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x20\x3d\x3d\x20\x69\x74\x65\x6d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x74\x75\x70\x6c\x65\x2e\x5f\x5f\x63\x6f\x6e\x74\x61\x69\x6e\x73\x5f\x5f\x20\x3d\x20\x6c\x69\x73\x74\x2e\x5f\x5f\x63\x6f\x6e\x74\x61\x69\x6e\x73\x5f\x5f\x0a\x0a\x0a\x63\x6c\x61\x73\x73\x20\x70\x72\x6f\x70\x65\x72\x74\x79\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x66\x67\x65\x74\x2c\x20\x66\x73\x65\x74\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x66\x67\x65\x74\x20\x3d\x20\x66\x67\x65\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x66\x73\x65\x74\x20\x3d\x20\x66\x73\x65\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x67\x65\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x62\x6a\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x66\x67\x65\x74\x28\x6f\x62\x6a\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x73\x65\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x62\x6a\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x2e\x66\x73\x65\x74\x20\x69\x73\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x41\x74\x74\x72\x69\x62\x75\x74\x65\x45\x72\x72\x6f\x72\x28\x22\x72\x65\x61\x64\x6f\x6e\x6c\x79\x20\x70\x72\x6f\x70\x65\x72\x74\x79\x22\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x66\x73\x65\x74\x28\x6f\x62\x6a\x2c\x20\x76\x61\x6c\x75\x65\x29\x0a\x0a\x63\x6c\x61\x73\x73\x20\x73\x74\x61\x74\x69\x63\x6d\x65\x74\x68\x6f\x64\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x66\x20\x3d\x20\x66\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x67\x65\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x62\x6a\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x66\x0a\x20\x20\x20\x20\x0a\x64\x65\x66\x20\x74\x79\x70\x65\x3a\x3a\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x22\x3c\x63\x6c\x61\x73\x73\x20\x27\x22\x20\x2b\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x6e\x61\x6d\x65\x5f\x5f\x20\x2b\x20\x22\x27\x3e\x22"},
-        {"this", "\x70\x72\x69\x6e\x74\x28\x22\x22\x22\x54\x68\x65\x20\x5a\x65\x6e\x20\x6f\x66\x20\x50\x79\x74\x68\x6f\x6e\x2c\x20\x62\x79\x20\x54\x69\x6d\x20\x50\x65\x74\x65\x72\x73\x0a\x0a\x42\x65\x61\x75\x74\x69\x66\x75\x6c\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x75\x67\x6c\x79\x2e\x0a\x45\x78\x70\x6c\x69\x63\x69\x74\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x69\x6d\x70\x6c\x69\x63\x69\x74\x2e\x0a\x53\x69\x6d\x70\x6c\x65\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x63\x6f\x6d\x70\x6c\x65\x78\x2e\x0a\x43\x6f\x6d\x70\x6c\x65\x78\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x63\x6f\x6d\x70\x6c\x69\x63\x61\x74\x65\x64\x2e\x0a\x46\x6c\x61\x74\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x6e\x65\x73\x74\x65\x64\x2e\x0a\x53\x70\x61\x72\x73\x65\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x64\x65\x6e\x73\x65\x2e\x0a\x52\x65\x61\x64\x61\x62\x69\x6c\x69\x74\x79\x20\x63\x6f\x75\x6e\x74\x73\x2e\x0a\x53\x70\x65\x63\x69\x61\x6c\x20\x63\x61\x73\x65\x73\x20\x61\x72\x65\x6e\x27\x74\x20\x73\x70\x65\x63\x69\x61\x6c\x20\x65\x6e\x6f\x75\x67\x68\x20\x74\x6f\x20\x62\x72\x65\x61\x6b\x20\x74\x68\x65\x20\x72\x75\x6c\x65\x73\x2e\x0a\x41\x6c\x74\x68\x6f\x75\x67\x68\x20\x70\x72\x61\x63\x74\x69\x63\x61\x6c\x69\x74\x79\x20\x62\x65\x61\x74\x73\x20\x70\x75\x72\x69\x74\x79\x2e\x0a\x45\x72\x72\x6f\x72\x73\x20\x73\x68\x6f\x75\x6c\x64\x20\x6e\x65\x76\x65\x72\x20\x70\x61\x73\x73\x20\x73\x69\x6c\x65\x6e\x74\x6c\x79\x2e\x0a\x55\x6e\x6c\x65\x73\x73\x20\x65\x78\x70\x6c\x69\x63\x69\x74\x6c\x79\x20\x73\x69\x6c\x65\x6e\x63\x65\x64\x2e\x0a\x49\x6e\x20\x74\x68\x65\x20\x66\x61\x63\x65\x20\x6f\x66\x20\x61\x6d\x62\x69\x67\x75\x69\x74\x79\x2c\x20\x72\x65\x66\x75\x73\x65\x20\x74\x68\x65\x20\x74\x65\x6d\x70\x74\x61\x74\x69\x6f\x6e\x20\x74\x6f\x20\x67\x75\x65\x73\x73\x2e\x0a\x54\x68\x65\x72\x65\x20\x73\x68\x6f\x75\x6c\x64\x20\x62\x65\x20\x6f\x6e\x65\x2d\x2d\x20\x61\x6e\x64\x20\x70\x72\x65\x66\x65\x72\x61\x62\x6c\x79\x20\x6f\x6e\x6c\x79\x20\x6f\x6e\x65\x20\x2d\x2d\x6f\x62\x76\x69\x6f\x75\x73\x20\x77\x61\x79\x20\x74\x6f\x20\x64\x6f\x20\x69\x74\x2e\x0a\x41\x6c\x74\x68\x6f\x75\x67\x68\x20\x74\x68\x61\x74\x20\x77\x61\x79\x20\x6d\x61\x79\x20\x6e\x6f\x74\x20\x62\x65\x20\x6f\x62\x76\x69\x6f\x75\x73\x20\x61\x74\x20\x66\x69\x72\x73\x74\x20\x75\x6e\x6c\x65\x73\x73\x20\x79\x6f\x75\x27\x72\x65\x20\x44\x75\x74\x63\x68\x2e\x0a\x4e\x6f\x77\x20\x69\x73\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x6e\x65\x76\x65\x72\x2e\x0a\x41\x6c\x74\x68\x6f\x75\x67\x68\x20\x6e\x65\x76\x65\x72\x20\x69\x73\x20\x6f\x66\x74\x65\x6e\x20\x62\x65\x74\x74\x65\x72\x20\x74\x68\x61\x6e\x20\x2a\x72\x69\x67\x68\x74\x2a\x20\x6e\x6f\x77\x2e\x0a\x49\x66\x20\x74\x68\x65\x20\x69\x6d\x70\x6c\x65\x6d\x65\x6e\x74\x61\x74\x69\x6f\x6e\x20\x69\x73\x20\x68\x61\x72\x64\x20\x74\x6f\x20\x65\x78\x70\x6c\x61\x69\x6e\x2c\x20\x69\x74\x27\x73\x20\x61\x20\x62\x61\x64\x20\x69\x64\x65\x61\x2e\x0a\x49\x66\x20\x74\x68\x65\x20\x69\x6d\x70\x6c\x65\x6d\x65\x6e\x74\x61\x74\x69\x6f\x6e\x20\x69\x73\x20\x65\x61\x73\x79\x20\x74\x6f\x20\x65\x78\x70\x6c\x61\x69\x6e\x2c\x20\x69\x74\x20\x6d\x61\x79\x20\x62\x65\x20\x61\x20\x67\x6f\x6f\x64\x20\x69\x64\x65\x61\x2e\x0a\x4e\x61\x6d\x65\x73\x70\x61\x63\x65\x73\x20\x61\x72\x65\x20\x6f\x6e\x65\x20\x68\x6f\x6e\x6b\x69\x6e\x67\x20\x67\x72\x65\x61\x74\x20\x69\x64\x65\x61\x20\x2d\x2d\x20\x6c\x65\x74\x27\x73\x20\x64\x6f\x20\x6d\x6f\x72\x65\x20\x6f\x66\x20\x74\x68\x6f\x73\x65\x21\x22\x22\x22\x29"},
-        {"random", "\x5f\x69\x6e\x73\x74\x20\x3d\x20\x52\x61\x6e\x64\x6f\x6d\x28\x29\x0a\x0a\x73\x65\x65\x64\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x73\x65\x65\x64\x0a\x72\x61\x6e\x64\x6f\x6d\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x72\x61\x6e\x64\x6f\x6d\x0a\x75\x6e\x69\x66\x6f\x72\x6d\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x75\x6e\x69\x66\x6f\x72\x6d\x0a\x72\x61\x6e\x64\x69\x6e\x74\x20\x3d\x20\x5f\x69\x6e\x73\x74\x2e\x72\x61\x6e\x64\x69\x6e\x74\x0a\x0a\x64\x65\x66\x20\x73\x68\x75\x66\x66\x6c\x65\x28\x4c\x29\x3a\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x72\x61\x6e\x67\x65\x28\x6c\x65\x6e\x28\x4c\x29\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6a\x20\x3d\x20\x72\x61\x6e\x64\x69\x6e\x74\x28\x69\x2c\x20\x6c\x65\x6e\x28\x4c\x29\x20\x2d\x20\x31\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x4c\x5b\x69\x5d\x2c\x20\x4c\x5b\x6a\x5d\x20\x3d\x20\x4c\x5b\x6a\x5d\x2c\x20\x4c\x5b\x69\x5d\x0a\x0a\x64\x65\x66\x20\x63\x68\x6f\x69\x63\x65\x28\x4c\x29\x3a\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x4c\x5b\x72\x61\x6e\x64\x69\x6e\x74\x28\x30\x2c\x20\x6c\x65\x6e\x28\x4c\x29\x20\x2d\x20\x31\x29\x5d"},
-        {"collections", "\x63\x6c\x61\x73\x73\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x70\x72\x65\x76\x2c\x20\x6e\x65\x78\x74\x2c\x20\x76\x61\x6c\x75\x65\x29\x20\x2d\x3e\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x70\x72\x65\x76\x20\x3d\x20\x70\x72\x65\x76\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x76\x61\x6c\x75\x65\x20\x3d\x20\x76\x61\x6c\x75\x65\x0a\x0a\x63\x6c\x61\x73\x73\x20\x64\x65\x71\x75\x65\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3d\x4e\x6f\x6e\x65\x29\x20\x2d\x3e\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x2c\x20\x4e\x6f\x6e\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x20\x3d\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x76\x61\x6c\x75\x65\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x61\x70\x70\x65\x6e\x64\x28\x76\x61\x6c\x75\x65\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x61\x70\x70\x65\x6e\x64\x28\x73\x65\x6c\x66\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x2c\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2c\x20\x76\x61\x6c\x75\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x61\x70\x70\x65\x6e\x64\x6c\x65\x66\x74\x28\x73\x65\x6c\x66\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x5f\x4c\x69\x6e\x6b\x65\x64\x4c\x69\x73\x74\x4e\x6f\x64\x65\x28\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2c\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x2c\x20\x76\x61\x6c\x75\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x2e\x70\x72\x65\x76\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x6f\x64\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2b\x3d\x20\x31\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x70\x6f\x70\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x3e\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x2e\x70\x72\x65\x76\x2e\x6e\x65\x78\x74\x20\x3d\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x2e\x70\x72\x65\x76\x20\x3d\x20\x6e\x6f\x64\x65\x2e\x70\x72\x65\x76\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2d\x3d\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x6f\x64\x65\x2e\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x70\x6f\x70\x6c\x65\x66\x74\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x73\x73\x65\x72\x74\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x3e\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x2e\x6e\x65\x78\x74\x2e\x70\x72\x65\x76\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x20\x3d\x20\x6e\x6f\x64\x65\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x20\x2d\x3d\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x6f\x64\x65\x2e\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6f\x70\x79\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x65\x77\x5f\x6c\x69\x73\x74\x20\x3d\x20\x64\x65\x71\x75\x65\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x76\x61\x6c\x75\x65\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x65\x77\x5f\x6c\x69\x73\x74\x2e\x61\x70\x70\x65\x6e\x64\x28\x76\x61\x6c\x75\x65\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x65\x77\x5f\x6c\x69\x73\x74\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x73\x69\x7a\x65\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x74\x65\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x6e\x6f\x64\x65\x20\x69\x73\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x6e\x6f\x64\x65\x2e\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x6e\x6f\x64\x65\x20\x3d\x20\x6e\x6f\x64\x65\x2e\x6e\x65\x78\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x20\x2d\x3e\x20\x73\x74\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x66\x22\x64\x65\x71\x75\x65\x28\x7b\x6c\x69\x73\x74\x28\x73\x65\x6c\x66\x29\x7d\x29\x22\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x65\x71\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x5f\x5f\x6f\x3a\x20\x6f\x62\x6a\x65\x63\x74\x29\x20\x2d\x3e\x20\x62\x6f\x6f\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x69\x73\x69\x6e\x73\x74\x61\x6e\x63\x65\x28\x5f\x5f\x6f\x2c\x20\x64\x65\x71\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x21\x3d\x20\x6c\x65\x6e\x28\x5f\x5f\x6f\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x74\x31\x2c\x20\x74\x32\x20\x3d\x20\x73\x65\x6c\x66\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x2c\x20\x5f\x5f\x6f\x2e\x68\x65\x61\x64\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x74\x31\x20\x69\x73\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x2e\x74\x61\x69\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x74\x31\x2e\x76\x61\x6c\x75\x65\x20\x21\x3d\x20\x74\x32\x2e\x76\x61\x6c\x75\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x74\x31\x2c\x20\x74\x32\x20\x3d\x20\x74\x31\x2e\x6e\x65\x78\x74\x2c\x20\x74\x32\x2e\x6e\x65\x78\x74\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6e\x65\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x5f\x5f\x6f\x3a\x20\x6f\x62\x6a\x65\x63\x74\x29\x20\x2d\x3e\x20\x62\x6f\x6f\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x20\x3d\x3d\x20\x5f\x5f\x6f\x0a\x0a\x0a\x64\x65\x66\x20\x43\x6f\x75\x6e\x74\x65\x72\x28\x69\x74\x65\x72\x61\x62\x6c\x65\x29\x3a\x0a\x20\x20\x20\x20\x61\x20\x3d\x20\x7b\x7d\x0a\x20\x20\x20\x20\x66\x6f\x72\x20\x78\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x78\x20\x69\x6e\x20\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x61\x5b\x78\x5d\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x61\x5b\x78\x5d\x20\x3d\x20\x31\x0a\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x61"},
-        {"dict", "\x63\x6c\x61\x73\x73\x20\x64\x69\x63\x74\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x63\x61\x70\x61\x63\x69\x74\x79\x3d\x31\x33\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x20\x3d\x20\x63\x61\x70\x61\x63\x69\x74\x79\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x20\x3d\x20\x5b\x4e\x6f\x6e\x65\x5d\x20\x2a\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x6c\x65\x6e\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x6c\x65\x6e\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x70\x72\x6f\x62\x65\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x3d\x20\x68\x61\x73\x68\x28\x6b\x65\x79\x29\x20\x25\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x77\x68\x69\x6c\x65\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x69\x5d\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x69\x5d\x5b\x30\x5d\x20\x3d\x3d\x20\x6b\x65\x79\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x2c\x20\x69\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x20\x3d\x20\x28\x69\x20\x2b\x20\x31\x29\x20\x25\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x2c\x20\x69\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x67\x65\x74\x69\x74\x65\x6d\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6f\x6b\x2c\x20\x69\x20\x3d\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x70\x72\x6f\x62\x65\x28\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x6f\x6b\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x4b\x65\x79\x45\x72\x72\x6f\x72\x28\x72\x65\x70\x72\x28\x6b\x65\x79\x29\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x69\x5d\x5b\x31\x5d\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x63\x6f\x6e\x74\x61\x69\x6e\x73\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6f\x6b\x2c\x20\x69\x20\x3d\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x70\x72\x6f\x62\x65\x28\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6f\x6b\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x73\x65\x74\x69\x74\x65\x6d\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x2c\x20\x76\x61\x6c\x75\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6f\x6b\x2c\x20\x69\x20\x3d\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x70\x72\x6f\x62\x65\x28\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6f\x6b\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x69\x5d\x5b\x31\x5d\x20\x3d\x20\x76\x61\x6c\x75\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6c\x73\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x69\x5d\x20\x3d\x20\x5b\x6b\x65\x79\x2c\x20\x76\x61\x6c\x75\x65\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x6c\x65\x6e\x20\x2b\x3d\x20\x31\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x2e\x5f\x6c\x65\x6e\x20\x3e\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x20\x2a\x20\x30\x2e\x36\x37\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x20\x2a\x3d\x20\x32\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x72\x65\x68\x61\x73\x68\x28\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x64\x65\x6c\x69\x74\x65\x6d\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6f\x6b\x2c\x20\x69\x20\x3d\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x70\x72\x6f\x62\x65\x28\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6e\x6f\x74\x20\x6f\x6b\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x4b\x65\x79\x45\x72\x72\x6f\x72\x28\x72\x65\x70\x72\x28\x6b\x65\x79\x29\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x69\x5d\x20\x3d\x20\x4e\x6f\x6e\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x6c\x65\x6e\x20\x2d\x3d\x20\x31\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x68\x61\x73\x68\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6f\x6c\x64\x5f\x61\x20\x3d\x20\x73\x65\x6c\x66\x2e\x5f\x61\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x20\x3d\x20\x5b\x4e\x6f\x6e\x65\x5d\x20\x2a\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x6c\x65\x6e\x20\x3d\x20\x30\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x76\x20\x69\x6e\x20\x6f\x6c\x64\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x76\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x5b\x6b\x76\x5b\x30\x5d\x5d\x20\x3d\x20\x6b\x76\x5b\x31\x5d\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x67\x65\x74\x28\x73\x65\x6c\x66\x2c\x20\x6b\x65\x79\x2c\x20\x64\x65\x66\x61\x75\x6c\x74\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x6f\x6b\x2c\x20\x69\x20\x3d\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x70\x72\x6f\x62\x65\x28\x6b\x65\x79\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6f\x6b\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x69\x5d\x5b\x31\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x64\x65\x66\x61\x75\x6c\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x6b\x65\x79\x73\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x76\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x76\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x6b\x76\x5b\x30\x5d\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x76\x61\x6c\x75\x65\x73\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x76\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x76\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x6b\x76\x5b\x31\x5d\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x74\x65\x6d\x73\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x76\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x76\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x79\x69\x65\x6c\x64\x20\x6b\x76\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6c\x65\x61\x72\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x20\x3d\x20\x5b\x4e\x6f\x6e\x65\x5d\x20\x2a\x20\x73\x65\x6c\x66\x2e\x5f\x63\x61\x70\x61\x63\x69\x74\x79\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x6c\x65\x6e\x20\x3d\x20\x30\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x75\x70\x64\x61\x74\x65\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x2c\x20\x76\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x2e\x69\x74\x65\x6d\x73\x28\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x5b\x6b\x5d\x20\x3d\x20\x76\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6f\x70\x79\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x64\x20\x3d\x20\x64\x69\x63\x74\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x76\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x76\x20\x69\x73\x20\x6e\x6f\x74\x20\x4e\x6f\x6e\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x64\x5b\x6b\x76\x5b\x30\x5d\x5d\x20\x3d\x20\x6b\x76\x5b\x31\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x64\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x20\x3d\x20\x5b\x72\x65\x70\x72\x28\x6b\x29\x2b\x27\x3a\x20\x27\x2b\x72\x65\x70\x72\x28\x76\x29\x20\x66\x6f\x72\x20\x6b\x2c\x76\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x69\x74\x65\x6d\x73\x28\x29\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x27\x7b\x27\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x61\x29\x20\x2b\x20\x27\x7d\x27\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x61\x20\x3d\x20\x5b\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x2c\x76\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x69\x74\x65\x6d\x73\x28\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x74\x79\x70\x65\x28\x6b\x29\x20\x69\x73\x20\x6e\x6f\x74\x20\x73\x74\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x61\x69\x73\x65\x20\x54\x79\x70\x65\x45\x72\x72\x6f\x72\x28\x27\x6a\x73\x6f\x6e\x20\x6b\x65\x79\x73\x20\x6d\x75\x73\x74\x20\x62\x65\x20\x73\x74\x72\x69\x6e\x67\x73\x2c\x20\x67\x6f\x74\x20\x27\x20\x2b\x20\x72\x65\x70\x72\x28\x6b\x29\x20\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x61\x2e\x61\x70\x70\x65\x6e\x64\x28\x6b\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x28\x29\x2b\x27\x3a\x20\x27\x2b\x76\x2e\x5f\x5f\x6a\x73\x6f\x6e\x5f\x5f\x28\x29\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x27\x7b\x27\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x61\x29\x20\x2b\x20\x27\x7d\x27\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x65\x71\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x5f\x5f\x6f\x3a\x20\x6f\x62\x6a\x65\x63\x74\x29\x20\x2d\x3e\x20\x62\x6f\x6f\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x74\x79\x70\x65\x28\x5f\x5f\x6f\x29\x20\x69\x73\x20\x6e\x6f\x74\x20\x64\x69\x63\x74\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x21\x3d\x20\x6c\x65\x6e\x28\x5f\x5f\x6f\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x6b\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x6b\x65\x79\x73\x28\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6b\x20\x6e\x6f\x74\x20\x69\x6e\x20\x5f\x5f\x6f\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x73\x65\x6c\x66\x5b\x6b\x5d\x20\x21\x3d\x20\x5f\x5f\x6f\x5b\x6b\x5d\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x46\x61\x6c\x73\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x54\x72\x75\x65\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6e\x65\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x5f\x5f\x6f\x3a\x20\x6f\x62\x6a\x65\x63\x74\x29\x20\x2d\x3e\x20\x62\x6f\x6f\x6c\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6e\x6f\x74\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x65\x71\x5f\x5f\x28\x5f\x5f\x6f\x29"},
-        {"set", "\x63\x6c\x61\x73\x73\x20\x73\x65\x74\x3a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x6e\x69\x74\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3d\x4e\x6f\x6e\x65\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x20\x3d\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x20\x6f\x72\x20\x5b\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x20\x3d\x20\x7b\x7d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x69\x74\x65\x6d\x20\x69\x6e\x20\x69\x74\x65\x72\x61\x62\x6c\x65\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x61\x64\x64\x28\x69\x74\x65\x6d\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x61\x64\x64\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x65\x6c\x65\x6d\x5d\x20\x3d\x20\x4e\x6f\x6e\x65\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x64\x69\x73\x63\x61\x72\x64\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x64\x65\x6c\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x65\x6c\x65\x6d\x5d\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x72\x65\x6d\x6f\x76\x65\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x64\x65\x6c\x20\x73\x65\x6c\x66\x2e\x5f\x61\x5b\x65\x6c\x65\x6d\x5d\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6c\x65\x61\x72\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x63\x6c\x65\x61\x72\x28\x29\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x75\x70\x64\x61\x74\x65\x28\x73\x65\x6c\x66\x2c\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x6c\x66\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x2e\x5f\x61\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x63\x6f\x70\x79\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x74\x28\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x6b\x65\x79\x73\x28\x29\x29\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x61\x6e\x64\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x74\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6f\x72\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x6c\x66\x2e\x63\x6f\x70\x79\x28\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x73\x75\x62\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x74\x28\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x6e\x6f\x74\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x78\x6f\x72\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x20\x3d\x20\x73\x65\x74\x28\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x6e\x6f\x74\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x66\x6f\x72\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x6f\x74\x68\x65\x72\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x65\x6c\x65\x6d\x20\x6e\x6f\x74\x20\x69\x6e\x20\x73\x65\x6c\x66\x3a\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x2e\x61\x64\x64\x28\x65\x6c\x65\x6d\x29\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x72\x65\x74\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x75\x6e\x69\x6f\x6e\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x7c\x20\x6f\x74\x68\x65\x72\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x6e\x74\x65\x72\x73\x65\x63\x74\x69\x6f\x6e\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x26\x20\x6f\x74\x68\x65\x72\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x64\x69\x66\x66\x65\x72\x65\x6e\x63\x65\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x2d\x20\x6f\x74\x68\x65\x72\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x73\x79\x6d\x6d\x65\x74\x72\x69\x63\x5f\x64\x69\x66\x66\x65\x72\x65\x6e\x63\x65\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x20\x5e\x20\x6f\x74\x68\x65\x72\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x65\x71\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x78\x6f\x72\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x6e\x65\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x78\x6f\x72\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x21\x3d\x20\x30\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x73\x64\x69\x73\x6a\x6f\x69\x6e\x74\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x61\x6e\x64\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x73\x73\x75\x62\x73\x65\x74\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x5f\x73\x75\x62\x5f\x5f\x28\x6f\x74\x68\x65\x72\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x69\x73\x73\x75\x70\x65\x72\x73\x65\x74\x28\x73\x65\x6c\x66\x2c\x20\x6f\x74\x68\x65\x72\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x6f\x74\x68\x65\x72\x2e\x5f\x5f\x73\x75\x62\x5f\x5f\x28\x73\x65\x6c\x66\x29\x2e\x5f\x5f\x6c\x65\x6e\x5f\x5f\x28\x29\x20\x3d\x3d\x20\x30\x0a\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x63\x6f\x6e\x74\x61\x69\x6e\x73\x5f\x5f\x28\x73\x65\x6c\x66\x2c\x20\x65\x6c\x65\x6d\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x65\x6c\x65\x6d\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x72\x65\x70\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6c\x65\x6e\x28\x73\x65\x6c\x66\x29\x20\x3d\x3d\x20\x30\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x27\x73\x65\x74\x28\x29\x27\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x27\x7b\x27\x2b\x20\x27\x2c\x20\x27\x2e\x6a\x6f\x69\x6e\x28\x5b\x72\x65\x70\x72\x28\x69\x29\x20\x66\x6f\x72\x20\x69\x20\x69\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x6b\x65\x79\x73\x28\x29\x5d\x29\x20\x2b\x20\x27\x7d\x27\x0a\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x64\x65\x66\x20\x5f\x5f\x69\x74\x65\x72\x5f\x5f\x28\x73\x65\x6c\x66\x29\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6e\x20\x73\x65\x6c\x66\x2e\x5f\x61\x2e\x6b\x65\x79\x73\x28\x29"},
+#define PK_LEGACY_EXPORT PK_EXPORT inline
 
-    };
-}   // namespace pkpy
-
+#endif
 
 
 namespace pkpy {
 
-CodeObject_ VM::compile(Str source, Str filename, CompileMode mode) {
-    Compiler compiler(this, source.c_str(), filename, mode);
+inline CodeObject_ VM::compile(Str source, Str filename, CompileMode mode, bool unknown_global_scope) {
+    Compiler compiler(this, source, filename, mode, unknown_global_scope);
     try{
         return compiler.compile();
     }catch(Exception& e){
-        // std::cout << e.summary() << std::endl;
+#if DEBUG_FULL_EXCEPTION
+        std::cerr << e.summary() << std::endl;
+#endif
         _error(e);
         return nullptr;
     }
 }
 
+
+inline void init_builtins(VM* _vm) {
 #define BIND_NUM_ARITH_OPT(name, op)                                                                    \
-    _vm->_bind_methods<1>({"int","float"}, #name, [](VM* vm, Args& args){                         \
-        if(is_both_int(args[0], args[1])){                                                              \
-            return VAR(_CAST(i64, args[0]) op _CAST(i64, args[1]));                     \
+    _vm->bind##name(_vm->tp_int, [](VM* vm, PyObject* lhs, PyObject* rhs) {                             \
+        if(is_int(rhs)){                                                                                \
+            return VAR(_CAST(i64, lhs) op _CAST(i64, rhs));                                             \
         }else{                                                                                          \
-            return VAR(vm->num_to_float(args[0]) op vm->num_to_float(args[1]));                 \
+            return VAR(_CAST(i64, lhs) op vm->num_to_float(rhs));                                       \
         }                                                                                               \
+    });                                                                                                 \
+    _vm->bind##name(_vm->tp_float, [](VM* vm, PyObject* lhs, PyObject* rhs) {                           \
+        return VAR(_CAST(f64, lhs) op vm->num_to_float(rhs));                                           \
     });
 
-#define BIND_NUM_LOGICAL_OPT(name, op, is_eq)                                                           \
-    _vm->_bind_methods<1>({"int","float"}, #name, [](VM* vm, Args& args){                         \
-        if(!is_both_int_or_float(args[0], args[1])){                                                    \
-            if constexpr(is_eq) return VAR(args[0] op args[1]);                                  \
-            vm->TypeError("unsupported operand type(s) for " #op );                                     \
-        }                                                                                               \
-        if(is_both_int(args[0], args[1]))                                                               \
-            return VAR(_CAST(i64, args[0]) op _CAST(i64, args[1]));                    \
-        return VAR(vm->num_to_float(args[0]) op vm->num_to_float(args[1]));                      \
-    });
-    
-
-void init_builtins(VM* _vm) {
     BIND_NUM_ARITH_OPT(__add__, +)
     BIND_NUM_ARITH_OPT(__sub__, -)
     BIND_NUM_ARITH_OPT(__mul__, *)
+
+#undef BIND_NUM_ARITH_OPT
+
+#define BIND_NUM_LOGICAL_OPT(name, op, is_eq)   \
+    _vm->bind##name(_vm->tp_int, [](VM* vm, PyObject* lhs, PyObject* rhs) { \
+        if(is_int(rhs))     return _CAST(i64, lhs) op _CAST(i64, rhs);      \
+        if(is_float(rhs))   return _CAST(i64, lhs) op _CAST(f64, rhs);      \
+        if constexpr(is_eq) return lhs op rhs;                              \
+        vm->TypeError("unsupported operand type(s) for " #op );             \
+        return false;                                                       \
+    });                                                                     \
+    _vm->bind##name(_vm->tp_float, [](VM* vm, PyObject* lhs, PyObject* rhs) {   \
+        if(is_int(rhs))     return _CAST(f64, lhs) op _CAST(i64, rhs);          \
+        if(is_float(rhs))   return _CAST(f64, lhs) op _CAST(f64, rhs);          \
+        if constexpr(is_eq) return lhs op rhs;                                  \
+        vm->TypeError("unsupported operand type(s) for " #op );                 \
+        return false;                                                           \
+    });
 
     BIND_NUM_LOGICAL_OPT(__lt__, <, false)
     BIND_NUM_LOGICAL_OPT(__le__, <=, false)
     BIND_NUM_LOGICAL_OPT(__gt__, >, false)
     BIND_NUM_LOGICAL_OPT(__ge__, >=, false)
     BIND_NUM_LOGICAL_OPT(__eq__, ==, true)
-    BIND_NUM_LOGICAL_OPT(__ne__, !=, true)
 
 #undef BIND_NUM_ARITH_OPT
 #undef BIND_NUM_LOGICAL_OPT
 
-    _vm->bind_builtin_func<1>("__sys_stdout_write", [](VM* vm, Args& args) {
-        (*vm->_stdout) << CAST(Str&, args[0]);
-        return vm->None;
-    });
-
-    _vm->bind_builtin_func<2>("super", [](VM* vm, Args& args) {
-        vm->check_type(args[0], vm->tp_type);
+    _vm->bind_builtin_func<2>("super", [](VM* vm, ArgsView args) {
+        vm->check_non_tagged_type(args[0], vm->tp_type);
         Type type = OBJ_GET(Type, args[0]);
         if(!vm->isinstance(args[1], type)){
-            vm->TypeError("super(type, obj): obj must be an instance or subtype of type");
+            Str _0 = obj_type_name(vm, OBJ_GET(Type, vm->_t(args[1])));
+            Str _1 = obj_type_name(vm, type);
+            vm->TypeError("super(): " + _0.escape() + " is not an instance of " + _1.escape());
         }
-        Type base = vm->_all_types[type.index].base;
-        return vm->new_object(vm->tp_super, Super(args[1], base));
+        Type base = vm->_all_types[type].base;
+        return vm->heap.gcnew(vm->tp_super, Super(args[1], base));
     });
 
-    _vm->bind_builtin_func<2>("isinstance", [](VM* vm, Args& args) {
-        vm->check_type(args[1], vm->tp_type);
+    _vm->bind_builtin_func<2>("isinstance", [](VM* vm, ArgsView args) {
+        vm->check_non_tagged_type(args[1], vm->tp_type);
         Type type = OBJ_GET(Type, args[1]);
         return VAR(vm->isinstance(args[0], type));
     });
 
-    _vm->bind_builtin_func<1>("id", [](VM* vm, Args& args) {
-        const PyVar& obj = args[0];
-        if(obj.is_tagged()) return VAR((i64)0);
-        return VAR(obj.bits);
+    _vm->bind_builtin_func<0>("globals", [](VM* vm, ArgsView args) {
+        PyObject* mod = vm->top_frame()->_module;
+        return VAR(MappingProxy(mod));
     });
 
-    _vm->bind_builtin_func<2>("divmod", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<1>("id", [](VM* vm, ArgsView args) {
+        PyObject* obj = args[0];
+        if(is_tagged(obj)) return vm->None;
+        return VAR_T(VoidP, obj);
+    });
+
+    _vm->bind_builtin_func<1>("staticmethod", [](VM* vm, ArgsView args) {
+        return args[0];
+    });
+
+    _vm->bind_builtin_func<1>("__import__", [](VM* vm, ArgsView args) {
+        return vm->py_import(CAST(Str&, args[0]));
+    });
+
+    _vm->bind_builtin_func<2>("divmod", [](VM* vm, ArgsView args) {
         i64 lhs = CAST(i64, args[0]);
         i64 rhs = CAST(i64, args[1]);
-        if(rhs == 0) vm->ZeroDivisionError();
-        return VAR(two_args(VAR(lhs/rhs), VAR(lhs%rhs)));
+        return VAR(Tuple({VAR(lhs/rhs), VAR(lhs%rhs)}));
     });
 
-    _vm->bind_builtin_func<1>("eval", [](VM* vm, Args& args) {
-        CodeObject_ code = vm->compile(CAST(Str&, args[0]), "<eval>", EVAL_MODE);
-        return vm->_exec(code, vm->top_frame()->_module, vm->top_frame()->_locals);
+    _vm->bind_builtin_func<1>("eval", [](VM* vm, ArgsView args) {
+        CodeObject_ code = vm->compile(CAST(Str&, args[0]), "<eval>", EVAL_MODE, true);
+        FrameId frame = vm->top_frame();
+        return vm->_exec(code.get(), frame->_module, frame->_callable, frame->_locals);
     });
 
-    _vm->bind_builtin_func<1>("exec", [](VM* vm, Args& args) {
-        CodeObject_ code = vm->compile(CAST(Str&, args[0]), "<exec>", EXEC_MODE);
-        vm->_exec(code, vm->top_frame()->_module, vm->top_frame()->_locals);
+    _vm->bind_builtin_func<1>("exec", [](VM* vm, ArgsView args) {
+        CodeObject_ code = vm->compile(CAST(Str&, args[0]), "<exec>", EXEC_MODE, true);
+        FrameId frame = vm->top_frame();
+        vm->_exec(code.get(), frame->_module, frame->_callable, frame->_locals);
         return vm->None;
     });
 
-    _vm->bind_builtin_func<-1>("exit", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<-1>("exit", [](VM* vm, ArgsView args) {
         if(args.size() == 0) std::exit(0);
         else if(args.size() == 1) std::exit(CAST(int, args[0]));
         else vm->TypeError("exit() takes at most 1 argument");
         return vm->None;
     });
 
-    _vm->bind_builtin_func<1>("repr", CPP_LAMBDA(vm->asRepr(args[0])));
-    _vm->bind_builtin_func<1>("len", CPP_LAMBDA(vm->call(args[0], __len__, no_arg())));
+    _vm->bind_builtin_func<1>("repr", CPP_LAMBDA(vm->py_repr(args[0])));
 
-    _vm->bind_builtin_func<1>("hash", [](VM* vm, Args& args){
-        i64 value = vm->hash(args[0]);
+    _vm->bind_builtin_func<1>("len", [](VM* vm, ArgsView args){
+        const PyTypeInfo* ti = vm->_inst_type_info(args[0]);
+        if(ti->m__len__) return VAR(ti->m__len__(vm, args[0]));
+        return vm->call_method(args[0], __len__);
+    });
+
+    _vm->bind_builtin_func<1>("hash", [](VM* vm, ArgsView args){
+        i64 value = vm->py_hash(args[0]);
         if(((value << 2) >> 2) != value) value >>= 2;
         return VAR(value);
     });
 
-    _vm->bind_builtin_func<1>("chr", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<1>("chr", [](VM* vm, ArgsView args) {
         i64 i = CAST(i64, args[0]);
         if (i < 0 || i > 128) vm->ValueError("chr() arg not in range(128)");
         return VAR(std::string(1, (char)i));
     });
 
-    _vm->bind_builtin_func<1>("ord", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<1>("ord", [](VM* vm, ArgsView args) {
         const Str& s = CAST(Str&, args[0]);
-        if (s.size() != 1) vm->TypeError("ord() expected an ASCII character");
-        return VAR((i64)(s.c_str()[0]));
+        if (s.length()!=1) vm->TypeError("ord() expected an ASCII character");
+        return VAR((i64)(s[0]));
     });
 
-    _vm->bind_builtin_func<2>("hasattr", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<2>("hasattr", [](VM* vm, ArgsView args) {
         return VAR(vm->getattr(args[0], CAST(Str&, args[1]), false) != nullptr);
     });
 
-    _vm->bind_builtin_func<3>("setattr", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<3>("setattr", [](VM* vm, ArgsView args) {
         vm->setattr(args[0], CAST(Str&, args[1]), args[2]);
         return vm->None;
     });
 
-    _vm->bind_builtin_func<2>("getattr", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<2>("getattr", [](VM* vm, ArgsView args) {
         const Str& name = CAST(Str&, args[1]);
         return vm->getattr(args[0], name);
     });
 
-    _vm->bind_builtin_func<1>("hex", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<1>("hex", [](VM* vm, ArgsView args) {
         std::stringstream ss;
         ss << std::hex << CAST(i64, args[0]);
         return VAR("0x" + ss.str());
     });
 
-    _vm->bind_builtin_func<1>("iter", [](VM* vm, Args& args) {
-        return vm->asIter(args[0]);
+    _vm->bind_builtin_func<1>("iter", [](VM* vm, ArgsView args) {
+        return vm->py_iter(args[0]);
     });
 
-    _vm->bind_builtin_func<1>("dir", [](VM* vm, Args& args) {
+    _vm->bind_builtin_func<1>("next", [](VM* vm, ArgsView args) {
+        return vm->py_next(args[0]);
+    });
+
+    _vm->bind_builtin_func<1>("dir", [](VM* vm, ArgsView args) {
         std::set<StrName> names;
-        if(args[0]->is_attr_valid()){
+        if(!is_tagged(args[0]) && args[0]->is_attr_valid()){
             std::vector<StrName> keys = args[0]->attr().keys();
             names.insert(keys.begin(), keys.end());
         }
@@ -5535,24 +10104,25 @@ void init_builtins(VM* _vm) {
         std::vector<StrName> keys = t_attr.keys();
         names.insert(keys.begin(), keys.end());
         List ret;
-        for (StrName name : names) ret.push_back(VAR(name.str()));
+        for (StrName name : names) ret.push_back(VAR(name.sv()));
         return VAR(std::move(ret));
     });
 
-    _vm->bind_method<0>("object", "__repr__", [](VM* vm, Args& args) {
-        PyVar self = args[0];
-        std::uintptr_t addr = self.is_tagged() ? 0 : (uintptr_t)self.get();
-        StrStream ss;
-        ss << std::hex << addr;
-        Str s = "<" + OBJ_NAME(vm->_t(self)) + " object at 0x" + ss.str() + ">";
-        return VAR(s);
+    _vm->bind__repr__(_vm->tp_object, [](VM* vm, PyObject* obj) {
+        if(is_tagged(obj)) FATAL_ERROR();
+        std::stringstream ss;
+        ss << "<" << OBJ_NAME(vm->_t(obj)) << " object at 0x";
+        ss << std::hex << reinterpret_cast<intptr_t>(obj) << ">";
+        return VAR(ss.str());
     });
 
-    _vm->bind_method<1>("object", "__eq__", CPP_LAMBDA(VAR(args[0] == args[1])));
-    _vm->bind_method<1>("object", "__ne__", CPP_LAMBDA(VAR(args[0] != args[1])));
+    _vm->bind__eq__(_vm->tp_object, [](VM* vm, PyObject* lhs, PyObject* rhs) { return lhs == rhs; });
+    _vm->bind__hash__(_vm->tp_object, [](VM* vm, PyObject* obj) { return BITS(obj); });
 
-    _vm->bind_static_method<1>("type", "__new__", CPP_LAMBDA(vm->_t(args[0])));
-    _vm->bind_static_method<-1>("range", "__new__", [](VM* vm, Args& args) {
+    _vm->bind_constructor<2>("type", CPP_LAMBDA(vm->_t(args[1])));
+
+    _vm->bind_constructor<-1>("range", [](VM* vm, ArgsView args) {
+        args._begin += 1;   // skip cls
         Range r;
         switch (args.size()) {
             case 1: r.stop = CAST(i64, args[0]); break;
@@ -5563,23 +10133,24 @@ void init_builtins(VM* _vm) {
         return VAR(r);
     });
 
-    _vm->bind_method<0>("range", "__iter__", CPP_LAMBDA(
-        vm->PyIter(RangeIter(vm, args[0]))
-    ));
+    _vm->bind__iter__(_vm->tp_range, [](VM* vm, PyObject* obj) { return VAR_T(RangeIter, OBJ_GET(Range, obj)); });
+    _vm->bind__repr__(_vm->_type("NoneType"), [](VM* vm, PyObject* obj) { return VAR("None"); });
+    _vm->bind__json__(_vm->_type("NoneType"), [](VM* vm, PyObject* obj) { return VAR("null"); });
 
-    _vm->bind_method<0>("NoneType", "__repr__", CPP_LAMBDA(VAR("None")));
-    _vm->bind_method<0>("NoneType", "__json__", CPP_LAMBDA(VAR("null")));
-
-    _vm->_bind_methods<1>({"int", "float"}, "__truediv__", [](VM* vm, Args& args) {
-        f64 rhs = vm->num_to_float(args[1]);
-        if (rhs == 0) vm->ZeroDivisionError();
-        return VAR(vm->num_to_float(args[0]) / rhs);
+    _vm->bind__truediv__(_vm->tp_float, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        f64 value = CAST_F(rhs);
+        return VAR(_CAST(f64, lhs) / value);
     });
 
-    _vm->_bind_methods<1>({"int", "float"}, "__pow__", [](VM* vm, Args& args) {
-        if(is_both_int(args[0], args[1])){
-            i64 lhs = _CAST(i64, args[0]);
-            i64 rhs = _CAST(i64, args[1]);
+    _vm->bind__truediv__(_vm->tp_int, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        f64 value = CAST_F(rhs);
+        return VAR(_CAST(i64, lhs) / value);
+    });
+
+    auto py_number_pow = [](VM* vm, PyObject* lhs_, PyObject* rhs_) {
+        if(is_both_int(lhs_, rhs_)){
+            i64 lhs = _CAST(i64, lhs_);
+            i64 rhs = _CAST(i64, rhs_);
             bool flag = false;
             if(rhs < 0) {flag = true; rhs = -rhs;}
             i64 ret = 1;
@@ -5591,47 +10162,54 @@ void init_builtins(VM* _vm) {
             if(flag) return VAR((f64)(1.0 / ret));
             return VAR(ret);
         }else{
-            return VAR((f64)std::pow(vm->num_to_float(args[0]), vm->num_to_float(args[1])));
+            return VAR((f64)std::pow(CAST_F(lhs_), CAST_F(rhs_)));
         }
-    });
+    };
 
-    /************ PyInt ************/
-    _vm->bind_static_method<1>("int", "__new__", [](VM* vm, Args& args) {
-        if (is_type(args[0], vm->tp_int)) return args[0];
-        if (is_type(args[0], vm->tp_float)) return VAR((i64)CAST(f64, args[0]));
-        if (is_type(args[0], vm->tp_bool)) return VAR(_CAST(bool, args[0]) ? 1 : 0);
-        if (is_type(args[0], vm->tp_str)) {
-            const Str& s = CAST(Str&, args[0]);
+    _vm->bind__pow__(_vm->tp_int, py_number_pow);
+    _vm->bind__pow__(_vm->tp_float, py_number_pow);
+
+    /************ int ************/
+    _vm->bind_constructor<2>("int", [](VM* vm, ArgsView args) {
+        if (is_type(args[1], vm->tp_float)) return VAR((i64)CAST(f64, args[1]));
+        if (is_type(args[1], vm->tp_int)) return args[1];
+        if (is_type(args[1], vm->tp_bool)) return VAR(_CAST(bool, args[1]) ? 1 : 0);
+        if (is_type(args[1], vm->tp_str)) {
+            const Str& s = CAST(Str&, args[1]);
             try{
                 size_t parsed = 0;
-                i64 val = S_TO_INT(s, &parsed, 10);
-                if(parsed != s.size()) throw std::invalid_argument("<?>");
+                i64 val = Number::stoi(s.str(), &parsed, 10);
+                if(parsed != s.length()) throw std::invalid_argument("<?>");
                 return VAR(val);
             }catch(std::invalid_argument&){
-                vm->ValueError("invalid literal for int(): " + s.escape(true));
+                vm->ValueError("invalid literal for int(): " + s.escape());
             }
         }
         vm->TypeError("int() argument must be a int, float, bool or str");
         return vm->None;
     });
 
-    _vm->bind_method<1>("int", "__floordiv__", [](VM* vm, Args& args) {
-        i64 rhs = CAST(i64, args[1]);
-        if(rhs == 0) vm->ZeroDivisionError();
-        return VAR(CAST(i64, args[0]) / rhs);
+    _vm->bind__floordiv__(_vm->tp_int, [](VM* vm, PyObject* lhs_, PyObject* rhs_) {
+        i64 rhs = CAST(i64, rhs_);
+        return VAR(_CAST(i64, lhs_) / rhs);
     });
 
-    _vm->bind_method<1>("int", "__mod__", [](VM* vm, Args& args) {
-        i64 rhs = CAST(i64, args[1]);
-        if(rhs == 0) vm->ZeroDivisionError();
-        return VAR(CAST(i64, args[0]) % rhs);
+    _vm->bind__mod__(_vm->tp_int, [](VM* vm, PyObject* lhs_, PyObject* rhs_) {
+        i64 rhs = CAST(i64, rhs_);
+        return VAR(_CAST(i64, lhs_) % rhs);
     });
 
-    _vm->bind_method<0>("int", "__repr__", CPP_LAMBDA(VAR(std::to_string(CAST(i64, args[0])))));
-    _vm->bind_method<0>("int", "__json__", CPP_LAMBDA(VAR(std::to_string(CAST(i64, args[0])))));
+    _vm->bind__repr__(_vm->tp_int, [](VM* vm, PyObject* obj) { return VAR(std::to_string(_CAST(i64, obj))); });
+    _vm->bind__json__(_vm->tp_int, [](VM* vm, PyObject* obj) { return VAR(std::to_string(_CAST(i64, obj))); });
 
-#define INT_BITWISE_OP(name,op) \
-    _vm->bind_method<1>("int", #name, CPP_LAMBDA(VAR(CAST(i64, args[0]) op CAST(i64, args[1]))));
+    _vm->bind__neg__(_vm->tp_int, [](VM* vm, PyObject* obj) { return VAR(-_CAST(i64, obj)); });
+
+    _vm->bind__hash__(_vm->tp_int, [](VM* vm, PyObject* obj) { return _CAST(i64, obj); });
+
+#define INT_BITWISE_OP(name, op) \
+    _vm->bind##name(_vm->tp_int, [](VM* vm, PyObject* lhs, PyObject* rhs) { \
+        return VAR(_CAST(i64, lhs) op CAST(i64, rhs)); \
+    });
 
     INT_BITWISE_OP(__lshift__, <<)
     INT_BITWISE_OP(__rshift__, >>)
@@ -5641,504 +10219,971 @@ void init_builtins(VM* _vm) {
 
 #undef INT_BITWISE_OP
 
-    /************ PyFloat ************/
-    _vm->bind_static_method<1>("float", "__new__", [](VM* vm, Args& args) {
-        if (is_type(args[0], vm->tp_int)) return VAR((f64)CAST(i64, args[0]));
-        if (is_type(args[0], vm->tp_float)) return args[0];
-        if (is_type(args[0], vm->tp_bool)) return VAR(_CAST(bool, args[0]) ? 1.0 : 0.0);
-        if (is_type(args[0], vm->tp_str)) {
-            const Str& s = CAST(Str&, args[0]);
+    /************ float ************/
+    _vm->bind_constructor<2>("float", [](VM* vm, ArgsView args) {
+        if (is_type(args[1], vm->tp_int)) return VAR((f64)CAST(i64, args[1]));
+        if (is_type(args[1], vm->tp_float)) return args[1];
+        if (is_type(args[1], vm->tp_bool)) return VAR(_CAST(bool, args[1]) ? 1.0 : 0.0);
+        if (is_type(args[1], vm->tp_str)) {
+            const Str& s = CAST(Str&, args[1]);
             if(s == "inf") return VAR(INFINITY);
             if(s == "-inf") return VAR(-INFINITY);
             try{
-                f64 val = S_TO_FLOAT(s);
+                f64 val = Number::stof(s.str());
                 return VAR(val);
             }catch(std::invalid_argument&){
-                vm->ValueError("invalid literal for float(): '" + s + "'");
+                vm->ValueError("invalid literal for float(): " + s.escape());
             }
         }
         vm->TypeError("float() argument must be a int, float, bool or str");
         return vm->None;
     });
 
-    _vm->bind_method<0>("float", "__repr__", [](VM* vm, Args& args) {
-        f64 val = CAST(f64, args[0]);
+    _vm->bind__hash__(_vm->tp_float, [](VM* vm, PyObject* obj) {
+        f64 val = _CAST(f64, obj);
+        return (i64)std::hash<f64>()(val);
+    });
+
+    _vm->bind__neg__(_vm->tp_float, [](VM* vm, PyObject* obj) { return VAR(-_CAST(f64, obj)); });
+
+    _vm->bind__repr__(_vm->tp_float, [](VM* vm, PyObject* obj) {
+        f64 val = _CAST(f64, obj);
         if(std::isinf(val) || std::isnan(val)) return VAR(std::to_string(val));
-        StrStream ss;
-        ss << std::setprecision(std::numeric_limits<f64>::max_digits10-1-2) << val;
+        std::stringstream ss;
+        ss << std::setprecision(std::numeric_limits<f64>::max_digits10-2) << val;
         std::string s = ss.str();
         if(std::all_of(s.begin()+1, s.end(), isdigit)) s += ".0";
         return VAR(s);
     });
-
-    _vm->bind_method<0>("float", "__json__", [](VM* vm, Args& args) {
-        f64 val = CAST(f64, args[0]);
+    _vm->bind__json__(_vm->tp_float, [](VM* vm, PyObject* obj) {
+        f64 val = _CAST(f64, obj);
         if(std::isinf(val) || std::isnan(val)) vm->ValueError("cannot jsonify 'nan' or 'inf'");
         return VAR(std::to_string(val));
     });
 
-    /************ PyString ************/
-    _vm->bind_static_method<1>("str", "__new__", CPP_LAMBDA(vm->asStr(args[0])));
+    /************ str ************/
+    _vm->bind_constructor<2>("str", CPP_LAMBDA(vm->py_str(args[1])));
 
-    _vm->bind_method<1>("str", "__add__", [](VM* vm, Args& args) {
-        const Str& lhs = CAST(Str&, args[0]);
-        const Str& rhs = CAST(Str&, args[1]);
-        return VAR(lhs + rhs);
+    _vm->bind__hash__(_vm->tp_str, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(Str&, obj).hash();
     });
 
-    _vm->bind_method<0>("str", "__len__", [](VM* vm, Args& args) {
-        const Str& self = CAST(Str&, args[0]);
-        return VAR(self.u8_length());
+    _vm->bind__add__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return VAR(_CAST(Str&, lhs) + CAST(Str&, rhs));
     });
-
-    _vm->bind_method<1>("str", "__contains__", [](VM* vm, Args& args) {
-        const Str& self = CAST(Str&, args[0]);
-        const Str& other = CAST(Str&, args[1]);
-        return VAR(self.find(other) != Str::npos);
+    _vm->bind__len__(_vm->tp_str, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(Str&, obj).u8_length();
     });
-
-    _vm->bind_method<0>("str", "__str__", CPP_LAMBDA(args[0]));
-    _vm->bind_method<0>("str", "__iter__", CPP_LAMBDA(vm->PyIter(StringIter(vm, args[0]))));
-
-    _vm->bind_method<0>("str", "__repr__", [](VM* vm, Args& args) {
-        const Str& _self = CAST(Str&, args[0]);
-        return VAR(_self.escape(true));
+    _vm->bind__mul__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        const Str& self = _CAST(Str&, lhs);
+        i64 n = CAST(i64, rhs);
+        std::stringstream ss;
+        for(i64 i = 0; i < n; i++) ss << self.sv();
+        return VAR(ss.str());
     });
-
-    _vm->bind_method<0>("str", "__json__", [](VM* vm, Args& args) {
-        const Str& self = CAST(Str&, args[0]);
+    _vm->bind__contains__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        const Str& self = _CAST(Str&, lhs);
+        const Str& other = CAST(Str&, rhs);
+        return self.index(other) != -1;
+    });
+    _vm->bind__str__(_vm->tp_str, [](VM* vm, PyObject* obj) { return obj; });
+    _vm->bind__iter__(_vm->tp_str, [](VM* vm, PyObject* obj) { return VAR_T(StringIter, obj); });
+    _vm->bind__repr__(_vm->tp_str, [](VM* vm, PyObject* obj) {
+        const Str& self = _CAST(Str&, obj);
+        return VAR(self.escape(true));
+    });
+    _vm->bind__json__(_vm->tp_str, [](VM* vm, PyObject* obj) {
+        const Str& self = _CAST(Str&, obj);
         return VAR(self.escape(false));
     });
-
-    _vm->bind_method<1>("str", "__eq__", [](VM* vm, Args& args) {
-        if(is_type(args[0], vm->tp_str) && is_type(args[1], vm->tp_str))
-            return VAR(CAST(Str&, args[0]) == CAST(Str&, args[1]));
-        return VAR(args[0] == args[1]);
+    _vm->bind__eq__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        if(!is_non_tagged_type(rhs, vm->tp_str)) return false;
+        return _CAST(Str&, lhs) == _CAST(Str&, rhs);
+    });
+    _vm->bind__gt__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return _CAST(Str&, lhs) > CAST(Str&, rhs);
+    });
+    _vm->bind__lt__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return _CAST(Str&, lhs) < CAST(Str&, rhs);
+    });
+    _vm->bind__ge__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return _CAST(Str&, lhs) >= CAST(Str&, rhs);
+    });
+    _vm->bind__le__(_vm->tp_str, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return _CAST(Str&, lhs) <= CAST(Str&, rhs);
     });
 
-    _vm->bind_method<1>("str", "__ne__", [](VM* vm, Args& args) {
-        if(is_type(args[0], vm->tp_str) && is_type(args[1], vm->tp_str))
-            return VAR(CAST(Str&, args[0]) != CAST(Str&, args[1]));
-        return VAR(args[0] != args[1]);
-    });
-
-    _vm->bind_method<1>("str", "__getitem__", [](VM* vm, Args& args) {
-        const Str& self (CAST(Str&, args[0]));
-
-        if(is_type(args[1], vm->tp_slice)){
-            Slice s = _CAST(Slice, args[1]);
-            s.normalize(self.u8_length());
-            return VAR(self.u8_substr(s.start, s.stop));
+    _vm->bind__getitem__(_vm->tp_str, [](VM* vm, PyObject* obj, PyObject* index) {
+        const Str& self = _CAST(Str&, obj);
+        if(is_non_tagged_type(index, vm->tp_slice)){
+            const Slice& s = _CAST(Slice&, index);
+            int start, stop, step;
+            vm->parse_int_slice(s, self.u8_length(), start, stop, step);
+            return VAR(self.u8_slice(start, stop, step));
         }
-
-        int index = CAST(int, args[1]);
-        index = vm->normalized_index(index, self.u8_length());
-        return VAR(self.u8_getitem(index));
+        int i = CAST(int, index);
+        i = vm->normalized_index(i, self.u8_length());
+        return VAR(self.u8_getitem(i));
     });
 
-    _vm->bind_method<1>("str", "__gt__", [](VM* vm, Args& args) {
-        const Str& self (CAST(Str&, args[0]));
-        const Str& obj (CAST(Str&, args[1]));
-        return VAR(self > obj);
+    _vm->bind_method<-1>("str", "replace", [](VM* vm, ArgsView args) {
+        if(args.size() != 1+2 && args.size() != 1+3) vm->TypeError("replace() takes 2 or 3 arguments");
+        const Str& self = _CAST(Str&, args[0]);
+        const Str& old = CAST(Str&, args[1]);
+        const Str& new_ = CAST(Str&, args[2]);
+        int count = args.size()==1+3 ? CAST(int, args[3]) : -1;
+        return VAR(self.replace(old, new_, count));
     });
 
-    _vm->bind_method<1>("str", "__lt__", [](VM* vm, Args& args) {
-        const Str& self (CAST(Str&, args[0]));
-        const Str& obj (CAST(Str&, args[1]));
-        return VAR(self < obj);
+    _vm->bind_method<1>("str", "index", [](VM* vm, ArgsView args) {
+        const Str& self = _CAST(Str&, args[0]);
+        const Str& sub = CAST(Str&, args[1]);
+        int index = self.index(sub);
+        if(index == -1) vm->ValueError("substring not found");
+        return VAR(index);
     });
 
-    _vm->bind_method<2>("str", "replace", [](VM* vm, Args& args) {
-        const Str& _self = CAST(Str&, args[0]);
-        const Str& _old = CAST(Str&, args[1]);
-        const Str& _new = CAST(Str&, args[2]);
-        Str _copy = _self;
-        size_t pos = 0;
-        while ((pos = _copy.find(_old, pos)) != std::string::npos) {
-            _copy.replace(pos, _old.length(), _new);
-            pos += _new.length();
-        }
-        return VAR(_copy);
-    });
-
-    _vm->bind_method<1>("str", "startswith", [](VM* vm, Args& args) {
-        const Str& self = CAST(Str&, args[0]);
+    _vm->bind_method<1>("str", "startswith", [](VM* vm, ArgsView args) {
+        const Str& self = _CAST(Str&, args[0]);
         const Str& prefix = CAST(Str&, args[1]);
-        return VAR(self.find(prefix) == 0);
+        return VAR(self.index(prefix) == 0);
     });
 
-    _vm->bind_method<1>("str", "endswith", [](VM* vm, Args& args) {
-        const Str& self = CAST(Str&, args[0]);
+    _vm->bind_method<1>("str", "endswith", [](VM* vm, ArgsView args) {
+        const Str& self = _CAST(Str&, args[0]);
         const Str& suffix = CAST(Str&, args[1]);
-        return VAR(self.rfind(suffix) == self.length() - suffix.length());
+        int offset = self.length() - suffix.length();
+        if(offset < 0) return vm->False;
+        bool ok = memcmp(self.data+offset, suffix.data, suffix.length()) == 0;
+        return VAR(ok);
     });
 
-    _vm->bind_method<1>("str", "join", [](VM* vm, Args& args) {
-        const Str& self = CAST(Str&, args[0]);
-        StrStream ss;
-        PyVar obj = vm->asList(args[1]);
-        const List& list = CAST(List&, obj);
-        for (int i = 0; i < list.size(); ++i) {
-            if (i > 0) ss << self;
-            ss << CAST(Str&, list[i]);
+    _vm->bind_method<0>("str", "encode", [](VM* vm, ArgsView args) {
+        const Str& self = _CAST(Str&, args[0]);
+        std::vector<char> buffer(self.length());
+        memcpy(buffer.data(), self.data, self.length());
+        return VAR(Bytes(std::move(buffer)));
+    });
+
+    _vm->bind_method<1>("str", "join", [](VM* vm, ArgsView args) {
+        auto _lock = vm->heap.gc_scope_lock();
+        const Str& self = _CAST(Str&, args[0]);
+        FastStrStream ss;
+        PyObject* it = vm->py_iter(args[1]);     // strong ref
+        PyObject* obj = vm->py_next(it);
+        while(obj != vm->StopIteration){
+            if(!ss.empty()) ss << self;
+            ss << CAST(Str&, obj);
+            obj = vm->py_next(it);
         }
         return VAR(ss.str());
     });
 
-    /************ PyList ************/
-    _vm->bind_method<1>("list", "append", [](VM* vm, Args& args) {
-        List& self = CAST(List&, args[0]);
+    _vm->bind_method<0>("str", "to_c_str", [](VM* vm, ArgsView args){
+        const Str& self = _CAST(Str&, args[0]);
+        return VAR(self.c_str_dup());
+    });
+
+    _vm->bind_func<1>("str", "from_c_str", [](VM* vm, ArgsView args){
+        char* p = CAST(char*, args[0]);
+        return VAR(Str(p));
+    });
+
+    _vm->bind_method<0>("str", "lower", [](VM* vm, ArgsView args) {
+        const Str& self = _CAST(Str&, args[0]);
+        return VAR(self.lower());
+    });
+
+    _vm->bind_method<0>("str", "upper", [](VM* vm, ArgsView args) {
+        const Str& self = _CAST(Str&, args[0]);
+        return VAR(self.upper());
+    });
+
+    /************ list ************/
+    _vm->bind_constructor<2>("list", [](VM* vm, ArgsView args) {
+        return vm->py_list(args[1]);
+    });
+
+    _vm->bind__contains__(_vm->tp_list, [](VM* vm, PyObject* obj, PyObject* item) {
+        List& self = _CAST(List&, obj);
+        for(PyObject* i: self) if(vm->py_equals(i, item)) return true;
+        return false;
+    });
+
+    _vm->bind_method<1>("list", "count", [](VM* vm, ArgsView args) {
+        List& self = _CAST(List&, args[0]);
+        int count = 0;
+        for(PyObject* i: self) if(vm->py_equals(i, args[1])) count++;
+        return VAR(count);
+    });
+
+    _vm->bind__eq__(_vm->tp_list, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        List& a = _CAST(List&, lhs);
+        List& b = _CAST(List&, rhs);
+        if(a.size() != b.size()) return false;
+        for(int i=0; i<a.size(); i++){
+            if(!vm->py_equals(a[i], b[i])) return false;
+        }
+        return true;
+    });
+
+    _vm->bind_method<1>("list", "index", [](VM* vm, ArgsView args) {
+        List& self = _CAST(List&, args[0]);
+        PyObject* obj = args[1];
+        for(int i=0; i<self.size(); i++){
+            if(vm->py_equals(self[i], obj)) return VAR(i);
+        }
+        vm->ValueError(_CAST(Str&, vm->py_repr(obj)) + " is not in list");
+        return vm->None;
+    });
+
+    _vm->bind_method<1>("list", "remove", [](VM* vm, ArgsView args) {
+        List& self = _CAST(List&, args[0]);
+        PyObject* obj = args[1];
+        for(int i=0; i<self.size(); i++){
+            if(vm->py_equals(self[i], obj)){
+                self.erase(i);
+                return vm->None;
+            }
+        }
+        vm->ValueError(_CAST(Str&, vm->py_repr(obj)) + " is not in list");
+        return vm->None;
+    });
+
+    _vm->bind_method<-1>("list", "pop", [](VM* vm, ArgsView args) {
+        List& self = _CAST(List&, args[0]);
+        if(args.size() == 1+0){
+            if(self.empty()) vm->IndexError("pop from empty list");
+            return self.popx_back();
+        }
+        if(args.size() == 1+1){
+            int index = CAST(int, args[1]);
+            index = vm->normalized_index(index, self.size());
+            PyObject* ret = self[index];
+            self.erase(index);
+            return ret;
+        }
+        vm->TypeError("pop() takes at most 1 argument");
+        return vm->None;
+    });
+
+    _vm->bind_method<1>("list", "append", [](VM* vm, ArgsView args) {
+        List& self = _CAST(List&, args[0]);
         self.push_back(args[1]);
         return vm->None;
     });
 
-    _vm->bind_method<1>("list", "extend", [](VM* vm, Args& args) {
-        List& self = CAST(List&, args[0]);
-        PyVar obj = vm->asList(args[1]);
-        const List& list = CAST(List&, obj);
-        self.insert(self.end(), list.begin(), list.end());
+    _vm->bind_method<1>("list", "extend", [](VM* vm, ArgsView args) {
+        auto _lock = vm->heap.gc_scope_lock();
+        List& self = _CAST(List&, args[0]);
+        PyObject* it = vm->py_iter(args[1]);     // strong ref
+        PyObject* obj = vm->py_next(it);
+        while(obj != vm->StopIteration){
+            self.push_back(obj);
+            obj = vm->py_next(it);
+        }
         return vm->None;
     });
 
-    _vm->bind_method<0>("list", "reverse", [](VM* vm, Args& args) {
-        List& self = CAST(List&, args[0]);
+    _vm->bind_method<0>("list", "reverse", [](VM* vm, ArgsView args) {
+        List& self = _CAST(List&, args[0]);
         std::reverse(self.begin(), self.end());
         return vm->None;
     });
 
-    _vm->bind_method<1>("list", "__mul__", [](VM* vm, Args& args) {
-        const List& self = CAST(List&, args[0]);
-        int n = CAST(int, args[1]);
+    _vm->bind__mul__(_vm->tp_list, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        const List& self = _CAST(List&, lhs);
+        int n = CAST(int, rhs);
         List result;
         result.reserve(self.size() * n);
-        for(int i = 0; i < n; i++) result.insert(result.end(), self.begin(), self.end());
+        for(int i = 0; i < n; i++) result.extend(self);
         return VAR(std::move(result));
     });
 
-    _vm->bind_method<2>("list", "insert", [](VM* vm, Args& args) {
-        List& self = CAST(List&, args[0]);
+    _vm->bind_method<2>("list", "insert", [](VM* vm, ArgsView args) {
+        List& self = _CAST(List&, args[0]);
         int index = CAST(int, args[1]);
         if(index < 0) index += self.size();
         if(index < 0) index = 0;
         if(index > self.size()) index = self.size();
-        self.insert(self.begin() + index, args[2]);
+        self.insert(index, args[2]);
         return vm->None;
     });
 
-    _vm->bind_method<0>("list", "clear", [](VM* vm, Args& args) {
-        CAST(List&, args[0]).clear();
+    _vm->bind_method<0>("list", "clear", [](VM* vm, ArgsView args) {
+        _CAST(List&, args[0]).clear();
         return vm->None;
     });
 
-    _vm->bind_method<0>("list", "copy", CPP_LAMBDA(VAR(CAST(List, args[0]))));
+    _vm->bind_method<0>("list", "copy", CPP_LAMBDA(VAR(_CAST(List, args[0]))));
 
-    _vm->bind_method<1>("list", "__add__", [](VM* vm, Args& args) {
-        const List& self = CAST(List&, args[0]);
-        const List& obj = CAST(List&, args[1]);
-        List new_list = self;
-        new_list.insert(new_list.end(), obj.begin(), obj.end());
-        return VAR(new_list);
+    _vm->bind__hash__(_vm->tp_list, [](VM* vm, PyObject* obj) {
+        vm->TypeError("unhashable type: 'list'");
+        return (i64)0;
     });
 
-    _vm->bind_method<0>("list", "__len__", [](VM* vm, Args& args) {
-        const List& self = CAST(List&, args[0]);
-        return VAR(self.size());
+    _vm->bind__add__(_vm->tp_list, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        const List& self = _CAST(List&, lhs);
+        const List& other = CAST(List&, rhs);
+        List new_list(self);    // copy construct
+        new_list.extend(other);
+        return VAR(std::move(new_list));
     });
 
-    _vm->bind_method<0>("list", "__iter__", [](VM* vm, Args& args) {
-        return vm->PyIter(ArrayIter<List>(vm, args[0]));
+    _vm->bind__len__(_vm->tp_list, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(List&, obj).size();
+    });
+    _vm->bind__iter__(_vm->tp_list, [](VM* vm, PyObject* obj) {
+        List& self = _CAST(List&, obj);
+        return VAR_T(ArrayIter, obj, self.begin(), self.end());
+    });
+    _vm->bind__getitem__(_vm->tp_list, PyArrayGetItem<List>);
+    _vm->bind__setitem__(_vm->tp_list, [](VM* vm, PyObject* obj, PyObject* index, PyObject* value){
+        List& self = _CAST(List&, obj);
+        int i = CAST(int, index);
+        i = vm->normalized_index(i, self.size());
+        self[i] = value;
+    });
+    _vm->bind__delitem__(_vm->tp_list, [](VM* vm, PyObject* obj, PyObject* index){
+        List& self = _CAST(List&, obj);
+        int i = CAST(int, index);
+        i = vm->normalized_index(i, self.size());
+        self.erase(i);
     });
 
-    _vm->bind_method<1>("list", "__getitem__", [](VM* vm, Args& args) {
-        const List& self = CAST(List&, args[0]);
+    /************ tuple ************/
+    _vm->bind_constructor<2>("tuple", [](VM* vm, ArgsView args) {
+        List list = CAST(List, vm->py_list(args[1]));
+        return VAR(Tuple(std::move(list)));
+    });
 
-        if(is_type(args[1], vm->tp_slice)){
-            Slice s = _CAST(Slice, args[1]);
-            s.normalize(self.size());
-            List new_list;
-            for(size_t i = s.start; i < s.stop; i++) new_list.push_back(self[i]);
-            return VAR(std::move(new_list));
+    _vm->bind__contains__(_vm->tp_tuple, [](VM* vm, PyObject* obj, PyObject* item) {
+        Tuple& self = _CAST(Tuple&, obj);
+        for(PyObject* i: self) if(vm->py_equals(i, item)) return true;
+        return false;
+    });
+
+    _vm->bind_method<1>("tuple", "count", [](VM* vm, ArgsView args) {
+        Tuple& self = _CAST(Tuple&, args[0]);
+        int count = 0;
+        for(PyObject* i: self) if(vm->py_equals(i, args[1])) count++;
+        return VAR(count);
+    });
+
+    _vm->bind__eq__(_vm->tp_tuple, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        const Tuple& self = _CAST(Tuple&, lhs);
+        const Tuple& other = CAST(Tuple&, rhs);
+        if(self.size() != other.size()) return false;
+        for(int i = 0; i < self.size(); i++) {
+            if(!vm->py_equals(self[i], other[i])) return false;
         }
-
-        int index = CAST(int, args[1]);
-        index = vm->normalized_index(index, self.size());
-        return self[index];
+        return true;
     });
 
-    _vm->bind_method<2>("list", "__setitem__", [](VM* vm, Args& args) {
-        List& self = CAST(List&, args[0]);
-        int index = CAST(int, args[1]);
-        index = vm->normalized_index(index, self.size());
-        self[index] = args[2];
-        return vm->None;
-    });
-
-    _vm->bind_method<1>("list", "__delitem__", [](VM* vm, Args& args) {
-        List& self = CAST(List&, args[0]);
-        int index = CAST(int, args[1]);
-        index = vm->normalized_index(index, self.size());
-        self.erase(self.begin() + index);
-        return vm->None;
-    });
-
-    /************ PyTuple ************/
-    _vm->bind_static_method<1>("tuple", "__new__", [](VM* vm, Args& args) {
-        List list = CAST(List, vm->asList(args[0]));
-        return VAR(Tuple::from_list(std::move(list)));
-    });
-
-    _vm->bind_method<0>("tuple", "__iter__", [](VM* vm, Args& args) {
-        return vm->PyIter(ArrayIter<Args>(vm, args[0]));
-    });
-
-    _vm->bind_method<1>("tuple", "__getitem__", [](VM* vm, Args& args) {
-        const Tuple& self = CAST(Tuple&, args[0]);
-
-        if(is_type(args[1], vm->tp_slice)){
-            Slice s = _CAST(Slice, args[1]);
-            s.normalize(self.size());
-            List new_list;
-            for(size_t i = s.start; i < s.stop; i++) new_list.push_back(self[i]);
-            return VAR(Tuple::from_list(std::move(new_list)));
+    _vm->bind__hash__(_vm->tp_tuple, [](VM* vm, PyObject* obj) {
+        i64 x = 1000003;
+        const Tuple& items = CAST(Tuple&, obj);
+        for (int i=0; i<items.size(); i++) {
+            i64 y = vm->py_hash(items[i]);
+            // recommended by Github Copilot
+            x = x ^ (y + 0x9e3779b9 + (x << 6) + (x >> 2));
         }
-
-        int index = CAST(int, args[1]);
-        index = vm->normalized_index(index, self.size());
-        return self[index];
+        return x;
     });
 
-    _vm->bind_method<0>("tuple", "__len__", [](VM* vm, Args& args) {
-        const Tuple& self = CAST(Tuple&, args[0]);
-        return VAR(self.size());
+    _vm->bind__iter__(_vm->tp_tuple, [](VM* vm, PyObject* obj) {
+        Tuple& self = _CAST(Tuple&, obj);
+        return VAR_T(ArrayIter, obj, self.begin(), self.end());
+    });
+    _vm->bind__getitem__(_vm->tp_tuple, PyArrayGetItem<Tuple>);
+    _vm->bind__len__(_vm->tp_tuple, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(Tuple&, obj).size();
     });
 
-    /************ PyBool ************/
-    _vm->bind_static_method<1>("bool", "__new__", CPP_LAMBDA(vm->asBool(args[0])));
-
-    _vm->bind_method<0>("bool", "__repr__", [](VM* vm, Args& args) {
-        bool val = CAST(bool, args[0]);
+    /************ bool ************/
+    _vm->bind_constructor<2>("bool", CPP_LAMBDA(VAR(vm->py_bool(args[1]))));
+    _vm->bind__hash__(_vm->tp_bool, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(bool, obj);
+    });
+    _vm->bind__repr__(_vm->tp_bool, [](VM* vm, PyObject* self) {
+        bool val = _CAST(bool, self);
         return VAR(val ? "True" : "False");
     });
-
-    _vm->bind_method<0>("bool", "__json__", [](VM* vm, Args& args) {
-        bool val = CAST(bool, args[0]);
+    _vm->bind__json__(_vm->tp_bool, [](VM* vm, PyObject* self) {
+        bool val = _CAST(bool, self);
         return VAR(val ? "true" : "false");
     });
 
-    _vm->bind_method<1>("bool", "__xor__", [](VM* vm, Args& args) {
-        bool self = CAST(bool, args[0]);
-        bool other = CAST(bool, args[1]);
-        return VAR(self ^ other);
+    _vm->bind__and__(_vm->tp_bool, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return VAR(_CAST(bool, lhs) && CAST(bool, rhs));
+    });
+    _vm->bind__or__(_vm->tp_bool, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return VAR(_CAST(bool, lhs) || CAST(bool, rhs));
+    });
+    _vm->bind__xor__(_vm->tp_bool, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return VAR(_CAST(bool, lhs) != CAST(bool, rhs));
+    });
+    _vm->bind__eq__(_vm->tp_bool, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return _CAST(bool, lhs) == CAST(bool, rhs);
+    });
+    _vm->bind__repr__(_vm->_type("ellipsis"), [](VM* vm, PyObject* self) {
+        return VAR("Ellipsis");
     });
 
-    _vm->bind_method<0>("ellipsis", "__repr__", CPP_LAMBDA(VAR("Ellipsis")));
+    /************ bytes ************/
+    _vm->bind_constructor<2>("bytes", [](VM* vm, ArgsView args){
+        List& list = CAST(List&, args[1]);
+        std::vector<char> buffer(list.size());
+        for(int i=0; i<list.size(); i++){
+            i64 b = CAST(i64, list[i]);
+            if(b<0 || b>255) vm->ValueError("byte must be in range[0, 256)");
+            buffer[i] = (char)b;
+        }
+        return VAR(Bytes(std::move(buffer)));
+    });
+
+    _vm->bind__getitem__(_vm->tp_bytes, [](VM* vm, PyObject* obj, PyObject* index) {
+        const Bytes& self = _CAST(Bytes&, obj);
+        int i = CAST(int, index);
+        i = vm->normalized_index(i, self.size());
+        return VAR(self[i]);
+    });
+
+    _vm->bind__hash__(_vm->tp_bytes, [](VM* vm, PyObject* obj) {
+        const Bytes& self = _CAST(Bytes&, obj);
+        return (i64)std::hash<std::string>()(self.str());
+    });
+
+    _vm->bind__repr__(_vm->tp_bytes, [](VM* vm, PyObject* obj) {
+        const Bytes& self = _CAST(Bytes&, obj);
+        std::stringstream ss;
+        ss << "b'";
+        for(int i=0; i<self.size(); i++){
+            ss << "\\x" << std::hex << std::setw(2) << std::setfill('0') << self[i];
+        }
+        ss << "'";
+        return VAR(ss.str());
+    });
+    _vm->bind__len__(_vm->tp_bytes, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(Bytes&, obj).size();
+    });
+
+    _vm->bind_method<0>("bytes", "decode", [](VM* vm, ArgsView args) {
+        const Bytes& self = _CAST(Bytes&, args[0]);
+        // TODO: check encoding is utf-8
+        return VAR(Str(self.str()));
+    });
+
+    _vm->bind_method<0>("bytes", "to_char_array", [](VM* vm, ArgsView args) {
+        const Bytes& self = _CAST(Bytes&, args[0]);
+        void* buffer = malloc(self.size());
+        memcpy(buffer, self.data(), self.size());
+        return VAR_T(VoidP, buffer);
+    });
+
+    _vm->bind_func<2>("bytes", "from_char_array", [](VM* vm, ArgsView args) {
+        const VoidP& data = _CAST(VoidP&, args[0]);
+        int size = CAST(int, args[1]);
+        std::vector<char> buffer(size);
+        memcpy(buffer.data(), data.ptr, size);
+        return VAR(Bytes(std::move(buffer)));
+    });
+
+    _vm->bind__eq__(_vm->tp_bytes, [](VM* vm, PyObject* lhs, PyObject* rhs) {
+        return _CAST(Bytes&, lhs) == _CAST(Bytes&, rhs);
+    });
+    /************ slice ************/
+    _vm->bind_constructor<4>("slice", [](VM* vm, ArgsView args) {
+        return VAR(Slice(args[1], args[2], args[3]));
+    });
+
+    _vm->bind__repr__(_vm->tp_slice, [](VM* vm, PyObject* obj) {
+        const Slice& self = _CAST(Slice&, obj);
+        std::stringstream ss;
+        ss << "slice(";
+        ss << CAST(Str, vm->py_repr(self.start)) << ", ";
+        ss << CAST(Str, vm->py_repr(self.stop)) << ", ";
+        ss << CAST(Str, vm->py_repr(self.step)) << ")";
+        return VAR(ss.str());
+    });
+
+    /************ mappingproxy ************/
+    _vm->bind_method<0>("mappingproxy", "keys", [](VM* vm, ArgsView args) {
+        MappingProxy& self = _CAST(MappingProxy&, args[0]);
+        List keys;
+        for(StrName name : self.attr().keys()) keys.push_back(VAR(name.sv()));
+        return VAR(std::move(keys));
+    });
+
+    _vm->bind_method<0>("mappingproxy", "values", [](VM* vm, ArgsView args) {
+        MappingProxy& self = _CAST(MappingProxy&, args[0]);
+        List values;
+        for(auto& item : self.attr().items()) values.push_back(item.second);
+        return VAR(std::move(values));
+    });
+
+    _vm->bind_method<0>("mappingproxy", "items", [](VM* vm, ArgsView args) {
+        MappingProxy& self = _CAST(MappingProxy&, args[0]);
+        List items;
+        for(auto& item : self.attr().items()){
+            PyObject* t = VAR(Tuple({VAR(item.first.sv()), item.second}));
+            items.push_back(std::move(t));
+        }
+        return VAR(std::move(items));
+    });
+
+    _vm->bind__len__(_vm->tp_mappingproxy, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(MappingProxy&, obj).attr().size();
+    });
+
+    _vm->bind__getitem__(_vm->tp_mappingproxy, [](VM* vm, PyObject* obj, PyObject* index) {
+        MappingProxy& self = _CAST(MappingProxy&, obj);
+        StrName key = CAST(Str&, index);
+        PyObject* ret = self.attr().try_get(key);
+        if(ret == nullptr) vm->AttributeError(key.sv());
+        return ret;
+    });
+
+    _vm->bind__repr__(_vm->tp_mappingproxy, [](VM* vm, PyObject* obj) {
+        MappingProxy& self = _CAST(MappingProxy&, obj);
+        std::stringstream ss;
+        ss << "mappingproxy({";
+        bool first = true;
+        for(auto& item : self.attr().items()){
+            if(!first) ss << ", ";
+            first = false;
+            ss << item.first.escape() << ": " << CAST(Str, vm->py_repr(item.second));
+        }
+        ss << "})";
+        return VAR(ss.str());
+    });
+
+    _vm->bind__contains__(_vm->tp_mappingproxy, [](VM* vm, PyObject* obj, PyObject* key) {
+        MappingProxy& self = _CAST(MappingProxy&, obj);
+        return self.attr().contains(CAST(Str&, key));
+    });
+
+    /************ dict ************/
+    _vm->bind_constructor<-1>("dict", [](VM* vm, ArgsView args){
+        return VAR(Dict(vm));
+    });
+
+    _vm->bind_method<-1>("dict", "__init__", [](VM* vm, ArgsView args){
+        if(args.size() == 1+0) return vm->None;
+        if(args.size() == 1+1){
+            auto _lock = vm->heap.gc_scope_lock();
+            Dict& self = _CAST(Dict&, args[0]);
+            List& list = CAST(List&, args[1]);
+            for(PyObject* item : list){
+                Tuple& t = CAST(Tuple&, item);
+                if(t.size() != 2){
+                    vm->ValueError("dict() takes an iterable of tuples (key, value)");
+                    return vm->None;
+                }
+                self.set(t[0], t[1]);
+            }
+            return vm->None;
+        }
+        vm->TypeError("dict() takes at most 1 argument");
+        return vm->None;
+    });
+
+    _vm->bind__len__(_vm->tp_dict, [](VM* vm, PyObject* obj) {
+        return (i64)_CAST(Dict&, obj).size();
+    });
+
+    _vm->bind__getitem__(_vm->tp_dict, [](VM* vm, PyObject* obj, PyObject* index) {
+        Dict& self = _CAST(Dict&, obj);
+        PyObject* ret = self.try_get(index);
+        if(ret == nullptr) vm->KeyError(index);
+        return ret;
+    });
+
+    _vm->bind__setitem__(_vm->tp_dict, [](VM* vm, PyObject* obj, PyObject* key, PyObject* value) {
+        Dict& self = _CAST(Dict&, obj);
+        self.set(key, value);
+    });
+
+    _vm->bind__delitem__(_vm->tp_dict, [](VM* vm, PyObject* obj, PyObject* key) {
+        Dict& self = _CAST(Dict&, obj);
+        if(!self.contains(key)) vm->KeyError(key);
+        self.erase(key);
+    });
+
+    _vm->bind_method<1>("dict", "pop", [](VM* vm, ArgsView args) {
+        Dict& self = _CAST(Dict&, args[0]);
+        PyObject* value = self.try_get(args[1]);
+        if(value == nullptr) vm->KeyError(args[1]);
+        self.erase(args[1]);
+        return value;
+    });
+
+    _vm->bind__contains__(_vm->tp_dict, [](VM* vm, PyObject* obj, PyObject* key) {
+        Dict& self = _CAST(Dict&, obj);
+        return self.contains(key);
+    });
+
+    _vm->bind_method<-1>("dict", "get", [](VM* vm, ArgsView args) {
+        Dict& self = _CAST(Dict&, args[0]);
+        if(args.size() == 1+1){
+            PyObject* ret = self.try_get(args[1]);
+            if(ret != nullptr) return ret;
+            return vm->None;
+        }else if(args.size() == 1+2){
+            PyObject* ret = self.try_get(args[1]);
+            if(ret != nullptr) return ret;
+            return args[2];
+        }
+        vm->TypeError("get() takes at most 2 arguments");
+        return vm->None;
+    });
+
+    _vm->bind_method<0>("dict", "keys", [](VM* vm, ArgsView args) {
+        Dict& self = _CAST(Dict&, args[0]);
+        List keys;
+        for(auto& item : self.items()) keys.push_back(item.first);
+        return VAR(std::move(keys));
+    });
+
+    _vm->bind_method<0>("dict", "values", [](VM* vm, ArgsView args) {
+        Dict& self = _CAST(Dict&, args[0]);
+        List values;
+        for(auto& item : self.items()) values.push_back(item.second);
+        return VAR(std::move(values));
+    });
+
+    _vm->bind_method<0>("dict", "items", [](VM* vm, ArgsView args) {
+        Dict& self = _CAST(Dict&, args[0]);
+        List items;
+        for(auto& item : self.items()){
+            PyObject* t = VAR(Tuple({item.first, item.second}));
+            items.push_back(std::move(t));
+        }
+        return VAR(std::move(items));
+    });
+
+    _vm->bind_method<1>("dict", "update", [](VM* vm, ArgsView args) {
+        Dict& self = _CAST(Dict&, args[0]);
+        const Dict& other = CAST(Dict&, args[1]);
+        self.update(other);
+        return vm->None;
+    });
+
+    _vm->bind_method<0>("dict", "copy", [](VM* vm, ArgsView args) {
+        const Dict& self = _CAST(Dict&, args[0]);
+        return VAR(self);
+    });
+
+    _vm->bind_method<0>("dict", "clear", [](VM* vm, ArgsView args) {
+        Dict& self = _CAST(Dict&, args[0]);
+        self.clear();
+        return vm->None;
+    });
+
+    _vm->bind__repr__(_vm->tp_dict, [](VM* vm, PyObject* obj) {
+        Dict& self = _CAST(Dict&, obj);
+        std::stringstream ss;
+        ss << "{";
+        bool first = true;
+        for(auto& item : self.items()){
+            if(!first) ss << ", ";
+            first = false;
+            Str key = CAST(Str&, vm->py_repr(item.first));
+            Str value = CAST(Str&, vm->py_repr(item.second));
+            ss << key << ": " << value;
+        }
+        ss << "}";
+        return VAR(ss.str());
+    });
+
+    _vm->bind__json__(_vm->tp_dict, [](VM* vm, PyObject* obj) {
+        Dict& self = _CAST(Dict&, obj);
+        std::stringstream ss;
+        ss << "{";
+        bool first = true;
+        for(auto& item : self.items()){
+            if(!first) ss << ", ";
+            first = false;
+            Str key = CAST(Str&, item.first).escape(false);
+            Str value = CAST(Str&, vm->py_json(item.second));
+            ss << key << ": " << value;
+        }
+        ss << "}";
+        return VAR(ss.str());
+    });
+
+    _vm->bind__eq__(_vm->tp_dict, [](VM* vm, PyObject* a, PyObject* b) {
+        Dict& self = _CAST(Dict&, a);
+        if(!is_non_tagged_type(b, vm->tp_dict)) return false;
+        Dict& other = _CAST(Dict&, b);
+        if(self.size() != other.size()) return false;
+        for(auto& item : self.items()){
+            PyObject* value = other.try_get(item.first);
+            if(value == nullptr) return false;
+            if(!vm->py_equals(item.second, value)) return false;
+        }
+        return true;
+    });
+    /************ property ************/
+    _vm->bind_constructor<-1>("property", [](VM* vm, ArgsView args) {
+        if(args.size() == 1+1){
+            return VAR(Property(args[1], vm->None));
+        }else if(args.size() == 1+2){
+            return VAR(Property(args[1], args[2]));
+        }
+        vm->TypeError("property() takes at most 2 arguments");
+        return vm->None;
+    });
+
+    RangeIter::register_class(_vm, _vm->builtins);
+    ArrayIter::register_class(_vm, _vm->builtins);
+    StringIter::register_class(_vm, _vm->builtins);
+    Generator::register_class(_vm, _vm->builtins);
 }
 
-#ifdef _WIN32
-#define __EXPORT __declspec(dllexport)
-#elif __APPLE__
-#define __EXPORT __attribute__((visibility("default"))) __attribute__((used))
-#elif __EMSCRIPTEN__
-#include <emscripten.h>
-#define __EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define __EXPORT
-#endif
+inline void add_module_time(VM* vm){
+    PyObject* mod = vm->new_module("time");
+    vm->bind_func<0>(mod, "time", [](VM* vm, ArgsView args) {
+        auto now = std::chrono::system_clock::now();
+        return VAR(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0);
+    });
 
-void add_module_time(VM* vm){
-    PyVar mod = vm->new_module("time");
-    vm->bind_func<0>(mod, "time", [](VM* vm, Args& args) {
-        auto now = std::chrono::high_resolution_clock::now();
-        return VAR(std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count() / 1000000.0);
+    vm->bind_func<1>(mod, "sleep", [](VM* vm, ArgsView args) {
+        f64 seconds = CAST_F(args[0]);
+        auto begin = std::chrono::system_clock::now();
+        while(true){
+            auto now = std::chrono::system_clock::now();
+            f64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - begin).count() / 1000.0;
+            if(elapsed >= seconds) break;
+        }
+        return vm->None;
+    });
+
+    vm->bind_func<0>(mod, "localtime", [](VM* vm, ArgsView args) {
+        auto now = std::chrono::system_clock::now();
+        std::time_t t = std::chrono::system_clock::to_time_t(now);
+        std::tm* tm = std::localtime(&t);
+        Dict d(vm);
+        d.set(VAR("tm_year"), VAR(tm->tm_year + 1900));
+        d.set(VAR("tm_mon"), VAR(tm->tm_mon + 1));
+        d.set(VAR("tm_mday"), VAR(tm->tm_mday));
+        d.set(VAR("tm_hour"), VAR(tm->tm_hour));
+        d.set(VAR("tm_min"), VAR(tm->tm_min));
+        d.set(VAR("tm_sec"), VAR(tm->tm_sec + 1));
+        d.set(VAR("tm_wday"), VAR((tm->tm_wday + 6) % 7));
+        d.set(VAR("tm_yday"), VAR(tm->tm_yday + 1));
+        d.set(VAR("tm_isdst"), VAR(tm->tm_isdst));
+        return VAR(std::move(d));
     });
 }
 
-void add_module_sys(VM* vm){
-    PyVar mod = vm->new_module("sys");
+struct PyREPL{
+    PY_CLASS(PyREPL, sys, _repl)
+
+    REPL* repl;
+
+    PyREPL(VM* vm){ repl = new REPL(vm); }
+    ~PyREPL(){ delete repl; }
+
+    PyREPL(const PyREPL&) = delete;
+    PyREPL& operator=(const PyREPL&) = delete;
+
+    PyREPL(PyREPL&& other) noexcept{
+        repl = other.repl;
+        other.repl = nullptr;
+    }
+
+    struct TempOut{
+        PrintFunc backup;
+        VM* vm;
+        TempOut(VM* vm, PrintFunc f){
+            this->vm = vm;
+            this->backup = vm->_stdout;
+            vm->_stdout = f;
+        }
+        ~TempOut(){
+            vm->_stdout = backup;
+        }
+        TempOut(const TempOut&) = delete;
+        TempOut& operator=(const TempOut&) = delete;
+        TempOut(TempOut&&) = delete;
+        TempOut& operator=(TempOut&&) = delete;
+    };
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_constructor<1>(type, [](VM* vm, ArgsView args){
+            return VAR_T(PyREPL, vm);
+        });
+
+        vm->bind_method<1>(type, "input", [](VM* vm, ArgsView args){
+            PyREPL& self = _CAST(PyREPL&, args[0]);
+            const Str& s = CAST(Str&, args[1]);
+            static std::stringstream ss_out;
+            ss_out.str("");
+            TempOut _(vm, [](VM* vm, const Str& s){ ss_out << s; });
+            bool ok = self.repl->input(s.str());
+            return VAR(Tuple({VAR(ok), VAR(ss_out.str())}));
+        });
+    }
+};
+
+inline void add_module_sys(VM* vm){
+    PyObject* mod = vm->new_module("sys");
+    PyREPL::register_class(vm, mod);
     vm->setattr(mod, "version", VAR(PK_VERSION));
 
-    vm->bind_func<1>(mod, "getrefcount", CPP_LAMBDA(VAR(args[0].use_count())));
-    vm->bind_func<0>(mod, "getrecursionlimit", CPP_LAMBDA(VAR(vm->recursionlimit)));
+    PyObject* stdout_ = vm->heap.gcnew<DummyInstance>(vm->tp_object, {});
+    PyObject* stderr_ = vm->heap.gcnew<DummyInstance>(vm->tp_object, {});
+    PyObject* stdin_ = vm->heap.gcnew<DummyInstance>(vm->tp_object, {});
+    vm->setattr(mod, "stdout", stdout_);
+    vm->setattr(mod, "stderr", stderr_);
+    vm->setattr(mod, "stdin", stdin_);
 
-    vm->bind_func<1>(mod, "setrecursionlimit", [](VM* vm, Args& args) {
-        vm->recursionlimit = CAST(int, args[0]);
+    vm->bind_func<1>(stdout_, "write", [](VM* vm, ArgsView args) {
+        vm->_stdout(vm, CAST(Str&, args[0]));
+        return vm->None;
+    });
+
+    vm->bind_func<1>(stderr_, "write", [](VM* vm, ArgsView args) {
+        vm->_stderr(vm, CAST(Str&, args[0]));
         return vm->None;
     });
 }
 
-void add_module_json(VM* vm){
-    PyVar mod = vm->new_module("json");
-    vm->bind_func<1>(mod, "loads", [](VM* vm, Args& args) {
+inline void add_module_json(VM* vm){
+    PyObject* mod = vm->new_module("json");
+    vm->bind_func<1>(mod, "loads", [](VM* vm, ArgsView args) {
         const Str& expr = CAST(Str&, args[0]);
         CodeObject_ code = vm->compile(expr, "<json>", JSON_MODE);
-        return vm->_exec(code, vm->top_frame()->_module, vm->top_frame()->_locals);
+        return vm->_exec(code, vm->top_frame()->_module);
     });
 
-    vm->bind_func<1>(mod, "dumps", CPP_LAMBDA(vm->call(args[0], __json__)));
+    vm->bind_func<1>(mod, "dumps", [](VM* vm, ArgsView args) {
+        return vm->py_json(args[0]);
+    });
 }
 
-void add_module_math(VM* vm){
-    PyVar mod = vm->new_module("math");
-    vm->setattr(mod, "pi", VAR(3.1415926535897932384));
-    vm->setattr(mod, "e" , VAR(2.7182818284590452354));
 
-    vm->bind_func<1>(mod, "log", CPP_LAMBDA(VAR(std::log(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "log10", CPP_LAMBDA(VAR(std::log10(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "log2", CPP_LAMBDA(VAR(std::log2(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "sin", CPP_LAMBDA(VAR(std::sin(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "cos", CPP_LAMBDA(VAR(std::cos(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "tan", CPP_LAMBDA(VAR(std::tan(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "isnan", CPP_LAMBDA(VAR(std::isnan(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "isinf", CPP_LAMBDA(VAR(std::isinf(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "fabs", CPP_LAMBDA(VAR(std::fabs(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "floor", CPP_LAMBDA(VAR((i64)std::floor(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "ceil", CPP_LAMBDA(VAR((i64)std::ceil(vm->num_to_float(args[0])))));
-    vm->bind_func<1>(mod, "sqrt", CPP_LAMBDA(VAR(std::sqrt(vm->num_to_float(args[0])))));
+// https://docs.python.org/3.5/library/math.html
+inline void add_module_math(VM* vm){
+    PyObject* mod = vm->new_module("math");
+    mod->attr().set("pi", VAR(3.1415926535897932384));
+    mod->attr().set("e" , VAR(2.7182818284590452354));
+    mod->attr().set("inf", VAR(std::numeric_limits<double>::infinity()));
+    mod->attr().set("nan", VAR(std::numeric_limits<double>::quiet_NaN()));
+
+    vm->bind_func<1>(mod, "ceil", CPP_LAMBDA(VAR((i64)std::ceil(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "fabs", CPP_LAMBDA(VAR(std::fabs(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "floor", CPP_LAMBDA(VAR((i64)std::floor(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "fsum", [](VM* vm, ArgsView args) {
+        List& list = CAST(List&, args[0]);
+        double sum = 0;
+        double c = 0;
+        for(PyObject* arg : list){
+            double x = CAST_F(arg);
+            double y = x - c;
+            double t = sum + y;
+            c = (t - sum) - y;
+            sum = t;
+        }
+        return VAR(sum);
+    });
+    vm->bind_func<2>(mod, "gcd", [](VM* vm, ArgsView args) {
+        i64 a = CAST(i64, args[0]);
+        i64 b = CAST(i64, args[1]);
+        if(a < 0) a = -a;
+        if(b < 0) b = -b;
+        while(b != 0){
+            i64 t = b;
+            b = a % b;
+            a = t;
+        }
+        return VAR(a);
+    });
+
+    vm->bind_func<1>(mod, "isfinite", CPP_LAMBDA(VAR(std::isfinite(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "isinf", CPP_LAMBDA(VAR(std::isinf(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "isnan", CPP_LAMBDA(VAR(std::isnan(CAST_F(args[0])))));
+
+    vm->bind_func<1>(mod, "exp", CPP_LAMBDA(VAR(std::exp(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "log", CPP_LAMBDA(VAR(std::log(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "log2", CPP_LAMBDA(VAR(std::log2(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "log10", CPP_LAMBDA(VAR(std::log10(CAST_F(args[0])))));
+
+    vm->bind_func<2>(mod, "pow", CPP_LAMBDA(VAR(std::pow(CAST_F(args[0]), CAST_F(args[1])))));
+    vm->bind_func<1>(mod, "sqrt", CPP_LAMBDA(VAR(std::sqrt(CAST_F(args[0])))));
+
+    vm->bind_func<1>(mod, "acos", CPP_LAMBDA(VAR(std::acos(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "asin", CPP_LAMBDA(VAR(std::asin(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "atan", CPP_LAMBDA(VAR(std::atan(CAST_F(args[0])))));
+    vm->bind_func<2>(mod, "atan2", CPP_LAMBDA(VAR(std::atan2(CAST_F(args[0]), CAST_F(args[1])))));
+
+    vm->bind_func<1>(mod, "cos", CPP_LAMBDA(VAR(std::cos(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "sin", CPP_LAMBDA(VAR(std::sin(CAST_F(args[0])))));
+    vm->bind_func<1>(mod, "tan", CPP_LAMBDA(VAR(std::tan(CAST_F(args[0])))));
+    
+    vm->bind_func<1>(mod, "degrees", CPP_LAMBDA(VAR(CAST_F(args[0]) * 180 / 3.1415926535897932384)));
+    vm->bind_func<1>(mod, "radians", CPP_LAMBDA(VAR(CAST_F(args[0]) * 3.1415926535897932384 / 180)));
+
+    vm->bind_func<1>(mod, "modf", [](VM* vm, ArgsView args) {
+        f64 i;
+        f64 f = std::modf(CAST_F(args[0]), &i);
+        return VAR(Tuple({VAR(f), VAR(i)}));
+    });
 }
 
-void add_module_dis(VM* vm){
-    PyVar mod = vm->new_module("dis");
-    vm->bind_func<1>(mod, "dis", [](VM* vm, Args& args) {
-        PyVar f = args[0];
-        if(is_type(f, vm->tp_bound_method)) f = CAST(BoundMethod, args[0]).method;
-        CodeObject_ code = CAST(Function, f).code;
-        (*vm->_stdout) << vm->disassemble(code);
+inline void add_module_traceback(VM* vm){
+    PyObject* mod = vm->new_module("traceback");
+    vm->bind_func<0>(mod, "print_exc", [](VM* vm, ArgsView args) {
+        if(vm->_last_exception==nullptr) vm->ValueError("no exception");
+        Exception& e = CAST(Exception&, vm->_last_exception);
+        vm->_stdout(vm, e.summary());
+        return vm->None;
+    });
+
+    vm->bind_func<0>(mod, "format_exc", [](VM* vm, ArgsView args) {
+        if(vm->_last_exception==nullptr) vm->ValueError("no exception");
+        Exception& e = CAST(Exception&, vm->_last_exception);
+        return VAR(e.summary());
+    });
+}
+
+inline void add_module_dis(VM* vm){
+    PyObject* mod = vm->new_module("dis");
+    vm->bind_func<1>(mod, "dis", [](VM* vm, ArgsView args) {
+        if(is_type(args[0], vm->tp_str)){
+            const Str& source = CAST(Str, args[0]);
+            CodeObject_ code = vm->compile(source, "<dis>", EXEC_MODE);
+            vm->_stdout(vm, vm->disassemble(code));
+            return vm->None;
+        }
+        PyObject* f = args[0];
+        if(is_type(f, vm->tp_bound_method)) f = CAST(BoundMethod, args[0]).func;
+        CodeObject_ code = CAST(Function&, f).decl->code;
+        vm->_stdout(vm, vm->disassemble(code));
         return vm->None;
     });
 }
 
-struct ReMatch {
-    PY_CLASS(ReMatch, re, Match)
-
-    i64 start;
-    i64 end;
-    std::smatch m;
-    ReMatch(i64 start, i64 end, std::smatch m) : start(start), end(end), m(m) {}
-
-    static void _register(VM* vm, PyVar mod, PyVar type){
-        vm->bind_method<-1>(type, "__init__", CPP_NOT_IMPLEMENTED());
-        vm->bind_method<0>(type, "start", CPP_LAMBDA(VAR(CAST(ReMatch&, args[0]).start)));
-        vm->bind_method<0>(type, "end", CPP_LAMBDA(VAR(CAST(ReMatch&, args[0]).end)));
-
-        vm->bind_method<0>(type, "span", [](VM* vm, Args& args) {
-            auto& self = CAST(ReMatch&, args[0]);
-            return VAR(two_args(VAR(self.start), VAR(self.end)));
-        });
-
-        vm->bind_method<1>(type, "group", [](VM* vm, Args& args) {
-            auto& self = CAST(ReMatch&, args[0]);
-            int index = CAST(int, args[1]);
-            index = vm->normalized_index(index, self.m.size());
-            return VAR(self.m[index].str());
-        });
-    }
-};
-
-PyVar _regex_search(const Str& pattern, const Str& string, bool fromStart, VM* vm){
-    std::regex re(pattern);
-    std::smatch m;
-    if(std::regex_search(string, m, re)){
-        if(fromStart && m.position() != 0) return vm->None;
-        i64 start = string._to_u8_index(m.position());
-        i64 end = string._to_u8_index(m.position() + m.length());
-        return VAR_T(ReMatch, start, end, m);
-    }
-    return vm->None;
-};
-
-void add_module_re(VM* vm){
-    PyVar mod = vm->new_module("re");
-    ReMatch::register_class(vm, mod);
-
-    vm->bind_func<2>(mod, "match", [](VM* vm, Args& args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& string = CAST(Str&, args[1]);
-        return _regex_search(pattern, string, true, vm);
-    });
-
-    vm->bind_func<2>(mod, "search", [](VM* vm, Args& args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& string = CAST(Str&, args[1]);
-        return _regex_search(pattern, string, false, vm);
-    });
-
-    vm->bind_func<3>(mod, "sub", [](VM* vm, Args& args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& repl = CAST(Str&, args[1]);
-        const Str& string = CAST(Str&, args[2]);
-        std::regex re(pattern);
-        return VAR(std::regex_replace(string, re, repl));
-    });
-
-    vm->bind_func<2>(mod, "split", [](VM* vm, Args& args) {
-        const Str& pattern = CAST(Str&, args[0]);
-        const Str& string = CAST(Str&, args[1]);
-        std::regex re(pattern);
-        std::sregex_token_iterator it(string.begin(), string.end(), re, -1);
-        std::sregex_token_iterator end;
-        List vec;
-        for(; it != end; ++it){
-            vec.push_back(VAR(it->str()));
-        }
-        return VAR(vec);
-    });
+inline void add_module_gc(VM* vm){
+    PyObject* mod = vm->new_module("gc");
+    vm->bind_func<0>(mod, "collect", CPP_LAMBDA(VAR(vm->heap.collect())));
 }
 
-struct Random{
-    PY_CLASS(Random, random, Random)
-    std::mt19937 gen;
-
-    Random(){
-        gen.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count());
-    }
-
-    i64 randint(i64 a, i64 b) {
-        std::uniform_int_distribution<i64> dis(a, b);
-        return dis(gen);
-    }
-
-    f64 random() {
-        std::uniform_real_distribution<f64> dis(0.0, 1.0);
-        return dis(gen);
-    }
-
-    f64 uniform(f64 a, f64 b) {
-        std::uniform_real_distribution<f64> dis(a, b);
-        return dis(gen);
-    }
-
-    void seed(i64 seed) {
-        gen.seed(seed);
-    }
-
-    static void _register(VM* vm, PyVar mod, PyVar type){
-        vm->bind_static_method<0>(type, "__new__", CPP_LAMBDA(VAR_T(Random)));
-        vm->bind_method<1>(type, "seed", native_proxy_callable(&Random::seed));
-        vm->bind_method<2>(type, "randint", native_proxy_callable(&Random::randint));
-        vm->bind_method<0>(type, "random", native_proxy_callable(&Random::random));
-        vm->bind_method<2>(type, "uniform", native_proxy_callable(&Random::uniform));
-    }
-};
-
-void add_module_random(VM* vm){
-    PyVar mod = vm->new_module("random");
-    Random::register_class(vm, mod);
-    CodeObject_ code = vm->compile(kPythonLibs["random"], "random.py", EXEC_MODE);
-    vm->_exec(code, mod);
-}
-
-void VM::post_init(){
+inline void VM::post_init(){
     init_builtins(this);
+#if !DEBUG_NO_BUILTIN_MODULES
     add_module_sys(this);
+    add_module_traceback(this);
     add_module_time(this);
     add_module_json(this);
     add_module_math(this);
     add_module_re(this);
     add_module_dis(this);
-    add_module_random(this);
-    add_module_io(this);
-    add_module_os(this);
     add_module_c(this);
+    add_module_gc(this);
+    add_module_random(this);
+    add_module_base64(this);
 
     for(const char* name: {"this", "functools", "collections", "heapq", "bisect"}){
         _lazy_modules[name] = kPythonLibs[name];
@@ -6146,208 +11191,120 @@ void VM::post_init(){
 
     CodeObject_ code = compile(kPythonLibs["builtins"], "<builtins>", EXEC_MODE);
     this->_exec(code, this->builtins);
-    code = compile(kPythonLibs["dict"], "<builtins>", EXEC_MODE);
-    this->_exec(code, this->builtins);
-    code = compile(kPythonLibs["set"], "<builtins>", EXEC_MODE);
+    code = compile(kPythonLibs["_set"], "<set>", EXEC_MODE);
     this->_exec(code, this->builtins);
 
     // property is defined in builtins.py so we need to add it after builtins is loaded
-    _t(tp_object)->attr().set(__class__, property(CPP_LAMBDA(vm->_t(args[0]))));
-    _t(tp_type)->attr().set(__base__, property([](VM* vm, Args& args){
-        const PyTypeInfo& info = vm->_all_types[OBJ_GET(Type, args[0]).index];
-        return info.base.index == -1 ? vm->None : vm->_all_types[info.base.index].obj;
+    _t(tp_object)->attr().set("__class__", property(CPP_LAMBDA(vm->_t(args[0]))));
+    _t(tp_type)->attr().set("__base__", property([](VM* vm, ArgsView args){
+        const PyTypeInfo& info = vm->_all_types[OBJ_GET(Type, args[0])];
+        return info.base.index == -1 ? vm->None : vm->_all_types[info.base].obj;
     }));
-    _t(tp_type)->attr().set(__name__, property([](VM* vm, Args& args){
-        const PyTypeInfo& info = vm->_all_types[OBJ_GET(Type, args[0]).index];
+    _t(tp_type)->attr().set("__name__", property([](VM* vm, ArgsView args){
+        const PyTypeInfo& info = vm->_all_types[OBJ_GET(Type, args[0])];
         return VAR(info.name);
     }));
+
+    _t(tp_bound_method)->attr().set("__self__", property([](VM* vm, ArgsView args){
+        return CAST(BoundMethod&, args[0]).self;
+    }));
+    _t(tp_bound_method)->attr().set("__func__", property([](VM* vm, ArgsView args){
+        return CAST(BoundMethod&, args[0]).func;
+    }));
+
+    bind__eq__(tp_bound_method, [](VM* vm, PyObject* lhs, PyObject* rhs){
+        if(!is_non_tagged_type(rhs, vm->tp_bound_method)) return false;
+        return _CAST(BoundMethod&, lhs) == _CAST(BoundMethod&, rhs);
+    });
+    _t(tp_slice)->attr().set("start", property([](VM* vm, ArgsView args){
+        return CAST(Slice&, args[0]).start;
+    }));
+    _t(tp_slice)->attr().set("stop", property([](VM* vm, ArgsView args){
+        return CAST(Slice&, args[0]).stop;
+    }));
+    _t(tp_slice)->attr().set("step", property([](VM* vm, ArgsView args){
+        return CAST(Slice&, args[0]).step;
+    }));
+
+    _t(tp_object)->attr().set("__dict__", property([](VM* vm, ArgsView args){
+        if(is_tagged(args[0]) || !args[0]->is_attr_valid()) vm->AttributeError("'__dict__'");
+        return VAR(MappingProxy(args[0]));
+    }));
+
+    if(enable_os){
+        add_module_io(this);
+        add_module_os(this);
+        add_module_requests(this);
+        _import_handler = _default_import_handler;
+    }
+
+    add_module_linalg(this);
+    add_module_easing(this);
+#endif
 }
 
 }   // namespace pkpy
 
 /*************************GLOBAL NAMESPACE*************************/
-
-class PkExportedBase{
-public:
-    virtual ~PkExportedBase() = default;
-    virtual void* get() = 0;
-};
-
-static std::vector<PkExportedBase*> _pk_lookup_table;
-template<typename T>
-class PkExported : public PkExportedBase{
-    T* _ptr;
-public:
-    template<typename... Args>
-    PkExported(Args&&... args) {
-        _ptr = new T(std::forward<Args>(args)...);
-        _pk_lookup_table.push_back(this);
-    }
-    
-    ~PkExported() override { delete _ptr; }
-    void* get() override { return _ptr; }
-    operator T*() { return _ptr; }
-};
-
-#define PKPY_ALLOCATE(T, ...) *(new PkExported<T>(__VA_ARGS__))
-
 extern "C" {
-    __EXPORT
-    /// Delete a pointer allocated by `pkpy_xxx_xxx`.
-    /// It can be `VM*`, `REPL*`, `char*`, etc.
-    /// 
-    /// !!!
-    /// If the pointer is not allocated by `pkpy_xxx_xxx`, the behavior is undefined.
-    /// !!!
-    void pkpy_delete(void* p){
-        for(int i = 0; i < _pk_lookup_table.size(); i++){
-            if(_pk_lookup_table[i]->get() == p){
-                delete _pk_lookup_table[i];
-                _pk_lookup_table.erase(_pk_lookup_table.begin() + i);
-                return;
-            }
-        }
+    PK_LEGACY_EXPORT
+    void pkpy_free(void* p){
         free(p);
     }
 
-    __EXPORT
-    /// Run a given source on a virtual machine.
+    PK_LEGACY_EXPORT
     void pkpy_vm_exec(pkpy::VM* vm, const char* source){
         vm->exec(source, "main.py", pkpy::EXEC_MODE);
     }
 
-    __EXPORT
-    /// Get a global variable of a virtual machine.
-    /// 
-    /// Return `__repr__` of the result.
-    /// If the variable is not found, return `nullptr`.
-    char* pkpy_vm_get_global(pkpy::VM* vm, const char* name){
-        pkpy::PyVar* val = vm->_main->attr().try_get(name);
-        if(val == nullptr) return nullptr;
-        try{
-            pkpy::Str repr = pkpy::CAST(pkpy::Str, vm->asRepr(*val));
-            return strdup(repr.c_str());
-        }catch(...){
-            return nullptr;
+    PK_LEGACY_EXPORT
+    void pkpy_vm_exec_2(pkpy::VM* vm, const char* source, const char* filename, int mode, const char* module){
+        pkpy::PyObject* mod;
+        if(module == nullptr) mod = vm->_main;
+        else{
+            mod = vm->_modules.try_get(module);
+            if(mod == nullptr) return;
         }
+        vm->exec(source, filename, (pkpy::CompileMode)mode, mod);
     }
 
-    __EXPORT
-    /// Evaluate an expression.
-    /// 
-    /// Return `__repr__` of the result.
-    /// If there is any error, return `nullptr`.
-    char* pkpy_vm_eval(pkpy::VM* vm, const char* source){
-        pkpy::PyVarOrNull ret = vm->exec(source, "<eval>", pkpy::EVAL_MODE);
-        if(ret == nullptr) return nullptr;
-        try{
-            pkpy::Str repr = pkpy::CAST(pkpy::Str, vm->asRepr(ret));
-            return strdup(repr.c_str());
-        }catch(...){
-            return nullptr;
-        }
-    }
-
-    __EXPORT
-    /// Create a REPL, using the given virtual machine as the backend.
+    PK_LEGACY_EXPORT
     pkpy::REPL* pkpy_new_repl(pkpy::VM* vm){
-        return PKPY_ALLOCATE(pkpy::REPL, vm);
+        pkpy::REPL* p = new pkpy::REPL(vm);
+        return p;
     }
 
-    __EXPORT
-    /// Input a source line to an interactive console. Return true if need more lines.
+    PK_LEGACY_EXPORT
     bool pkpy_repl_input(pkpy::REPL* r, const char* line){
         return r->input(line);
     }
 
-    __EXPORT
-    /// Add a source module into a virtual machine.
+    PK_LEGACY_EXPORT
     void pkpy_vm_add_module(pkpy::VM* vm, const char* name, const char* source){
         vm->_lazy_modules[name] = source;
     }
 
-    __EXPORT
-    /// Create a virtual machine.
-    pkpy::VM* pkpy_new_vm(bool use_stdio){
-        return PKPY_ALLOCATE(pkpy::VM, use_stdio);
+    PK_LEGACY_EXPORT
+    pkpy::VM* pkpy_new_vm(bool enable_os=true){
+        pkpy::VM* p = new pkpy::VM(enable_os);
+        return p;
     }
 
-    __EXPORT
-    /// Read the standard output and standard error as string of a virtual machine.
-    /// The `vm->use_stdio` should be `false`.
-    /// After this operation, both stream will be cleared.
-    ///
-    /// Return a json representing the result.
-    char* pkpy_vm_read_output(pkpy::VM* vm){
-        if(vm->use_stdio) return nullptr;
-        pkpy::StrStream* s_out = (pkpy::StrStream*)(vm->_stdout);
-        pkpy::StrStream* s_err = (pkpy::StrStream*)(vm->_stderr);
-        pkpy::Str _stdout = s_out->str();
-        pkpy::Str _stderr = s_err->str();
-        pkpy::StrStream ss;
-        ss << '{' << "\"stdout\": " << _stdout.escape(false);
-        ss << ", " << "\"stderr\": " << _stderr.escape(false) << '}';
-        s_out->str(""); s_err->str("");
-        return strdup(ss.str().c_str());
+    PK_LEGACY_EXPORT
+    void pkpy_delete_vm(pkpy::VM* vm){
+        delete vm;
     }
 
-    typedef i64 (*f_int_t)(char*);
-    typedef f64 (*f_float_t)(char*);
-    typedef bool (*f_bool_t)(char*);
-    typedef char* (*f_str_t)(char*);
-    typedef void (*f_None_t)(char*);
-
-    static f_int_t f_int = nullptr;
-    static f_float_t f_float = nullptr;
-    static f_bool_t f_bool = nullptr;
-    static f_str_t f_str = nullptr;
-    static f_None_t f_None = nullptr;
-
-    __EXPORT
-    /// Setup the callback functions.
-    void pkpy_setup_callbacks(f_int_t _f_int, f_float_t _f_float, f_bool_t _f_bool, f_str_t _f_str, f_None_t _f_None){
-        f_int = _f_int;
-        f_float = _f_float;
-        f_bool = _f_bool;
-        f_str = _f_str;
-        f_None = _f_None;
+    PK_LEGACY_EXPORT
+    void pkpy_delete_repl(pkpy::REPL* repl){
+        delete repl;
     }
 
-    __EXPORT
-    /// Bind a function to a virtual machine.
-    char* pkpy_vm_bind(pkpy::VM* vm, const char* mod, const char* name, int ret_code){
-        if(!f_int || !f_float || !f_bool || !f_str || !f_None) return nullptr;
-        static int kGlobalBindId = 0;
-        for(int i=0; mod[i]; i++) if(mod[i] == ' ') return nullptr;
-        for(int i=0; name[i]; i++) if(name[i] == ' ') return nullptr;
-        std::string f_header = std::string(mod) + '.' + name + '#' + std::to_string(kGlobalBindId++);
-        pkpy::PyVar obj = vm->_modules.contains(mod) ? vm->_modules[mod] : vm->new_module(mod);
-        vm->bind_func<-1>(obj, name, [ret_code, f_header](pkpy::VM* vm, const pkpy::Args& args){
-            pkpy::StrStream ss;
-            ss << f_header;
-            for(int i=0; i<args.size(); i++){
-                ss << ' ';
-                pkpy::PyVar x = vm->call(args[i], pkpy::__json__);
-                ss << pkpy::CAST(pkpy::Str&, x);
-            }
-            char* packet = strdup(ss.str().c_str());
-            switch(ret_code){
-                case 'i': return VAR(f_int(packet));
-                case 'f': return VAR(f_float(packet));
-                case 'b': return VAR(f_bool(packet));
-                case 's': {
-                    char* p = f_str(packet);
-                    if(p == nullptr) return vm->None;
-                    return VAR(p); // no need to free(p)
-                }
-                case 'N': f_None(packet); return vm->None;
-            }
-            free(packet);
-            UNREACHABLE();
-            return vm->None;
-        });
-        return strdup(f_header.c_str());
+    PK_LEGACY_EXPORT
+    void pkpy_vm_gc_on_delete(pkpy::VM* vm, void (*f)(pkpy::VM *, pkpy::PyObject *)){
+        vm->heap._gc_on_delete = f;
     }
 }
+
 
 #endif // POCKETPY_H

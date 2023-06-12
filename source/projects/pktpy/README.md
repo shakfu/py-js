@@ -1,28 +1,33 @@
 # PocketPy Max External
 
-This is an experiment to use [pocketpy](https://github.com/blueloveTH/pocketpy), a nifty C++17 header-only Python interpreter for game engines, in a Max external.
+This external embeds [pocketpy](https://github.com/blueloveTH/pocketpy), a nifty C++17 header-only Python interpreter for game engines, in a Max external.
 
 ## Notes
 
-[pocketpy](https://github.com/blueloveTH/pocketpy) is a very cool early stage project to create an embeddable self-contained python implementation for game engines.
+[pocketpy](https://github.com/blueloveTH/pocketpy) is a very cool project to create an embeddable self-contained python implementation for game engines.
 
-A lot of language compatibility has been implemented but not a lot of module coverage yet, although user modules have been recently implemented.
-
-So far it offers preliminary support for the following modules:
+As of version 1.0.3, quite a lot of language compatibility has been implemented including custom modules and the following builtin modules:
 
 - bisect
 - c (custom module for c-level access)
 - collections
+- datatime
+- easing (a set of easing functions)
+- gc
 - heapq
 - json
+- linalg (linear algebra)
 - math
 - os
+- pickle
 - random
 - re
+- requests
 - sys
 - time
+- traceback
 
-This max external project embeds the pocketpy interpreter, provides for easy wrapping of max-api functions in c++, and produces a small sized external (~ 0.68 Mb when stripped) without dependencies making it completely self-contained, portable and ideal for standalones and packages.
+This max external project embeds the pocketpy interpreter, provides for easy wrapping of max-api functions in c++, and produces a small sized external (~ 0.88 Mb when stripped) without dependencies making it completely self-contained, portable and ideal for standalones and packages.
 
 ## Structure of Implementation
 
@@ -35,6 +40,8 @@ pktpy.cpp -includes-> pktpy.h -includes-> pocketpy.h
 - `pktp.h`: a general middle layer providing a cpp class, `PktpythonInterpreter`, with helpers and round-trip translation methods between pocketpy and the max c-api. The user should ideally not need to change anything in this file.
 
 - `pktpy.cpp`: In this file, the max-api methods are implemented by using the functionality in the middle layer. This is were customization should ocurr (e.g custom bultin methods).
+
+- `user_config.h`: A configuration header to allow for tweaking of the pocketpy VM. Currently the only adjustment has been to set `PK_ENABLE_THREAD 1` which adds additionals locks for multi-threaded applications.
 
 ## Current Status
 
