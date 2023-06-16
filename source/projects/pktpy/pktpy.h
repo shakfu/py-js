@@ -109,6 +109,9 @@ PktpyInterpreter::PktpyInterpreter()
     this->path_code = 0;
     this->loglevel = log_level::PY_LOG_LEVEL;
     this->vm = new VM(false); // vm->enable_os = false
+
+    // FIXME
+    // Should not be pass throughs
     this->vm->_stdout = [](VM* vm, const Str& s) {};
     this->vm->_stderr = [](VM* vm, const Str& s) {};
 

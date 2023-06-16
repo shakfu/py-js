@@ -11,6 +11,7 @@ typedef struct _pktpy {
     long run_on_close;      /*!< evaluate/run code in editor on close */
     void* outlet;           /*!< object outlet */
     PktpyInterpreter* py;   /*!< pktpy interpreter instance */
+    PyObject* mod_dsp;      /*!< pktpy dsp native module */
 } t_pktpy;
 
 // clang-format off
@@ -425,6 +426,16 @@ int add100(int a) { return a + 100; }
 
 void add_custom_builtins(t_pktpy* x)
 {
+    // add dsp native module
+    x->mod_dsp = x->py->vm->new_module("dsp");
+
+    x->py->vm->bind_func<2>(x->mod_dsp, "add", [](VM* vm, ArgsView args) {
+        f64 x = CAST(f64, args[0]);
+        f64 y = CAST(f64, args[1]);
+        return VAR(x + y);
+    });
+
+
     PyObject* obj; // to handle `x` pointer capture case
     // see: https://github.com/blueloveTH/pocketpy/issues/89
 

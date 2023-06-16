@@ -6,7 +6,7 @@ This external embeds [pocketpy](https://github.com/blueloveTH/pocketpy), a nifty
 
 [pocketpy](https://github.com/blueloveTH/pocketpy) is a very cool project to create an embeddable self-contained python implementation for game engines.
 
-As of version 1.0.3, quite a lot of language compatibility has been implemented including custom modules and the following builtin modules:
+As of version 1.0.4, quite a lot of language compatibility has been implemented including custom modules and the following builtin modules:
 
 - bisect
 - c (custom module for c-level access)
@@ -27,7 +27,7 @@ As of version 1.0.3, quite a lot of language compatibility has been implemented 
 - time
 - traceback
 
-This max external project embeds the pocketpy interpreter, provides for easy wrapping of max-api functions in c++, and produces a small sized external (~ 0.88 Mb when stripped) without dependencies making it completely self-contained, portable and ideal for standalones and packages.
+This max external project embeds the pocketpy interpreter, provides for easy wrapping of max-api functions in c++, and produces a small sized external (~ 1.0Mb) without dependencies making it completely self-contained, portable and ideal for standalones and packages.
 
 ## Structure of Implementation
 

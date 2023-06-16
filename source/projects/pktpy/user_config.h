@@ -58,7 +58,6 @@ inline const float kTypeAttrLoadFactor = 0.5f;
 #pragma warning (disable:4101)
 #pragma warning (disable:4244)
 #define _CRT_NONSTDC_NO_DEPRECATE
-#define strdup _strdup
 #endif
 
 #ifdef _MSC_VER
@@ -68,7 +67,6 @@ inline const float kTypeAttrLoadFactor = 0.5f;
 #define PK_ENABLE_COMPUTED_GOTO     1
 #define UNREACHABLE()               __builtin_unreachable()
 #endif
-
 
 #if DEBUG_CEVAL_STEP && defined(PK_ENABLE_COMPUTED_GOTO)
 #undef PK_ENABLE_COMPUTED_GOTO
