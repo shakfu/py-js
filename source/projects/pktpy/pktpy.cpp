@@ -1,6 +1,5 @@
 #include "pktpy.h"
 
-
 typedef struct _pktpy {
     t_object ob;            /*!< object header */
     t_symbol* name;         /*!< unique object name */
@@ -192,7 +191,6 @@ void* pktpy_new(t_symbol* s, long argc, t_atom* argv)
 /* -------------------------------------------------------------------------
  * set import path
  */
-
 
 
 
@@ -415,6 +413,35 @@ void pktpy_load(t_pktpy* x, t_symbol* s)
     pktpy_execfile(x, s);
 }
 
+/* -------------------------------------------------------------------------
+ * custom class wrappers (can be used as python classes)
+ */
+
+class PyPoint {
+private:
+    float x;
+    float y;
+
+public:
+    PY_CLASS(PyPoint, test, PyPoint)
+
+    PyPoint(float x, float y) : x(x), y(y) {}
+
+    static void _register(VM* vm, PyObject* mod, PyObject* type){
+        vm->bind_constructor<3>(type, [](VM* vm, ArgsView args){
+            float x = CAST_F(args[1]);
+            float y = CAST_F(args[2]);
+            return VAR_T(PyPoint, x, y);
+        });
+        vm->bind_method<0>(type, "__repr__", [](VM* vm, ArgsView args){
+            PyPoint& self = CAST(PyPoint&, args[0]);
+            std::stringstream ss;
+            ss << "PyPoint(" << self.x << ", " << self.y << ")";
+            return VAR(ss.str());
+        });
+    }
+};
+
 
 /* -------------------------------------------------------------------------
  * custom builtin function wrappers (can be used as python functions)
@@ -494,6 +521,8 @@ void add_custom_builtins(t_pktpy* x)
     });
     py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
-}
+    PyObject* mod = x->py->new_module("test");
+    PyPoint::register_class(x->py, mod);
 
+}
 
