@@ -14,6 +14,7 @@
 // By setting this to 1, capturing lambdas can be binded,
 // but it's slower and may cause severe "code bloat", also needs more time to compile.
 #define PK_ENABLE_STD_FUNCTION      0
+#define PK_ENABLE_STD_FUNCTION_PRINTFUNC 1
 
 /*************** debug settings ***************/
 

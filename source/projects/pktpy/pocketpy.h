@@ -28,6 +28,7 @@
 // By setting this to 1, capturing lambdas can be binded,
 // but it's slower and may cause severe "code bloat", also needs more time to compile.
 #define PK_ENABLE_STD_FUNCTION      0
+#define PK_ENABLE_STD_FUNCTION_PRINTFUNC 0
 
 /*************** debug settings ***************/
 
@@ -3432,7 +3433,14 @@ struct FrameId{
     Frame* operator->() const { return &data->operator[](index); }
 };
 
+
+#ifdef PK_ENABLE_STD_FUNCTION_PRINTFUNC
+typedef std::function<void(VM*, const Str&)> PrintFunc;
+#else
 typedef void(*PrintFunc)(VM*, const Str&);
+#endif
+
+
 
 class VM {
     VM* vm;     // self reference for simplify code

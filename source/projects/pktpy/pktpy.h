@@ -37,6 +37,7 @@ private:
     t_symbol* name;        //!< unique python object name
     t_symbol* pythonpath;  //!< path to python directory
     log_level loglevel;    //!< object-level log level (error, info, debug)
+    bool disable_stderr;   //!< disable stderr output;
 
 public:
     VM* vm;                //!< pocketpy vm instance
@@ -108,21 +109,22 @@ PktpyInterpreter::PktpyInterpreter()
     this->source_path = gensym("");
     this->path_code = 0;
     this->loglevel = log_level::PY_LOG_LEVEL;
-    this->vm = new VM(false); // vm->enable_os = false
+    this->disable_stderr = false;
+    this->vm = new VM(true); // vm->enable_os = true
+    // this->vm->_stdout = [](VM* vm, const Str& s) { };
+    // this->vm->_stderr = [](VM* vm, const Str& s) { };
 
-    // FIXME
-    // Should not be pass throughs
-    this->vm->_stdout = [](VM* vm, const Str& s) {};
-    this->vm->_stderr = [](VM* vm, const Str& s) {};
+    this->vm->_stdout = [](VM* vm, const Str& s) {
+        const char* stdout_output = s.c_str_dup();
+        post((char*)stdout_output);           
+    };
 
-    // this->vm->_stdout = [](VM* vm, const Str& s) { 
-    //     const char* stdout_output = s.c_str_dup();
-    //     post((char*)stdout_output);
-    // };
-    // this->vm->_stderr = [](VM* vm, const Str& s) { 
-    //     const char* stderr_output = s.c_str_dup();
-    //     error((char*)stderr_output);
-    // };
+    this->vm->_stderr = [&](VM* vm, const Str& s) {
+        if (!this->disable_stderr) {
+            const char* stderr_output = s.c_str_dup();
+            error((char*)stderr_output);
+        }
+    };
 }
 
 
@@ -805,7 +807,9 @@ t_max_err PktpyInterpreter::execfile_path(char* path)
  */
 PyObject* PktpyInterpreter::eval_text(char* text)
 {
+    this->disable_stderr = true;
     PyObject* result = this->vm->exec(text, "<eval>", EVAL_MODE);
+    this->disable_stderr = false;
  
     if (result == NULL) {
         if (this->vm->exec(text, "main.py", EXEC_MODE) != NULL) {
