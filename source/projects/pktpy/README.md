@@ -37,7 +37,7 @@ pktpy.cpp -includes-> pktpy.h -includes-> pocketpy.h
 
 - `pocketpy.h`: the [pocketpy](https://github.com/blueloveTH/pocketpy) header.
 
-- `pktp.h`: a general middle layer providing a cpp class, `PktpythonInterpreter`, with helpers and round-trip translation methods between pocketpy and the max c-api. The user should ideally not need to change anything in this file.
+- `pktp.h`: a general middle layer providing a cpp class, `PktpythonInterpreter`, a subclass of `pkpy::VM`, with helpers and round-trip translation methods between pocketpy and the max c-api. The user should ideally not need to change anything in this file.
 
 - `pktpy.cpp`: In this file, the max-api methods are implemented by using the functionality in the middle layer. This is were customization should ocurr (e.g custom bultin methods).
 

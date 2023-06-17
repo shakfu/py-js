@@ -6,6 +6,7 @@ g++ --std=c++17 \
 	-Wno-unused-variable \
 	-fno-rtti \
 	-stdlib=libc++ \
+	-I../.. \
 	-o main \
 	main.cpp
 

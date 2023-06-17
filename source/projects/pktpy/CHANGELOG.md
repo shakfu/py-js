@@ -3,7 +3,9 @@
 
 ## [0.0.2]
 
-- Updated code to [pocketpy](https://github.com/blueloveTH/pocketpy) to ver 1.0.3
+- Changed `PktpyInterpreter` to be a subclass of `pkpy::VM`
+
+- Updated code to [pocketpy](https://github.com/blueloveTH/pocketpy) to ver 1.0.4
 
 
 

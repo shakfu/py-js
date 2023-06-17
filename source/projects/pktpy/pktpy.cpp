@@ -219,7 +219,7 @@ void pktpy_bang(t_pktpy* x) { outlet_bang(x->outlet); }
  */
 t_max_err pktpy_exec(t_pktpy* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return x->py->exec(s, argc, argv);
+    return x->py->exec2(s, argc, argv);
 }
 
 /**
@@ -427,9 +427,9 @@ int add100(int a) { return a + 100; }
 void add_custom_builtins(t_pktpy* x)
 {
     // add dsp native module
-    x->mod_dsp = x->py->vm->new_module("dsp");
+    x->mod_dsp = x->py->new_module("dsp");
 
-    x->py->vm->bind_func<2>(x->mod_dsp, "add", [](VM* vm, ArgsView args) {
+    x->py->bind_func<2>(x->mod_dsp, "add", [](VM* vm, ArgsView args) {
         f64 x = CAST(f64, args[0]);
         f64 y = CAST(f64, args[1]);
         return VAR(x + y);
@@ -440,12 +440,12 @@ void add_custom_builtins(t_pktpy* x)
     // see: https://github.com/blueloveTH/pocketpy/issues/89
 
     // builtins
-    x->py->vm->bind_builtin_func<1>("add10", [](VM* vm, ArgsView args) {
+    x->py->bind_builtin_func<1>("add10", [](VM* vm, ArgsView args) {
         i64 a = CAST(i64, args[0]);
         return VAR(a + 10);
     });
 
-    x->py->vm->bind_builtin_func<1>("add100", [](VM* vm, ArgsView args) {
+    x->py->bind_builtin_func<1>("add100", [](VM* vm, ArgsView args) {
         i64 a = CAST(i64, args[0]);
         return VAR(add100(a));
     });
@@ -453,35 +453,35 @@ void add_custom_builtins(t_pktpy* x)
     // example of wrapping a max api function
     // bind: void *outlet_int(t_outlet *x, t_atom_long n);
     // >>> out_int(10) -> sends 10 out of outlet
-    obj = x->py->vm->bind_builtin_func<1>("out_int", [](VM* vm, ArgsView args) {
+    obj = x->py->bind_builtin_func<1>("out_int", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         i64 a = CAST(i64, args[0]);
         outlet_int(x->outlet, a);
         return vm->None;
     });
-    py_cast<NativeFunc&>(x->py->vm, obj).set_userdata(x);
+    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
     // wrap existing function pktpy_get_path_to_external
-    obj = x->py->vm->bind_builtin_func<0>("location", [](VM* vm, ArgsView args) {
+    obj = x->py->bind_builtin_func<0>("location", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         t_symbol* sym = pktpy_get_path_to_external(x);
         outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
         return vm->None;
     });
-    py_cast<NativeFunc&>(x->py->vm, obj).set_userdata(x);
+    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
     // wrap existing function pktpy_load
-    obj = x->py->vm->bind_builtin_func<1>("load", [](VM* vm, ArgsView args) {
+    obj = x->py->bind_builtin_func<1>("load", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         Str path = CAST(Str, args[0]);
         const char* path_cstr = path.c_str_dup();
         pktpy_load(x, gensym(path_cstr)); 
         return vm->None;
     });
-    py_cast<NativeFunc&>(x->py->vm, obj).set_userdata(x);
+    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
     // wrap max-api function newobject_fromboxtext as create(text: str)
-    obj = x->py->vm->bind_builtin_func<1>("create", [](VM* vm, ArgsView args) {
+    obj = x->py->bind_builtin_func<1>("create", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         Str text = CAST(Str, args[0]);
         const char* text_cstr = text.c_str_dup();
@@ -492,7 +492,7 @@ void add_custom_builtins(t_pktpy* x)
             newobject_fromboxtext(patcher, text_cstr);
         return vm->None;
     });
-    py_cast<NativeFunc&>(x->py->vm, obj).set_userdata(x);
+    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
 }
 

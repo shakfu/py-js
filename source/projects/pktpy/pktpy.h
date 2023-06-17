@@ -30,9 +30,10 @@ enum log_level { ERROR, INFO, DEBUG };
 
 
 /**
- * @brief      This class describes a pocketpy interpreter.
+ * @brief      This class describes a pocketpy interpreter,
+ *             a subclass of a pocketpy VM
  */
-class PktpyInterpreter {
+class PktpyInterpreter : public VM {
 private:
     t_symbol* name;        //!< unique python object name
     t_symbol* pythonpath;  //!< path to python directory
@@ -40,7 +41,6 @@ private:
     bool disable_stderr;   //!< disable stderr output;
 
 public:
-    VM* vm;                //!< pocketpy vm instance
     t_symbol* source_name; //!< base name of python file to execfile
     t_symbol* source_path; //!< full path to python file to execfile
     short     path_code;    
@@ -90,7 +90,7 @@ public:
 
     // core message methods
     t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
-    t_max_err exec(t_symbol* s, long argc, t_atom* argv);
+    t_max_err exec2(t_symbol* s, long argc, t_atom* argv);
     t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
     t_max_err execfile(t_symbol* s);
 };
@@ -110,17 +110,14 @@ PktpyInterpreter::PktpyInterpreter()
     this->path_code = 0;
     this->loglevel = log_level::PY_LOG_LEVEL;
     this->disable_stderr = false;
-    this->vm = new VM(true); // vm->enable_os = true
-    // this->vm->_stdout = [](VM* vm, const Str& s) { };
-    // this->vm->_stderr = [](VM* vm, const Str& s) { };
 
-    this->vm->_stdout = [](VM* vm, const Str& s) {
+    this->_stdout = [](VM* vm, const Str& s) {
         const char* stdout_output = s.c_str_dup();
         post((char*)stdout_output);           
     };
 
-    this->vm->_stderr = [&](VM* vm, const Str& s) {
-        if (!this->disable_stderr) {
+    this->_stderr = [](VM* vm, const Str& s) {
+        if (!static_cast<PktpyInterpreter*>(vm)->disable_stderr) {
             const char* stderr_output = s.c_str_dup();
             error((char*)stderr_output);
         }
@@ -131,7 +128,7 @@ PktpyInterpreter::PktpyInterpreter()
 /**
  * @brief      PktpyInterpreter destructor method.
  */
-PktpyInterpreter::~PktpyInterpreter() { delete(this->vm); }
+PktpyInterpreter::~PktpyInterpreter() { delete this; }
 
 
 // ---------------------------------------------------------------------------
@@ -381,25 +378,25 @@ PyObject* PktpyInterpreter::atom_to_pobject(t_atom* atom)
 
     case A_LONG:
         this->log_debug((char*)"int: %i", atom_getlong(atom));
-        return py_var(this->vm, atom_getlong(atom));
+        return py_var(this, atom_getlong(atom));
 
     case A_FLOAT:
         this->log_debug((char*)"float: %f", atom_getfloat(atom));
-        return py_var(this->vm, atom_getfloat(atom));
+        return py_var(this, atom_getfloat(atom));
 
     case A_SYM:
         this->log_debug((char*)"symbol: %s", atom_getsym(atom)->s_name);
-        return py_var(this->vm, atom_getsym(atom)->s_name);
+        return py_var(this, atom_getsym(atom)->s_name);
 
     case A_NOTHING:
-        return this->vm->None;
+        return this->None;
 
     default:
         // FIXME: should be this->log_warning
         this->log_error(
             (char*)"Warning: type %d unsupported for conversion to Python.",
             atom->a_type);
-        return this->vm->None;
+        return this->None;
     }
 }
 
@@ -416,23 +413,23 @@ t_max_err PktpyInterpreter::pobject_to_atom(PyObject* value, t_atom* atom)
 {
     t_max_err err = MAX_ERR_NONE;
 
-    if (is_type(value, this->vm->tp_int)) {
-        int int_value = py_cast<int>(this->vm, value);
+    if (is_type(value, this->tp_int)) {
+        int int_value = py_cast<int>(this, value);
         atom_setlong(atom, int_value);
     }
 
-    else if (is_type(value, this->vm->tp_float)) {
-        double float_value = py_cast<float>(this->vm, value);
+    else if (is_type(value, this->tp_float)) {
+        double float_value = py_cast<float>(this, value);
         atom_setfloat(atom, float_value);
     }
 
-    else if (is_type(value, this->vm->tp_bool)) {
-        bool bool_value = py_cast<bool>(this->vm, value);
+    else if (is_type(value, this->tp_bool)) {
+        bool bool_value = py_cast<bool>(this, value);
         atom_setlong(atom, bool_value);
     }
 
-    else if (is_type(value, this->vm->tp_str)) {
-        Str str_value = py_cast<Str>(this->vm, value);
+    else if (is_type(value, this->tp_str)) {
+        Str str_value = py_cast<Str>(this, value);
         const char* cstr = str_value.c_str_dup();
         atom_setsym(atom, gensym(cstr));
     }
@@ -485,17 +482,17 @@ List PktpyInterpreter::atoms_to_plist_with_offset(long argc, t_atom* argv,
         switch ((argv + i)->a_type) {
         case A_FLOAT: {
             double c_float = atom_getfloat(argv + i);
-            PyObject* p_float = py_var(this->vm, c_float);
+            PyObject* p_float = py_var(this, c_float);
             plist.push_back(p_float);
             break;
         }
         case A_LONG: {
-            PyObject* p_int = py_var(this->vm, atom_getlong(argv + i));
+            PyObject* p_int = py_var(this, atom_getlong(argv + i));
             plist.push_back(p_int);
             break;
         }
         case A_SYM: {
-            PyObject* p_str = py_var(this->vm, atom_getsym(argv + i)->s_name);
+            PyObject* p_str = py_var(this, atom_getsym(argv + i)->s_name);
             plist.push_back(p_str);
             break;
         }
@@ -571,21 +568,21 @@ t_max_err PktpyInterpreter:: handle_plist_output(List plist, void* outlet)
 
     for (PyObject* obj : plist) {
         if (is_int(obj)) {
-            int int_obj = py_cast<int>(this->vm, obj);
+            int int_obj = py_cast<int>(this, obj);
             atom_setlong(atoms + i, int_obj);
             this->log_debug((char*)"%d long: %ld\n", i, int_obj);
             i += 1;
         }
 
         if (is_float(obj)) {
-            float float_obj = py_cast<float>(this->vm, obj);
+            float float_obj = py_cast<float>(this, obj);
             atom_setfloat(atoms + i, float_obj);
             this->log_debug((char*)"%d float: %f\n", i, float_obj);
             i += 1;
         }
 
-        if (is_type(obj, this->vm->tp_str)) {
-            Str str_obj = py_cast<Str>(this->vm, obj);
+        if (is_type(obj, this->tp_str)) {
+            Str str_obj = py_cast<Str>(this, obj);
             const char* cstr = str_obj.c_str_dup();
             atom_setsym(atoms + i, gensym(cstr));
             this->log_debug((char*)"%d string: %s\n", i, cstr);
@@ -615,26 +612,26 @@ t_max_err PktpyInterpreter:: handle_plist_output(List plist, void* outlet)
 t_max_err PktpyInterpreter::handle_pyvar_output(PyObject* pval, void* outlet)
 {
     if (is_float(pval)) {
-        float float_result = py_cast<float>(this->vm, pval);
+        float float_result = py_cast<float>(this, pval);
         outlet_float(outlet, float_result);
         return MAX_ERR_NONE;
     }
 
     else if (is_int(pval)) {
-        float long_result = py_cast<int>(this->vm, pval);
+        float long_result = py_cast<int>(this, pval);
         outlet_int(outlet, long_result);
         return MAX_ERR_NONE;
     }
 
-    else if (is_type(pval, this->vm->tp_str)) {
-        Str str_result = py_cast<Str>(this->vm, pval);
+    else if (is_type(pval, this->tp_str)) {
+        Str str_result = py_cast<Str>(this, pval);
         const char* cstr = str_result.c_str_dup();
         outlet_anything(outlet, gensym(cstr), 0, (t_atom*)NIL);
         return MAX_ERR_NONE;
     }
 
-    else if (is_type(pval, this->vm->tp_list)) {
-        List plist = py_cast<List>(this->vm, pval);
+    else if (is_type(pval, this->tp_list)) {
+        List plist = py_cast<List>(this, pval);
         return handle_plist_output(plist, outlet);
     }
 
@@ -642,7 +639,7 @@ t_max_err PktpyInterpreter::handle_pyvar_output(PyObject* pval, void* outlet)
     //     return this->handle_dict_output(outlet, pval);
     // }
 
-    else if (pval == this->vm->None) {
+    else if (pval == this->None) {
         return MAX_ERR_GENERIC;
     }
 
@@ -667,82 +664,82 @@ t_max_err PktpyInterpreter::handle_pyvar_output(PyObject* pval, void* outlet)
  */
 t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
 {
-    PyObject* result = this->vm->exec(pcode, "<eval>", EVAL_MODE);
+    PyObject* result = this->exec(pcode, "<eval>", EVAL_MODE);
 
     if (result != NULL) {
 
         this->log_debug((char*)"eval %s", pcode);
 
-        if (is_type(result, this->vm->tp_int)) {
-            int int_result = py_cast<int>(this->vm, result);
+        if (is_type(result, this->tp_int)) {
+            int int_result = py_cast<int>(this, result);
             outlet_int(outlet, int_result);
         }
 
-        else if (is_type(result, this->vm->tp_float)) {
-            double float_result = py_cast<float>(this->vm, result);
+        else if (is_type(result, this->tp_float)) {
+            double float_result = py_cast<float>(this, result);
             outlet_float(outlet, float_result);
         }
 
-        else if (is_type(result, this->vm->tp_bool)) {
-            bool bool_result = py_cast<bool>(this->vm, result);
+        else if (is_type(result, this->tp_bool)) {
+            bool bool_result = py_cast<bool>(this, result);
             outlet_int(outlet, bool_result);
         }
 
-        else if (is_type(result, this->vm->tp_str)) {
-            Str str_result = py_cast<Str>(this->vm, result);
+        else if (is_type(result, this->tp_str)) {
+            Str str_result = py_cast<Str>(this, result);
             const char* cstr = str_result.c_str_dup();
             outlet_anything(outlet, gensym(cstr), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->vm->tp_list)) {
-            List list_result = py_cast<List>(this->vm, result);
+        else if (is_type(result, this->tp_list)) {
+            List list_result = py_cast<List>(this, result);
             this->handle_plist_output(list_result, outlet);
             // outlet_anything(outlet, gensym("list"), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->vm->tp_tuple)) {
-            Tuple tuple_result = py_cast<Tuple>(this->vm, result);
+        else if (is_type(result, this->tp_tuple)) {
+            Tuple tuple_result = py_cast<Tuple>(this, result);
             outlet_anything(outlet, gensym("tuple"), 0, (t_atom*)NIL);
         }
 
-        // else if (is_type(result, this->vm->tp_slice)) {
-        //     Slice slice_result = py_cast<Slice>(this->vm, result);
+        // else if (is_type(result, this->tp_slice)) {
+        //     Slice slice_result = py_cast<Slice>(this, result);
         //     outlet_anything(outlet, gensym("slice"), 0, (t_atom*)NIL);
         // }
 
-        // else if (is_type(result, this->vm->tp_range)) {
-        //     Range range_result = py_cast<Range>(this->vm, result);
+        // else if (is_type(result, this->tp_range)) {
+        //     Range range_result = py_cast<Range>(this, result);
         //     outlet_anything(outlet, gensym("range"), 0, (t_atom*)NIL);
         // }
 
-        else if (is_type(result, this->vm->tp_exception)) {
-            Exception exception_result = py_cast<Exception>(this->vm,
+        else if (is_type(result, this->tp_exception)) {
+            Exception exception_result = py_cast<Exception>(this,
                                                             result);
             outlet_anything(outlet, gensym("star_wrapper"), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->vm->tp_star_wrapper)) {
-            StarWrapper star_wrapper_result = py_cast<StarWrapper>(this->vm,
+        else if (is_type(result, this->tp_star_wrapper)) {
+            StarWrapper star_wrapper_result = py_cast<StarWrapper>(this,
                                                                    result);
             outlet_anything(outlet, gensym("star_wrapper"), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->vm->tp_function)) {
-            Function func_result = py_cast<Function>(this->vm, result);
+        else if (is_type(result, this->tp_function)) {
+            Function func_result = py_cast<Function>(this, result);
             outlet_anything(outlet, gensym("function"), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->vm->tp_native_func)) {
-            NativeFunc func_result = py_cast<NativeFunc>(this->vm, result);
+        else if (is_type(result, this->tp_native_func)) {
+            NativeFunc func_result = py_cast<NativeFunc>(this, result);
             outlet_anything(outlet, gensym("native_function"), 0,
                             (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->vm->tp_module)) {
+        else if (is_type(result, this->tp_module)) {
             outlet_anything(outlet, gensym("module"), 0, (t_atom*)NIL);
         }
 
-        else if (result == this->vm->None) {
+        else if (result == this->None) {
             this->log_debug((char*)"eval None");
         }
 
@@ -766,7 +763,7 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
  */ 
 t_max_err PktpyInterpreter::exec_pcode(char* pcode)
 {
-    if (this->vm->exec(pcode, "main.py", EXEC_MODE) == NULL) {
+    if (this->exec(pcode, "main.py", EXEC_MODE) == NULL) {
         this->log_error((char*)"exec %s", pcode);            
         return MAX_ERR_GENERIC;
     }
@@ -792,7 +789,7 @@ t_max_err PktpyInterpreter::execfile_path(char* path)
     std::ifstream ifs(str_path);
     std::stringstream buffer;
     buffer << ifs.rdbuf();
-    this->vm->exec(buffer.str(), "main.py", EXEC_MODE);
+    this->exec(buffer.str(), "main.py", EXEC_MODE);
 
     return MAX_ERR_NONE;
 }
@@ -808,12 +805,12 @@ t_max_err PktpyInterpreter::execfile_path(char* path)
 PyObject* PktpyInterpreter::eval_text(char* text)
 {
     this->disable_stderr = true;
-    PyObject* result = this->vm->exec(text, "<eval>", EVAL_MODE);
+    PyObject* result = this->exec(text, "<eval>", EVAL_MODE);
     this->disable_stderr = false;
  
     if (result == NULL) {
-        if (this->vm->exec(text, "main.py", EXEC_MODE) != NULL) {
-            return this->vm->None;
+        if (this->exec(text, "main.py", EXEC_MODE) != NULL) {
+            return this->None;
         }
     } else {
         return result;
@@ -886,7 +883,7 @@ t_max_err PktpyInterpreter::eval(t_symbol* s, long argc, t_atom* argv,
  *
  * @return t_max_err error code
  */
-t_max_err PktpyInterpreter::exec(t_symbol* s, long argc, t_atom* argv)
+t_max_err PktpyInterpreter::exec2(t_symbol* s, long argc, t_atom* argv)
 {
     char* pcode = atom_getsym(argv)->s_name;
     if (pcode == NULL) {
