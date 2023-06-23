@@ -19,17 +19,17 @@ Basically, there is no intrinsic reason why it shouldn't work with python3 on yo
 
 ## Implementation
 
-### Does it embed python into the external or is the external connecting to the local python installation?
+### Is the python interpreter embedded in the external or does the external basically use the host's python interpreter?
 
-The default build creates a lightweight external linked to your local python3; another variant embeds python3 into an external linked to python3 which resides in a Max package; and another embeds python into the external itself without an dependencies. There are other ways as well. The project [README](https://github.com/shakfu/py-js) gives an overview of differences between approaches.
+The default build creates a lightweight external dynamically linked to your local python3 interpreter; another variant embeds python3 into an external that is dynamically linked to a python3 interpreter which is part of the containing Max package; and another embeds python into the external itself without any dependencies. There are other ways as well. The project [README](https://github.com/shakfu/py-js) gives an overview of differences between approaches.
 
 ## Installation
 
-### Can I install two different python3 externals in the same project?
+### Can I use two different python3 externals in the same patch?
 
-Python3 external types which are not 'isolated' (see the [build variations](README.md#build-variations) section) cannot be loaded at the same time. So for example, if you build a `framework-ext`, `py.mxo` and `pyjs.mxo` will not work together in the same patch, but if you built a `framework-pkg` variations of the same two externals they should work fine without issues.
+Python3 external types which are not 'isolated' (see the [build variations](README.md#build-variations) section) cannot be loaded at the same time. So for example, if you build a `framework-ext` variation, `py.mxo` and `pyjs.mxo` will not work together in the same patch, but if you built a `framework-pkg` variation of the same two externals they should work fine without issues.
 
-Of course, it would normally be considered redundant to install two different python3 externals in your project.
+Of course, it would be considered redundant to install two different python3 externals in your project.
 
 ## Logging
 
@@ -49,7 +49,7 @@ This release contains relocatable python3 externals which are useful for distrib
 
 First note that there several ways to add code to the external:
 
-1. The external's site-packages: `py-js/externals/py.mxo/Contents/Resources/lib/python3.9/site-packages`
+1. The external's site-packages: `py-js/externals/py.mxo/Contents/Resources/lib/python3.X/site-packages`
 
 2. The package script folder: `py-js/examples/scripts`
 
@@ -59,7 +59,7 @@ For (1), I have tested pure python scripts which should work without re-codesign
 
 For (2), this is just a location that's searched automatically with `load`, `read`, and `execfile` messages so it can contain dependent files.
 
-For (3), this is just setting that is done at the patch level so it should be straightforward. As mentioned, the extra pythonpath is currently only set at object creation. It should be updated when changed but this is something on the todo list.
+For (3), this is just a setting that is done at the patch level so it should be straightforward. As mentioned, the extra pythonpath is currently only set at object creation. It should be updated when it's changed but this is something on the todo list.
 
 ## Specific Python package Compatibility
 
@@ -71,8 +71,7 @@ You can also add your system `site-packages` to the externals pythonpath attribu
 
 If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `bin-homebrew-pkg` build option for example.
 
-It is also possible to package numpy in a full relocatable external, it's quite involved, and can currently only be done with non-statically built relocatable externals. The releases section has an example of this.
+It is also possible to package numpy in a full relocatable external, it's quite involved, and can currently only be done with non-statically built relocatable externals.
 
-The build used to auto-detect numpy in a python used to build the external, but now it is a manual
-process and the limited numpy support has to be enabled at the Makefile and cmake level.
+The build used to auto-detect numpy in a python used to build the external, but now it is a manual process and the limited numpy support has to be enabled at the Makefile and cmake level.
 

@@ -340,7 +340,7 @@ void py_init(t_py* x)
 
     /* Add the cythonized 'api' built-in module, before Py_Initialize */
     if (PyImport_AppendInittab("api", PyInit_api) == -1) {
-        py_error(x, "could not add api to builtin modules table");
+        py_error(x, "could not add api module to builtin modules table");
     }
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
@@ -2257,11 +2257,11 @@ void py_edclose(t_py* x, char** text, long size)
 
 
 /**
- * @brief      { function_description }
+ * @brief Cnfigures behavior of system responding to editor window close
  *
- * @param      x       pointer to object structure
- * @param      s       custom save text (optional)
- * @param      result  set values [0-4] to adjust what happens
+ * @param x       pointer to object structure
+ * @param s       custom save text (optional)
+ * @param result  set values [0-4] to adjust what happens
  *                     how the system responds when the editor
  *                     window is closed.
  */
@@ -2331,7 +2331,14 @@ void py_load(t_py* x, t_symbol* s)
 /*--------------------------------------------------------------------------*/
 /* Max Datastructures Support */
 
-
+/**
+ * @brief      Determines if py table exists.
+ *
+ * @param      x           pointer to object structure
+ * @param      table_name  The table name
+ *
+ * @return     True if py table exists, False otherwise.
+ */
 bool py_table_exists(t_py* x, char* table_name)
 {
     long **storage, size;
@@ -2339,6 +2346,15 @@ bool py_table_exists(t_py* x, char* table_name)
     return (table_get(gensym(table_name), &storage, &size) == 0);
 }
 
+/**
+ * @brief      Convert python list to Max table
+ *
+ * @param      x           pointer to object structure
+ * @param      table_name  The table name
+ * @param      plist       The python list
+ *
+ * @return     The t maximum error.
+ */
 t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
 {
     long **storage, size, value;
@@ -2379,7 +2395,14 @@ error:
     return MAX_ERR_GENERIC;
 }
 
-
+/**
+ * @brief      Convert Max table to python list
+ *
+ * @param      x           pointer to object structure
+ * @param      table_name  The table name
+ *
+ * @return     python list
+ */
 PyObject* py_table_to_list(t_py* x, char* table_name)
 {
 
