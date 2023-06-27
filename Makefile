@@ -357,6 +357,27 @@ fix-framework:
 	$(call call-builder,"fix" "framework")
 
 
+# Building with logging
+# -----------------------------------------------------------------------
+.PHONY: log-shared-ext log-framework-ext log-tiny
+
+log-shared-ext:
+	@echo "building 'shared-ext' capturing output to logs/shared-ext.log"
+	@mkdir -p logs
+	@time make shared-ext > logs/shared-ext.log 2>&1
+
+log-framework-ext:
+	@echo "building 'framework-ext' capturing output to logs/framework-ext.log"
+	@mkdir -p logs
+	@time make framework-ext > logs/framework-ext.log 2>&1
+
+log-tiny:
+	@echo "building 'static-tiny-ext' capturing output to logs/framework-ext.log"
+	@mkdir -p logs
+	@time make tiny > logs/tiny.log 2>&1
+
+
+
 # Testing
 # -----------------------------------------------------------------------
 .PHONY: test \
@@ -453,7 +474,7 @@ cflow:
 projects:
 	@bash $(SCRIPTS)/build_projects.sh
 ifeq ($(ARCH),arm64)
-	$(MAKE) sign
+	$(MAKE) sign # FIXME: cache KeyError on first run
 endif
 
 # fat:

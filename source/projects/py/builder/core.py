@@ -51,7 +51,8 @@ from types import SimpleNamespace
 from typing import Dict, List, Optional
 
 from .config import (CURRENT_PYTHON_VERSION, DEFAULT_CONFIGURE_OPTIONS,
-                     LOG_FORMAT, LOG_LEVEL, Project)
+                     LOG_FORMAT, LOG_LEVEL, Project,
+                     DEFAULT_PKGS_TO_RM, DEFAULT_EXTS_TO_RM, DEFAULT_BINS_TO_RM)
 from .depend import DependencyManager
 from .ext.relocatable_python import download_relocatable_to
 from .shell import ShellCmd
@@ -125,6 +126,16 @@ class Product:
     def ver(self) -> str:
         """provides major.minor version: 3.9.1 -> 3.9"""
         return ".".join(self.version.split(".")[:2])
+
+    @property
+    def ver_minor(self) -> str:
+        """provides version patch element: 3.9.1 -> 9"""
+        return ".".join(self.version.split(".")[1])
+
+    @property
+    def ver_patch(self) -> str:
+        """provides version patch element: 3.9.1 -> 1"""
+        return ".".join(self.version.split(".")[2])
 
     @property
     def ver_nodot(self) -> str:
@@ -662,55 +673,15 @@ class PythonBuilder(Builder):
 
     def remove_packages(self):
         """remove list of non-critical packages"""
-
-        self.rm_libs(
-            [
-                self.project.python.config_ver_platform,
-                "idlelib",
-                "lib2to3",
-                "tkinter",
-                "turtledemo",
-                "turtle.py",
-                "ctypes",
-                "curses",
-                "ensurepip",
-                "venv",
-            ]
-        )
+        self.rm_libs(DEFAULT_PKGS_TO_RM)
 
     def remove_extensions(self):
         """remove extensions"""
-        self.rm_exts(
-            [
-                "_tkinter",
-                "_ctypes",
-                "_multibytecodec",
-                "_codecs_jp",
-                "_codecs_hk",
-                "_codecs_cn",
-                "_codecs_kr",
-                "_codecs_tw",
-                "_codecs_iso2022",
-                "_curses",
-                "_curses_panel",
-            ]
-        )
+        self.rm_exts(DEFAULT_EXTS_TO_RM)
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
-        ver = self.product.ver
-        self.rm_bins(
-            [
-                f"2to3-{ver}",
-                f"idle{ver}",
-                f"easy_install-{ver}",
-                f"pip{ver}",
-                f"pyvenv-{ver}",
-                f"pydoc{ver}",
-                # f'python{ver}{self.suffix}',
-                # f'python{ver}-config',
-            ]
-        )
+        self.rm_bins(DEFAULT_BINS_TO_RM)
 
     def write_python_getpip(self):
         """optionally provide latets pip to binary"""
@@ -837,7 +808,10 @@ class PythonSrcBuilder(PythonBuilder):
         """pre-build operations"""
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
-        self.apply_patch(patch="configure.patch", to_file="configure")
+        if self.product.ver == "11" and int(self.product.ver_patch) < 4: # special case
+            self.apply_patch(patch="configure_pre_11_4.patch", to_file="configure")
+        else:
+            self.apply_patch(patch="configure.patch", to_file="configure")
         self.cmd.chdir(self.project.pydir)
 
     def post_process(self):
@@ -1100,6 +1074,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions"""
         self.rm_exts(
+            DEFAULT_EXTS_TO_RM.union(set(
             [
                 "_blake2",
                 "_csv",
@@ -1110,7 +1085,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
                 "_zoneinfo",
                 "pyexpat",
                 "unicodedata",
-            ]
+            ]))
         )
 
     def remove_encodings(self):
@@ -1132,21 +1107,12 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
         """remove list of non-critical packages"""
         self.remove_encodings()
         self.rm_libs(
-            [
-                self.project.python.config_ver_platform,
+            DEFAULT_PKGS_TO_RM.union(set([
                 "argparse.py",
-                "cgi.py",
-                "ctypes",
-                "curses",
                 "dbm",
                 "difflib.py",
-                "distutils",
                 "email",
-                "ensurepip",
                 "html",
-                # "http",
-                "idlelib",
-                "lib2to3",
                 "mailbox",
                 "mailbox.py",
                 "multiprocessing",
@@ -1156,18 +1122,11 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
                 "pydoc_data",
                 "sqlite3",
                 "ssl.py",
-                "sunau",
-                "tkinter",
-                "turtle.py",
-                "turtledemo",
                 "urllib",
-                "venv",
                 "wsgiref",
                 "xml",
                 "zoneinfo",
-                # "inspect.py", # required by pdb
-                # "logging",  # required by asyncio
-            ]
+            ]))
         )
 
     def install(self):
@@ -1187,18 +1146,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
     def remove_binaries(self):
         """remove list of non-critical executables"""
         ver = self.product.ver
-        self.rm_bins(
-            [
-                f"2to3-{ver}",
-                f"idle{ver}",
-                f"easy_install-{ver}",
-                f"pip{ver}",
-                f"pyvenv-{ver}",
-                f"pydoc{ver}",
-                # f'python{ver}{self.suffix}',
-                # f'python{ver}-config',
-            ]
-        )
+        self.rm_bins(DEFAULT_BINS_TO_RM)
 
     def build(self):
         self.cmd.chdir(self.src_path)

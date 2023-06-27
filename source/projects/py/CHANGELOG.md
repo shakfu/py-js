@@ -3,6 +3,12 @@
 
 ## [0.2.x]
 
+- Added `log-<variant>` Makefile targets for timed and file logged builds
+
+- Slight Reduction of `builder`-based externals' size by removing deprecated modules including `distutils`.
+
+- Changed `configure.patch` for py 11.4 due to changes during patch increments. For versions of python 3.11 below 3.11.4 there is now a special case `configure_pre_11_4.patch`
+
 - Added `fold`, which wraps `functools.reduce`
 
 - Added mechanism to remove `\\` escape sequences to enable commas, double quotes and multi-argument functions to work correctly.

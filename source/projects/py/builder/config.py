@@ -106,70 +106,6 @@ PYTHON_TARGETS = {
 }
 
 
-PACKAGES_TO_DEL = [
-    # project.python.config_ver_platform,
-    "config-{ver}-{platform}",
-    "idlelib",
-    "lib2to3",
-    "tkinter",
-    "turtledemo",
-    "turtle.py",
-    "ctypes",
-    "curses",
-    "ensurepip",
-    "venv",
-]
-
-PACKAGES_TO_KEEP = [
-    "asyncio",
-    "collections",
-    "concurrent",
-    # 'ctypes',
-    # 'curses',
-    "dbm",
-    "distutils",
-    "email",
-    "encodings",
-    "html",
-    "http",
-    "importlib",
-    "json",
-    "lib-dynload",
-    "logging",
-    "multiprocessing",
-    "pydoc_data",
-    "sqlite3",
-    "unittest",
-    "urllib",
-    "wsgiref",
-    "xml",
-    "xmlrpc",
-]
-
-EXTENSIONS_TO_DEL = [
-    "_tkinter",
-    "_ctypes",
-    "_multibytecodec",
-    "_codecs_jp",
-    "_codecs_hk",
-    "_codecs_cn",
-    "_codecs_kr",
-    "_codecs_tw",
-    "_codecs_iso2022",
-    "_curses",
-    "_curses_panel",
-]
-
-BINS_TO_DEL = [
-    "2to3-{ver}",
-    "idle{ver}",
-    "easy_install-{ver}",
-    "pip{ver}",
-    "pyvenv-{ver}",
-    "pydoc{ver}",
-]
-
-
 # ----------------------------------------------------------------------------
 # Utility Functions
 
@@ -393,4 +329,68 @@ class Project:
                 VARIANT=variant,
                 PRODUCT_DMG=self.get_dmg(variant),
             )
+
+
+# ----------------------------------------------------------------------------
+# Default pkgs, exts and bins to remove
+
+ver = Python.version
+
+DEFAULT_PKGS_TO_RM = set([
+    Python.config_ver_platform,
+    "aifc.py",
+    "cgi.py",
+    "cgitb.py",
+    "chunk.py",
+    "crypt.py",
+    "ctypes",
+    "curses",
+    "distutils",
+    "ensurepip",
+    "idlelib",
+    "imghdr.py",
+    "lib2to3",
+    "mailcap.py",
+    "nntplib.py",
+    "pipes.py",
+    "sndhdr.py",
+    "sunau.py",
+    "telnetlib.py",
+    "tkinter",
+    "turtle.py",
+    "turtledemo",
+    "uu.py",
+    "venv",
+    "xdrlib.py",
+    # "msilib",
+    # "ossaudiodev",
+    # "spwd",
+])
+
+
+DEFAULT_EXTS_TO_RM = set([
+    "_codecs_cn",
+    "_codecs_hk",
+    "_codecs_iso2022",
+    "_codecs_jp",
+    "_codecs_kr",
+    "_codecs_tw",
+    "_ctypes",
+    "_curses",
+    "_curses_panel",
+    "_multibytecodec",
+    "_tkinter",
+    "audioop",
+    "nis",
+])
+
+
+DEFAULT_BINS_TO_RM = set([
+    "2to3-{ver}",
+    "idle{ver}",
+    "easy_install-{ver}",
+    "pip{ver}",
+    "pyvenv-{ver}",
+    "pydoc{ver}",
+])
 
