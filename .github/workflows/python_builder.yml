@@ -10,6 +10,7 @@ on:
         required: true
         options: 
           - python-shared
+          - python-shared-tiny
           - python-shared-ext
           - python-shared-pkg
           - python-static

@@ -6,7 +6,6 @@
 ## General Improvements
 
 
-
 ## Refactor
 
 
@@ -69,6 +68,8 @@
 - [ ] Normalize tiny-variant names: so `shared-tiny-ext` becomes `shared-ext-tiny` and `static-tiny-ext` becomes `static-ext-tiny`.
 
 - [ ] Each python or pyjs build variant such as `shared-pkg` or `shared-ext`, should produce a unique output, and there should be a dependency mgmt solution which includes a clear dep graph and hashing and caching to minimize unecessary builds and rebuilds
+
+- [ ] Develop a configuration based api for `builder` which can consume yaml, json or a python api.
 
 - [ ] add NUMPY_INCLUDE var to all xcode projects
 

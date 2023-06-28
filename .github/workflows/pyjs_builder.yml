@@ -12,6 +12,7 @@ on:
           - framework-ext
           - framework-pkg
           - shared-ext
+          - shared-tiny-ext
           - static-ext
           - static-tiny-ext
           - relocatable-pkg
