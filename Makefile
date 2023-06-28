@@ -104,8 +104,8 @@ all: default
 .PHONY: default local-sys \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
-		shared-pkg shared-ext \
-		static-pkg static-ext static-tiny-ext tiny
+		shared-pkg shared-ext shared-tiny-ext \
+		static-pkg static-ext static-tiny-ext
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -128,11 +128,17 @@ shared-pkg: clean-shared-pkg
 shared-ext: clean-shared-ext
 	$(call call-builder,"pyjs" "shared_ext" "--install" "--build")
 
-static-ext: clean-static-ext
-	$(call call-builder,"pyjs" "static_ext" "--install" "--build")
+shared-tiny-ext: clean-externals
+	$(call call-builder,"pyjs" "shared_tiny_ext" "--install" "--build" "--release")
 
 static-pkg: clean-static-pkg
 	$(call call-builder,"pyjs" "static_pkg" "--install" "--build")
+
+static-ext: clean-static-ext
+	$(call call-builder,"pyjs" "static_ext" "--install" "--build")
+
+static-tiny-ext: clean-externals
+	$(call call-builder,"pyjs" "static_tiny_ext" "--install" "--build" "--release")
 
 framework-pkg: clean-framework-pkg
 	$(call call-builder,"pyjs" "framework_pkg" "--install" "--build")
@@ -145,11 +151,6 @@ relocatable-pkg: clean-framework-pkg
 
 relocatable-pkg-nopip: clean-framework-pkg
 	$(call call-builder,"pyjs" "relocatable_pkg" "--install" "--build" "--without-pip")
-
-static-tiny-ext: clean-externals
-	$(call call-builder,"pyjs" "static_tiny_ext" "--install" "--build" "--release")
-
-tiny: static-tiny-ext
 
 beeware-ext: clean-externals
 	$(call call-builder,"pyjs" "beeware_ext" "--install" "--build" "--release")
@@ -188,7 +189,7 @@ release-relocatable-pkg: clean-framework-pkg
 # -----------------------------------------------------------------------
 # python targets
 
-.PHONY: python-shared python-shared-pkg python-shared-ext \
+.PHONY: python-shared python-shared-pkg python-shared-ext python-shared-tiny \
 		python-static  python-static-tiny \
 		python-framework python-framework-ext python-framework-pkg
 
@@ -222,6 +223,9 @@ python-relocatable: clean-python-framework-pkg
 python-static-tiny:
 	$(call call-builder,"python" "static_tiny" "--install")
 
+python-shared-tiny:
+	$(call call-builder,"python" "shared_tiny" "--install")
+
 python-beeware:
 	$(call call-builder,"python" "beeware" "--install")
 
@@ -247,8 +251,8 @@ xz:
 # -----------------------------------------------------------------------
 .PHONY: build-homebrew-pkg build-homebrew-ext \
 		build-framework-pkg build-framework-ext \
-		build-shared-pkg build-shared-ext \
-		build-static-pkg build-static-ext
+		build-shared-pkg build-shared-ext build-shared-tiny-ext \
+		build-static-pkg build-static-ext build-static-tiny-ext
 
 
 build-shared-pkg: clean-shared-pkg
@@ -274,6 +278,9 @@ build-relocatable-pkg: clean-externals
 
 build-static-tiny-ext: clean-static-ext
 	$(call call-builder,"pyjs" "static_tiny_ext" "--build" "--release")
+
+build-shared-tiny-ext: clean-shared-ext
+	$(call call-builder,"pyjs" "shared_tiny_ext" "--build" "--release")
 
 build-beeware-ext: clean-static-ext
 	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
@@ -393,7 +400,6 @@ test: clean
 test-default: clean-products
 	$(call section,"running default test")
 	$(call call-builder,"test" "default")
-
 
 test-homebrew-ext: clean-products
 	$(call section,"running homebrew-ext test")

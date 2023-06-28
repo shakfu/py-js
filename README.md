@@ -223,11 +223,12 @@ Currently only the `py` and `pyjs` externals are built using these methods, whic
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
 1    | `make static-ext`      | static     | external   | 9.0     | 8.8
-2    | `make tiny-static-ext` | static     | external   | 6.7     | 6.2  [2]
+2    | `make static-tiny-ext` | static     | external   | 6.7     | 6.2  [2]
 3    | `make shared-ext`      | shared     | external   | 16.4    | 15.8
-4    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8 [3]
+4    | `make shared-tiny-ext` | shared     | external   | 6.7     | 6.2  [2]
+5    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8 [3]
 
-[2] Can also be created by calling `make tiny`, this static variation  was created as part of an effort to create the smallest possible portable pyjs externals. Size figures are for python 3.10.x .
+[2] These 'tiny' variants are intended to be the smallest possible portable pyjs externals. In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoreticla minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, is the `pktpy` subproject in this repo.
 
 [3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
 
@@ -243,10 +244,10 @@ If you don't mind compiling (and have xcode installed) then pick one of the foll
     make static-ext
     ```
 
-    You may also prefer the teeny tiny version:
+    You may also prefer the tiny variant:
 
     ```bash
-    make tiny
+    make static-tiny-ext
     ```
 
 2. To build self-contained python3 exernals which include a dynamically linked libpythonX.Y.dylib:
@@ -254,6 +255,12 @@ If you don't mind compiling (and have xcode installed) then pick one of the foll
     ```bash
     make shared-ext
     ```
+
+    or for the corresponding tiny variant:
+
+    ```bash
+    make shared-tiny-ext
+    ```    
 
 3. To build python3 externals in a package, linked to a python installation in its `support` folder
 
@@ -283,8 +290,9 @@ make homebrew-pkg         : portable package w/ pyjs (requires homebrew python)
 make homebrew-ext         : portable pyjs externals (requires homebrew python)
 make shared-pkg           : portable package with pyjs externals (shared)
 make shared-ext           : portable pyjs externals (shared)
+make shared-tiny-ext      : tiny portable pyjs externals (shared)
 make static-ext           : portable pyjs externals (static)
-make tiny-static-ext      : tiny portable pyjs externals (static)
+make static-tiny-ext      : tiny portable pyjs externals (static)
 make framework-pkg        : portable package with pyjs externals (framework)
 make framework-ext        : portable pyjs externals (framework)
 make relocatable-pkg      : portable package w/ more custom options (framework)

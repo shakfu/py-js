@@ -16,7 +16,7 @@
 
 - [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
-- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashingerror. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug above). At least there's progress!
+- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashing error. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug above). At least there's progress!
 
 ## Features
 
@@ -28,12 +28,13 @@
 
 ### Extensibility
 
-- [ ] add an additional `PYTHONHOME` is the containing package `support` folder or `scripts` folder for self-contained externals
+- [ ] add an additional the containing package `support` folder or `scripts` folder to `PYTHONPATH` for self-contained externals
 
-- [ ] add script to install python packages and then remove the cache and `_vendor` libraries of the installer which are large.
+- [ ] add script which to create throwaway virtualenv environments: `virtualenv venv` to install python packages and then copy targeted to appropriate place in external or package and then delete remove the `venv` after done.
 
 ### Documentation
 
+- [ ] complete quarto based documentation subproject
 
 ### Testing
 
@@ -54,7 +55,7 @@
 
 ### Editor
 
-- [ ] redo editor logic, set current default to run-on-close
+- [x] redo editor logic, set current default to run-on-close
 
 - [ ] Fix defaults of `run_on_save`, `close_onsave` options:
   - if they are mutually exclusive, then enum is better otherwise make them binary options
@@ -64,6 +65,10 @@
 - [ ] add more tests and examples
 
 ### Build System
+
+- [ ] Normalize tiny-variant names: so `shared-tiny-ext` becomes `shared-ext-tiny` and `static-tiny-ext` becomes `static-ext-tiny`.
+
+- [ ] Each python or pyjs build variant such as `shared-pkg` or `shared-ext`, should produce a unique output, and there should be a dependency mgmt solution which includes a clear dep graph and hashing and caching to minimize unecessary builds and rebuilds
 
 - [ ] add NUMPY_INCLUDE var to all xcode projects
 

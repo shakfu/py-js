@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Added `shared-tiny-ext` Makefile target which is the shared lib counterpart to `static-tiny-ext`. The resulting external size for `py.mxo` and `pyjs.mxo` are 8.5 MB and 8.1 MB respectively.
+
 - Added `log-<variant>` Makefile targets for timed and file logged builds
 
 - Slight Reduction of `builder`-based externals' size by removing deprecated modules including `distutils`.

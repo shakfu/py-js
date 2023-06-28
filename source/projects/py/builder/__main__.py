@@ -129,6 +129,11 @@ class Application(Commander):
         self.ordered_dispatch("python_static_tiny", args)
 
     @common_options
+    def do_python_shared_tiny(self, args):
+        """build tiny shared python"""
+        self.ordered_dispatch("python_shared_tiny", args)
+
+    @common_options
     def do_python_beeware(self, args):
         """build beeware python framework"""
         self.ordered_dispatch("python_beeware", args)
@@ -201,6 +206,11 @@ class Application(Commander):
     def do_pyjs_static_tiny_ext(self, args):
         """build portable pyjs externals (tiny static)"""
         self.ordered_dispatch("pyjs_static_tiny_ext", args)
+
+    @common_options
+    def do_pyjs_shared_tiny_ext(self, args):
+        """build portable pyjs externals (tiny shared)"""
+        self.ordered_dispatch("pyjs_shared_tiny_ext", args)
 
     @common_options
     def do_pyjs_beeware_ext(self, args):

@@ -80,8 +80,10 @@ PYJS_TARGETS = {
         desc="portable package with pyjs externals (shared)", lines=17992
     ),
     "shared-ext": dict(desc="portable pyjs externals (shared)", lines=14195),
+    "shared-tiny-ext": dict(desc="tiny portable pyjs externals (shared)", lines=14195),    
     "static-ext": dict(desc="portable pyjs externals (static)", lines=14064),
     "static-tiny-ext": dict(desc="tiny portable pyjs externals (static)", lines=14064),
+
     "framework-pkg": dict(
         desc="portable package with pyjs externals (framework)", lines=14383
     ),
