@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Added `patch/3.8/setup-static-min6.local` to enable tiny variants in python 3.8
+
 - Added `shared-tiny-ext` Makefile target which is the shared lib counterpart to `static-tiny-ext`. The resulting external size for `py.mxo` and `pyjs.mxo` are 8.5 MB and 8.1 MB respectively.
 
 - Added `log-<variant>` Makefile targets for timed and file logged builds
