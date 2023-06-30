@@ -1,4 +1,4 @@
-# zpy
+# zpy: python3 via zmq in max
 
 A max external which uses `czmq` to connect to a separate python process
 

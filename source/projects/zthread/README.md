@@ -1,4 +1,4 @@
-# zthread: testing zmqc with Max threads
+# zthread: testing zmqc with max threads
 
 This is a proof-of-concept external using `zmq` with threading
 

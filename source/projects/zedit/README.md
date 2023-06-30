@@ -1,4 +1,4 @@
-# zedit
+# zedit: a web-based code-editor embedded in an max external
 
 This subproject aim to provide a web-based code-editor for the python3 externals in this project.
 

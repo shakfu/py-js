@@ -1,4 +1,4 @@
-# The Krait Experiment
+# krait: a single-header c++ python3 library for max externals
 
 Provides a single-header cpp-centric `py_interpreter.h` library with a python3 interpreter class.
 

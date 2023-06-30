@@ -1,4 +1,4 @@
-# jmx: jupyter client for Max
+# jmx: jupyter client for nax
 
 This is a proof-of-concept subproject to build a [jupyter client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) as a Max/MSP external.
 
