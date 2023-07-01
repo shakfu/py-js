@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.2.x]
 
+- Added a project documentation section in `scripts/docs` to collect documentation, organize notes, and automatically build a project guide book as pdf. This is done via [quarto](https://quarto.org)
+
 - Added library of common utility functions
 
 - Added CHANGELOG and TODO files for each subproject

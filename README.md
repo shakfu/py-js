@@ -477,11 +477,100 @@ Implemented for both `py` and `pyjs` objects:
 
 - **Exposing Max API to Python** A portion of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This code enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called directly by python scripts or via messages in a patcher.
 
+## Packaging
+
+This project has a builtin features to package, sign, notarize and deploy python3 externals for Max/MSP.
+
+These features are implemented in `py-js/source/project/py/builder/packaging.py` and are exposed via two interfaces:
+
+### The `argparse`-based interface of `builder`:
+
+```bash
+$ python3 -m builder package --help
+usage: builder package [-h] [-v VARIANT] [-d] [-k KEYCHAIN_PROFILE]
+                           [-i DEV_ID]
+                           ...
+
+options:
+  -h, --help            show this help message and exit
+  -v VARIANT, --variant VARIANT
+                        build variant name
+  -d, --dry-run         run without actual changes.
+  -k KEYCHAIN_PROFILE, --keychain-profile KEYCHAIN_PROFILE
+                        Keychain Profile
+  -i DEV_ID, --dev-id DEV_ID
+                        Developer ID
+
+package subcommands:
+  package, sign and release external
+
+                        additional help
+    collect_dmg         collect dmg
+    dist                create project distribution folder
+    dmg                 package distribution folder as .dmg
+    notarize_dmg        notarize dmg
+    sign                sign all required folders recursively
+    sign_dmg            sign dmg
+    staple_dmg          staple dmg
+
+
+```
+
+### The Project's `Makefile` frontend:
+
+Since the Makefile frontend basically just calles on `builder` interface in a simplified way, we will use it to explain the basic steps which occur sequentially. Note that while it is possible to automate thie process considerable, it is separated here into discrete steps for purposes of illustration and to facilitate debugging:
+
+1. Recursively sign all externals in the `external folder` and/or binaries in the `support` folder
+
+    ```bash
+    make sign
+    ```
+
+2. Gather all project resources into a distribution folder and then convert it into a `.dmg`
+
+    ```bash
+    make dmg
+    ```
+
+3. Sign the DMG
+
+    ```bash
+    make sign-dmg
+    ```
+
+4. Notarize the DMG (send it to Apple for validation and notarization)
+
+```bash
+make notarize-dmg
+```
+
+5. Staple a valid notarization ticket to the DMG
+
+```bash
+make staple-dmg
+```
+
+6. Zip the DMG and collect into in the `$HOME/Downloads/PY-JS` folder
+
+```bash
+make collect-dmg
+```
+
+Note that the it is important to sign externals (this is done by Xcode automatically) and to distribute to others, you can either ask users to remove the products quarantine state or notarize the product as above, which requires an Apple Developer License.
+
+
+### Github Actions
+
+There are a number of Github actions in the project which basically automate the packaging, signing and notarization steps described above.
+
+The only caveat is that currently Github only provide `x86_64` runners so one has to build for `arm64` on a dedicated machine.
+
+
 ## Caveats
 
-- Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a newer python3 based build system to handle simple to complex cases, and an older bash/makefile build system (which is deprecated and will be deleted eventually).
+- The externals in this project have been developed on MacOS and have not been tested on Windows.
 
-- Despite their relative maturity, the `py` and `pyjs` objects are only v0.1 and still need further unit/functional/integration testing and field testing of course!
+- Despite their relative maturity, the `py` and `pyjs` objects are still only v0.2.x and still need further unit/functional/integration testing and field testing of course!
 
 - As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions (python 3.11 perhaps?).
 

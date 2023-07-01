@@ -1,4 +1,4 @@
-# dirs to exclude
+# dirs, files, and patters to exclude
 **/project.xcworkspace
 **/xcshareddata
 *.dylib
@@ -30,8 +30,6 @@ leoenv
 log.txt
 logs
 package-info.json
-source/docs
-source/projects/py/docs
 source/projects/py/dump.yml
 source/projects/py/scripts/archive/*
 support/*

@@ -73,7 +73,6 @@ Are shared by others:
 
 ## @rpath, @loader_path, @exectuable_path
 
-- https://medium.com/@donblas/fun-with-rpath-otool-and-install-name-tool-e3e41ae86172
 - https://wincent.com/wiki/@executable_path,_@load_path_and_@rpath
 - https://blog.krzyzanowskim.com/2018/12/05/rpath-what/
 

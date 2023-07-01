@@ -1,0 +1,112 @@
+project:
+  type: book
+
+book:
+  title: "Python3 Externals for Max/MSP"
+  subtitle: "A PyJs Project Guide"
+  author: "S. Alireza"
+  date: "1/7/2023"
+  abstract: "Exploring different ways one can use Python3 in Max/MSP"
+  url: "https://github.com/shakfu/py-js"
+  version: "0.0.1"
+  chapters:
+    - index.md
+    - src/summary.md
+    - src/quickstart.md
+
+    # - src/intro.qmd
+    # - part: "The Project"
+    #   chapters: 
+    #   - src/summary.md
+    #   - src/quickstart.md
+    - part: "The Externals"
+      chapters:
+      - src/externals/py.md
+      - src/externals/pyjs.md
+      - src/externals/krait.md
+      - src/externals/mamba.md
+      - src/externals/cobra.md
+      # - src/externals/cmx.md
+      # - src/externals/jmx.md
+      - src/externals/mpy.md
+      - src/externals/mxpy.md
+      - src/externals/pktpy.md
+      - src/externals/zedit.md
+      # - src/externals/zpy.md
+      # - src/externals/zthread.md
+    - part: "Builder"
+      chapters:
+      - src/builder/overview.md
+      # - src/builder/building-on-apple-silicon.md
+      # - src/builder/building-pyext-flext.md
+      # - src/builder/cmake.md
+      # - src/builder/codesign-notarize.md
+      # - src/builder/fix_arm64_bug.md
+      # - src/builder/github-actions.md
+      # - src/builder/make-dmg.md
+      # - src/builder/mappings.md
+      # - src/builder/packaging.md
+      # - src/builder/relocatable-python.md
+      # - src/builder/remove-detritus.md
+      # - src/builder/switching-between-modes.md
+      # - src/builder/xcconfig.md
+      # - src/builder/xcode-concepts.md
+      
+    # - part: "Development Guide"
+    #   chapters:
+    #   - src/dev/overview.md
+
+    #   - src/dev/py/bugs.md
+    #   - src/dev/py/cython.md
+    #   - src/dev/py/design.md
+    #   - src/dev/py/dont.md
+    #   - src/dev/py/editor.md
+    #   - src/dev/py/escape_text.md
+    #   - src/dev/py/experiments.md
+    #   - src/dev/py/max-c-api.md
+    #   - src/dev/py/max-fileformats.md
+    #   - src/dev/py/numpy-error.md
+    #   - src/dev/py/numpy-shared-python.md
+    #   - src/dev/py/python-c-api.md
+    #   - src/dev/py/python-shell-via-nodejs.md
+    #   - src/dev/py/repl.md
+    #   - src/dev/py/scripting-tips.md
+    #   - src/dev/py/shared-python-problem.md
+    #   - src/dev/py/snippets.md
+    #   - src/dev/py/threading.md
+    #   - src/dev/py/type-translation.md
+    #   - src/dev/py/types.md
+
+    #   - src/dev/pyjs/javascript.md
+
+  appendices:
+    - src/faq.md
+    - src/references.md
+
+
+bibliography: src/references.bib
+
+format:
+  html:
+    theme: cosmo
+  pdf:
+    documentclass: scrreprt
+    # toc: true
+    # toc-depth: 3
+    # toc-title: Table of Contents
+    # lof: true
+    # lot: true
+    # number-sections: true
+    # number-depth: 1
+    # mainfont: Times New Roman
+    # mainfont: Optima
+    mainfont: Palatino
+    monofont: Inconsolata Nerd Font
+    # sansfont: Times New Roman
+    # sansfont: Optima
+    sansfont: Palatino
+    highlight-style: arrow
+
+
+
+

@@ -17,22 +17,22 @@
 ```bash
 py/
 ├── externals
-│   └── py.mxo
-│       └── Contents
-│           ├── MacOS
-│           │   └── py
-│           └── Pkginfo
+│ └── py.mxo
+│     └── Contents
+│         ├── MacOS
+│         │ └── py
+│         └── Pkginfo
 ├── help
-│   ├── py.maxhelp
-│   └── scripts
-│       ├── buffer.py
-│       ├── pak.py
-│       ├── script.py
-│       ├── sendrecv.py
-│       ├── sig.py
-│       ├── simple.py
-│       ├── tcltk.py
-│       └── threads.py
+│ ├── py.maxhelp
+│ └── scripts
+│     ├── buffer.py
+│     ├── pak.py
+│     ├── script.py
+│     ├── sendrecv.py
+│     ├── sig.py
+│     ├── simple.py
+│     ├── tcltk.py
+│     └── threads.py
 └── init
     └── py-objectmappings.txt
 ```
@@ -240,9 +240,9 @@ OSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Deve
 
 ### Modify max-sdk header
 
-As a final point, I had to modify a header reference in the max-sdk to get it to compile after getting a <Multiprocessing.h> not found error.
+As a final point, I had to modify a header reference in the max-sdk to get it to compile after getting a `<Multiprocessing.h>` not found error.
 
-With a bit of research discovered the fix and that <Multiprocessing.h> was deprecated in this stackoverflow [post](https://stackoverflow.com/questions/11912815/compiling-pulseaudio-on-mac-os-x-with-coreservices-h)
+With a bit of research discovered the fix and that `<Multiprocessing.h>` was deprecated in this stackoverflow [post](https://stackoverflow.com/questions/11912815/compiling-pulseaudio-on-mac-os-x-with-coreservices-h)
 
 The change in ../max-sdk/source/c74support/max-includes/ext_critical.h
 

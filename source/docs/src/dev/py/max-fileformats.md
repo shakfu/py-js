@@ -1,5 +1,6 @@
 # max-fileformats
 
+```
 max definekind textfile @parent file @showextension 1;
 max definekind javascript @parent textfile @showextension 1;
 max definekind xmlfile @parent textfile @showextension 1;
@@ -198,3 +199,5 @@ max system macintosh fileformat .auinfo AUin 0 "Audio Unit Plug-in" audioplugin;
 max system windows fileformat .exe APPL 0 Application application;
 max system macintosh fileformat .app APPL 0 Application application;
 max system macintosh fileformat .hibundle xQZZ 0 "Support file" file;
+```
+

@@ -1,0 +1,237 @@
+# builder: pyjs python external builder
+
+
+## Current Status of Builders
+
+As mentioned earlier, as of this writing this project uses a combination of a `Makefile` in the project root, a basic `cmake` build option and a custom python build system, `builder`, which resides in the `py-js/source/py/builder` package. The `Makefile` is a kind of 'frontend' to the more complex python build system. The latter can be used directly of course. A view into its many options can be obtained by typing the following:
+
+```bash
+cd py-js/source/py
+python3 -m builder --help
+```
+
+`builder` was developed to handle the more complex case of downloading the source code of python (from python.org) and its dependencies from their respective sites and then building custom python binaries with which to reliably compile python3 externals which are portable, relocatable, self-contained, small-in-size, and usable in Max Packages and Standalones.
+
+## Build Variations
+
+One of the objectives of this project is to cater to a number of build variations. As of this writing, the following table gives an overview of the different builds and their differences:
+
+There is generally tradeoff of size vs. portability:
+
+build command       | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
+:-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
+make                | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
+make brew-ext       | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
+make brew-pkg       | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
+make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
+make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
+make shared-pkg     | shared       | 18.7     | package   | yes      | no [4]   | yes      | yes      |
+make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
+make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
+
+[1] has automatic access to your system python's site-packages
+
+[2] current static external implementation does not work with numpy due to symbol access issues.
+
+[3] *hybrid* means that the source system was a `framework` and the destination system is `shared`.
+
+[4] the shared-pkg variant does build a compliant 'Framework-type' bundle and hence cannot be notarized.
+
+- *pip*: the build allows or provides for pip installation
+
+- *portable*: the externals can be deployed as portable packages or standalones
+
+- *numpy*: numpy compatibility
+
+- *isolated*: if yes, then different external types can run concurrently without issue
+
+### Python Version Compatibility
+
+![py-js testing](../media/python_compatibility.png)
+
+[1] Homebrew only tested on current relase (3.9.10), other versions are expected to work without issues.
+
+[2] Relocatable python can select its own version of python (Only tested with python 3.9.10, other versions should work without issues)
+
+### Packages vs Self-contained Externals
+
+The Max package format is a great way to move a bunch of related patches and externals around. This format also makes a lot of sense for `py-js`, giving a number of advantages over other alternatives:
+
+1. Portable: Relocatable, you can move it around and it still works.
+
+2. Extendable: Can include a full fit-for-purpse python3 installation in the `support` directory with its own site-packages. Packages can be `pip` installed and all of the `site-packages` is automatically made available to the thin 'client' python3 externals in the package's `externals` folder.
+
+3. Size-efficient, since you don't need to duplicate functionality in each external
+
+4. Standalone installable: Recent changes in Max have allowed for this to work in standalones. Just create your standalone application from a patcher which which includes the `py` and `pyjs` objects. Once it is built into a `<STANDALONE>` then copy the whole aforementioned `py` package to `<STANDALONE>/Contents/Resources/C74/packages` and delete the redundant `py.mxo` in `<STANDALONE>/Contents/Resources/C74/externals` since it already exists in the just-copied package.
+
+5. Better for codesigning / notarizing scenarios since Packages are not sealed bundles like externals.
+
+On the other hand, sometimes you just want an external which embeds a python distribution and custom extensions and code:
+
+1. Portable: Relocatable, you can move it around and it still works.
+
+2. Extendable: Can include new pure python code and be provided with new additionas to `sys.path`
+
+3. Size-efficient and fit-for-purpose
+
+4. Standalone installable. Easiest to install in standalones
+
+5. Can be codesigned and notarized relatively easily. [1]
+
+[1] If you want to codesign and notarize it for use in your standalone or package, the [codesigning / notarization script](source/py/scripts/notarize.sh) and related [entitlements file](source/py/scripts/entitlements.plist) can be found in the [source/py/scripts](source/py/scripts) folder.
+
+## The relocatable-python variation
+
+[relocatable-python](https://github.com/gregneagle/relocatable-python) is Greg Neagle's excellent tool for building standalone relocatable Python.framework bundles.
+
+It works so well, that its been included in the `builder` application as an external (embedded dependency).
+
+It can be seen in the `relocatable-pkg` make option which will download a nice default `Python.framework` to the `support` directory used for compiled both `py` and `pyjs` externals:
+
+```bash
+make relocatable-pkg
+```
+
+More options are available if you use the `builder` package directly:
+
+```bash
+$ python3 -m builder pyjs relocatable_pkg --help
+usage: __main__.py pyjs relocatable_pkg [-h] [--destination DESTINATION]
+                                        [--baseurl BASEURL]
+                                        [--os-version OS_VERSION]
+                                        [--python-version PYTHON_VERSION]
+                                        [--pip-requirements PIP_REQUIREMENTS]
+                                        [--pip-modules PIP_MODULES]
+                                        [--no-unsign] [--upgrade-pip]
+                                        [--without-pip] [--release] [-b] [-i]
+                                        [--dump]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --destination DESTINATION
+                        Directory destination for the Python.framework
+  --baseurl BASEURL     Override the base URL used to download the framework.
+  --os-version OS_VERSION
+                        Override the macOS version of the downloaded pkg.
+                        Current supported versions are "10.6", "10.9", and
+                        "11". Not all Python version and macOS version
+                        combinations are valid.
+  --python-version PYTHON_VERSION
+                        Override the version of the Python framework to be
+                        downloaded. See available versions at
+                        https://www.python.org/downloads/mac-osx/
+  --pip-requirements PIP_REQUIREMENTS
+                        Path to a pip freeze requirements.txt file that
+                        describes extra Python modules to be installed. If not
+                        provided, no modules will be installed.
+  --pip-modules PIP_MODULES
+                        list of extra Python modules to be installed.
+  --no-unsign           Do not unsign binaries and libraries after they are
+                        relocatablized.
+  --upgrade-pip         Upgrade pip prior to installing extra python modules.
+  --without-pip         Do not install pip.
+  --release             set configuration to release
+  -b, --build           build python
+  -i, --install         install python to build/lib
+  --dump                dump project and product vars
+```
+
+## Sidenote about building on a Mac
+
+If you are developing the package in `$HOME/Documents/Max 8/Packages/py` and you have your iCloud drive on for Documents, you will find that `make` or `xcodebuild` will reliably fail with 1 error during development, a codesigning error that is due to icloud sync creating detritus in the dev folder. This can be mostly ignored (unless your only focus is codesigning the external).
+
+The solution is to move the external project folder to folder that's not synced-with-icloud  (such as `$HOME/Downloads` for example) and then run `xattr -cr .` in the project directory to remove the detritus (which ironically Apple's system is itself creating) and then it should succeed (provided you have your `Info.plist` and `bundle id` correctly specified). Then just symlink the folder to `$HOME/Documents/Max 8/Packages/` to prevent this from recurring.
+
+I've tried this several times and and it works (for "sign to run locally" case and for the "Development" case).
+
+
+## Packaging
+
+This project has a builtin features to package, sign, notarize and deploy python3 externals for Max/MSP.
+
+These features are implemented in `py-js/source/project/py/builder/packaging.py` and are exposed via two interfaces:
+
+### The `argparse`-based interface of `builder`:
+
+```bash
+$ python3 -m builder package --help
+usage: builder package [-h] [-v VARIANT] [-d] [-k KEYCHAIN_PROFILE]
+                           [-i DEV_ID]
+                           ...
+
+options:
+  -h, --help            show this help message and exit
+  -v VARIANT, --variant VARIANT
+                        build variant name
+  -d, --dry-run         run without actual changes.
+  -k KEYCHAIN_PROFILE, --keychain-profile KEYCHAIN_PROFILE
+                        Keychain Profile
+  -i DEV_ID, --dev-id DEV_ID
+                        Developer ID
+
+package subcommands:
+  package, sign and release external
+
+                        additional help
+    collect_dmg         collect dmg
+    dist                create project distribution folder
+    dmg                 package distribution folder as .dmg
+    notarize_dmg        notarize dmg
+    sign                sign all required folders recursively
+    sign_dmg            sign dmg
+    staple_dmg          staple dmg
+
+
+```
+
+### The Project's `Makefile` frontend:
+
+Since the Makefile frontend basically just calles on `builder` interface in a simplified way, we will use it to explain the basic steps which occur sequentially. Note that while it is possible to automate thie process considerable, it is separated here into discrete steps for purposes of illustration and to facilitate debugging:
+
+1. Recursively sign all externals in the `external folder` and/or binaries in the `support` folder
+
+    ```bash
+    make sign
+    ```
+
+2. Gather all project resources into a distribution folder and then convert it into a `.dmg`
+
+    ```bash
+    make dmg
+    ```
+
+3. Sign the DMG
+
+    ```bash
+    make sign-dmg
+    ```
+
+4. Notarize the DMG (send it to Apple for validation and notarization)
+
+```bash
+make notarize-dmg
+```
+
+5. Staple a valid notarization ticket to the DMG
+
+```bash
+make staple-dmg
+```
+
+6. Zip the DMG and collect into in the `$HOME/Downloads/PY-JS` folder
+
+```bash
+make collect-dmg
+```
+
+Note that the it is important to sign externals (this is done by Xcode automatically) and to distribute to others, you can either ask users to remove the products quarantine state or notarize the product as above, which requires an Apple Developer License.
+
+
+### Github Actions
+
+There are a number of Github actions in the project which basically automate the packaging, signing and notarization steps described above.
+
+The only caveat is that currently Github only provide `x86_64` runners so one has to build for `arm64` on a dedicated machine.
+
+
