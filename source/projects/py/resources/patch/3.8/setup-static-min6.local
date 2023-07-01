@@ -17,7 +17,7 @@ posix -DPy_BUILD_CORE_BUILTIN -I$(srcdir)/Include/internal posixmodule.c
 errno errnomodule.c
 pwd pwdmodule.c
 
-_sre _sre/sre.c -DPy_BUILD_CORE_BUILTIN
+_sre _sre.c -DPy_BUILD_CORE_BUILTIN
 _codecs _codecsmodule.c
 _weakref _weakref.c
 _functools -DPy_BUILD_CORE_BUILTIN -I$(srcdir)/Include/internal _functoolsmodule.c
@@ -54,8 +54,8 @@ _symtable symtablemodule.c
 
 
 array arraymodule.c
-cmath cmathmodule.c
-math mathmodule.c
+cmath cmathmodule.c _math.c -DPy_BUILD_CORE_MODULE # -lm # complex math library functions
+math mathmodule.c _math.c -DPy_BUILD_CORE_MODULE # -lm # math library functions, e.g. sin()
 _contextvars _contextvarsmodule.c
 _struct _struct.c
 _weakref _weakref.c

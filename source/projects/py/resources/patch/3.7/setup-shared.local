@@ -1,10 +1,13 @@
+zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+
 *disabled*
 
 _ctypes
-#_sqlite3
+_sqlite3
 _tkinter
 _curses
 _curses_panel
+pyexpat
 xxlimited
 xxsubtype
 _multibytecodec

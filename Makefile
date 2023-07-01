@@ -26,6 +26,9 @@ TARGETS = py pyjs
 EXTENSION = $(PYDIR)/api.pyx
 PKG_NAME = py-js
 
+# system python override
+# PYTHON_VERSION = 3.8.17
+
 MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSION := 8
 MAX_DIR := "Max\ $(MAX_VERSION)"
@@ -56,8 +59,8 @@ section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
 # $(call pybuild,name)
 define call-builder
-$(call section,"builder $1 $2 $3 $4")
-@cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4
+$(call section,"builder $1 $2 $3 $4 $5 $6")
+@cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4 $5 $6
 endef
 
 # $(call xbuild,name)
@@ -123,28 +126,28 @@ homebrew-ext: clean-homebrew-ext
 	$(call call-builder,"pyjs" "homebrew_ext")
 
 shared-pkg: clean-shared-pkg
-	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build" "-p" "$(PYTHON_VERSION)")
 
 shared-ext: clean-shared-ext
-	$(call call-builder,"pyjs" "shared_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "shared_ext" "--install" "--build" "-p" "$(PYTHON_VERSION)")
 
 shared-tiny-ext: clean-externals
-	$(call call-builder,"pyjs" "shared_tiny_ext" "--install" "--build" "--release")
+	$(call call-builder,"pyjs" "shared_tiny_ext" "--install" "--build" "--release" "-p" "$(PYTHON_VERSION)")
 
 static-pkg: clean-static-pkg
-	$(call call-builder,"pyjs" "static_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "static_pkg" "--install" "--build" "-p" "$(PYTHON_VERSION)")
 
 static-ext: clean-static-ext
-	$(call call-builder,"pyjs" "static_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "static_ext" "--install" "--build" "-p" "$(PYTHON_VERSION)")
 
 static-tiny-ext: clean-externals
-	$(call call-builder,"pyjs" "static_tiny_ext" "--install" "--build" "--release")
+	$(call call-builder,"pyjs" "static_tiny_ext" "--install" "--build" "--release" "-p" "$(PYTHON_VERSION)")
 
 framework-pkg: clean-framework-pkg
-	$(call call-builder,"pyjs" "framework_pkg" "--install" "--build")
+	$(call call-builder,"pyjs" "framework_pkg" "--install" "--build" "-p" "$(PYTHON_VERSION)")
 
 framework-ext: clean-framework-ext
-	$(call call-builder,"pyjs" "framework_ext" "--install" "--build")
+	$(call call-builder,"pyjs" "framework_ext" "--install" "--build" "-p" "$(PYTHON_VERSION)")
 
 relocatable-pkg: clean-framework-pkg
 	$(call call-builder,"pyjs" "relocatable_pkg" "--install" "--build")
@@ -197,22 +200,22 @@ python-shared: clean-python-shared
 	$(call call-builder,"python" "shared" "--install")
 
 python-shared-ext: clean-python-shared-ext
-	$(call call-builder,"python" "shared_ext" "--install")
+	$(call call-builder,"python" "shared_ext" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-shared-pkg: clean-python-shared-pkg
-	$(call call-builder,"python" "shared_pkg" "--install")
+	$(call call-builder,"python" "shared_pkg" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-static: clean-python-static
-	$(call call-builder,"python" "static" "--install")
+	$(call call-builder,"python" "static" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-framework: clean-python-framework
-	$(call call-builder,"python" "framework" "--install")
+	$(call call-builder,"python" "framework" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-framework-ext: clean-python-framework-ext
-	$(call call-builder,"python" "framework_ext" "--install")
+	$(call call-builder,"python" "framework_ext" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-framework-pkg: clean-python-framework-pkg
-	$(call call-builder,"python" "framework_pkg" "--install")
+	$(call call-builder,"python" "framework_pkg" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-relocatable: clean-python-framework-pkg
 	$(call call-builder,"python" "relocatable" "--install")
@@ -221,10 +224,10 @@ python-relocatable: clean-python-framework-pkg
 # 	$(call call-builder,"python" "relocatable_pkg")
 
 python-static-tiny:
-	$(call call-builder,"python" "static_tiny" "--install")
+	$(call call-builder,"python" "static_tiny" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-shared-tiny:
-	$(call call-builder,"python" "shared_tiny" "--install")
+	$(call call-builder,"python" "shared_tiny" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-beeware:
 	$(call call-builder,"python" "beeware" "--install")
@@ -259,28 +262,28 @@ build-shared-pkg: clean-shared-pkg
 	$(call call-builder,"pyjs" "shared_pkg" "--build")
 
 build-shared-ext: clean-shared-ext
-	$(call call-builder,"pyjs" "shared_ext" "--build")
+	$(call call-builder,"pyjs" "shared_ext" "--build" "-p" "$(PYTHON_VERSION)")
 
 build-static-ext: clean-static-ext
-	$(call call-builder,"pyjs" "static_ext" "--build")
+	$(call call-builder,"pyjs" "static_ext" "--build" "-p" "$(PYTHON_VERSION)")
 
 build-static-pkg: clean-static-pkg
-	$(call call-builder,"pyjs" "static_pkg" "--build")
+	$(call call-builder,"pyjs" "static_pkg" "--build" "-p" "$(PYTHON_VERSION)")
 
 build-framework-pkg: clean-framework-pkg
-	$(call call-builder,"pyjs" "framework_pkg" "--build")
+	$(call call-builder,"pyjs" "framework_pkg" "--build" "-p" "$(PYTHON_VERSION)")
 
 build-framework-ext: clean-framework-ext
-	$(call call-builder,"pyjs" "framework_ext" "--build")
+	$(call call-builder,"pyjs" "framework_ext" "--build" "-p" "$(PYTHON_VERSION)")
 
 build-relocatable-pkg: clean-externals
 	$(call call-builder,"pyjs" "relocatable_pkg" "--build")
 
 build-static-tiny-ext: clean-static-ext
-	$(call call-builder,"pyjs" "static_tiny_ext" "--build" "--release")
+	$(call call-builder,"pyjs" "static_tiny_ext" "--build" "--release" "-p" "$(PYTHON_VERSION)")
 
 build-shared-tiny-ext: clean-shared-ext
-	$(call call-builder,"pyjs" "shared_tiny_ext" "--build" "--release")
+	$(call call-builder,"pyjs" "shared_tiny_ext" "--build" "--release" "-p" "$(PYTHON_VERSION)")
 
 build-beeware-ext: clean-static-ext
 	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
@@ -605,5 +608,6 @@ demo: README.md FAQ.md CHANGELOG.md
 	@echo "all-prereqs: '$^'"
 	@echo "newer-prereqs:'$?'"
 
-
+version:
+	@echo $(PYTHON_VERSION)
 

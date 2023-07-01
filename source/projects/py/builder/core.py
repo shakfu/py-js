@@ -51,8 +51,7 @@ from types import SimpleNamespace
 from typing import Dict, List, Optional
 
 from .config import (CURRENT_PYTHON_VERSION, DEFAULT_CONFIGURE_OPTIONS,
-                     LOG_FORMAT, LOG_LEVEL, Project,
-                     DEFAULT_PKGS_TO_RM, DEFAULT_EXTS_TO_RM, DEFAULT_BINS_TO_RM)
+                     LOG_FORMAT, LOG_LEVEL, Project)
 from .depend import DependencyManager
 from .ext.relocatable_python import download_relocatable_to
 from .shell import ShellCmd
@@ -106,7 +105,7 @@ class Product:
     def __init__(
         self,
         name: str,
-        version: str = None,  # type: ignore
+        version: str = None,    # type: ignore
         build_dir: str = None,  # type: ignore
         libs_static: List[str] = None,  # type: ignore
         url_template: str = None,  # type: ignore
@@ -160,8 +159,92 @@ class Product:
     @property
     def dylib(self) -> str:
         """name of dynamic library in macos case."""
-        ver = "3.7m" if self.ver == "3.7" else self.ver
-        return f"lib{self.name.lower()}{ver}.dylib"
+        return f"lib{self.name.lower()}{self.ver}{self.abiflags}.dylib"
+
+    @property
+    def staticlib(self) -> str:
+        """name of static library in macos case."""
+        return f"lib{self.name.lower()}{self.ver}.a"
+        # return f"lib{self.name.lower()}{self.ver}{self.abiflags}.a" # abiflags here?
+
+    @property
+    def abiflags(self) -> str:
+        """a rare and irritating suffix appended to python versions: 3.7m
+        
+        Currently only python 3.7 has this.
+        """
+        return "m" if self.ver in ["3.7"] else ""
+
+    @property
+    def config_ver_platform(self) -> str:
+        """config-{version_short}{abiflags}-darwin: config-3.11-darwin"""
+        return f"config-{self.ver}{self.abiflags}-darwin"
+
+    @property
+    def DEFAULT_PKGS_TO_RM(self) -> set:
+        """default packages to remove"""
+        return set([
+            self.config_ver_platform,
+            "aifc.py",
+            "cgi.py",
+            "cgitb.py",
+            "chunk.py",
+            "crypt.py",
+            "ctypes",
+            "curses",
+            "distutils",
+            "ensurepip",
+            "idlelib",
+            "imghdr.py",
+            "lib2to3",
+            "mailcap.py",
+            "nntplib.py",
+            "pipes.py",
+            "sndhdr.py",
+            "sunau.py",
+            "telnetlib.py",
+            "tkinter",
+            "turtle.py",
+            "turtledemo",
+            "uu.py",
+            "venv",
+            "xdrlib.py",
+            # "msilib",
+            # "ossaudiodev",
+            # "spwd",
+        ])
+
+    @property
+    def DEFAULT_EXTS_TO_RM(self) -> set:
+        """default extensions to remove"""
+        return set([
+            "_codecs_cn",
+            "_codecs_hk",
+            "_codecs_iso2022",
+            "_codecs_jp",
+            "_codecs_kr",
+            "_codecs_tw",
+            "_ctypes",
+            "_curses",
+            "_curses_panel",
+            "_multibytecodec",
+            "_tkinter",
+            "audioop",
+            "nis",
+        ])
+
+    @property
+    def DEFAULT_BINS_TO_RM(self) -> set:
+        """default binaries to remove"""
+        ver = self.ver
+        return set([
+            f"2to3-{ver}",
+            f"idle{ver}",
+            f"easy_install-{ver}",
+            f"pip{ver}",
+            f"pyvenv-{ver}",
+            f"pydoc{ver}",
+        ])
 
     @property
     def url(self):
@@ -365,23 +448,42 @@ class Builder:
             *preprocessor_flags, **xcconfig_flags):
         """python wrapper around command-line xcodebuild"""
 
-        # defaults
-        if "PY_VERSION" not in xcconfig_flags:
-            xcconfig_flags["PY_VERSION"] = self.project.python.version
+        if self.product.ver == "3.7" and not "PY_37" in preprocessor_flags:
+            preprocessor_flags = list(preprocessor_flags)
+            preprocessor_flags.append("PY_37")
 
-        if "PY_SHORT_VERSION" not in xcconfig_flags:
-            xcconfig_flags["PY_SHORT_VERSION"] = self.project.python.version_short
+        if self.settings.python_version:
+            if "PY_VERSION" not in xcconfig_flags:
+                xcconfig_flags["PY_VERSION"] = self.product.version
 
-        if "ABIFLAGS" not in xcconfig_flags:
-            xcconfig_flags["ABIFLAGS"] = str(self.project.python.abiflags)
+            if "PY_SHORT_VERSION" not in xcconfig_flags:
+                xcconfig_flags["PY_SHORT_VERSION"] = self.product.ver
+
+            if "ABIFLAGS" not in xcconfig_flags:
+                xcconfig_flags["ABIFLAGS"] = str(self.product.abiflags)
+
+            # if "NUMPY_HEADERS" not in xcconfig_flags and self.project.python.numpy_includes:
+            #     xcconfig_flags["NUMPY_HEADERS"] = self.project.python.numpy_includes
+
+        else:
+            # defaults
+            if "PY_VERSION" not in xcconfig_flags:
+                xcconfig_flags["PY_VERSION"] = self.project.python.version
+
+            if "PY_SHORT_VERSION" not in xcconfig_flags:
+                xcconfig_flags["PY_SHORT_VERSION"] = self.project.python.version_short
+
+            if "ABIFLAGS" not in xcconfig_flags:
+                xcconfig_flags["ABIFLAGS"] = str(self.project.python.abiflags)
+
+            if "NUMPY_HEADERS" not in xcconfig_flags and self.project.python.numpy_includes:
+                xcconfig_flags["NUMPY_HEADERS"] = self.project.python.numpy_includes
 
         if "ARCHS" not in xcconfig_flags:
             # xcconfig_flags["ARCHS"] = "arm64 x86_64"
             xcconfig_flags["ARCHS"] = "$(NATIVE_ARCH)"
             xcconfig_flags["ONLY_ACTIVE_ARCH"] = "NO"
 
-        if "NUMPY_HEADERS" not in xcconfig_flags and self.project.python.numpy_includes:
-            xcconfig_flags["NUMPY_HEADERS"] = self.project.python.numpy_includes
 
         xcconfig_flags["PROJECT_FOLDER_NAME"] = project
 
@@ -673,15 +775,15 @@ class PythonBuilder(Builder):
 
     def remove_packages(self):
         """remove list of non-critical packages"""
-        self.rm_libs(DEFAULT_PKGS_TO_RM)
+        self.rm_libs(self.product.DEFAULT_PKGS_TO_RM)
 
     def remove_extensions(self):
         """remove extensions"""
-        self.rm_exts(DEFAULT_EXTS_TO_RM)
+        self.rm_exts(self.product.DEFAULT_EXTS_TO_RM)
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
-        self.rm_bins(DEFAULT_BINS_TO_RM)
+        self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
 
     def write_python_getpip(self):
         """optionally provide latets pip to binary"""
@@ -1074,7 +1176,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions"""
         self.rm_exts(
-            DEFAULT_EXTS_TO_RM.union(set(
+            self.product.DEFAULT_EXTS_TO_RM.union(set(
             [
                 "_blake2",
                 "_csv",
@@ -1107,7 +1209,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
         """remove list of non-critical packages"""
         self.remove_encodings()
         self.rm_libs(
-            DEFAULT_PKGS_TO_RM.union(set([
+            self.product.DEFAULT_PKGS_TO_RM.union(set([
                 "argparse.py",
                 "dbm",
                 "difflib.py",
@@ -1146,7 +1248,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
     def remove_binaries(self):
         """remove list of non-critical executables"""
         ver = self.product.ver
-        self.rm_bins(DEFAULT_BINS_TO_RM)
+        self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
 
     def build(self):
         self.cmd.chdir(self.src_path)
@@ -1187,7 +1289,7 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions"""
         self.rm_exts(
-            DEFAULT_EXTS_TO_RM.union(set(
+            self.product.DEFAULT_EXTS_TO_RM.union(set(
             [
                 "_blake2",
                 "_csv",
@@ -1220,7 +1322,7 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
         """remove list of non-critical packages"""
         self.remove_encodings()
         self.rm_libs(
-            DEFAULT_PKGS_TO_RM.union(set([
+            self.product.DEFAULT_PKGS_TO_RM.union(set([
                 "argparse.py",
                 "dbm",
                 "difflib.py",
@@ -1259,7 +1361,7 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
     def remove_binaries(self):
         """remove list of non-critical executables"""
         ver = self.product.ver
-        self.rm_bins(DEFAULT_BINS_TO_RM)
+        self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
 
     def build(self):
         self.cmd.chdir(self.src_path)
@@ -1483,20 +1585,7 @@ class SharedPythonForPkgBuilder(SharedPythonBuilder):
 
     def remove_packages(self):
         """remove list of non-critical packages"""
-        self.rm_libs(
-            [
-                self.project.python.config_ver_platform,
-                "idlelib",
-                "lib2to3",
-                "tkinter",
-                "turtledemo",
-                "turtle.py",
-                "ctypes",
-                "curses",
-                # "ensurepip",
-                "venv",
-            ]
-        )
+        self.rm_libs(self.product.DEFAULT_PKGS_TO_RM)
 
     def post_process(self):
         """post-build operations"""
@@ -1540,20 +1629,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
 
     def remove_packages(self):
         """remove list of non-critical packages"""
-        self.rm_libs(
-            [
-                self.project.python.config_ver_platform,
-                "idlelib",
-                "lib2to3",
-                "tkinter",
-                "turtledemo",
-                "turtle.py",
-                "ctypes",
-                "curses",
-                # "ensurepip",
-                "venv",
-            ]
-        )
+        self.rm_libs(self.product.DEFAULT_PKGS_TO_RM)
 
     def post_process(self):
         """post-build operations"""
@@ -1577,7 +1653,8 @@ class PyJsBuilder(PythonBuilder):
 
     @property
     def prefix(self):
-        return self.project.support / self.project.python.name
+        # return self.project.support / self.project.python.name
+        return self.project.support / self.product.name_ver
 
     def remove_externals(self):
         """remove py and pyjs externals from the py-js/externals directory"""
@@ -1795,7 +1872,7 @@ class StaticExtBuilder(PyJsBuilder):
             self.project.build_lib
             / "python-static"
             / "lib"
-            / self.project.python.staticlib  # type: ignore
+            / self.product.staticlib  # type: ignore
         )  # type: ignore
         if not static_lib.exists():
             self.log.warning("static python is not built: %s", static_lib)
@@ -1816,7 +1893,8 @@ class SharedExtBuilder(PyJsBuilder):
     @property
     def product_exists(self):
         shared_lib = (
-            self.project.build_lib / "python-shared" / "lib" / self.project.python.dylib
+            # self.project.build_lib / "python-shared" / "lib" / self.project.python.dylib
+            self.project.build_lib / "python-shared" / "lib" / self.product.dylib
         )
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)
@@ -1837,7 +1915,7 @@ class SharedPkgBuilder(PyJsBuilder):
     @property
     def product_exists(self):
         shared_lib = (
-            self.project.build_lib / "python-shared" / "lib" / self.project.python.dylib
+            self.project.build_lib / "python-shared" / "lib" / self.product.dylib
         )
         if not shared_lib.exists():
             self.log.warning("shared python is not built: %s", shared_lib)

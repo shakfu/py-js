@@ -65,6 +65,8 @@
 
 ### Build System
 
+- [ ] Change python variant product names to include python version and architecture (and platform), for example: `shared-ext-3711-x86`
+
 - [ ] Normalize tiny-variant names: so `shared-tiny-ext` becomes `shared-ext-tiny` and `static-tiny-ext` becomes `static-ext-tiny`.
 
 - [ ] Each python or pyjs build variant such as `shared-pkg` or `shared-ext`, should produce a unique output, and there should be a dependency mgmt solution which includes a clear dep graph and hashing and caching to minimize unecessary builds and rebuilds

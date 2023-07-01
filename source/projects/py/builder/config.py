@@ -182,7 +182,6 @@ class Project:
     build one or more software products.
     """
 
-
     name = "py-js"
 
     python = Python()
@@ -331,68 +330,3 @@ class Project:
                 VARIANT=variant,
                 PRODUCT_DMG=self.get_dmg(variant),
             )
-
-
-# ----------------------------------------------------------------------------
-# Default pkgs, exts and bins to remove
-
-ver = Python.version
-
-DEFAULT_PKGS_TO_RM = set([
-    Python.config_ver_platform,
-    "aifc.py",
-    "cgi.py",
-    "cgitb.py",
-    "chunk.py",
-    "crypt.py",
-    "ctypes",
-    "curses",
-    "distutils",
-    "ensurepip",
-    "idlelib",
-    "imghdr.py",
-    "lib2to3",
-    "mailcap.py",
-    "nntplib.py",
-    "pipes.py",
-    "sndhdr.py",
-    "sunau.py",
-    "telnetlib.py",
-    "tkinter",
-    "turtle.py",
-    "turtledemo",
-    "uu.py",
-    "venv",
-    "xdrlib.py",
-    # "msilib",
-    # "ossaudiodev",
-    # "spwd",
-])
-
-
-DEFAULT_EXTS_TO_RM = set([
-    "_codecs_cn",
-    "_codecs_hk",
-    "_codecs_iso2022",
-    "_codecs_jp",
-    "_codecs_kr",
-    "_codecs_tw",
-    "_ctypes",
-    "_curses",
-    "_curses_panel",
-    "_multibytecodec",
-    "_tkinter",
-    "audioop",
-    "nis",
-])
-
-
-DEFAULT_BINS_TO_RM = set([
-    "2to3-{ver}",
-    "idle{ver}",
-    "easy_install-{ver}",
-    "pip{ver}",
-    "pyvenv-{ver}",
-    "pydoc{ver}",
-])
-

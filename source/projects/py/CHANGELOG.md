@@ -3,6 +3,22 @@
 
 ## [0.2.x]
 
+- Made it easier to build specific python versions (3.7 - 3.11) by providing an optional environment parameter. If provided, the specific version will be downloaded from python.org and used as follows:
+
+  ```bash
+  # build both python variant and external
+
+  make shared-ext PYTHON_VERSION=3.7.17
+
+  # or to build python variant only
+
+  make python-shared-ext PYTHON_VERSION=3.7.17
+
+  # and then use that to build the external
+
+  make build-shared-ext PYTHON_VERSION=3.7.17
+  ``` 
+
 - Added `patch/3.8/setup-static-min6.local` to enable tiny variants in python 3.8
 
 - Added `shared-tiny-ext` Makefile target which is the shared lib counterpart to `static-tiny-ext`. The resulting external size for `py.mxo` and `pyjs.mxo` are 8.5 MB and 8.1 MB respectively.
