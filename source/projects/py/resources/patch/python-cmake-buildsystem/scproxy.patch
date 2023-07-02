@@ -1,0 +1,13 @@
+diff --git a/cmake/extensions/CMakeLists.txt b/cmake/extensions/CMakeLists.txt
+index cdc1520..d9be461 100644
+--- a/cmake/extensions/CMakeLists.txt
++++ b/cmake/extensions/CMakeLists.txt
+@@ -203,7 +203,7 @@ set(_scproxy3_SOURCES ${SRC_DIR}/Modules/_scproxy.c)
+ add_python_extension(_scproxy
+     REQUIRES APPLE HAVE_LIBSYSTEMCONFIGURATION
+     SOURCES ${_scproxy${PY_VERSION_MAJOR}_SOURCES}
+-    LIBRARIES ${HAVE_LIBSYSTEMCONFIGURATION}
++    LIBRARIES ${HAVE_LIBSYSTEMCONFIGURATION} "-framework CoreFoundation"
+ )
+ 
+ # Linux-only extensions
