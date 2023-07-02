@@ -65,6 +65,8 @@
 
 ### Build System
 
+- [ ] As the `Product` class is becoming overloaded with python related data and bevaviour, should have `AbstractProduct` and `PythonProduct`
+
 - [ ] Change python variant product names to include python version and architecture (and platform), for example: `shared-ext-3711-x86`
 
 - [ ] Normalize tiny-variant names: so `shared-tiny-ext` becomes `shared-ext-tiny` and `static-tiny-ext` becomes `static-ext-tiny`.

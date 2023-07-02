@@ -26,7 +26,8 @@ subcommands:
 from . import utils
 from .cli import Commander, option, option_group
 from .ext.relocatable_python import relocatable_options, fix_framework
-from .factory import builder_factory
+# from .factory import builder_factory
+from .factory import FactoryManager
 from .package import PackageManager
 from .config import Project
 
@@ -64,11 +65,14 @@ class Application(Commander):
     default_args = ["--help"]
     _argparse_levels = 1
 
+    def __init__(self):
+        self.factory_mgr = FactoryManager()
+
     def ordered_dispatch(self, name, args):
         """generic ordered argument dispatcher"""
         order = ["dump", "download", "install", "build", "clean", "ziplib"]
         kwdargs = vars(args)
-        builder = builder_factory(name, **kwdargs)
+        builder = self.factory_mgr.builder_factory(name, **kwdargs)
         if args.dump:
             builder.to_yaml()
         for method in order:
@@ -147,17 +151,17 @@ class Application(Commander):
     @common_options
     def do_pyjs_local_sys(self, args):
         """build non-portable pyjs externals"""
-        builder_factory("pyjs_local_sys", **vars(args)).build()
+        self.factory_mgr.builder_factory("pyjs_local_sys", **vars(args)).build()
 
     @common_options
     def do_pyjs_homebrew_pkg(self, args):
         """build portable pyjs package (homebrew)"""
-        builder_factory("pyjs_homebrew_pkg", **vars(args)).install()
+        self.factory_mgr.builder_factory("pyjs_homebrew_pkg", **vars(args)).install()
 
     @common_options
     def do_pyjs_homebrew_ext(self, args):
         """build portable pyjs externals (homebrew)"""
-        builder_factory("pyjs_homebrew_ext", **vars(args)).install()
+        self.factory_mgr.builder_factory("pyjs_homebrew_ext", **vars(args)).install()
 
     @common_options
     def do_pyjs_static_pkg(self, args):
@@ -225,15 +229,15 @@ class Application(Commander):
 
     def do_dep_bz2(self, args):
         """build bzip2 dependency"""
-        builder_factory("bz2").build()
+        self.factory_mgr.builder_factory("bz2").build()
 
     def do_dep_ssl(self, args):
         """build openssl dependency"""
-        builder_factory("ssl").build()
+        self.factory_mgr.builder_factory("ssl").build()
 
     def do_dep_xz(self, args):
         """build xz dependency"""
-        builder_factory("xz").build()
+        self.factory_mgr.builder_factory("xz").build()
 
     # ----------------------------------------------------------------------------
     # help methods
@@ -295,7 +299,8 @@ class Application(Commander):
     @option("-v", "--variant", help="build variant name")
     def do_package(self, args):
         """package, sign and release external"""
-        mgr = PackageManager(args.variant, args.dev_id, args.keychain_profile, args.dry_run)
+        mgr = PackageManager(
+            args.variant, args.dev_id, args.keychain_profile, args.dry_run)
         mgr.process()
 
     def do_package_sign(self, args):

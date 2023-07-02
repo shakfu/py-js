@@ -270,7 +270,7 @@ update('3.11',
 # Setup Management 
 
 
-class PythonSetup:
+class PythonSetupManager:
     def __init__(self, version=None):
         if not version:
             self.version = self.py_version_short
@@ -397,7 +397,7 @@ def render_all():
     for version in MODULES.keys():
         if version == 'common':
             continue
-        p = PythonSetup(version)
+        p = PythonSetupManager(version)
         for i in Build: # build types
             name = f'setup-{version}-{i.name}.local.sh'
             p.render(level=i.value, setup_path=f'setups/{name}')

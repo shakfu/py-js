@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Added `builder.factory.FactoryManager` to encapsulate dispatch functions.
+
 - Made it easier to build specific python versions (3.7 - 3.11) by providing an optional environment parameter. If provided, the specific version will be downloaded from python.org and used as follows:
 
   ```bash
