@@ -13,6 +13,7 @@ Builder
     OpensslBuilder
     XzBuilder
     PythonBuilder
+        PythonCmakeBuilder
         PythonSrcBuilder
             FrameworkPythonBuilder
                 FrameworkPythonForExtBuilder
@@ -33,6 +34,7 @@ Builder
             FrameworkExtBuilder
             FrameworkPkgBuilder
             RelocatablePkgBuilder
+        
 
 install:
     configure -> reset -> download -> pre_process -> build -> post_process
@@ -51,12 +53,12 @@ from types import SimpleNamespace
 from typing import Dict, List, Optional
 
 from .config import (CURRENT_PYTHON_VERSION, DEFAULT_CONFIGURE_OPTIONS,
-                     LOG_FORMAT, LOG_LEVEL, Project)
+                     LOG_FORMAT, LOG_LEVEL, URL_GETPIP,
+                     URL_PYTHON_CMAKE_BUILDSYSTEM, PYJS_CMAKE_DEFAULT_OPTIONS,
+                     Project)
 from .depend import DependencyManager
 from .ext.relocatable_python import download_relocatable_to
 from .shell import ShellCmd
-
-URL_GETPIP = "https://bootstrap.pypa.io/get-pip.py"
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
@@ -397,23 +399,7 @@ class Builder:
             json.dump(self.to_dict(), fopen, sort_keys=True, indent=4)
 
     def configure(self, *options, **kwargs):
-        """generate ./configure instructions"""
-        _kwargs = {}
-        _options = [opt.replace("_", "-") for opt in options]
-        _env = {}
-
-        if self.default_env_vars:
-            _env.update(self.default_env_vars)
-
-        prefix = " ".join(f"{k}={v}" for k, v in _env.items()) if _env else ""
-
-        for key, val in kwargs.items():
-            _key = key.replace("_", "-")
-            _kwargs[_key] = val
-
-        options=" ".join(f"--{opt}" for opt in _options)
-        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
-        self.cmd(f"{prefix} ./configure {options} {kwargs}")
+        """configure builder"""
 
     def recursive_clean(self, path, pattern):
         """generic recursive clean/remove method."""
@@ -701,24 +687,7 @@ class PythonBuilder(Builder):
     # src-level operations
 
     def configure(self, *options, **kwargs):
-        """generate ./configure instructions"""
-        _kwargs = {}
-        options = set(DEFAULT_CONFIGURE_OPTIONS).union(set(options))
-        _options = [opt.replace("_", "-") for opt in options]
-        _env = {}
-
-        if self.default_env_vars:
-            _env.update(self.default_env_vars)
-
-        prefix = " ".join(f"{k}={v}" for k, v in _env.items()) if _env else ""
-
-        for key, val in kwargs.items():
-            _key = key.replace("_", "-")
-            _kwargs[_key] = val
-
-        options=" ".join(f"--{opt}" for opt in _options)
-        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
-        self.cmd(f"{prefix} ./configure {options} {kwargs}")
+        """configure builder"""
 
     def pre_process(self):
         """pre-build operations"""
@@ -891,8 +860,90 @@ class PythonBuilder(Builder):
                 self.install_name_tool_change(dir_to_change, backref, exe)
 
 
+class PythonCmakeBuilder(PythonBuilder):
+    """Generic Python builder from src using cmake buildsystem."""
+
+    @property
+    def prefix(self) -> Path:
+        return self.project.build_lib / self.product.build_dir
+
+    def rm_exts(self, names):
+        """remove all named extensions"""
+        for name in names:
+            self.cmd.remove(
+                self.python_lib
+                / "lib-dynload"
+                / f"{name}.so"
+                # / f"{name}.cpython-{self.product.ver_nodot}-darwin.so"
+            )
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.rm_libs(self.product.DEFAULT_PKGS_TO_RM)
+
+    def remove_extensions(self):
+        """remove extensions"""
+        self.rm_exts(self.product.DEFAULT_EXTS_TO_RM)
+
+    def remove_binaries(self):
+        """remove list of non-critical executables"""
+        self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
+
+    def post_process(self):
+        """post-build operations"""
+        self.clean()
+        # self.ziplib() # FIXME: python-cmake fails tests for zip
+        self.fix_dylib_for_shared_ext(
+            dylib=self.prefix_lib / self.product.dylib,
+        )
+
+    def git_clone(self, repo, to_dir):
+        """retrieve git clone of repo"""
+        self.cmd(f"git clone --depth=1 {repo} {to_dir}")
+
+    def apply_patch(self, to_file, patch):
+        """Apply a patch to a file.
+        """
+        self.cmd(f"patch {to_file} < '{patch}'")
+
+    def cmake_generate(self, src_dir, build_dir, **options):
+        """activate cmake configuration / generation stage"""
+        _options = PYJS_CMAKE_DEFAULT_OPTIONS.copy()
+        _options.update(options)
+        opts = " ".join(f"-D{k}={v}" for k, v in _options.items())
+        self.cmd(
+            f"cmake -S {src_dir} -B {build_dir} {opts}"
+        )
+
+    def cmake_build(self, build_dir):
+        """activate cmake build stage"""
+        self.cmd(f"cmake --build {build_dir}")
+
+    def cmake_install(self, build_dir):
+        """activate cmake install stage"""
+        self.cmd(f"cmake --install {build_dir}")
+
+    def build(self):
+        """build python"""
+        python_cmake_buildsystem = self.project.build_downloads / 'python-cmake-buildsystem'
+        python_cmake_build = self.project.build_src / 'python-cmake-build'
+        python_cmake_install = self.project.build_lib / 'python-cmake'
+        if not python_cmake_buildsystem.exists():
+            self.git_clone(URL_PYTHON_CMAKE_BUILDSYSTEM, python_cmake_buildsystem)
+        for _dir in [python_cmake_build, python_cmake_install]: # reset dirs every run
+            if _dir.exists():
+                shutil.rmtree(_dir)
+            _dir.mkdir(exist_ok=True)
+        self.cmake_generate(python_cmake_buildsystem, python_cmake_build, 
+            CMAKE_INSTALL_PREFIX=python_cmake_install,
+        )
+        self.cmake_build(python_cmake_build)
+        self.cmake_install(python_cmake_build)
+
+
+
 class PythonSrcBuilder(PythonBuilder):
-    """Generic Python from src builder."""
+    """Generic Python builder from src using default python buildsystem."""
 
     setup_local: str = ""
     patch: str = ""
@@ -905,6 +956,26 @@ class PythonSrcBuilder(PythonBuilder):
         self.pre_process()
         self.build()
         self.post_process()
+
+    def configure(self, *options, **kwargs):
+        """generate ./configure instructions"""
+        _kwargs = {}
+        options = set(DEFAULT_CONFIGURE_OPTIONS).union(set(options))
+        _options = [opt.replace("_", "-") for opt in options]
+        _env = {}
+
+        if self.default_env_vars:
+            _env.update(self.default_env_vars)
+
+        prefix = " ".join(f"{k}={v}" for k, v in _env.items()) if _env else ""
+
+        for key, val in kwargs.items():
+            _key = key.replace("_", "-")
+            _kwargs[_key] = val
+
+        options=" ".join(f"--{opt}" for opt in _options)
+        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
+        self.cmd(f"{prefix} ./configure {options} {kwargs}")
 
     def pre_process(self):
         """pre-build operations"""

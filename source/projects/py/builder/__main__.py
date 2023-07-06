@@ -120,6 +120,12 @@ class Application(Commander):
         """build framework python to embed in a package"""
         self.ordered_dispatch("python_framework_pkg", args)
 
+    @common_options
+    def do_python_cmake(self, args):
+        """download and build python using cmake"""
+        # TODO: add cmake-specific options
+        self.ordered_dispatch("python_cmake", args)
+
     @option("--dump", action="store_true", help="dump project and product vars")
     @option("-i", "--install", action="store_true", help="install python to build/lib")
     @relocatable_options

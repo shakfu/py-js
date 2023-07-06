@@ -3,7 +3,7 @@
 
 ## [0.2.x]
 
-- Added initial proof-of-concept for building python via cmake. Next step will be to integrate this into the `builder` system. This capability is provided courtesy of the [python-cmake-buildsystem](https://github.com/python-cmake-buildsystem/python-cmake-buildsystem) project.
+- Added unstable proof-of-concept for building python via cmake. Next step will be to integrate this into the `builder` system. This capability is provided courtesy of the [python-cmake-buildsystem](https://github.com/python-cmake-buildsystem/python-cmake-buildsystem) project, but the python tests fails so this is a work-in-progress
 
 - Added `builder.factory.FactoryManager` to encapsulate dispatch functions.
 

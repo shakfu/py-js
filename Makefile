@@ -194,7 +194,8 @@ release-relocatable-pkg: clean-framework-pkg
 
 .PHONY: python-shared python-shared-pkg python-shared-ext python-shared-tiny \
 		python-static  python-static-tiny \
-		python-framework python-framework-ext python-framework-pkg
+		python-framework python-framework-ext python-framework-pkg \
+		python-beeware python-cmake
 
 python-shared: clean-python-shared
 	$(call call-builder,"python" "shared" "--install")
@@ -231,6 +232,11 @@ python-shared-tiny:
 
 python-beeware:
 	$(call call-builder,"python" "beeware" "--install")
+
+python-cmake: clean-python-cmake
+	$(call call-builder,"python" "cmake" "--install" "-p" "3.9.17")
+
+
 
 
 # -----------------------------------------------------------------------
@@ -514,7 +520,8 @@ clean-build-lib: clean-python-shared \
 				 clean-python-shared-ext \
 				 clean-python-shared-pkg \
 				 clean-python-static \
-				 clean-python-framework
+				 clean-python-framework \
+				 clean-python-cmake
 
 reset: clean clean-build
 	$(call section,"reset build system")
@@ -601,6 +608,10 @@ clean-python-framework-ext:
 
 clean-python-framework-pkg: clean-externals clean-support
 	$(call xcleanlib,"Python.framework")
+
+clean-python-cmake:
+	$(call xcleanlib,"python-cmake")
+
 
 demo: README.md FAQ.md CHANGELOG.md
 	@echo "target: '$@'"

@@ -42,6 +42,7 @@ class FactoryManager:
         python_static=core.StaticPythonBuilder,
         python_static_tiny=core.TinyStaticPythonBuilder,
         python_beeware=core.BeewarePythonBuilder,
+        python_cmake=core.PythonCmakeBuilder,
     )
 
     PYJS_BUILDERS = dict(
@@ -133,7 +134,13 @@ class FactoryManager:
             url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
             libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
         )
-        if isinstance(_builder, core.RelocatablePythonBuilder):
+
+        _independent_python_builders = [
+            core.PythonCmakeBuilder,
+            core.RelocatablePythonBuilder,
+        ]
+
+        if any(isinstance(_builder, i) for i in _independent_python_builders):
             return _builder(product=product, **settings)
         else:
             return _builder(product=product, depends_on=_dependencies, **settings)
@@ -207,7 +214,7 @@ class FactoryManager:
             name=name,
             builders=[
                 core.StaticPythonBuilder(
-                    product=core.Product(
+                product=core.Product(
                         name="Python",
                         version=py_version,
                         build_dir="python-static",

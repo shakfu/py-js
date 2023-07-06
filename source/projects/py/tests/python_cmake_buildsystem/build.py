@@ -10,8 +10,11 @@ import os
 import shutil
 from pathlib import Path
 
+# PYTHON_CMAKE_BUILDSYSTEM_URL = \
+#     "https://github.com/python-cmake-buildsystem/python-cmake-buildsystem"
+
 PYTHON_CMAKE_BUILDSYSTEM_URL = \
-    "https://github.com/python-cmake-buildsystem/python-cmake-buildsystem"
+    "https://github.com/shakfu/python-cmake-buildsystem"
 
 CMAKE_DEFAULT_OPTIONS = {
     "PYTHON_VERSION": "3.9.17",
@@ -225,7 +228,17 @@ CUSTOM_OPTIONS = {
     "ENABLE_UNICODEDATA": "OFF",
 }
 
+OPTIONS = {
+    "CMAKE_INSTALL_PREFIX:PATH": None,
+    "CMAKE_BUILD_TYPE:STRING" : "Release",
+    "BUILD_EXTENSIONS_AS_BUILTIN:BOOL": "ON",
+    "BUILD_LIBPYTHON_SHARED:BOOL": "ON",
+}
+
+
 class CMakeBuilder:
+    def __init__(self, **options):
+        self.options = options
 
     def shellcmd(self, cmd, *args, **kwds):
         """run shellcmd"""
@@ -242,7 +255,7 @@ class CMakeBuilder:
 
     def cmake_generate(self, src_dir, build_dir, **options):
         """activate cmake configuration / generation stage"""
-        _options = CMAKE_DEFAULT_OPTIONS.copy()
+        _options = self.options.copy()
         _options.update(options)
         opts = " ".join(f"-D{k}={v}" for k, v in _options.items())
         self.shellcmd(
@@ -263,20 +276,22 @@ class CMakeBuilder:
         python_cmake_install = Path('python-cmake-install')
         if not python_cmake_buildsystem.exists():
             self.git_clone(PYTHON_CMAKE_BUILDSYSTEM_URL, python_cmake_buildsystem)
-            self.apply_patch(
-                to_file=python_cmake_buildsystem / 'cmake' / 'extensions' / 'CMakeLists.txt',
-                patch='scproxy.patch'
-            )
+            # self.apply_patch(
+            #     to_file=python_cmake_buildsystem / 'cmake' / 'extensions' / 'CMakeLists.txt',
+            #     patch='scproxy.patch'
+            # )
         for _dir in [python_cmake_build, python_cmake_install]: # reset dirs every run
             if _dir.exists():
                 shutil,rmtree(_dir)
             _dir.mkdir(exist_ok=True)
-        CUSTOM_OPTIONS["CMAKE_INSTALL_PREFIX"] = python_cmake_install
-        self.cmake_generate(python_cmake_buildsystem, python_cmake_build, **CUSTOM_OPTIONS)
+        # CUSTOM_OPTIONS["CMAKE_INSTALL_PREFIX"] = python_cmake_install
+        self.cmake_generate(python_cmake_buildsystem, python_cmake_build,
+            CMAKE_INSTALL_PREFIX = python_cmake_install,
+        )
         self.cmake_build(python_cmake_build)
         self.cmake_install(python_cmake_build)
 
 
 if __name__ == '__main__':
-    CMakeBuilder().build()
+    CMakeBuilder(**OPTIONS).build()
 
