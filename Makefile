@@ -242,7 +242,15 @@ python-cmake: clean-python-cmake
 # -----------------------------------------------------------------------
 # build dependencies
 
-.PHONY: deps bz2 ssl xz
+.PHONY: check deps bz2 ssl xz
+
+check:
+	@brew --prefix > /dev/null || (echo "Homebrew not found"; exit 1)
+	@for dep in $(DEPENDENCIES); do \
+		brew --prefix $$dep > /dev/null || \
+			(echo "$$dep not available, install via homebrew: 'brew install $$dep'"; \
+				exit 1); \
+	done
 
 deps: ssl bz2 xz
 
