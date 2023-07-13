@@ -71,7 +71,9 @@ ENDMACRO()
 
 # dev only
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cmx)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cobra)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/demo)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/krait)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy)
@@ -80,7 +82,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/shell)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zpy)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zthread)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
 
