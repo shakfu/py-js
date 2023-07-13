@@ -26,6 +26,8 @@ TARGETS = py pyjs
 EXTENSION = $(PYDIR)/api.pyx
 PKG_NAME = py-js
 
+DEPENDENCIES = "cmake zmq czmq"
+
 # system python override
 # PYTHON_VERSION = 3.8.17
 
@@ -242,9 +244,9 @@ python-cmake: clean-python-cmake
 # -----------------------------------------------------------------------
 # build dependencies
 
-.PHONY: check deps bz2 ssl xz
+.PHONY: check_deps deps bz2 ssl xz
 
-check:
+check_deps:
 	@brew --prefix > /dev/null || (echo "Homebrew not found"; exit 1)
 	@for dep in $(DEPENDENCIES); do \
 		brew --prefix $$dep > /dev/null || \
