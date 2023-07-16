@@ -16,7 +16,8 @@ PROJECTS := $(SRCDIR)/projects
 PYDIR := $(PROJECTS)/py
 BUILDER := $(PYDIR)/builder
 SCRIPTS := $(PYDIR)/scripts
-BUILDDIR := $(HOME)/.build_pyjs
+# BUILDDIR := $(HOME)/.build_pyjs
+BUILDDIR := $(PYDIR)/targets/build
 CFLOW := $(PYDIR)/resources/cflow
 
 # project variables
@@ -547,6 +548,11 @@ clean-build:
 	@rm -rf '${BUILDDIR}'/lib/python-shared
 	@rm -rf '${BUILDDIR}'/lib/python-static
 	@rm -rf '${BUILDDIR}'/lib/Python.framework
+
+reset-build:
+	$(call section,"cleaning build directory")
+	@rm -rf '${ROOTDIR}'/build
+	@rm -rf '${BUILDDIR}'
 
 clean-externals:
 	$(call section,"cleaning externals")

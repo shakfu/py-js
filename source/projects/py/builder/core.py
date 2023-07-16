@@ -9,9 +9,10 @@ Settings
 Product
 Recipe
 Builder
-    Bzip2Builder
-    OpensslBuilder
-    XzBuilder
+    ConfiguredBuilder
+        Bzip2Builder
+        OpensslBuilder
+        XzBuilder
     PythonBuilder
         PythonCmakeBuilder
         PythonSrcBuilder
@@ -562,6 +563,28 @@ class Builder:
         """deploy to package"""
 
 
+class ConfiguredBuilder(Builder):
+    def configure(self, *options, **kwargs):
+        """generate ./configure instructions"""
+        _kwargs = {}
+        options = set(DEFAULT_CONFIGURE_OPTIONS).union(set(options))
+        _options = [opt.replace("_", "-") for opt in options]
+        _env = {}
+
+        if self.default_env_vars:
+            _env.update(self.default_env_vars)
+
+        prefix = " ".join(f"{k}={v}" for k, v in _env.items()) if _env else ""
+
+        for key, val in kwargs.items():
+            _key = key.replace("_", "-")
+            _kwargs[_key] = val
+
+        options=" ".join(f"--{opt}" for opt in _options)
+        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
+        self.cmd(f"{prefix} ./configure {options} {kwargs}")
+
+
 class Recipe:
     """A platform-specific container for multiple builder-centric projects."""
 
@@ -593,7 +616,7 @@ class Recipe:
 # DEPENDENCY BUILDERS
 
 
-class Bzip2Builder(Builder):
+class Bzip2Builder(ConfiguredBuilder):
     """Bzip2 static library builder"""
 
     def build(self):
@@ -609,7 +632,7 @@ class Bzip2Builder(Builder):
             self.log.info("product built already")
 
 
-class OpensslBuilder(Builder):
+class OpensslBuilder(ConfiguredBuilder):
     """OpenSSL static library builder"""
 
     def build(self):
@@ -631,7 +654,7 @@ class OpensslBuilder(Builder):
             self.log.info("product built already")
 
 
-class XzBuilder(Builder):
+class XzBuilder(ConfiguredBuilder):
     """Xz static library builder"""
 
     @property
