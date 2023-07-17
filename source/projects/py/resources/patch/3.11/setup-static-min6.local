@@ -94,7 +94,8 @@ _lsprof _lsprof.o rotatingtree.c
 
 zlib zlibmodule.c -I$(prefix)/include -lz
 
-
+unicodedata unicodedata.c
+_multibytecodec cjkcodecs/multibytecodec.c
 
 
 # -------------------------------------------------------------------------------
@@ -137,7 +138,7 @@ _codecs_iso2022
 _codecs_jp 
 _codecs_kr 
 _codecs_tw
-unicodedata unicodedata.c
+#unicodedata unicodedata.c
 
 _scproxy
 _bz2

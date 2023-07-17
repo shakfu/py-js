@@ -230,7 +230,7 @@ class Product:
             "_ctypes",
             "_curses",
             "_curses_panel",
-            "_multibytecodec",
+            # "_multibytecodec",
             "_tkinter",
             "audioop",
             "nis",
@@ -1200,7 +1200,7 @@ class BeewarePythonBuilder(StaticPythonBuilder):
                 "_curses_panel",
                 "_dbm",
                 "_gdbm",
-                "_multibytecodec",
+                # "_multibytecodec",
                 "_posixshmem",
                 "_tkinter",
                 "_xxsubinterpreters",
@@ -1280,7 +1280,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
                 "_pickle",
                 "_zoneinfo",
                 "pyexpat",
-                "unicodedata",
+                # "unicodedata",
             ]))
         )
 
@@ -1393,7 +1393,7 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
                 "_pickle",
                 "_zoneinfo",
                 "pyexpat",
-                "unicodedata",
+                # "unicodedata",
             ]))
         )
 
@@ -1550,7 +1550,7 @@ class RelocatablePythonBuilder(PythonBuilder):
             [
                 "_tkinter",
                 # "_ctypes",
-                "_multibytecodec",
+                # "_multibytecodec",
                 "_codecs_jp",
                 "_codecs_hk",
                 "_codecs_cn",

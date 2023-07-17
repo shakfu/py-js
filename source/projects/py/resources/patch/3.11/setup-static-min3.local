@@ -76,6 +76,7 @@ _json -I$(srcdir)/Include/internal -DPy_BUILD_CORE_BUILTIN _json.c
 _statistics _statisticsmodule.c
 
 unicodedata unicodedata.c
+_multibytecodec cjkcodecs/multibytecodec.c
 
 _uuid _uuidmodule.c
 _opcode _opcode.c
@@ -153,7 +154,7 @@ xxlimited_35
 xxsubtype
 _xxsubinterpreters
 
-_multibytecodec
+#_multibytecodec
 _codecs_cn
 _codecs_hk
 _codecs_iso2022

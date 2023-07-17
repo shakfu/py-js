@@ -64,6 +64,9 @@ syslog syslogmodule.c
 termios termios.c
 zlib  zlibmodule.c -lz
 
+unicodedata unicodedata.c
+_multibytecodec cjkcodecs/multibytecodec.c
+
 #_hashlib _hashopenssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) -lcrypto
 _hashlib _hashopenssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
 
@@ -88,7 +91,7 @@ _curses -lncurses -lncursesw -ltermcap _cursesmodule.c
 _curses_panel -lpanel -lncurses _curses_panel.c
 _dbm _dbmmodule.c -lgdbm_compat -DUSE_GDBM_COMPAT
 _gdbm _gdbmmodule.c -lgdbm
-_multibytecodec cjkcodecs/multibytecodec.c
+#_multibytecodec cjkcodecs/multibytecodec.c
 _testbuffer _testbuffer.c
 _testcapi _testcapimodule.c
 _testimportmultiple _testimportmultiple.c
@@ -102,7 +105,7 @@ nis nismodule.c -I/usr/include/tirpc -lnsl -ltirpc
 ossaudiodev ossaudiodev.c
 readline readline.c -lreadline -ltermcap
 spwd spwdmodule.c
-unicodedata unicodedata.c
+#unicodedata unicodedata.c
 xx xxmodule.c
 xxlimited xxlimited.c
 xxlimited_35 xxlimited_35.c
