@@ -6,6 +6,7 @@ project(${THIS_FOLDER_NAME})
 option(C74_BUILD_FAT "Build Universal Externals") # not supported (you're on your own! :-)
 option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals")
 option(BUILD_ZMQ_EXTERNALS "Enable building zeromq externals")
+option(BUILD_MICROPYTHON_EXTERNAL "Enable building of micropython external")
 
 # use ccache if available
 find_program(CCACHE_PROGRAM ccache)
@@ -83,8 +84,10 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
 
 # python variants
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy) 
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy) # micropython
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy)
+if(BUILD_MICROPYTHON_EXTERNAL)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy)
+endif()
 
 # zmq externals
 if(BUILD_ZMQ_EXTERNALS)

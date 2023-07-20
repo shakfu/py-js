@@ -12,23 +12,45 @@ repo - <https://github.com/shakfu/py-js>
 
 This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring different ways of using python3 in max.
 
-Along the way, a number of python3 or python-related externals have been developed for use in a live Max environment:
+Along the way, a number of externals have been developed for use in a live Max environment:
+
+**Python3 Externals:**
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [py]       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
 [pyjs]     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
-[mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
-[pymx] [1] | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
-[zpy]      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
-[cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
-[pktpy]    | max-sdk    | c++    | uses the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
+[cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
+[mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 [zedit]    | max-sdk    | c      | a web-based python editor using [codemirror](https://codemirror.net) and the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
-[mpy]      | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
+[pymx] [2] | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
 
 [1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
+
+
+**Python Variants Externals:**
+
+name       | sdk        | lang   | description
+:--------- | :--------- | :----: | :---------------------------------------------------
+[pktpy]    | max-sdk    | c++    | uses the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
+[mpy] [2]  | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
+
+[2] `mpy` is not enabled by default since it is still in early stages and requires a download of its source. To build it use the `-DBUILD_MICROPYTHON_EXTERNAL` option with cmake.
+
+
+**ZeroMQ-related Externals**
+
+name       | sdk        | lang   | description
+:--------- | :--------- | :----: | :---------------------------------------------------
+[jmx]      | max-sdk    | c      | explore how to embed a [jupyter client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) or [kernel](https://github.com/jupyter-xeus/xeus-python) in an external
+[zpy]      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
+[zthread]  | max-sdk    | c      | exploration of zeromq and Max threads
+
+Note: zeromq externals are not enabled by default since they require zeromq libraries to be installed. To build them use the `-DBUILD_ZEROMQ_EXTERNALS` option with cmake.
+
+
 
 [py]: source/projects/py
 [pyjs]: source/projects/pyjs
@@ -41,6 +63,8 @@ name       | sdk        | lang   | description
 [pktpy]: source/projects/pktpy
 [zedit]: source/projects/zedit
 [mpy]: source/projects/mpy
+[jmx]: source/projects/mpy
+[zthread]: source/projects/mpy
 
 
 The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.

@@ -1,6 +1,6 @@
-# jmx: jupyter client for nax
+# jmx: jupyter client/kernel for Max/MSP
 
-This is a proof-of-concept subproject to build a [jupyter client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) as a Max/MSP external.
+This is a proof-of-concept subproject to embed a [jupyter client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) or jupyter [kernel](https://github.com/jupyter-xeus/xeus-python) in a Max/MSP external.
 
 ## Requires
 
