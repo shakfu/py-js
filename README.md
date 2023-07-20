@@ -30,7 +30,7 @@ name       | sdk        | lang   | description
 [1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
 
 
-**Python Variants Externals:**
+**Alternative Python Implementation Externals:**
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
