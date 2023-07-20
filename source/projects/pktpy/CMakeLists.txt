@@ -1,6 +1,8 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Release")
 
 file(GLOB PROJECT_SRC
@@ -27,17 +29,21 @@ target_include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+
 target_compile_options(
 	${PROJECT_NAME}
 	PRIVATE
-	--std=c++17
-	-O2
-	-Wall
-	-Wfatal-errors
-	-Wno-sign-compare
-	-Wno-unused-variable
-	-fno-rtti
-	-stdlib=libc++
+	$<$<PLATFORM_ID:Darwin>:-Wno-unused-variable>
+	$<$<PLATFORM_ID:Darwin>:-Wno-sign-compare>
+	$<$<PLATFORM_ID:Darwin>:-Wfatal-errors>
+	$<$<PLATFORM_ID:Darwin>:-Wall>	
+	$<$<PLATFORM_ID:Darwin>:-O2>
+	$<$<PLATFORM_ID:Darwin>:-fno-rtti>
+	$<$<PLATFORM_ID:Darwin>:-stdlib=libc++>
+	$<$<PLATFORM_ID:Darwin>:--std=c++17>
+	$<$<PLATFORM_ID:Windows>:/EHsc>
+	$<$<PLATFORM_ID:Windows>:/utf-8>
+	$<$<PLATFORM_ID:Windows>:/O2>
 )
 
 

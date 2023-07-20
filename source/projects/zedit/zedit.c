@@ -31,7 +31,7 @@ static const char* s_listening_address = "http://0.0.0.0:8000";
 static const char* s_subpath = "/source/projects/zedit/webroot";
 #endif
 static const   int s_debug_level = 2;
-static const char* s_enable_hexdump = "no";
+// static const char* s_enable_hexdump = "no";
 static const char* s_ssi_pattern = "#.shtml";
 
 // mutable constants
@@ -91,7 +91,7 @@ t_max_err zedit_exec_single_input(t_zedit* x, const char* code);
 
 
 // web
-void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv);
+// void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv);
 void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, void *fn_data);
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data);
 t_string* get_path_to_webroot(t_class* klass);
@@ -103,23 +103,23 @@ t_string* get_path_to_webroot(t_class* klass);
 
 
 
-void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv)
-{
+// void do_build_objects(t_zedit* x, t_symbol *s, short argc, t_atom *argv)
+// {
 
-    t_object *patcher;
+//     t_object *patcher;
 
-    if (object_obex_lookup(x, gensym("#P"), &patcher) == MAX_ERR_NONE) {
-        if (1) {
-            t_object *toggle, *metro;
-            newobject_sprintf(patcher, 
-                "@maxclass toggle @patching_position %.2f %.2f", 50.0, 300.0); 
-            newobject_sprintf(patcher, 
-                "@maxclass newobj @text \"metro 400\" @patching_position %.2f %.2f", 200.0, 400.0);        
-        } else {
-            newobject_fromboxtext(patcher, "cycle~ 440");
-        } 
-    }
-}
+//     if (object_obex_lookup(x, gensym("#P"), &patcher) == MAX_ERR_NONE) {
+//         if (1) {
+//             t_object *toggle, *metro;
+//             newobject_sprintf(patcher, 
+//                 "@maxclass toggle @patching_position %.2f %.2f", 50.0, 300.0); 
+//             newobject_sprintf(patcher, 
+//                 "@maxclass newobj @text \"metro 400\" @patching_position %.2f %.2f", 200.0, 400.0);        
+//         } else {
+//             newobject_fromboxtext(patcher, "cycle~ 440");
+//         } 
+//     }
+// }
 
 // http message handler
 void handle_event_http_message(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
@@ -457,13 +457,13 @@ void* zedit_threadproc(t_zedit* x)
         mg_mgr_free(&mgr); // Cleanup
         break;
 
-        systhread_mutex_lock(x->x_mutex);
-        x->x_foo++; // fiddle with shared data
-        systhread_mutex_unlock(x->x_mutex);
+        // systhread_mutex_lock(x->x_mutex);
+        // x->x_foo++; // fiddle with shared data
+        // systhread_mutex_unlock(x->x_mutex);
 
-        qelem_set(x->x_qelem); // notify main thread using qelem mechanism
+        // qelem_set(x->x_qelem); // notify main thread using qelem mechanism
 
-        systhread_sleep(x->x_sleeptime); // sleep a bit
+        // systhread_sleep(x->x_sleeptime); // sleep a bit
     }
 
     // reset cancel flag for next time, in case the thread is created again

@@ -4,6 +4,8 @@ string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
 project(${THIS_FOLDER_NAME})
 
 option(C74_BUILD_FAT "Build Universal Externals") # not supported (you're on your own! :-)
+option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals")
+option(BUILD_ZMQ_EXTERNALS "Enable building zeromq externals")
 
 # use ccache if available
 find_program(CCACHE_PROGRAM ccache)
@@ -12,7 +14,9 @@ if(CCACHE_PROGRAM)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
 endif()
 
-if (APPLE)
+message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     if (${CMAKE_GENERATOR} MATCHES "Xcode")
             if (${XCODE_VERSION} VERSION_LESS 10)
                 message(STATUS "Xcode 10 or higher is required. Please install from the Mac App Store.")
@@ -30,16 +34,16 @@ if (APPLE)
         endif()
         message("CMAKE_OSX_ARCHITECTURES set to ${CMAKE_OSX_ARCHITECTURES}")
     endif()
-endif()
 
-set(local_prefix "/usr/local")
-if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used aand if so get prefix
+    # i.e check if homebrew is used, set local prefix accordingly
+    set(local_prefix "/usr/local")
     execute_process(
         COMMAND brew --prefix
         OUTPUT_VARIABLE homebrew_prefix
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     if(DEFINED homebrew_prefix)
+        set(HAS_HOMEBREW 1)
         set(local_prefix ${homebrew_prefix})
     endif()
 endif()
@@ -69,20 +73,32 @@ ENDMACRO()
 #   endforeach ()
 # endforeach ()
 
-# dev only
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cmx)
+# python3 externals
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cobra)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/demo)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/krait)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mxpy)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy) 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/shell)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
+
+# python variants
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy) 
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy) # micropython
+
+# zmq externals
+if(BUILD_ZMQ_EXTERNALS)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zpy)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zthread)
+endif()
 
+# other externals
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cmx)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/demo)
+
+# thirdparty externals
+if(BUILD_THIRDPARTY_EXTERNALS)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/shell)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/oscar)
+endif()

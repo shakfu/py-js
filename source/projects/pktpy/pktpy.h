@@ -938,10 +938,6 @@ t_max_err PktpyInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
                                      void* outlet)
 {
     t_atom atoms[PY_MAX_ELEMS];
-    long textsize = 0;
-    char* text = NULL;
-    int is_eval = 1;
-
 
     if (s == gensym("")) {
         return MAX_ERR_GENERIC;

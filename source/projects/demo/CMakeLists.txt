@@ -33,9 +33,6 @@ target_link_libraries(
 )
 
 
-message("CMAKE_SOURCE_DIR/source/projects/cmx: " ${CMAKE_SOURCE_DIR}/source/projects/cmx)
-message("CMAKE_BINARY_DIR}/include: " ${CMAKE_BINARY_DIR}/include)
-
 # target_include_directories(${PROJECT_NAME} PRIVATE
 # 	${CMAKE_SOURCE_DIR}/source/projects/cmx
 # )

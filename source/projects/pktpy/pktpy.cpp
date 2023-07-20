@@ -513,7 +513,7 @@ void add_custom_builtins(t_pktpy* x)
         Str text = CAST(Str, args[0]);
         const char* text_cstr = text.c_str_dup();
         t_object *patcher;//, *obj;
-        t_max_err err;
+        // t_max_err err;
         if (object_obex_lookup(x, gensym("#P"), &patcher) == MAX_ERR_NONE)
             // obj = newobject_fromboxtext(patcher, text_cstr);
             newobject_fromboxtext(patcher, text_cstr);

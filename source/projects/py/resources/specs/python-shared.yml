@@ -1,0 +1,192 @@
+
+python:
+    name: python-shared
+    version: 3.11.4
+    inherits: []
+    setup: # include core required
+
+        core:
+            - _asyncio
+            - _bisect
+            - _contextvars
+            - _csv
+            - _datetime
+            - _decimal
+            - _heapq
+            - _json
+            - _lsprof
+            - _multiprocessing
+            - _opcode
+            - _pickle
+            - _queue
+            - _random
+            - _socket
+            - _statistics
+            - _struct
+            - _typing
+            - _zoneinfo
+            - array
+            - audioop
+            - binascii
+            - cmath
+            - math
+            - mmap
+            - select
+            
+            # XML
+            - _elementtree
+            - pyexpat
+
+            # hashing builtins
+            - _blake2
+            - _md5
+            - _sha1
+            - _sha256
+            - _sha512
+            - _sha3
+
+            # text encodings and unicode
+            - _multibytecodec
+            - unicodedata
+
+
+
+
+        shared:
+            - _asyncio
+            - _bisect
+            - _blake2
+            - _bz2
+            - _contextvars
+            - _csv
+            - _datetime
+            - _decimal
+            - _elementtree
+            - _hashlib
+            - _heapq
+            - _json
+            - _lsprof
+            - _lzma
+            - _md5
+            - _multibytecodec
+            - _multiprocessing
+            - _opcode
+            - _pickle
+            - _posixshmem
+            - _posixsubprocess
+            - _queue
+            - _random
+            - _sha1
+            - _sha256
+            - _sha3
+            - _sha512
+            - _socket
+            - _sqlite3 
+            - _ssl
+            - _statistics
+            - _struct 
+            - _typing
+            - _zoneinfo
+            - array
+            - audioop
+            - binascii
+            - cmath
+            - fcntl
+            - grp
+            - math
+            - mmap
+            - pyexpat 
+            - resource
+            - select
+            - syslog
+            - termios 
+            - unicodedata 
+            - zlib
+        static: []
+        disabled:
+            - _codecs_cn
+            - _codecs_hk
+            - _codecs_iso2022
+            - _codecs_jp
+            - _codecs_kr
+            - _codecs_tw
+            - _crypt]
+            - _ctypes
+            - _ctypes_test
+            - _curses
+            - _curses_panel
+            - _dbm
+            - _gdbm
+            - _testbuffer
+            - _testcapi
+            - _testimportmultiple
+            - _testinternalcapi
+            - _testmultiphase
+            - _tkinter
+            - _uuid
+            - _xxsubinterpreters
+            - _xxtestfuzz
+            - nis nismodule.c
+            - ossaudiodev
+            - readline
+            - spwd
+            - xx
+            - xxlimited
+            - xxlimited_35
+            - xxsubtype
+    remove:
+        modules:
+            - aifc.py
+            - cgi.py
+            - cgitb.py
+            - chunk.py
+            - crypt.py
+            - ctypes
+            - curses
+            - distutils
+            - ensurepip
+            - idlelib
+            - imghdr.py
+            - lib2to3
+            - mailcap.py
+            # - msilib      # deprecateed
+            - nntplib.py
+            # - ossaudiodev # deprecateed
+            - pipes.py
+            - sndhdr.py
+            # - spwd        # deprecateed
+            - sunau.py
+            - telnetlib.py
+            - tkinter
+            - turtle.py
+            - turtledemo
+            - uu.py
+            - venv
+            - xdrlib.py
+        extensions:
+            - _codecs_cn
+            - _codecs_hk
+            - _codecs_iso2022
+            - _codecs_jp
+            - _codecs_kr
+            - _codecs_tw
+            - _ctypes
+            - _curses
+            - _curses_panel
+            - _tkinter
+            - audioop
+            - nis
+        binaries:
+            - 2to3
+            - idle
+            - easy_install
+            - pip
+            - pyvenv
+            - pydoc
+    install:
+        pip:
+            - py_pkg1
+            - py_pkg2
+
+        path: [] # provide a list of paths to modules or packages
+

@@ -1,29 +1,13 @@
-
-# ============================================================================
-# MAX EXTERNAL
-
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
-# ----------------------------------------------------------------------------
-# common steps
-
-# configuration
-# set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
-# set(CMAKE_EXPORT_COMPILE_COMMANDS True)
-set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
-
-
-# options
-option(USE_STATIC_PY "build static extension")
-option(USE_FRAMEWORK_PY "build framework-based extension")
 
 find_package(Python3 COMPONENTS Interpreter Development)
 
 file(GLOB PROJECT_SRC
-   "*.h"
-   "*.c"
-   "*.cpp"
+     "*.h"
+	"*.c"
+     "*.cpp"
 )
 
 include_directories( 
@@ -38,7 +22,6 @@ add_library(
 	${PROJECT_SRC}
 )
 
-message("using standard local configuration")
 set(PY_INCLUDE "${Python3_INCLUDE_DIRS}")
 set(PY_LIBDIRS "${Python3_LIBRARY_DIRS}")
 
@@ -48,20 +31,23 @@ target_include_directories(
 	${PY_INCLUDE}
 )
 
+target_compile_definitions(
+	${PROJECT_NAME}
+	PRIVATE
+	-DNDEBUG
+)
 
 target_compile_options(
 	${PROJECT_NAME}
 	PRIVATE
-	-Wno-unused-result
-	-Wsign-compare
-	-Wunreachable-code
-	-DNDEBUG
-	-g
-	-fwrapv
-	-O3
-	-Wall
+	$<$<PLATFORM_ID:Darwin>:-Wno-unused-result>
+	$<$<PLATFORM_ID:Darwin>:-Wsign-compare>
+	$<$<PLATFORM_ID:Darwin>:-Wunreachable-code>
+	$<$<PLATFORM_ID:Darwin>:-Wall>	
+	$<$<PLATFORM_ID:Darwin>:-g>
+	$<$<PLATFORM_ID:Darwin>:-fwrapv>
+	$<$<PLATFORM_ID:Darwin>:-O3>
 )
-
 
 target_link_directories(
 	${PROJECT_NAME} 
@@ -69,19 +55,13 @@ target_link_directories(
 	${PY_LIBDIRS}
 )
 
-
 target_link_libraries(
 	${PROJECT_NAME} 
 	PRIVATE
 	"${Python3_LIBRARIES}"
-	"-ldl"
-	"-framework CoreFoundation"
+	"$<$<PLATFORM_ID:Darwin>:-ldl>"
+	"$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"
 )
 
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
-
-# ============================================================================
-
-
-

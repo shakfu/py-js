@@ -27,33 +27,32 @@ add_library(
 target_include_directories(
 	${PROJECT_NAME}
 	PRIVATE
-	"${local_prefix}/include"
+	"$<$<PLATFORM_ID:Darwin>:${local_prefix}/include>"
 )
 
 target_compile_options(
 	${PROJECT_NAME}
 	PRIVATE
-	-Wno-unused-result
-	-Wsign-compare
-	-Wunreachable-code
-	-DNDEBUG
-	-g
-	-fwrapv
-	-O3
-	-Wall
+	$<$<PLATFORM_ID:Darwin>:-Wno-unused-result>
+	$<$<PLATFORM_ID:Darwin>:-Wsign-compare>
+	$<$<PLATFORM_ID:Darwin>:-Wunreachable-code>
+	$<$<PLATFORM_ID:Darwin>:-Wall>	
+	$<$<PLATFORM_ID:Darwin>:-g>
+	$<$<PLATFORM_ID:Darwin>:-fwrapv>
+	$<$<PLATFORM_ID:Darwin>:-O3>
 )
 
 target_link_directories(
 	${PROJECT_NAME} 
 	PRIVATE
-	"${local_prefix}/lib"
+	"$<$<PLATFORM_ID:Darwin>:${local_prefix}/lib>"
 )
 
 target_link_libraries(
 	${PROJECT_NAME} 
 	PRIVATE
-	"-ldl"
-	"-framework CoreFoundation"
+	"$<$<PLATFORM_ID:Darwin>:-ldl>"
+	"$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"
 	"-lczmq"
 	"-lzmq"
 	"-lsodium"

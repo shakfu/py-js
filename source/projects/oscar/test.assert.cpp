@@ -91,12 +91,12 @@ void testassert_assist(t_testassert *x, void *b, long m, long a, char *s)
 {
 	if (m==ASSIST_INLET) {
 		switch (a) {
-			case 0: sprintf(s,"receive values from the system under test to compare against expectations"); break;
+			case 0: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "receive values from the system under test to compare against expectations"); break;
 		}
 	} 
 	else {
 		switch (a) {
-			case 0: sprintf(s,"sends input values to the system under test at loadbang time"); break;
+			case 0: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "sends input values to the system under test at loadbang time"); break;
 		}
 	}
 }
