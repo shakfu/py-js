@@ -5,7 +5,6 @@
 #include "ext_obex.h"
 
 #include <fstream>
-#include <wordexp.h>
 
 #define PK_USER_CONFIG_H
 #include "pocketpy.h"
@@ -299,14 +298,8 @@ t_max_err PktpyInterpreter::locate_path_from_symbol(t_symbol* s)
 
     } else {
         // tilde expansion in path
-        wordexp_t exp_result;
-        wordexp(s->s_name, &exp_result, 0);
-        // must copy symbol before calling locatefile_extended
-        strncpy_zero(filename, exp_result.we_wordv[0], MAX_PATH_CHARS);
-        wordfree(&exp_result);
-
-        if (locatefile_extended(filename, &this->path_code, &outtype, &filetype,
-                                1)) {
+        path_nameconform(s->s_name, filename, PATH_STYLE_MAX, PATH_TYPE_BOOT);
+        if (locatefile_extended(filename, &this->path_code, &outtype, &filetype, 1)) {
             // nozero: not found
             this->log_error((char*)"can't find file %s", s->s_name);
             ret = MAX_ERR_GENERIC;

@@ -41,6 +41,7 @@ target_compile_options(
 	$<$<PLATFORM_ID:Darwin>:-fno-rtti>
 	$<$<PLATFORM_ID:Darwin>:-stdlib=libc++>
 	$<$<PLATFORM_ID:Darwin>:--std=c++17>
+	$<$<PLATFORM_ID:Windows>:/std:c++17>
 	$<$<PLATFORM_ID:Windows>:/EHsc>
 	$<$<PLATFORM_ID:Windows>:/utf-8>
 	$<$<PLATFORM_ID:Windows>:/O2>
