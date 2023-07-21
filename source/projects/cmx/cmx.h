@@ -15,8 +15,6 @@
 #ifndef CMX_H
 #define CMX_H
 
-#include <libgen.h>
-
 #include "ext.h"
 #include "ext_obex.h"
 
@@ -31,9 +29,12 @@
 // forward declarations
 
 // t_symbol* locate_path_to_external(t_class* c);
-t_string* get_path_from_external(t_class* c, char* subpath);
-t_string* get_path_from_package(t_class* c, char* subpath);
+t_string* get_path_to_external(t_class* c, char* subpath);
+t_string* get_path_to_package(t_class* c, char* subpath);
 t_object* create_object(t_object* x, const char* text);
+void path_basename(const char* path, char* filename);
+void path_dirname(const char* path, char* parent_directory);
+void path_join(char* destination, const char* path1, const char* path2);
 
 #endif // CMX_H
 
@@ -52,7 +53,7 @@ t_object* create_object(t_object* x, const char* text);
  *
  * @return     path to external + (optional subpath)
  */
-t_string* get_path_from_external(t_class* c, char* subpath)
+t_string* get_path_to_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
@@ -65,7 +66,7 @@ t_string* get_path_from_external(t_class* c, char* subpath)
 #else
     const char* ext_filename = "%s.mxe64";
 #endif
-    snprintf_zero(external_name, CMX_MAX_ELEMS, ext_filename, c->c_sym->s_name);
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename, c->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
                      PATH_TYPE_TILDE);
@@ -85,14 +86,24 @@ t_string* get_path_from_external(t_class* c, char* subpath)
  *
  * @return     path to package + (optional subpath)
  */
-t_string* get_path_from_package(t_class* c, char* subpath)
+t_string* get_path_to_package(t_class* c, char* subpath)
 {
+    char _dummy[MAX_PATH_CHARS];
+    char externals_folder[MAX_PATH_CHARS];
+    char package_folder[MAX_PATH_CHARS];
+
     t_string* result;
-    t_string* external_path = get_path_from_external(c, NULL);
+    t_string* external_path = get_path_to_external(c, NULL);
 
     const char* ext_path_c = string_getptr(external_path);
 
-    result = string_new(dirname(dirname((char*)ext_path_c)));
+    path_splitnames(ext_path_c, externals_folder, _dummy); // ignore filename
+    path_splitnames(externals_folder, package_folder, _dummy); // ignore filename
+
+    // post("externals_folder: %s", externals_folder);
+    // post("package_folder: %s", package_folder);
+
+    result = string_new((char*)package_folder);
 
     if (subpath != NULL) {
         string_append(result, subpath);
@@ -125,6 +136,31 @@ void open_patch(const char *name)
 	if (stringload(name) == 0) 
 		error("could not load patch: '%s'", name);
 }
+
+/**
+ * @brief      get parent directory 
+ *
+ * @param[in]  path                 full path
+ * @param[out] parent_directory     output parent_directory
+ */
+void path_dirname(const char* path, char* parent_directory)
+{
+    char _filename[MAX_PATH_CHARS];
+    path_splitnames(path, parent_directory, _filename); // discard filename
+}
+
+/**
+ * @brief      get path basename
+ *
+ * @param[in]  path         full path
+ * @param[out] filename     output filename
+ */
+void path_basename(const char* path, char* filename)
+{
+    char _folder[MAX_PATH_CHARS];
+    path_splitnames(path, _folder, filename); // discard _folder
+}
+
 
 
 /**

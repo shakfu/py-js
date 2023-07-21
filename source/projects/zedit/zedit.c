@@ -13,8 +13,6 @@
 #include "ext_obex.h"
 #include "ext_systhread.h"
 
-#include <libgen.h>
-
 #define PY_IMPLEMENTATION // <-- activate the implementation
 #include "py.h"           // <-- include this
 
@@ -325,26 +323,60 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 // }
 
 
+// t_string* get_path_to_webroot(t_class* klass)
+// {
+//     char external_path[MAX_PATH_CHARS];
+//     char external_name[MAX_PATH_CHARS];
+//     char conform_path[MAX_PATH_CHARS];
+
+//     short path_id = class_getpath(klass);
+//     snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
+//     path_toabsolutesystempath(path_id, external_name, external_path);
+//     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+//                      PATH_TYPE_TILDE);
+// #if defined RELEASE
+//     t_string* webroot_path = string_new(external_path);
+// #else
+//     t_string* webroot_path = string_new(dirname(dirname(external_path)));
+// #endif
+//     string_append(webroot_path, s_subpath);
+//     return webroot_path;
+// }
+
+
 t_string* get_path_to_webroot(t_class* klass)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
     char conform_path[MAX_PATH_CHARS];
 
+    char _dummy[MAX_PATH_CHARS];
+    char externals_folder[MAX_PATH_CHARS];
+    char package_folder[MAX_PATH_CHARS];
+
     short path_id = class_getpath(klass);
-    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", klass->c_sym->s_name);
+    t_string* webroot_path;
+
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
+#endif
+
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename, klass->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
                      PATH_TYPE_TILDE);
 #if defined RELEASE
-    t_string* webroot_path = string_new(external_path);
+    webroot_path = string_new(external_path);
 #else
-    t_string* webroot_path = string_new(dirname(dirname(external_path)));
+    path_splitnames(external_path, externals_folder, _dummy); // ignore filename
+    path_splitnames(externals_folder, package_folder, _dummy); // ignore filename
+    webroot_path = string_new((char*)package_folder);
 #endif
     string_append(webroot_path, s_subpath);
     return webroot_path;
 }
-
 
 
 t_class* zedit_class;

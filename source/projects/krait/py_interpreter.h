@@ -59,7 +59,7 @@ namespace pyjs
 // constants
 
 #define PY_MAX_ELEMS 1024
-#define PY_LOG_LEVEL DEBUG
+#define PY_LOG_LEVEL PY_DEBUG
 
 // ---------------------------------------------------------------------------
 // enums
@@ -69,7 +69,7 @@ namespace pyjs
  * @brief      specifies three logging levels
  */
 enum log_level {
-    ERROR, INFO, DEBUG 
+    PY_ERROR, PY_INFO, PY_DEBUG 
 };
 
 // ---------------------------------------------------------------------------
@@ -217,7 +217,7 @@ PythonInterpreter::~PythonInterpreter()
  */
 void PythonInterpreter::log_debug(char* fmt, ...)
 {
-    if (this->p_log_level >= log_level::DEBUG) {
+    if (this->p_log_level >= log_level::PY_DEBUG) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -238,7 +238,7 @@ void PythonInterpreter::log_debug(char* fmt, ...)
  */
 void PythonInterpreter::log_info(char* fmt, ...)
 {
-    if (this->p_log_level >= log_level::INFO) {
+    if (this->p_log_level >= log_level::PY_INFO) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -259,7 +259,7 @@ void PythonInterpreter::log_info(char* fmt, ...)
  */
 void PythonInterpreter::log_error(char* fmt, ...)
 {
-    if (this->p_log_level >= log_level::ERROR) {
+    if (this->p_log_level >= log_level::PY_ERROR) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;

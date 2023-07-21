@@ -15,11 +15,6 @@
 /*--------------------------------------------------------------------------*/
 /* Includes */
 
-/* posix */
-#if defined(__APPLE__)
-#include <libgen.h>
-#endif
-
 /* max api */
 #include "ext.h"
 #include "ext_obex.h"
@@ -85,8 +80,8 @@ uintptr_t py_get_object_ref(void);
 /*--------------------------------------------------------------------------*/
 /* Path helpers */
 
-t_string* py_get_path_from_external(t_class* c, char* subpath);
-t_string* py_get_path_from_package(t_class* c, char* subpath);
+t_string* py_get_path_to_external(t_class* c, char* subpath);
+t_string* py_get_path_to_package(t_class* c, char* subpath);
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
 void path_join(char* destination, const char* path1, const char* path2);
 

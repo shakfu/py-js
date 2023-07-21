@@ -345,13 +345,13 @@ void py_init(t_py* x)
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
-        py_get_path_from_external(py_class, "/Contents/Resources"));
+        py_get_path_to_external(py_class, "/Contents/Resources"));
     python_home = Py_DecodeLocale(resources_path, NULL);
 #endif
 
 #if defined(__APPLE__) && defined(PY_SHARED_PKG)
     const char* package_path = string_getptr(
-        py_get_path_from_package(py_class, "/support/python" PY_VER));
+        py_get_path_to_package(py_class, "/support/python" PY_VER));
     python_home = Py_DecodeLocale(package_path, NULL);
 #endif
 
@@ -573,7 +573,7 @@ uintptr_t py_get_object_ref(void) {
  *
  * @return     path to external + (optional subpath)
  */
-t_string* py_get_path_from_external(t_class* c, char* subpath)
+t_string* py_get_path_to_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
@@ -586,7 +586,7 @@ t_string* py_get_path_from_external(t_class* c, char* subpath)
 #else
     const char* ext_filename = "%s.mxe64";
 #endif
-    snprintf_zero(external_name, PY_MAX_ELEMS, ext_filename, c->c_sym->s_name);
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename, c->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
     path_nameconform(external_path, conform_path, PATH_STYLE_MAX,
                      PATH_TYPE_BOOT);
@@ -605,15 +605,21 @@ t_string* py_get_path_from_external(t_class* c, char* subpath)
  *
  * @return     path to package + (optional subpath)
  */
-t_string* py_get_path_from_package(t_class* c, char* subpath)
+t_string* py_get_path_to_package(t_class* c, char* subpath)
 {
-    t_string* result;
+    char _dummy[MAX_PATH_CHARS];
+    char externals_folder[MAX_PATH_CHARS];
+    char package_folder[MAX_PATH_CHARS];
 
-    t_string* external_path = py_get_path_from_external(c, NULL);
+    t_string* result;
+    t_string* external_path = py_get_path_to_external(c, NULL);
 
     const char* ext_path_c = string_getptr(external_path);
 
-    result = string_new(dirname(dirname((char*)ext_path_c)));
+    path_splitnames(ext_path_c, externals_folder, _dummy);     // ignore filename
+    path_splitnames(externals_folder, package_folder, _dummy); // ignore filename
+
+    result = string_new((char*)package_folder);
 
     if (subpath != NULL) {
         string_append(result, subpath);
@@ -621,6 +627,7 @@ t_string* py_get_path_from_package(t_class* c, char* subpath)
 
     return result;
 }
+
 
 
 /**
@@ -861,7 +868,7 @@ void py_info(t_py* x)
     post("defaultpath: %s", output_path);
 
     const char * external_path = string_getptr(
-        py_get_path_from_external(py_class, NULL));
+        py_get_path_to_external(py_class, NULL));
 
     post("externalpath: %s", external_path);
 

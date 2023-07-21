@@ -97,9 +97,26 @@ void demo_float(t_demo *x, double f)
 
 void demo_bang(t_demo* x) {
     // example of using libcmx.a (common max lib)
-    t_string* path = get_path_from_external(demo_class, NULL);
-    const char* txt = string_getptr(path);
-    post("path: %s", txt);
+    t_string* path_to_ext = get_path_to_external(demo_class, NULL);
+    const char* ext_path = string_getptr(path_to_ext);
+    post("path to external: %s", ext_path);
+
+    t_string* path_to_pkg = get_path_to_package(demo_class, "");
+    const char* pkg_path = string_getptr(path_to_pkg);
+    post("path to package: %s", pkg_path);
+
+    char filename[MAX_PATH_CHARS];
+    char directory[MAX_PATH_CHARS];
+
+    path_dirname(pkg_path, directory);
+    path_basename(pkg_path, filename);
+
+    post("directory: %s", directory);
+    post("filename: %s", filename);
+
+
+
+
     outlet_bang(x->ob_proxy_1); 
 }
 

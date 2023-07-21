@@ -712,16 +712,14 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
         // }
 
         else if (is_type(result, this->tp_exception)) {
-            Exception exception_result = py_cast<Exception>(this,
-                                                            result);
+            Exception exception_result = py_cast<Exception>(this, result);
             outlet_anything(outlet, gensym("star_wrapper"), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->tp_star_wrapper)) {
-            StarWrapper star_wrapper_result = py_cast<StarWrapper>(this,
-                                                                   result);
-            outlet_anything(outlet, gensym("star_wrapper"), 0, (t_atom*)NIL);
-        }
+        // else if (is_type(result, this->tp_star_wrapper)) {
+        //     StarWrapper star_wrapper_result = py_cast<StarWrapper>(this, result);
+        //     outlet_anything(outlet, gensym("star_wrapper"), 0, (t_atom*)NIL);
+        // }
 
         else if (is_type(result, this->tp_function)) {
             Function func_result = py_cast<Function>(this, result);

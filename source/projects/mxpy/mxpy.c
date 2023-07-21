@@ -1,8 +1,6 @@
 #include "ext.h"
 #include "ext_obex.h"
 
-#include <libgen.h>
-
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
@@ -144,22 +142,87 @@ static void emit_outlet_message(PyObject* value, void* x_outlet)
     }
 }
 
-t_symbol* mxpy_locate_path_to_external(t_mxpy* x)
+// t_symbol* mxpy_locate_path_to_external(t_mxpy* x)
+// {
+//     char external_path[MAX_PATH_CHARS];
+//     char external_name[MAX_PATH_CHARS];
+//     char conform_path[MAX_PATH_CHARS];
+
+//     short path_id = class_getpath(mxpy_class);
+//     snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", mxpy_class->c_sym->s_name);
+//     path_toabsolutesystempath(path_id, external_name, external_path);
+//     path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
+//     return gensym(external_path);
+// }
+
+
+/**
+ * @brief      Return path to external with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to external + (optional subpath)
+ */
+t_string* mxpy_get_path_to_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
     char conform_path[MAX_PATH_CHARS];
+    short path_id = class_getpath(c);
+    t_string* result;
 
-    short path_id = class_getpath(mxpy_class);
-    snprintf_zero(external_name, PY_MAX_ELEMS, "%s.mxo", mxpy_class->c_sym->s_name);
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
+#endif
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename, c->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
-    /* path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_PATH); */
-    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE, PATH_TYPE_TILDE);
-    /* post("path_id: %d, external_name: %s, external_path: %s conform_path: %s",
-             path_id, external_name, external_path, conform_path);
-    */
-    return gensym(external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    result = string_new(external_path);
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+    return result;
 }
+
+
+/**
+ * @brief      Return path to package with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to package + (optional subpath)
+ */
+t_string* mxpy_get_path_to_package(t_class* c, char* subpath)
+{
+    char _dummy[MAX_PATH_CHARS];
+    char externals_folder[MAX_PATH_CHARS];
+    char package_folder[MAX_PATH_CHARS];
+
+    t_string* result;
+    t_string* external_path = mxpy_get_path_to_external(c, NULL);
+
+    const char* ext_path_c = string_getptr(external_path);
+
+    path_splitnames(ext_path_c, externals_folder, _dummy); // ignore filename
+    path_splitnames(externals_folder, package_folder, _dummy); // ignore filename
+
+    // post("externals_folder: %s", externals_folder);
+    // post("package_folder: %s", package_folder);
+
+    result = string_new((char*)package_folder);
+
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+
+    return result;
+}
+
 
 
 static void mxpy_bang(t_mxpy* x)
@@ -266,15 +329,10 @@ static void* mxpy_new(t_symbol* selector, int argc, t_atom* argv)
 
     } else {
 
-        // hackish way to get project root and then add path mxpy dir to pythonpath
+        // get package root and then add path mxpy dir to pythonpath
         // all this to import py-js/source/projects/mxpy/python_help.py
-        // TODO convert this to a function.
-        t_symbol* path_to_ext_sym = mxpy_locate_path_to_external(x);
-        post("path to external: %s", path_to_ext_sym->s_name);
-        post("path to root: %s", dirname(dirname(path_to_ext_sym->s_name)));
-        t_string* root_path = string_new(dirname(dirname(path_to_ext_sym->s_name)));
-        string_append(root_path, "/source/projects/mxpy");
-        const char* modpath_cstr = string_getptr(root_path);
+        t_string* modpath = mxpy_get_path_to_package(mxpy_class, "/source/projects/mxpy");
+        const char* modpath_cstr = string_getptr(modpath);
         PyObject* modulePath = PyUnicode_FromString(modpath_cstr);
         PyObject* sysPath = PySys_GetObject((char*)"path"); // borrowed reference
         if (!PySequence_Contains(sysPath, modulePath)) {
@@ -282,7 +340,6 @@ static void* mxpy_new(t_symbol* selector, int argc, t_atom* argv)
             PyList_Append(sysPath, modulePath);
         }
         Py_DECREF(modulePath);
-        // end TODO
         
         // try loading a system module
         PyObject* os_name = PyUnicode_FromString("os");
