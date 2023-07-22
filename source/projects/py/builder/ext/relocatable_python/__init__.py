@@ -8,7 +8,7 @@ from ...config import Project
 
 from sysconfig import get_config_var
 
-AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.12", "3.10.8", "3.11.2"]
+AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.13", "3.10.11", "3.11.4"]
 
 if Project.python.arch == 'arm64':
     DEFAULT_OS_VERSION = '11'
