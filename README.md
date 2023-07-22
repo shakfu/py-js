@@ -188,6 +188,33 @@ pyjs max external (jsextension)
 
 ## Quickstart
 
+### Windows
+
+Since Windows support is relatively new, no releases have been made pending further testing.
+
+Currently, the externals which are enabled by default in this project can be built with only a few requirements: 
+
+1. Install [Visual Studio Community Edition](https://visualstudio.microsoft.com/vs/community/) or use the commercial versions as you like.
+
+2. Install [Python3 for Windows](https://www.python.org/downloads/windows) from python.org
+
+3. (Optional) since Visual Studio has its captive cmake, [you can use that](https://stackoverflow.com/questions/70178963/where-is-cmake-located-when-downloaded-from-visual-studio-2022), but it is preferable to [install cmake](https://cmake.org/download/#latest) independently.
+
+After istallation of the above you can build the externals inside your `Documents/Max 8/Packages` folder as follows:
+
+```powershell
+git clone https://github.com/shakfu/py-js
+cd py-js
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+```
+
+Open one of the `.maxhelp` files or any one of the files in the `patchers` folders to see how things work.
+
+### macOS
+
 As mentioned earlier, the `py` and `pyjs` objects are the most mature and best documented of the collection. Happily, there is also no need to compile them as they are available for download, fully codesigned and notarized, from the [releases](https://github.com/shakfu/py-js/releases) section.
 
 If you'd rather build them or any of the other externals yourself then the process is straightforward:
