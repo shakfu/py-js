@@ -724,12 +724,12 @@ char *str_replace(char *orig, char *rep, char *with) {
     // sanity checks and initialization
     if (!orig || !rep)
         return NULL;
-    len_rep = strlen(rep);
+    len_rep = (int)strlen(rep);
     if (len_rep == 0)
         return NULL; // empty rep causes infinite loop during count
     if (!with)
         with = "";
-    len_with = strlen(with);
+    len_with = (int)strlen(with);
 
     // count the number of replacements needed
     ins = orig;

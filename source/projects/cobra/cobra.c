@@ -89,7 +89,7 @@ void ext_main(void *r)
     class_addmethod(c, (method)cobra_inletinfo, "inletinfo",    A_CANT, 0);
 
     class_addmethod(c, (method)cobra_import,    "import",       A_SYM,  0);
-    class_addmethod(c, (method)cobra_defer,      "defer",       A_GIMME, 0);
+    class_addmethod(c, (method)cobra_defer,     "defer",       A_GIMME, 0);
 
     class_time_addattr(c, "delaytime", "Delay Time", TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK | TIME_FLAGS_TRANSPORT);
     class_time_addattr(c, "quantize", "Quantization", TIME_FLAGS_TICKSONLY);
@@ -189,14 +189,14 @@ void cobra_assist(t_cobra *x, void *b, long m, long a, char *s)
 {
     if (m == ASSIST_INLET) {    // Inlets
         switch (a) {
-        case 0: snprintf_zero(s, PY_MAX_ELEMS, "bang Gets Delayed, stop Cancels"); break;
-        case 1: snprintf_zero(s, PY_MAX_ELEMS, "Set Delay Time"); break;
+        case 0: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "bang Gets Delayed, stop Cancels"); break;
+        case 1: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "Set Delay Time"); break;
         }
     }
     else {                      // Outlets
         switch (a) {
-        case 0: snprintf_zero(s, PY_MAX_ELEMS, "Delayed bang"); break;
-        case 1: snprintf_zero(s, PY_MAX_ELEMS, "Another Delayed bang"); break;
+        case 0: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "Delayed bang"); break;
+        case 1: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "Another Delayed bang"); break;
         }
     }
 }
