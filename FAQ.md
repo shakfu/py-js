@@ -73,7 +73,7 @@ The easiest way is to just create an adhoc python external linked to your system
 
 You can also add your system `site-packages` to the externals pythonpath attribute.
 
-If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `bin-homebrew-pkg` build option for example.
+If you need numpy embedded in a portable variation of py-js, then you have a couple of options. A py-js package build which has 'thin' externals referencing a python distribution in the `support` folder of the package is the way to go and is provided by the `homebrew-pkg` build option for example.
 
 It is also possible to package numpy in a full relocatable external, it's quite involved, and can currently only be done with non-statically built relocatable externals.
 
