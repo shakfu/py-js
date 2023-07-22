@@ -2,6 +2,8 @@
 
 This project is an experimental attempt to defer the evaluation of a python function via Max's ITM-based sequencing.
 
+It re-uses the mamba single header to reduce boilerplate
+
 ## Building
 
 From the root of the `py-js` project
