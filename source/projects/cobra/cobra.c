@@ -279,8 +279,10 @@ void cobra_clocktick(t_cobra *x)
 
 void cobra_stop(t_cobra *x)
 {
+    post("stop");
     time_stop(x->c_timeobj);
     clock_unset(x->c_clock);
+    x->c_func = NULL; // reset the function
 }
 
 void cobra_handle_error(t_cobra* x, char* fmt, ...)
