@@ -27,8 +27,9 @@ set(PY_LIBDIRS "${Python3_LIBRARY_DIRS}")
 
 target_include_directories(
 	${PROJECT_NAME}
-	PRIVATE
+	PUBLIC
 	${PY_INCLUDE}
+	${CMAKE_CURRENT_SOURCE_DIR}/../mamba
 )
 
 target_compile_definitions(

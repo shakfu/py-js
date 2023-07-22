@@ -1,6 +1,6 @@
 # zedit: a web-based code-editor embedded in an max external
 
-This subproject aim to provide a web-based code-editor for the python3 externals in this project.
+This subproject provides an example of a web-based code-editor / interactive console for the python3 externals in this project. It also embeds a python interpreter which is enabled by including mamba's single header python3 c library.
 
 Note there is also a very nice alternative, light-weight and practical solution  to this requirement: the`py_external_editor.maxpat` abstraction in this project's `patchers` folder, which is also implemented as a bpatcher.
 

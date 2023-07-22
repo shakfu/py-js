@@ -39,8 +39,9 @@ target_compile_definitions(${PROJECT_NAME}
 
 target_include_directories(
 	${PROJECT_NAME}
-	PRIVATE
+	PUBLIC
 	${PY_INCLUDE}
+	${CMAKE_CURRENT_SOURCE_DIR}/../mamba
 )
 
 target_compile_definitions(

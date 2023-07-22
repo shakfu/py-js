@@ -1,5 +1,5 @@
 /** \file py_interpreter.h
-    \brief A single-header python3 library for Max externals.
+    \brief A single-header python3 c++ library for Max externals.
 
     Provides a `PythonInterpreter` implementation which can be dropped into any
     arbitrary Max external. 

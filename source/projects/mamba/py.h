@@ -60,6 +60,10 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv,
                       void* outlet);
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
+// code execution methods
+t_max_err py_exec_file_input(t_py* x, const char* code);
+t_max_err py_exec_single_input(t_py* x, const char* code);
+
 
 #ifdef __cplusplus
 }
@@ -693,6 +697,71 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
         return MAX_ERR_GENERIC;
     }
 }
+
+
+/**
+ * @brief Execute a c string as a file-length block of python code
+ *
+ * @param x pointer to object structure
+ * @param code char* python code
+ * @return t_max_err error code
+ */
+t_max_err py_exec_file_input(t_py* x, const char* code)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = NULL;
+
+    pval = PyRun_String(code, Py_file_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(pval);
+    PyGILState_Release(gstate);
+
+    py_log(x, (char*)"py_exec_file_input");
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, (char*)"py_exec_file_input");
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
+
+/**
+ * @brief Execute a c string as a statement-length block of python code
+ *
+ * @param x pointer to object structure
+ * @param code char* python code
+ * @return t_max_err error code
+ */
+t_max_err py_exec_single_input(t_py* x, const char* code)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = NULL;
+
+    pval = PyRun_String(code, Py_single_input, x->p_globals, x->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(pval);
+    PyGILState_Release(gstate);
+
+    py_log(x, (char*)"py_exec_single_input");
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, (char*)"py_exec_single_input");
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return MAX_ERR_GENERIC;
+}
+
 
 /**
  * @brief Execute a max symbol as a line of python code

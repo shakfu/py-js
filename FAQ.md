@@ -3,13 +3,17 @@
 
 ## Compatibility
 
-### Is this macOS only?
+### Does this project work with Windows?
 
-This project is currently only macOS x86_64 (Intel) or arm64 (Apple silicon) compatible.
+Yes, although Windows support came relatively recently, all python externals and also the `pktpy` external can be compiled using the default MSVC buildsystem. 
 
-### What about compatibility with Windows?
+Currently only building via cmake with dynamic linking of externals is supported. Refer to the README quickstart for compilation instructions.
 
-There's no particular reason why this project shouldn't work in windows except that I don't develop in windows any longer. Feel free to send pull requests to help make this happen.
+### Does this project work with macOS?
+
+Yes, macOS support is the most mature for both x86_64 (Intel) and arm64 (Apple silicon). Note that externals are only built natively (no univeral binaries).
+
+Refer to the README quickstart for compilation instructions.
 
 ### Does it only work with Homebrew python?
 
@@ -43,7 +47,7 @@ You can also go to the external c file itself and hardcode DEBUG=0 if you want t
 
 ### How to extend python with your own scripts and 3rd party libraries?
 
-The easiest solution is not to use a self-contained external and use an external that's linked to your system python3 installation. This is what gets built if you run ./build.sh in the root of the [py-js](https://github.com/shakfu/py-js) project. If you do it this way, you automatically get access to all of your python libraries, but you give up portability.
+The easiest solution is not to use a self-contained external and use an external that's linked to your system python3 installation. This is what gets built if you run `make` or `make projects` in the root of the [py-js](https://github.com/shakfu/py-js) project. If you do it this way, you automatically get access to all of your python libraries, but you give up portability.
 
 This release contains relocatable python3 externals which are useful for distribution in packages and standalones so it's a little bit more involved.
 
@@ -55,7 +59,7 @@ First note that there several ways to add code to the external:
 
 3. Whichever path you set the patcher PYTHONPATH property to (during object creation).
 
-For (1), I have tested pure python scripts which should work without re-codesigning the externals, but if you add compiled extensions, then I think you have to re-codesign the external. Check out my [maxutils](https://github.com/shakfu/maxutils) project for help with that.
+For (1), if you make changes to the external by adding modules or compiled extensions then you will have to resign the external. This is straightforward in `py-js`, just make sure the externals are in the `externals` folder and `make sign`.
 
 For (2), this is just a location that's searched automatically with `load`, `read`, and `execfile` messages so it can contain dependent files.
 
