@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.2.x]
 
+- All python3 externals + `pktpy` now work on Windows via `make projects`!
+
 - Removed all posix `libgen.h` usage to pave the way for windows compatibility
 
 - Added a project documentation section in `scripts/docs` to collect documentation, organize notes, and automatically build a project guide book as pdf. This is done via [quarto](https://quarto.org)

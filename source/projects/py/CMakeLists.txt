@@ -71,6 +71,8 @@ target_compile_options(
 	$<$<PLATFORM_ID:Darwin>:-g>
 	$<$<PLATFORM_ID:Darwin>:-fwrapv>
 	$<$<PLATFORM_ID:Darwin>:-O3>
+	$<$<PLATFORM_ID:Windows>:/O2>
+	$<$<PLATFORM_ID:Windows>:/MD> # api module works with this
 )
 
 add_custom_command(

@@ -12,7 +12,9 @@ from pathlib import Path
 
 
 class PackageInstaller:
-    PACKAGES = []
+    PACKAGES = [
+        'rpl',
+    ]
     INCLUDES = []
     EXCLUDES = []
     PREFIX_PATTERNS = [
@@ -29,13 +31,13 @@ class PackageInstaller:
         ".dist-info",
     ]
 
-    def __init__(self, destination_dir, working_dir='.', **options):
+    def __init__(self, destination_dir=None, working_dir='.', **options):
         self.destination_dir = destination_dir
         self.working_dir = Path(working_dir)
         self.venv = options.get("venv", "pyenv")
-        self.packages = options.get("packages", PACKAGES)
-        self.includes = options.get("includes", INCLUDES)
-        self.excludes = options.get("excludes", EXCLUDES)
+        self.packages = options.get("packages", self.PACKAGES)
+        self.includes = options.get("includes", self.INCLUDES)
+        self.excludes = options.get("excludes", self.EXCLUDES)
         self.requirements_txt = options.get("requirements_txt")
         self.py_ver = sysconfig.get_config_var("py_version_short")
         self.venv_dir = self.working_dir / self.venv
@@ -49,23 +51,25 @@ class PackageInstaller:
         shellcmd = " && ".join(shellcmds)
         os.system(shellcmd)
 
-    def remove(self, target):
-        assert os.path.exists(target)
-        if os.path.isfile(target):
-            os.remove(target)
+    def remove(self, target: Path):
+        # assert os.path.exists(target)
+        if target.is_file():
+            target.unlink()
             print('removed file:', target)
-        else:
+        elif target.is_dir():
             shutil.rmtree(target)
             print('removed dir:', target)
 
     def cleanup(self):
         for i in self.site_packages.iterdir():
-            if any(i.startswith(p) for p in PREFIX_PATTERNS):
+            if any(i.name.startswith(p) for p in self.PREFIX_PATTERNS):
                 self.remove(i)
-            if any(i.endswith(p) for p in SUFFIX_PATTERNS):
+                # print("PREFIX_PATERN:", i)
+            elif any(i.name.endswith(p) for p in self.SUFFIX_PATTERNS):
                 self.remove(i)
+                # print("SUFFIX_PATERN:", i)
 
-    def build(self):
+    def install(self):
         self.vcmds(
             [
                 f"virtualenv {self.venv}",
@@ -74,10 +78,9 @@ class PackageInstaller:
             ]
         )
         self.cleanup()
-        # copy to external site-packages
+        # copy to external's site-packages
 
 
 if __name__ == "__main__":
-    # checks()
-    builder = PackageInstaller()
-    builder.build()
+    pkg_installer = PackageInstaller()
+    pkg_installer.install()
