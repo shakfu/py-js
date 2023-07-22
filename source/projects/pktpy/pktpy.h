@@ -18,13 +18,13 @@ using namespace pkpy;
  * @brief      constants
  */
 #define PY_MAX_ELEMS 1024
-#define PY_LOG_LEVEL DEBUG
+#define PY_LOG_LEVEL PKTPY_DEBUG
 
 
 /**
  * @brief      specifies three logging levels
  */
-enum log_level { ERROR, INFO, DEBUG };
+enum log_level { PKTPY_ERROR, PKTPY_INFO, PKTPY_DEBUG };
 
 
 /**
@@ -141,7 +141,7 @@ PktpyInterpreter::~PktpyInterpreter() { delete this; }
  */
 void PktpyInterpreter::log_debug(char* fmt, ...)
 {
-    if (this->loglevel >= log_level::DEBUG) {
+    if (this->loglevel >= log_level::PKTPY_DEBUG) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -162,7 +162,7 @@ void PktpyInterpreter::log_debug(char* fmt, ...)
  */
 void PktpyInterpreter::log_info(char* fmt, ...)
 {
-    if (this->loglevel >= log_level::INFO) {
+    if (this->loglevel >= log_level::PKTPY_INFO) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -183,7 +183,7 @@ void PktpyInterpreter::log_info(char* fmt, ...)
  */
 void PktpyInterpreter::log_error(char* fmt, ...)
 {
-    if (this->loglevel >= log_level::ERROR) {
+    if (this->loglevel >= log_level::PKTPY_ERROR) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;

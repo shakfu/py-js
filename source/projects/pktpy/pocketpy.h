@@ -581,7 +581,7 @@ struct pod_vector{
         _data = (T*)pool64.alloc(_capacity * sizeof(T));
     }
 
-    pod_vector(int size): _size(size), _capacity(std::max(N, size)) {
+    pod_vector(int size): _size(size), _capacity((std::max)(N, size)) {
         _data = (T*)pool64.alloc(_capacity * sizeof(T));
     }
 
@@ -1053,31 +1053,31 @@ namespace pkpy {
     }
 
     bool Str::operator<(const Str& other) const {
-        int ret = strncmp(data, other.data, std::min(size, other.size));
+        int ret = strncmp(data, other.data, (std::min)(size, other.size));
         if(ret != 0) return ret < 0;
         return size < other.size;
     }
 
     bool Str::operator<(const std::string_view other) const {
-        int ret = strncmp(data, other.data(), std::min(size, (int)other.size()));
+        int ret = strncmp(data, other.data(), (std::min)(size, (int)other.size()));
         if(ret != 0) return ret < 0;
         return size < (int)other.size();
     }
 
     bool Str::operator>(const Str& other) const {
-        int ret = strncmp(data, other.data, std::min(size, other.size));
+        int ret = strncmp(data, other.data, (std::min)(size, other.size));
         if(ret != 0) return ret > 0;
         return size > other.size;
     }
 
     bool Str::operator<=(const Str& other) const {
-        int ret = strncmp(data, other.data, std::min(size, other.size));
+        int ret = strncmp(data, other.data, (std::min)(size, other.size));
         if(ret != 0) return ret < 0;
         return size <= other.size;
     }
 
     bool Str::operator>=(const Str& other) const {
-        int ret = strncmp(data, other.data, std::min(size, other.size));
+        int ret = strncmp(data, other.data, (std::min)(size, other.size));
         if(ret != 0) return ret > 0;
         return size >= other.size;
     }
