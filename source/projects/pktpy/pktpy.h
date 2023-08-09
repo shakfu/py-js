@@ -109,15 +109,15 @@ PktpyInterpreter::PktpyInterpreter()
     this->loglevel = log_level::PY_LOG_LEVEL;
     this->disable_stderr = false;
 
-    this->_stdout = [](VM* vm, const Str& s) {
-        const char* stdout_output = s.c_str_dup();
-        post((char*)stdout_output);           
+    this->_stdout = [](VM* vm, const char * txt, int size) {
+        Str stdout_output = Str(txt, size);
+        post((const char*)stdout_output.c_str());           
     };
 
-    this->_stderr = [](VM* vm, const Str& s) {
+    this->_stderr = [](VM* vm, const char * txt, int size) {
         if (!static_cast<PktpyInterpreter*>(vm)->disable_stderr) {
-            const char* stderr_output = s.c_str_dup();
-            error((char*)stderr_output);
+            Str stderr_output = Str(txt, size);
+            error((const char*)stderr_output.c_str());
         }
     };
 }
