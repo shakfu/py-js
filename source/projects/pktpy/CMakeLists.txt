@@ -49,4 +49,3 @@ target_compile_options(
 
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
-

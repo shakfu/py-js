@@ -521,8 +521,19 @@ void add_custom_builtins(t_pktpy* x)
     });
     py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
-    PyObject* mod = x->py->new_module("test");
-    PyPoint::register_class(x->py, mod);
+    // create 'test' module
+    PyObject* mod_test = x->py->new_module("test");
 
+    // register class for 'test' module
+    PyPoint::register_class(x->py, mod_test);
+
+    // register variables / constants for 'test' module
+    mod_test->attr().set("pi",  py_var(x->py, 3.14));
+
+    // register functions for 'test' module
+    x->py->bind_func<1>(mod_test, "square", [](VM* vm, ArgsView args){
+        i64 a = CAST(i64, args[0]);
+        return VAR(a * a);
+    });
 }
 

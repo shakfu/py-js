@@ -171,7 +171,7 @@ namespace pkpy{
 #include <type_traits>
 #include <random>
 
-#define PK_VERSION				"1.1.3"
+#define PK_VERSION				"1.1.4"
 
 #ifdef min
 #undef min
@@ -320,6 +320,26 @@ struct is_pod {
 } // namespace pkpy
 
 
+
+namespace pkpy{
+
+void* pool64_alloc(size_t);
+void pool64_dealloc(void*);
+
+void* pool128_alloc(size_t);
+void pool128_dealloc(void*);
+
+template<typename T>
+void* pool64_alloc(){
+    return pool64_alloc(sizeof(T));
+}
+
+template<typename T>
+void* pool128_alloc(){
+    return pool128_alloc(sizeof(T));
+}
+
+};  // namespace pkpy
 
 namespace pkpy{
 
@@ -496,9 +516,6 @@ struct MemoryPool{
     DoubleLinkedList<Arena> _arenas;
     DoubleLinkedList<Arena> _empty_arenas;
 
-    template<typename __T>
-    void* alloc() { return alloc(sizeof(__T)); }
-
     void* alloc(size_t size){
         PK_GLOBAL_SCOPE_LOCK();
 #if PK_DEBUG_NO_MEMORY_POOL
@@ -552,12 +569,12 @@ struct MemoryPool{
         }
     }
 
-    size_t allocated_size() {
-        size_t n = 0;
-        _arenas.apply([&n](Arena* arena){ n += arena->allocated_size(); });
-        _empty_arenas.apply([&n](Arena* arena){ n += arena->allocated_size(); });
-        return n;
-    }
+    // size_t allocated_size() {
+    //     size_t n = 0;
+    //     _arenas.apply([&n](Arena* arena){ n += arena->allocated_size(); });
+    //     _empty_arenas.apply([&n](Arena* arena){ n += arena->allocated_size(); });
+    //     return n;
+    // }
 
     ~MemoryPool(){
         _arenas.apply([](Arena* arena){ delete arena; });
@@ -565,11 +582,16 @@ struct MemoryPool{
     }
 };
 
-inline MemoryPool<64> pool64;
-inline MemoryPool<128> pool128;
+static MemoryPool<64> pool64;
+static MemoryPool<128> pool128;
 
-};  // namespace pkpy
+void* pool64_alloc(size_t size){ return pool64.alloc(size); }
+void pool64_dealloc(void* p){ pool64.dealloc(p); }
 
+void* pool128_alloc(size_t size){ return pool128.alloc(size); }
+void pool128_dealloc(void* p){ pool128.dealloc(p); }
+
+}
 
 
 namespace pkpy{
@@ -585,15 +607,15 @@ struct pod_vector{
     T* _data;
 
     pod_vector(): _size(0), _capacity(N) {
-        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+        _data = (T*)pool64_alloc(_capacity * sizeof(T));
     }
 
     pod_vector(int size): _size(size), _capacity(std::max(N, size)) {
-        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+        _data = (T*)pool64_alloc(_capacity * sizeof(T));
     }
 
     pod_vector(const pod_vector& other): _size(other._size), _capacity(other._capacity) {
-        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+        _data = (T*)pool64_alloc(_capacity * sizeof(T));
         memcpy(_data, other._data, sizeof(T) * _size);
     }
 
@@ -605,7 +627,7 @@ struct pod_vector{
     }
 
     pod_vector& operator=(pod_vector&& other) noexcept {
-        if(_data!=nullptr) pool64.dealloc(_data);
+        if(_data!=nullptr) pool64_dealloc(_data);
         _size = other._size;
         _capacity = other._capacity;
         _data = other._data;
@@ -632,10 +654,10 @@ struct pod_vector{
         if(cap <= _capacity) return;
         _capacity = cap;
         T* old_data = _data;
-        _data = (T*)pool64.alloc(_capacity * sizeof(T));
+        _data = (T*)pool64_alloc(_capacity * sizeof(T));
         if(old_data!=nullptr){
             memcpy(_data, old_data, sizeof(T) * _size);
-            pool64.dealloc(old_data);
+            pool64_dealloc(old_data);
         }
     }
 
@@ -684,7 +706,7 @@ struct pod_vector{
     }
 
     ~pod_vector() {
-        if(_data!=nullptr) pool64.dealloc(_data);
+        if(_data!=nullptr) pool64_dealloc(_data);
     }
 };
 
@@ -988,12 +1010,12 @@ int utf8len(unsigned char c, bool suppress){
         if(size <= 16){
             this->data = _inlined;
         }else{
-            this->data = (char*)pool64.alloc(size);
+            this->data = (char*)pool64_alloc(size);
         }
     }
 
     Str& Str::operator=(const Str& other){
-        if(!is_inlined()) pool64.dealloc(data);
+        if(!is_inlined()) pool64_dealloc(data);
         size = other.size;
         is_ascii = other.is_ascii;
         _cached_c_str = nullptr;
@@ -1063,7 +1085,7 @@ int utf8len(unsigned char c, bool suppress){
     }
 
     Str::~Str(){
-        if(!is_inlined()) pool64.dealloc(data);
+        if(!is_inlined()) pool64_dealloc(data);
         if(_cached_c_str != nullptr) free((void*)_cached_c_str);
     }
 
@@ -1340,7 +1362,7 @@ Tuple::Tuple(int n){
     if(n <= 3){
         this->_args = _inlined;
     }else{
-        this->_args = (PyObject**)pool64.alloc(n * sizeof(void*));
+        this->_args = (PyObject**)pool64_alloc(n * sizeof(void*));
     }
     this->_size = n;
 }
@@ -1372,7 +1394,7 @@ Tuple::Tuple(std::initializer_list<PyObject*> list): Tuple(list.size()){
     for(PyObject* obj: list) _args[i++] = obj;
 }
 
-Tuple::~Tuple(){ if(!is_inlined()) pool64.dealloc(_args); }
+Tuple::~Tuple(){ if(!is_inlined()) pool64_dealloc(_args); }
 
 List ArgsView::to_list() const{
     List ret(size());
@@ -1414,16 +1436,28 @@ struct NameDictImpl {
     uint16_t _mask;
     Item* _items;
 
-#define HASH_PROBE(key, ok, i)          \
-ok = false;                             \
-i = _hash(key, _mask, _hash_seed);      \
-while(!_items[i].first.empty()) {       \
+#define HASH_PROBE_0(key, ok, i)            \
+ok = false;                                 \
+i = _hash(key, _mask, _hash_seed);          \
+for(int _j=0; _j<_capacity; _j++) {         \
+    if(!_items[i].first.empty()){           \
+        if(_items[i].first == (key)) { ok = true; break; }  \
+    }else{                                                  \
+        if(_items[i].second == 0) break;                    \
+    }                                                       \
+    i = (i + 1) & _mask;                                    \
+}
+
+#define HASH_PROBE_1(key, ok, i)            \
+ok = false;                                 \
+i = _hash(key, _mask, _hash_seed);          \
+while(!_items[i].first.empty()) {           \
     if(_items[i].first == (key)) { ok = true; break; }  \
     i = (i + 1) & _mask;                                \
 }
 
 #define NAMEDICT_ALLOC()                \
-    _items = (Item*)pool128.alloc(_capacity * sizeof(Item));    \
+    _items = (Item*)pool128_alloc(_capacity * sizeof(Item));    \
     memset(_items, 0, _capacity * sizeof(Item));                \
 
     NameDictImpl(float load_factor=0.67f):
@@ -1439,14 +1473,14 @@ while(!_items[i].first.empty()) {       \
     }
 
     NameDictImpl& operator=(const NameDictImpl& other) {
-        pool128.dealloc(_items);
+        pool128_dealloc(_items);
         memcpy(this, &other, sizeof(NameDictImpl));
         NAMEDICT_ALLOC()
         for(int i=0; i<_capacity; i++) _items[i] = other._items[i];
         return *this;
     }
     
-    ~NameDictImpl(){ pool128.dealloc(_items); }
+    ~NameDictImpl(){ pool128_dealloc(_items); }
 
     NameDictImpl(NameDictImpl&&) = delete;
     NameDictImpl& operator=(NameDictImpl&&) = delete;
@@ -1454,19 +1488,19 @@ while(!_items[i].first.empty()) {       \
 
     T operator[](StrName key) const {
         bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
+        HASH_PROBE_0(key, ok, i);
         if(!ok) throw std::out_of_range(fmt("NameDict key not found: ", key));
         return _items[i].second;
     }
 
     void set(StrName key, T val){
         bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
+        HASH_PROBE_1(key, ok, i);
         if(!ok) {
             _size++;
             if(_size > _capacity*_load_factor){
                 _rehash(true);
-                HASH_PROBE(key, ok, i);
+                HASH_PROBE_1(key, ok, i);
             }
             _items[i].first = key;
         }
@@ -1484,11 +1518,11 @@ while(!_items[i].first.empty()) {       \
         for(uint16_t i=0; i<old_capacity; i++){
             if(old_items[i].first.empty()) continue;
             bool ok; uint16_t j;
-            HASH_PROBE(old_items[i].first, ok, j);
+            HASH_PROBE_1(old_items[i].first, ok, j);
             if(ok) FATAL_ERROR();
             _items[j] = old_items[i];
         }
-        pool128.dealloc(old_items);
+        pool128_dealloc(old_items);
     }
 
     void _try_perfect_rehash(){
@@ -1498,7 +1532,7 @@ while(!_items[i].first.empty()) {       \
 
     T try_get(StrName key) const{
         bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
+        HASH_PROBE_0(key, ok, i);
         if(!ok){
             if constexpr(std::is_pointer_v<T>) return nullptr;
             else if constexpr(std::is_same_v<int, T>) return -1;
@@ -1509,14 +1543,14 @@ while(!_items[i].first.empty()) {       \
 
     T* try_get_2(StrName key) {
         bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
+        HASH_PROBE_0(key, ok, i);
         if(!ok) return nullptr;
         return &_items[i].second;
     }
 
     bool try_set(StrName key, T val){
         bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
+        HASH_PROBE_1(key, ok, i);
         if(!ok) return false;
         _items[i].second = val;
         return true;
@@ -1524,7 +1558,7 @@ while(!_items[i].first.empty()) {       \
 
     bool contains(StrName key) const {
         bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
+        HASH_PROBE_0(key, ok, i);
         return ok;
     }
 
@@ -1537,10 +1571,10 @@ while(!_items[i].first.empty()) {       \
 
     void erase(StrName key){
         bool ok; uint16_t i;
-        HASH_PROBE(key, ok, i);
+        HASH_PROBE_0(key, ok, i);
         if(!ok) throw std::out_of_range(fmt("NameDict key not found: ", key));
         _items[i].first = StrName();
-        _items[i].second = nullptr;
+        // _items[i].second = PY_DELETED_SLOT;      // do not change .second if it is not zero, it means the slot is occupied by a deleted item
         _size--;
     }
 
@@ -2177,6 +2211,16 @@ static bool is_unicode_Lo_char(uint32_t c) {
                 case '[': add_token(TK("[")); return true;
                 case ']': add_token(TK("]")); return true;
                 case '@': add_token(TK("@")); return true;
+                case '\\': {
+                    // line continuation character
+                    char c = eatchar_include_newline();
+                    if (c != '\n'){
+                        if(src->mode == REPL_MODE && c == '\0') throw NeedMoreLines(false);
+                        SyntaxError("expected newline after line continuation character");
+                    }
+                    eat_spaces();
+                    return true;
+                }
                 case '$': {
                     for(int i=TK("$goto"); i<=TK("$label"); i++){
                         // +1 to skip the '$'
@@ -2446,7 +2490,7 @@ struct PyObject{
     virtual ~PyObject();
 
     void enable_instance_dict(float lf=kInstAttrLoadFactor) {
-        _attr = new(pool64.alloc<NameDict>()) NameDict(lf);
+        _attr = new(pool64_alloc<NameDict>()) NameDict(lf);
     }
 };
 
@@ -2685,7 +2729,7 @@ namespace pkpy{
     PyObject::~PyObject() {
         if(_attr == nullptr) return;
         _attr->~NameDict();
-        pool64.dealloc(_attr);
+        pool64_dealloc(_attr);
     }
 }   // namespace pkpy
 
@@ -2726,7 +2770,8 @@ struct Dict{
 
     int size() const { return _size; }
 
-    void _probe(PyObject* key, bool& ok, int& i) const;
+    void _probe_0(PyObject* key, bool& ok, int& i) const;
+    void _probe_1(PyObject* key, bool& ok, int& i) const;
 
     void set(PyObject* key, PyObject* val);
     void _rehash();
@@ -2734,7 +2779,7 @@ struct Dict{
     PyObject* try_get(PyObject* key) const;
 
     bool contains(PyObject* key) const;
-    void erase(PyObject* key);
+    bool erase(PyObject* key);
     void update(const Dict& other);
 
     template<typename __Func>
@@ -2760,9 +2805,9 @@ namespace pkpy{
     Dict::Dict(VM* vm): vm(vm), _capacity(__Capacity),
             _mask(__Capacity-1),
             _size(0), _critical_size(__Capacity*__LoadFactor+0.5f), _head_idx(-1), _tail_idx(-1){
-        _items = (Item*)pool128.alloc(_capacity * sizeof(Item));
+        _items = (Item*)pool128_alloc(_capacity * sizeof(Item));
         memset(_items, 0, _capacity * sizeof(Item));
-        _nodes = (ItemNode*)pool64.alloc(_capacity * sizeof(ItemNode));
+        _nodes = (ItemNode*)pool64_alloc(_capacity * sizeof(ItemNode));
         memset(_nodes, -1, _capacity * sizeof(ItemNode));
     }
 
@@ -2788,9 +2833,9 @@ namespace pkpy{
         _critical_size = other._critical_size;
         _head_idx = other._head_idx;
         _tail_idx = other._tail_idx;
-        _items = (Item*)pool128.alloc(_capacity * sizeof(Item));
+        _items = (Item*)pool128_alloc(_capacity * sizeof(Item));
         memcpy(_items, other._items, _capacity * sizeof(Item));
-        _nodes = (ItemNode*)pool64.alloc(_capacity * sizeof(ItemNode));
+        _nodes = (ItemNode*)pool64_alloc(_capacity * sizeof(ItemNode));
         memcpy(_nodes, other._nodes, _capacity * sizeof(ItemNode));
     }
 
@@ -2798,7 +2843,7 @@ namespace pkpy{
         // do possible rehash
         if(_size+1 > _critical_size) _rehash();
         bool ok; int i;
-        _probe(key, ok, i);
+        _probe_1(key, ok, i);
         if(!ok) {
             _size++;
             _items[i].first = key;
@@ -2828,9 +2873,9 @@ namespace pkpy{
         _head_idx = -1;
         _tail_idx = -1;
         
-        _items = (Item*)pool128.alloc(_capacity * sizeof(Item));
+        _items = (Item*)pool128_alloc(_capacity * sizeof(Item));
         memset(_items, 0, _capacity * sizeof(Item));
-        _nodes = (ItemNode*)pool64.alloc(_capacity * sizeof(ItemNode));
+        _nodes = (ItemNode*)pool64_alloc(_capacity * sizeof(ItemNode));
         memset(_nodes, -1, _capacity * sizeof(ItemNode));
 
         // copy old items to new dict
@@ -2839,30 +2884,30 @@ namespace pkpy{
             set(old_items[i].first, old_items[i].second);
             i = old_nodes[i].next;
         }
-        pool128.dealloc(old_items);
-        pool64.dealloc(old_nodes);
+        pool128_dealloc(old_items);
+        pool64_dealloc(old_nodes);
     }
 
 
     PyObject* Dict::try_get(PyObject* key) const{
         bool ok; int i;
-        _probe(key, ok, i);
+        _probe_0(key, ok, i);
         if(!ok) return nullptr;
         return _items[i].second;
     }
 
     bool Dict::contains(PyObject* key) const{
         bool ok; int i;
-        _probe(key, ok, i);
+        _probe_0(key, ok, i);
         return ok;
     }
 
-    void Dict::erase(PyObject* key){
+    bool Dict::erase(PyObject* key){
         bool ok; int i;
-        _probe(key, ok, i);
-        if(!ok) return;
+        _probe_0(key, ok, i);
+        if(!ok) return false;
         _items[i].first = nullptr;
-        _items[i].second = nullptr;
+        // _items[i].second = PY_DELETED_SLOT;  // do not change .second if it is not NULL, it means the slot is occupied by a deleted item
         _size--;
 
         if(_size == 0){
@@ -2882,6 +2927,7 @@ namespace pkpy{
         }
         _nodes[i].prev = -1;
         _nodes[i].next = -1;
+        return true;
     }
 
     void Dict::update(const Dict& other){
@@ -2922,8 +2968,8 @@ namespace pkpy{
 
     Dict::~Dict(){
         if(_items==nullptr) return;
-        pool128.dealloc(_items);
-        pool64.dealloc(_nodes);
+        pool128_dealloc(_items);
+        pool64_dealloc(_nodes);
     }
 
     void Dict::_gc_mark() const{
@@ -3819,7 +3865,7 @@ struct ManagedHeap{
     PyObject* gcnew(Type type, Args&&... args){
         using __T = Py_<std::decay_t<T>>;
         // https://github.com/blueloveTH/pocketpy/issues/94#issuecomment-1594784476
-        PyObject* obj = new(pool64.alloc<__T>()) Py_<std::decay_t<T>>(type, std::forward<Args>(args)...);
+        PyObject* obj = new(pool64_alloc<__T>()) Py_<std::decay_t<T>>(type, std::forward<Args>(args)...);
         gen.push_back(obj);
         gc_counter++;
         return obj;
@@ -3829,7 +3875,7 @@ struct ManagedHeap{
     PyObject* _new(Type type, Args&&... args){
         using __T = Py_<std::decay_t<T>>;
         // https://github.com/blueloveTH/pocketpy/issues/94#issuecomment-1594784476
-        PyObject* obj = new(pool64.alloc<__T>()) Py_<std::decay_t<T>>(type, std::forward<Args>(args)...);
+        PyObject* obj = new(pool64_alloc<__T>()) Py_<std::decay_t<T>>(type, std::forward<Args>(args)...);
         obj->gc.enabled = false;
         _no_gc.push_back(obj);
         return obj;
@@ -3862,7 +3908,7 @@ namespace pkpy{
 #endif
                 if(_gc_on_delete) _gc_on_delete(vm, obj);
                 obj->~PyObject();
-                pool64.dealloc(obj);
+                pool64_dealloc(obj);
             }
         }
 
@@ -3895,8 +3941,8 @@ namespace pkpy{
     }
 
     ManagedHeap::~ManagedHeap(){
-        for(PyObject* obj: _no_gc) { obj->~PyObject(); pool64.dealloc(obj); }
-        for(PyObject* obj: gen) { obj->~PyObject(); pool64.dealloc(obj); }
+        for(PyObject* obj: _no_gc) { obj->~PyObject(); pool64_dealloc(obj); }
+        for(PyObject* obj: gen) { obj->~PyObject(); pool64_dealloc(obj); }
 #if PK_DEBUG_GC_STATS
         for(auto& [type, count]: deleted){
             std::cout << "GC: " << obj_type_name(vm, type) << "=" << count << std::endl;
@@ -5593,7 +5639,24 @@ void VM::bind__len__(Type type, i64 (*f)(VM*, PyObject*)){
     PK_OBJ_GET(NativeFunc, nf).set_userdata(f);
 }
 
-void Dict::_probe(PyObject *key, bool &ok, int &i) const{
+void Dict::_probe_0(PyObject *key, bool &ok, int &i) const{
+    ok = false;
+    i64 hash = vm->py_hash(key);
+    i = hash & _mask;
+    // std::cout << CAST(Str, vm->py_repr(key)) << " " << hash << " " << i << std::endl;
+    for(int j=0; j<_capacity; j++) {
+        if(_items[i].first != nullptr){
+            if(vm->py_equals(_items[i].first, key)) { ok = true; break; }
+        }else{
+            if(_items[i].second == nullptr) break;
+        }
+        // https://github.com/python/cpython/blob/3.8/Objects/dictobject.c#L166
+        i = ((5*i) + 1) & _mask;
+        // std::cout << CAST(Str, vm->py_repr(key)) << " next: " << i << std::endl;
+    }
+}
+
+void Dict::_probe_1(PyObject *key, bool &ok, int &i) const{
     ok = false;
     i = vm->py_hash(key) & _mask;
     while(_items[i].first != nullptr) {
@@ -8699,7 +8762,7 @@ namespace pkpy {
 
 }
 
-// generated on 2023-08-08 08:26:42
+// generated on 2023-08-13 02:34:49
 #include <map>
 #include <string>
 
@@ -10896,9 +10959,8 @@ struct FileIO {
     static void _register(VM* vm, PyObject* mod, PyObject* type);
 };
 
-#endif
-
 } // namespace pkpy
+#endif
 namespace pkpy{
 
 Bytes _default_import_handler(const Str& name){
@@ -11009,6 +11071,13 @@ void add_module_os(VM* vm){
         std::filesystem::path path(CAST(Str&, args[0]).sv());
         std::filesystem::current_path(path);
         return vm->None;
+    });
+
+    // system
+    vm->bind_func<1>(mod, "system", [](VM* vm, ArgsView args){
+        std::string cmd = CAST(Str&, args[0]).str();
+        int ret = system(cmd.c_str());
+        return VAR(ret);
     });
 
     vm->bind_func<1>(mod, "listdir", [](VM* vm, ArgsView args){
@@ -11148,6 +11217,10 @@ static dylib_entry_t load_dylib(const char* path){
 }
 #endif
 
+#else
+static dylib_entry_t load_dylib(const char* path){
+    return nullptr;
+}
 #endif
 
 
@@ -12160,8 +12233,8 @@ void init_builtins(VM* _vm) {
 
     _vm->bind__delitem__(_vm->tp_dict, [](VM* vm, PyObject* obj, PyObject* key) {
         Dict& self = _CAST(Dict&, obj);
-        if(!self.contains(key)) vm->KeyError(key);
-        self.erase(key);
+        bool ok = self.erase(key);
+        if(!ok) vm->KeyError(key);
     });
 
     _vm->bind_method<1>("dict", "pop", [](VM* vm, ArgsView args) {
@@ -12171,6 +12244,29 @@ void init_builtins(VM* _vm) {
         self.erase(args[1]);
         return value;
     });
+
+    // _vm->bind_method<0>("dict", "_data", [](VM* vm, ArgsView args) {
+    //     Dict& self = _CAST(Dict&, args[0]);
+    //     std::stringstream ss;
+    //     ss << "[\n";
+    //     for(int i=0; i<self._capacity; i++){
+    //         auto item = self._items[i];
+    //         Str key("None");
+    //         Str value("None");
+    //         if(item.first != nullptr){
+    //             key = CAST(Str&, vm->py_repr(item.first));
+    //         }
+    //         if(item.second != nullptr){
+    //             value = CAST(Str&, vm->py_repr(item.second));
+    //         }
+    //         int prev = self._nodes[i].prev;
+    //         int next = self._nodes[i].next;
+    //         ss << "  [" << key << ", " << value << ", " << prev << ", " << next << "],\n";
+    //     }
+    //     ss << "]\n";
+    //     vm->stdout_write(ss.str());
+    //     return vm->None;
+    // });
 
     _vm->bind__contains__(_vm->tp_dict, [](VM* vm, PyObject* obj, PyObject* key) {
         Dict& self = _CAST(Dict&, obj);
