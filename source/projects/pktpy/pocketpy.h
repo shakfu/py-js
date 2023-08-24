@@ -17,10 +17,15 @@
 /*************** feature settings ***************/
 
 // Whether to compile os-related modules or not
+#ifndef PK_ENABLE_OS                // can be overrided by cmake
 #define PK_ENABLE_OS                1
+#endif
+
 // Enable this if you are working with multi-threading (experimental)
 // This triggers necessary locks to make the VM thread-safe
+#ifndef PK_ENABLE_THREAD            // can be overrided by cmake
 #define PK_ENABLE_THREAD            0
+#endif
 
 // Enable this for `vm->_ceval_on_step`
 #define PK_ENABLE_CEVAL_CALLBACK    0
@@ -171,7 +176,7 @@ namespace pkpy{
 #include <type_traits>
 #include <random>
 
-#define PK_VERSION				"1.1.4"
+#define PK_VERSION				"1.1.6"
 
 #ifdef min
 #undef min
@@ -2402,8 +2407,8 @@ struct BoundMethod {
 struct Property{
     PyObject* getter;
     PyObject* setter;
-    Str type_hint;
-    Property(PyObject* getter, PyObject* setter, Str type_hint) : getter(getter), setter(setter), type_hint(type_hint) {}
+    Str signature;
+    Property(PyObject* getter, PyObject* setter, Str signature) : getter(getter), setter(setter), signature(signature) {}
 };
 
 struct Range {
@@ -3291,9 +3296,15 @@ struct CodeBlock {
     int for_loop_depth; // this is used for exception handling
     int start;          // start index of this block in codes, inclusive
     int end;            // end index of this block in codes, exclusive
+    int end2;           // ...
 
     CodeBlock(CodeBlockType type, int parent, int for_loop_depth, int start):
-        type(type), parent(parent), for_loop_depth(for_loop_depth), start(start), end(-1) {}
+        type(type), parent(parent), for_loop_depth(for_loop_depth), start(start), end(-1), end2(-1) {}
+
+    int get_break_end() const{
+        if(end2 != -1) return end2;
+        return end;
+    }
 };
 
 struct CodeObject;
@@ -4958,10 +4969,31 @@ void VM::parse_int_slice(const Slice& s, int length, int& start, int& stop, int&
 }
 
 i64 VM::py_hash(PyObject* obj){
+    // https://docs.python.org/3.10/reference/datamodel.html#object.__hash__
     const PyTypeInfo* ti = _inst_type_info(obj);
     if(ti->m__hash__) return ti->m__hash__(this, obj);
-    PyObject* ret = call_method(obj, __hash__);
-    return CAST(i64, ret);
+
+    PyObject* self;
+    PyObject* f = get_unbound_method(obj, __hash__, &self, false);
+    if(f != nullptr){
+        PyObject* ret = call_method(self, f);
+        return CAST(i64, ret);
+    }
+    // if it is trivial `object`, return PK_BITS
+    if(ti == &_all_types[tp_object]) return PK_BITS(obj);
+    // otherwise, we check if it has a custom __eq__ other than object.__eq__
+    bool has_custom_eq = false;
+    if(ti->m__eq__) has_custom_eq = true;
+    else{
+        f = get_unbound_method(obj, __eq__, &self, false);
+        has_custom_eq = f != _t(tp_object)->attr(__eq__);
+    }
+    if(has_custom_eq){
+        TypeError(fmt("unhashable type: ", ti->name.escape()));
+        return 0;
+    }else{
+        return PK_BITS(obj);
+    }
 }
 
 PyObject* VM::format(Str spec, PyObject* obj){
@@ -5585,13 +5617,10 @@ PyObject* VM::bind_property(PyObject* obj, Str name, NativeFuncC fget, NativeFun
     PyObject* _0 = heap.gcnew<NativeFunc>(tp_native_func, fget, 1, false);
     PyObject* _1 = vm->None;
     if(fset != nullptr) _1 = heap.gcnew<NativeFunc>(tp_native_func, fset, 2, false);
-    Str type_hint;
+    Str signature = name;
     int pos = name.index(":");
-    if(pos > 0){
-        type_hint = name.substr(pos + 1).strip();
-        name = name.substr(0, pos).strip();
-    }
-    PyObject* prop = VAR(Property(_0, _1, type_hint));
+    if(pos > 0) name = name.substr(0, pos).strip();
+    PyObject* prop = VAR(Property(_0, _1, signature));
     obj->attr().set(name, prop);
     return prop;
 }
@@ -6309,10 +6338,10 @@ __NEXT_STEP:;
         } else POP();                       // [b]
         DISPATCH();
     TARGET(LOOP_CONTINUE)
-        frame->jump_abs(co_blocks[byte.block].start);
+        frame->jump_abs(co_blocks[byte.arg].start);
         DISPATCH();
     TARGET(LOOP_BREAK)
-        frame->jump_abs_break(co_blocks[byte.block].end);
+        frame->jump_abs_break(co_blocks[byte.arg].get_break_end());
         DISPATCH();
     TARGET(GOTO) {
         _name = StrName(byte.arg);
@@ -6661,8 +6690,8 @@ struct CodeEmitContext{
     bool is_compiling_class = false;
     int for_loop_depth = 0;
 
-    bool is_curr_block_loop() const;
-    void enter_block(CodeBlockType type);
+    int get_loop() const;
+    CodeBlock* enter_block(CodeBlockType type);
     void exit_block();
     void emit_expr();   // clear the expression stack and generate bytecode
     std::string _log_s_expr();
@@ -6930,16 +6959,23 @@ struct TernaryExpr: Expr{
 } // namespace pkpy
 namespace pkpy{
 
-    bool CodeEmitContext::is_curr_block_loop() const {
-        return co->blocks[curr_block_i].type == FOR_LOOP || co->blocks[curr_block_i].type == WHILE_LOOP;
+    int CodeEmitContext::get_loop() const {
+        int index = curr_block_i;
+        while(index >= 0){
+            if(co->blocks[index].type == FOR_LOOP) break;
+            if(co->blocks[index].type == WHILE_LOOP) break;
+            index = co->blocks[index].parent;
+        }
+        return index;
     }
 
-    void CodeEmitContext::enter_block(CodeBlockType type){
+    CodeBlock* CodeEmitContext::enter_block(CodeBlockType type){
         if(type == FOR_LOOP) for_loop_depth++;
         co->blocks.push_back(CodeBlock(
             type, curr_block_i, for_loop_depth, (int)co->codes.size()
         ));
         curr_block_i = co->blocks.size()-1;
+        return &co->blocks[curr_block_i];
     }
 
     void CodeEmitContext::exit_block(){
@@ -7266,7 +7302,7 @@ namespace pkpy{
             expr->emit(ctx);
             ctx->emit(op1(), BC_NOARG, BC_KEEPLINE);
         }
-        ctx->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+        ctx->emit(OP_LOOP_CONTINUE, ctx->get_loop(), BC_KEEPLINE);
         ctx->exit_block();
     }
 
@@ -8207,13 +8243,18 @@ __SUBSCR_END:
     }
 
     void Compiler::compile_while_loop() {
-        ctx()->enter_block(WHILE_LOOP);
+        CodeBlock* block = ctx()->enter_block(WHILE_LOOP);
         EXPR(false);   // condition
         int patch = ctx()->emit(OP_POP_JUMP_IF_FALSE, BC_NOARG, prev().line);
         compile_block_body();
-        ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+        ctx()->emit(OP_LOOP_CONTINUE, ctx()->get_loop(), BC_KEEPLINE);
         ctx()->patch_jump(patch);
         ctx()->exit_block();
+        // optional else clause
+        if (match(TK("else"))) {
+            compile_block_body();
+            block->end2 = ctx()->co->codes.size();
+        }
     }
 
     void Compiler::compile_for_loop() {
@@ -8221,13 +8262,18 @@ __SUBSCR_END:
         consume(TK("in"));
         EXPR_TUPLE(false);
         ctx()->emit(OP_GET_ITER, BC_NOARG, BC_KEEPLINE);
-        ctx()->enter_block(FOR_LOOP);
+        CodeBlock* block = ctx()->enter_block(FOR_LOOP);
         ctx()->emit(OP_FOR_ITER, BC_NOARG, BC_KEEPLINE);
         bool ok = vars->emit_store(ctx());
         if(!ok) SyntaxError();  // this error occurs in `vars` instead of this line, but...nevermind
         compile_block_body();
-        ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+        ctx()->emit(OP_LOOP_CONTINUE, ctx()->get_loop(), BC_KEEPLINE);
         ctx()->exit_block();
+        // optional else clause
+        if (match(TK("else"))) {
+            compile_block_body();
+            block->end2 = ctx()->co->codes.size();
+        }
     }
 
     void Compiler::compile_try_except() {
@@ -8316,15 +8362,16 @@ __SUBSCR_END:
     void Compiler::compile_stmt() {
         advance();
         int kw_line = prev().line;  // backup line number
+        int curr_loop_block = ctx()->get_loop();
         switch(prev().type){
             case TK("break"):
-                if (!ctx()->is_curr_block_loop()) SyntaxError("'break' outside loop");
-                ctx()->emit(OP_LOOP_BREAK, BC_NOARG, kw_line);
+                if (curr_loop_block < 0) SyntaxError("'break' outside loop");
+                ctx()->emit(OP_LOOP_BREAK, curr_loop_block, kw_line);
                 consume_end_stmt();
                 break;
             case TK("continue"):
-                if (!ctx()->is_curr_block_loop()) SyntaxError("'continue' not properly in loop");
-                ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, kw_line);
+                if (curr_loop_block < 0) SyntaxError("'continue' not properly in loop");
+                ctx()->emit(OP_LOOP_CONTINUE, curr_loop_block, kw_line);
                 consume_end_stmt();
                 break;
             case TK("yield"): 
@@ -8344,7 +8391,7 @@ __SUBSCR_END:
                 ctx()->enter_block(FOR_LOOP);
                 ctx()->emit(OP_FOR_ITER, BC_NOARG, BC_KEEPLINE);
                 ctx()->emit(OP_YIELD_VALUE, BC_NOARG, BC_KEEPLINE);
-                ctx()->emit(OP_LOOP_CONTINUE, BC_NOARG, BC_KEEPLINE);
+                ctx()->emit(OP_LOOP_CONTINUE, ctx()->get_loop(), BC_KEEPLINE);
                 ctx()->exit_block();
                 consume_end_stmt();
                 break;
@@ -8762,7 +8809,7 @@ namespace pkpy {
 
 }
 
-// generated on 2023-08-13 02:34:49
+// generated on 2023-08-23 00:00:43
 #include <map>
 #include <string>
 
@@ -9222,6 +9269,7 @@ namespace pkpy{
 void add_module_c(VM* vm){
     PyObject* mod = vm->new_module("c");
     
+#if PK_ENABLE_OS
     vm->bind_func<1>(mod, "malloc", [](VM* vm, ArgsView args){
         i64 size = CAST(i64, args[0]);
         return VAR(malloc(size));
@@ -9231,20 +9279,6 @@ void add_module_c(VM* vm){
         void* p = CAST(void*, args[0]);
         free(p);
         return vm->None;
-    });
-
-    vm->bind_func<1>(mod, "sizeof", [](VM* vm, ArgsView args){
-        const Str& type = CAST(Str&, args[0]);
-        i64 size = c99_sizeof(vm, type);
-        return VAR(size);
-    });
-
-    vm->bind_func<1>(mod, "refl", [](VM* vm, ArgsView args){
-        const Str& key = CAST(Str&, args[0]);
-        auto it = _refl_types.find(key.sv());
-        if(it == _refl_types.end()) vm->ValueError("reflection type not found");
-        const ReflType& rt = it->second;
-        return VAR_T(C99ReflType, rt);
     });
 
     vm->bind_func<3>(mod, "memset", [](VM* vm, ArgsView args){
@@ -9259,6 +9293,21 @@ void add_module_c(VM* vm){
         i64 size = CAST(i64, args[2]);
         memcpy(dst, src, size);
         return vm->None;
+    });
+#endif
+
+    vm->bind_func<1>(mod, "sizeof", [](VM* vm, ArgsView args){
+        const Str& type = CAST(Str&, args[0]);
+        i64 size = c99_sizeof(vm, type);
+        return VAR(size);
+    });
+
+    vm->bind_func<1>(mod, "refl", [](VM* vm, ArgsView args){
+        const Str& key = CAST(Str&, args[0]);
+        auto it = _refl_types.find(key.sv());
+        if(it == _refl_types.end()) vm->ValueError("reflection type not found");
+        const ReflType& rt = it->second;
+        return VAR_T(C99ReflType, rt);
     });
 
     VoidP::register_class(vm, mod);
@@ -9441,7 +9490,7 @@ struct StringIter{
     PY_CLASS(StringIter, builtins, "_string_iterator")
     PyObject* ref;
     Str* str;
-    int index;
+    int index;      // byte index
 
     StringIter(PyObject* ref) : ref(ref), str(&PK_OBJ_GET(Str, ref)), index(0) {}
 
@@ -9451,7 +9500,7 @@ struct StringIter{
 };
 
 struct Generator{
-    PY_CLASS(Generator, builtins, "_generator")
+    PY_CLASS(Generator, builtins, "generator")
     Frame frame;
     int state;      // 0,1,2
     List s_backup;
@@ -9502,9 +9551,11 @@ namespace pkpy{
         vm->bind__iter__(PK_OBJ_GET(Type, type), [](VM* vm, PyObject* obj){ return obj; });
         vm->bind__next__(PK_OBJ_GET(Type, type), [](VM* vm, PyObject* obj){
             StringIter& self = _CAST(StringIter&, obj);
-            // TODO: optimize this... operator[] is of O(n) complexity
-            if(self.index == self.str->u8_length()) return vm->StopIteration;
-            return VAR(self.str->u8_getitem(self.index++));
+            if(self.index == self.str->size) return vm->StopIteration;
+            int start = self.index;
+            int len = utf8len(self.str->data[self.index]);
+            self.index += len;
+            return VAR(self.str->substr(start, len));
         });
     }
 
@@ -10963,18 +11014,38 @@ struct FileIO {
 #endif
 namespace pkpy{
 
+static FILE* io_fopen(const char* name, const char* mode){
+#if _WIN32
+    FILE* fp;
+    errno_t err = fopen_s(&fp, name, mode);
+    if(err != 0) return nullptr;
+    return fp;
+#else
+    return fopen(name, mode);
+#endif
+}
+
+static size_t io_fread(void* buffer, size_t size, size_t count, FILE* fp){
+#if _WIN32
+    return fread_s(buffer, std::numeric_limits<size_t>::max(), size, count, fp);
+#else
+    return fread(buffer, size, count, fp);
+#endif
+}
+
+
 Bytes _default_import_handler(const Str& name){
 #if PK_ENABLE_OS
     std::filesystem::path path(name.sv());
     bool exists = std::filesystem::exists(path);
     if(!exists) return Bytes();
     std::string cname = name.str();
-    FILE* fp = fopen(cname.c_str(), "rb");
+    FILE* fp = io_fopen(cname.c_str(), "rb");
     if(!fp) return Bytes();
     fseek(fp, 0, SEEK_END);
     std::vector<char> buffer(ftell(fp));
     fseek(fp, 0, SEEK_SET);
-    size_t sz = fread(buffer.data(), 1, buffer.size(), fp);
+    size_t sz = io_fread(buffer.data(), 1, buffer.size(), fp);
     PK_UNUSED(sz);
     fclose(fp);
     return Bytes(std::move(buffer));
@@ -10997,7 +11068,7 @@ Bytes _default_import_handler(const Str& name){
             fseek(io.fp, 0, SEEK_END);
             std::vector<char> buffer(ftell(io.fp));
             fseek(io.fp, 0, SEEK_SET);
-            size_t sz = fread(buffer.data(), 1, buffer.size(), io.fp);
+            size_t sz = io_fread(buffer.data(), 1, buffer.size(), io.fp);
             PK_UNUSED(sz);
             Bytes b(std::move(buffer));
             if(io.is_text()) return VAR(b.str());
@@ -11032,7 +11103,7 @@ Bytes _default_import_handler(const Str& name){
     }
 
     FileIO::FileIO(VM* vm, std::string file, std::string mode): file(file), mode(mode) {
-        fp = fopen(file.c_str(), mode.c_str());
+        fp = io_fopen(file.c_str(), mode.c_str());
         if(!fp) vm->IOError(strerror(errno));
     }
 
@@ -11465,7 +11536,6 @@ void init_builtins(VM* _vm) {
     });
 
     _vm->bind__eq__(_vm->tp_object, [](VM* vm, PyObject* lhs, PyObject* rhs) { return VAR(lhs == rhs); });
-    _vm->bind__hash__(_vm->tp_object, [](VM* vm, PyObject* obj) { return PK_BITS(obj); });
 
     _vm->cached_object__new__ = _vm->bind_constructor<1>("object", [](VM* vm, ArgsView args) {
         vm->check_non_tagged_type(args[0], vm->tp_type);
@@ -11910,11 +11980,6 @@ void init_builtins(VM* _vm) {
 
     _vm->bind_method<0>("list", "copy", PK_LAMBDA(VAR(_CAST(List, args[0]))));
 
-    _vm->bind__hash__(_vm->tp_list, [](VM* vm, PyObject* obj) {
-        vm->TypeError("unhashable type: 'list'");
-        return (i64)0;
-    });
-
     _vm->bind__add__(_vm->tp_list, [](VM* vm, PyObject* lhs, PyObject* rhs) {
         const List& self = _CAST(List&, lhs);
         const List& other = CAST(List&, rhs);
@@ -12153,9 +12218,13 @@ void init_builtins(VM* _vm) {
         return (i64)_CAST(MappingProxy&, obj).attr().size();
     });
 
-    _vm->bind__hash__(_vm->tp_mappingproxy, [](VM* vm, PyObject* obj) {
-        vm->TypeError("unhashable type: 'mappingproxy'");
-        return (i64)0;
+    _vm->bind__eq__(_vm->tp_mappingproxy, [](VM* vm, PyObject* obj, PyObject* other){
+        MappingProxy& a = _CAST(MappingProxy&, obj);
+        if(!is_non_tagged_type(other, vm->tp_mappingproxy)){
+            return vm->NotImplemented;
+        }
+        MappingProxy& b = _CAST(MappingProxy&, other);
+        return VAR(a.obj == b.obj);
     });
 
     _vm->bind__getitem__(_vm->tp_mappingproxy, [](VM* vm, PyObject* obj, PyObject* index) {
@@ -12212,11 +12281,6 @@ void init_builtins(VM* _vm) {
 
     _vm->bind__len__(_vm->tp_dict, [](VM* vm, PyObject* obj) {
         return (i64)_CAST(Dict&, obj).size();
-    });
-    
-    _vm->bind__hash__(_vm->tp_dict, [](VM* vm, PyObject* obj) {
-        vm->TypeError("unhashable type: 'dict'");
-        return (i64)0;
     });
 
     _vm->bind__getitem__(_vm->tp_dict, [](VM* vm, PyObject* obj, PyObject* index) {
@@ -12387,17 +12451,18 @@ void init_builtins(VM* _vm) {
             return VAR(Property(args[1], vm->None, ""));
         }else if(args.size() == 1+2){
             return VAR(Property(args[1], args[2], ""));
+        }else if(args.size() == 1+3){
+            return VAR(Property(args[1], args[2], CAST(Str, args[3])));
         }
-        vm->TypeError("property() takes at most 2 arguments");
+        vm->TypeError("property() takes at most 3 arguments");
         return vm->None;
     });
 
-    _vm->bind_property(_vm->_t(_vm->tp_property), "type_hint: str", [](VM* vm, ArgsView args){
+    _vm->bind_property(_vm->_t(_vm->tp_property), "__signature__", [](VM* vm, ArgsView args){
         Property& self = _CAST(Property&, args[0]);
-        return VAR(self.type_hint);
+        return VAR(self.signature);
     });
     
-
     _vm->bind_property(_vm->_t(_vm->tp_function), "__doc__", [](VM* vm, ArgsView args) {
         Function& func = _CAST(Function&, args[0]);
         return VAR(func.decl->docstring);
@@ -12417,7 +12482,7 @@ void init_builtins(VM* _vm) {
     _vm->bind_property(_vm->_t(_vm->tp_native_func), "__signature__", [](VM* vm, ArgsView args) {
         NativeFunc& func = _CAST(NativeFunc&, args[0]);
         if(func.decl != nullptr) return VAR(func.decl->signature);
-        return VAR("unknown(*args, **kwargs)");
+        return VAR("");
     });
 
     RangeIter::register_class(_vm, _vm->builtins);
