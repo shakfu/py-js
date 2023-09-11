@@ -805,6 +805,8 @@ The style used in this project is specified in the `.clang-format` file.
 
 - [Python Apple Support](https://github.com/beeware/Python-Apple-support): A meta-package for building a version of Python that can be embedded into a macOS, iOS, tvOS or watchOS project. (directly inspired static linking approach)
 
+- [python-cmake-buildsystem](https://github.com/python-cmake-buildsystem/python-cmake-buildsystem): A cmake buildsystem for compiling Python. Not currently used in this project, but may be used in the future.
+
 - [py2max](https://github.com/shakfu/py2max) : using python3 with Max in an offline capacity to generate max patches.
 
 - [maxutils](https://github.com/shakfu/maxutils) : scripts and utilities to help with codesigning and notarization of Max standalones and externals.

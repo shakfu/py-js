@@ -1,7 +1,7 @@
 # TODO
 
 
-- [ ] Create project-level userguide (in-process) in `pyjs/source/docs`
+- [ ] Create project-level userguide (in-progress in `pyjs/source/docs`)
 
 - [ ] Move `builder` to `py-js/source/scripts/builder`
 
