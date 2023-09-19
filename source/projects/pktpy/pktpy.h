@@ -55,6 +55,9 @@ public:
     // error handling methods
 
 
+    // text handling methods
+    Str remove_escape(char* text);
+
     // path handling methods
     // t_max_err syspath_append(char* path);
     t_max_err set_working_directory(char* path);
@@ -229,6 +232,26 @@ void PktpyInterpreter::print_atom(int argc, t_atom* argv)
 // ---------------------------------------------------------------------------
 // error handling methods
 
+
+// ---------------------------------------------------------------------------
+// string handling methods
+
+/**
+ * @brief      Remove backslash quotation from a c string
+ * 
+ * To use commas and spaces in Max messages it is sometimes necessary
+ * to escape with a '\' backslash. This method removes this escape but
+ * it is better to be explicit and just quote [eval "range(1, 10)"] instead.
+ *
+ * @param      text  c string
+ *
+ * @return     a Str struct
+ */
+Str PktpyInterpreter::remove_escape(char* text)
+{
+    Str ctext = Str(text).replace("\\", "");
+    return ctext;
+}
 
 // ---------------------------------------------------------------------------
 // path handling methods
@@ -794,6 +817,7 @@ t_max_err PktpyInterpreter::execfile_path(char* path)
  */
 PyObject* PktpyInterpreter::eval_text(char* text)
 {
+    // Str ctext = this->remove_escape(text); // works but not used
     this->disable_stderr = true;
     PyObject* result = this->exec(text, "<eval>", EVAL_MODE);
     this->disable_stderr = false;

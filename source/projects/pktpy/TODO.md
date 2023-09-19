@@ -2,7 +2,7 @@
 
 - [ ] add `dsp` module
 
-- [ ] add smarter removal of Max escape sequences.
+- [x] add smarter removal of Max escape sequences. (added method not yet enabled)
 
 - [ ] add additional support for container types (list, tuple, set, slice, range)
 
