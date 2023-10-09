@@ -199,14 +199,14 @@ Currently, the externals which are enabled by default in this project can be bui
 
 3. (Optional) since Visual Studio has its captive cmake, [you can use that](https://stackoverflow.com/questions/70178963/where-is-cmake-located-when-downloaded-from-visual-studio-2022), but it is preferable to [install cmake](https://cmake.org/download/#latest) independently.
 
-After istallation of the above you can build the externals inside your `Documents/Max 8/Packages` folder as follows:
+After installation of the above you can build the externals inside your `Documents/Max 8/Packages` folder as follows:
 
 ```powershell
 git clone https://github.com/shakfu/py-js
 cd py-js
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
