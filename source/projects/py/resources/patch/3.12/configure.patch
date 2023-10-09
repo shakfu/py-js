@@ -1,0 +1,60 @@
+10553a10554,10557
+> ac_fn_c_check_header_compile "$LINENO" "libintl.h" "ac_cv_header_libintl_h" "$ac_includes_default"
+> if test "x$ac_cv_header_libintl_h" = xyes
+> then :
+>   printf "%s\n" "#define HAVE_LIBINTL_H 1" >>confdefs.h
+10554a10559
+> fi
+13596a13602,13646
+> # check if we need libintl for locale functions
+> { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for textdomain in -lintl" >&5
+> printf %s "checking for textdomain in -lintl... " >&6; }
+> if test ${ac_cv_lib_intl_textdomain+y}
+> then :
+>   printf %s "(cached) " >&6
+> else $as_nop
+>   ac_check_lib_save_LIBS=$LIBS
+> LIBS="-lintl  $LIBS"
+> cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+> /* end confdefs.h.  */
+> 
+> /* Override any GCC internal prototype to avoid an error.
+>    Use char because int might match the return type of a GCC
+>    builtin and then its argument prototype would still apply.  */
+> char textdomain ();
+> int
+> main (void)
+> {
+> return textdomain ();
+>   ;
+>   return 0;
+> }
+> _ACEOF
+> if ac_fn_c_try_link "$LINENO"
+> then :
+>   ac_cv_lib_intl_textdomain=yes
+> else $as_nop
+>   ac_cv_lib_intl_textdomain=no
+> fi
+> rm -f core conftest.err conftest.$ac_objext conftest.beam \
+>     conftest$ac_exeext conftest.$ac_ext
+> LIBS=$ac_check_lib_save_LIBS
+> fi
+> { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_intl_textdomain" >&5
+> printf "%s\n" "$ac_cv_lib_intl_textdomain" >&6; }
+> if test "x$ac_cv_lib_intl_textdomain" = xyes
+> then :
+> 
+> printf "%s\n" "#define WITH_LIBINTL 1" >>confdefs.h
+> 
+>         LIBS="-lintl $LIBS"
+> fi
+> 
+> 
+17453a17504,17507
+> ac_fn_c_check_func "$LINENO" "bind_textdomain_codeset" "ac_cv_func_bind_textdomain_codeset"
+> if test "x$ac_cv_func_bind_textdomain_codeset" = xyes
+> then :
+>   printf "%s\n" "#define HAVE_BIND_TEXTDOMAIN_CODESET 1" >>confdefs.h
+17454a17509
+> fi

@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 3,
-			"revision" : 1,
+			"minor" : 5,
+			"revision" : 6,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -40,12 +40,38 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-31",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "bang", "bang" ],
+					"patching_rect" : [ 702.5, 384.0, 32.0, 22.0 ],
+					"text" : "t b b"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-11",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "bang" ],
+					"patching_rect" : [ 702.5, 352.0, 58.0, 22.0 ],
+					"text" : "loadbang"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-90",
 					"linecount" : 5,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 5.0, 44.0, 280.0, 74.0 ],
+					"patching_rect" : [ 5.0, 44.0, 283.0, 74.0 ],
 					"text" : "This page introduces the features of the pyjs jsextension.\n\nClick on the messages to the right and below the js object and on the pyjs_repl subbatcher."
 				}
 
@@ -615,11 +641,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-7",
+					"linecount" : 5,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 31.5, 387.0, 109.0, 22.0 ]
+					"patching_rect" : [ 31.5, 387.0, 109.0, 76.0 ],
+					"text" : "\"3.12.0 (main, Oct  9 2023, 18:00:28) [Clang 15.0.0 (clang-1500.0.40.1)]\""
 				}
 
 			}
@@ -653,6 +681,14 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-31", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-11", 0 ]
 				}
 
 			}
@@ -807,6 +843,22 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-35", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-31", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-37", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-31", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-32", 0 ]
@@ -919,8 +971,8 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "pyjs_repl.maxpat",
-				"bootpath" : "~/Downloads/projects/py-js/patchers",
-				"patcherrelativepath" : ".",
+				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
+				"patcherrelativepath" : "../patchers/bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}

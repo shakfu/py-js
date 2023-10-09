@@ -2,7 +2,7 @@
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
 
-Cross-platform: currently builds 'natively' on macOS `x86_64`and `arm64` and Windows (with MSVC).
+Cross-platform: currently builds 'natively' on macOS `x86_64` or `arm64` and Windows (with MSVC).
 
 repo - <https://github.com/shakfu/py-js>
 
@@ -10,7 +10,7 @@ repo - <https://github.com/shakfu/py-js>
 
 ## Preface
 
-This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for maxmsp. It then evolved into an umbrella project for exploring different ways of using python3 in max.
+This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for Max/MSP. It then evolved into an umbrella project for exploring different ways of using python3 in max.
 
 Along the way, a number of externals have been developed for use in a live Max environment:
 
@@ -51,7 +51,6 @@ name       | sdk        | lang   | description
 Note: zeromq externals are not enabled by default since they require zeromq libraries to be installed. To build them use the `-DBUILD_ZEROMQ_EXTERNALS` option with cmake.
 
 
-
 [py]: source/projects/py
 [pyjs]: source/projects/pyjs
 [mxpy]: source/projects/mxpy
@@ -67,11 +66,11 @@ Note: zeromq externals are not enabled by default since they require zeromq libr
 [zthread]: source/projects/mpy
 
 
-The common objective in these externals is to help you use and distribute your python code and libraries in your Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
+The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project has the following compatibility:
 
-- macOS: both and x86_64 and Apple Silicon compatible. Note that the project intentionally only produces 'native' (`x86_64` or `arm64`) externals with no plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
+- macOS: both x86_64 and Apple Silicon compatible. Note that the project intentionally only produces 'native' (`x86_64` or `arm64`) externals with no current plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
 - Windows: win32 support was recently provided, and currently all Python3 externals and also the `pktpy` projects build without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. This constraint will be hopefully addressed in future iterations. The `pktpy` external, however, is fully portable and self-contained. 
 
@@ -160,7 +159,7 @@ py max external
 
 ### `pyjs` external
 
-General purpose python3 jsextension, which means that it is a c-based Max external which can only be accessed via the javascript `js` interface.
+General purpose python3 jsextension, which means that it's a c-based Max external which can only be accessed via the javascript `js` interface.
 
 ```text
 pyjs max external (jsextension)

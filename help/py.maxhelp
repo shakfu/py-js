@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 5,
-			"revision" : 4,
+			"revision" : 6,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -51,7 +51,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 5,
-							"revision" : 4,
+							"revision" : 6,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -290,11 +290,13 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-24",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ]
+									"patching_rect" : [ 376.0, 359.0, 158.0, 49.0 ],
+									"text" : "\"3.12.0 (main, Oct  9 2023, 18:00:28) [Clang 15.0.0 (clang-1500.0.40.1)]\""
 								}
 
 							}
@@ -662,7 +664,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 5,
-							"revision" : 4,
+							"revision" : 6,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -698,6 +700,32 @@
 						"showontab" : 1,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"hidden" : 1,
+									"id" : "obj-103",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 2,
+									"outlettype" : [ "bang", "bang" ],
+									"patching_rect" : [ 758.0, 76.0, 32.0, 22.0 ],
+									"text" : "t b b"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"hidden" : 1,
+									"id" : "obj-101",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "bang" ],
+									"patching_rect" : [ 792.0, 76.0, 58.0, 22.0 ],
+									"text" : "loadbang"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-105",
 									"maxclass" : "message",
@@ -1527,13 +1555,16 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 22.0 ]
+									"presentation_linecount" : 11,
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 156.0 ],
+									"text" : "\"3.12.0 (main, Oct  9 2023, 18:00:28) [Clang 15.0.0 (clang-1500.0.40.1)]\""
 								}
 
 							}
@@ -2121,9 +2152,33 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-103", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-101", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-7", 0 ],
 									"hidden" : 1,
 									"source" : [ "obj-102", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-26", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-103", 1 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-59", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-103", 0 ]
 								}
 
 							}
@@ -2684,7 +2739,7 @@
 , 			{
 				"name" : "py_repl.maxpat",
 				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
-				"patcherrelativepath" : "./bpatchers_ui",
+				"patcherrelativepath" : "../patchers/bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}

@@ -1,0 +1,19 @@
+166,170c166,169
+< #_md5 md5module.c
+< #_sha1 sha1module.c
+< #_sha256 sha256module.c
+< #_sha512 sha512module.c
+< #_sha3 _sha3/sha3module.c
+---
+> #_md5 md5module.c -I$(srcdir)/Modules/_hacl/include _hacl/Hacl_Hash_MD5.c -D_BSD_SOURCE -D_DEFAULT_SOURCE
+> #_sha1 sha1module.c -I$(srcdir)/Modules/_hacl/include _hacl/Hacl_Hash_SHA1.c -D_BSD_SOURCE -D_DEFAULT_SOURCE
+> #_sha2 sha2module.c -I$(srcdir)/Modules/_hacl/include Modules/_hacl/libHacl_Hash_SHA2.a
+> #_sha3 sha3module.c -I$(srcdir)/Modules/_hacl/include _hacl/Hacl_Hash_SHA3.c -D_BSD_SOURCE -D_DEFAULT_SOURCE
+278c277
+< xxsubtype xxsubtype.c  # Required for the test suite to pass!
+---
+> #xxsubtype xxsubtype.c
+282a282
+> #_xxinterpchannels _xxinterpchannelsmodule.c
+293a294
+> #_testsinglephase _testsinglephase.c
