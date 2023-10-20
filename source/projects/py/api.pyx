@@ -385,6 +385,21 @@ cdef class Buffer:
         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
         return buffer
 
+    @staticmethod
+    cdef Buffer new(mx.t_object *x, str name, str sample_file):
+        """create a buffer from scratch given name and file to load"""
+        # create a buffer
+        cdef mx.t_atom a
+        mx.atom_setsym(&a, str_to_sym(name))
+        cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
+            mx.CLASS_BOX, mx.gensym("buffer~"), 1, &a)
+        mx.atom_setsym(&a, str_to_sym(sample_file))
+        mx.typedmess(b, mx.gensym("replace"), 1, &a)
+
+        # now retrieve buffer by name
+        return Buffer.from_name(x, name)
+
+
     def change_reference(self, str name):
         """Change a buffer reference to refer to a different buffer object by name."""
         mp.buffer_ref_set(self.ref, str_to_sym(name))
@@ -1379,10 +1394,9 @@ cdef class PyExternal:
         buf = Buffer.from_name(<mx.t_object*>self.obj, name)
         return buf
 
-    def test_buffer(self, str name):
-        buf = Buffer.from_name(<mx.t_object*>self.obj, name)
-        buf.view()
-        return buf.samplerate
+    def create_buffer(self, str name, str sample_file):
+        buf = Buffer.new(<mx.t_object*>self.obj, name, sample_file)
+        return buf
 
     # UNTESTED
     cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
@@ -1591,9 +1605,9 @@ def out_dict(**kwargs):
     ext.out(kwargs)
 
 
-def send(name='mrfloat', value=9.5):
+def send(name, *args):
     ext = PyExternal()
-    ext.send(name, [value])
+    ext.send(name, list(args))
 
 
 def lookup(name):
@@ -1607,6 +1621,24 @@ def post(str s):
 
 def error(str s):
     mx.error(s.encode('utf-8'))
+
+
+# buffer helpers
+
+def create_buffer(str name, str sample_file) -> Buffer:
+    ext = PyExternal()
+    buf = ext.create_buffer(name, sample_file)
+    return buf
+
+def get_buffer(str name) -> Buffer:
+    ext = PyExternal()
+    buf = ext.get_buffer(name)
+    return buf
+
+def view_buffer(str name):
+    ext = PyExternal()
+    buf = ext.get_buffer(name)
+    buf.view()
 
 # ----------------------------------------------------------------------------
 # test functions and variables
@@ -1635,11 +1667,8 @@ def test_dict():
     d['hello'] = 'world'
     return d.getentrycount()
 
-
-def test_buffer(str name):
-    ext = PyExternal()
-    return ext.test_buffer(name)
-
+def test_send(name='mrfloat', value=9.5):
+    send(name, value)
 
 cpdef public str hello():
     return greeting
@@ -1663,7 +1692,6 @@ def table_exists(str name):
     return ext.table_exists(name)
 
 
-
 # ----------------------------------------------------------------------------
 # Alternative external extension type (obj pointer retrieved via uintptr_t
 
@@ -1679,4 +1707,8 @@ cdef class PyMxObject:
 def test_ref():
     ext = PyMxObject()
     ext.bang()
+
+
+
+
 

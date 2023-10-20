@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 5,
-			"revision" : 4,
+			"revision" : 6,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -79,8 +79,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 229.0, 114.0, 22.0 ],
-					"text" : "api.test_buffer('buf')"
+					"patching_rect" : [ 213.0, 229.0, 118.0, 22.0 ],
+					"text" : "api.view_buffer('buf')"
 				}
 
 			}
@@ -211,8 +211,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 505.5, 238.0, 87.0, 22.0 ],
-					"text" : "eval api.send()"
+					"patching_rect" : [ 505.5, 238.0, 162.0, 22.0 ],
+					"text" : "eval api.send(\\\"mrfloat\\\"\\,9.5)"
 				}
 
 			}
@@ -608,8 +608,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 176.5, 556.0, 187.0, 22.0 ],
-					"text" : "44100."
+					"patching_rect" : [ 176.5, 556.0, 187.0, 22.0 ]
 				}
 
 			}
