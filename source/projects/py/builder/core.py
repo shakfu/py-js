@@ -1004,8 +1004,11 @@ class PythonSrcBuilder(PythonBuilder):
         """pre-build operations"""
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
-        if self.product.ver == "11" and int(self.product.ver_patch) < 4: # special case
+        # python 11.x requires a lot of special cases for patching configure
+        if self.product.ver == "11" and int(self.product.ver_patch) < 4:
             self.apply_patch(patch="configure_pre_11_4.patch", to_file="configure")
+        elif self.product.ver == "11" and int(self.product.ver_patch) in [4, 5]:
+            self.apply_patch(patch="configure_11_4to5.patch", to_file="configure")
         else:
             self.apply_patch(patch="configure.patch", to_file="configure")
         self.cmd.chdir(self.project.pydir)

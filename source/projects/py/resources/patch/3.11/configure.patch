@@ -1,18 +1,15 @@
-10017,10022d10016
-< ac_fn_c_check_header_compile "$LINENO" "libintl.h" "ac_cv_header_libintl_h" "$ac_includes_default"
-< if test "x$ac_cv_header_libintl_h" = xyes
-< then :
-<   printf "%s\n" "#define HAVE_LIBINTL_H 1" >>confdefs.h
+9194c9194
+<   ieeefp.h io.h langinfo.h libintl.h libutil.h linux/auxvec.h sys/auxv.h linux/limits.h linux/memfd.h \
+---
+>   ieeefp.h io.h langinfo.h libutil.h linux/auxvec.h sys/auxv.h linux/limits.h linux/memfd.h \
+11769,11807d11768
 < 
-< fi
-13003,13042d12996
 < # check if we need libintl for locale functions
-< { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for textdomain in -lintl" >&5
-< printf %s "checking for textdomain in -lintl... " >&6; }
-< if test ${ac_cv_lib_intl_textdomain+y}
-< then :
-<   printf %s "(cached) " >&6
-< else $as_nop
+< { $as_echo "$as_me:${as_lineno-$LINENO}: checking for textdomain in -lintl" >&5
+< $as_echo_n "checking for textdomain in -lintl... " >&6; }
+< if ${ac_cv_lib_intl_textdomain+:} false; then :
+<   $as_echo_n "(cached) " >&6
+< else
 <   ac_check_lib_save_LIBS=$LIBS
 < LIBS="-lintl  $LIBS"
 < cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -21,38 +18,36 @@
 < /* Override any GCC internal prototype to avoid an error.
 <    Use char because int might match the return type of a GCC
 <    builtin and then its argument prototype would still apply.  */
+< #ifdef __cplusplus
+< extern "C"
+< #endif
 < char textdomain ();
 < int
-< main (void)
+< main ()
 < {
 < return textdomain ();
 <   ;
 <   return 0;
 < }
 < _ACEOF
-< if ac_fn_c_try_link "$LINENO"
-< then :
+< if ac_fn_c_try_link "$LINENO"; then :
 <   ac_cv_lib_intl_textdomain=yes
-< else $as_nop
+< else
 <   ac_cv_lib_intl_textdomain=no
 < fi
-< rm -f core conftest.err conftest.$ac_objext conftest.beam \
+< rm -f core conftest.err conftest.$ac_objext \
 <     conftest$ac_exeext conftest.$ac_ext
 < LIBS=$ac_check_lib_save_LIBS
 < fi
-< { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_intl_textdomain" >&5
-< printf "%s\n" "$ac_cv_lib_intl_textdomain" >&6; }
-< if test "x$ac_cv_lib_intl_textdomain" = xyes
-< then :
-< 
-< printf "%s\n" "#define WITH_LIBINTL 1" >>confdefs.h
-13044,13045d12997
+< { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_intl_textdomain" >&5
+< $as_echo "$ac_cv_lib_intl_textdomain" >&6; }
+< if test "x$ac_cv_lib_intl_textdomain" = xyes; then :
+11809d11769
+< $as_echo "#define WITH_LIBINTL 1" >>confdefs.h
+11811,11812d11770
 <         LIBS="-lintl $LIBS"
 < fi
-16467,16472d16418
-< ac_fn_c_check_func "$LINENO" "bind_textdomain_codeset" "ac_cv_func_bind_textdomain_codeset"
-< if test "x$ac_cv_func_bind_textdomain_codeset" = xyes
-< then :
-<   printf "%s\n" "#define HAVE_BIND_TEXTDOMAIN_CODESET 1" >>confdefs.h
-< 
-< fi
+15200c15158
+<   accept4 alarm bind_textdomain_codeset chmod chown clock close_range confstr \
+---
+>   accept4 alarm chmod chown clock close_range confstr \
