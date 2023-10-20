@@ -1375,6 +1375,10 @@ cdef class PyExternal:
         else:
             self.log("found object")
 
+    def get_buffer(self, str name):
+        buf = Buffer.from_name(<mx.t_object*>self.obj, name)
+        return buf
+
     def test_buffer(self, str name):
         buf = Buffer.from_name(<mx.t_object*>self.obj, name)
         buf.view()

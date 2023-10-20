@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 118.0, 87.0, 846.0, 774.0 ],
+		"rect" : [ 231.0, 92.0, 846.0, 774.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -290,13 +290,11 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-24",
-									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 158.0, 49.0 ],
-									"text" : "\"3.12.0 (main, Oct  9 2023, 18:00:28) [Clang 15.0.0 (clang-1500.0.40.1)]\""
+									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -670,7 +668,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 118.0, 113.0, 846.0, 748.0 ],
+						"rect" : [ 231.0, 118.0, 846.0, 748.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -700,6 +698,30 @@
 						"showontab" : 1,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-108",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 211.5, 551.0, 106.0, 22.0 ],
+									"text" : "read drumLoop.aif"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-106",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 2,
+									"outlettype" : [ "float", "bang" ],
+									"patching_rect" : [ 211.5, 586.0, 77.0, 22.0 ],
+									"text" : "buffer~ drum"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"hidden" : 1,
 									"id" : "obj-103",
@@ -1562,9 +1584,9 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_linecount" : 11,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 156.0 ],
-									"text" : "\"3.12.0 (main, Oct  9 2023, 18:00:28) [Clang 15.0.0 (clang-1500.0.40.1)]\""
+									"presentation_linecount" : 12,
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
+									"text" : "\"3.11.6 (main, Oct  2 2023, 20:46:14) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
 								}
 
 							}
@@ -2192,6 +2214,13 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-106", 0 ],
+									"source" : [ "obj-108", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-7", 0 ],
 									"hidden" : 1,
 									"source" : [ "obj-11", 0 ]
@@ -2678,8 +2707,18 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-108", 0 ],
+									"hidden" : 1,
+									"order" : 0,
+									"source" : [ "obj-8", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-32", 0 ],
 									"hidden" : 1,
+									"order" : 1,
 									"source" : [ "obj-8", 0 ]
 								}
 
