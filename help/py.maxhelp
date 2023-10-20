@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 231.0, 92.0, 846.0, 774.0 ],
+		"rect" : [ 231.0, 92.0, 862.0, 765.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 846.0, 748.0 ],
+						"rect" : [ 0.0, 26.0, 862.0, 739.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -294,7 +294,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ]
+									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ],
+									"text" : "bob"
 								}
 
 							}
@@ -668,7 +669,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 231.0, 118.0, 846.0, 748.0 ],
+						"rect" : [ 231.0, 118.0, 862.0, 739.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -704,8 +705,25 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 211.5, 551.0, 106.0, 22.0 ],
-									"text" : "read drumLoop.aif"
+									"patching_rect" : [ 760.75, 378.0, 73.0, 22.0 ],
+									"presentation" : 1,
+									"presentation_rect" : [ 717.0, 357.0, 76.0, 22.0 ],
+									"text" : "test_buffer()"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-107",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 642.0, 378.0, 106.0, 22.0 ],
+									"presentation" : 1,
+									"presentation_linecount" : 3,
+									"presentation_rect" : [ 690.0, 346.0, 76.0, 49.0 ],
+									"text" : "load test_buffer.py"
 								}
 
 							}
@@ -716,8 +734,8 @@
 									"numinlets" : 1,
 									"numoutlets" : 2,
 									"outlettype" : [ "float", "bang" ],
-									"patching_rect" : [ 211.5, 586.0, 77.0, 22.0 ],
-									"text" : "buffer~ drum"
+									"patching_rect" : [ 688.0, 308.0, 150.0, 22.0 ],
+									"text" : "buffer~ drum drumLoop.aif"
 								}
 
 							}
@@ -729,7 +747,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 2,
 									"outlettype" : [ "bang", "bang" ],
-									"patching_rect" : [ 758.0, 76.0, 32.0, 22.0 ],
+									"patching_rect" : [ 778.0, 76.0, 32.0, 22.0 ],
 									"text" : "t b b"
 								}
 
@@ -742,7 +760,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
-									"patching_rect" : [ 792.0, 76.0, 58.0, 22.0 ],
+									"patching_rect" : [ 812.0, 76.0, 58.0, 22.0 ],
 									"text" : "loadbang"
 								}
 
@@ -754,7 +772,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 696.0, 108.0, 116.0, 22.0 ],
+									"patching_rect" : [ 716.0, 108.0, 116.0, 22.0 ],
 									"text" : "[x for x in range(10)]"
 								}
 
@@ -765,7 +783,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 728.25, 207.0, 98.0, 20.0 ],
+									"patching_rect" : [ 748.25, 207.0, 98.0, 20.0 ],
 									"text" : "escape commas"
 								}
 
@@ -777,7 +795,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 207.0, 103.0, 22.0 ],
+									"patching_rect" : [ 642.0, 207.0, 103.0, 22.0 ],
 									"text" : "list(range(10\\,20))"
 								}
 
@@ -789,7 +807,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 173.0, 199.0, 22.0 ],
+									"patching_rect" : [ 642.0, 173.0, 199.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 622.0, 207.0, 199.0, 22.0 ],
 									"text" : "list(range(5)) if 1 else list(range(12))"
@@ -851,7 +869,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 488.5, 414.0, 119.0, 20.0 ],
+									"patching_rect" : [ 508.5, 414.0, 119.0, 20.0 ],
 									"text" : "display external info"
 								}
 
@@ -863,7 +881,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 455.75, 414.0, 29.5, 22.0 ],
+									"patching_rect" : [ 475.75, 414.0, 29.5, 22.0 ],
 									"text" : "info"
 								}
 
@@ -875,7 +893,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 478.5, 439.5, 129.0, 47.0 ],
+									"patching_rect" : [ 498.5, 439.5, 129.0, 47.0 ],
 									"text" : "api is an embedded python module that wraps the max api"
 								}
 
@@ -886,7 +904,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 459.25, 377.0, 118.75, 20.0 ],
+									"patching_rect" : [ 479.25, 377.0, 118.75, 20.0 ],
 									"text" : "count = # py objects"
 								}
 
@@ -897,7 +915,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 622.0, 247.0, 146.0, 20.0 ],
+									"patching_rect" : [ 642.0, 247.0, 146.0, 20.0 ],
 									"text" : "= is shorthand for assign"
 								}
 
@@ -908,8 +926,8 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 696.0, 377.0, 135.0, 20.0 ],
-									"text" : "gives name of py object"
+									"patching_rect" : [ 760.75, 344.0, 93.0, 20.0 ],
+									"text" : "py object name"
 								}
 
 							}
@@ -920,7 +938,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 495.0, 340.5, 116.0, 33.0 ],
+									"patching_rect" : [ 515.0, 340.5, 116.0, 33.0 ],
 									"text" : "dbl-click on py after read or load msg"
 								}
 
@@ -1160,7 +1178,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 455.75, 207.0, 29.5, 22.0 ],
+									"patching_rect" : [ 475.75, 207.0, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 423.0, 209.0, 57.0, 22.0 ],
 									"text" : "x"
@@ -1174,7 +1192,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 751.0, 273.0, 67.0, 22.0 ],
+									"patching_rect" : [ 771.0, 273.0, 67.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 551.5, 311.0, 75.0, 22.0 ],
 									"text" : "= xs happy"
@@ -1188,7 +1206,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 273.0, 120.0, 22.0 ],
+									"patching_rect" : [ 642.0, 273.0, 120.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 551.5, 283.0, 128.0, 22.0 ],
 									"text" : "= xs 1 2.1 3 4.5 a b c"
@@ -1202,7 +1220,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 696.0, 76.0, 52.0, 22.0 ],
+									"patching_rect" : [ 716.0, 76.0, 52.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 652.0, 79.0, 47.0, 22.0 ],
 									"text" : "version"
@@ -1216,7 +1234,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 696.0, 44.0, 135.0, 22.0 ],
+									"patching_rect" : [ 716.0, 44.0, 135.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 652.0, 41.0, 135.0, 22.0 ],
 									"text" : "from sys import version"
@@ -1230,7 +1248,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 377.0, 65.0, 22.0 ],
+									"patching_rect" : [ 688.0, 344.0, 65.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 445.5, 407.0, 69.0, 22.0 ],
 									"text" : "__name__"
@@ -1244,7 +1262,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 696.0, 142.0, 35.0, 22.0 ],
+									"patching_rect" : [ 716.0, 142.0, 35.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 558.5, 178.0, 60.0, 22.0 ],
 									"text" : "x+10"
@@ -1258,7 +1276,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 173.0, 117.0, 22.0 ],
+									"patching_rect" : [ 432.0, 173.0, 117.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 178.0, 142.0, 22.0 ],
 									"text" : "dict(a=list(range(5)))"
@@ -1272,7 +1290,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 662.0, 45.0, 22.0 ],
+									"patching_rect" : [ 642.0, 662.0, 45.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 648.0, 705.0, 45.0, 22.0 ],
 									"text" : "pipe 's'"
@@ -1286,7 +1304,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 628.0, 72.0, 22.0 ],
+									"patching_rect" : [ 642.0, 628.0, 72.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 669.0, 72.0, 22.0 ],
 									"text" : "import math"
@@ -1300,7 +1318,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 628.0, 149.0, 22.0 ],
+									"patching_rect" : [ 429.0, 628.0, 149.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 669.0, 149.0, 22.0 ],
 									"text" : "pipe 90 math.sin math.cos"
@@ -1314,7 +1332,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 695.0, 101.0, 22.0 ],
+									"patching_rect" : [ 642.0, 695.0, 101.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 742.0, 101.0, 22.0 ],
 									"text" : "pipe 5 range sum"
@@ -1328,7 +1346,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 695.0, 143.0, 22.0 ],
+									"patching_rect" : [ 429.0, 695.0, 143.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 705.0, 143.0, 22.0 ],
 									"text" : "pipe x range reversed list"
@@ -1342,7 +1360,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 563.0, 695.0, 29.5, 22.0 ],
+									"patching_rect" : [ 583.0, 695.0, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 705.0, 57.0, 22.0 ],
 									"text" : "x=7"
@@ -1356,7 +1374,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 662.0, 146.0, 22.0 ],
+									"patching_rect" : [ 429.0, 662.0, 146.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 742.0, 146.0, 22.0 ],
 									"text" : "pipe 5 range reversed list"
@@ -1370,7 +1388,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 628.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 628.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 278.0, 669.0, 86.0, 20.0 ],
 									"text" : "test_pipe",
@@ -1429,7 +1447,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 527.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 527.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 278.0, 546.0, 86.0, 20.0 ],
 									"text" : "test_call",
@@ -1444,7 +1462,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 590.0, 111.0, 22.0 ],
+									"patching_rect" : [ 642.0, 590.0, 111.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 625.0, 107.0, 22.0 ],
 									"text" : "call api.random 10"
@@ -1458,7 +1476,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 560.0, 111.0, 22.0 ],
+									"patching_rect" : [ 642.0, 560.0, 111.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 587.0, 105.0, 22.0 ],
 									"text" : "call api.echo 1 2 3"
@@ -1472,7 +1490,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 527.0, 163.0, 22.0 ],
+									"patching_rect" : [ 642.0, 527.0, 163.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 546.0, 159.0, 22.0 ],
 									"text" : "call api.total 10.1 12.2 40 50"
@@ -1486,7 +1504,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 308.0, 34.0, 22.0 ],
+									"patching_rect" : [ 642.0, 308.0, 34.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 571.5, 344.0, 34.0, 22.0 ],
 									"text" : "scan"
@@ -1500,7 +1518,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 590.0, 90.0, 22.0 ],
+									"patching_rect" : [ 429.0, 590.0, 90.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 625.0, 115.0, 22.0 ],
 									"text" : "api.random(10)"
@@ -1514,7 +1532,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 527.0, 189.5, 22.0 ],
+									"patching_rect" : [ 429.0, 527.0, 189.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 546.0, 186.0, 22.0 ],
 									"text" : "eval \"api.total(10.1, 12.2, 40, 50)\""
@@ -1528,7 +1546,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 560.0, 189.5, 22.0 ],
+									"patching_rect" : [ 429.0, 560.0, 189.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 587.0, 129.0, 22.0 ],
 									"text" : "eval \"api.echo(1, 2, 3)\""
@@ -1577,23 +1595,21 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
-									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
 									"presentation" : 1,
-									"presentation_linecount" : 12,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
-									"text" : "\"3.11.6 (main, Oct  2 2023, 20:46:14) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 22.0 ],
+									"text" : "bob"
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"autoload" : 0,
-									"file" : "",
+									"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/scripts/test_buffer.py",
 									"id" : "obj-7",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -1606,7 +1622,7 @@
 									"saved_object_attributes" : 									{
 										"autoload" : 0,
 										"debug" : 1,
-										"file" : "",
+										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/scripts/test_buffer.py",
 										"pythonpath" : ""
 									}
 ,
@@ -1622,7 +1638,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 414.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 414.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 280.0, 437.0, 86.0, 20.0 ],
 									"text" : "test_misc",
@@ -1637,7 +1653,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 377.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 377.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 280.0, 407.0, 86.0, 20.0 ],
 									"text" : "test_meta",
@@ -1652,7 +1668,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 344.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 344.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 280.0, 375.0, 86.0, 20.0 ],
 									"text" : "test_load",
@@ -1667,7 +1683,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 308.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 308.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 282.25, 344.0, 86.0, 20.0 ],
 									"text" : "test_read",
@@ -1682,7 +1698,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 452.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 452.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 278.0, 468.0, 85.5, 20.0 ],
 									"text" : "test_api",
@@ -1697,7 +1713,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 275.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 275.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 278.0, 283.0, 86.0, 20.0 ],
 									"text" : "test_assign",
@@ -1712,7 +1728,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 13.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 13.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 277.0, 13.0, 86.0, 20.0 ],
 									"text" : "test_import",
@@ -1727,7 +1743,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 241.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 241.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 278.0, 250.0, 86.0, 20.0 ],
 									"text" : "test_execfile",
@@ -1742,7 +1758,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 207.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 207.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 278.0, 212.0, 86.0, 20.0 ],
 									"text" : "test_exec",
@@ -1757,7 +1773,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 307.0, 142.0, 86.0, 20.0 ],
+									"patching_rect" : [ 327.0, 142.0, 86.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 277.0, 79.0, 86.0, 20.0 ],
 									"text" : "test_eval",
@@ -1772,7 +1788,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 578.0, 273.0, 29.5, 22.0 ],
+									"patching_rect" : [ 598.0, 273.0, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 692.5, 283.0, 54.0, 22.0 ],
 									"text" : "xs"
@@ -1786,7 +1802,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 273.0, 148.0, 22.0 ],
+									"patching_rect" : [ 432.0, 273.0, 148.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 283.0, 156.0, 22.0 ],
 									"text" : "assign xs 1 2.1 3 4.5 a b c"
@@ -1800,7 +1816,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 414.0, 29.5, 22.0 ],
+									"patching_rect" : [ 642.0, 414.0, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 437.0, 29.5, 22.0 ],
 									"text" : "bye"
@@ -1814,7 +1830,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 452.0, 141.0, 22.0 ],
+									"patching_rect" : [ 642.0, 452.0, 141.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 468.0, 141.0, 22.0 ],
 									"text" : "sprintf eval api.post('%s')"
@@ -1828,7 +1844,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 344.0, 29.5, 22.0 ],
+									"patching_rect" : [ 642.0, 344.0, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 487.0, 375.0, 41.0, 22.0 ],
 									"text" : "b"
@@ -1842,7 +1858,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 308.0, 77.0, 22.0 ],
+									"patching_rect" : [ 432.0, 308.0, 77.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 391.25, 344.0, 77.0, 22.0 ],
 									"text" : "read hello.py"
@@ -1856,7 +1872,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 512.0, 308.0, 33.0, 22.0 ],
+									"patching_rect" : [ 532.0, 308.0, 33.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 489.25, 344.0, 33.0, 22.0 ],
 									"text" : "read"
@@ -1870,7 +1886,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 377.0, 38.0, 22.0 ],
+									"patching_rect" : [ 432.0, 377.0, 38.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 389.0, 407.0, 38.0, 22.0 ],
 									"text" : "count"
@@ -1884,7 +1900,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 344.0, 76.0, 22.0 ],
+									"patching_rect" : [ 432.0, 344.0, 76.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 389.0, 375.0, 76.0, 22.0 ],
 									"text" : "load hello.py"
@@ -1898,7 +1914,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 487.0, 88.0, 22.0 ],
+									"patching_rect" : [ 429.0, 487.0, 88.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 504.0, 114.0, 22.0 ],
 									"text" : "api.post('hello')"
@@ -1912,7 +1928,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 487.0, 61.0, 22.0 ],
+									"patching_rect" : [ 642.0, 487.0, 61.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 504.0, 87.0, 22.0 ],
 									"text" : "api.hello()"
@@ -1926,7 +1942,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 512.0, 487.0, 66.0, 22.0 ],
+									"patching_rect" : [ 532.0, 487.0, 66.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 474.0, 468.0, 66.0, 22.0 ],
 									"text" : "eval api.txt"
@@ -1940,7 +1956,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 409.0, 452.0, 61.0, 22.0 ],
+									"patching_rect" : [ 429.0, 452.0, 61.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 468.0, 61.0, 22.0 ],
 									"text" : "import api"
@@ -1954,7 +1970,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 241.0, 94.0, 22.0 ],
+									"patching_rect" : [ 432.0, 241.0, 94.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 249.0, 94.0, 22.0 ],
 									"text" : "execfile hello.py"
@@ -1968,7 +1984,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 207.0, 29.5, 22.0 ],
+									"patching_rect" : [ 432.0, 207.0, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 212.0, 57.0, 22.0 ],
 									"text" : "x=1"
@@ -1981,7 +1997,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 525.5, 108.0, 128.0, 20.0 ],
+									"patching_rect" : [ 545.5, 108.0, 128.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 505.5, 111.0, 128.0, 20.0 ],
 									"text" : "> 128 (dynamic alloc.)"
@@ -1994,7 +2010,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 525.5, 76.0, 113.0, 20.0 ],
+									"patching_rect" : [ 545.5, 76.0, 113.0, 20.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 505.5, 78.0, 113.0, 20.0 ],
 									"text" : "< 128 (static alloc.)"
@@ -2008,7 +2024,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 108.0, 90.0, 22.0 ],
+									"patching_rect" : [ 432.0, 108.0, 90.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 111.0, 115.0, 22.0 ],
 									"text" : "list(range(150))"
@@ -2023,7 +2039,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 412.0, 414.0, 24.0, 24.0 ],
+									"patching_rect" : [ 432.0, 414.0, 24.0, 24.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 389.0, 437.0, 24.0, 24.0 ]
 								}
@@ -2036,7 +2052,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 525.5, 44.0, 159.0, 22.0 ],
+									"patching_rect" : [ 545.5, 44.0, 159.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 485.0, 41.0, 160.0, 22.0 ],
 									"text" : "str(datetime.datetime.now())"
@@ -2050,7 +2066,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 44.0, 91.0, 22.0 ],
+									"patching_rect" : [ 432.0, 44.0, 91.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 41.0, 91.0, 22.0 ],
 									"text" : "import datetime"
@@ -2064,7 +2080,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 525.5, 13.0, 89.0, 22.0 ],
+									"patching_rect" : [ 545.5, 13.0, 89.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 476.0, 13.0, 114.0, 22.0 ],
 									"text" : "string.hexdigits"
@@ -2078,7 +2094,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 622.0, 142.0, 50.0, 22.0 ],
+									"patching_rect" : [ 642.0, 142.0, 50.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 558.5, 146.0, 76.0, 22.0 ],
 									"text" : "str(1+1)"
@@ -2092,7 +2108,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 76.0, 77.0, 22.0 ],
+									"patching_rect" : [ 432.0, 76.0, 77.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 78.0, 113.0, 22.0 ],
 									"text" : "list(range(2))"
@@ -2106,7 +2122,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 142.0, 49.0, 22.0 ],
+									"patching_rect" : [ 432.0, 142.0, 49.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 146.0, 74.0, 22.0 ],
 									"text" : "1.4+2.3"
@@ -2120,7 +2136,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 505.5, 142.0, 29.5, 22.0 ],
+									"patching_rect" : [ 525.5, 142.0, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 480.5, 146.0, 54.0, 22.0 ],
 									"text" : "1+1"
@@ -2134,7 +2150,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 627.5, 12.0, 166.0, 22.0 ],
+									"patching_rect" : [ 647.5, 12.0, 166.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 600.0, 12.0, 191.0, 22.0 ],
 									"text" : "list(reversed(string.hexdigits))"
@@ -2148,7 +2164,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 412.0, 13.0, 75.0, 22.0 ],
+									"patching_rect" : [ 432.0, 13.0, 75.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 13.0, 75.0, 22.0 ],
 									"text" : "import string"
@@ -2214,7 +2230,16 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-106", 0 ],
+									"destination" : [ "obj-7", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-107", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-7", 0 ],
+									"hidden" : 1,
 									"source" : [ "obj-108", 0 ]
 								}
 
@@ -2707,18 +2732,8 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-108", 0 ],
-									"hidden" : 1,
-									"order" : 0,
-									"source" : [ "obj-8", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
 									"destination" : [ "obj-32", 0 ],
 									"hidden" : 1,
-									"order" : 1,
 									"source" : [ "obj-8", 0 ]
 								}
 
