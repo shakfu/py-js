@@ -8,6 +8,7 @@
 
 ## Refactor
 
+- [ ] Move `api` module tests to `examples/scripts` or `examples/tests`
 
 ## Bugs
 
@@ -21,20 +22,7 @@
 
 ## api
 
-- [x] buffer improvements:
-
-  To create a buffer as per a [post](https://cycling74.com/forums/how-to-create-a-buffer-and-change-its-size) by Emanual Jourdan:
-
-  ```c
-  t_atom a;
-  atom_setsym(&a, gensym("toto"));
-  t_object *b = object_new_typed(CLASS_BOX, gensym("buffer~"), 1, &a);
-  atom_setsym(&a, gensym("anton.aif"));
-  typedmess(b, gensym("replace"), 1, &a);
-  ```
-
-  Implement the above in cython api.pyx (done)
-
+- [x] Added buffer creation, retrieval and sample setting / getting from python code with a test_buffer.maxpat test.
 
 ### Core
 

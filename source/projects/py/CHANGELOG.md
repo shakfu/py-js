@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Added addition capabilities and tests to Buffer extension in the `api` module. This includes additional capabilities for retrieval by name, creation, sample setting / getting from python code via numpy and a demonstrative test: `test_buffer.maxpat` and `examples/scripts/test_buffer.py`.
+
 - Added unstable proof-of-concept for building python via cmake. Next step will be to integrate this into the `builder` system. This capability is provided courtesy of the [python-cmake-buildsystem](https://github.com/python-cmake-buildsystem/python-cmake-buildsystem) project, but the python tests fails so this is a work-in-progress
 
 - Added `builder.factory.FactoryManager` to encapsulate dispatch functions.

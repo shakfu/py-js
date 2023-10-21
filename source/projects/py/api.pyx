@@ -102,6 +102,7 @@ Workarounds for max types which are not exposed in the c-api:
 # cimport cython
 # from cpython cimport PyFloat_AsDouble
 # from cpython cimport PyLong_AsLong
+from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
 from libc.stdint cimport uintptr_t
 # from libc.stdlib cimport malloc, free
@@ -165,7 +166,7 @@ cdef str sym_to_str(mx.t_symbol* symbol):
 # EXTENSION TYPES
 
 # ----------------------------------------------------------------------------
-# Atom
+# api.Atom
 
 cdef class Atom:
     """A wrapper class for a Max t_atom
@@ -299,7 +300,7 @@ cdef class Atom:
         return Atom.from_ptr(ptr, size, owner=True)
 
 # ----------------------------------------------------------------------------
-# Table
+# api.Table
 
 cdef class Table:
     """A wrapper class to acess a pre-existing Max table
@@ -335,7 +336,7 @@ cdef class Table:
         return xs
 
 # ----------------------------------------------------------------------------
-# Buffer
+# api.Buffer
 
 cdef class Buffer:
     """A wrapper class for a Max t_buffer_obj
@@ -345,23 +346,7 @@ cdef class Buffer:
     # cdef mx.t_object *tobj # t_object with ref to buffer
     cdef bint is_locked
     cdef float* samples
-
-    # def __cinit__(self, str name):
-    #     self.x = <mx.t_object*>mx.sysmem_newptr(sizeof(mx.t_object))
-    #     self.ref = mp.buffer_ref_new(self.x, str_to_sym(name))
-    #     assert(mp.buffer_ref_exists(self.ref))
-    #     self.obj = mp.buffer_ref_getobject(self.ref)
-    #     self.samples = NULL
-    #     self.is_locked = False
-
-    # def __dealloc__(self):
-    #     # De-allocate if not null
-    #     if self.ref is not NULL:
-    #         mx.object_free(self.ref)
-    #         self.ref = NULL
-    #     if self.x is not NULL:
-    #         mx.sysmem_freeptr(self.x)
-    #         self.x = NULL
+    cdef double[:] s_buffer # cython memoryview 
 
     def __cinit__(self):
         self.obj = NULL
@@ -399,6 +384,18 @@ cdef class Buffer:
         # now retrieve buffer by name
         return Buffer.from_name(x, name)
 
+    @staticmethod
+    cdef Buffer empty(mx.t_object *x, str name, int duration_ms):
+        """create a buffer from scratch given name and file to load"""
+        # create a buffer
+        cdef mx.t_atom argv[2];
+        mx.atom_setsym(argv + 0, str_to_sym(name))
+        mx.atom_setlong(argv + 1, duration_ms);
+        cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
+            mx.CLASS_BOX, mx.gensym("buffer~"), 2, argv)
+
+        # now retrieve buffer by name
+        return Buffer.from_name(x, name)
 
     def change_reference(self, str name):
         """Change a buffer reference to refer to a different buffer object by name."""
@@ -431,6 +428,21 @@ cdef class Buffer:
         return mp.buffer_getmillisamplerate(self.obj)
 
     @property
+    def n_samples(self):
+        """Get the number of samples in the buffer."""
+        return self.framecount
+
+    @property
+    def duration(self):
+        """Get the buffer's duration in seconds."""
+        return self.n_samples() / self.samplerate
+
+    @property
+    def duration_ms(self):
+        """Get the buffer's duration in milliseconds."""
+        return self.duration() * 1000
+
+    @property
     def filename(self):
         """Retrieve the name of the last file to be read by a buffer~."""
         return sym_to_str(mp.buffer_getfilename(self.obj))
@@ -453,8 +465,27 @@ cdef class Buffer:
         mp.buffer_unlocksamples(self.obj)
         self.is_locked = False
 
+    def get_samples(self) -> double[:]:
+        """get samples as a memoryview"""
+        self.s_buffer = cvarray(
+            shape=(self.n_samples,), itemsize=sizeof(double), format="d")
+        self.locksamples()
+        for i in range(self.n_samples):
+            self.s_buffer[i] = self.samples[i]
+        self.unlocksamples()
+        cdef double[:] res = self.s_buffer
+        return res
+
+    def set_samples(self, double[:] samples):
+        """set samples from a memoryview"""
+        assert samples.shape[0] <= self.n_samples
+        self.locksamples()
+        for i in range(samples.shape[0]):
+            self.samples[i] = samples[i]
+        self.unlocksamples()
+
 # ----------------------------------------------------------------------------
-# Dictionary
+# api.Dictionary
 
 cdef class Dictionary:
     """A wrapper class for a Max t_dictionary
@@ -853,7 +884,7 @@ cdef class Dictionary:
     #     """Given a complex key (one that includes potential heirarchy or array-member access), return the actual key and the dictionary in which the key should be referenced."""
 
 # ----------------------------------------------------------------------------
-# Database
+# api.Database
 
 cdef class Database:
     cdef mx.t_database *db
@@ -965,7 +996,7 @@ cdef class Database:
     # cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
 
 # ----------------------------------------------------------------------------
-# Linklist
+# api.Linklist
 
 cdef class Linklist:
     cdef mx.t_linklist* lst
@@ -1119,7 +1150,7 @@ cdef class Linklist:
     # cdef void linklist_sort(t_linklist *x, long cmpfn(void *, void *))
 
 # ----------------------------------------------------------------------------
-# Binbuf
+# api.Binbuf
 
 cdef class Binbuf:
     cdef void* buf
@@ -1164,7 +1195,7 @@ cdef class Binbuf:
         mx.readatom(outstr, text, n, e, ap)
 
 # ---------------------------------------------------------------------------
-# Hashtab
+# api.Hashtab
 
 cdef class Hashtab:
     cdef mx.t_hashtab* x
@@ -1262,7 +1293,7 @@ cdef class Hashtab:
     # cdef t_max_err hashtab_methodall(t_hashtab *x, t_symbol *s, ...)
 
 # ---------------------------------------------------------------------------
-# Atom Array
+# api.AtomArray
 
 cdef class AtomArray:
     cdef mx.t_atomarray *x
@@ -1332,7 +1363,7 @@ cdef class AtomArray:
         mx.atomarray_funall(self.x, fun, arg)
 
 # ----------------------------------------------------------------------------
-# PyExternal extension type
+# api.PyExternal extension type
 
 cdef class PyExternal:
     """
@@ -1396,6 +1427,10 @@ cdef class PyExternal:
 
     def create_buffer(self, str name, str sample_file):
         buf = Buffer.new(<mx.t_object*>self.obj, name, sample_file)
+        return buf
+
+    def create_empty_buffer(self, str name, int duration_ms):
+        buf = Buffer.empty(<mx.t_object*>self.obj, name, duration_ms)
         return buf
 
     # UNTESTED
@@ -1628,6 +1663,11 @@ def error(str s):
 def create_buffer(str name, str sample_file) -> Buffer:
     ext = PyExternal()
     buf = ext.create_buffer(name, sample_file)
+    return buf
+
+def create_empty_buffer(str name, int duration_ms) -> Buffer:
+    ext = PyExternal()
+    buf = ext.create_empty_buffer(name, duration_ms)
     return buf
 
 def get_buffer(str name) -> Buffer:
