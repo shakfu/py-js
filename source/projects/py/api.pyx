@@ -165,6 +165,7 @@ cdef str sym_to_str(mx.t_symbol* symbol):
 # ============================================================================
 # EXTENSION TYPES
 
+
 # ----------------------------------------------------------------------------
 # api.Atom
 
@@ -243,17 +244,20 @@ cdef class Atom:
             else:
                 print("other:", i)
 
-    # TODO: move to PyExternal
-    # def create_object(self, classname: str, namespace: str = "box"):
-    #     """Creates an object.
+    # TODO: move this out of the class
+    def create_object(self, classname: str, namespace: str = "box"):
+        """Creates an object from classname
 
-    #     :param      classname:  t_class class name
-    #     :type       classname:  str
-    #     :param      namespace:  The namespace i.e. CLASS_BOX | CLASS_NOBOX
-    #     :type       namespace:  str
-    #     """
-    #     mx.object_new_typed(str_to_sym(namespace),
-    #         str_to_sym(classname), self.size, self.ptr)
+        :param      classname:  t_class class name
+        :type       classname:  str
+        :param      namespace:  The namespace i.e. CLASS_BOX | CLASS_NOBOX
+        :type       namespace:  str
+        void *object_new_typed(t_symbol *name_space, t_symbol *classname, 
+            long ac, t_atom *av);
+        """
+        mx.object_new_typed(str_to_sym(namespace), str_to_sym(classname),
+            self.size, self.ptr)
+
 
     @staticmethod
     cdef Atom from_ptr(mx.t_atom *ptr, int size, bint owner=False):
@@ -272,7 +276,7 @@ cdef class Atom:
         return Atom.from_ptr(ptr, size, owner=True)
 
     @staticmethod
-    cdef Atom from_seq(object seq):
+    def from_seq(seq: object) -> Atom:
         cdef int size = len(seq)
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
@@ -298,6 +302,35 @@ cdef class Atom:
                 continue
 
         return Atom.from_ptr(ptr, size, owner=True)
+
+    # @staticmethod
+    # cdef Atom from_seq(object seq):
+    #     cdef int size = len(seq)
+    #     cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
+    #     if ptr is NULL:
+    #         raise MemoryError
+
+    #     cdef int i
+    #     for i, obj in enumerate(seq):
+
+    #         if isinstance(obj, float):
+    #             mx.atom_setfloat(ptr+i, <float>obj)
+
+    #         elif isinstance(obj, int):
+    #             mx.atom_setlong(ptr+i, <long>obj)
+
+    #         elif isinstance(obj, bytes):
+    #             mx.atom_setsym(ptr+i, mx.gensym(obj))
+
+    #         elif isinstance(obj, str):
+    #             mx.atom_setsym(ptr+i, str_to_sym(obj))
+
+    #         else:
+    #             print("cannot convert:", obj)
+    #             continue
+
+    #     return Atom.from_ptr(ptr, size, owner=True)
+
 
 # ----------------------------------------------------------------------------
 # api.Table
@@ -465,8 +498,9 @@ cdef class Buffer:
         mp.buffer_unlocksamples(self.obj)
         self.is_locked = False
 
-    def get_samples(self) -> double[:]:
+    def get_samples(self):
         """get samples as a memoryview"""
+        cdef int i;
         self.s_buffer = cvarray(
             shape=(self.n_samples,), itemsize=sizeof(double), format="d")
         self.locksamples()
@@ -1362,6 +1396,163 @@ cdef class AtomArray:
     cdef void funall(self, mx.method fun, void* arg):
         mx.atomarray_funall(self.x, fun, arg)
 
+
+# ----------------------------------------------------------------------------
+# api.Patcher
+
+cdef class Patcher:
+    """A wrapper class for a Max patcher
+    """
+    cdef mx.t_object *ptr
+
+    def __cinit__(self):
+        self.ptr = NULL
+
+    @staticmethod
+    cdef Patcher from_object(mx.t_object *x):
+        """Create a reference to a pstcher object from object."""
+        cdef Patcher patcher = Patcher.__new__(Patcher)
+        mx.object_obex_lookup(x, mx.gensym("#P"), &patcher.ptr)
+        if patcher.ptr is NULL:
+            raise MemoryError
+        return patcher
+
+    def get_sym_attr(self, name) -> str:
+        cdef mx.t_symbol *attr_sym = <mx.t_symbol *>mx.object_attr_getsym(
+            self.ptr, str_to_sym(name))
+        return sym_to_str(attr_sym)
+
+    def get_long_attr(self, name) -> int:
+        return mx.object_attr_getlong(self.ptr, str_to_sym(name))
+
+    def get_char_attr(self, name) -> bool:
+        return mx.object_attr_getchar(self.ptr, str_to_sym(name))
+
+    # array props
+
+    # FIXME
+    def get_arr_attr(self, str name) -> list:
+        """t_max_err object_attr_getvalueof(void *x, t_symbol *s, long *argc, t_atom **argv)"""
+        cdef mx.t_atom *argv = NULL
+        cdef long argc = 0
+
+        mx.object_attr_getvalueof(self.ptr, str_to_sym(name), &argc, &argv)   
+        atom = Atom.from_ptr(argv, argc)
+        result = atom.to_list()
+        mx.sysmem_freeptr(argv)
+        return result
+
+    # char/bool props
+
+    @property
+    def locked(self) -> bool:
+        return self.get_char_attr("locked")
+
+    @property
+    def bglocked(self) -> bool:
+        return self.get_char_attr("bglocked")
+
+    @property
+    def presentation(self) -> bool:
+        return self.get_char_attr("presentation")
+
+    @property
+    def openinpresentation(self) -> bool:
+        return self.get_char_attr("openinpresentation")
+
+    @property
+    def cansave(self) -> bool:
+        return self.get_char_attr("cansave")
+
+    @property
+    def dirty(self) -> bool:
+        return self.get_char_attr("dirty")
+
+    @property
+    def toolbarvisible(self) -> bool:
+        return self.get_char_attr("toolbarvisible")
+
+    # sym props
+
+    @property
+    def title(self) -> str:
+        return self.get_sym_attr("title")
+
+    @property
+    def fulltitle(self) -> str:
+        return self.get_sym_attr("fulltitle")
+
+    @property
+    def name(self) -> str:
+        return self.get_sym_attr("name")
+
+    @property
+    def filename(self) -> str:
+        return self.get_sym_attr("filename")
+
+    @property
+    def filepath(self) -> str:
+        return self.get_sym_attr("filepath")
+
+    # int/long props
+
+    @property
+    def count(self) -> int:
+        return self.get_long_attr("count")
+
+    @property
+    def fgcount(self) -> int:
+        return self.get_long_attr("fgcount")
+
+    @property
+    def bgcount(self) -> int:
+        return self.get_long_attr("bgcount")
+
+    @property
+    def fileversion(self) -> int:
+        return self.get_long_attr("fileversion")
+
+    @property
+    def numviews(self) -> int:
+        return self.get_long_attr("numviews")
+
+    @property
+    def numwindowviews(self) -> int:
+        return self.get_long_attr("numwindowviews")
+
+    @property
+    def default_fontface(self) -> int:
+        return self.get_long_attr("default_fontface")
+
+    @property
+    def toolbarheight(self) -> int:
+        return self.get_long_attr("toolbarheight")
+
+    # array props
+
+    # FIXME
+    @property
+    def rect(self) -> list:
+        return self.get_arr_attr("rect")
+
+
+    def add_box(self, maxclass, x, y) -> bool:
+        cdef mx.t_object *obj
+        _text = f"@maxclass {maxclass} @patching_position {x} {y}"
+        obj = <mx.t_object *>mx.newobject_sprintf(self.ptr, _text.encode('utf-8'));
+        if obj is not NULL:
+            return True
+        return False
+
+    def add_textbox(self, text, x, y, maxclass='newobj') -> bool:
+        cdef mx.t_object *obj
+        _text = fr'@maxclass {maxclass} @text "{text}" @patching_position {x} {y}'
+        obj = <mx.t_object *>mx.newobject_sprintf(self.ptr, _text.encode('utf-8'))
+        if obj is not NULL:
+            return True
+        return False
+
+
 # ----------------------------------------------------------------------------
 # api.PyExternal extension type
 
@@ -1420,6 +1611,11 @@ cdef class PyExternal:
             self.error("no object found with name")
         else:
             self.log("found object")
+
+    def get_patcher(self):
+        """get containing patcher"""
+        patcher = Patcher.from_object(<mx.t_object*>self.obj)
+        return patcher
 
     def get_buffer(self, str name):
         buf = Buffer.from_name(<mx.t_object*>self.obj, name)
@@ -1551,7 +1747,21 @@ cdef class PyExternal:
                 res.append(v)
         self.out_list(res)
 
-    cdef out(self, object arg):
+    # cdef out(self, object arg):
+    #     if isinstance(arg, float):
+    #         self.out_float(arg)
+    #     elif isinstance(arg, int):
+    #         self.out_int(arg)
+    #     elif isinstance(arg, str):
+    #         self.out_sym(arg)
+    #     elif isinstance(arg, list):
+    #         self.out_list(arg)
+    #     elif isinstance(arg, dict):
+    #         self.out_dict(<dict>arg)
+    #     else:
+    #         return
+
+    def out(self, arg: object) -> obj:
         if isinstance(arg, float):
             self.out_float(arg)
         elif isinstance(arg, int):
@@ -1658,6 +1868,21 @@ def error(str s):
     mx.error(s.encode('utf-8'))
 
 
+# object helpers
+
+def create_object(classname: str, *args, namespace: str = "box"):
+    """Creates an object from classname"""
+    cdef atom = Atom.from_seq(args)
+    return atom.create_object(classname, namespace)
+
+
+# table helpers
+
+def table_exists(str name):
+    ext = PyExternal()
+    return ext.table_exists(name)
+
+
 # buffer helpers
 
 def create_buffer(str name, str sample_file) -> Buffer:
@@ -1679,58 +1904,6 @@ def view_buffer(str name):
     ext = PyExternal()
     buf = ext.get_buffer(name)
     buf.view()
-
-# ----------------------------------------------------------------------------
-# test functions and variables
-
-
-txt = "Hello MAX!"
-
-greeting = 'Hello World'
-
-
-def test_atom():
-    ext = PyExternal()
-    a1 = Atom.from_seq([1, 2.5, b'hello', 'world'])
-    ext.out(a1.to_list())
-
-
-def test_atom_create():
-    atom = Atom.from_seq([440])
-    atom.create_object('cycle~')
-
-
-def test_dict():
-    d = Dictionary()
-    d['myfloat'] = 10.1
-    d['myint'] = 3
-    d['hello'] = 'world'
-    return d.getentrycount()
-
-def test_send(name='mrfloat', value=9.5):
-    send(name, value)
-
-cpdef public str hello():
-    return greeting
-
-
-def random(int n):
-    import random
-    return random.randint(0, n)
-
-
-def echo(*args):
-    return args
-
-
-def total(*args):
-    return sum(args)
-
-
-def table_exists(str name):
-    ext = PyExternal()
-    return ext.table_exists(name)
-
 
 # ----------------------------------------------------------------------------
 # Alternative external extension type (obj pointer retrieved via uintptr_t

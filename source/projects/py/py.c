@@ -178,7 +178,8 @@ void ext_main(void* module_ref)
 
     CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "patch-wide pythonpath");
     CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
-    CLASS_ATTR_STYLE(c,     "pythonpath", 0,  "file");
+    // disabled since it provides a dialogue only for file instead of dir
+    // CLASS_ATTR_STYLE(c,     "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,     "pythonpath", 0);
     CLASS_ATTR_SAVE(c,      "pythonpath", 0);
 

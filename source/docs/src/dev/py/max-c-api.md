@@ -175,6 +175,8 @@ t_max_err myobject_notify(t_myobject *x, t_symbol *s, t_symbol *msg, void *sende
 
 ### chapter 13: Scripting the Patcher
 
+see: [here](https://cycling74.com/sdk/max-sdk-8.2.0/chapter_scripting.html#chapter_scripting_objects)
+
 #### the patcher
 
 To obtain the name of the patcher and its file path (if any), obtain attribute values as shown below.
