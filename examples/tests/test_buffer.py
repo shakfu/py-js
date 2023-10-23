@@ -75,38 +75,3 @@ except ImportError:
     def test_buffer_set_samples():
         api.post("placeholder for none-numpy example")
         api.post("try against after 'pip install numpy scipy")
-
-# TODO:  fix below
-
-# def linspace(start, stop, num=50, endpoint=True):
-#     """pure python version of np.linspace
-#     from: https://gist.github.com/pmav99/d124872c879f3e9fa51e
-#     """
-#     num = int(num)
-#     start = start * 1.
-#     stop = stop * 1.
-
-#     if num == 1:
-#         yield stop
-#         return
-#     if endpoint:
-#         step = (stop - start) / (num - 1)
-#     else:
-#         step = (stop - start) / num
-
-#     for i in range(num):
-#         yield start + step * i
-
-
-# def test_buffer_set_samples():
-#     name = "drum1"
-#     duration_ms = 500
-#     buf = api.create_empty_buffer(name, duration_ms)
-#     api.post("buffer.set_sample example")
-#     api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
-#     api.post(f"framecount: {buf.framecount}")
-#     n_samples = buf.n_samples
-#     t = linspace(-10, 10, n_samples)
-#     xs = [math.sin(i) for i in t]
-#     buf.set_samples(xs)
-#     api.post(f"set {n_samples} samples to buffer {name}")
