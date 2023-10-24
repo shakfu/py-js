@@ -3,11 +3,20 @@
 
 ## [0.2.x]
 
-- Add `api.Patcher` object to facilitate patcher-scripting from python.
+- Added `api.Patcher` object to facilitate patcher-scripting from python.
 
-- Added a bunch of api and buffer tests `examples/tests` with a set of python tests which can be loaded.
+- Added additional capabilities and tests to Buffer extension in the `api` module. This includes retrieval by buffer name, buffer creation,  setting / getting samples from python code using either python's builtin array module or numpy, and a set of demonstrative set of tests:
 
-- Added additional capabilities and tests to Buffer extension in the `api` module. This includes additional capabilities for retrieval by name, creation, sample setting / getting from python code via numpy and a demonstrative test: `test_buffer.maxpat` and `examples/scripts/test_buffer.py`.
+  pure python tests:
+
+  - `examples/tests/test_buffer.maxpat`
+  - `examples/tests/test_buffer_np.maxpat`
+  - `examples/tests/test_buffer_array.maxpat`
+
+  patcher tests:
+
+  - `patchers/tests/test_buffer_np.maxpat`
+  - `patchers/tests/test_buffer_array.maxpat`
 
 - Added unstable proof-of-concept for building python via cmake. Next step will be to integrate this into the `builder` system. This capability is provided courtesy of the [python-cmake-buildsystem](https://github.com/python-cmake-buildsystem/python-cmake-buildsystem) project, but the python tests fails so this is a work-in-progress
 
