@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 289.0, 87.0, 876.0, 765.0 ],
+		"rect" : [ 289.0, 87.0, 877.0, 769.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 876.0, 739.0 ],
+						"rect" : [ 0.0, 26.0, 877.0, 743.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -294,8 +294,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ],
-									"text" : "6 5 4 3 2 1 0"
+									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -669,7 +668,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 289.0, 113.0, 876.0, 739.0 ],
+						"rect" : [ 289.0, 113.0, 877.0, 743.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -700,6 +699,33 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-119",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 429.0, 640.0, 194.0, 33.0 ],
+									"text" : "see test_buffer_np..maxpat for numpy get/set with buffer~"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontface" : 1,
+									"id" : "obj-118",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 333.0, 675.0, 83.0, 20.0 ],
+									"presentation" : 1,
+									"presentation_rect" : [ 329.0, 674.0, 85.5, 20.0 ],
+									"text" : "test_buffer",
+									"textjustification" : 2
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-117",
 									"maxclass" : "message",
 									"numinlets" : 2,
@@ -720,7 +746,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 754.75, 675.0, 105.0, 22.0 ],
+									"patching_rect" : [ 754.75, 645.5, 105.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 748.0, 454.0, 76.0, 35.0 ],
@@ -735,7 +761,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 532.0, 646.0, 91.0, 22.0 ],
+									"patching_rect" : [ 532.0, 614.5, 91.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 748.0, 409.0, 76.0, 35.0 ],
@@ -750,7 +776,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 645.75, 675.0, 84.0, 22.0 ],
+									"patching_rect" : [ 645.75, 645.5, 84.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 642.0, 448.0, 76.0, 35.0 ],
@@ -765,7 +791,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 645.75, 646.0, 99.0, 22.0 ],
+									"patching_rect" : [ 645.75, 614.5, 99.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 641.25, 418.0, 76.0, 35.0 ],
@@ -780,7 +806,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 764.5, 646.0, 92.0, 22.0 ],
+									"patching_rect" : [ 764.5, 614.5, 92.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 746.75, 379.0, 76.0, 35.0 ],
@@ -805,7 +831,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 429.0, 646.0, 93.0, 22.0 ],
+									"patching_rect" : [ 429.0, 614.5, 93.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 640.0, 380.0, 76.0, 35.0 ],
@@ -819,19 +845,20 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 196.0, 561.5, 53.0, 20.0 ],
-									"text" : "drum1"
+									"patching_rect" : [ 196.0, 561.5, 126.0, 20.0 ],
+									"text" : "drum1: will be created"
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"id" : "obj-114",
+									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 196.0, 482.0, 53.0, 20.0 ],
-									"text" : "drum"
+									"patching_rect" : [ 196.0, 473.0, 126.0, 33.0 ],
+									"text" : "drum: buffer already exists"
 								}
 
 							}
@@ -860,7 +887,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 764.5, 617.0, 96.0, 22.0 ],
+									"patching_rect" : [ 763.0, 708.0, 96.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 707.5, 482.0, 76.0, 35.0 ],
@@ -875,7 +902,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 645.75, 617.0, 113.0, 22.0 ],
+									"patching_rect" : [ 645.75, 708.0, 113.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 680.0, 416.0, 76.0, 35.0 ],
@@ -908,10 +935,11 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 550.0, 617.0, 73.0, 22.0 ],
+									"patching_rect" : [ 645.75, 675.0, 104.0, 22.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 717.0, 357.0, 76.0, 22.0 ],
-									"text" : "test_buffer()"
+									"presentation_linecount" : 2,
+									"presentation_rect" : [ 717.0, 357.0, 76.0, 35.0 ],
+									"text" : "test_view_buffer()"
 								}
 
 							}
@@ -932,7 +960,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 429.0, 617.0, 106.0, 22.0 ],
+									"patching_rect" : [ 429.0, 675.0, 106.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 3,
 									"presentation_rect" : [ 690.0, 346.0, 76.0, 49.0 ],
@@ -1798,22 +1826,23 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_linecount" : 2,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 35.0 ],
-									"text" : "6 5 4 3 2 1 0"
+									"presentation_linecount" : 12,
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
+									"text" : "\"3.11.6 (main, Oct  2 2023, 20:46:14) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"autoload" : 0,
-									"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/scripts/hello.py",
+									"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api.py",
 									"id" : "obj-7",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -1826,7 +1855,7 @@
 									"saved_object_attributes" : 									{
 										"autoload" : 0,
 										"debug" : 1,
-										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/scripts/hello.py",
+										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api.py",
 										"pythonpath" : ""
 									}
 ,

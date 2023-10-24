@@ -1,16 +1,35 @@
 # api.pyx
 """
-# api: max api wrapped by cython for use by `py` external
+# `api`: a cython module which wraps part of the Max/MSP c-api 
+         for use by the `py` external.
 
-The main place to create and re-use cython wrappers and utilities which
-access Max's c-api.
+The `api` module consists of:
+    - api.pyx: main cython (https://cython.org) wrapper
+    - api_max.pxd: exposes max api to api.pyx
+    - api_msp.pxd: provides msp api to api.pyx
+    _ api_py.pxd: provides `py` external api to to api.pyx
 
-Using this file requires some knowledge of cython (https://cython.org).
+Cython classes, functions, and constants defined here are optionally
+available for use by python code running in a `py` external instance.
 
-The wrappers here are available for use by python code running on the
-`py` external. First you have to send the `py` object an `import api`
-message and then call one of the functions or classes in this file
-making sure to prefix it with `api.`. For example:
+The api module is considered is builtin module.
+
+## Usage
+
+Either 
+
+1a. Send the `py` object an `import api` message or 
+
+2b. Import a module on the pythonpath which imports the `api` module or
+
+3b. [load <file.py]` which contains python code which imports the `api`
+module.
+
+Then
+
+2. Call one of the functions or classes in this file 
+   making sure to prefix it with `api.`
+
 
         1.
    ( import api )
@@ -19,17 +38,19 @@ making sure to prefix it with `api.`. For example:
       [ py ] ------ ( api.post('hello world') )
 
 
+## Development
+
 A lot of the painful laborious work of creating header mappings has been
-done (at least for the  max api) and can be reviewed (and corrected) in
-the `api_max.pxd` file.
+done and can be reviewed (and corrected) in
+the `api_max.pxd` and `api_msp.pxd` files.
 
 This provides the benefit that we can import the max api via its header
 declarations as follows:
 
     cimport api_max as mx
 
-Then you can start using the max api's symbols or functions by prefixing
-with `mx.` For example
+Then you can start using Max api symbols or functions in the cython code 
+by prefixing with `mx.` For example
 
     gensym()    -> mx.gensym()
     post()      -> mx.post()
@@ -71,6 +92,7 @@ So far the following extension types are planned or implemented (partial or othe
 - [x] String Object: wrapper for C-strings with an API for manipulating them
 - [ ] Symbol Object: wrapper for symbols
 - [x] Table
+- [x] Patcher
 
 - [x] PyExternal
 
@@ -93,20 +115,17 @@ Workarounds for max types which are not exposed in the c-api:
 - helper cdef functions (type-translation)
 - extension types
 - helper def functions
-- test functions
 """
 
 # ----------------------------------------------------------------------------
 # imports
 
-# cimport cython
-# from cpython cimport PyFloat_AsDouble
-# from cpython cimport PyLong_AsLong
 from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
 from libc.stdint cimport uintptr_t
 # from libc.stdlib cimport malloc, free
 # from libc.string cimport strcpy, strlen
+
 
 cimport api_max as mx  # api is a cython keyword!
 cimport api_msp as mp
@@ -149,7 +168,7 @@ cdef extern from "Python.h":
 cdef mx.t_symbol* str_to_sym(str string):
     """converts a python string to a t_symbol*
 
-    api.gensym(str s) -> t_symbol*
+    gensym(str s) -> t_symbol*
     """
     return mx.gensym(string.encode('utf-8'))
 
@@ -157,7 +176,7 @@ cdef mx.t_symbol* str_to_sym(str string):
 cdef str sym_to_str(mx.t_symbol* symbol):
     """converts a max symbol to a python string
 
-    api.sym_to_str(symbol) -> python str
+    sym_to_str(symbol) -> python str
     """
     return symbol.s_name.decode()
 
@@ -186,37 +205,48 @@ cdef class Atom:
             self.ptr = NULL
 
     def set_float(self, float f, int idx=0):
+        """Inserts a float into a t_atom and change its type to A_FLOAT."""
         mx.atom_setfloat(self.ptr + idx, f)
 
     def get_float(self, int idx=0) -> float:
+        """Retrieves a float value from a t_atom."""
         return <float>mx.atom_getfloat(self.ptr + idx)
 
     def set_long(self, long x, int idx=0):
+        """Inserts an integer into a t_atom and change its type to A_LONG."""
         mx.atom_setlong(self.ptr + idx, x)
 
     def get_long(self, int idx=0) -> long:
+        """Retrieves a long integer value from a t_atom."""
         return <long>mx.atom_getlong(self.ptr + idx)
 
     def get_int(self, int idx=0) -> int:
+        """Retrieves an integer value from a t_atom."""
         return <int>mx.atom_getlong(self.ptr + idx)
 
     def set_symbol(self, str symbol, int idx=0):
+        """Inserts a t_symbol∗ into a t_atom and change its type to A_SYM."""
         mx.atom_setsym(self.ptr + idx, str_to_sym(symbol))
 
     cdef mx.t_symbol *get_symbol(self, int idx=0):
+        """Retrieves a t_symbol ∗ value from a t_atom."""
         return mx.atom_getsym(self.ptr + idx)
 
     def get_string(self, int idx=0) -> str:
+        """Retrieves a string value from a symbol t_atom."""
         # return (self.get_symbol(idx).s_name).decode()
         return sym_to_str(self.get_symbol(idx))
 
     cdef bint is_symbol(self, int idx=0):
+        """check if index points to a symbol"""
         return (self.ptr + idx).a_type == mx.A_SYM
 
     cdef bint is_long(self, int idx=0):
+        """check if index points to a long"""
         return (self.ptr + idx).a_type == mx.A_LONG
 
     cdef bint is_float(self, int idx=0):
+        """check if index points to a float"""
         return (self.ptr + idx).a_type == mx.A_FLOAT
 
     def to_list(self) -> list:
@@ -230,8 +260,9 @@ cdef class Atom:
                 _res.append(self.get_float(i))
         return _res
 
-    # def to_np_array(self):
-    #     return np.array(self.to_list(), dtype=np.float64)
+    # if INCLUDE_NUMPY:
+    #     def to_np_array(self):
+    #         return np.array(self.to_list(), dtype=np.float64)
 
     def display(self):
         for i in range(self.size):
@@ -245,18 +276,18 @@ cdef class Atom:
                 print("other:", i)
 
     # TODO: move this out of the class
-    def create_object(self, classname: str, namespace: str = "box"):
-        """Creates an object from classname
+    # def create_object(self, classname: str, namespace: str = "box"):
+    #     """Creates an object from classname
 
-        :param      classname:  t_class class name
-        :type       classname:  str
-        :param      namespace:  The namespace i.e. CLASS_BOX | CLASS_NOBOX
-        :type       namespace:  str
-        void *object_new_typed(t_symbol *name_space, t_symbol *classname, 
-            long ac, t_atom *av);
-        """
-        mx.object_new_typed(str_to_sym(namespace), str_to_sym(classname),
-            self.size, self.ptr)
+    #     :param      classname:  t_class class name
+    #     :type       classname:  str
+    #     :param      namespace:  The namespace i.e. CLASS_BOX | CLASS_NOBOX
+    #     :type       namespace:  str
+    #     void *object_new_typed(t_symbol *name_space, t_symbol *classname, 
+    #         long ac, t_atom *av);
+    #     """
+    #     mx.object_new_typed(str_to_sym(namespace), str_to_sym(classname),
+    #         self.size, self.ptr)
 
 
     @staticmethod
@@ -303,35 +334,6 @@ cdef class Atom:
 
         return Atom.from_ptr(ptr, size, owner=True)
 
-    # @staticmethod
-    # cdef Atom from_seq(object seq):
-    #     cdef int size = len(seq)
-    #     cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
-    #     if ptr is NULL:
-    #         raise MemoryError
-
-    #     cdef int i
-    #     for i, obj in enumerate(seq):
-
-    #         if isinstance(obj, float):
-    #             mx.atom_setfloat(ptr+i, <float>obj)
-
-    #         elif isinstance(obj, int):
-    #             mx.atom_setlong(ptr+i, <long>obj)
-
-    #         elif isinstance(obj, bytes):
-    #             mx.atom_setsym(ptr+i, mx.gensym(obj))
-
-    #         elif isinstance(obj, str):
-    #             mx.atom_setsym(ptr+i, str_to_sym(obj))
-
-    #         else:
-    #             print("cannot convert:", obj)
-    #             continue
-
-    #     return Atom.from_ptr(ptr, size, owner=True)
-
-
 # ----------------------------------------------------------------------------
 # api.Table
 
@@ -376,7 +378,6 @@ cdef class Buffer:
     """
     cdef mp.t_buffer_obj *obj
     cdef mp.t_buffer_ref *ref
-    # cdef mx.t_object *tobj # t_object with ref to buffer
     cdef bint is_locked
     cdef float* samples
     cdef double[:] s_buffer # cython memoryview 
@@ -1564,7 +1565,6 @@ cdef class PyExternal:
     """
     cdef px.t_py *obj
     cdef bytes name
-    # cdef mp.t_buffer_ref *ref
 
     def __cinit__(self):
         """Retrieves the py object name and reference.
@@ -1580,9 +1580,6 @@ cdef class PyExternal:
         self.name = PY_OBJ_NAME.encode('utf-8')
         self.obj = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(self.name))
-
-    # def get_buffer_ref(self, str s):
-    #     self.ref = mp.buffer_ref_new(<mx.t_object *>self.obj, mx.gensym(s.encode('utf-8')))
 
     cpdef bang(self):
         px.py_bang(self.obj)
@@ -1747,20 +1744,6 @@ cdef class PyExternal:
                 res.append(v)
         self.out_list(res)
 
-    # cdef out(self, object arg):
-    #     if isinstance(arg, float):
-    #         self.out_float(arg)
-    #     elif isinstance(arg, int):
-    #         self.out_int(arg)
-    #     elif isinstance(arg, str):
-    #         self.out_sym(arg)
-    #     elif isinstance(arg, list):
-    #         self.out_list(arg)
-    #     elif isinstance(arg, dict):
-    #         self.out_dict(<dict>arg)
-    #     else:
-    #         return
-
     def out(self, arg: object) -> obj:
         if isinstance(arg, float):
             self.out_float(arg)
@@ -1801,47 +1784,38 @@ if INCLUDE_NUMPY:
 # ----------------------------------------------------------------------------
 # helper functions
 
-
 def get_globals():
     return list(globals().keys())
-
 
 def bang():
     ext = PyExternal()
     ext.bang()
 
-
 def success_bang():
     ext = PyExternal()
     ext.success_bang()
-
 
 def failure_bang():
     ext = PyExternal()
     ext.failure_bang()
 
-
 def out_sym(s='hello outlet!'):
     ext = PyExternal()
     ext.out(s)
-
 
 def out_int(n=100):
     ext = PyExternal()
     ext.out(n)
 
-
 def out_float(n=12.75):
     ext = PyExternal()
     ext.out(n)
-
 
 def out_list(xs=None):
     if not xs:
         xs = [1, 'a', 'c', 4, 5]
     ext = PyExternal()
     ext.out(xs)
-
 
 def out_dict(**kwargs):
     if not kwargs:
@@ -1920,8 +1894,3 @@ cdef class PyMxObject:
 def test_ref():
     ext = PyMxObject()
     ext.bang()
-
-
-
-
-

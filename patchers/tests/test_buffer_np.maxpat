@@ -327,8 +327,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 83.0, 45.0, 106.0, 22.0 ],
-					"text" : "load test_buffer.py"
+					"patching_rect" : [ 83.0, 45.0, 127.0, 22.0 ],
+					"text" : "load test_buffer_np.py"
 				}
 
 			}
@@ -346,7 +346,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/scripts/test_buffer.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -356,7 +356,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 0,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/scripts/test_buffer.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer.py",
 						"pythonpath" : ""
 					}
 ,
