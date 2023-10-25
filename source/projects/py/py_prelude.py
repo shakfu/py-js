@@ -221,9 +221,10 @@ def fold(s: str):
 # ---------------------------------------------------------
 # misc funcs
 
-def edit(path: str):
+def edit(path: str, editor=None):
     """open the file in the editor"""
-    editor = os.getenv("EDITOR", EDITOR)
+    if not editor:
+        editor = os.getenv("EDITOR", EDITOR)
     path = os.path.expanduser(path)
     shell(f"open -a '{editor}' '{path}'")
 

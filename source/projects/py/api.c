@@ -3804,6 +3804,7 @@ static const char __pyx_k_name[] = "name";
 static const char __pyx_k_ndim[] = "ndim";
 static const char __pyx_k_open[] = "open";
 static const char __pyx_k_pack[] = "pack";
+static const char __pyx_k_path[] = "path";
 static const char __pyx_k_post[] = "post";
 static const char __pyx_k_rect[] = "rect";
 static const char __pyx_k_self[] = "self";
@@ -3887,7 +3888,6 @@ static const char __pyx_k_bglocked[] = "bglocked";
 static const char __pyx_k_builtins[] = "__builtins__";
 static const char __pyx_k_duration[] = "duration";
 static const char __pyx_k_filename[] = "filename";
-static const char __pyx_k_filepath[] = "filepath";
 static const char __pyx_k_from_seq[] = "from_seq";
 static const char __pyx_k_get_long[] = "get_long";
 static const char __pyx_k_getstate[] = "__getstate__";
@@ -4585,7 +4585,6 @@ typedef struct {
   PyObject *__pyx_n_s_failure_bang;
   PyObject *__pyx_n_u_fgcount;
   PyObject *__pyx_n_u_filename;
-  PyObject *__pyx_n_u_filepath;
   PyObject *__pyx_n_u_fileversion;
   PyObject *__pyx_n_s_flags;
   PyObject *__pyx_n_s_float;
@@ -4675,6 +4674,7 @@ typedef struct {
   PyObject *__pyx_n_s_patcher;
   PyObject *__pyx_kp_u_patching_position;
   PyObject *__pyx_kp_u_patching_position_2;
+  PyObject *__pyx_n_u_path;
   PyObject *__pyx_n_s_pickle;
   PyObject *__pyx_n_s_populate;
   PyObject *__pyx_n_s_post;
@@ -5198,7 +5198,6 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_failure_bang);
   Py_CLEAR(clear_module_state->__pyx_n_u_fgcount);
   Py_CLEAR(clear_module_state->__pyx_n_u_filename);
-  Py_CLEAR(clear_module_state->__pyx_n_u_filepath);
   Py_CLEAR(clear_module_state->__pyx_n_u_fileversion);
   Py_CLEAR(clear_module_state->__pyx_n_s_flags);
   Py_CLEAR(clear_module_state->__pyx_n_s_float);
@@ -5288,6 +5287,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_patcher);
   Py_CLEAR(clear_module_state->__pyx_kp_u_patching_position);
   Py_CLEAR(clear_module_state->__pyx_kp_u_patching_position_2);
+  Py_CLEAR(clear_module_state->__pyx_n_u_path);
   Py_CLEAR(clear_module_state->__pyx_n_s_pickle);
   Py_CLEAR(clear_module_state->__pyx_n_s_populate);
   Py_CLEAR(clear_module_state->__pyx_n_s_post);
@@ -5789,7 +5789,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_failure_bang);
   Py_VISIT(traverse_module_state->__pyx_n_u_fgcount);
   Py_VISIT(traverse_module_state->__pyx_n_u_filename);
-  Py_VISIT(traverse_module_state->__pyx_n_u_filepath);
   Py_VISIT(traverse_module_state->__pyx_n_u_fileversion);
   Py_VISIT(traverse_module_state->__pyx_n_s_flags);
   Py_VISIT(traverse_module_state->__pyx_n_s_float);
@@ -5879,6 +5878,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_patcher);
   Py_VISIT(traverse_module_state->__pyx_kp_u_patching_position);
   Py_VISIT(traverse_module_state->__pyx_kp_u_patching_position_2);
+  Py_VISIT(traverse_module_state->__pyx_n_u_path);
   Py_VISIT(traverse_module_state->__pyx_n_s_pickle);
   Py_VISIT(traverse_module_state->__pyx_n_s_populate);
   Py_VISIT(traverse_module_state->__pyx_n_s_post);
@@ -6414,7 +6414,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_failure_bang __pyx_mstate_global->__pyx_n_s_failure_bang
 #define __pyx_n_u_fgcount __pyx_mstate_global->__pyx_n_u_fgcount
 #define __pyx_n_u_filename __pyx_mstate_global->__pyx_n_u_filename
-#define __pyx_n_u_filepath __pyx_mstate_global->__pyx_n_u_filepath
 #define __pyx_n_u_fileversion __pyx_mstate_global->__pyx_n_u_fileversion
 #define __pyx_n_s_flags __pyx_mstate_global->__pyx_n_s_flags
 #define __pyx_n_s_float __pyx_mstate_global->__pyx_n_s_float
@@ -6504,6 +6503,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_patcher __pyx_mstate_global->__pyx_n_s_patcher
 #define __pyx_kp_u_patching_position __pyx_mstate_global->__pyx_kp_u_patching_position
 #define __pyx_kp_u_patching_position_2 __pyx_mstate_global->__pyx_kp_u_patching_position_2
+#define __pyx_n_u_path __pyx_mstate_global->__pyx_n_u_path
 #define __pyx_n_s_pickle __pyx_mstate_global->__pyx_n_s_pickle
 #define __pyx_n_s_populate __pyx_mstate_global->__pyx_n_s_populate
 #define __pyx_n_s_post __pyx_mstate_global->__pyx_n_s_post
@@ -38641,7 +38641,7 @@ static PyObject *__pyx_pf_3api_7Patcher_8filename___get__(struct __pyx_obj_3api_
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def filepath(self) -> str:
- *         return self.get_sym_attr("filepath")
+ *         return self.get_sym_attr("path")
  */
 
 /* Python wrapper */
@@ -38674,7 +38674,7 @@ static PyObject *__pyx_pf_3api_7Patcher_8filepath___get__(struct __pyx_obj_3api_
   /* "api.pyx":1496
  *     @property
  *     def filepath(self) -> str:
- *         return self.get_sym_attr("filepath")             # <<<<<<<<<<<<<<
+ *         return self.get_sym_attr("path")             # <<<<<<<<<<<<<<
  * 
  *     # int/long props
  */
@@ -38696,7 +38696,7 @@ static PyObject *__pyx_pf_3api_7Patcher_8filepath___get__(struct __pyx_obj_3api_
   }
   #endif
   {
-    PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_n_u_filepath};
+    PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_n_u_path};
     __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_4, 1+__pyx_t_4);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1496, __pyx_L1_error)
@@ -38712,7 +38712,7 @@ static PyObject *__pyx_pf_3api_7Patcher_8filepath___get__(struct __pyx_obj_3api_
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def filepath(self) -> str:
- *         return self.get_sym_attr("filepath")
+ *         return self.get_sym_attr("path")
  */
 
   /* function exit code */
@@ -51143,7 +51143,6 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_failure_bang, __pyx_k_failure_bang, sizeof(__pyx_k_failure_bang), 0, 0, 1, 1},
     {&__pyx_n_u_fgcount, __pyx_k_fgcount, sizeof(__pyx_k_fgcount), 0, 1, 0, 1},
     {&__pyx_n_u_filename, __pyx_k_filename, sizeof(__pyx_k_filename), 0, 1, 0, 1},
-    {&__pyx_n_u_filepath, __pyx_k_filepath, sizeof(__pyx_k_filepath), 0, 1, 0, 1},
     {&__pyx_n_u_fileversion, __pyx_k_fileversion, sizeof(__pyx_k_fileversion), 0, 1, 0, 1},
     {&__pyx_n_s_flags, __pyx_k_flags, sizeof(__pyx_k_flags), 0, 0, 1, 1},
     {&__pyx_n_s_float, __pyx_k_float, sizeof(__pyx_k_float), 0, 0, 1, 1},
@@ -51233,6 +51232,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_patcher, __pyx_k_patcher, sizeof(__pyx_k_patcher), 0, 0, 1, 1},
     {&__pyx_kp_u_patching_position, __pyx_k_patching_position, sizeof(__pyx_k_patching_position), 0, 1, 0, 0},
     {&__pyx_kp_u_patching_position_2, __pyx_k_patching_position_2, sizeof(__pyx_k_patching_position_2), 0, 1, 0, 0},
+    {&__pyx_n_u_path, __pyx_k_path, sizeof(__pyx_k_path), 0, 1, 0, 1},
     {&__pyx_n_s_pickle, __pyx_k_pickle, sizeof(__pyx_k_pickle), 0, 0, 1, 1},
     {&__pyx_n_s_populate, __pyx_k_populate, sizeof(__pyx_k_populate), 0, 0, 1, 1},
     {&__pyx_n_s_post, __pyx_k_post, sizeof(__pyx_k_post), 0, 0, 1, 1},
