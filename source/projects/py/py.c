@@ -1505,7 +1505,7 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 /**
- * @brief Execute a max symbol as a line of python code
+ * @brief Execute a max symbol as one to many lines of python code
  *
  * @param x pointer to object structure
  * @param s symbol
@@ -1526,7 +1526,7 @@ t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+    pval = PyRun_String(py_argv, Py_file_input, x->p_globals, x->p_globals);
     if (pval == NULL) {
         goto error;
     }

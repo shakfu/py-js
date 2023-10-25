@@ -4,13 +4,13 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 5,
-			"revision" : 3,
+			"revision" : 6,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 320.0, 286.0, 640.0, 480.0 ],
+		"rect" : [ 570.0, 104.0, 640.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,40 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-11",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 367.0, 223.0, 217.0, 20.0 ],
+					"presentation_linecount" : 3,
+					"text" : "triggers on editor save / code reload"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-9",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 116.0, 141.0, 130.0, 20.0 ],
+					"text" : "open python file to edit"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-6",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 367.0, 141.0, 104.0, 20.0 ],
+					"text" : "filewatcher on/off"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-10",
 					"maxclass" : "button",
@@ -143,7 +177,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/VOLE/Users/sa/Downloads/test.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/demos/hello.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -153,7 +187,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 0,
-						"file" : "/Volumes/VOLE/Users/sa/Downloads/test.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/demos/hello.py",
 						"pythonpath" : ""
 					}
 ,
@@ -219,8 +253,8 @@
 			}
 , 			{
 				"name" : "py_external_editor.maxpat",
-				"bootpath" : "~/Downloads/projects/py-js/patchers",
-				"patcherrelativepath" : ".",
+				"bootpath" : "~/Downloads/projects/py-js/patchers/abstractions",
+				"patcherrelativepath" : "../abstractions",
 				"type" : "JSON",
 				"implicit" : 1
 			}
