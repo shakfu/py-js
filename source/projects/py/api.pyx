@@ -376,6 +376,7 @@ cdef class Table:
 cdef class Buffer:
     """A wrapper class for a Max t_buffer_obj
     """
+    cdef str name
     cdef mp.t_buffer_obj *obj
     cdef mp.t_buffer_ref *ref
     cdef bint is_locked
@@ -383,6 +384,7 @@ cdef class Buffer:
     cdef double[:] s_buffer # cython memoryview 
 
     def __cinit__(self):
+        self.name = None
         self.obj = NULL
         self.ref = NULL
         self.samples = NULL
@@ -401,6 +403,7 @@ cdef class Buffer:
         cdef Buffer buffer = Buffer.__new__(Buffer)
         buffer.ref = mp.buffer_ref_new(x, str_to_sym(name))
         assert(mp.buffer_ref_exists(buffer.ref))
+        buffer.name = name
         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
         return buffer
 
@@ -431,6 +434,141 @@ cdef class Buffer:
         # now retrieve buffer by name
         return Buffer.from_name(x, name)
 
+    # def resize(self, int frames, int channels=0, double new_sample_rate=0.0):
+    #     cdef mx.t_atom args[2]
+    #     cdef mx.t_atom sr
+
+    #     if not new_sample_rate:
+    #         new_sample_rate = self.samplerate
+
+    #     if not channels:
+    #         channels = self.channelcount
+
+    #     if frames == self.n_samples and channels == self.channelcount:
+    #         return
+
+    #     if (self.obj):
+    #         if mx.systhread_ismainthread():
+    #             self.unlocksamples()
+    #             mx.atom_setlong(&args[0], <mx.t_atom_long>frames)
+    #             mx.atom_setlong(&args[1], <mx.t_atom_long>channels)
+    #             mx.object_method_typed(<mx.t_object*>self.obj, mx.gensym("sizeinsamps"), 2, args, NULL)
+
+    #             mx.atom_setfloat(&sr, new_sample_rate)
+    #             mx.object_method_typed(<mx.t_object*>self.obj, mx.gensym("sr"), 1, &sr, NULL)
+    #             self.setdirty()
+    #             self.locksamples()
+
+    #             if frames != self.framecount or channels != self.channelcount:
+    #                 error(f"Could not resize {self.name} "
+    #                       f"frames: {frames} != {self.framecount} "
+    #                       f"channels: {channels} != {self.channelcount} ")
+
+    #             assert(frames == self.framecount and channels == self.channelcount)
+
+    #             return
+
+    #         else:
+    #             if channels > self.channelcount:
+    #                 return error(f"Can't resize buffers outside main thread, not enough channels in {self.name}")
+
+    #             if frames > self.framecount:
+    #                 return error(f"Can't resize buffers outside main thread, not enough frames in{self.name}")
+
+    #             if self.samplerate == new_sample_rate:
+    #                 mx.atom_setfloat(&sr, new_sample_rate)
+    #                 mx.object_method_typed(<mx.t_object*>self.obj, mx.gensym("sr"), 1, &sr, NULL)
+    #                 mx.object_method(<mx.t_object*>self.obj, mx.gensym("dirty"))
+
+    #             return
+
+    #     return error("Resize on null buffer")
+
+
+    # def resize(self, int frames, int channels=0, double new_sample_rate=0.0):
+    #     cdef mx.t_atom args[2]
+    #     cdef mx.t_atom sr
+
+    #     if not new_sample_rate:
+    #         new_sample_rate = self.samplerate
+
+    #     if not channels:
+    #         channels = self.channelcount
+
+    #     if frames == self.n_samples and channels == self.channelcount:
+    #         return
+
+    #     self.sync()
+
+    #     if (self.obj):
+    #         if mx.systhread_ismainthread():
+    #             self.unlocksamples()
+    #             mx.atom_setlong(&args[0], <mx.t_atom_long>frames)
+    #             mx.atom_setlong(&args[1], <mx.t_atom_long>channels)
+    #             mx.object_method_typed(<mp.t_buffer_obj*>self.obj, mx.gensym("sizeinsamps"), 2, args, NULL)
+
+    #             mx.atom_setfloat(&sr, new_sample_rate)
+    #             mx.object_method_typed(<mp.t_buffer_obj*>self.obj, mx.gensym("sr"), 1, &sr, NULL)
+    #             self.setdirty()
+    #             self.locksamples()
+
+    #             # if frames != self.framecount or channels != self.channelcount:
+    #             #     error(f"Could not resize {self.name} "
+    #             #           f"frames: {frames} != {self.framecount} "
+    #             #           f"channels: {channels} != {self.channelcount} ")
+
+    #             # assert(frames == self.framecount and channels == self.channelcount)
+
+    #             return
+
+    #         else:
+    #             if channels > self.channelcount:
+    #                 return error(f"Can't resize buffers outside main thread, not enough channels in {self.name}")
+
+    #             if frames > self.framecount:
+    #                 return error(f"Can't resize buffers outside main thread, not enough frames in{self.name}")
+
+    #             if self.samplerate == new_sample_rate:
+    #                 mx.atom_setfloat(&sr, new_sample_rate)
+    #                 mx.object_method_typed(<mp.t_buffer_obj*>self.obj, mx.gensym("sr"), 1, &sr, NULL)
+    #                 mx.object_method(<mp.t_buffer_obj*>self.obj, mx.gensym("dirty"))
+
+    #             return
+
+    #     return error("Resize on null buffer")
+
+    # cdef mp.t_buffer_obj* get_buffer_obj(self):
+    #      return mp.buffer_ref_getobject(self.ref)
+
+    def sync(self):
+        self.obj = mp.buffer_ref_getobject(self.ref)
+
+    def resize(self, int frames):
+        cdef mx.t_atom atom;
+
+        if frames == self.n_samples:
+            return
+
+        if (self.obj):
+            mx.atom_setlong(&atom, <mx.t_atom_long>frames)
+            mp.buffer_edit_begin(self.obj)
+
+            mx.object_method_typed(<mx.t_object*>self.obj, mx.gensym("sizeinsamps"), 1, &atom, NULL)
+            mp.buffer_edit_end(self.obj, 1)
+            self.setdirty()
+
+            # self.sync()
+
+            if frames != self.framecount:
+                error(f"Could not resize {self.name} "
+                      f"frames: {frames} != {self.framecount}")
+
+            assert(frames == self.framecount)
+
+            return
+
+        return error("Resize on null buffer")
+
     def change_reference(self, str name):
         """Change a buffer reference to refer to a different buffer object by name."""
         mp.buffer_ref_set(self.ref, str_to_sym(name))
@@ -439,26 +577,31 @@ cdef class Buffer:
 
     def view(self):
         """Open a viewer window to display the contents of the buffer."""
+        # self.sync()
         mp.buffer_view(self.obj)
 
     @property
     def channelcount(self):
         """Get how many channels are present in the buffer content."""
+        # self.sync()
         return mp.buffer_getchannelcount(self.obj)
 
     @property
     def framecount(self):
         """Get how many frames long the buffer content is in samples."""
+        # self.sync()
         return mp.buffer_getframecount(self.obj)
 
     @property
     def samplerate(self):
         """Get the buffer's native sample rate in samples per second."""
+        # self.sync()
         return mp.buffer_getsamplerate(self.obj)
 
     @property
     def millisamplerate(self):
         """Get the buffer's native sample rate in samples per millisecond."""
+        # self.sync()
         return mp.buffer_getmillisamplerate(self.obj)
 
     @property
@@ -491,13 +634,17 @@ cdef class Buffer:
 
     def locksamples(self):
         """Claim the buffer∼ and get a pointer to the first sample in memory."""
+        # self.sync()
         self.samples = mp.buffer_locksamples(self.obj)
         self.is_locked = True
 
     def unlocksamples(self):
         """Release claim on buffer's contents so other objects can read/write to it."""
         mp.buffer_unlocksamples(self.obj)
-        self.is_locked = False
+        if self.samples:
+            # self.sync()
+            self.samples = NULL
+            self.is_locked = False
 
     def get_samples(self):
         """get samples as a memoryview"""

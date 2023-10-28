@@ -272,7 +272,7 @@ The following section addresses this requirement.
 
 ### Building self-contained Python3 Externals for Packages and Standalones
 
-Currently only the `py` and `pyjs` externals are built using these methods, which rely on a python [builder manager](https://github.com/shakfu/py-js/tree/main/source/projects/py/builder). The `Makefile` in the project root provides a simplified interface to this builder. See the [Current Status of Builders](https://github.com/shakfu/py-js#current-status-of-builders) section for further information.
+Currently only the `py` and `pyjs` externals are built using these methods, which rely on a custom python [build manager](https://github.com/shakfu/py-js/tree/main/source/projects/py/builder). The `Makefile` in the project root provides a simplified interface to this builder. See the [Current Status of Builders](https://github.com/shakfu/py-js#current-status-of-builders) section for further information.
 
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
@@ -282,7 +282,7 @@ idx  | command                | type       | format     | py size |  pyjs size
 4    | `make shared-tiny-ext` | shared     | external   | 6.7     | 6.2  [2]
 5    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8 [3]
 
-[2] These 'tiny' variants are intended to be the smallest possible portable pyjs externals. In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoreticla minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, is the `pktpy` subproject in this repo.
+[2] These 'tiny' variants are intended to be the smallest possible portable pyjs externals. In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoreticla minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo.
 
 [3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
 
@@ -610,7 +610,7 @@ make staple-dmg
 make collect-dmg
 ```
 
-Note that the it is important to sign externals (this is done by Xcode automatically) and to distribute to others, you can either ask users to remove the products quarantine state or notarize the product as above, which requires an Apple Developer License.
+Note that the it is important to sign externals (this is done by Xcode automatically) if you want to to distribute to others (or in the case of Apple Silicon, use yourself). If the externals are signed, then you can proceed to the notarization step if you have an Apple Develop License (100 USD/year) or, alternatively, you can ask users to remove the products quarantine state or let Max do this automatically on opening the external.
 
 
 ### Github Actions

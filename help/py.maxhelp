@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 238.0, 87.0, 877.0, 769.0 ],
+		"rect" : [ 238.0, 87.0, 878.0, 769.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 877.0, 743.0 ],
+						"rect" : [ 0.0, 26.0, 878.0, 743.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 1,
 						"default_fontsize" : 12.0,
@@ -94,7 +94,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 124.0, 295.0, 326.0, 47.0 ],
-									"presentation_linecount" : 4,
 									"text" : "This is a bpatcher which has to parts: the top editor part which can be a multiline python program and the lower part which is a basic evaluation termal. "
 								}
 
@@ -391,7 +390,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 877.0, 743.0 ],
+						"rect" : [ 0.0, 26.0, 878.0, 743.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -660,13 +659,11 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-24",
-									"linecount" : 16,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 158.0, 223.0 ],
-									"text" : "Applications\nLibrary\nSystem\nUsers\nVolumes\nbin\ncores\ndev\netc\nhome\nopt\nprivate\nsbin\ntmp\nusr\nvar"
+									"patching_rect" : [ 376.0, 359.0, 48.0, 22.0 ]
 								}
 
 							}
@@ -1061,7 +1058,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 238.0, 113.0, 877.0, 743.0 ],
+						"rect" : [ 238.0, 113.0, 878.0, 743.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1091,6 +1088,21 @@
 						"showontab" : 1,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-60",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 764.5, 708.0, 96.0, 22.0 ],
+									"presentation" : 1,
+									"presentation_linecount" : 2,
+									"presentation_rect" : [ 762.0, 676.0, 76.0, 35.0 ],
+									"text" : "test_get_buffer()"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-56",
 									"maxclass" : "message",
@@ -1295,11 +1307,11 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 763.0, 708.0, 96.0, 22.0 ],
+									"patching_rect" : [ 754.75, 675.0, 112.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 707.5, 482.0, 76.0, 35.0 ],
-									"text" : "test_get_buffer()"
+									"text" : "test_resize_buffer()"
 								}
 
 							}
@@ -2234,13 +2246,16 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 22.0 ]
+									"presentation_linecount" : 12,
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
+									"text" : "\"3.11.6 (main, Oct  2 2023, 20:46:14) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
 								}
 
 							}
@@ -3256,6 +3271,14 @@
 									"destination" : [ "obj-7", 0 ],
 									"hidden" : 1,
 									"source" : [ "obj-6", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-7", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-60", 0 ]
 								}
 
 							}

@@ -124,12 +124,11 @@ t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /*--------------------------------------------------------------------------*/
-/* Informations Methods */
+/* Information Methods */
 
 void py_info(t_py* x);
 void py_count(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
-void py_appendtodict(t_py* x, t_dictionary* dict);
 
 /*--------------------------------------------------------------------------*/
 /* Time-based Methods */
@@ -159,10 +158,12 @@ void py_okclose(t_py* x, char *s, short *result);
 /*--------------------------------------------------------------------------*/
 /* max datastructure support methods */
 
+// dict
+void py_appendtodict(t_py* x, t_dictionary* dict);
+
 // table
 bool py_table_exists(t_py* x, char* table_name);
 t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist);
 PyObject* py_table_to_list(t_py* x, char* table_name);
-
 
 #endif // PY_H

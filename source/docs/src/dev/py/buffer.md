@@ -1,8 +1,6 @@
 # Wrapping the `buffer~` object
 
 
-
-
 ## Articles on buffer c-api
 
 - Buffer creation: to create a buffer as per a [post](https://cycling74.com/forums/how-to-create-a-buffer-and-change-its-size) by Emanual Jourdan:
@@ -15,42 +13,392 @@ atom_setsym(&a, gensym("anton.aif"));
 typedmess(b, gensym("replace"), 1, &a);
 ```
 
-or 
+
+## Articles on Buffer Resizing and Access
+
+
+- 2009 [resizing buffer --> notify?](https://cycling74.com/forums/resizing-buffer-notify)
+
+- 2010 [buffer~ resize programmatically questions](https://cycling74.com/forums/buffer-resize-programmatically-questions)
+
+
+
+### Accessing buffer~ Objects in Max5
+
+Including here from an 2009 article by Tim Place: [Accessing buffer~ Objects in Max5](https://74objects.wordpress.com/2009/03/22/accessing-buffers/):
+
+One thing that has always been a bit tricky, and perhaps a bit under-documented, has been writing good code for accessing the contents of a `buffer~`` object in Max.  What has made the situation a bit more confusing is that the API has changed slowly over a number of versions of Max to make the system more robust and easier to use.  This is certainly true of Max 5, and the most recent version of the Max 5 Software Developer Kit makes these new facilities available.
+
+I’ll be showing the favored way to access `buffer~` objects for Max 5 in the context of a real object: `tap.buffer.peak~` from Tap.Tools.  I’ll show how it should be done now, and in some places I’ll show how it was done in the past for reference.
+
+#### Getting a Pointer
+
+The first thing we need to do is get a pointer to the `buffer~` bound to a given name.  If you know that there is a `buffer~` object with the name `foo` then you could simply do this:
 
 ```c
-t_object * create_empty_buffer(t_py* x, t_symbol* name, long size_ms)
+t_symbol* s = gensym("foo");
+t_buffer* b = s->s_thing;
+```
+
+However, there are some problems here.  What if `foo` is the name of a table and not a `buffer~`?  What if there is a `buffer~` named `foo` in the patcher, but when the patcher is loaded the `buffer~` is instantiated after your object.  What if you execute the above code and then the user delete’s the `buffer~` from their patch?  These are a few of the scenarios that happen regularly.
+
+A new header in Max 5 includes a facility for eleganty handling these scenarios:
+
+```c
+#include "ext_globalsymbol.h"`
+```
+
+Having included that header, you can now implement a `set` method for your `buffer~`-accessing object like so:
+
+```c
+// Set Buffer Method
+void peak_set(t_peak *x, t_symbol *s)
 {
-	t_atom argv[2];
-	atom_setsym(argv + 0, name);
-	atom_setlong(argv + 1, size_ms);
-	t_object *buf = object_new_typed(CLASS_BOX, gensym("buffer~"), 2, argv);
-	return buf;
+	if(s != x->sym){
+		x->buf = (t_buffer*)globalsymbol_reference((t_object*)x, s->s_name, "buffer~");
+		if(x->sym)
+			globalsymbol_dereference((t_object*)x, x->sym->s_name, "buffer~");
+		x->sym = s;
+		x->changed = true;
+	}
 }
+```
 
-t_object * create_buffer(t_py* x, t_symbol* name, t_symbol* sample_file)
+By calling `globalsymbol_reference()`, we will bind to the named `buffer~` when it gets created or otherwise we will attach to an existing buffer.  And when I say attached, I mean it.  Internally this function calls `object_attach()` and our object, in this case `tap.buffer.peak~`, will receive notifications from the `buffer~` object.
+
+To respond to these notifications we need to setup a message binding:
+
+```c
+class_addmethod(c, (method)peak_notify,		"notify",		A_CANT,	0);
+```
+
+And then we need to implement the notify method:
+
+
+```c
+t_max_err peak_notify(t_peak *x, t_symbol *s, t_symbol *msg, void *sender, void *data)
 {
-	t_atom argv[2];
-	atom_setsym(argv + 0, name);
-	atom_setsym(argv + 1, sample_file);
-	t_object *buf = object_new_typed(CLASS_BOX, gensym("buffer~"), 2, argv);
-	return buf;
+	if (msg == ps_globalsymbol_binding)
+		x->buf = (t_buffer*)x->sym->s_thing;
+	else if (msg == ps_globalsymbol_unbinding)
+		x->buf = NULL;
+	else if (msg == ps_buffer_modified)
+		x->changed = true;
+
+	return MAX_ERR_NONE;
 }
+```
 
-``` 
+As you may have deduced, the `notify` method is called any time a `buffer~` is bound to the symbol we specified, unbound from the symbol, or any time the contents of the buffer~ are modified.  For example, this is how the `waveform~` object in MSP knows to update its display when the `buffer~` contents change.
 
-in cython
+#### Accessing the Contents
 
-```python
-@staticmethod
-cdef Buffer empty(mx.t_object *x, str name, int size_ms):
-    """create a buffer from scratch given name and file to load"""
-    # create a buffer
-    cdef mx.t_atom argv[2];
-    mx.atom_setsym(argv+0, str_to_sym(name))
- 	mx.atom_setlong(argv+1, size_ms);  
-    cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
-        mx.CLASS_BOX, mx.gensym("buffer~"), 2, argv)
+Now that you have a pointer to a `buffer~` object (the `t_buffer*`), you want to access the contents.  Having the pointer to the `buffer~` is not enough, because if you simply start reading or writing to the buffer’s b_samples member you will not be guaranteed of thread-safety, meaning that all matter of subtle (and sometimes not so subtle) problems may ensue at the most inopportune moment.
 
-    # now retrieve buffer by name
-    return Buffer.from_name(x, name)
+In Max 4 you might have used code that looked like the following before and after you accessed a `buffer~`’s contents:
+
+```c
+    saveinuse = b->b_inuse;
+    b->b_inuse = true;
+
+    // access buffer contents here
+
+    b->b_inuse = saveinuse;
+    object_method((t_object*)b, gensym("dirty"));
+```
+
+The problem is that the above code is not entirely up to the task.  There’s a new sheriff in town, and in Max 5 the above code will be rewritten as:
+
+```c
+    ATOMIC_INCREMENT((int32_t*)&b->b_inuse);
+    // access buffer contents here
+    ATOMIC_DECREMENT((int32_t*)&b->b_inuse);
+```
+
+This is truly threadsafe.  And as a bonus you no longer need to call the `dirty` method on the buffer to tell that it changed.
+
+Here is the code from `tap.buffer.peak~` that access the `buffer~`’s contents to find the hottest sample in the buffer:
+
+```c
+{
+	t_buffer	*b = x->buf;		// Our Buffer
+	float		*tab;		        // Will point to our buffer's values
+	long		i, chan;
+	double		current_samp = 0.0;	// current sample value
+
+	ATOMIC_INCREMENT((int32_t*)&b->b_inuse);
+	if (!x->buf->b_valid) {
+		ATOMIC_DECREMENT((int32_t*)&b->b_inuse);
+		return;
+	}
+
+	// FIND PEAK VALUE
+	tab = b->b_samples;			// point tab to our sample values
+	for(chan=0; chan < b->b_nchans; chan++){
+		for(i=0; i < b->b_frames; i++){
+			if(fabs(tab[(chan * b->b_nchans) + i]) > current_samp){
+				current_samp = fabs(tab[(chan * b->b_nchans) + i]);
+				x->index = (chan * b->b_nchans) + i;
+			}
+		}
+	}
+
+	ATOMIC_DECREMENT((int32_t*)&b->b_inuse);
+}
+```
+
+
+## Code Examples using buffer~ in c or c++
+
+
+- [flucoma MaxBufferAdaptor](https://github.com/flucoma/flucoma-max/blob/a1a00d906a8c37978c44a9b97147df03bf8e6c91/source/include/MaxBufferAdaptor.hpp
+)
+
+
+## The `ext_buffer.h` header
+
+```c
+#ifndef _EXT_BUFFER_H_
+#define _EXT_BUFFER_H_
+
+#include "ext_prefix.h"
+#include "ext_mess.h"
+
+/**	A buffer~ reference.
+	Use this struct to represent a reference to a buffer~ object in Max.
+	Use the buffer_ref_getbuffer() call to return a pointer to the buffer.
+	You can then make calls on the buffer itself.
+ 
+	@ingroup buffers
+*/
+typedef struct _buffer_ref t_buffer_ref;
+
+
+/**	A buffer~ object.
+	This represents the actual buffer~ object.
+	You can use this to send messages, query attributes, etc. of the actual buffer object
+	referenced by a #t_buffer_ref.
+ 
+	@ingroup buffers
+ */
+typedef t_object t_buffer_obj;
+
+
+/**	Common buffer~ data/metadata.
+	This info can be retreived from a buffer~ using the buffer_getinfo() call.
+ 
+	@ingroup buffers
+ */
+typedef struct _buffer_info
+{
+	t_symbol	*b_name;		///< name of the buffer
+	float		*b_samples;		///< stored with interleaved channels if multi-channel
+	long		b_frames;		///< number of sample frames (each one is sizeof(float) * b_nchans bytes)
+	long		b_nchans;		///< number of channels
+	long		b_size;			///< size of buffer in floats
+	float		b_sr;			///< sampling rate of the buffer
+	long		b_modtime;		///< last modified time ("dirty" method)
+	long		b_rfu[57];		///< reserved for future use (total struct size is 64x4 = 256 bytes)
+} t_buffer_info;
+
+
+BEGIN_USING_C_LINKAGE
+
+
+/**	Create a reference to a buffer~ object by name.
+	You must release the buffer reference using object_free() when you are finished using it.
+ 
+	@ingroup buffers
+	@param	self	pointer to your object
+	@param	name 	the name of the buffer~
+	@return			a pointer to your new buffer reference
+*/
+t_buffer_ref* buffer_ref_new(t_object *self, t_symbol *name);
+
+
+/**	Change a buffer reference to refer to a different buffer~ object by name.
+ 
+	 @ingroup buffers
+	 @param	x		the buffer reference
+	 @param	name 	the name of a different buffer~ to reference
+ */
+void buffer_ref_set(t_buffer_ref *x, t_symbol *name);
+
+
+/**	Query to find out if a buffer~ with the referenced name actually exists.
+ 
+	@ingroup buffers
+	@param	x		the buffer reference
+	@return			non-zero if the buffer~ exists, otherwise zero
+*/
+t_atom_long buffer_ref_exists(t_buffer_ref *x);
+
+
+/**	Query a buffer reference to get the actual buffer~ object being referenced, if it exists.
+ 
+	 @ingroup buffers
+	 @param	x			the buffer reference
+	 @return			the buffer object if exists, otherwise NULL
+ */
+t_buffer_obj *buffer_ref_getobject(t_buffer_ref *x);
+
+
+/**	Your object needs to handle notifications issued by the buffer~ you reference.
+	You do this by defining a "notify" method.
+	Your notify method should then call this notify method for the #t_buffer_ref.
+ 
+	@ingroup buffers
+	@param	x		the buffer reference
+	@param	s 		the registered name of the sending object
+	@param	msg		then name of the notification/message sent
+	@param	sender	the pointer to the sending object
+	@param	data	optional argument sent with the notification/message
+	@return			a max error code
+*/
+t_max_err buffer_ref_notify(t_buffer_ref *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+
+
+/**	Open a viewer window to display the contents of the buffer~.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+*/
+void buffer_view(t_buffer_obj *buffer_object);
+
+
+/**	Claim the buffer~ and get a pointer to the first sample in memory.
+	When you are done reading/writing to the buffer you must call buffer_unlocksamples().
+	If the attempt to claim the buffer~ fails the returned pointer will be NULL.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@return					a pointer to the first sample in memory, or NULL if the buffer doesn't exist.
+*/
+float *buffer_locksamples(t_buffer_obj *buffer_object);
+
+
+/**	Release your claim on the buffer~ contents so that other objects may read/write to the buffer~.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+*/
+void buffer_unlocksamples(t_buffer_obj *buffer_object);
+
+
+#ifndef C74_BUFFER_INTERNAL
+
+
+/**	Query a buffer~ to find out how many channels are present in the buffer content.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@return					the number of channels in the buffer
+*/
+t_atom_long buffer_getchannelcount(t_buffer_obj *buffer_object);
+
+
+/**	Query a buffer~ to find out how many frames long the buffer content is in samples.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@return					the number of frames in the buffer
+*/
+t_atom_long buffer_getframecount(t_buffer_obj *buffer_object);
+
+
+/**	Query a buffer~ to find out its native sample rate in samples per second.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@return					the sample rate in samples per second
+*/
+t_atom_float buffer_getsamplerate(t_buffer_obj *buffer_object);
+
+
+/**	Query a buffer~ to find out its native sample rate in samples per millisecond.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@return					the sample rate in samples per millisecond
+*/
+t_atom_float buffer_getmillisamplerate(t_buffer_obj *buffer_object);
+
+
+/** Set the number of samples with which to zero-pad the buffer~'s contents.
+	The typical application for this need is to pad a buffer with enough room to allow for the reach of a FIR kernel in convolution.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@param	samplecount		the number of sample to pad the buffer with on each side of the contents
+	@return					an error code
+*/
+t_max_err buffer_setpadding(t_buffer_obj *buffer_object, t_atom_long samplecount);
+
+
+/**	Set the buffer's dirty flag, indicating that changes have been made.
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@return					an error code
+ */
+t_max_err buffer_setdirty(t_buffer_obj *buffer_object);
+
+
+/** Retrieve the name of the last file to be read by a buffer~.
+	(Not the last file written).
+ 
+	@ingroup buffers
+	@param	buffer_object	the buffer object
+	@return					The name of the file last read, or gensym("") if no files have been read.
+ 
+	@version Introduced in Max 7.0.1
+ */
+t_symbol *buffer_getfilename(t_buffer_obj *buffer_object);
+
+
+#endif //  C74_BUFFER_INTERNAL
+
+
+// Internal or low-level functions
+
+
+// buffer_perform functions to replace the direct use of
+// atomics and other buffer state flags from the perform method
+// wrapped by buffer_locksamples() and buffer_unlocksamples()
+t_max_err buffer_perform_begin(t_buffer_obj *buffer_object);
+t_max_err buffer_perform_end(t_buffer_obj *buffer_object);
+
+// utility function for getting buffer info in struct form
+// without needing to know entire buffer struct
+t_max_err buffer_getinfo(t_buffer_obj *buffer_object, t_buffer_info *info);
+
+
+// the following functions are not to be called in the perform method
+// please use the lightweight buffer_perform methods
+
+// use buffer_edit functions to collapse all operations of
+// locking heavy b_mutex, setting b_valid flag,
+// waiting on lightweight atomic b_inuse, etc.
+t_max_err buffer_edit_begin(t_buffer_obj *buffer_object);
+t_max_err buffer_edit_end(t_buffer_obj *buffer_object, long valid);  // valid 0=FALSE, positive=TRUE, negative=RESTORE_OLD_VALID (not common)
+
+// low level mutex locking used by buffer_edit fucntions.
+// use only if you really know what you're doing.
+// otherwise, use the buffer_edit functions
+// if you're touching a t_buffer outside perform
+t_max_err buffer_lock(t_buffer_obj *buffer_object);
+t_max_err buffer_trylock(t_buffer_obj *buffer_object);
+t_max_err buffer_unlock(t_buffer_obj *buffer_object);
+
+// low level utilities used by buffer_edit functions
+// use only if you really know what you're doing.
+// otherwise, use the buffer_edit functions
+// if you're touching a t_buffer outside perform
+t_buffer_obj *buffer_findowner(t_buffer_obj *buffer_object);
+long buffer_spinwait(t_buffer_obj *buffer_object);
+long buffer_valid(t_buffer_obj *buffer_object, long way);
+
+END_USING_C_LINKAGE
+
+#endif // #ifndef _EXT_BUFFER_H_
 ```

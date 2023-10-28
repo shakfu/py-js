@@ -58,8 +58,7 @@ struct t_py {
     t_symbol* p_run_on;
 
     t_symbol* p_code_filepath;  /*!< default python filepath to load into
-                                  the code editor and object 'globals'
-                                  namespace */
+                                  the code editor and 'globals' namespace */
     t_bool p_autoload;          /*!< bool to autoload of p_code_filepath  */
 
     /* outlet creation */
@@ -132,8 +131,8 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_run,        "run",        A_NOTHING, 0);
     class_addmethod(c, (method)py_okclose,    "okclose",    A_CANT,    0);
 
-    // experimental
-    class_addmethod(c, (method)py_appendtodict,  "appendtodictionary",  A_CANT, 0);
+    // datastructure helpers
+    class_addmethod(c, (method)py_appendtodict, "appendtodictionary",  A_CANT, 0);
 
     // class attributes
     //------------------------------------------------------------------------
@@ -849,6 +848,18 @@ void py_info(t_py* x)
     short userdocfolder_id = path_userdocfolder();
     short usermaxfolder_id = path_usermaxfolder();
     short defaultpath_id = path_getdefault();
+
+    // patcher info
+    t_object *patcher;
+ 
+    object_obex_lookup(x, gensym("#P"), &patcher);
+    post("my patcher is at address %lx", patcher);
+    t_symbol *name = object_attr_getsym(patcher, gensym("name"));
+    t_symbol *path = object_attr_getsym(patcher, gensym("filepath"));
+    post("patcher.name: %s", name->s_name);
+    post("patcher.path: %s", path->s_name);
+
+    // path info
 
     path_toabsolutesystempath(supportpath_id, "", output_path);
     post("supportpath: %s", output_path);

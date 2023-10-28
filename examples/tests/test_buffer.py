@@ -26,3 +26,19 @@ def test_get_buffer():
     api.send("drum_scope1", "set", "drum1")
     buf.view()
     return buf.samplerate
+
+
+def resize(buffer_name, to_framecount):
+    buf = api.get_buffer(buffer_name)
+    api.post(f"framecount: {buf.framecount}")
+    buf.resize(int(to_framecount))
+    return buf.framecount
+
+
+def test_resize_buffer():
+    buf = api.get_buffer("drum")
+    api.post(f"framecount: {buf.framecount}")
+    buf.resize(int(buf.framecount/2))
+    # api.send("drum_scope", "set", "drum")
+    buf.view()
+    return buf.framecount
