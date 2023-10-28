@@ -65,7 +65,6 @@ struct t_py {
     void* p_outlet_right;       /*!< right outlet to bang success */
     void* p_outlet_middle;      /*!< middle outleet to bang error */
     void* p_outlet_left;        /*!< left outleet for msg output  */
-
 };
 
 

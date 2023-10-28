@@ -499,9 +499,7 @@ cflow:
 
 projects:
 	@bash $(SCRIPTS)/build_projects.sh
-ifeq ($(ARCH),arm64)
-	$(MAKE) sign # FIXME: cache KeyError on first run
-endif
+
 
 # fat:
 # 	@echo "NOT FUNCTIONAL UNLESS DEPS ARE ALSO FAT"

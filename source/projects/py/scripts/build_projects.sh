@@ -4,8 +4,8 @@ pushd .
 
 mkdir build
 cd build
-cmake ..
-make
+cmake -GXcode ..
+cmake --build . --config Release
 
 popd
 

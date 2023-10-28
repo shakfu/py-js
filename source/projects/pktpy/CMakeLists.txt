@@ -1,9 +1,11 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Release")
+
 
 file(GLOB PROJECT_SRC
     "*.h"

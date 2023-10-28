@@ -22,7 +22,7 @@
 
 ## api
 
-- [x] Added buffer creation, retrieval and sample setting / getting from python code with a test_buffer.maxpat test.
+- [x] Added buffer creation, retrieval and sample setting / getting, resizing from python code with a `test_buffer.maxpat` test.
 
 ### Core
 
@@ -31,6 +31,19 @@
 
 
 ### Extensibility
+
+- [ ] consider to add a folder which would contain the following single-header libs along the line of the mamba `py.h`:
+
+  - py_data.h (parent)
+    - py_buffer.h
+    - py_dict.h
+    - py_table.h
+    - py_patcher.h
+    - py_database.h
+    - ...
+
+  The idea is that `#include "py_data.h` would provide a `t_py_data` struct which contains the child objects which can be used on demand.
+
 
 - [ ] add an additional the containing package `support` folder or `scripts` folder to `PYTHONPATH` for self-contained externals
 

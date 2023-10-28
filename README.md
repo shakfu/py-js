@@ -2,7 +2,7 @@
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
 
-Cross-platform: currently builds 'natively' on macOS `x86_64` or `arm64` and Windows (with MSVC).
+Cross-platform: currently builds 'natively' on macOS (`x86_64` or `arm64`) and Windows (with MSVC).
 
 repo - <https://github.com/shakfu/py-js>
 
@@ -70,9 +70,9 @@ The common objective in these externals is to help use and distribute python cod
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project has the following compatibility:
 
-- macOS: both x86_64 and Apple Silicon compatible. Note that the project intentionally only produces 'native' (`x86_64` or `arm64`) externals with no current plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
+- macOS: both x86_64 and Apple Silicon compatible. Note that the project intentionally only produces 'native' (`x86_64` xor `arm64`) externals with no current plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-- Windows: win32 support was recently provided, and currently all Python3 externals and also the `pktpy` projects build without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. This constraint will be hopefully addressed in future iterations. The `pktpy` external, however, is fully portable and self-contained. 
+- Windows: windows support was recently provided, and currently all Python3 externals and also the `pktpy` projects build without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. This constraint will be hopefully addressed in future iterations. The `pktpy` external, however, is fully portable and self-contained. 
 
 This README will mostly cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
 
@@ -189,7 +189,7 @@ pyjs max external (jsextension)
 
 ### Windows
 
-Since Windows support is relatively new, no releases have been made pending further testing.
+Since Windows support still is relatively new, no releases have been made pending further testing.
 
 Currently, the externals which are enabled by default in this project can be built with only a few requirements: 
 
