@@ -3,20 +3,23 @@
 
 ## [0.2.x]
 
+- Added auto-resizing to buffer.set_samples and methods to set duration, samplerate as well as methods for generic message sending to a buffer for examples "fill" operations.
+
 - Added `api.Patcher` object to facilitate patcher-scripting from python.
 
 - Added additional capabilities and tests to Buffer extension in the `api` module. This includes retrieval by buffer name, buffer creation,  setting / getting samples from python code using either python's builtin array module or numpy, and a set of demonstrative set of tests:
 
   pure python tests:
 
-  - `examples/tests/test_buffer.maxpat`
-  - `examples/tests/test_buffer_np.maxpat`
-  - `examples/tests/test_buffer_array.maxpat`
+  - `examples/tests/test_buffer.py`
+  - `examples/tests/test_buffer_np.py`
+  - `examples/tests/test_buffer_array.py`
 
   patcher tests:
 
   - `patchers/tests/test_buffer_np.maxpat`
   - `patchers/tests/test_buffer_array.maxpat`
+  - `examples/tests/test_buffer_resize.maxpat`
 
 - Added unstable proof-of-concept for building python via cmake. Next step will be to integrate this into the `builder` system. This capability is provided courtesy of the [python-cmake-buildsystem](https://github.com/python-cmake-buildsystem/python-cmake-buildsystem) project, but the python tests fails so this is a work-in-progress
 

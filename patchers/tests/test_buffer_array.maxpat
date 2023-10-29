@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 183.0, 128.0, 640.0, 480.0 ],
+		"rect" : [ 183.0, 128.0, 657.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,18 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-15",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 492.0, 84.0, 155.0, 22.0 ],
+					"text" : "test_buffer_set_samples2()"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-17",
 					"maxclass" : "comment",
@@ -282,7 +294,7 @@
 , 			{
 				"box" : 				{
 					"bgcolor" : [ 0.501961, 0.717647, 0.764706, 1.0 ],
-					"buffername" : "drum1",
+					"buffername" : "",
 					"gridcolor" : [ 0.352941, 0.337255, 0.521569, 1.0 ],
 					"id" : "obj-73",
 					"maxclass" : "waveform~",
@@ -303,7 +315,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 468.0, 69.0, 147.0, 22.0 ],
+					"patching_rect" : [ 468.0, 57.0, 147.0, 22.0 ],
 					"text" : "test_buffer_set_samples()"
 				}
 
@@ -361,7 +373,7 @@
 					}
 ,
 					"text" : "py",
-					"varname" : "__main__"
+					"varname" : "u432000422"
 				}
 
 			}
@@ -419,6 +431,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-21", 0 ],
 					"source" : [ "obj-14", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-16", 0 ],
+					"source" : [ "obj-15", 0 ]
 				}
 
 			}

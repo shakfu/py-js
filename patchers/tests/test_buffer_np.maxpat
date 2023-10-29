@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 183.0, 128.0, 640.0, 480.0 ],
+		"rect" : [ 183.0, 128.0, 682.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,19 @@
 		"subpatcher_template" : "",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-15",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 501.0, 87.0, 154.0, 22.0 ],
+					"presentation_linecount" : 2,
+					"text" : "test_buffer_set_samples2()"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-17",
 					"maxclass" : "comment",
@@ -250,7 +263,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 301.0, 69.0, 148.0, 22.0 ],
+					"patching_rect" : [ 301.0, 63.0, 148.0, 22.0 ],
 					"text" : "test_buffer_get_samples()"
 				}
 
@@ -282,7 +295,7 @@
 , 			{
 				"box" : 				{
 					"bgcolor" : [ 0.501961, 0.717647, 0.764706, 1.0 ],
-					"buffername" : "drum1",
+					"buffername" : "",
 					"gridcolor" : [ 0.352941, 0.337255, 0.521569, 1.0 ],
 					"id" : "obj-73",
 					"maxclass" : "waveform~",
@@ -303,7 +316,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 468.0, 69.0, 147.0, 22.0 ],
+					"patching_rect" : [ 468.0, 63.0, 147.0, 22.0 ],
 					"text" : "test_buffer_set_samples()"
 				}
 
@@ -346,7 +359,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer_array.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -356,7 +369,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 0,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer_array.py",
 						"pythonpath" : ""
 					}
 ,
@@ -419,6 +432,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-21", 0 ],
 					"source" : [ "obj-14", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-16", 0 ],
+					"source" : [ "obj-15", 0 ]
 				}
 
 			}
