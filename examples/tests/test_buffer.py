@@ -34,10 +34,17 @@ def resize(buffer_name, frames):
     buf.set_framecount(frames)
     return buf.framecount
 
-def test_change_buffer_framecount():
+def test_change_framecount():
     buf = api.get_buffer("drum")
     api.post(f"framecount: {buf.framecount}")
     buf.set_framecount(buf.framecount/2)
+    return buf.framecount
+
+def test_change_framecount_prop():
+    buf = api.get_buffer("drum")
+    api.post(f"framecount: {buf.framecount}")
+    # set as property
+    buf.framecount = buf.framecount/2
     return buf.framecount
 
 def test_change_duration():
@@ -46,15 +53,32 @@ def test_change_duration():
     buf.set_duration(buf.duration/2)
     return buf.duration
 
+def test_change_duration_prop():
+    buf = api.get_buffer("drum")
+    api.post(f"duration (secs): {buf.duration}")
+    buf.duration = buf.duration / 2
+    return buf.duration
+
 def test_change_duration_ms():
     buf = api.get_buffer("drum")
     api.post(f"duration (ms): {buf.duration_ms}")
     buf.set_duration_ms(buf.duration_ms/2)
     return buf.duration_ms
 
+def test_change_duration_ms_prop():
+    buf = api.get_buffer("drum")
+    api.post(f"duration (ms): {buf.duration_ms}")
+    buf.duration_ms = buf.duration_ms / 2
+    return buf.duration_ms
+
 def test_change_samplerate():
     buf = api.get_buffer("drum")
     buf.set_samplerate(22500)
+    return buf.samplerate
+
+def test_change_samplerate_prop():
+    buf = api.get_buffer("drum")
+    buf.samplerate = 22500
     return buf.samplerate
 
 def test_send():

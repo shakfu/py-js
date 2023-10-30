@@ -374,8 +374,7 @@ cdef class Table:
 # api.Buffer
 
 cdef class Buffer:
-    """A wrapper class for a Max t_buffer_obj
-    """
+    """A wrapper class for a Max buffer~ object"""
     cdef str name
     cdef mp.t_buffer_obj *obj
     cdef mp.t_buffer_ref *ref
@@ -462,9 +461,6 @@ cdef class Buffer:
         # now retrieve buffer by name
         return Buffer.from_name(x, name)
 
-    def sync(self):
-        self.obj = mp.buffer_ref_getobject(self.ref)
-
     def change(self, str msg, *args) -> bool:
         """generic structural change method
 
@@ -484,6 +480,9 @@ cdef class Buffer:
 
         return False
 
+    def framecount(self):
+        """Get how many frames long the buffer content is in samples."""
+        return mp.buffer_getframecount(self.obj)
 
     def set_framecount(self, int frames):
         """resize buffer by number of samples (frames)"""
@@ -503,6 +502,13 @@ cdef class Buffer:
 
         return error("Resize on null buffer")
 
+    framecount = property(framecount, set_framecount)
+
+
+    def samplerate(self):
+        """Get the buffer's native sample rate in samples per second."""
+        return mp.buffer_getsamplerate(self.obj)
+
     def set_samplerate(self, int samplerate):
         """change buffer samplerate (Hz)"""
 
@@ -521,11 +527,24 @@ cdef class Buffer:
 
         return error("Resize on null buffer")
 
+    samplerate = property(samplerate, set_samplerate)
+
+
+    def duration(self):
+        """Get the buffer's duration in seconds."""
+        return self.n_samples / self.samplerate
+
     def set_duration(self, int duration):
         """resize buffer duration (seconds)"""
  
         self.set_duration_ms(1000 * duration)
 
+    duration = property(duration, set_duration)
+
+
+    def duration_ms(self):
+        """Get the buffer's duration in milliseconds."""
+        return self.duration * 1000
 
     def set_duration_ms(self, int duration):
         """resize buffer duration (milliseconds)"""
@@ -545,6 +564,8 @@ cdef class Buffer:
 
         return error("Resize on null buffer")
 
+    duration_ms = property(duration_ms, set_duration_ms)
+
 
     def change_reference(self, str name):
         """Change a buffer reference to refer to a different buffer object by name."""
@@ -554,31 +575,26 @@ cdef class Buffer:
 
     def view(self):
         """Open a viewer window to display the contents of the buffer."""
-        # self.sync()
         mp.buffer_view(self.obj)
 
     @property
     def channelcount(self):
         """Get how many channels are present in the buffer content."""
-        # self.sync()
         return mp.buffer_getchannelcount(self.obj)
 
-    @property
-    def framecount(self):
-        """Get how many frames long the buffer content is in samples."""
-        # self.sync()
-        return mp.buffer_getframecount(self.obj)
+    # @property
+    # def framecount(self):
+    #     """Get how many frames long the buffer content is in samples."""
+    #     return mp.buffer_getframecount(self.obj)
 
-    @property
-    def samplerate(self):
-        """Get the buffer's native sample rate in samples per second."""
-        # self.sync()
-        return mp.buffer_getsamplerate(self.obj)
+    # @property
+    # def samplerate(self):
+    #     """Get the buffer's native sample rate in samples per second."""
+    #     return mp.buffer_getsamplerate(self.obj)
 
     @property
     def millisamplerate(self):
         """Get the buffer's native sample rate in samples per millisecond."""
-        # self.sync()
         return mp.buffer_getmillisamplerate(self.obj)
 
     @property
@@ -586,15 +602,15 @@ cdef class Buffer:
         """Get the number of samples in the buffer."""
         return self.framecount
 
-    @property
-    def duration(self):
-        """Get the buffer's duration in seconds."""
-        return self.n_samples / self.samplerate
+    # @property
+    # def duration(self):
+    #     """Get the buffer's duration in seconds."""
+    #     return self.n_samples / self.samplerate
 
-    @property
-    def duration_ms(self):
-        """Get the buffer's duration in milliseconds."""
-        return self.duration * 1000
+    # @property
+    # def duration_ms(self):
+    #     """Get the buffer's duration in milliseconds."""
+    #     return self.duration * 1000
 
     @property
     def filename(self):
@@ -611,7 +627,6 @@ cdef class Buffer:
 
     def locksamples(self):
         """Claim the buffer∼ and get a pointer to the first sample in memory."""
-        # self.sync()
         self.samples = mp.buffer_locksamples(self.obj)
         self.is_locked = True
 
@@ -619,7 +634,6 @@ cdef class Buffer:
         """Release claim on buffer's contents so other objects can read/write to it."""
         mp.buffer_unlocksamples(self.obj)
         if self.samples:
-            # self.sync()
             self.samples = NULL
             self.is_locked = False
 
@@ -632,7 +646,7 @@ cdef class Buffer:
         """
         mp.buffer_edit_begin(self.obj)
 
-    def buffer_edit_begin(self, int valid=1):
+    def buffer_edit_end(self, int valid=1):
         """end buffer_edit block"""
         mp.buffer_edit_end(self.obj, valid)
 
@@ -660,9 +674,6 @@ cdef class Buffer:
             self.samples[i] = samples[i]
         self.unlocksamples()
 
-
-    # -----------------------------
-
     def send(self, str msg, *args):
         """generic message sender
 
@@ -673,25 +684,19 @@ cdef class Buffer:
         >>> buf.send("fill", "sin", 24)
         """
         if not args:
-            self.send_single(msg)
+            self._send_single(msg)
         else:
-            self.send_multi(msg, *args)
+            self._send_multi(msg, *args)
 
-    def send_single(self, str msg):
-        """generic message sender
-
-        May only be used for content modification
-
-        >>> buf.send("fill", "sin", 24)
+    def _send_single(self, str msg):
+        """generic message sender for a one word message
         """
         if (self.obj):
             mx.object_method_typed(
                 <mx.t_object*>self.obj, str_to_sym(msg), 0, NULL, NULL)
 
-    def send_multi(self, str msg, *args):
-        """generic message sender
-
-        May only be used for content modification
+    def _send_multi(self, str msg, *args):
+        """generic message sender for a msg with a list of arguments
 
         >>> buf.send("fill", "sin", 24)
         """
@@ -705,11 +710,7 @@ cdef class Buffer:
 
     def bang(self):
         """redraw buffer display"""
-        # self.send("bang")
-        if self.obj:
-            mx.object_method_typed(
-                <mx.t_object*>self.obj, mx.gensym("bang"), 0, NULL, NULL)
-
+        self.send("bang")
 
     def apply(self, *args):
         """apply a function to buffer contents
