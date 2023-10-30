@@ -1,5 +1,6 @@
 import api
 
+from pathlib import Path
 
 # fixture
 def buf(name="drum"):
@@ -43,11 +44,12 @@ def test_import3():
 def test_import4():
     buf().import_("drumLoop.aif", channels=1)
 
-def importreplace():
+def test_importreplace():
     buf().importreplace("drumLoop.aif")
 
 def test_rename():
-    buf().rename("drumx")
+    buf("drum").rename("drumx")
+    buf("drumx").rename("drum")
 
 def test_normalize():
     buf().normalize(0.4)
@@ -62,10 +64,14 @@ def test_printmodtime():
     buf().printmodtime()
 
 def test_write():
-    buf = buf()
-    buf.write("/tmp/drum.wav")
-    buf.write("/tmp/drum.aiff")
-    buf.write("/tmp/drum.au")
-    buf.write("/tmp/drum.raw")
-    buf.write("/tmp/drum.flac")
+    endings = [".wav", ".aiff", ".raw", ".flac"]
+    name = "drum"
+    buf = api.get_buffer(name)
+
+    tmp = Path("/tmp")
+
+    for ending in endings:
+        p = tmp / f"{name}{ending}"
+        buf.write(str(p))
+        assert p.exists()
 

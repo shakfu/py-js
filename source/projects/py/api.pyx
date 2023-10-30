@@ -802,10 +802,10 @@ cdef class Buffer:
     def write(self, str path):
         """write contents of buffer to audio file"""
         if path.endswith(".wav"):
-            self.send("writewav", path)
+            self.send("writewave", path)
         elif path.endswith(".aiff"):
             self.send("writeaiff", path)
-        elif path.endswith(".rawf"):
+        elif path.endswith(".raw"):
             self.send("writeraw", path)
         elif path.endswith(".flac"):
             self.send("writeflac", path)
