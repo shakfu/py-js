@@ -417,9 +417,9 @@ Have fun!
 
 This overview will cover the following two external implementations:
 
-1. A `py` external which provides a more featureful two-way interface between max and python in a way that feels natural to both languages.
+1. The `py` external which provides a more featureful two-way interface between Max and python in a way that feels natural to both languages.
 
-2. A `pyjs` max external/jsextension providing a `PyJS` class and a minimal subset of the `py` external's features which work well with the max `js` object and javascript code (like returning json directly from evaluations of python expressions).
+2. The `pyjs` max external/jsextension providing a `PyJS` class and a minimal subset of the `py` external's features which work well with the Max `js` object and javascript code (like returning json directly from evaluations of python expressions).
 
 Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
 
@@ -525,11 +525,54 @@ Implemented for `py` objects only.
 
 For `pyjs` objects, code editing is already provided by the [js](https://docs.cycling74.com/max8/refpages/js) Max object.
 
-#### Scripting
+#### Scripting Max via the builtin `api` module
 
-Implemented for both `py` and `pyjs` objects:
+**Exposing the Max c-api to Python** A subset of the Max c-api is wrapped by the cython-based `api` module (`api.pyx`) which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` to be importable by all python code which runs in a `py` objects or via `import` messages to the object. This makes it easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
 
-- **Exposing Max API to Python** A portion of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This code enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called directly by python scripts or via messages in a patcher.
+As of this writing the following Max objects have been wrapped to some extent:
+
+- [x] PyExternal: gives python code access to the `py` externals methods and data
+
+- [x] Atom: wrapp t_atom
+- [x] Atom Array: container for an array of atoms
+- [x] Binbuf
+- [x] Buffer: full wraps the buffer~ object
+- [x] Database: SQLite database access
+- [x] Dictionary: structured/hierarchical data that is both sortable and fast
+- [x] Hash Table: hash table for mapping symbols to data
+- [ ] Index Map: managed array of pointers
+- [x] Linked List: doubly-linked-list
+- [ ] Quick Map: a double hash with keys mapped to values and vice-versa
+- [x] String Object: wrapper for C-strings with an API for manipulating them
+- [ ] Symbol Object: wrapper for symbols
+- [x] Table
+- [x] Patcher
+
+To give an example of this power, the following example show's how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api`module.
+
+```python
+import api
+
+import numpy as np
+from scipy import signal
+
+def get_buffer__samples(name: str, sample_file: str) -> np.array:
+    buf = api.create_buffer(name, sample_file)
+    xs = np.array(buf.get_samples())
+    assert len(xs) == buf.n_samples
+    api.post(f"get {n_samples} samples from buffer {name}")
+    return xs
+
+
+def set_buffer_samples(name: str, duration_ms: int):
+    buf = api.create_empty_buffer(name, duration_ms)
+    t = np.linspace(0, 1, buf.n_samples, endpoint=False, dtype=np.float64)
+    xs = signal.sawtooth(2 * np.pi * 5 * t)
+    buf.set_samples(xs)
+    api.post(f"set {buf.n_samples} samples to buffer {name}")
+```
+
+See the `examples` folder and the `patchers/tests`  folder for actual examples of use.
 
 ## Packaging
 
