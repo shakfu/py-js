@@ -407,58 +407,77 @@ cdef class Buffer:
         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
         return buffer
 
+    # @staticmethod
+    # cdef Buffer new(mx.t_object *x, str name, str sample_file):
+    #     """create a buffer from scratch given name and file to load"""
+    #     # create a buffer
+    #     cdef mx.t_atom a
+    #     mx.atom_setsym(&a, str_to_sym(name))
+    #     cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
+    #         mx.CLASS_BOX, mx.gensym("buffer~"), 1, &a)
+    #     mx.atom_setsym(&a, str_to_sym(sample_file))
+    #     mx.typedmess(b, mx.gensym("replace"), 1, &a)
+
+    #     # now retrieve buffer by name
+    #     return Buffer.from_name(x, name)
+
+
     @staticmethod
-    cdef Buffer new(mx.t_object *x, str name, str sample_file):
-        """create a buffer from scratch given name and file to load"""
+    cdef Buffer new(mx.t_object *x, str name, str sample_file, int duration = -1, int channels = 1):
+        """create a buffer from scratch given name and file to load
+
+        params:
+            name: str
+            filename: str
+            duration: int (ms) (default -1)
+            channels: int      (default 1)
+        """
         # create a buffer
-        cdef mx.t_atom a
-        mx.atom_setsym(&a, str_to_sym(name))
+        cdef mx.t_atom[4] argv
+        cdef int argc = 4
+        mx.atom_setsym(argv, str_to_sym(name))
+        mx.atom_setsym(argv+1, str_to_sym(sample_file))        
+        mx.atom_setlong(argv+2, duration)
+        mx.atom_setlong(argv+3, channels)
         cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
-            mx.CLASS_BOX, mx.gensym("buffer~"), 1, &a)
-        mx.atom_setsym(&a, str_to_sym(sample_file))
-        mx.typedmess(b, mx.gensym("replace"), 1, &a)
+            mx.CLASS_BOX, mx.gensym("buffer~"), argc, argv)
+        argc = 3
+        mx.atom_setsym(argv, str_to_sym(sample_file))
+        mx.atom_setlong(argv+1, 0) # starting time
+        mx.atom_setlong(argv+2, channels)
+        mx.typedmess(b, mx.gensym("replace"), argc, argv)
 
         # now retrieve buffer by name
         return Buffer.from_name(x, name)
 
     @staticmethod
-    cdef Buffer empty(mx.t_object *x, str name, int duration_ms):
-        """create a buffer from scratch given name and file to load"""
+    cdef Buffer empty(mx.t_object *x, str name, int duration_ms, int channels=1):
+        """create a new buffer
+
+        params:
+            name: str
+            duration: int (ms)
+            channels: int      (default 1)
+        """
         # create a buffer
-        cdef mx.t_atom argv[2];
+        cdef mx.t_atom argv[3];
+
+        # check if another buffer exists with same name
+        cdef mp.t_buffer_ref* ref = mp.buffer_ref_new(x, str_to_sym(name))
+        if mp.buffer_ref_exists(ref):
+            return error(f"buffer with name {name} already exists")
+
         mx.atom_setsym(argv + 0, str_to_sym(name))
         mx.atom_setlong(argv + 1, duration_ms);
+        mx.atom_setlong(argv + 2, channels);
         cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
-            mx.CLASS_BOX, mx.gensym("buffer~"), 2, argv)
+            mx.CLASS_BOX, mx.gensym("buffer~"), 3, argv)
 
         # now retrieve buffer by name
         return Buffer.from_name(x, name)
 
     def sync(self):
         self.obj = mp.buffer_ref_getobject(self.ref)
-
-    def send(self, str msg, *args):
-        """generic message sender
-
-        May only be used for content modification
-
-        >>> buf.send("fill", "sin", 24)
-        """
-        cdef Atom atom = Atom.from_seq(args)
-        if (self.obj):
-            self.locksamples()
-            mx.object_method_typed(
-                <mx.t_object*>self.obj, str_to_sym(msg), atom.size, atom.ptr, NULL)
-            self.unlocksamples()
-            self.setdirty()
-
-    def fill(self, *args):
-        """generic fill method
-
-        >>> buf.fill("sin", 24)
-        """
-        self.send("fill", *args)
-
 
     def change(self, str msg, *args) -> bool:
         """generic structural change method
@@ -654,6 +673,155 @@ cdef class Buffer:
         for i in range(n_samples):
             self.samples[i] = samples[i]
         self.unlocksamples()
+
+
+    # -----------------------------
+
+    def send(self, str msg, *args):
+        """generic message sender
+
+        May only be used for content modification
+
+        >>> buf.send("fill", "sin", 24)
+        """
+        if not args:
+            self.send_single(msg)
+        else:
+            self.send_multi(msg, *args)
+
+    def send_single(self, str msg):
+        """generic message sender
+
+        May only be used for content modification
+
+        >>> buf.send("fill", "sin", 24)
+        """
+        if (self.obj):
+            mx.object_method_typed(
+                <mx.t_object*>self.obj, str_to_sym(msg), 0, NULL, NULL)
+
+    def send_multi(self, str msg, *args):
+        """generic message sender
+
+        May only be used for content modification
+
+        >>> buf.send("fill", "sin", 24)
+        """
+        cdef Atom atom = Atom.from_seq(args)
+        if (self.obj):
+            self.locksamples()
+            mx.object_method_typed(
+                <mx.t_object*>self.obj, str_to_sym(msg), atom.size, atom.ptr, NULL)
+            self.unlocksamples()
+            self.setdirty()
+
+    def bang(self):
+        """redraw buffer display"""
+        # self.send("bang")
+        if self.obj:
+            mx.object_method_typed(
+                <mx.t_object*>self.obj, mx.gensym("bang"), 0, NULL, NULL)
+
+
+    def apply(self, *args):
+        """apply a function to buffer contents
+
+        funcs:
+            triangle, hamming, hanning, blackman, welch, (kaiser beta) (windowing)
+            gain
+            offset
+            getdelta
+        """
+        self.send("apply", *args)
+
+    def clear(self):
+        """erase contents of buffer"""
+        self.send("clear")
+
+    def clearlow(self):
+        """erase contents of buffer via a low priority thread"""
+        self.send("clearlow")
+
+    def crop(self, int start, int end):
+        """trim audio data in buffer and resize it accordingly"""
+        self.change("crop", start, end)
+
+    def duplicate(self, str name):
+        """import contents of named buffer"""
+        self.change("duplicate", name)
+
+    def enumerate(self):
+        """lists (on console) all objects referencing buffer"""
+        self.send("enumerate")
+
+    def fill(self, *args):
+        """generic fill method
+
+        >>> buf.fill("sin", 24)
+        """
+        self.send("fill", *args)
+
+    def import_(self, path: str, start: int = 0, duration: int = -1, channels: int = 0):
+        """file import
+
+        params:
+            filename: str
+            start: float (ms)
+            duration: float (ms) (negative resizes buffer)
+            channels
+        """
+        if channels:
+            self.change("import", path, start, duration, channels)
+        else:
+            self.change("import", path, start, duration)
+
+    def importreplace(self, path: str, start: int = 0, channels: int = 0):
+        """same as import but imports are performed with automatic duration and channel resizing enabled by default
+        """
+        if channels:
+            self.change("import", path, start, channels)
+        else:
+            self.change("import", path, start)
+
+    def rename(self, str name):
+        """combine 'name' and 'set' in one method
+
+        renames buffer to new <name> and tells other objects to refer to it by new name
+        """
+        self.send("set", name)
+        self.send("name", name)
+
+    def normalize(self, float amount):
+        """normalize audio in buffer"""
+        self.send("normalize", amount)
+
+    def open(self):
+        """open sample display"""
+        self.send("open")
+
+    def printmodtime(self):
+        """posts last modification time to console"""
+        self.send("printmodtime")
+
+    read = import_ # read is a synonym for import
+
+    replace = importreplace # replace is a synonym for importreplace
+
+    def close(self):
+        """close view window"""
+        self.send("wclose")
+
+    def write(self, str path):
+        """write contents of buffer to audio file"""
+        if path.endswith(".wav"):
+            self.send("writewav", path)
+        elif path.endswith(".aiff"):
+            self.send("writeaiff", path)
+        elif path.endswith(".rawf"):
+            self.send("writeraw", path)
+        elif path.endswith(".flac"):
+            self.send("writeflac", path)
+
 
 # ----------------------------------------------------------------------------
 # api.Dictionary

@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Added additional message method support for api.Buffer
+
 - Added auto-resizing to buffer.set_samples and methods to set duration, samplerate as well as methods for generic message sending to a buffer for examples "fill" operations.
 
 - Added `api.Patcher` object to facilitate patcher-scripting from python.

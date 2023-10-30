@@ -40,32 +40,32 @@ def test_change_buffer_framecount():
     buf.set_framecount(buf.framecount/2)
     return buf.framecount
 
-def test_change_buffer_duration():
+def test_change_duration():
     buf = api.get_buffer("drum")
     api.post(f"duration (secs): {buf.duration}")
     buf.set_duration(buf.duration/2)
     return buf.duration
 
-def test_change_buffer_duration_ms():
+def test_change_duration_ms():
     buf = api.get_buffer("drum")
     api.post(f"duration (ms): {buf.duration_ms}")
     buf.set_duration_ms(buf.duration_ms/2)
     return buf.duration_ms
 
-def test_change_buffer_samplerate():
+def test_change_samplerate():
     buf = api.get_buffer("drum")
     buf.set_samplerate(22500)
     return buf.samplerate
 
-def test_buffer_send():
+def test_send():
     buf = api.get_buffer("drum")
     buf.send("fill", "sin", 24)
 
-def test_buffer_fill():
+def test_fill():
     buf = api.get_buffer("drum")
     buf.fill("sin", 12)
 
-def test_buffer_change():
+def test_change():
     buf = api.get_buffer("drum")
     buf.change("sizeinsamps", 20000)
 
