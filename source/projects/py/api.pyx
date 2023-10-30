@@ -449,8 +449,9 @@ cdef class Buffer:
 
         # check if another buffer exists with same name
         cdef mp.t_buffer_ref* ref = mp.buffer_ref_new(x, str_to_sym(name))
-        if mp.buffer_ref_exists(ref):
-            return error(f"buffer with name {name} already exists")
+        # TODO: rethink (overly safe?)
+        # if mp.buffer_ref_exists(ref):
+        #     return error(f"buffer with name {name} already exists")
 
         mx.atom_setsym(argv + 0, str_to_sym(name))
         mx.atom_setlong(argv + 1, duration_ms);

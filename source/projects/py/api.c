@@ -4078,7 +4078,6 @@ static const char __pyx_k_Database_close[] = "Database.close";
 static const char __pyx_k_PyExternal_log[] = "PyExternal.log";
 static const char __pyx_k_PyExternal_out[] = "PyExternal.out";
 static const char __pyx_k_Table_populate[] = "Table.populate";
-static const char __pyx_k_already_exists[] = " already exists";
 static const char __pyx_k_cannot_convert[] = "cannot convert:";
 static const char __pyx_k_numwindowviews[] = "numwindowviews";
 static const char __pyx_k_set_framecount[] = "set_framecount";
@@ -4108,7 +4107,6 @@ static const char __pyx_k_Buffer_enumerate[] = "Buffer.enumerate";
 static const char __pyx_k_Buffer_normalize[] = "Buffer.normalize";
 static const char __pyx_k_Could_not_resize[] = "Could not resize ";
 static const char __pyx_k_PyExternal_error[] = "PyExternal.error";
-static const char __pyx_k_buffer_with_name[] = "buffer with name ";
 static const char __pyx_k_change_reference[] = "change_reference";
 static const char __pyx_k_default_fontface[] = "default_fontface";
 static const char __pyx_k_Buffer_framecount[] = "Buffer.framecount";
@@ -4709,7 +4707,6 @@ typedef struct {
   PyObject *__pyx_n_s_add_textbox;
   PyObject *__pyx_kp_u_aiff;
   PyObject *__pyx_n_s_allocate_buffer;
-  PyObject *__pyx_kp_u_already_exists;
   PyObject *__pyx_n_s_amount;
   PyObject *__pyx_kp_u_and;
   PyObject *__pyx_n_s_api;
@@ -4734,7 +4731,6 @@ typedef struct {
   PyObject *__pyx_n_s_buf;
   PyObject *__pyx_n_s_buffer_edit_begin;
   PyObject *__pyx_n_s_buffer_edit_end;
-  PyObject *__pyx_kp_u_buffer_with_name;
   PyObject *__pyx_n_s_builtins;
   PyObject *__pyx_n_s_c;
   PyObject *__pyx_n_u_c;
@@ -5476,7 +5472,6 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_add_textbox);
   Py_CLEAR(clear_module_state->__pyx_kp_u_aiff);
   Py_CLEAR(clear_module_state->__pyx_n_s_allocate_buffer);
-  Py_CLEAR(clear_module_state->__pyx_kp_u_already_exists);
   Py_CLEAR(clear_module_state->__pyx_n_s_amount);
   Py_CLEAR(clear_module_state->__pyx_kp_u_and);
   Py_CLEAR(clear_module_state->__pyx_n_s_api);
@@ -5501,7 +5496,6 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_buf);
   Py_CLEAR(clear_module_state->__pyx_n_s_buffer_edit_begin);
   Py_CLEAR(clear_module_state->__pyx_n_s_buffer_edit_end);
-  Py_CLEAR(clear_module_state->__pyx_kp_u_buffer_with_name);
   Py_CLEAR(clear_module_state->__pyx_n_s_builtins);
   Py_CLEAR(clear_module_state->__pyx_n_s_c);
   Py_CLEAR(clear_module_state->__pyx_n_u_c);
@@ -6221,7 +6215,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_add_textbox);
   Py_VISIT(traverse_module_state->__pyx_kp_u_aiff);
   Py_VISIT(traverse_module_state->__pyx_n_s_allocate_buffer);
-  Py_VISIT(traverse_module_state->__pyx_kp_u_already_exists);
   Py_VISIT(traverse_module_state->__pyx_n_s_amount);
   Py_VISIT(traverse_module_state->__pyx_kp_u_and);
   Py_VISIT(traverse_module_state->__pyx_n_s_api);
@@ -6246,7 +6239,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_buf);
   Py_VISIT(traverse_module_state->__pyx_n_s_buffer_edit_begin);
   Py_VISIT(traverse_module_state->__pyx_n_s_buffer_edit_end);
-  Py_VISIT(traverse_module_state->__pyx_kp_u_buffer_with_name);
   Py_VISIT(traverse_module_state->__pyx_n_s_builtins);
   Py_VISIT(traverse_module_state->__pyx_n_s_c);
   Py_VISIT(traverse_module_state->__pyx_n_u_c);
@@ -7000,7 +6992,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_add_textbox __pyx_mstate_global->__pyx_n_s_add_textbox
 #define __pyx_kp_u_aiff __pyx_mstate_global->__pyx_kp_u_aiff
 #define __pyx_n_s_allocate_buffer __pyx_mstate_global->__pyx_n_s_allocate_buffer
-#define __pyx_kp_u_already_exists __pyx_mstate_global->__pyx_kp_u_already_exists
 #define __pyx_n_s_amount __pyx_mstate_global->__pyx_n_s_amount
 #define __pyx_kp_u_and __pyx_mstate_global->__pyx_kp_u_and
 #define __pyx_n_s_api __pyx_mstate_global->__pyx_n_s_api
@@ -7025,7 +7016,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_buf __pyx_mstate_global->__pyx_n_s_buf
 #define __pyx_n_s_buffer_edit_begin __pyx_mstate_global->__pyx_n_s_buffer_edit_begin
 #define __pyx_n_s_buffer_edit_end __pyx_mstate_global->__pyx_n_s_buffer_edit_end
-#define __pyx_kp_u_buffer_with_name __pyx_mstate_global->__pyx_kp_u_buffer_with_name
 #define __pyx_n_s_builtins __pyx_mstate_global->__pyx_n_s_builtins
 #define __pyx_n_s_c __pyx_mstate_global->__pyx_n_s_c
 #define __pyx_n_u_c __pyx_mstate_global->__pyx_n_u_c
@@ -25406,19 +25396,12 @@ static struct __pyx_obj_3api_Buffer *__pyx_f_3api_6Buffer_new(t_object *__pyx_v_
 static struct __pyx_obj_3api_Buffer *__pyx_f_3api_6Buffer_empty(t_object *__pyx_v_x, PyObject *__pyx_v_name, int __pyx_v_duration_ms, struct __pyx_opt_args_3api_6Buffer_empty *__pyx_optional_args) {
   int __pyx_v_channels = ((int)1);
   t_atom __pyx_v_argv[3];
-  t_buffer_ref *__pyx_v_ref;
+  CYTHON_UNUSED t_buffer_ref *__pyx_v_ref;
   CYTHON_UNUSED t_object *__pyx_v_b;
   struct __pyx_obj_3api_Buffer *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   t_symbol *__pyx_t_1;
-  int __pyx_t_2;
-  PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
-  PyObject *__pyx_t_5 = NULL;
-  Py_ssize_t __pyx_t_6;
-  Py_UCS4 __pyx_t_7;
-  PyObject *__pyx_t_8 = NULL;
-  int __pyx_t_9;
+  PyObject *__pyx_t_2 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -25433,93 +25416,14 @@ static struct __pyx_obj_3api_Buffer *__pyx_f_3api_6Buffer_empty(t_object *__pyx_
  * 
  *         # check if another buffer exists with same name
  *         cdef mp.t_buffer_ref* ref = mp.buffer_ref_new(x, str_to_sym(name))             # <<<<<<<<<<<<<<
- *         if mp.buffer_ref_exists(ref):
- *             return error(f"buffer with name {name} already exists")
+ *         # if mp.buffer_ref_exists(ref):
+ *         #     return error(f"buffer with name {name} already exists")
  */
   __pyx_t_1 = __pyx_f_3api_str_to_sym(__pyx_v_name); if (unlikely(__pyx_t_1 == ((t_symbol *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 451, __pyx_L1_error)
   __pyx_v_ref = buffer_ref_new(__pyx_v_x, __pyx_t_1);
 
-  /* "api.pyx":452
- *         # check if another buffer exists with same name
- *         cdef mp.t_buffer_ref* ref = mp.buffer_ref_new(x, str_to_sym(name))
- *         if mp.buffer_ref_exists(ref):             # <<<<<<<<<<<<<<
- *             return error(f"buffer with name {name} already exists")
- * 
- */
-  __pyx_t_2 = (buffer_ref_exists(__pyx_v_ref) != 0);
-  if (__pyx_t_2) {
-
-    /* "api.pyx":453
- *         cdef mp.t_buffer_ref* ref = mp.buffer_ref_new(x, str_to_sym(name))
- *         if mp.buffer_ref_exists(ref):
- *             return error(f"buffer with name {name} already exists")             # <<<<<<<<<<<<<<
- * 
- *         mx.atom_setsym(argv + 0, str_to_sym(name))
- */
-    __Pyx_XDECREF((PyObject *)__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_error); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 453, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyTuple_New(3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 453, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = 0;
-    __pyx_t_7 = 127;
-    __Pyx_INCREF(__pyx_kp_u_buffer_with_name);
-    __pyx_t_6 += 17;
-    __Pyx_GIVEREF(__pyx_kp_u_buffer_with_name);
-    PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_kp_u_buffer_with_name);
-    __pyx_t_8 = __Pyx_PyUnicode_Unicode(__pyx_v_name); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 453, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_7 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_8) > __pyx_t_7) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_8) : __pyx_t_7;
-    __pyx_t_6 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_8);
-    __Pyx_GIVEREF(__pyx_t_8);
-    PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_8);
-    __pyx_t_8 = 0;
-    __Pyx_INCREF(__pyx_kp_u_already_exists);
-    __pyx_t_6 += 15;
-    __Pyx_GIVEREF(__pyx_kp_u_already_exists);
-    PyTuple_SET_ITEM(__pyx_t_5, 2, __pyx_kp_u_already_exists);
-    __pyx_t_8 = __Pyx_PyUnicode_Join(__pyx_t_5, 3, __pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 453, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_8);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = NULL;
-    __pyx_t_9 = 0;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_4))) {
-      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
-      if (likely(__pyx_t_5)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
-        __Pyx_INCREF(__pyx_t_5);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_4, function);
-        __pyx_t_9 = 1;
-      }
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[2] = {__pyx_t_5, __pyx_t_8};
-      __pyx_t_3 = __Pyx_PyObject_FastCall(__pyx_t_4, __pyx_callargs+1-__pyx_t_9, 1+__pyx_t_9);
-      __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 453, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_3);
-      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    }
-    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_3api_Buffer))))) __PYX_ERR(0, 453, __pyx_L1_error)
-    __pyx_r = ((struct __pyx_obj_3api_Buffer *)__pyx_t_3);
-    __pyx_t_3 = 0;
-    goto __pyx_L0;
-
-    /* "api.pyx":452
- *         # check if another buffer exists with same name
- *         cdef mp.t_buffer_ref* ref = mp.buffer_ref_new(x, str_to_sym(name))
- *         if mp.buffer_ref_exists(ref):             # <<<<<<<<<<<<<<
- *             return error(f"buffer with name {name} already exists")
- * 
- */
-  }
-
   /* "api.pyx":455
- *             return error(f"buffer with name {name} already exists")
+ *         #     return error(f"buffer with name {name} already exists")
  * 
  *         mx.atom_setsym(argv + 0, str_to_sym(name))             # <<<<<<<<<<<<<<
  *         mx.atom_setlong(argv + 1, duration_ms);
@@ -25563,10 +25467,10 @@ static struct __pyx_obj_3api_Buffer *__pyx_f_3api_6Buffer_empty(t_object *__pyx_
  *     def change(self, str msg, *args) -> bool:
  */
   __Pyx_XDECREF((PyObject *)__pyx_r);
-  __pyx_t_3 = ((PyObject *)__pyx_f_3api_6Buffer_from_name(__pyx_v_x, __pyx_v_name)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 462, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_r = ((struct __pyx_obj_3api_Buffer *)__pyx_t_3);
-  __pyx_t_3 = 0;
+  __pyx_t_2 = ((PyObject *)__pyx_f_3api_6Buffer_from_name(__pyx_v_x, __pyx_v_name)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 462, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_r = ((struct __pyx_obj_3api_Buffer *)__pyx_t_2);
+  __pyx_t_2 = 0;
   goto __pyx_L0;
 
   /* "api.pyx":439
@@ -25579,10 +25483,7 @@ static struct __pyx_obj_3api_Buffer *__pyx_f_3api_6Buffer_empty(t_object *__pyx_
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_XDECREF(__pyx_t_2);
   __Pyx_AddTraceback("api.Buffer.empty", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
@@ -57615,7 +57516,6 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_add_textbox, __pyx_k_add_textbox, sizeof(__pyx_k_add_textbox), 0, 0, 1, 1},
     {&__pyx_kp_u_aiff, __pyx_k_aiff, sizeof(__pyx_k_aiff), 0, 1, 0, 0},
     {&__pyx_n_s_allocate_buffer, __pyx_k_allocate_buffer, sizeof(__pyx_k_allocate_buffer), 0, 0, 1, 1},
-    {&__pyx_kp_u_already_exists, __pyx_k_already_exists, sizeof(__pyx_k_already_exists), 0, 1, 0, 0},
     {&__pyx_n_s_amount, __pyx_k_amount, sizeof(__pyx_k_amount), 0, 0, 1, 1},
     {&__pyx_kp_u_and, __pyx_k_and, sizeof(__pyx_k_and), 0, 1, 0, 0},
     {&__pyx_n_s_api, __pyx_k_api, sizeof(__pyx_k_api), 0, 0, 1, 1},
@@ -57640,7 +57540,6 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_buf, __pyx_k_buf, sizeof(__pyx_k_buf), 0, 0, 1, 1},
     {&__pyx_n_s_buffer_edit_begin, __pyx_k_buffer_edit_begin, sizeof(__pyx_k_buffer_edit_begin), 0, 0, 1, 1},
     {&__pyx_n_s_buffer_edit_end, __pyx_k_buffer_edit_end, sizeof(__pyx_k_buffer_edit_end), 0, 0, 1, 1},
-    {&__pyx_kp_u_buffer_with_name, __pyx_k_buffer_with_name, sizeof(__pyx_k_buffer_with_name), 0, 1, 0, 0},
     {&__pyx_n_s_builtins, __pyx_k_builtins, sizeof(__pyx_k_builtins), 0, 0, 1, 1},
     {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
     {&__pyx_n_u_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 1, 0, 1},

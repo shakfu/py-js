@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Combined buffer tests (except numpy and array tests) into `test_buffer.py` and `test_buffer.maxpat`
+
 - Added additional message method support for api.Buffer
 
 - Added auto-resizing to buffer.set_samples and methods to set duration, samplerate as well as methods for generic message sending to a buffer for examples "fill" operations.
