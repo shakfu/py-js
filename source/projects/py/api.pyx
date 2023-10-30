@@ -234,7 +234,6 @@ cdef class Atom:
 
     def get_string(self, int idx=0) -> str:
         """Retrieves a string value from a symbol t_atom."""
-        # return (self.get_symbol(idx).s_name).decode()
         return sym_to_str(self.get_symbol(idx))
 
     cdef bint is_symbol(self, int idx=0):
@@ -472,10 +471,12 @@ cdef class Buffer:
         cdef Atom atom = Atom.from_seq(args)
 
         if (self.obj):
-            mp.buffer_edit_begin(self.obj)
+            # mp.buffer_edit_begin(self.obj)
+            self.buffer_edit_begin()
             mx.object_method_typed(
                 <mx.t_object*>self.obj, str_to_sym(msg), atom.size, atom.ptr, NULL)
-            mp.buffer_edit_end(self.obj, 1)
+            # mp.buffer_edit_end(self.obj, 1)
+            self.buffer_edit_end()
             self.setdirty()
             return True
 
@@ -492,13 +493,10 @@ cdef class Buffer:
             return
 
         if self.change("sizeinsamps", frames):
-
             if frames != self.framecount:
                 error(f"Could not resize {self.name} "
                       f"frames: {frames} != {self.framecount}")
-
             assert(frames == self.framecount)
-
             return
 
         return error("Resize on null buffer")
@@ -512,18 +510,14 @@ cdef class Buffer:
 
     def set_samplerate(self, int samplerate):
         """change buffer samplerate (Hz)"""
-
         if samplerate == self.samplerate:
             return
 
         if self.change("sr", samplerate):
-
             if samplerate != self.samplerate:
                 error(f"Could not set samplerate to buffer {self.name} "
                       f"{samplerate} != {self.samplerate}")
-
             assert(samplerate == self.samplerate)
-
             return
 
         return error("Resize on null buffer")
@@ -554,13 +548,10 @@ cdef class Buffer:
             return
 
         if self.change("size", duration):
-
             if duration != self.duration_ms:
                 error(f"Could not resize {self.name} "
                       f"duration_ms != {self.duration_ms}")
-
             assert(duration == self.duration_ms)
-
             return
 
         return error("Resize on null buffer")
@@ -583,16 +574,6 @@ cdef class Buffer:
         """Get how many channels are present in the buffer content."""
         return mp.buffer_getchannelcount(self.obj)
 
-    # @property
-    # def framecount(self):
-    #     """Get how many frames long the buffer content is in samples."""
-    #     return mp.buffer_getframecount(self.obj)
-
-    # @property
-    # def samplerate(self):
-    #     """Get the buffer's native sample rate in samples per second."""
-    #     return mp.buffer_getsamplerate(self.obj)
-
     @property
     def millisamplerate(self):
         """Get the buffer's native sample rate in samples per millisecond."""
@@ -602,16 +583,6 @@ cdef class Buffer:
     def n_samples(self):
         """Get the number of samples in the buffer."""
         return self.framecount
-
-    # @property
-    # def duration(self):
-    #     """Get the buffer's duration in seconds."""
-    #     return self.n_samples / self.samplerate
-
-    # @property
-    # def duration_ms(self):
-    #     """Get the buffer's duration in milliseconds."""
-    #     return self.duration * 1000
 
     @property
     def filename(self):
@@ -641,9 +612,9 @@ cdef class Buffer:
     def buffer_edit_begin(self):
         """begin buffer_edit block
 
-        use buffer_edit functions to collapse all operations of
-        locking heavy b_mutex, setting b_valid flag,
-        waiting on lightweight atomic b_inuse, etc.
+        Use `buffer_edit` functions to collapse all operations of
+        locking heavy `b_mutex`, setting b_valid flag, waiting on
+        lightweight atomic b_inuse, etc.
         """
         mp.buffer_edit_begin(self.obj)
 
@@ -651,6 +622,7 @@ cdef class Buffer:
         """end buffer_edit block"""
         mp.buffer_edit_end(self.obj, valid)
 
+    # TODO: add start:end slice
     def get_samples(self):
         """get samples as a memoryview"""
         cdef int i;
@@ -666,9 +638,9 @@ cdef class Buffer:
     def set_samples(self, double[:] samples):
         """set samples from a memoryview"""
         # assert samples.shape[0] <= self.n_samples
-        # resize buffer to samples.shape[0]
         cdef int n_samples = samples.shape[0]
         cdef int i
+        # resize buffer to samples.shape[0]
         self.set_framecount(n_samples)
         self.locksamples()
         for i in range(n_samples):
@@ -678,9 +650,10 @@ cdef class Buffer:
     def send(self, str msg, *args):
         """generic message sender
 
-        May only be used for content modification and general
-        messages (not for structural changes which require
-        re-allocation of memory).
+        Used for all message methos except those modifying
+        the buffer structure (size, framecount, ..)
+        i.e. not for structural changes which require
+        re-allocation of memory.
 
         >>> buf.send("fill", "sin", 24)
         """
