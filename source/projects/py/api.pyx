@@ -407,20 +407,6 @@ cdef class Buffer:
         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
         return buffer
 
-    # @staticmethod
-    # cdef Buffer new(mx.t_object *x, str name, str sample_file):
-    #     """create a buffer from scratch given name and file to load"""
-    #     # create a buffer
-    #     cdef mx.t_atom a
-    #     mx.atom_setsym(&a, str_to_sym(name))
-    #     cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
-    #         mx.CLASS_BOX, mx.gensym("buffer~"), 1, &a)
-    #     mx.atom_setsym(&a, str_to_sym(sample_file))
-    #     mx.typedmess(b, mx.gensym("replace"), 1, &a)
-
-    #     # now retrieve buffer by name
-    #     return Buffer.from_name(x, name)
-
 
     @staticmethod
     cdef Buffer new(mx.t_object *x, str name, str sample_file, int duration = -1, int channels = 1):
@@ -680,7 +666,9 @@ cdef class Buffer:
     def send(self, str msg, *args):
         """generic message sender
 
-        May only be used for content modification
+        May only be used for content modification and general
+        messages (not for structural changes which require
+        re-allocation of memory).
 
         >>> buf.send("fill", "sin", 24)
         """
@@ -779,9 +767,9 @@ cdef class Buffer:
         """same as import but imports are performed with automatic duration and channel resizing enabled by default
         """
         if channels:
-            self.change("import", path, start, channels)
+            self.change("importreplace", path, start, channels)
         else:
-            self.change("import", path, start)
+            self.change("importreplace", path, start)
 
     def rename(self, str name):
         """combine 'name' and 'set' in one method
