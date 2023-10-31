@@ -204,6 +204,32 @@ cdef class Atom:
             mx.sysmem_freeptr(self.ptr)
             self.ptr = NULL
 
+    def __init__(self, *args):
+        self.size = len(args)
+        self.ptr = <mx.t_atom *>mx.sysmem_newptr(self.size * sizeof(mx.t_atom))
+        if self.ptr is NULL:
+            raise MemoryError
+
+        cdef int i
+        for i, obj in enumerate(args):
+
+            if isinstance(obj, float):
+                mx.atom_setfloat(self.ptr+i, <float>obj)
+
+            elif isinstance(obj, int):
+                mx.atom_setlong(self.ptr+i, <long>obj)
+
+            elif isinstance(obj, bytes):
+                mx.atom_setsym(self.ptr+i, mx.gensym(obj))
+
+            elif isinstance(obj, str):
+                mx.atom_setsym(self.ptr+i, str_to_sym(obj))
+
+            else:
+                error(f"cannot convert: {obj}")
+
+        self.owner=True
+
     def set_float(self, float f, int idx=0):
         """Inserts a float into a t_atom and change its type to A_FLOAT."""
         mx.atom_setfloat(self.ptr + idx, f)
@@ -328,7 +354,7 @@ cdef class Atom:
                 mx.atom_setsym(ptr+i, str_to_sym(obj))
 
             else:
-                print("cannot convert:", obj)
+                error(f"cannot convert: {obj}")
                 continue
 
         return Atom.from_ptr(ptr, size, owner=True)
@@ -336,14 +362,23 @@ cdef class Atom:
 # ----------------------------------------------------------------------------
 # api.Table
 
+# TODO: ??? create new table using         
+# self.obj = <mx.t_object*>mx.object_new_typed(
+#       mx.CLASS_BOX, mx.gensym("table"), argc, argv)
+
 cdef class Table:
     """A wrapper class to acess a pre-existing Max table
     """
-    cdef str name
+    cdef public str name
     cdef long **storage
     cdef readonly long size
 
-    def __cinit__(self, str name):
+    def __cinit__(self):
+        self.name = None
+        self.storage = NULL
+        self.size = 0
+
+    def __init__(self, str name):
         self.name = name
         check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
         assert check == 0, f"table with name '{name}' doesn't exist"
@@ -819,12 +854,12 @@ cdef class Dictionary:
     cdef dict type_map
 
     def __cinit__(self):
-        # Create a new dictionary object.
+        self.d = NULL
+        self.type_map = None
+
+    def __init__(self):
         self.d = mx.dictionary_new()
         self.type_map = dict()
-
-    # def __init__(self):
-    #     self.type_map = dict()
 
     def __dealloc__(self):
         # De-allocate if not null
@@ -832,23 +867,24 @@ cdef class Dictionary:
             mx.object_free(self.d)
             self.d = NULL
 
-    def __setitem__(self, str key, value):
+    def __setitem__(self, str key, object value):
         if isinstance(value, float):
             self.type_map[key] = 'float'
             self.appendfloat(str_to_sym(key), <double>value)
+            # self.appendfloat(str_to_sym(key), <float>value)
         elif isinstance(value, int):
             self.type_map[key] = 'long'
-            self.appendlong(str_to_sym(key), <long>value)
+            self.appendlong(str_to_sym(key), <int>value)
         elif isinstance(value, str):
             self.type_map[key] = 'str'
             self.appendsym(str_to_sym(key), str_to_sym(value))
 
     def __getitem__(self, str key):
         return {
-            'float': self.get_float(key),
-            'long': self.get_long(key),
-            'str': self.get_str(key),
-        }[key]
+            'float': self.get_float,
+            'long': self.get_long,
+            'str': self.get_str,
+        }[self.type_map[key]](key)
 
     cdef mx.t_max_err appendlong(self, mx.t_symbol* key, mx.t_atom_long value):
         """Add a long integer value to the dictionary."""
@@ -898,6 +934,7 @@ cdef class Dictionary:
 
     def get_long(self, str key) -> int:
         """Retrieve a long integer from the dictionary."""
+        post(f"getting int from key {key}")
         cdef mx.t_atom_long value
         cdef mx.t_max_err err = mx.dictionary_getlong(self.d, str_to_sym(key), &value)
         # cdef mx.t_max_err err = self.getlong(str_to_sym(key), &value)
@@ -910,6 +947,7 @@ cdef class Dictionary:
 
     def get_float(self, str key) -> float:
         """Retrieve a double-precision float from the dictionary."""
+        post(f"getting float from key {key}")
         cdef double value
         cdef mx.t_max_err err = mx.dictionary_getfloat(self.d, str_to_sym(key), &value)
         if err == mx.MAX_ERR_NONE:
@@ -920,6 +958,7 @@ cdef class Dictionary:
         return mx.dictionary_getsym(self.d, key, value)
 
     def get_str(self, str key) -> str:
+        post(f"getting symbol from key {key}")
         """Retrieve a t_symbol* as a python string from the dictionary."""
         cdef mx.t_symbol* value
         cdef mx.t_max_err err = mx.dictionary_getsym(self.d, str_to_sym(key), &value)
