@@ -205,8 +205,11 @@ cdef class Atom:
             self.ptr = NULL
 
     def __init__(self, *args):
+        if len(args)==1 and isinstance(args[0], list):
+            args = args[0]
         self.size = len(args)
         self.ptr = <mx.t_atom *>mx.sysmem_newptr(self.size * sizeof(mx.t_atom))
+        self.ptr_owner=True
         if self.ptr is NULL:
             raise MemoryError
 
@@ -228,7 +231,6 @@ cdef class Atom:
             else:
                 error(f"cannot convert: {obj}")
 
-        self.owner=True
 
     def set_float(self, float f, int idx=0):
         """Inserts a float into a t_atom and change its type to A_FLOAT."""
@@ -1255,13 +1257,26 @@ cdef class Database:
     cdef mx.t_symbol* db_name
     cdef bytes db_path
 
-    def __cinit__(self, str db_name, str db_path):
+    # def __cinit__(self, str db_name, str db_path):
+    #     self.db_name = str_to_sym(db_name)
+    #     self.db_path = db_path.encode('utf-8')
+    #     mx.db_open(self.db_name, self.db_path, &self.db)
+
+    def __cinit__(self):
+        self.db = NULL
+        self.db_name = NULL
+        self.db_path = None
+
+    def __init__(self, str db_name, str db_path):
         self.db_name = str_to_sym(db_name)
         self.db_path = db_path.encode('utf-8')
-        mx.db_open(self.db_name, self.db_path, &self.db)
+        # mx.db_open(self.db_name, self.db_path, &self.db)
 
     def __dealloc__(self):
         mx.db_close(&self.db)
+        self.db = NULL
+        self.db_name = NULL
+        self.db_path = None
 
     def open(self):
         mx.db_open(self.db_name, self.db_path, &self.db)
