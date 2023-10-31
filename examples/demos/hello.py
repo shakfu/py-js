@@ -29,3 +29,4 @@ e = '"double-quoted"'
 
 f = "'single-quoted'"
 
+g = "finally"

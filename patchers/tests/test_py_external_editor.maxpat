@@ -45,7 +45,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 367.0, 223.0, 217.0, 20.0 ],
-					"presentation_linecount" : 3,
 					"text" : "triggers on editor save / code reload"
 				}
 
@@ -122,13 +121,14 @@
 			}
 , 			{
 				"box" : 				{
+					"fontsize" : 14.0,
 					"id" : "obj-40",
-					"linecount" : 3,
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 383.666666666666629, 15.0, 207.0, 47.0 ],
-					"text" : "test of abstract to open file in external editor with auto filewatch and reloading after save"
+					"patching_rect" : [ 39.0, 36.0, 427.0, 38.0 ],
+					"text" : "test of abstraction to open file in external editor with auto filewatch and reloading after save"
 				}
 
 			}

@@ -517,11 +517,23 @@ Implemented for `py` objects only:
 
 Implemented for `py` objects only.
 
-- **Line REPL**. The `py`has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all of the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of entries in a session. Of course, a coll can made to save all commands if required.
+- **Line REPL**. The `py` object has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all of the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of entries in a session. Of course, a coll can made to save all commands if required.
 
-- **Experimental Remote Console**. A new method (due to [Iain Duncan](https://github.com/iainctduncan)) of sending code to the `py` node via `udp` has been implemented and allows for send-from-editor and send-from-interactive-console capabilities. The clients are still in their infancy, but this method looks promising since you get syntax highlighting, syntax checking, and other features. It assumes you want to treat your `py` nodes as remotely accessible `server/interpreters-in-max`.
+- **Multiedit REPL**. Another bpatcher combines a textedit for writing multiliine python code which will be `exec`'ed into the respective `py` external's namespace with a simple line repl strictly for `eval`ing objects in the namespace.
+
+- **External Editor Filewatcher**. `py_extedit.maxpat` is a bpatcher which wraps wraps the `filewatcher` object and opens a watched file in an external editor. If the the watched file is saved by the editor, it will be sent out as text via the outlet and can be received, for example, by the `py` object's inlet, to enable reloading python code after save.
+
+- **Experimental Remote Console**. A method (due to [Iain Duncan](https://github.com/iainctduncan)) of sending code to the `py` node via `udp` has been implemented and allows for send-from-editor and send-from-interactive-console capabilities. The clients are still in their infancy, but this method looks promising since you get syntax highlighting, syntax checking, and other features. It assumes you want to treat your `py` nodes as remotely accessible `server/interpreters-in-max`.
 
 - **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
+
+
+```
+zedit: [python interpreter / web server] <-> [web-editor / web-console]
+```
+
+- **`zedit`: a python3 external with an embedded web server**. `zedit` is a python-enabled external by virtue of using the `mamba` single-header library and also embeds the [mongoose embedded webserver](https://mongoose.ws). On the frontend, it uses modern javascript, [jquery-terminal](https://terminal.jcubic.pl) and the powerful [code-mirror](https://codemirror.net) web text editor widget to create a reasonably powerful web-editor / web-console which communicates with the mongoose webserver and the underlying python interpreter and all of this is packaged in a Max external.
+
 
 For `pyjs` objects, code editing is already provided by the [js](https://docs.cycling74.com/max8/refpages/js) Max object.
 
