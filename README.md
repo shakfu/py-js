@@ -577,7 +577,7 @@ See the `examples/tests` folder and the `patchers/tests`  folder for more exampl
 
 ## Packaging
 
-This project has builtin features to package, sign, notarize and deploy python3 externals for Max/MSP.
+As mentioned previously, the py-js `builder` subproject be used to build customized python distributions for python3 externals. In addition, it can also package, sign, notarize and deploy the same externals for distribution.
 
 These features are implemented in `py-js/source/project/py/builder/packaging.py` and are exposed via two interfaces:
 
@@ -616,7 +616,7 @@ package subcommands:
 
 ### The Project's `Makefile` frontend:
 
-Since the Makefile frontend basically just calles on `builder` interface in a simplified way, we will use it to explain the basic steps which occur sequentially. Note that while it is possible to automate thie process considerable, it is separated here into discrete steps for purposes of illustration and to facilitate debugging:
+Since the `Makefile` frontend basically just calls the `builder` interface in a simplified way, we will use it to explain the basic sequential packaging steps.
 
 1. Recursively sign all externals in the `external folder` and/or binaries in the `support` folder
 
@@ -654,25 +654,25 @@ make staple-dmg
 make collect-dmg
 ```
 
-Note that the it is important to sign externals (this is done by Xcode automatically) if you want to to distribute to others (or in the case of Apple Silicon, use yourself). If the externals are signed, then you can proceed to the notarization step if you have an Apple Develop License (100 USD/year) or, alternatively, you can ask users to remove the products quarantine state or let Max do this automatically on opening the external.
+Note that the it is important to sign externals (this is done by Xcode automatically) if you want to to distribute to others (or in the case of Apple Silicon, even use yourself). If the externals are signed, then you can proceed to the notarization step if you have an Apple Developer License (100 USD/year) or, alternatively, you can ask users to remove the product's quarantine state or let Max do this automatically on opening the external.
 
 
 ### Github Actions
 
 There are a number of Github actions in the project which basically automate the packaging, signing and notarization steps described above.
 
-The only caveat is that currently Github only provide `x86_64` runners so one has to build for `arm64` on a dedicated machine.
+The only issue is that currently Github only provide `x86_64` runners so one has to build for `arm64` on a dedicated machine.
 
 
 ## Caveats
 
-- The externals in this project have been developed on MacOS and have not been tested on Windows.
+- The externals in this project have been mostly developed on MacOS and have not yet been extensively tested on Windows.
 
-- Despite their relative maturity, the `py` and `pyjs` objects are still only v0.2.x and still need further unit/functional/integration testing and field testing of course!
+- Despite their relative maturity, the `py` and `pyjs` objects are still only v0.2.x and still need further unit/functional/integration/field testing!
 
-- As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions (python 3.11 perhaps?).
+- As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions (python 3.13 perhaps?).
 
-- `Numpy`, the popular python numerical analysis package, falls in the above category. In python 3.9.x, it thankfully doesn't crash but gives the following error:
+- `Numpy`, the popular python numerical analysis package, falls in the above category. As of python 3.9.x, it thankfully doesn't crash but gives the following error:
 
 ```bash
 [py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
