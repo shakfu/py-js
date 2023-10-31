@@ -394,6 +394,25 @@ cdef class Buffer:
             mx.object_free(self.ref)
             self.ref = NULL
 
+    def __init__(self, str name, str filename, int duration = -1, int channels = 1):
+        """create a buffer from scratch given name and file to load
+
+        params:
+            name: str
+            filename: str
+            duration: int (ms) (default -1)
+            channels: int      (default 1)
+        """
+        cdef mx.t_atom[4] argv
+        cdef int argc = 4
+        mx.atom_setsym(argv, str_to_sym(name))
+        mx.atom_setsym(argv+1, str_to_sym(filename))        
+        mx.atom_setlong(argv+2, duration)
+        mx.atom_setlong(argv+3, channels)
+        self.obj = <mx.t_object*>mx.object_new_typed(
+            mx.CLASS_BOX, mx.gensym("buffer~"), argc, argv)
+        self.ref = mp.buffer_ref_new(self.obj, str_to_sym(name))
+
     @staticmethod
     cdef Buffer from_name(mx.t_object *x, str name):
         """Create a reference to a buffer~ object by name."""
@@ -407,7 +426,7 @@ cdef class Buffer:
 
 
     @staticmethod
-    cdef Buffer new(mx.t_object *x, str name, str sample_file, int duration = -1, int channels = 1):
+    cdef Buffer new(mx.t_object *x, str name, str filename, int duration = -1, int channels = 1):
         """create a buffer from scratch given name and file to load
 
         params:
@@ -420,13 +439,13 @@ cdef class Buffer:
         cdef mx.t_atom[4] argv
         cdef int argc = 4
         mx.atom_setsym(argv, str_to_sym(name))
-        mx.atom_setsym(argv+1, str_to_sym(sample_file))        
+        mx.atom_setsym(argv+1, str_to_sym(filename))        
         mx.atom_setlong(argv+2, duration)
         mx.atom_setlong(argv+3, channels)
         cdef mx.t_object *b = <mx.t_object*>mx.object_new_typed(
             mx.CLASS_BOX, mx.gensym("buffer~"), argc, argv)
         argc = 3
-        mx.atom_setsym(argv, str_to_sym(sample_file))
+        mx.atom_setsym(argv, str_to_sym(filename))
         mx.atom_setlong(argv+1, 0) # starting time
         mx.atom_setlong(argv+2, channels)
         mx.typedmess(b, mx.gensym("replace"), argc, argv)

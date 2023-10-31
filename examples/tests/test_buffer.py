@@ -13,6 +13,12 @@ import api
 
 from pathlib import Path
 
+def test_init_buffer():
+    # creating a buffer the pythonic way!! (Experimental)
+    b = api.Buffer("drum", "drumLoop.aif")
+    # test it
+    api.post(f"framecount: {b.framecount})")
+    b.view()
 
 def test_view_buffer():
     # this step is necessary to get a reference to the `py` external instance
