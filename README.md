@@ -70,9 +70,9 @@ The common objective in these externals is to help use and distribute python cod
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project has the following compatibility:
 
-- macOS: both x86_64 and Apple Silicon compatible. Note that the project intentionally only produces 'native' (`x86_64` xor `arm64`) externals with no current plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
+- **macOS**: both x86_64 and Apple Silicon compatible. Note that the project intentionally only produces 'native' (`x86_64` xor `arm64`) externals with no current plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-- Windows: windows support was recently provided, and currently all Python3 externals and also the `pktpy` projects build without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. This constraint will be hopefully addressed in future iterations. The `pktpy` external, however, is fully portable and self-contained. 
+- **Windows**: windows support was recently provided, and currently all Python3 externals and also the `pktpy` projects build without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. This constraint will be hopefully addressed in future iterations. The `pktpy` external, however, is fully portable and self-contained. 
 
 This README will mostly cover the first two mature externals (`py.mxo` and `pyjs.mxo`) and their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
 
@@ -94,7 +94,7 @@ A general purpose Max external which embeds a python3 interpreter and is made up
 
 2. A pure python module, `py_prelude.py` which is converted to `py_prelude.h` and compiled with `py` and then pre-loaded into the `globals()` namespace of every `py` instance.
 
-3. A builtin `api` module which is derived from a cython-wrapper of a subset of the Max c-api. 
+3. A builtin `api` module which is derived from a cython-based wrapper of a subset of the Max c-api. 
 
 The following provides a brief view of key attributes and methods:
 
@@ -232,19 +232,19 @@ If you'd rather build them or any of the other externals yourself then the proce
 
     [?] It is possible to install `py-js` directly into `$HOME/Documents/Max 8/Packages`, but it requires moving the place of compilation to a location in your filesystem that is not exposed to errors due to icloud syncing or spaces in the path. This split is possible, but it is not recommended for the purposes of this quickstart.
 
-4. Install [cython](https://cython.org) via `pip3 install cython`, which is used for wrapping the max api and worth installing in case you want to play around or extend the max api wrapper (which is written in cython) for the `py` or `pyjs` externals.
+4. Install [cython](https://cython.org) via `pip3 install cython`, required for translating the cython-based `api.pyx`, which wraps the the Max c-api, to c.
 
-5. To build only the `py` or `pyjs` externals, type the following in the root directory of the `py-js` project (other installation options are detailed below):
+5. To build only the `py` and `pyjs` externals, type the following in the root directory of the `py-js` project (other installation options are detailed below):
 
     ```bash
     make
     ```
 
-Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are quite small in size and are linked to your system python3 installation. This has the immediate benefit that you have access to your curated collection of python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
+Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are relatively small in size and are linked to your system python3 installation. This has the immediate benefit that you have access to your curated collection of existing python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
 
 No worries, if you need portable relocatable python3 externals for your package or standalone then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section
 
-Open up any of the patch files in the `patchers` directory of the repo or the generated max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
+Open up any of the patch files in the `patchers` directory of the repo or the generated Max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
 
 ### Building Experimental Externals using Cmake
 
@@ -262,7 +262,7 @@ Now you can build all externals (including `py` and `pyjs`) in one shot using cm
 make projects
 ```
 
-After doing the above, the recommended iterative development workflow is to make changes to the source code in the respective project and then `cd py-js/build` and `make`. This will cause cmake to only build modified projects efficiently.
+After doing the above, the recommended iterative development workflow is to make changes to the source code in the respective project and then `cd py-js/build` and `cmake --build .`. This will cause cmake to only build modified projects efficiently.
 
 Note that for some of the less developed externals and more experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
@@ -272,7 +272,9 @@ The following section addresses this requirement.
 
 ### Building self-contained Python3 Externals for Packages and Standalones
 
-Currently only the `py` and `pyjs` externals are built using these methods, which rely on a custom python [build manager](https://github.com/shakfu/py-js/tree/main/source/projects/py/builder). The `Makefile` in the project root provides a simplified interface to this builder. See the [Current Status of Builders](https://github.com/shakfu/py-js#current-status-of-builders) section for further information.
+Currently, the `py` and `pyjs` externals can be additionally custom-built for the express purpose of packaging these for standalone and Max packages using a custom python [build manager](https://github.com/shakfu/py-js/tree/main/source/projects/py/builder). This allows highly-customized `build variants` to be produced.
+
+The `Makefile` in the project root provides a simplified interface to this builder. See the [Current Status of Builders](https://github.com/shakfu/py-js#current-status-of-builders) section for further information.
 
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
@@ -370,16 +372,16 @@ If you would like to see which build variations are compatible with your current
 make test
 ````
 
-This can take a long time, but it is worth doing to understand which variations work on your particular setup.
+This can take a long time, but it is worth doing to understand which variants work on your particular setup.
 
-If you want to test or retest one individual variation, just prefix `test-` to the name of variation as follows:
+If you want to test or retest one individual variant, just prefix `test-` to the name of variant as follows:
 
 ```bash
 
 make test-shared-pkg
 ```
 
-### Using Self-contained Python Externals in a Standalone
+### Using Self-contained Python Externals in a Standalone (macOS only)
 
 If you have downloaded any pre-built externals from [releases](https://github.com/shakfu/py-js/releases) or if you have built self-contained python externals as per the methods above, then you should be ready to use these in a standalone.
 
@@ -417,9 +419,9 @@ Have fun!
 
 This overview will cover the following two external implementations:
 
-1. The `py` external which provides a more featureful two-way interface between Max and python in a way that feels natural to both languages.
+1. The `py` external provides a more featureful two-way interface between Max and python in a way that feels natural to both languages.
 
-2. The `pyjs` max external/jsextension providing a `PyJS` class and a minimal subset of the `py` external's features which work well with the Max `js` object and javascript code (like returning json directly from evaluations of python expressions).
+2. The `pyjs` max external/jsextension provides a `PyJS` class and a minimal subset of the `py` external's features which work well with the Max `js` object and javascript code (like returning json directly from evaluations of python expressions).
 
 Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
 
@@ -517,52 +519,37 @@ Implemented for `py` objects only:
 
 Implemented for `py` objects only.
 
-- **Line REPL**. The `py` object has two bpatcher line `repls`, one of which embeds a `py` object and another which has an outlet to connect to one. The repls include a convenient menu with all of the `py` object's methods and also feature coll-based history via arrow-up/arrow-down recall of entries in a session. Of course, a coll can made to save all commands if required.
+- **Line REPL**. The `py` object has two bpatcher line `repls`: one, `py_repl_plux.maxpat` which embeds a `py` object and another, `py_repl.maxpat` which has an outlet to connect to one. The repls include a convenient menu with all of the `py` object's methods and also feature `coll`-based history via arrow-up/arrow-down recall of entries in a session. A `coll` can made to save all commands if required.
 
-- **Multiedit REPL**. Another bpatcher combines a textedit for writing multiliine python code which will be `exec`'ed into the respective `py` external's namespace with a simple line repl strictly for `eval`ing objects in the namespace.
+- **Multiedit REPL**. Another bpatcher, `py_multiedit.maxpat`, combines a `textedit` object for writing multiliine python code to be executed in the respective `py` external's namespace, and a simple line repl strictly for evaluating objects in the namespace.
 
-- **External Editor Filewatcher**. `py_extedit.maxpat` is a bpatcher which wraps wraps the `filewatcher` object and opens a watched file in an external editor. If the the watched file is saved by the editor, it will be sent out as text via the outlet and can be received, for example, by the `py` object's inlet, to enable reloading python code after save.
+- **External Editor Filewatcher**. `py_extedit.maxpat` is a bpatcher which wraps the `filewatcher` object and opens a *watched* file in an external editor. If the file is saved by the editor, it will be sent out as text via the outlet and can be received, for example, by the `py` object's inlet, to enable a kind of load-on-save workflow.
+
+- **Code Editor**. Double-clicking on the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to the external's attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved code to the object's namespace.
 
 - **Experimental Remote Console**. A method (due to [Iain Duncan](https://github.com/iainctduncan)) of sending code to the `py` node via `udp` has been implemented and allows for send-from-editor and send-from-interactive-console capabilities. The clients are still in their infancy, but this method looks promising since you get syntax highlighting, syntax checking, and other features. It assumes you want to treat your `py` nodes as remotely accessible `server/interpreters-in-max`.
-
-- **Code Editor**. Double-clicking the `py` object opens a code-editor. This is populated by a `read` message which reads a file into the editor and saves the filepath to an attribute. A `load` message also `reads` the file followed by `execfile`. Saving the text in the editor uses the attribute filepath and execs the saved text to the object's namespace.
 
 
 ```
 zedit: [python interpreter / web server] <-> [web-editor / web-console]
 ```
 
-- **`zedit`: a python3 external with an embedded web server**. `zedit` is a python-enabled external by virtue of using the `mamba` single-header library and also embeds the [mongoose embedded webserver](https://mongoose.ws). On the frontend, it uses modern javascript, [jquery-terminal](https://terminal.jcubic.pl) and the powerful [code-mirror](https://codemirror.net) web text editor widget to create a reasonably powerful web-editor / web-console which communicates with the mongoose webserver and the underlying python interpreter and all of this is packaged in a Max external.
-
+- **`zedit`: a python3 external with an embedded web server**. `zedit` is a python3-enabled external by virtue of using the `mamba` single-header library and also embeds the [mongoose embedded webserver](https://mongoose.ws). On the frontend, it uses modern javascript, [jquery-terminal](https://terminal.jcubic.pl) and the widely-used [code-mirror](https://codemirror.net) web text editor widget to create a web-editor / web-console which can be accessed from a browser and which communicates via the mongoose webserver with the underlying python interpreter.
 
 For `pyjs` objects, code editing is already provided by the [js](https://docs.cycling74.com/max8/refpages/js) Max object.
 
-#### Scripting Max via the builtin `api` module
 
-A subset of the Max c-api is wrapped by the cython-based `api` module (`api.pyx`). Prior to compilation it is converted to c-code and then built and embedded in the external during compilation. This enables a custom python builtin module called `api` to be importable by all python code which run in `py` objects. 
+#### Scripting Max with Python via the builtin `api` module
 
-This makes it easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
+A subset of the Max c-api is wrapped by the cython-based `api` module (`api.pyx`). Prior to compilation it is converted to c and then compiled into the external. This exposes a Python *builtin* module called `api` to all python code running on `py` objects. 
 
-As of this writing the following Max objects have been wrapped to some extent:
+The `api` module includes functions and cython extension classes which make it relatively easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
 
-- [x] PyExternal: gives python code access to the `py` external's methods and data
+As of this writing the following extension classes which wrap their corresponding Max datastructures are included in the `api` module: `Atom`, `AtomArray`, `Table`, `Buffer`, `Dictionary`, `Database`, `Linklist`, `Binbuf`, `Hashtab` and `Patcher`. 
 
-- [x] Atom: the pervasive `t_atom`
-- [x] Atom Array: a container for an array of atoms
-- [x] Binbuf: a text buffer data structure
-- [x] Buffer: full wraps the buffer~ object
-- [x] Database: SQLite database access
-- [x] Dictionary: structured/hierarchical data that is both sortable and fast
-- [x] Hash Table: hash table for mapping symbols to data
-- [ ] Index Map: managed array of pointers
-- [x] Linked List: doubly-linked-list
-- [ ] Quick Map: a double hash with keys mapped to values and vice-versa
-- [x] String Object: wrapper for C-strings with an API for manipulating them
-- [ ] Symbol Object: wrapper for symbols
-- [x] Table
-- [x] Patcher: to enable scripting via the `[thepatcher]`
+In addition, a cython extension class, `PyExternal`, gives python code access to the c-based `py` external's data and methods.
 
-To give a sense of the level of integration: the following example demonstrates how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api`module.
+To give a sense of the level of integration which is possible as a result of this module, the following example demonstrates how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api` module's `Buffer` extension class:
 
 ```python
 import api
@@ -586,11 +573,11 @@ def set_buffer_samples(name: str, duration_ms: int):
     api.post(f"set {buf.n_samples} samples to buffer {name}")
 ```
 
-See the `examples` folder and the `patchers/tests`  folder for actual examples of use.
+See the `examples/tests` folder and the `patchers/tests`  folder for more examples.
 
 ## Packaging
 
-This project has a builtin features to package, sign, notarize and deploy python3 externals for Max/MSP.
+This project has builtin features to package, sign, notarize and deploy python3 externals for Max/MSP.
 
 These features are implemented in `py-js/source/project/py/builder/packaging.py` and are exposed via two interfaces:
 
