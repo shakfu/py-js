@@ -539,15 +539,17 @@ For `pyjs` objects, code editing is already provided by the [js](https://docs.cy
 
 #### Scripting Max via the builtin `api` module
 
-**Exposing the Max c-api to Python** A subset of the Max c-api is wrapped by the cython-based `api` module (`api.pyx`) which is converted to c-code during builds and embedded in the external. This enables a custom python builtin module called `api` to be importable by all python code which runs in a `py` objects or via `import` messages to the object. This makes it easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
+A subset of the Max c-api is wrapped by the cython-based `api` module (`api.pyx`). Prior to compilation it is converted to c-code and then built and embedded in the external during compilation. This enables a custom python builtin module called `api` to be importable by all python code which run in `py` objects. 
+
+This makes it easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
 
 As of this writing the following Max objects have been wrapped to some extent:
 
-- [x] PyExternal: gives python code access to the `py` externals methods and data
+- [x] PyExternal: gives python code access to the `py` external's methods and data
 
-- [x] Atom: wrapp t_atom
-- [x] Atom Array: container for an array of atoms
-- [x] Binbuf
+- [x] Atom: the pervasive `t_atom`
+- [x] Atom Array: a container for an array of atoms
+- [x] Binbuf: a text buffer data structure
 - [x] Buffer: full wraps the buffer~ object
 - [x] Database: SQLite database access
 - [x] Dictionary: structured/hierarchical data that is both sortable and fast
@@ -558,9 +560,9 @@ As of this writing the following Max objects have been wrapped to some extent:
 - [x] String Object: wrapper for C-strings with an API for manipulating them
 - [ ] Symbol Object: wrapper for symbols
 - [x] Table
-- [x] Patcher
+- [x] Patcher: to enable scripting via the `[thepatcher]`
 
-To give an sense of this power, the following example demonstrates how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api`module.
+To give a sense of the level of integration: the following example demonstrates how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api`module.
 
 ```python
 import api
