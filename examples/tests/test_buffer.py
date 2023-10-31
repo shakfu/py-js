@@ -45,39 +45,45 @@ def resize(buffer_name, frames):
 
 def test_change_framecount():
     buf = api.get_buffer("drum")
-    api.post(f"framecount: {buf.framecount}")
+    api.post(f"before: framecount: {buf.framecount}")
     buf.set_framecount(buf.framecount/2)
+    api.post(f"after: framecount: {buf.framecount}")
     return buf.framecount
 
 def test_change_framecount_prop():
     buf = api.get_buffer("drum")
-    api.post(f"framecount: {buf.framecount}")
+    api.post(f"before: framecount: {buf.framecount}")
     # set as property
     buf.framecount = buf.framecount/2
+    api.post(f"after: framecount: {buf.framecount}")
     return buf.framecount
 
 def test_change_duration():
     buf = api.get_buffer("drum")
-    api.post(f"duration (secs): {buf.duration}")
+    api.post(f"before: duration (secs): {buf.duration}")
     buf.set_duration(buf.duration/2)
+    api.post(f"after: duration (secs): {buf.duration}")
     return buf.duration
 
 def test_change_duration_prop():
     buf = api.get_buffer("drum")
-    api.post(f"duration (secs): {buf.duration}")
+    api.post(f"before: duration (secs): {buf.duration}")
     buf.duration = buf.duration / 2
+    api.post(f"after: duration (secs): {buf.duration}")
     return buf.duration
 
 def test_change_duration_ms():
     buf = api.get_buffer("drum")
-    api.post(f"duration (ms): {buf.duration_ms}")
+    api.post(f"before duration (ms): {buf.duration_ms}")
     buf.set_duration_ms(buf.duration_ms/2)
+    api.post(f"after duration (ms): {buf.duration_ms}")
     return buf.duration_ms
 
 def test_change_duration_ms_prop():
     buf = api.get_buffer("drum")
-    api.post(f"duration (ms): {buf.duration_ms}")
+    api.post(f"before duration (ms): {buf.duration_ms}")
     buf.duration_ms = buf.duration_ms / 2
+    api.post(f"after duration (ms): {buf.duration_ms}")
     return buf.duration_ms
 
 def test_change_samplerate():
@@ -90,6 +96,15 @@ def test_change_samplerate_prop():
     buf.samplerate = 22500
     return buf.samplerate
 
+def test_change_filename_prop():
+    buf = api.get_buffer("drum")
+    buf.filename = "vibes-a1.aif"
+    return buf.filename
+
+def test_change_reference():
+    buf = api.get_buffer("drum")
+    buf.change_reference("other")
+    return buf.filename
 
 # ----------------------------------------------------------------------
 # generic methods

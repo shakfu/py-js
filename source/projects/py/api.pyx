@@ -374,7 +374,7 @@ cdef class Table:
 
 cdef class Buffer:
     """A wrapper class for a Max buffer~ object"""
-    cdef str name
+    cdef public str name
     cdef mp.t_buffer_obj *obj
     cdef mp.t_buffer_ref *ref
     cdef bint is_locked
@@ -450,7 +450,7 @@ cdef class Buffer:
         cdef mp.t_buffer_ref* ref = mp.buffer_ref_new(x, str_to_sym(name))
         # TODO: rethink (overly safe?)
         # if mp.buffer_ref_exists(ref):
-        #     return error(f"buffer with name {name} already exists")
+        #     return error(f"buffer with name {name} already exists, and was overwritten")
 
         mx.atom_setsym(argv + 0, str_to_sym(name))
         mx.atom_setlong(argv + 1, duration_ms);
@@ -460,6 +460,10 @@ cdef class Buffer:
 
         # now retrieve buffer by name
         return Buffer.from_name(x, name)
+
+    def refresh(self):
+        """reset buffer object from ref"""
+        self.obj = mp.buffer_ref_getobject(self.ref)
 
     def change(self, str msg, *args) -> bool:
         """generic structural change method
@@ -525,13 +529,12 @@ cdef class Buffer:
     samplerate = property(samplerate, set_samplerate)
 
 
-    def duration(self):
+    def duration(self) -> float:
         """Get the buffer's duration in seconds."""
         return self.n_samples / self.samplerate
 
-    def set_duration(self, int duration):
+    def set_duration(self, float duration):
         """resize buffer duration (seconds)"""
- 
         self.set_duration_ms(1000 * duration)
 
     duration = property(duration, set_duration)
@@ -544,14 +547,10 @@ cdef class Buffer:
     def set_duration_ms(self, int duration):
         """resize buffer duration (milliseconds)"""
 
-        if duration == self.duration_ms:
+        if duration == int(self.duration_ms):
             return
 
         if self.change("size", duration):
-            if duration != self.duration_ms:
-                error(f"Could not resize {self.name} "
-                      f"duration_ms != {self.duration_ms}")
-            assert(duration == self.duration_ms)
             return
 
         return error("Resize on null buffer")
@@ -584,10 +583,16 @@ cdef class Buffer:
         """Get the number of samples in the buffer."""
         return self.framecount
 
-    @property
-    def filename(self):
+    # @property
+    def filename(self) -> str:
         """Retrieve the name of the last file to be read by a buffer~."""
         return sym_to_str(mp.buffer_getfilename(self.obj))
+
+    def set_filename(self, str filename):
+        """set filename, uses 'replace <filename>' to set buffer length, contents from file"""
+        self.replace(filename)
+
+    filename = property(filename, set_filename)
 
     def setdirty(self):
         """Set the buffer's dirty flag, indicating that changes have been made."""
@@ -612,9 +617,8 @@ cdef class Buffer:
     def buffer_edit_begin(self):
         """begin buffer_edit block
 
-        Use `buffer_edit` functions to collapse all operations of
-        locking heavy `b_mutex`, setting b_valid flag, waiting on
-        lightweight atomic b_inuse, etc.
+        Use `buffer_edit` functions to collapse all operations of locking heavy `b_mutex`,
+        setting b_valid flag, waiting on lightweight atomic b_inuse, etc.
         """
         mp.buffer_edit_begin(self.obj)
 

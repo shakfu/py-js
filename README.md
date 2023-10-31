@@ -423,7 +423,7 @@ This overview will cover the following two external implementations:
 
 Both externals have access to builtin python modules and the whole universe of 3rd party modules, and further have the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
 
-There are 3 general deployment variations:
+There are 3 general deployment scenarios:
 
 1. **Linked to system python**. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
 
@@ -548,7 +548,7 @@ As of this writing the following Max objects have been wrapped to some extent:
 - [x] Table
 - [x] Patcher
 
-To give an example of this power, the following example show's how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api`module.
+To give an sense of this power, the following example demonstrates how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api`module.
 
 ```python
 import api
@@ -556,7 +556,7 @@ import api
 import numpy as np
 from scipy import signal
 
-def get_buffer__samples(name: str, sample_file: str) -> np.array:
+def get_buffer_samples(name: str, sample_file: str) -> np.array:
     buf = api.create_buffer(name, sample_file)
     xs = np.array(buf.get_samples())
     assert len(xs) == buf.n_samples
