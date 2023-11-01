@@ -59,7 +59,7 @@
 						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 878.0, 743.0 ],
 						"bglocked" : 0,
-						"openinpresentation" : 1,
+						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
 						"default_fontface" : 0,
 						"default_fontname" : "Arial",
@@ -87,6 +87,27 @@
 						"showontab" : 2,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"bgmode" : 0,
+									"border" : 0,
+									"clickthrough" : 0,
+									"enablehscroll" : 0,
+									"enablevscroll" : 0,
+									"id" : "obj-3",
+									"lockeddragscroll" : 0,
+									"lockedsize" : 0,
+									"maxclass" : "bpatcher",
+									"name" : "py_extedit.maxpat",
+									"numinlets" : 1,
+									"numoutlets" : 2,
+									"offset" : [ 0.0, 0.0 ],
+									"outlettype" : [ "", "bang" ],
+									"patching_rect" : [ 23.0, 471.0, 231.0, 28.0 ],
+									"viewvisibility" : 1
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-13",
 									"linecount" : 3,
@@ -130,27 +151,6 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 23.0, 516.0, 47.0, 22.0 ],
 									"text" : "s to_py"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"bgmode" : 0,
-									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
-									"id" : "obj-6",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "py_external_editor_bp.maxpat",
-									"numinlets" : 1,
-									"numoutlets" : 2,
-									"offset" : [ 0.0, 0.0 ],
-									"outlettype" : [ "", "bang" ],
-									"patching_rect" : [ 23.0, 462.0, 211.0, 31.0 ],
-									"viewvisibility" : 1
 								}
 
 							}
@@ -244,7 +244,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 505.0, 165.0, 158.0, 22.0 ]
+									"patching_rect" : [ 505.0, 165.0, 158.0, 22.0 ],
+									"text" : "44100."
 								}
 
 							}
@@ -339,6 +340,13 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-7", 0 ],
+									"source" : [ "obj-3", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-45", 0 ],
 									"source" : [ "obj-31", 0 ]
 								}
@@ -348,13 +356,6 @@
 								"patchline" : 								{
 									"destination" : [ "obj-24", 1 ],
 									"source" : [ "obj-32", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-7", 0 ],
-									"source" : [ "obj-6", 0 ]
 								}
 
 							}
@@ -663,7 +664,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 48.0, 22.0 ]
+									"patching_rect" : [ 376.0, 359.0, 48.0, 22.0 ],
+									"text" : "44100."
 								}
 
 							}
@@ -1089,16 +1091,42 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"hidden" : 1,
+									"id" : "obj-118",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 35.0, 422.0, 110.0, 22.0 ],
+									"text" : "loadmess set drum"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"hidden" : 1,
+									"id" : "obj-107",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 35.0, 459.5, 117.0, 22.0 ],
+									"text" : "loadmess set drum1"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-60",
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 764.5, 708.0, 96.0, 22.0 ],
+									"patching_rect" : [ 764.5, 708.0, 91.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 762.0, 676.0, 76.0, 35.0 ],
-									"text" : "test_get_buffer()"
+									"text" : "test_fill_buffer()"
 								}
 
 							}
@@ -1124,23 +1152,8 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 429.0, 640.0, 194.0, 33.0 ],
+									"patching_rect" : [ 429.0, 668.5, 194.0, 33.0 ],
 									"text" : "see test_buffer_np..maxpat for numpy get/set with buffer~"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontface" : 1,
-									"id" : "obj-118",
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 333.0, 675.0, 83.0, 20.0 ],
-									"presentation" : 1,
-									"presentation_rect" : [ 329.0, 674.0, 85.5, 20.0 ],
-									"text" : "test_buffer",
-									"textjustification" : 2
 								}
 
 							}
@@ -1285,7 +1298,7 @@
 , 							{
 								"box" : 								{
 									"bgcolor" : [ 0.501961, 0.717647, 0.764706, 1.0 ],
-									"buffername" : "",
+									"buffername" : "drum1",
 									"gridcolor" : [ 0.352941, 0.337255, 0.521569, 1.0 ],
 									"id" : "obj-109",
 									"maxclass" : "waveform~",
@@ -1307,11 +1320,11 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 754.75, 675.0, 112.0, 22.0 ],
+									"patching_rect" : [ 771.0, 675.0, 103.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 707.5, 482.0, 76.0, 35.0 ],
-									"text" : "test_resize_buffer()"
+									"text" : "test_crop_buffer()"
 								}
 
 							}
@@ -1333,7 +1346,7 @@
 , 							{
 								"box" : 								{
 									"bgcolor" : [ 0.501961, 0.717647, 0.764706, 1.0 ],
-									"buffername" : "",
+									"buffername" : "drum",
 									"gridcolor" : [ 0.352941, 0.337255, 0.521569, 1.0 ],
 									"id" : "obj-111",
 									"maxclass" : "waveform~",
@@ -1355,36 +1368,11 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 645.75, 675.0, 104.0, 22.0 ],
+									"patching_rect" : [ 645.75, 675.0, 119.0, 22.0 ],
 									"presentation" : 1,
 									"presentation_linecount" : 2,
 									"presentation_rect" : [ 717.0, 357.0, 76.0, 35.0 ],
-									"text" : "test_view_buffer()"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"bgcolor" : [ 0.011765, 0.396078, 0.752941, 1.0 ],
-									"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
-									"bgfillcolor_angle" : 270.0,
-									"bgfillcolor_autogradient" : 0.0,
-									"bgfillcolor_color" : [ 0.011765, 0.396078, 0.752941, 1.0 ],
-									"bgfillcolor_color1" : [ 0.011765, 0.396078, 0.752941, 1.0 ],
-									"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
-									"bgfillcolor_proportion" : 0.5,
-									"bgfillcolor_type" : "gradient",
-									"gradient" : 1,
-									"id" : "obj-107",
-									"maxclass" : "message",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 429.0, 675.0, 106.0, 22.0 ],
-									"presentation" : 1,
-									"presentation_linecount" : 3,
-									"presentation_rect" : [ 690.0, 346.0, 76.0, 49.0 ],
-									"text" : "load test_buffer.py"
+									"text" : "test_replace_buffer()"
 								}
 
 							}
@@ -2246,23 +2234,21 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
-									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
 									"presentation" : 1,
-									"presentation_linecount" : 12,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
-									"text" : "\"3.11.6 (main, Oct  2 2023, 20:46:14) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 22.0 ],
+									"text" : "44100."
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"autoload" : 0,
-									"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/demos/hello.py",
+									"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_api.py",
 									"id" : "obj-7",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -2275,7 +2261,7 @@
 									"saved_object_attributes" : 									{
 										"autoload" : 0,
 										"debug" : 1,
-										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/demos/hello.py",
+										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_api.py",
 										"pythonpath" : ""
 									}
 ,
@@ -2892,14 +2878,6 @@
 								"patchline" : 								{
 									"destination" : [ "obj-7", 0 ],
 									"hidden" : 1,
-									"source" : [ "obj-107", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-7", 0 ],
-									"hidden" : 1,
 									"source" : [ "obj-108", 0 ]
 								}
 
@@ -3105,27 +3083,8 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-109", 0 ],
-									"hidden" : 1,
-									"order" : 0,
-									"source" : [ "obj-32", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-111", 0 ],
-									"hidden" : 1,
-									"order" : 1,
-									"source" : [ "obj-32", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
 									"destination" : [ "obj-21", 0 ],
 									"hidden" : 1,
-									"order" : 2,
 									"source" : [ "obj-32", 0 ]
 								}
 
@@ -3518,7 +3477,7 @@
 				"type" : "iLaX"
 			}
 , 			{
-				"name" : "py_external_editor_bp.maxpat",
+				"name" : "py_extedit.maxpat",
 				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
 				"patcherrelativepath" : "../patchers/bpatchers_ui",
 				"type" : "JSON",

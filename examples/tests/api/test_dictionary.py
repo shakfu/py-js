@@ -32,3 +32,19 @@ def test_dict_int():
     d[key] = value
     assert d.getentrycount() == 1
     assert d[key] == value, f"{d[key]} != {value}"
+
+def test_dict_atoms():
+    d = api.Dictionary()
+    key, value = "mylist",  [1, "asym", 12.1]
+    d[key] = value
+    assert d.getentrycount() == 1
+    _value = d[key]
+    assert len(_value) == len(value)
+    api.post(f"key '{key}' returned {_value}")
+
+def test_dict_bytes():
+    d = api.Dictionary()
+    key, value = "mybytes",  b'some-binary-value-here'
+    d[key] = value
+    assert d.getentrycount() == 1
+    assert d[key] == value, f"{d[key]} != {value}"

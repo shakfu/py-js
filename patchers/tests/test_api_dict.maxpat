@@ -40,12 +40,38 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-13",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 396.0, 454.0, 97.0, 22.0 ],
+					"presentation_linecount" : 2,
+					"text" : "test_dict_bytes()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-10",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 396.0, 424.0, 101.0, 22.0 ],
+					"presentation_linecount" : 2,
+					"text" : "test_dict_atoms()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-15",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "bang", "bang" ],
-					"patching_rect" : [ 317.0, 198.0, 32.0, 22.0 ],
+					"patching_rect" : [ 299.0, 63.0, 32.0, 22.0 ],
 					"text" : "t b b"
 				}
 
@@ -57,7 +83,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 317.0, 156.0, 58.0, 22.0 ],
+					"patching_rect" : [ 299.0, 21.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -69,7 +95,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 98.0, 295.0, 51.0, 22.0 ],
+					"patching_rect" : [ 80.0, 160.0, 51.0, 22.0 ],
 					"text" : "set x 10"
 				}
 
@@ -81,7 +107,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 4,
 					"outlettype" : [ "dictionary", "", "", "" ],
-					"patching_rect" : [ 98.0, 359.0, 55.0, 22.0 ],
+					"patching_rect" : [ 80.0, 224.0, 55.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"embed" : 0,
 						"parameter_enable" : 0,
@@ -99,7 +125,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 490.0, 383.0, 61.0, 22.0 ],
+					"patching_rect" : [ 491.0, 308.0, 61.0, 22.0 ],
 					"text" : "test_dict()"
 				}
 
@@ -111,7 +137,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 395.0, 468.0, 81.0, 22.0 ],
+					"patching_rect" : [ 396.0, 393.0, 81.0, 22.0 ],
 					"text" : "test_dict_int()"
 				}
 
@@ -123,7 +149,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 395.0, 440.0, 91.0, 22.0 ],
+					"patching_rect" : [ 396.0, 365.0, 91.0, 22.0 ],
 					"text" : "test_dict_float()"
 				}
 
@@ -135,7 +161,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 395.0, 411.0, 106.0, 22.0 ],
+					"patching_rect" : [ 396.0, 336.0, 106.0, 22.0 ],
 					"text" : "test_dict_symbol()"
 				}
 
@@ -157,7 +183,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 359.0, 127.0, 22.0 ],
+					"patching_rect" : [ 195.0, 224.0, 127.0, 22.0 ],
 					"text" : "load test_dictionary.py"
 				}
 
@@ -169,7 +195,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 395.0, 383.0, 83.0, 22.0 ],
+					"patching_rect" : [ 396.0, 308.0, 83.0, 22.0 ],
 					"text" : "test_dict_init()"
 				}
 
@@ -191,7 +217,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 344.5, 359.0, 61.0, 22.0 ],
+					"patching_rect" : [ 326.5, 224.0, 61.0, 22.0 ],
 					"text" : "import api"
 				}
 
@@ -203,7 +229,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 526.0, 35.0, 22.0 ],
+					"patching_rect" : [ 194.0, 505.0, 35.0, 22.0 ],
 					"text" : "clear"
 				}
 
@@ -217,7 +243,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 372.5, 556.0, 24.0, 24.0 ]
+					"patching_rect" : [ 353.5, 535.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -229,7 +255,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 176.5, 526.0, 29.5, 22.0 ],
+					"patching_rect" : [ 157.5, 505.0, 29.5, 22.0 ],
 					"text" : "set"
 				}
 
@@ -242,7 +268,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 176.5, 491.0, 58.0, 22.0 ],
+					"patching_rect" : [ 157.5, 470.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -256,7 +282,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 400.5, 556.0, 24.0, 24.0 ]
+					"patching_rect" : [ 381.5, 535.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -267,25 +293,24 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 176.5, 556.0, 187.0, 22.0 ],
-					"text" : "3"
+					"patching_rect" : [ 157.5, 535.0, 187.0, 22.0 ]
 				}
 
 			}
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_dictionary.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_dictionary.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "bang", "bang" ],
-					"patching_rect" : [ 344.5, 516.0, 75.0, 22.0 ],
+					"patching_rect" : [ 325.5, 495.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_dictionary.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_dictionary.py",
 						"pythonpath" : ""
 					}
 ,
@@ -318,6 +343,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-9", 0 ],
 					"source" : [ "obj-11", 0 ]
 				}
@@ -327,6 +359,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-15", 0 ],
 					"source" : [ "obj-12", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-13", 0 ]
 				}
 
 			}
