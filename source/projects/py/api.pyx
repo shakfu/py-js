@@ -181,6 +181,22 @@ cdef str sym_to_str(mx.t_symbol* symbol):
     return symbol.s_name.decode()
 
 
+cdef mx.t_symbol* bytes_to_sym(bytes string):
+    """converts a python string to a t_symbol*
+
+    gensym(bytes s) -> t_symbol*
+    """
+    return mx.gensym(string)
+
+
+cdef bytes sym_to_bytes(mx.t_symbol* symbol):
+    """converts a max symbol to a python string
+
+    sym_to_str(symbol) -> python str
+    """
+    return <bytes>symbol.s_name
+
+
 # ============================================================================
 # EXTENSION TYPES
 
@@ -264,22 +280,38 @@ cdef class Atom:
 
         cdef int i
         for i, obj in enumerate(args):
+            self[i] = obj
 
-            if isinstance(obj, float):
-                mx.atom_setfloat(self.ptr+i, <float>obj)
+    def __iter__(self):
+        return iter(self.to_list())
 
-            elif isinstance(obj, int):
-                mx.atom_setlong(self.ptr+i, <long>obj)
+    def __len__(self):
+        return self.size
 
-            elif isinstance(obj, bytes):
-                mx.atom_setsym(self.ptr+i, mx.gensym(obj))
+    def __getitem__(self, int idx) -> object:
+        if self.is_symbol(idx):
+            return self.get_string(idx)
 
-            elif isinstance(obj, str):
-                mx.atom_setsym(self.ptr+i, str_to_sym(obj))
+        elif self.is_float(idx):
+            return self.get_float(idx)
 
-            else:
-                error(f"cannot convert: {obj}")
+        elif self.is_long(idx):
+            return self.get_long(idx)
 
+        else:
+            raise TypeError
+
+    def __setitem__(self, int idx, object value):
+        if isinstance(value, str):
+            self.set_symbol(value, idx)
+        elif isinstance(value, float):
+            self.set_float(value, idx)
+        elif isinstance(value, int):
+            self.set_long(value, idx)
+        elif isinstance(value, bytes):
+            self.set_bytes(value, idx)
+        else:
+            raise TypeError
 
     def set_float(self, float f, int idx=0):
         """Inserts a float into a t_atom and change its type to A_FLOAT."""
@@ -312,6 +344,14 @@ cdef class Atom:
     def get_string(self, int idx=0) -> str:
         """Retrieves a string value from a symbol t_atom."""
         return sym_to_str(self.get_symbol(idx))
+
+    def set_bytes(self, bytes x, int idx=0):
+        """Inserts an integer into a t_atom and change its type to A_LONG."""
+        mx.atom_setsym(self.ptr + idx, bytes_to_sym(x))
+
+    def get_bytes(self, int idx=0) -> bytes:
+        """Retrieves a long integer value from a t_atom."""
+        return sym_to_bytes(mx.atom_getsym(self.ptr + idx))
 
     cdef bint is_symbol(self, int idx=0):
         """check if index points to a symbol"""
@@ -350,21 +390,6 @@ cdef class Atom:
                 print("string:", type(s))
             else:
                 print("other:", i)
-
-    # TODO: move this out of the class
-    # def create_object(self, classname: str, namespace: str = "box"):
-    #     """Creates an object from classname
-
-    #     :param      classname:  t_class class name
-    #     :type       classname:  str
-    #     :param      namespace:  The namespace i.e. CLASS_BOX | CLASS_NOBOX
-    #     :type       namespace:  str
-    #     void *object_new_typed(t_symbol *name_space, t_symbol *classname, 
-    #         long ac, t_atom *av);
-    #     """
-    #     mx.object_new_typed(str_to_sym(namespace), str_to_sym(classname),
-    #         self.size, self.ptr)
-
 
     @staticmethod
     cdef Atom from_ptr(mx.t_atom *ptr, int size, bint owner=False):
