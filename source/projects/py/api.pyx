@@ -124,7 +124,7 @@ from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
 from libc.stdint cimport uintptr_t
 # from libc.stdlib cimport malloc, free
-# from libc.string cimport strcpy, strlen
+from libc.string cimport strcpy, strlen
 
 
 cimport api_max as mx  # api is a cython keyword!
@@ -1599,19 +1599,32 @@ cdef class Linklist:
 # api.Binbuf
 
 cdef class Binbuf:
-    cdef void* buf
+    cdef mx.t_binbuf* buf
 
     def __cinit__(self):
-        self.buf = mx.binbuf_new()
+        self.buf = <mx.t_binbuf*>mx.binbuf_new()
+        if not self.buf:
+            raise MemoryError
 
     def __dealloc__(self):
         mx.object_free(self.buf)
 
-    cdef void append(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
-        mx.binbuf_append(self.buf, s, argc, argv)
+    def append(self, *args):
+        """Append t_atoms to a Binbuf without modifying them."""
+        cdef Atom atom = Atom(*args)
+        assert isinstance(args[0], str), f"binbuf.append error: first argument as receiver must be a symbol"
+        mx.binbuf_append(self.buf, NULL, atom.size, atom.ptr)
 
-    cdef void insert(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
-        mx.binbuf_insert(self.buf, s, argc, argv)
+    def insert(self, *args):
+        """Used if you want to saving your object into a Binbuf.
+
+        It assumes the message is part of a file that will later be evaluated, such as a 
+        Patcher file. The first argument argv[0] will be the receiver of the 
+        message and must be a Symbol.
+        """
+        cdef Atom atom = Atom(*args)
+        assert isinstance(args[0], str), f"binbuf.insert error: first argument as receiver must be a symbol"
+        mx.binbuf_insert(self.buf, NULL, atom.size, atom.ptr)
 
     # cdef void vinsert(self, char *fmt, ...):
     #     mx.binbuf_vinsert(self.buf, fmt, ...)
@@ -1622,11 +1635,41 @@ cdef class Binbuf:
     cdef short getatom(self, long *p1, long *p2, mx.t_atom *ap):
         return mx.binbuf_getatom(self.buf, p1, p2, ap)
 
-    cdef short text(self, char **src_text, long n):
-        return mx.binbuf_text(self.buf, src_text, n)
+    def add_text(self, str text):
+        """Used binbuf_text() to convert a text handle to a Binbuf.
 
-    cdef short totext(self, char **dst_text, mx.t_ptr_size *sizep):
-        return mx.binbuf_totext(self.buf, dst_text, sizep)
+        binbuf_text() parses the text in the handle srcText and converts it 
+        into binary format. Use it to evaluate a text file or text line entry into a 
+        Binbuf.
+        """
+        cdef char* src_text = <char *>mx.sysmem_newptr((len(text)+1) * sizeof(char))
+        cdef int n = len(text) + 1
+        cdef short err = 0
+
+        strcpy(src_text, text.encode('utf8'))
+        err = mx.binbuf_text(self.buf, &src_text, n)
+        mx.sysmem_freeptr(src_text)
+        if err:
+            return error("binbuf.add_text failed")
+
+    def to_text(self) -> str:
+        """Convert a Binbuf into a text handle.
+
+        Backslashes are added to protect literal commas and semicolons 
+        contained in symbols. The pseudo-types are converted into commas, 
+        semicolons, or dollar-sign and number, without backslashes preceding 
+        them. binbuf_text can read the output of binbuf_totext and
+        make the same Binbuf.
+        """
+        cdef char* dst_text
+        cdef mx.t_ptr_size size
+        cdef short err = 0
+        cdef bytes result
+        err = mx.binbuf_totext(<mx.t_binbuf *>self.buf, &dst_text, &size)
+        if err:
+            return error("binbuf.to_text failed")
+        result = <bytes>dst_text
+        return result.encode('utf-8')
 
     cdef void set(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
         mx.binbuf_set(self.buf, s, argc, argv)
