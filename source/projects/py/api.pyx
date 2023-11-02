@@ -122,10 +122,10 @@ Workarounds for max types which are not exposed in the c-api:
 
 from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
+from cpython cimport Py_buffer
 from libc.stdint cimport uintptr_t
 # from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy, strlen
-
 
 cimport api_max as mx  # api is a cython keyword!
 cimport api_msp as mp
@@ -490,7 +490,7 @@ cdef class Buffer:
     cdef mp.t_buffer_ref *ref
     cdef bint is_locked
     cdef float* samples
-    cdef double[:] s_buffer # cython memoryview 
+    cdef double[:] s_buffer # cython memoryview
 
     def __cinit__(self):
         self.name = None
@@ -523,6 +523,26 @@ cdef class Buffer:
         self.obj = <mx.t_object*>mx.object_new_typed(
             mx.CLASS_BOX, mx.gensym("buffer~"), argc, argv)
         self.ref = mp.buffer_ref_new(self.obj, str_to_sym(name))
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        cdef Py_ssize_t itemsize = sizeof(double)
+        cdef Py_ssize_t buffersize = <Py_ssize_t>mp.buffer_getframecount(self.obj)
+
+        self.locksamples()
+
+        buffer.buf = <char *>&(self.samples[0])
+        buffer.format = 'd'                     # float
+        buffer.itemsize = itemsize
+        buffer.len = buffersize * itemsize   # product(shape) * itemsize
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = 0
+        buffer.shape = <Py_ssize_t*>&buffersize
+        buffer.suboffsets = NULL                # for pointer arrays only
+        buffer.internal = NULL                  # see References
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        self.unlocksamples()
 
     @staticmethod
     cdef Buffer from_name(mx.t_object *x, str name):

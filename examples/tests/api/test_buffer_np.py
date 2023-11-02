@@ -23,6 +23,17 @@ def test_buffer_get_samples():
     api.post(f"get {n_samples} samples from buffer {name}")
 
 
+def test_buffer_protocol():
+    name = "drum1"
+    sample_file = "jongly.aif"
+    buf = api.create_buffer(name, sample_file)
+    api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
+    xs = np.asarray(buf)
+    # assert len(xs) == buf.n_samples
+    api.post("len(x): %d" % len(xs))
+    api.post("buf.n_samples: %d" % len(xs))
+    api.post(f"ok test_buffer_protocol")
+
 def test_buffer_set_samples():
     name = "drum1"
     duration_ms = 500

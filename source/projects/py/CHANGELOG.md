@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Added [buffer protocol support](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html#buffer) to `api.Buffer` with numpy test
+
 - Combined buffer tests (except numpy and array tests) into `test_buffer.py` and `test_buffer.maxpat`
 
 - Added additional message method support for api.Buffer
