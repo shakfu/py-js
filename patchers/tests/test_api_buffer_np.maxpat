@@ -40,13 +40,36 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-18",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 511.0, 146.5, 154.0, 22.0 ],
+					"text" : "test_buffer_protocol_write()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-19",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 511.0, 114.0, 160.0, 22.0 ],
+					"text" : "test_buffer_protocol_read()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-15",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 501.0, 87.0, 154.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_buffer_set_samples2()"
 				}
 
@@ -129,7 +152,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 480.0, 146.5, 47.0, 22.0 ],
+					"patching_rect" : [ 480.0, 186.5, 47.0, 22.0 ],
 					"text" : "s to_py"
 				}
 
@@ -359,7 +382,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer_array.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_np.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -369,7 +392,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 0,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer_array.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_np.py",
 						"pythonpath" : ""
 					}
 ,
@@ -453,6 +476,20 @@
 				"patchline" : 				{
 					"destination" : [ "obj-7", 0 ],
 					"source" : [ "obj-16", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-16", 0 ],
+					"source" : [ "obj-18", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-16", 0 ],
+					"source" : [ "obj-19", 0 ]
 				}
 
 			}

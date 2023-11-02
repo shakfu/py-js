@@ -23,17 +23,6 @@ def test_buffer_get_samples():
     api.post(f"get {n_samples} samples from buffer {name}")
 
 
-def test_buffer_protocol():
-    name = "drum1"
-    sample_file = "jongly.aif"
-    buf = api.create_buffer(name, sample_file)
-    api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
-    xs = np.asarray(buf)
-    # assert len(xs) == buf.n_samples
-    api.post("len(x): %d" % len(xs))
-    api.post("buf.n_samples: %d" % len(xs))
-    api.post(f"ok test_buffer_protocol")
-
 def test_buffer_set_samples():
     name = "drum1"
     duration_ms = 500
@@ -60,4 +49,26 @@ def test_buffer_set_samples2():
     xs = signal.sawtooth(2 * np.pi * 5 * t)
     buf.set_samples(xs)
     api.post(f"set {buf.n_samples} samples to buffer {name}")
+
+def test_buffer_protocol_read():
+    name = "drum1"
+    sample_file = "jongly.aif"
+    buf = api.create_buffer(name, sample_file)
+    api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
+    xs = np.asarray(buf)
+    assert len(xs) == buf.n_samples
+    api.post(f"len(x): {len(xs)} == buf.n_samples: {buf.n_samples}")
+
+def test_buffer_protocol_write():
+    name = "drum1"
+    duration_ms = 500
+    buf = api.create_empty_buffer(name, duration_ms)
+    api.post("buffer.set_sample example with numpy and scipy.signal")
+    api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
+    api.post(f"framecount: {buf.framecount}")
+    n_samples = buf.n_samples
+    xs = np.asarray(buf)
+    t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float64)
+    xs[:] = signal.sawtooth(2 * np.pi * 5 * t)
+    # xs[:] = 0.5
 

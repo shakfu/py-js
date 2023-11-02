@@ -491,6 +491,8 @@ cdef class Buffer:
     cdef bint is_locked
     cdef float* samples
     cdef double[:] s_buffer # cython memoryview
+    cdef Py_ssize_t[2] shape
+    cdef Py_ssize_t[2] strides
 
     def __cinit__(self):
         self.name = None
@@ -528,16 +530,30 @@ cdef class Buffer:
         cdef Py_ssize_t itemsize = sizeof(double)
         cdef Py_ssize_t buffersize = <Py_ssize_t>mp.buffer_getframecount(self.obj)
 
+        self.shape[0] = buffersize
+        self.shape[1] = 0
+
+        # Stride 1 is the distance, in bytes, between two items in a row;
+        # this is the distance between two adjacent items in the vector.
+        # Stride 0 is the distance between the first elements of adjacent rows.
+        self.strides[1] = <Py_ssize_t>(  <void *>&(self.samples[1])
+                                       - <void *>&(self.samples[0]))
+        self.strides[0] = 1 * self.strides[1]
+        # self.strides[0] = self.ncols * self.strides[1]
+
         self.locksamples()
 
-        buffer.buf = <char *>&(self.samples[0])
-        buffer.format = 'd'                     # float
-        buffer.itemsize = itemsize
-        buffer.len = buffersize * itemsize   # product(shape) * itemsize
-        buffer.ndim = 1
+        buffer.buf = <void *>self.samples
         buffer.obj = self
+        buffer.len = buffersize * itemsize   # product(shape) * itemsize
+        buffer.itemsize = itemsize
         buffer.readonly = 0
-        buffer.shape = <Py_ssize_t*>&buffersize
+        buffer.ndim = 1        
+        buffer.format = "d"                     # float
+        # buffer.shape = <Py_ssize_t*>&buffersize
+        buffer.shape = self.shape
+        buffer.strides = self.strides
+        # buffer.strides = <Py_ssize_t*>&itemsize
         buffer.suboffsets = NULL                # for pointer arrays only
         buffer.internal = NULL                  # see References
 
