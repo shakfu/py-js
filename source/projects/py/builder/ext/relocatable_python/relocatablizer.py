@@ -33,7 +33,7 @@ def run(cmd):
 
 def fix_modes(framework_dir):
     """Make sure all files are set so owner can read/write and everyone else
-       can only read"""
+    can only read"""
     cmd = [CHMOD, "-R", "u+rw,g+r,g-w,o+r,o-w", framework_dir]
     print("Ensuring correct modes for files in %s..." % framework_dir)
     subprocess.check_call(cmd)
@@ -96,7 +96,7 @@ def get_rpaths(some_file):
     cmd = [OTOOL, "-l", some_file]
     output_lines = subprocess.check_output(cmd).decode("utf-8").splitlines()
     rpaths = []
-    for (index, line) in enumerate(output_lines):
+    for index, line in enumerate(output_lines):
         if "cmd LC_RPATH" in line and index + 2 <= len(output_lines):
             rpath_line = output_lines[index + 2]
             rpath_line = rpath_line.lstrip()

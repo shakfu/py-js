@@ -34,8 +34,9 @@ import unittest
 
 
 class ProgressBar:
-
-    def __init__(self, max_value, title=None, start_state=0, max_refreshrate=0.3, zero_index=True):
+    def __init__(
+        self, max_value, title=None, start_state=0, max_refreshrate=0.3, zero_index=True
+    ):
         self.max_value = max_value
         self.start_time = time()
         self.state = start_state
@@ -56,15 +57,15 @@ class ProgressBar:
             return rule_of_thumb_standard_value
 
     def get_width_of_terminal(self):
-        _, ncolumns = os.popen('stty size', 'r').read().split()
+        _, ncolumns = os.popen("stty size", "r").read().split()
         width = int(ncolumns)
         return width
 
     def prepare_title(self, title):
         if title is None:
-            return ''
+            return ""
         else:
-            return title + ' '
+            return title + " "
 
     def update(self, current_value=None):
         if current_value is None:
@@ -101,7 +102,9 @@ class ProgressBar:
         return max_bar_length - bar_length
 
     def computed_estimate_time_left(self, complete_elapsed_time):
-        estimated_time_left = complete_elapsed_time * (self.max_value / float(self.state) - 1)
+        estimated_time_left = complete_elapsed_time * (
+            self.max_value / float(self.state) - 1
+        )
         return estimated_time_left
 
     def build_output_string(self, current_time):
@@ -111,35 +114,45 @@ class ProgressBar:
         complete_elapsed_time_pretty = self.time_div_to_short_str(complete_elapsed_time)
 
         if (complete_elapsed_time > 3) & (self.state > 0):
-                estimated_time_left = self.computed_estimate_time_left(complete_elapsed_time)
-                estimated_time_left_pretty = self.time_div_to_short_str(estimated_time_left)
-                estimated_time_left_pretty_formatted = " - " + estimated_time_left_pretty + " remaining"
+            estimated_time_left = self.computed_estimate_time_left(
+                complete_elapsed_time
+            )
+            estimated_time_left_pretty = self.time_div_to_short_str(estimated_time_left)
+            estimated_time_left_pretty_formatted = (
+                " - " + estimated_time_left_pretty + " remaining"
+            )
         else:
-                estimated_time_left_pretty_formatted = ''
+            estimated_time_left_pretty_formatted = ""
         progress_str = " " + str(progress) + "% in "
         len_of_brackets = 2
-        overhead = len_of_brackets + \
-                   len(progress_str) + \
-                   len(complete_elapsed_time_pretty) + \
-                   len(self.title) + \
-                   len(estimated_time_left_pretty_formatted)
+        overhead = (
+            len_of_brackets
+            + len(progress_str)
+            + len(complete_elapsed_time_pretty)
+            + len(self.title)
+            + len(estimated_time_left_pretty_formatted)
+        )
         bar_length = self.compute_bar_length(overhead, progress)
         filling_length = self.compute_filling_length(overhead, progress)
-        progressbar_string = '[' + '#' * int(bar_length) + ' ' * int(filling_length) + ']'
+        progressbar_string = (
+            "[" + "#" * int(bar_length) + " " * int(filling_length) + "]"
+        )
 
         complete_elapsed_time_pretty = str(complete_elapsed_time_pretty)
 
         if self.length == self.length:
             carriage_return = "\r"
         else:
-            carriage_return = '\n'
+            carriage_return = "\n"
 
-        ordered_output_string_fields = [carriage_return,
-                                self.title,
-                                progressbar_string,
-                                progress_str,
-                                complete_elapsed_time_pretty,
-                                estimated_time_left_pretty_formatted]
+        ordered_output_string_fields = [
+            carriage_return,
+            self.title,
+            progressbar_string,
+            progress_str,
+            complete_elapsed_time_pretty,
+            estimated_time_left_pretty_formatted,
+        ]
 
         output_string = "".join(ordered_output_string_fields)
 
@@ -156,15 +169,16 @@ class ProgressBar:
 
 
 class ProgressBarTests(unittest.TestCase):
-    """ run tests with
-        python -m unittest pbar
+    """run tests with
+    python -m unittest pbar
     """
+
     def testExplicitStart(self):
         pbar = ProgressBar(10)
         pbar.update(0)
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\r[######                                                       ] 10% in 0:00:00'
+        should_value = "\r[######                                                       ] 10% in 0:00:00"
         self.assertEqual(output, should_value)
 
     def testExplicitEnd(self):
@@ -172,7 +186,7 @@ class ProgressBarTests(unittest.TestCase):
         pbar.update(98)
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\r[#############################################################] 100% in 0:00:00'
+        should_value = "\r[#############################################################] 100% in 0:00:00"
         self.assertEqual(output, should_value)
 
     def testImplicitStart(self):
@@ -180,27 +194,27 @@ class ProgressBarTests(unittest.TestCase):
         pbar.update()
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\r[######                                                       ] 10% in 0:00:00'
+        should_value = "\r[######                                                       ] 10% in 0:00:00"
         self.assertEqual(output, should_value)
 
     def testImplicitEnd(self):
         max_value = 99
         pbar = ProgressBar(max_value)
-        for i in range(max_value-1):
+        for i in range(max_value - 1):
             pbar.update()
         pbar.update()
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\r[#############################################################] 100% in 0:00:00'
+        should_value = "\r[#############################################################] 100% in 0:00:00"
         self.assertEqual(output, should_value)
 
     def testTitle(self):
-        example_title = 'example title'
+        example_title = "example title"
         pbar = ProgressBar(10, example_title)
         pbar.update(0)
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\rexample title [####                                           ] 10% in 0:00:00'
+        should_value = "\rexample title [####                                           ] 10% in 0:00:00"
         self.assertEqual(output, should_value)
 
     def testElapsedTime(self):
@@ -209,7 +223,7 @@ class ProgressBarTests(unittest.TestCase):
         sleep(1)
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\r[######                                                       ] 10% in 0:00:01'
+        should_value = "\r[######                                                       ] 10% in 0:00:01"
         self.assertEqual(output, should_value)
 
     def testEstimatedTime(self):
@@ -218,7 +232,7 @@ class ProgressBarTests(unittest.TestCase):
         sleep(3)
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\r[####                                     ] 10% in 0:00:03 - 0:00:27 remaining'
+        should_value = "\r[####                                     ] 10% in 0:00:03 - 0:00:27 remaining"
         self.assertEqual(output, should_value)
 
     def testEstimatedTimeEnd(self):
@@ -228,46 +242,45 @@ class ProgressBarTests(unittest.TestCase):
         pbar.update(9)
         pbar.length = 80
         output = pbar.build_output_string(time())
-        should_value = '\r[#########################################] 100% in 0:00:03 - 0:00:00 remaining'
+        should_value = "\r[#########################################] 100% in 0:00:03 - 0:00:00 remaining"
         self.assertEqual(output, should_value)
 
     def testException(self):
         max_value = 99
         pbar = ProgressBar(max_value)
-        self.assertRaises(ValueError,pbar.update, max_value)
+        self.assertRaises(ValueError, pbar.update, max_value)
 
-if __name__ == '__main__':
 
+if __name__ == "__main__":
     ## usage examples
     example_rangevalue = 40
-    example_title_example_one = 'explicit update'
+    example_title_example_one = "explicit update"
     progressbar = ProgressBar(example_rangevalue, example_title_example_one)
     for new_value in range(example_rangevalue):
         progressbar.update(new_value)
         sleep(0.1)
 
-    example_title_example_two = 'implicit update by 1'
+    example_title_example_two = "implicit update by 1"
     progressbar = ProgressBar(example_rangevalue, example_title_example_two)
     for i in range(example_rangevalue):
         sleep(0.1)
         progressbar.update()
 
-    example_title_example_three = 'slow updates'
+    example_title_example_three = "slow updates"
     example_rangevalue_three = 4
     progressbar = ProgressBar(example_rangevalue_three, example_title_example_three)
     for i in range(example_rangevalue_three):
         sleep(3.8)
         progressbar.update()
 
-    example_title_example_three = 'using zero_index=False'
+    example_title_example_three = "using zero_index=False"
     example_rangevalue = 40
-    progressbar = ProgressBar(example_rangevalue, example_title_example_three, zero_index=False)
+    progressbar = ProgressBar(
+        example_rangevalue, example_title_example_three, zero_index=False
+    )
     foo = list()
     for i in range(example_rangevalue):
         progressbar.update(len(foo))
         foo.append(i)
         progressbar.update(len(foo))
         sleep(0.6)
-
-
-

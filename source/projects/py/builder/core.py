@@ -53,10 +53,16 @@ from textwrap import dedent
 from types import SimpleNamespace
 from typing import Dict, List, Optional
 
-from .config import (CURRENT_PYTHON_VERSION, DEFAULT_CONFIGURE_OPTIONS,
-                     LOG_FORMAT, LOG_LEVEL, URL_GETPIP,
-                     URL_PYTHON_CMAKE_BUILDSYSTEM, PYJS_CMAKE_DEFAULT_OPTIONS,
-                     Project)
+from .config import (
+    CURRENT_PYTHON_VERSION,
+    DEFAULT_CONFIGURE_OPTIONS,
+    LOG_FORMAT,
+    LOG_LEVEL,
+    URL_GETPIP,
+    URL_PYTHON_CMAKE_BUILDSYSTEM,
+    PYJS_CMAKE_DEFAULT_OPTIONS,
+    Project,
+)
 from .depend import DependencyManager
 from .ext.relocatable_python import download_relocatable_to
 from .shell import ShellCmd
@@ -67,9 +73,11 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 # ----------------------------------------------------------------------------
 # Utility Functions
 
+
 def quote(obj):
     """convert object to string and ensure it's quoted"""
     return repr(str(obj))
+
 
 # ----------------------------------------------------------------------------
 # Utility Classes
@@ -108,7 +116,7 @@ class Product:
     def __init__(
         self,
         name: str,
-        version: str = None,    # type: ignore
+        version: str = None,  # type: ignore
         build_dir: str = None,  # type: ignore
         libs_static: List[str] = None,  # type: ignore
         url_template: str = None,  # type: ignore
@@ -173,7 +181,7 @@ class Product:
     @property
     def abiflags(self) -> str:
         """a rare and irritating suffix appended to python versions: 3.7m
-        
+
         Currently only python 3.7 has this.
         """
         return "m" if self.ver in ["3.7"] else ""
@@ -186,68 +194,74 @@ class Product:
     @property
     def DEFAULT_PKGS_TO_RM(self) -> set:
         """default packages to remove"""
-        return set([
-            self.config_ver_platform,
-            "aifc.py",
-            "cgi.py",
-            "cgitb.py",
-            "chunk.py",
-            "crypt.py",
-            "ctypes",
-            "curses",
-            "distutils",
-            "ensurepip",
-            "idlelib",
-            "imghdr.py",
-            "lib2to3",
-            "mailcap.py",
-            "nntplib.py",
-            "pipes.py",
-            "sndhdr.py",
-            "sunau.py",
-            "telnetlib.py",
-            "tkinter",
-            "turtle.py",
-            "turtledemo",
-            "uu.py",
-            "venv",
-            "xdrlib.py",
-            # "msilib",
-            # "ossaudiodev",
-            # "spwd",
-        ])
+        return set(
+            [
+                self.config_ver_platform,
+                "aifc.py",
+                "cgi.py",
+                "cgitb.py",
+                "chunk.py",
+                "crypt.py",
+                "ctypes",
+                "curses",
+                "distutils",
+                "ensurepip",
+                "idlelib",
+                "imghdr.py",
+                "lib2to3",
+                "mailcap.py",
+                "nntplib.py",
+                "pipes.py",
+                "sndhdr.py",
+                "sunau.py",
+                "telnetlib.py",
+                "tkinter",
+                "turtle.py",
+                "turtledemo",
+                "uu.py",
+                "venv",
+                "xdrlib.py",
+                # "msilib",
+                # "ossaudiodev",
+                # "spwd",
+            ]
+        )
 
     @property
     def DEFAULT_EXTS_TO_RM(self) -> set:
         """default extensions to remove"""
-        return set([
-            "_codecs_cn",
-            "_codecs_hk",
-            "_codecs_iso2022",
-            "_codecs_jp",
-            "_codecs_kr",
-            "_codecs_tw",
-            "_ctypes",
-            "_curses",
-            "_curses_panel",
-            # "_multibytecodec",
-            "_tkinter",
-            "audioop",
-            "nis",
-        ])
+        return set(
+            [
+                "_codecs_cn",
+                "_codecs_hk",
+                "_codecs_iso2022",
+                "_codecs_jp",
+                "_codecs_kr",
+                "_codecs_tw",
+                "_ctypes",
+                "_curses",
+                "_curses_panel",
+                # "_multibytecodec",
+                "_tkinter",
+                "audioop",
+                "nis",
+            ]
+        )
 
     @property
     def DEFAULT_BINS_TO_RM(self) -> set:
         """default binaries to remove"""
         ver = self.ver
-        return set([
-            f"2to3-{ver}",
-            f"idle{ver}",
-            f"easy_install-{ver}",
-            f"pip{ver}",
-            f"pyvenv-{ver}",
-            f"pydoc{ver}",
-        ])
+        return set(
+            [
+                f"2to3-{ver}",
+                f"idle{ver}",
+                f"easy_install-{ver}",
+                f"pip{ver}",
+                f"pyvenv-{ver}",
+                f"pydoc{ver}",
+            ]
+        )
 
     @property
     def url(self):
@@ -383,13 +397,10 @@ class Builder:
         """convert properties to yaml"""
         try:
             import yaml
+
             with open("dump.yml", "w", encoding="utf8") as fopen:
                 fopen.write(
-                    yaml.safe_dump(
-                        self.to_dict(),
-                        indent=4,
-                        default_flow_style=False
-                    )
+                    yaml.safe_dump(self.to_dict(), indent=4, default_flow_style=False)
                 )
         except ImportError:
             self.log.error("could not import yaml module")
@@ -431,8 +442,9 @@ class Builder:
             if src.exists():
                 self.cmd.copy(src, dst)
 
-    def xcodebuild(self, project: str, targets: List[str],
-            *preprocessor_flags, **xcconfig_flags):
+    def xcodebuild(
+        self, project: str, targets: List[str], *preprocessor_flags, **xcconfig_flags
+    ):
         """python wrapper around command-line xcodebuild"""
 
         if self.product.ver == "3.7" and not "PY_37" in preprocessor_flags:
@@ -463,14 +475,16 @@ class Builder:
             if "ABIFLAGS" not in xcconfig_flags:
                 xcconfig_flags["ABIFLAGS"] = str(self.project.python.abiflags)
 
-            if "NUMPY_HEADERS" not in xcconfig_flags and self.project.python.numpy_includes:
+            if (
+                "NUMPY_HEADERS" not in xcconfig_flags
+                and self.project.python.numpy_includes
+            ):
                 xcconfig_flags["NUMPY_HEADERS"] = self.project.python.numpy_includes
 
         if "ARCHS" not in xcconfig_flags:
             # xcconfig_flags["ARCHS"] = "arm64 x86_64"
             xcconfig_flags["ARCHS"] = "$(NATIVE_ARCH)"
             xcconfig_flags["ONLY_ACTIVE_ARCH"] = "NO"
-
 
         xcconfig_flags["PROJECT_FOLDER_NAME"] = project
 
@@ -580,8 +594,8 @@ class ConfiguredBuilder(Builder):
             _key = key.replace("_", "-")
             _kwargs[_key] = val
 
-        options=" ".join(f"--{opt}" for opt in _options)
-        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
+        options = " ".join(f"--{opt}" for opt in _options)
+        kwargs = " ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
         self.cmd(f"{prefix} ./configure {options} {kwargs}")
 
 
@@ -894,9 +908,7 @@ class PythonCmakeBuilder(PythonBuilder):
         """remove all named extensions"""
         for name in names:
             self.cmd.remove(
-                self.python_lib
-                / "lib-dynload"
-                / f"{name}.so"
+                self.python_lib / "lib-dynload" / f"{name}.so"
                 # / f"{name}.cpython-{self.product.ver_nodot}-darwin.so"
             )
 
@@ -925,8 +937,7 @@ class PythonCmakeBuilder(PythonBuilder):
         self.cmd(f"git clone --depth=1 {repo} {to_dir}")
 
     def apply_patch(self, to_file, patch):
-        """Apply a patch to a file.
-        """
+        """Apply a patch to a file."""
         self.cmd(f"patch {to_file} < '{patch}'")
 
     def cmake_generate(self, src_dir, build_dir, **options):
@@ -934,9 +945,7 @@ class PythonCmakeBuilder(PythonBuilder):
         _options = PYJS_CMAKE_DEFAULT_OPTIONS.copy()
         _options.update(options)
         opts = " ".join(f"-D{k}={v}" for k, v in _options.items())
-        self.cmd(
-            f"cmake -S {src_dir} -B {build_dir} {opts}"
-        )
+        self.cmd(f"cmake -S {src_dir} -B {build_dir} {opts}")
 
     def cmake_build(self, build_dir):
         """activate cmake build stage"""
@@ -948,21 +957,24 @@ class PythonCmakeBuilder(PythonBuilder):
 
     def build(self):
         """build python"""
-        python_cmake_buildsystem = self.project.build_downloads / 'python-cmake-buildsystem'
-        python_cmake_build = self.project.build_src / 'python-cmake-build'
-        python_cmake_install = self.project.build_lib / 'python-cmake'
+        python_cmake_buildsystem = (
+            self.project.build_downloads / "python-cmake-buildsystem"
+        )
+        python_cmake_build = self.project.build_src / "python-cmake-build"
+        python_cmake_install = self.project.build_lib / "python-cmake"
         if not python_cmake_buildsystem.exists():
             self.git_clone(URL_PYTHON_CMAKE_BUILDSYSTEM, python_cmake_buildsystem)
-        for _dir in [python_cmake_build, python_cmake_install]: # reset dirs every run
+        for _dir in [python_cmake_build, python_cmake_install]:  # reset dirs every run
             if _dir.exists():
                 shutil.rmtree(_dir)
             _dir.mkdir(exist_ok=True)
-        self.cmake_generate(python_cmake_buildsystem, python_cmake_build, 
+        self.cmake_generate(
+            python_cmake_buildsystem,
+            python_cmake_build,
             CMAKE_INSTALL_PREFIX=python_cmake_install,
         )
         self.cmake_build(python_cmake_build)
         self.cmake_install(python_cmake_build)
-
 
 
 class PythonSrcBuilder(PythonBuilder):
@@ -996,8 +1008,8 @@ class PythonSrcBuilder(PythonBuilder):
             _key = key.replace("_", "-")
             _kwargs[_key] = val
 
-        options=" ".join(f"--{opt}" for opt in _options)
-        kwargs=" ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
+        options = " ".join(f"--{opt}" for opt in _options)
+        kwargs = " ".join(f"--{k}='{v}'" for k, v in _kwargs.items())
         self.cmd(f"{prefix} ./configure {options} {kwargs}")
 
     def pre_process(self):
@@ -1080,12 +1092,12 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
         self.cmd.chdir(self.src_path)
 
         kwargs = {
-            "enable_framework": quote(self.project.build_lib), 
-            "with_openssl": quote(self.project.build_lib / 'openssl'),
+            "enable_framework": quote(self.project.build_lib),
+            "with_openssl": quote(self.project.build_lib / "openssl"),
         }
 
-        if self.project.python.arch == 'arm64':
-            kwargs['with_universal_archs'] = 'universal2'
+        if self.project.python.arch == "arm64":
+            kwargs["with_universal_archs"] = "universal2"
 
         self.configure(
             # "enable_ipv6",
@@ -1184,7 +1196,7 @@ class BeewarePythonBuilder(StaticPythonBuilder):
         """pre-build operations"""
         self.cmd.chdir(self.src_path)
         self.write_setup_local()
-        self.apply_patch(patch="beeware.patch") # FIXME: not available
+        self.apply_patch(patch="beeware.patch")  # FIXME: not available
         self.apply_patch(patch="configure.patch", to_file="configure")
         self.cmd.chdir(self.project.pydir)
 
@@ -1273,18 +1285,21 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions"""
         self.rm_exts(
-            self.product.DEFAULT_EXTS_TO_RM.union(set(
-            [
-                "_blake2",
-                "_csv",
-                "_elementtree",
-                "_json",
-                "_multiprocessing",
-                "_pickle",
-                "_zoneinfo",
-                "pyexpat",
-                # "unicodedata",
-            ]))
+            self.product.DEFAULT_EXTS_TO_RM.union(
+                set(
+                    [
+                        "_blake2",
+                        "_csv",
+                        "_elementtree",
+                        "_json",
+                        "_multiprocessing",
+                        "_pickle",
+                        "_zoneinfo",
+                        "pyexpat",
+                        # "unicodedata",
+                    ]
+                )
+            )
         )
 
     def remove_encodings(self):
@@ -1306,26 +1321,30 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
         """remove list of non-critical packages"""
         self.remove_encodings()
         self.rm_libs(
-            self.product.DEFAULT_PKGS_TO_RM.union(set([
-                "argparse.py",
-                "dbm",
-                "difflib.py",
-                "email",
-                "html",
-                "mailbox",
-                "mailbox.py",
-                "multiprocessing",
-                "optparse.py",
-                "pickletools.py",
-                "pydoc.py",
-                "pydoc_data",
-                "sqlite3",
-                "ssl.py",
-                "urllib",
-                "wsgiref",
-                "xml",
-                "zoneinfo",
-            ]))
+            self.product.DEFAULT_PKGS_TO_RM.union(
+                set(
+                    [
+                        "argparse.py",
+                        "dbm",
+                        "difflib.py",
+                        "email",
+                        "html",
+                        "mailbox",
+                        "mailbox.py",
+                        "multiprocessing",
+                        "optparse.py",
+                        "pickletools.py",
+                        "pydoc.py",
+                        "pydoc_data",
+                        "sqlite3",
+                        "ssl.py",
+                        "urllib",
+                        "wsgiref",
+                        "xml",
+                        "zoneinfo",
+                    ]
+                )
+            )
         )
 
     def install(self):
@@ -1386,18 +1405,21 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
     def remove_extensions(self):
         """remove extensions"""
         self.rm_exts(
-            self.product.DEFAULT_EXTS_TO_RM.union(set(
-            [
-                "_blake2",
-                "_csv",
-                "_elementtree",
-                "_json",
-                "_multiprocessing",
-                "_pickle",
-                "_zoneinfo",
-                "pyexpat",
-                # "unicodedata",
-            ]))
+            self.product.DEFAULT_EXTS_TO_RM.union(
+                set(
+                    [
+                        "_blake2",
+                        "_csv",
+                        "_elementtree",
+                        "_json",
+                        "_multiprocessing",
+                        "_pickle",
+                        "_zoneinfo",
+                        "pyexpat",
+                        # "unicodedata",
+                    ]
+                )
+            )
         )
 
     def remove_encodings(self):
@@ -1419,26 +1441,30 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
         """remove list of non-critical packages"""
         self.remove_encodings()
         self.rm_libs(
-            self.product.DEFAULT_PKGS_TO_RM.union(set([
-                "argparse.py",
-                "dbm",
-                "difflib.py",
-                "email",
-                "html",
-                "mailbox",
-                "mailbox.py",
-                "multiprocessing",
-                "optparse.py",
-                "pickletools.py",
-                "pydoc.py",
-                "pydoc_data",
-                "sqlite3",
-                "ssl.py",
-                "urllib",
-                "wsgiref",
-                "xml",
-                "zoneinfo",
-            ]))
+            self.product.DEFAULT_PKGS_TO_RM.union(
+                set(
+                    [
+                        "argparse.py",
+                        "dbm",
+                        "difflib.py",
+                        "email",
+                        "html",
+                        "mailbox",
+                        "mailbox.py",
+                        "multiprocessing",
+                        "optparse.py",
+                        "pickletools.py",
+                        "pydoc.py",
+                        "pydoc_data",
+                        "sqlite3",
+                        "ssl.py",
+                        "urllib",
+                        "wsgiref",
+                        "xml",
+                        "zoneinfo",
+                    ]
+                )
+            )
         )
 
     def install(self):
@@ -1479,6 +1505,7 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.pydir)
 
+
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BINARY)
 
@@ -1510,7 +1537,7 @@ class RelocatablePythonBuilder(PythonBuilder):
 
     def download(self, include_dependencies=True):
         """download relocatable python"""
-        self.project.build_downloads.mkdir(parents=True,  exist_ok=True)
+        self.project.build_downloads.mkdir(parents=True, exist_ok=True)
         download_relocatable_to(self.project.support, self.settings)
 
     def post_process(self):
@@ -1527,7 +1554,7 @@ class RelocatablePythonBuilder(PythonBuilder):
     def restore_site_packages(self, tmp_dir):
         """restore site_packages from tmp directory"""
         tmp_dir = Path(tmp_dir)
-        self.cmd.move(tmp_dir / 'site-packages', self.site_packages)
+        self.cmd.move(tmp_dir / "site-packages", self.site_packages)
 
     def clean(self):
         """clean everything."""
@@ -1854,7 +1881,7 @@ class HomebrewExtBuilder(PyJsBuilder):
                 "wsgiref",
                 "xml",
                 "xmlrpc",
-             ]
+            ]
         )
         self.cmd.copy(self.project.python.prefix / "include", self.prefix_include)
         self.cmd.remove(self.prefix_lib / self.product.dylib)
@@ -1951,7 +1978,7 @@ class LocalSystemBuilder(PyJsBuilder):
         """builds externals from local system python"""
 
         flags = {
-            "PREFIX": str(self.project.python.prefix), 
+            "PREFIX": str(self.project.python.prefix),
             "LIBS": str(self.project.python.libs),
         }
 
@@ -1966,10 +1993,7 @@ class StaticExtBuilder(PyJsBuilder):
     @property
     def product_exists(self):
         static_lib = (
-            self.project.build_lib
-            / "python-static"
-            / "lib"
-            / self.product.staticlib  # type: ignore
+            self.project.build_lib / "python-static" / "lib" / self.product.staticlib  # type: ignore
         )  # type: ignore
         if not static_lib.exists():
             self.log.warning("static python is not built: %s", static_lib)
@@ -2105,13 +2129,16 @@ class RelocatablePkgBuilder(PyJsBuilder):
                 / "bin"
                 / "python3"
             )
+
             def get(name):
-                return subprocess.check_output([
-                    py_exe,
-                    "-c",
-                    f"import sysconfig; print(sysconfig.get_config_var('{name}'))"
-                ],
-                text=True).strip()
+                return subprocess.check_output(
+                    [
+                        py_exe,
+                        "-c",
+                        f"import sysconfig; print(sysconfig.get_config_var('{name}'))",
+                    ],
+                    text=True,
+                ).strip()
 
             self.xcodebuild(
                 self.NAME,

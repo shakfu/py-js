@@ -10,10 +10,11 @@ from sysconfig import get_config_var
 
 AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.13", "3.10.11", "3.11.4"]
 
-if Project.python.arch == 'arm64':
-    DEFAULT_OS_VERSION = '11'
+if Project.python.arch == "arm64":
+    DEFAULT_OS_VERSION = "11"
 else:
     DEFAULT_OS_VERSION = get.DEFAULT_OS_VERSION
+
 
 def get_default_py_version(version: str = None):
     _short_version = None
@@ -31,48 +32,65 @@ def get_default_py_version(version: str = None):
             if ver.startswith(_short_version):
                 return ver
 
-    print('version not found, selecting latest available version')
+    print("version not found, selecting latest available version")
     return AVAILABLE_VERSIONS[-1]
 
 
 relocatable_options = option_group(
-    option("--destination",default="../../support",
+    option(
+        "--destination",
+        default="../../support",
         help="Directory destination for the Python.framework",
     ),
-    option("--baseurl", default=get.DEFAULT_BASEURL,
+    option(
+        "--baseurl",
+        default=get.DEFAULT_BASEURL,
         help="Override the base URL used to download the framework.",
     ),
-    option("--os-version", default=DEFAULT_OS_VERSION,
+    option(
+        "--os-version",
+        default=DEFAULT_OS_VERSION,
         help="Override the macOS version of the downloaded pkg. "
         'Current supported versions are "10.6", "10.9", and "11.2". '
         "Not all Python version and macOS version combinations are valid.",
     ),
     # option("--python-version", default=get.DEFAULT_PYTHON_VERSION,
-    option("--python-version", default=get_default_py_version(),
+    option(
+        "--python-version",
+        default=get_default_py_version(),
         help="Override the version of the Python framework to be downloaded. "
         "See available versions at "
         "https://www.python.org/downloads/mac-osx/",
     ),
-    option("--pip-requirements", default=None,
+    option(
+        "--pip-requirements",
+        default=None,
         help="Path to a pip freeze requirements.txt file that describes extra "
         "Python modules to be installed. If not provided, no modules will be installed.",
     ),
-    option("--pip-modules", default=None,
+    option(
+        "--pip-modules",
+        default=None,
         help="list of extra Python modules to be installed.",
     ),
-    option("--no-unsign", dest="unsign", action="store_false",
-        help="Do not unsign binaries and libraries after they are relocatablized."
+    option(
+        "--no-unsign",
+        dest="unsign",
+        action="store_false",
+        help="Do not unsign binaries and libraries after they are relocatablized.",
     ),
-    option("--upgrade-pip", default=False, action="store_true",
-        help="Upgrade pip prior to installing extra python modules."
+    option(
+        "--upgrade-pip",
+        default=False,
+        action="store_true",
+        help="Upgrade pip prior to installing extra python modules.",
     ),
-    option("--without-pip", default=False, action="store_true",
-        help="Do not install pip."
+    option(
+        "--without-pip", default=False, action="store_true", help="Do not install pip."
     ),
-    option("--release", action="store_true", 
-        help="set configuration to release"
-    ),
+    option("--release", action="store_true", help="set configuration to release"),
 )
+
 
 def fix_framework(path):
     relocatablize(path)
@@ -87,7 +105,7 @@ def download_relocatable_to(directory, settings):
         python_version=py_version,
         os_version=settings.os_version,
         base_url=settings.baseurl,
-        ).download_and_extract(destination=directory)
+    ).download_and_extract(destination=directory)
 
     if framework_path:
         files_relocatablized = relocatablize(framework_path)
@@ -98,7 +116,7 @@ def download_relocatable_to(directory, settings):
             pip_modules=settings.pip_modules,
             requirements_file=settings.pip_requirements,
             upgrade_pip=settings.upgrade_pip,
-            without_pip=settings.without_pip
+            without_pip=settings.without_pip,
         )
         if fix_other_things(framework_path, py_short_version):
             print()

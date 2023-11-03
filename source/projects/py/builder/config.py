@@ -11,7 +11,6 @@ except ImportError:
     numpy = None
 
 
-
 # ----------------------------------------------------------------------------
 # Logging
 
@@ -67,8 +66,6 @@ DEFAULT_CONFIGURE_OPTIONS = [
     # "enable_universalsdk=SDKDIR",
     # "enable_framework",
     # "enable_framework=INSTALLDIR",
-    
-
 ]
 
 PYJS_TARGETS = {
@@ -85,10 +82,9 @@ PYJS_TARGETS = {
         desc="portable package with pyjs externals (shared)", lines=17992
     ),
     "shared-ext": dict(desc="portable pyjs externals (shared)", lines=14195),
-    "shared-tiny-ext": dict(desc="tiny portable pyjs externals (shared)", lines=14195),    
+    "shared-tiny-ext": dict(desc="tiny portable pyjs externals (shared)", lines=14195),
     "static-ext": dict(desc="portable pyjs externals (static)", lines=14064),
     "static-tiny-ext": dict(desc="tiny portable pyjs externals (static)", lines=14064),
-
     "framework-pkg": dict(
         desc="portable package with pyjs externals (framework)", lines=14383
     ),
@@ -96,7 +92,6 @@ PYJS_TARGETS = {
     "relocatable-pkg": dict(
         desc="portable package w/ more custom options (framework)", lines=414
     ),
-
     # "pymx"          : dict(desc="non-portable alternative python3 externals (min-lib)", lines=210),
 }
 
@@ -114,223 +109,221 @@ PYTHON_TARGETS = {
 
 
 CMAKE_DEFAULT_OPTIONS = {
-    "PYTHON_VERSION":               "3.9.17",
-    "PYTHON_APPLY_PATCHES":         "ON",
-    "CMAKE_BUILD_TYPE":             "Debug",
-    "DOWNLOAD_SOURCES":             "ON",
-    "BUILD_LIBPYTHON_SHARED":       "OFF",
-    "BUILD_EXTENSIONS_AS_BUILTIN":  "OFF",
-    "WITH_STATIC_DEPENDENCIES":     "OFF",
-    "INSTALL_DEVELOPMENT":          "ON",
-    "INSTALL_MANUAL":               "OFF",
-    "INSTALL_TEST":                 "OFF",
-    "USE_LIB64":                    "OFF",
-    "WITH_C_LOCALE_COERCION":       "ON",
-    "WITH_DECIMAL_CONTEXTVAR":      "ON",
-    "WITH_TRACE_REFS":              "OFF",
-    "WITH_SSL_DEFAULT_SUITES":      "python",
-    "EXTRA_PYTHONPATH":             "", # colon (:) separated
-    "USE_SYSTEM_LIBRARIES":         "ON",
-    "USE_SYSTEM_Curses":            "ON",
-    "USE_SYSTEM_EXPAT":             "ON",
-    "USE_SYSTEM_LibFFI":            "OFF",
-    "USE_SYSTEM_OpenSSL":           "ON",
-    "USE_SYSTEM_TCL":               "ON",
-    "USE_SYSTEM_ZLIB":              "ON",
-    "USE_SYSTEM_DB":                "ON",
-    "USE_SYSTEM_GDBM":              "ON",
-    "USE_SYSTEM_LZMA":              "ON",
-    "USE_SYSTEM_READLINE":          "ON",
-    "USE_SYSTEM_SQLite3":           "ON",
-
+    "PYTHON_VERSION": "3.9.17",
+    "PYTHON_APPLY_PATCHES": "ON",
+    "CMAKE_BUILD_TYPE": "Debug",
+    "DOWNLOAD_SOURCES": "ON",
+    "BUILD_LIBPYTHON_SHARED": "OFF",
+    "BUILD_EXTENSIONS_AS_BUILTIN": "OFF",
+    "WITH_STATIC_DEPENDENCIES": "OFF",
+    "INSTALL_DEVELOPMENT": "ON",
+    "INSTALL_MANUAL": "OFF",
+    "INSTALL_TEST": "OFF",
+    "USE_LIB64": "OFF",
+    "WITH_C_LOCALE_COERCION": "ON",
+    "WITH_DECIMAL_CONTEXTVAR": "ON",
+    "WITH_TRACE_REFS": "OFF",
+    "WITH_SSL_DEFAULT_SUITES": "python",
+    "EXTRA_PYTHONPATH": "",  # colon (:) separated
+    "USE_SYSTEM_LIBRARIES": "ON",
+    "USE_SYSTEM_Curses": "ON",
+    "USE_SYSTEM_EXPAT": "ON",
+    "USE_SYSTEM_LibFFI": "OFF",
+    "USE_SYSTEM_OpenSSL": "ON",
+    "USE_SYSTEM_TCL": "ON",
+    "USE_SYSTEM_ZLIB": "ON",
+    "USE_SYSTEM_DB": "ON",
+    "USE_SYSTEM_GDBM": "ON",
+    "USE_SYSTEM_LZMA": "ON",
+    "USE_SYSTEM_READLINE": "ON",
+    "USE_SYSTEM_SQLite3": "ON",
     # extension options
-    "ENABLE_ARRAY":                 "ON",
-    "ENABLE_AUDIOOP":               "ON",
-    "ENABLE_BINASCII":              "ON",
-    "ENABLE_BISECT":                "ON",
-    "ENABLE_BSDDB":                 "ON",
-    "ENABLE_BZ2":                   "ON",
-    "ENABLE_CMATH":                 "ON",
-    "ENABLE_CODECS_CN":             "ON",
-    "ENABLE_CODECS_HK":             "ON",
-    "ENABLE_CODECS_ISO2022":        "ON",
-    "ENABLE_CODECS_JP":             "ON",
-    "ENABLE_CODECS_KR":             "ON",
-    "ENABLE_CODECS_TW":             "ON",
-    "ENABLE_COLLECTIONS":           "ON",
-    "ENABLE_CPICKLE":               "ON",
-    "ENABLE_CRYPT":                 "ON",
-    "ENABLE_CSTRINGIO":             "ON",
-    "ENABLE_CSV":                   "ON",
-    "ENABLE_CTYPES":                "ON",
-    "ENABLE_CTYPES_TEST":           "ON",
-    "ENABLE_CURSES":                "ON",
-    "ENABLE_CURSES_PANEL":          "ON",
-    "ENABLE_DATETIME":              "ON",
-    "ENABLE_DBM":                   "ON",
-    "ENABLE_ELEMENTTREE":           "ON",
-    "ENABLE_FCNTL":                 "ON",
-    "ENABLE_FUNCTOOLS":             "ON",
-    "ENABLE_FUTURE_BUILTINS":       "ON",
-    "ENABLE_GDBM":                  "ON",
-    "ENABLE_GRP":                   "ON",
-    "ENABLE_HASHLIB":               "ON",
-    "ENABLE_HEAPQ":                 "ON",
-    "ENABLE_HOTSHOT":               "ON",
-    "ENABLE_IO":                    "ON",
-    "ENABLE_ITERTOOLS":             "ON",
-    "ENABLE_JSON":                  "ON",
-    "ENABLE_LINUXAUDIODEV":         "ON",
-    "ENABLE_LOCALE":                "ON",
-    "ENABLE_LSPROF":                "ON",
-    "ENABLE_LZMA":                  "ON",
-    "ENABLE_MATH":                  "ON",
-    "ENABLE_MMAP":                  "ON",
-    "ENABLE_MULTIBYTECODEC":        "ON",
-    "ENABLE_MULTIPROCESSING":       "ON",
-    "ENABLE_NIS":                   "ON",
-    "ENABLE_NT":                    "ON",
-    "ENABLE_OPERATOR":              "ON",
-    "ENABLE_OSSAUDIODEV":           "ON",
-    "ENABLE_PARSER":                "ON",
-    "ENABLE_POSIX":                 "ON",
-    "ENABLE_PWD":                   "ON",
-    "ENABLE_PYEXPAT":               "ON",
-    "ENABLE_RANDOM":                "ON",
-    "ENABLE_READLINE":              "ON",
-    "ENABLE_RESOURCE":              "ON",
-    "ENABLE_SELECT":                "ON",
-    "ENABLE_SOCKET":                "ON",
-    "ENABLE_SPWD":                  "ON",
-    "ENABLE_SQLITE3":               "ON",
-    "ENABLE_SSL":                   "ON",
-    "ENABLE_STROP":                 "ON",
-    "ENABLE_STRUCT":                "ON",
-    "ENABLE_SYSLOG":                "ON",
-    "ENABLE_TERMIOS":               "ON",
-    "ENABLE_TESTCAPI":              "ON",
-    "ENABLE_TIME":                  "ON",
-    "ENABLE_TKINTER":               "ON",
-    "ENABLE_UNICODEDATA":           "ON",
-    "ENABLE_ZLIB":                  "ON",
-
-    "BUILTIN_ARRAY":                "OFF",
-    "BUILTIN_AUDIOOP":              "OFF",
-    "BUILTIN_BINASCII":             "OFF",
-    "BUILTIN_BISECT":               "OFF",
-    "BUILTIN_BSDDB":                "OFF",
-    "BUILTIN_BZ2":                  "OFF",
-    "BUILTIN_CMATH":                "OFF",
-    "BUILTIN_CODECS_CN":            "OFF",
-    "BUILTIN_CODECS_HK":            "OFF",
-    "BUILTIN_CODECS_ISO2022":       "OFF",
-    "BUILTIN_CODECS_JP":            "OFF",
-    "BUILTIN_CODECS_KR":            "OFF",
-    "BUILTIN_CODECS_TW":            "OFF",
-    "BUILTIN_COLLECTIONS":          "OFF",
-    "BUILTIN_CPICKLE":              "OFF",
-    "BUILTIN_CRYPT":                "OFF",
-    "BUILTIN_CSTRINGIO":            "OFF",
-    "BUILTIN_CSV":                  "OFF",
-    "BUILTIN_CTYPES":               "OFF",
-    "BUILTIN_CTYPES_TEST":          "OFF",
-    "BUILTIN_CURSES":               "OFF",
-    "BUILTIN_CURSES_PANEL":         "OFF",
-    "BUILTIN_DATETIME":             "OFF",
-    "BUILTIN_DBM":                  "OFF",
-    "BUILTIN_ELEMENTTREE":          "OFF",
-    "BUILTIN_FCNTL":                "OFF",
-    "BUILTIN_FUNCTOOLS":            "OFF",
-    "BUILTIN_FUTURE_BUILTINS":      "OFF",
-    "BUILTIN_GDBM":                 "OFF",
-    "BUILTIN_GRP":                  "OFF",
-    "BUILTIN_HASHLIB":              "OFF",
-    "BUILTIN_HEAPQ":                "OFF",
-    "BUILTIN_HOTSHOT":              "OFF",
-    "BUILTIN_IO":                   "OFF",
-    "BUILTIN_ITERTOOLS":            "OFF",
-    "BUILTIN_JSON":                 "OFF",
-    "BUILTIN_LINUXAUDIODEV":        "OFF",
-    "BUILTIN_LOCALE":               "OFF",
-    "BUILTIN_LSPROF":               "OFF",
-    "BUILTIN_LZMA":                 "OFF",
-    "BUILTIN_MATH":                 "OFF",
-    "BUILTIN_MMAP":                 "OFF",
-    "BUILTIN_MULTIBYTECODEC":       "OFF",
-    "BUILTIN_MULTIPROCESSING":      "OFF",
-    "BUILTIN_NIS":                  "OFF",
-    "BUILTIN_NT":                   "ON",
-    "BUILTIN_OPERATOR":             "OFF",
-    "BUILTIN_OSSAUDIODEV":          "OFF",
-    "BUILTIN_PARSER":               "OFF",
-    "BUILTIN_POSIX":                "ON",
-    "BUILTIN_PWD":                  "ON",
-    "BUILTIN_PYEXPAT":              "OFF",
-    "BUILTIN_RANDOM":               "OFF",
-    "BUILTIN_READLINE":             "OFF",
-    "BUILTIN_RESOURCE":             "OFF",
-    "BUILTIN_SELECT":               "OFF",
-    "BUILTIN_SOCKET":               "OFF",
-    "BUILTIN_SPWD":                 "OFF",
-    "BUILTIN_SQLITE3":              "OFF",
-    "BUILTIN_SSL":                  "OFF",
-    "BUILTIN_STROP":                "OFF",
-    "BUILTIN_STRUCT":               "OFF",
-    "BUILTIN_SYSLOG":               "OFF",
-    "BUILTIN_TERMIOS":              "OFF",
-    "BUILTIN_TESTCAPI":             "OFF",
-    "BUILTIN_TIME":                 "OFF",
-    "BUILTIN_TKINTER":              "OFF",
-    "BUILTIN_UNICODEDATA":          "OFF",
-    "BUILTIN_ZLIB":                 "OFF",
+    "ENABLE_ARRAY": "ON",
+    "ENABLE_AUDIOOP": "ON",
+    "ENABLE_BINASCII": "ON",
+    "ENABLE_BISECT": "ON",
+    "ENABLE_BSDDB": "ON",
+    "ENABLE_BZ2": "ON",
+    "ENABLE_CMATH": "ON",
+    "ENABLE_CODECS_CN": "ON",
+    "ENABLE_CODECS_HK": "ON",
+    "ENABLE_CODECS_ISO2022": "ON",
+    "ENABLE_CODECS_JP": "ON",
+    "ENABLE_CODECS_KR": "ON",
+    "ENABLE_CODECS_TW": "ON",
+    "ENABLE_COLLECTIONS": "ON",
+    "ENABLE_CPICKLE": "ON",
+    "ENABLE_CRYPT": "ON",
+    "ENABLE_CSTRINGIO": "ON",
+    "ENABLE_CSV": "ON",
+    "ENABLE_CTYPES": "ON",
+    "ENABLE_CTYPES_TEST": "ON",
+    "ENABLE_CURSES": "ON",
+    "ENABLE_CURSES_PANEL": "ON",
+    "ENABLE_DATETIME": "ON",
+    "ENABLE_DBM": "ON",
+    "ENABLE_ELEMENTTREE": "ON",
+    "ENABLE_FCNTL": "ON",
+    "ENABLE_FUNCTOOLS": "ON",
+    "ENABLE_FUTURE_BUILTINS": "ON",
+    "ENABLE_GDBM": "ON",
+    "ENABLE_GRP": "ON",
+    "ENABLE_HASHLIB": "ON",
+    "ENABLE_HEAPQ": "ON",
+    "ENABLE_HOTSHOT": "ON",
+    "ENABLE_IO": "ON",
+    "ENABLE_ITERTOOLS": "ON",
+    "ENABLE_JSON": "ON",
+    "ENABLE_LINUXAUDIODEV": "ON",
+    "ENABLE_LOCALE": "ON",
+    "ENABLE_LSPROF": "ON",
+    "ENABLE_LZMA": "ON",
+    "ENABLE_MATH": "ON",
+    "ENABLE_MMAP": "ON",
+    "ENABLE_MULTIBYTECODEC": "ON",
+    "ENABLE_MULTIPROCESSING": "ON",
+    "ENABLE_NIS": "ON",
+    "ENABLE_NT": "ON",
+    "ENABLE_OPERATOR": "ON",
+    "ENABLE_OSSAUDIODEV": "ON",
+    "ENABLE_PARSER": "ON",
+    "ENABLE_POSIX": "ON",
+    "ENABLE_PWD": "ON",
+    "ENABLE_PYEXPAT": "ON",
+    "ENABLE_RANDOM": "ON",
+    "ENABLE_READLINE": "ON",
+    "ENABLE_RESOURCE": "ON",
+    "ENABLE_SELECT": "ON",
+    "ENABLE_SOCKET": "ON",
+    "ENABLE_SPWD": "ON",
+    "ENABLE_SQLITE3": "ON",
+    "ENABLE_SSL": "ON",
+    "ENABLE_STROP": "ON",
+    "ENABLE_STRUCT": "ON",
+    "ENABLE_SYSLOG": "ON",
+    "ENABLE_TERMIOS": "ON",
+    "ENABLE_TESTCAPI": "ON",
+    "ENABLE_TIME": "ON",
+    "ENABLE_TKINTER": "ON",
+    "ENABLE_UNICODEDATA": "ON",
+    "ENABLE_ZLIB": "ON",
+    "BUILTIN_ARRAY": "OFF",
+    "BUILTIN_AUDIOOP": "OFF",
+    "BUILTIN_BINASCII": "OFF",
+    "BUILTIN_BISECT": "OFF",
+    "BUILTIN_BSDDB": "OFF",
+    "BUILTIN_BZ2": "OFF",
+    "BUILTIN_CMATH": "OFF",
+    "BUILTIN_CODECS_CN": "OFF",
+    "BUILTIN_CODECS_HK": "OFF",
+    "BUILTIN_CODECS_ISO2022": "OFF",
+    "BUILTIN_CODECS_JP": "OFF",
+    "BUILTIN_CODECS_KR": "OFF",
+    "BUILTIN_CODECS_TW": "OFF",
+    "BUILTIN_COLLECTIONS": "OFF",
+    "BUILTIN_CPICKLE": "OFF",
+    "BUILTIN_CRYPT": "OFF",
+    "BUILTIN_CSTRINGIO": "OFF",
+    "BUILTIN_CSV": "OFF",
+    "BUILTIN_CTYPES": "OFF",
+    "BUILTIN_CTYPES_TEST": "OFF",
+    "BUILTIN_CURSES": "OFF",
+    "BUILTIN_CURSES_PANEL": "OFF",
+    "BUILTIN_DATETIME": "OFF",
+    "BUILTIN_DBM": "OFF",
+    "BUILTIN_ELEMENTTREE": "OFF",
+    "BUILTIN_FCNTL": "OFF",
+    "BUILTIN_FUNCTOOLS": "OFF",
+    "BUILTIN_FUTURE_BUILTINS": "OFF",
+    "BUILTIN_GDBM": "OFF",
+    "BUILTIN_GRP": "OFF",
+    "BUILTIN_HASHLIB": "OFF",
+    "BUILTIN_HEAPQ": "OFF",
+    "BUILTIN_HOTSHOT": "OFF",
+    "BUILTIN_IO": "OFF",
+    "BUILTIN_ITERTOOLS": "OFF",
+    "BUILTIN_JSON": "OFF",
+    "BUILTIN_LINUXAUDIODEV": "OFF",
+    "BUILTIN_LOCALE": "OFF",
+    "BUILTIN_LSPROF": "OFF",
+    "BUILTIN_LZMA": "OFF",
+    "BUILTIN_MATH": "OFF",
+    "BUILTIN_MMAP": "OFF",
+    "BUILTIN_MULTIBYTECODEC": "OFF",
+    "BUILTIN_MULTIPROCESSING": "OFF",
+    "BUILTIN_NIS": "OFF",
+    "BUILTIN_NT": "ON",
+    "BUILTIN_OPERATOR": "OFF",
+    "BUILTIN_OSSAUDIODEV": "OFF",
+    "BUILTIN_PARSER": "OFF",
+    "BUILTIN_POSIX": "ON",
+    "BUILTIN_PWD": "ON",
+    "BUILTIN_PYEXPAT": "OFF",
+    "BUILTIN_RANDOM": "OFF",
+    "BUILTIN_READLINE": "OFF",
+    "BUILTIN_RESOURCE": "OFF",
+    "BUILTIN_SELECT": "OFF",
+    "BUILTIN_SOCKET": "OFF",
+    "BUILTIN_SPWD": "OFF",
+    "BUILTIN_SQLITE3": "OFF",
+    "BUILTIN_SSL": "OFF",
+    "BUILTIN_STROP": "OFF",
+    "BUILTIN_STRUCT": "OFF",
+    "BUILTIN_SYSLOG": "OFF",
+    "BUILTIN_TERMIOS": "OFF",
+    "BUILTIN_TESTCAPI": "OFF",
+    "BUILTIN_TIME": "OFF",
+    "BUILTIN_TKINTER": "OFF",
+    "BUILTIN_UNICODEDATA": "OFF",
+    "BUILTIN_ZLIB": "OFF",
 }
 
 PYJS_CMAKE_DEFAULT_OPTIONS = CMAKE_DEFAULT_OPTIONS.copy()
-PYJS_CMAKE_DEFAULT_OPTIONS.update({
-    "CMAKE_INSTALL_PREFIX:PATH":    None,
-    "BUILD_EXTENSIONS_AS_BUILTIN":  "ON",
-    "BUILD_LIBPYTHON_SHARED":       "ON",
-
-    "USE_SYSTEM_LIBRARIES":         "OFF",
-    "USE_SYSTEM_ZLIB":              "OFF",
-    "PYTHON_APPLY_PATCHES":         "OFF",
-    "ENABLE_LOCALE":                "OFF",
-    "WITH_C_LOCALE_COERCION":       "OFF",
-
-    # extensions
-    "ENABLE_AUDIOOP":               "OFF",
-    "ENABLE_BSDDB":                 "OFF",
-    "ENABLE_CODECS_CN":             "OFF",
-    "ENABLE_CODECS_HK":             "OFF",
-    "ENABLE_CODECS_ISO2022":        "OFF",
-    "ENABLE_CODECS_JP":             "OFF",
-    "ENABLE_CODECS_KR":             "OFF",
-    "ENABLE_CODECS_TW":             "OFF",
-    "ENABLE_CPICKLE":               "OFF",
-    "ENABLE_CTYPES":                "OFF",
-    "ENABLE_CTYPES_TEST":           "OFF",
-    "ENABLE_CURSES":                "OFF",
-    "ENABLE_CURSES_PANEL":          "OFF",
-    "ENABLE_DBM":                   "OFF",
-    "ENABLE_GDBM":                  "OFF",
-    "ENABLE_HASHLIB":               "OFF",
-    "ENABLE_HOTSHOT":               "OFF",
-    "ENABLE_LINUXAUDIODEV":         "OFF",
-    "ENABLE_LOCALE":                "OFF",
-    "ENABLE_LSPROF":                "OFF",
-    "ENABLE_MULTIBYTECODEC":        "OFF",
-    "ENABLE_NIS":                   "OFF",    
-    "ENABLE_OSSAUDIODEV":           "OFF",
-    "ENABLE_READLINE":              "OFF",
-    "ENABLE_SPWD":                  "OFF",
-    "ENABLE_SQLITE3":               "OFF",
-    "ENABLE_SSL":                   "OFF",
-    "ENABLE_SYSLOG":                "OFF",
-    "ENABLE_TERMIOS":               "OFF",
-    "ENABLE_TESTCAPI":              "OFF",
-    "ENABLE_TKINTER":               "OFF",
-    "ENABLE_UNICODEDATA":           "OFF",
-})
+PYJS_CMAKE_DEFAULT_OPTIONS.update(
+    {
+        "CMAKE_INSTALL_PREFIX:PATH": None,
+        "BUILD_EXTENSIONS_AS_BUILTIN": "ON",
+        "BUILD_LIBPYTHON_SHARED": "ON",
+        "USE_SYSTEM_LIBRARIES": "OFF",
+        "USE_SYSTEM_ZLIB": "OFF",
+        "PYTHON_APPLY_PATCHES": "OFF",
+        "ENABLE_LOCALE": "OFF",
+        "WITH_C_LOCALE_COERCION": "OFF",
+        # extensions
+        "ENABLE_AUDIOOP": "OFF",
+        "ENABLE_BSDDB": "OFF",
+        "ENABLE_CODECS_CN": "OFF",
+        "ENABLE_CODECS_HK": "OFF",
+        "ENABLE_CODECS_ISO2022": "OFF",
+        "ENABLE_CODECS_JP": "OFF",
+        "ENABLE_CODECS_KR": "OFF",
+        "ENABLE_CODECS_TW": "OFF",
+        "ENABLE_CPICKLE": "OFF",
+        "ENABLE_CTYPES": "OFF",
+        "ENABLE_CTYPES_TEST": "OFF",
+        "ENABLE_CURSES": "OFF",
+        "ENABLE_CURSES_PANEL": "OFF",
+        "ENABLE_DBM": "OFF",
+        "ENABLE_GDBM": "OFF",
+        "ENABLE_HASHLIB": "OFF",
+        "ENABLE_HOTSHOT": "OFF",
+        "ENABLE_LINUXAUDIODEV": "OFF",
+        "ENABLE_LOCALE": "OFF",
+        "ENABLE_LSPROF": "OFF",
+        "ENABLE_MULTIBYTECODEC": "OFF",
+        "ENABLE_NIS": "OFF",
+        "ENABLE_OSSAUDIODEV": "OFF",
+        "ENABLE_READLINE": "OFF",
+        "ENABLE_SPWD": "OFF",
+        "ENABLE_SQLITE3": "OFF",
+        "ENABLE_SSL": "OFF",
+        "ENABLE_SYSLOG": "OFF",
+        "ENABLE_TERMIOS": "OFF",
+        "ENABLE_TESTCAPI": "OFF",
+        "ENABLE_TKINTER": "OFF",
+        "ENABLE_UNICODEDATA": "OFF",
+    }
+)
 
 # ----------------------------------------------------------------------------
 # Utility Functions
@@ -439,8 +432,8 @@ class Project:
     is_symlinked = True
 
     # project root here
-    root = BASEDIR # i.e py-js
-    pydir = root / 'source' / 'projects' / 'py'
+    root = BASEDIR  # i.e py-js
+    pydir = root / "source" / "projects" / "py"
     support = root / "support"
     externals = root / "externals"
 
@@ -473,7 +466,7 @@ class Project:
     build_lib = build / "lib"
 
     # collect stapled and zipped .dmgs in release directory
-    release_dir = HOME / 'Downloads' / 'PYJS_RELEASE'
+    release_dir = HOME / "Downloads" / "PYJS_RELEASE"
 
     # settings
     mac_dep_target = "10.13"
@@ -517,13 +510,13 @@ class Project:
         config["cache"] = kwds
         if not self.build.exists():
             self.build.mkdir(exist_ok=True)
-        with open(self.build_cache, 'w') as configfile:
+        with open(self.build_cache, "w") as configfile:
             config.write(configfile)
 
     def cache_get(self, key, as_path=False):
         config = configparser.ConfigParser()
         config.read(self.build_cache)
-        value = config['cache'][key]
+        value = config["cache"][key]
         if as_path:
             value = Path(value)
         return value
@@ -531,7 +524,7 @@ class Project:
     def get_package_name(self, variant):
         """ensure package name has standard format.
 
-        `py-js-<variant>-<system>-<arch>-<py_ver>` for example 
+        `py-js-<variant>-<system>-<arch>-<py_ver>` for example
         `py-js-shared-ext-darwin-x86-3.11`
         """
         name = self.name
@@ -541,15 +534,14 @@ class Project:
         return f"{name}-{variant}-{system}-{arch}-{ver}"
 
     def get_dmg(self, variant):
-        """get final dmg package name and path
-        """
+        """get final dmg package name and path"""
         package_name = self.get_package_name(variant)
-        dmg = self.root / f'{package_name}.dmg'
+        dmg = self.root / f"{package_name}.dmg"
         return dmg.resolve()
 
     def record_variant(self, name):
-        if name.startswith('pyjs'):
-            variant = name[len('pyjs_'):].replace('_','-')
+        if name.startswith("pyjs"):
+            variant = name[len("pyjs_") :].replace("_", "-")
             self.cache_set(
                 VARIANT=variant,
                 PRODUCT_DMG=self.get_dmg(variant),

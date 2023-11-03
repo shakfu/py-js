@@ -37,6 +37,7 @@ def test_buffer_set_samples():
     buf.set_samples(xs)
     api.post(f"set {n_samples} samples to buffer {name}")
 
+
 def test_buffer_set_samples2():
     name = "drum1"
     duration_ms = 500
@@ -52,12 +53,14 @@ def test_buffer_set_samples2():
     buf.set_samples(xs)
     api.post(f"set {buf.n_samples} samples to buffer {name}")
 
+
 def test_buffer_set_samples3():
     name = "drum1"
     duration_ms = 500
     buf = api.create_empty_buffer(name, duration_ms)
     t = np.linspace(0, 1, buf.n_samples, endpoint=False, dtype=np.float32)
     buf.set_samples(t)
+
 
 def test_buffer_protocol_read():
     name = "drum1"
@@ -67,6 +70,7 @@ def test_buffer_protocol_read():
     xs = np.asarray(buf)
     assert len(xs) == buf.n_samples
     api.post(f"len(x): {len(xs)} == buf.n_samples: {buf.n_samples}")
+
 
 def test_buffer_protocol_write():
     name = "drum1"

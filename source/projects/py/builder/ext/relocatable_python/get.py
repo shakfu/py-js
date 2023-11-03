@@ -16,7 +16,6 @@
 """Object to download the Python.org framework pkg and extract it"""
 
 
-
 import os
 import shutil
 import subprocess
@@ -30,6 +29,7 @@ PKGUTIL = "/usr/sbin/pkgutil"
 DEFAULT_BASEURL = "https://www.python.org/ftp/python/%s/python-%s-macosx%s.pkg"
 DEFAULT_PYTHON_VERSION = "3.11.2"
 DEFAULT_OS_VERSION = "11"
+
 
 class FrameworkGetter:
     """Handles getting the Python.org pkg and extracting the framework"""
@@ -52,7 +52,6 @@ class FrameworkGetter:
         self.destination = ""
         self.thin_framework = thin_framework
 
-
     def __del__(self):
         """Clean up"""
         if self.expanded_path:
@@ -62,12 +61,11 @@ class FrameworkGetter:
 
     def download(self):
         """Downloads a macOS installer pkg from python.org.
-           Returns path to the download."""
+        Returns path to the download."""
         if self.python_version.startswith("3.10"):
             self.os_version = "11"
-        if self.base_url == DEFAULT_BASEURL and \
-           not self.os_version.startswith('10'):
-            base_url = self.base_url.replace('macosx', 'macos')
+        if self.base_url == DEFAULT_BASEURL and not self.os_version.startswith("10"):
+            base_url = self.base_url.replace("macosx", "macos")
         else:
             base_url = self.base_url
         url = base_url % (
@@ -89,7 +87,7 @@ class FrameworkGetter:
 
     def expand(self):
         """Uses pkgutil to expand our downloaded pkg. Returns a path to the
-           expanded contents."""
+        expanded contents."""
         self.expanded_path = self.downloaded_pkg_path + "__expanded__"
         cmd = [
             PKGUTIL,
@@ -102,11 +100,16 @@ class FrameworkGetter:
 
     def extract_framework(self):
         """Extracts the Python framework from the expanded pkg"""
-        payload = os.path.join(
-            self.expanded_path, "Python_Framework.pkg/Payload"
-        )
+        payload = os.path.join(self.expanded_path, "Python_Framework.pkg/Payload")
         if self.thin_framework:
-            cmd = [DITTO, "--arch", platform.machine(), "-xz", payload, self.destination]
+            cmd = [
+                DITTO,
+                "--arch",
+                platform.machine(),
+                "-xz",
+                payload,
+                self.destination,
+            ]
         else:
             cmd = [DITTO, "-xz", payload, self.destination]
         print("Extracting %s to %s..." % (payload, self.destination))
@@ -114,14 +117,12 @@ class FrameworkGetter:
 
     def download_and_extract(self, destination="."):
         """Downloads and extracts the Python framework.
-           Returns path to the framework."""
+        Returns path to the framework."""
         destination = os.path.expanduser(destination)
         if os.path.basename(destination) != "Python.framework":
             destination = os.path.join(destination, "Python.framework")
         if os.path.exists(destination):
-            print(
-                "Destination %s already exists!" % destination, file=sys.stderr
-            )
+            print("Destination %s already exists!" % destination, file=sys.stderr)
             return None
         self.destination = destination
         try:

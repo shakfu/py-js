@@ -11,6 +11,7 @@ from .config import (
 # -----------------------------------------------------------------------------
 # UTILITY FUNCTIONS
 
+
 # returns default if k is not found in d or d[k] returns None
 def get(d, k, default):
     return d[k] if k in d and d[k] else default
@@ -18,6 +19,7 @@ def get(d, k, default):
 
 # -----------------------------------------------------------------------------
 # FACTORY MANAGER
+
 
 class FactoryManager:
     """
@@ -60,8 +62,8 @@ class FactoryManager:
         pyjs_beeware_ext=(core.BeewareExtBuilder, ["python_beeware"]),
     )
 
-# -----------------------------------------------------------------------------
-# DEPENDENCY PRODUCTS
+    # -----------------------------------------------------------------------------
+    # DEPENDENCY PRODUCTS
 
     def get_bzip2_product(self, bz2_version=DEFAULT_BZ2_VERSION, **settings):
         return core.Product(
@@ -71,7 +73,6 @@ class FactoryManager:
             libs_static=["libbz2.a"],
         )
 
-
     def get_ssl_product(self, ssl_version=DEFAULT_SSL_VERSION, **settings):
         return core.Product(
             name="openssl",
@@ -79,7 +80,6 @@ class FactoryManager:
             url_template="https://www.openssl.org/source/{name}-{version}.tar.gz",
             libs_static=["libssl.a", "libcrypto.a"],
         )
-
 
     def get_xz_product(self, xz_version=DEFAULT_XZ_VERSION, **settings):
         return core.Product(
@@ -89,30 +89,28 @@ class FactoryManager:
             libs_static=["libxz.a"],
         )
 
-
-# -----------------------------------------------------------------------------
-# DEPENDENCY BUILDERS
-
+    # -----------------------------------------------------------------------------
+    # DEPENDENCY BUILDERS
 
     def dependency_builder_factory(self, name, **settings):
-
         bz2_version = get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
         ssl_version = get(settings, "ssl_version", DEFAULT_SSL_VERSION)
         xz_version = get(settings, "xz_version", DEFAULT_XZ_VERSION)
 
         return {
-            "bz2": core.Bzip2Builder(product=self.get_bzip2_product(bz2_version), **settings),
-            "ssl": core.OpensslBuilder(product=self.get_ssl_product(ssl_version), **settings),
+            "bz2": core.Bzip2Builder(
+                product=self.get_bzip2_product(bz2_version), **settings
+            ),
+            "ssl": core.OpensslBuilder(
+                product=self.get_ssl_product(ssl_version), **settings
+            ),
             "xz": core.XzBuilder(product=self.get_xz_product(xz_version), **settings),
         }[name]
 
-
-# -----------------------------------------------------------------------------
-# PYTHON BUILDERS
-
+    # -----------------------------------------------------------------------------
+    # PYTHON BUILDERS
 
     def python_builder_factory(self, name, **settings):
-
         py_version = get(settings, "python_version", CURRENT_PYTHON_VERSION)
         bz2_version = get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
         ssl_version = get(settings, "ssl_version", DEFAULT_SSL_VERSION)
@@ -145,13 +143,10 @@ class FactoryManager:
         else:
             return _builder(product=product, depends_on=_dependencies, **settings)
 
-
-# -----------------------------------------------------------------------------
-# PYJS BUILDERS
-
+    # -----------------------------------------------------------------------------
+    # PYJS BUILDERS
 
     def pyjs_builder_factory(self, name, **settings):
-
         py_version = get(settings, "python_version", CURRENT_PYTHON_VERSION)
         get(settings, "bz2_version", DEFAULT_BZ2_VERSION)
         get(settings, "ssl_version", DEFAULT_SSL_VERSION)
@@ -162,7 +157,8 @@ class FactoryManager:
             return _builder(
                 product=core.Product(name="Python", version=py_version),
                 depends_on=[
-                    self.python_builder_factory(name, **settings) for name in dependencies
+                    self.python_builder_factory(name, **settings)
+                    for name in dependencies
                 ],
                 **settings,
             )
@@ -173,10 +169,8 @@ class FactoryManager:
                 **settings,
             )
 
-
-# -----------------------------------------------------------------------------
-# GENERIC BUILDERS
-
+    # -----------------------------------------------------------------------------
+    # GENERIC BUILDERS
 
     def builder_factory(self, name, **settings):
         builder = None
@@ -194,12 +188,10 @@ class FactoryManager:
 
         return builder
 
+    # -----------------------------------------------------------------------------
+    # RECIPES
 
-# -----------------------------------------------------------------------------
-# RECIPES
-
-# An example of a recipe which can fix requirements to versions.
-
+    # An example of a recipe which can fix requirements to versions.
 
     def get_static_python_recipe(
         self,
@@ -214,12 +206,14 @@ class FactoryManager:
             name=name,
             builders=[
                 core.StaticPythonBuilder(
-                product=core.Product(
+                    product=core.Product(
                         name="Python",
                         version=py_version,
                         build_dir="python-static",
                         url_template="https://www.python.org/ftp/python/{version}/Python-{version}.tgz",
-                        libs_static=[f"libpython{'.'.join(py_version.split('.')[:-1])}.a"],
+                        libs_static=[
+                            f"libpython{'.'.join(py_version.split('.')[:-1])}.a"
+                        ],
                     ),
                     depends_on=[
                         core.Bzip2Builder(
@@ -228,7 +222,9 @@ class FactoryManager:
                         core.OpensslBuilder(
                             product=self.get_ssl_product(ssl_version, **settings)
                         ),
-                        core.XzBuilder(product=self.get_xz_product(xz_version, **settings)),
+                        core.XzBuilder(
+                            product=self.get_xz_product(xz_version, **settings)
+                        ),
                     ],
                 )
             ],

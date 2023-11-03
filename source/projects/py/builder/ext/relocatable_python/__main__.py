@@ -64,19 +64,16 @@ def main():
         "--no-unsign",
         dest="unsign",
         action="store_false",
-        help="Do not unsign binaries and libraries after they are relocatablized."
+        help="Do not unsign binaries and libraries after they are relocatablized.",
     )
     parser.add_option(
         "--upgrade-pip",
         default=False,
         action="store_true",
-        help="Upgrade pip prior to installing extra python modules."
+        help="Upgrade pip prior to installing extra python modules.",
     )
     parser.add_option(
-        "--without-pip",
-        default=False,
-        action="store_true",
-        help="Do not install pip."
+        "--without-pip", default=False, action="store_true", help="Do not install pip."
     )
     parser.set_defaults(unsign=True)
     options, _arguments = parser.parse_args()
@@ -96,7 +93,7 @@ def main():
             version=short_version,
             requirements_file=options.pip_requirements,
             upgrade_pip=options.upgrade_pip,
-            without_pip=options.without_pip
+            without_pip=options.without_pip,
         )
         if fix_other_things(framework_path, short_version):
             print()

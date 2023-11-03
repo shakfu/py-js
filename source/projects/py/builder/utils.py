@@ -59,7 +59,9 @@ def section(title):
 
 def display_help():
     section("general")
-    print(f"{CYAN}make{RESET} {GREEN}{'projects':<20}{RESET} : build all subprojects using standard cmake process")
+    print(
+        f"{CYAN}make{RESET} {GREEN}{'projects':<20}{RESET} : build all subprojects using standard cmake process"
+    )
     print()
 
     section("pyjs targets")
@@ -92,7 +94,6 @@ def runlog(target, requirement=2):
     successes = 0
 
     with open(logfile, "w") as f:
-
         progressbar = ProgressBar(PYJS_TARGETS[target]["lines"], target)
 
         for line in proc(["make", "-C", str(BASEDIR), target]):
@@ -144,6 +145,7 @@ def check_version(path: str, requirement: int = 2):
     print()
     sum(check_success(str(log), requirement) for log in version_folder.iterdir())
     # print(f"{version_folder.name:<6}: {GREEN}{total_successes}{RESET} out of {requirement * 2} builds OK")
+
 
 def check_logs(path: str, requirement: int = 2):
     logs_folder = Path(path)

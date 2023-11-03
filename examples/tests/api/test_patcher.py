@@ -27,10 +27,8 @@ def test_patcher():
     api.post(f"patcher.rect: {p.rect}")
 
 
-
 def test_patcher_create():
     ext = api.PyExternal()
     p = ext.get_patcher()
     p.add_textbox("metro 400", 100.0, 150.0)
     p.add_box("toggle", 240.0, 150.0)
-

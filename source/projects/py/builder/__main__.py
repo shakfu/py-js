@@ -26,6 +26,7 @@ subcommands:
 from . import utils
 from .cli import Commander, option, option_group
 from .ext.relocatable_python import relocatable_options, fix_framework
+
 # from .factory import builder_factory
 from .factory import FactoryManager
 from .package import PackageManager
@@ -306,7 +307,8 @@ class Application(Commander):
     def do_package(self, args):
         """package, sign and release external"""
         mgr = PackageManager(
-            args.variant, args.dev_id, args.keychain_profile, args.dry_run)
+            args.variant, args.dev_id, args.keychain_profile, args.dry_run
+        )
         mgr.process()
 
     def do_package_sign(self, args):
@@ -343,7 +345,6 @@ class Application(Commander):
         """collect dmg"""
         mgr = PackageManager()
         mgr.collect_dmg()
-
 
     # ----------------------------------------------------------------------------
     # utility methods

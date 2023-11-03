@@ -107,13 +107,14 @@ def match_python_shared(target):
 
 
 class PackageManager:
-    """ Manages and executes the entire release process.
-    """
+    """Manages and executes the entire release process."""
 
     def __init__(self, variant=None, dev_id=None, keychain_profile=None, dry_run=False):
-        self.project = Project()        
+        self.project = Project()
         self.variant, self.product_dmg = self.setup(variant)
-        self.dev_id = dev_id or os.getenv('DEV_ID', '-') # '-' fallback to ad-hoc signing
+        self.dev_id = dev_id or os.getenv(
+            "DEV_ID", "-"
+        )  # '-' fallback to ad-hoc signing
         self.keychain_profile = keychain_profile
         self.dry_run = dry_run
         self.entitlements = self.project.entitlements / "entitlements.plist"
@@ -125,8 +126,8 @@ class PackageManager:
         if variant:
             self.project.record_variant(variant)
         return (
-            self.project.cache_get('variant'),
-            self.project.cache_get('product_dmg', as_path=True)
+            self.project.cache_get("variant"),
+            self.project.cache_get("product_dmg", as_path=True),
         )
 
     @property
@@ -156,8 +157,10 @@ class PackageManager:
             if any(match(target) for match in matchers):
                 # if target.suffix in CodesignExternal.FOLDER_EXTENSIONS:
                 signer = CodesignExternal(
-                    target, dev_id=self.dev_id, 
-                    entitlements=self.entitlements, dry_run=self.dry_run
+                    target,
+                    dev_id=self.dev_id,
+                    entitlements=self.entitlements,
+                    dry_run=self.dry_run,
                 )
                 if signer.dry_run:
                     signer.process_dry_run()
@@ -202,9 +205,10 @@ class PackageManager:
             with open(env_file, "a") as fopen:
                 fopen.write(f"PRODUCT_DMG={self.product_dmg}")
 
-
     def sign_dmg(self):
-        assert self.product_dmg.exists() and self.dev_id, f"{self.product_dmg} and DEV_ID not set"
+        assert (
+            self.product_dmg.exists() and self.dev_id
+        ), f"{self.product_dmg} and DEV_ID not set"
         self.cmd(
             f'codesign --sign "Developer ID Application: {self.dev_id}" '
             f'--deep --force --verbose --options runtime "{self.product_dmg}"'
@@ -223,8 +227,10 @@ class PackageManager:
     def notarize_dmg(self):
         """notarize .dmg using notarytool"""
         if not self.keychain_profile:
-            self.keychain_profile = os.environ['KEYCHAIN_PROFILE']
-        assert self.product_dmg.exists() and self.dev_id, f"{self.product_dmg} and KEYCHAIN_PROFILE not set"
+            self.keychain_profile = os.environ["KEYCHAIN_PROFILE"]
+        assert (
+            self.product_dmg.exists() and self.dev_id
+        ), f"{self.product_dmg} and KEYCHAIN_PROFILE not set"
         self.cmd(
             f'xcrun notarytool submit "{self.product_dmg}" --keychain-profile "{self.keychain_profile}"'
         )
@@ -232,15 +238,15 @@ class PackageManager:
     def staple_dmg(self):
         """staple .dmg using notarytool"""
         assert self.product_dmg.exists(), f"{self.product_dmg} not set"
-        self.cmd(
-            f'xcrun stapler staple "{self.product_dmg}"'
-        )
+        self.cmd(f'xcrun stapler staple "{self.product_dmg}"')
 
     def collect_dmg(self):
         """zip and collect stapled dmg in folder"""
         self.project.release_dir.mkdir(exist_ok=True)
-        archive = self.project.release_dir / f'{self.product_dmg.stem}.zip'
-        with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as zip_archive:
+        archive = self.project.release_dir / f"{self.product_dmg.stem}.zip"
+        with zipfile.ZipFile(
+            archive, "w", compression=zipfile.ZIP_DEFLATED
+        ) as zip_archive:
             zip_archive.write(self.product_dmg, arcname=self.product_dmg.name)
         os.rename(self.product_dmg, self.project.release_dir / self.product_dmg.name)
 
@@ -252,11 +258,12 @@ class PackageManager:
         option("-v", "--variant", help="name of build variant")
         option("-i", "--dev-id", help="Developer ID")
         option("-k", "--keychain-profile", help="Keychain Profile")
-        option("-d", "--dry-run",action="store_true", help="run without actual changes.")
+        option(
+            "-d", "--dry-run", action="store_true", help="run without actual changes."
+        )
         args = parser.parse_args()
         app = cls(args.variant, args.dev_id, args.keychain_profile, args.dry_run)
         app.process()
-
 
 
 class CodesignExternal:
@@ -278,7 +285,7 @@ class CodesignExternal:
         dry_run: bool = False,
     ):
         self.path = path
-        if dev_id not in [None, '-']:
+        if dev_id not in [None, "-"]:
             self.authority = f"Developer ID Application: {dev_id}"
         else:
             self.authority = None
@@ -293,7 +300,7 @@ class CodesignExternal:
         self._cmd_codesign = [
             "codesign",
             "--sign",
-            repr(self.authority) if self.authority else '-',
+            repr(self.authority) if self.authority else "-",
             "--timestamp",
             "--deep",
             "--force",
@@ -437,6 +444,7 @@ class CodesignExternal:
 
     def process_dry_run(self):
         """main process to recursive sign."""
+
         def right(x):
             return str(x).lstrip(str(self.path))
 
@@ -494,9 +502,6 @@ class CodesignExternal:
                 app.process_dry_run()
             else:
                 app.process()
-
-
-
 
 
 if __name__ == "__main__":

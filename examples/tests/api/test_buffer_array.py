@@ -19,6 +19,7 @@ from array import array
 
 import api
 
+
 def test_create_empty_buffer():
     name = "drum"
     duration_ms = 500
@@ -34,7 +35,7 @@ def test_buffer_get_samples():
     buf = api.create_buffer(name, sample_file)
     api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
     n_samples = buf.n_samples
-    xs = array('f', buf.get_samples())
+    xs = array("f", buf.get_samples())
     assert len(xs) == n_samples
     api.post(f"get {n_samples} samples from buffer {name}")
 
@@ -44,8 +45,8 @@ def linspace(start, stop, num=50, endpoint=True):
     from: https://gist.github.com/pmav99/d124872c879f3e9fa51e
     """
     num = int(num)
-    start = start * 1.
-    stop = stop * 1.
+    start = start * 1.0
+    stop = stop * 1.0
 
     if num == 1:
         yield stop
@@ -72,6 +73,7 @@ def test_buffer_set_samples():
     buf.set_samples(xs)
     api.post(f"set {n_samples} samples to buffer {name}")
 
+
 def test_buffer_set_samples2():
     name = "drum1"
     duration_ms = 500
@@ -93,9 +95,10 @@ def test_buffer_protocol_read():
     buf = api.create_buffer(name, sample_file)
     api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
     with memoryview(buf) as mv_buf:
-        xs = array('f', mv_buf)
+        xs = array("f", mv_buf)
         assert len(xs) == buf.n_samples
         api.post(f"len(xs): {len(xs)} == buf.n_samples: {buf.n_samples}")
+
 
 def test_buffer_protocol_write():
     name = "drum1"
@@ -109,6 +112,7 @@ def test_buffer_protocol_write():
     with memoryview(buf) as xs:
         xs[:] = ys
 
+
 def test_buffer_memoryview_read():
     name = "drum1"
     sample_file = "jongly.aif"
@@ -120,6 +124,7 @@ def test_buffer_memoryview_read():
         api.post(f"first: buf[0] = {buf[0]}")
         api.post(f"last: buf[{n-1}] = {buf[n-1]}")
 
+
 def test_buffer_memoryview_write():
     name = "drum1"
     sample_file = "jongly.aif"
@@ -129,4 +134,3 @@ def test_buffer_memoryview_write():
     ys = array("f", [math.sin(i * 2 * math.pi * 5) for i in t])
     with memoryview(mybuf) as buf:
         buf[:] = ys
-

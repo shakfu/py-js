@@ -23,8 +23,11 @@ PATTERNS_TO_FIX = [
 ]
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+
+
 def title(x):
     return print(x)
+
 
 # ----------------------------------------------------------------------------
 # Utility Classes

@@ -13,16 +13,20 @@ memory = {}
 
 
 def test_maxobject_init():
-	memory['buf'] = api.MaxObject("buffer~", "buf", "jongly.aif")
+    memory["buf"] = api.MaxObject("buffer~", "buf", "jongly.aif")
+
 
 def test_maxobject_method_replace():
-	memory['buf'].method("replace", "vibes-a1.aif")
+    memory["buf"].method("replace", "vibes-a1.aif")
+
 
 def test_maxobject_method_open():
-	memory['buf'].method("open")
+    memory["buf"].method("open")
+
 
 def test_maxobject_method_close():
-	memory['buf'].method("wclose")
+    memory["buf"].method("wclose")
+
 
 def test_maxobject_delete():
-	del memory['buf']
+    del memory["buf"]

@@ -808,18 +808,6 @@ cdef class Buffer:
             self.samples[i] = samples[i]
         self.unlocksamples()
 
-    # TODO: do we need a version for double?
-    def set_samples_double(self, double[:] samples):
-        """set float samples from a memoryview"""
-        cdef int n_samples = samples.shape[0]
-        cdef int i
-        # resize buffer to samples.shape[0]
-        self.set_framecount(n_samples)
-        self.locksamples()
-        for i in range(n_samples):
-            self.samples[i] = samples[i]
-        self.unlocksamples()
-
     def send(self, str msg, *args):
         """generic message sender
 

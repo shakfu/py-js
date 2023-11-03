@@ -16,7 +16,6 @@
 """Functions to pip install extra modules in our framework"""
 
 
-
 import os
 import subprocess
 import sys
@@ -72,6 +71,7 @@ def install_requirements(requirements_file, framework_path, version):
     cmd = [python_path, "-s", "-m", "pip", "install", "-r", requirements_file]
     print("Installing modules from %s..." % requirements_file)
     subprocess.check_call(cmd)
+
 
 def install_modules(pip_modules, framework_path, version):
     """Use pip to install a Python pkg into framework_path"""
