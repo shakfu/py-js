@@ -40,12 +40,24 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-20",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 507.0, 119.0, 154.0, 22.0 ],
+					"text" : "test_buffer_set_samples3()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-18",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 511.0, 146.5, 154.0, 22.0 ],
+					"patching_rect" : [ 507.0, 205.5, 154.0, 22.0 ],
 					"text" : "test_buffer_protocol_write()"
 				}
 
@@ -57,7 +69,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 511.0, 114.0, 160.0, 22.0 ],
+					"patching_rect" : [ 507.0, 173.0, 160.0, 22.0 ],
 					"text" : "test_buffer_protocol_read()"
 				}
 
@@ -152,7 +164,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 480.0, 186.5, 47.0, 22.0 ],
+					"patching_rect" : [ 480.0, 265.5, 47.0, 22.0 ],
 					"text" : "s to_py"
 				}
 
@@ -497,6 +509,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-2", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-16", 0 ],
+					"source" : [ "obj-20", 0 ]
 				}
 
 			}

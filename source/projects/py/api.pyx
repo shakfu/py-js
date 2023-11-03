@@ -795,9 +795,22 @@ cdef class Buffer:
         cdef float[:] res = self.s_buffer
         return res
 
+    # float32 is the default in Max/MSP
     def set_samples(self, float[:] samples):
         """set samples from a memoryview"""
         # assert samples.shape[0] <= self.n_samples
+        cdef int n_samples = samples.shape[0]
+        cdef int i
+        # resize buffer to samples.shape[0]
+        self.set_framecount(n_samples)
+        self.locksamples()
+        for i in range(n_samples):
+            self.samples[i] = samples[i]
+        self.unlocksamples()
+
+    # TODO: do we need a version for double?
+    def set_samples_double(self, double[:] samples):
+        """set float samples from a memoryview"""
         cdef int n_samples = samples.shape[0]
         cdef int i
         # resize buffer to samples.shape[0]

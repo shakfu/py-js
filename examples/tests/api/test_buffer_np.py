@@ -31,8 +31,9 @@ def test_buffer_set_samples():
     api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
     api.post(f"framecount: {buf.framecount}")
     n_samples = buf.n_samples
-    t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float64)
-    xs = signal.sawtooth(2 * np.pi * 5 * t)
+    t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float32)
+    # returns dtype('float64') by default needs to be converted to np.float32
+    xs = signal.sawtooth(2 * np.pi * 5 * t).astype(np.float32)
     buf.set_samples(xs)
     api.post(f"set {n_samples} samples to buffer {name}")
 
@@ -45,10 +46,18 @@ def test_buffer_set_samples2():
     api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
     api.post(f"framecount: {buf.framecount}")
     n_samples = buf.n_samples * 2
-    t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float64)
-    xs = signal.sawtooth(2 * np.pi * 5 * t)
+    t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float32)
+    # returns dtype('float64') by default needs to be converted to np.float32
+    xs = signal.sawtooth(2 * np.pi * 5 * t).astype(np.float32)
     buf.set_samples(xs)
     api.post(f"set {buf.n_samples} samples to buffer {name}")
+
+def test_buffer_set_samples3():
+    name = "drum1"
+    duration_ms = 500
+    buf = api.create_empty_buffer(name, duration_ms)
+    t = np.linspace(0, 1, buf.n_samples, endpoint=False, dtype=np.float32)
+    buf.set_samples(t)
 
 def test_buffer_protocol_read():
     name = "drum1"
