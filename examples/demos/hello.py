@@ -1,7 +1,7 @@
 # hello.py
 """
 
-This is an demo of a python script in the `py` package.
+This is a demo of a python script in the `py` package.
 
 
 """
@@ -29,4 +29,9 @@ e = '"double-quoted"'
 
 f = "'single-quoted'"
 
-g = "finally"
+g = """a multiline lines
+of text.
+here.
+"""
+
+h = [b'10121', b'abcdef']
