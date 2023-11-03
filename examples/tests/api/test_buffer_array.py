@@ -65,8 +65,44 @@ def test_buffer_set_samples2():
     api.post("buffer.set_sample example with numpy and scipy.signal")
     api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
     api.post(f"framecount: {buf.framecount}")
-    n_samples = 2 * buf.n_samples
-    t = linspace(0, 1, n_samples, endpoint=False)
+    n_samples = 2 * buf.framecount
+    t = linspace(0, 1, buf.framecount, endpoint=False)
     xs = array("d", [math.sin(i * 2 * math.pi * 5) for i in t])
     buf.set_samples(xs)
-    api.post(f"set {buf.n_samples} samples to buffer {name}")
+    api.post(f"set {buf.framecount} samples to buffer {name}")
+
+
+# FIXME: if possible
+
+def test_buffer_protocol_read():
+    name = "drum1"
+    sample_file = "jongly.aif"
+    buf = api.create_buffer(name, sample_file)
+    api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
+    with memoryview(buf) as mv_buf:
+        xs = array('d', mv_buf)
+        assert len(xs) == buf.n_samples
+        api.post(f"len(xs): {len(xs)} == buf.n_samples: {buf.n_samples}")
+
+    # xs = array('d', memoryview(buf))
+    # assert len(xs) == buf.n_samples
+    # api.post(f"len(xs): {len(xs)} == buf.n_samples: {buf.n_samples}")
+
+# https://docs.python.org/dev/library/stdtypes.html#memoryview
+# https://docs.python.org/3/c-api/memoryview.html
+# https://stackoverflow.com/questions/18655648/what-exactly-is-the-point-of-memoryview-in-python
+# https://github.com/python/cpython/issues/101071
+# https://github.com/python/cpython/issues/84620
+
+def test_buffer_protocol_write():
+    name = "drum1"
+    duration_ms = 500
+    buf = api.create_empty_buffer(name, duration_ms)
+    api.post("buffer.set_sample example with numpy and scipy.signal")
+    api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
+    api.post(f"framecount: {buf.framecount}")
+    t = linspace(0, 1, buf.framecount, endpoint=False)
+    ys = array("d", [math.sin(i * 2 * math.pi * 5) for i in t])
+    with memoryview(buf) as xs:
+        xs[:] = ys
+
