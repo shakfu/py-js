@@ -34,7 +34,7 @@ def test_buffer_get_samples():
     buf = api.create_buffer(name, sample_file)
     api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
     n_samples = buf.n_samples
-    xs = array('d', buf.get_samples())
+    xs = array('f', buf.get_samples())
     assert len(xs) == n_samples
     api.post(f"get {n_samples} samples from buffer {name}")
 
@@ -68,8 +68,7 @@ def test_buffer_set_samples():
     api.post(f"framecount: {buf.framecount}")
     n_samples = buf.n_samples
     t = linspace(0, 1, n_samples, endpoint=False)
-    xs = array("d", [math.sin(i * 2 * math.pi * 5) for i in t])
-    # xs = array("d", [math.sin(i) for i in t])
+    xs = array("f", [math.sin(i * 2 * math.pi * 5) for i in t])
     buf.set_samples(xs)
     api.post(f"set {n_samples} samples to buffer {name}")
 
@@ -83,7 +82,7 @@ def test_buffer_set_samples2():
     api.post(f"framecount: {buf.framecount}")
     n_samples = 2 * buf.framecount
     t = linspace(0, 1, buf.framecount, endpoint=False)
-    xs = array("d", [math.sin(i * 2 * math.pi * 5) for i in t])
+    xs = array("f", [math.sin(i * 2 * math.pi * 5) for i in t])
     buf.set_samples(xs)
     api.post(f"set {buf.framecount} samples to buffer {name}")
 
@@ -94,7 +93,7 @@ def test_buffer_protocol_read():
     buf = api.create_buffer(name, sample_file)
     api.post(f"created buffer name: '{name}' sample_file: '{sample_file}'")
     with memoryview(buf) as mv_buf:
-        xs = array('d', mv_buf)
+        xs = array('f', mv_buf)
         assert len(xs) == buf.n_samples
         api.post(f"len(xs): {len(xs)} == buf.n_samples: {buf.n_samples}")
 

@@ -3489,11 +3489,11 @@ static int __Pyx_ValidateAndInit_memviewslice(
                 PyObject *original_obj);
 
 /* ObjectToMemviewSlice.proto */
-static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_double(PyObject *, int writable_flag);
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_float(PyObject *, int writable_flag);
 
 /* MemviewDtypeToObject.proto */
-static CYTHON_INLINE PyObject *__pyx_memview_get_double(const char *itemp);
-static CYTHON_INLINE int __pyx_memview_set_double(const char *itemp, PyObject *obj);
+static CYTHON_INLINE PyObject *__pyx_memview_get_float(const char *itemp);
+static CYTHON_INLINE int __pyx_memview_set_float(const char *itemp, PyObject *obj);
 
 /* MemviewSliceCopyTemplate.proto */
 static __Pyx_memviewslice
@@ -3909,7 +3909,7 @@ static void __pyx_memoryview_slice_assign_scalar(__Pyx_memviewslice *, int, size
 static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize_t *, int, size_t, void *); /*proto*/
 static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *, PyObject *); /*proto*/
 /* #### Code section: typeinfo ### */
-static __Pyx_TypeInfo __Pyx_TypeInfo_double = { "double", NULL, sizeof(double), { 0 }, 0, 'R', 0, 0 };
+static __Pyx_TypeInfo __Pyx_TypeInfo_float = { "float", NULL, sizeof(float), { 0 }, 0, 'R', 0, 0 };
 /* #### Code section: before_global_var ### */
 #define __Pyx_MODULE_NAME "api"
 extern int __pyx_module_is_main_api;
@@ -5168,6 +5168,7 @@ typedef struct {
   PyObject *__pyx_n_s_error;
   PyObject *__pyx_n_s_ext;
   PyObject *__pyx_n_s_f;
+  PyObject *__pyx_n_u_f;
   PyObject *__pyx_n_s_failure_bang;
   PyObject *__pyx_n_u_fgcount;
   PyObject *__pyx_n_s_filename;
@@ -6037,6 +6038,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_error);
   Py_CLEAR(clear_module_state->__pyx_n_s_ext);
   Py_CLEAR(clear_module_state->__pyx_n_s_f);
+  Py_CLEAR(clear_module_state->__pyx_n_u_f);
   Py_CLEAR(clear_module_state->__pyx_n_s_failure_bang);
   Py_CLEAR(clear_module_state->__pyx_n_u_fgcount);
   Py_CLEAR(clear_module_state->__pyx_n_s_filename);
@@ -6884,6 +6886,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_error);
   Py_VISIT(traverse_module_state->__pyx_n_s_ext);
   Py_VISIT(traverse_module_state->__pyx_n_s_f);
+  Py_VISIT(traverse_module_state->__pyx_n_u_f);
   Py_VISIT(traverse_module_state->__pyx_n_s_failure_bang);
   Py_VISIT(traverse_module_state->__pyx_n_u_fgcount);
   Py_VISIT(traverse_module_state->__pyx_n_s_filename);
@@ -7835,6 +7838,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_error __pyx_mstate_global->__pyx_n_s_error
 #define __pyx_n_s_ext __pyx_mstate_global->__pyx_n_s_ext
 #define __pyx_n_s_f __pyx_mstate_global->__pyx_n_s_f
+#define __pyx_n_u_f __pyx_mstate_global->__pyx_n_u_f
 #define __pyx_n_s_failure_bang __pyx_mstate_global->__pyx_n_s_failure_bang
 #define __pyx_n_u_fgcount __pyx_mstate_global->__pyx_n_u_fgcount
 #define __pyx_n_s_filename __pyx_mstate_global->__pyx_n_s_filename
@@ -33767,7 +33771,7 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
   /* "api.pyx":790
  *         cdef int i;
  *         self.s_buffer = cvarray(
- *             shape=(self.n_samples,), itemsize=sizeof(double), format="d")             # <<<<<<<<<<<<<<
+ *             shape=(self.n_samples,), itemsize=sizeof(float), format="f")             # <<<<<<<<<<<<<<
  *         self.locksamples()
  *         for i in range(self.n_samples):
  */
@@ -33782,23 +33786,23 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
   __pyx_t_2 = 0;
   if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_shape, __pyx_t_3) < 0) __PYX_ERR(0, 790, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyInt_FromSize_t((sizeof(double))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 790, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_FromSize_t((sizeof(float))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 790, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_itemsize, __pyx_t_3) < 0) __PYX_ERR(0, 790, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_format, __pyx_n_u_d) < 0) __PYX_ERR(0, 790, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_format, __pyx_n_u_f) < 0) __PYX_ERR(0, 790, __pyx_L1_error)
 
   /* "api.pyx":789
  *         """get samples as a memoryview"""
  *         cdef int i;
  *         self.s_buffer = cvarray(             # <<<<<<<<<<<<<<
- *             shape=(self.n_samples,), itemsize=sizeof(double), format="d")
+ *             shape=(self.n_samples,), itemsize=sizeof(float), format="f")
  *         self.locksamples()
  */
   __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_array_type), __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 789, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_t_3, PyBUF_WRITABLE); if (unlikely(!__pyx_t_4.memview)) __PYX_ERR(0, 789, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(__pyx_t_3, PyBUF_WRITABLE); if (unlikely(!__pyx_t_4.memview)) __PYX_ERR(0, 789, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __PYX_XCLEAR_MEMVIEW(&__pyx_v_self->s_buffer, 0);
   __pyx_v_self->s_buffer = __pyx_t_4;
@@ -33807,7 +33811,7 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
 
   /* "api.pyx":791
  *         self.s_buffer = cvarray(
- *             shape=(self.n_samples,), itemsize=sizeof(double), format="d")
+ *             shape=(self.n_samples,), itemsize=sizeof(float), format="f")
  *         self.locksamples()             # <<<<<<<<<<<<<<
  *         for i in range(self.n_samples):
  *             self.s_buffer[i] = self.samples[i]
@@ -33839,7 +33843,7 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "api.pyx":792
- *             shape=(self.n_samples,), itemsize=sizeof(double), format="d")
+ *             shape=(self.n_samples,), itemsize=sizeof(float), format="f")
  *         self.locksamples()
  *         for i in range(self.n_samples):             # <<<<<<<<<<<<<<
  *             self.s_buffer[i] = self.samples[i]
@@ -33858,7 +33862,7 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
  *         for i in range(self.n_samples):
  *             self.s_buffer[i] = self.samples[i]             # <<<<<<<<<<<<<<
  *         self.unlocksamples()
- *         cdef double[:] res = self.s_buffer
+ *         cdef float[:] res = self.s_buffer
  */
     if (unlikely(!__pyx_v_self->s_buffer.memview)) {PyErr_SetString(PyExc_AttributeError,"Memoryview is not initialized");__PYX_ERR(0, 793, __pyx_L1_error)}
     __pyx_t_8 = __pyx_v_i;
@@ -33871,14 +33875,14 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
       __Pyx_RaiseBufferIndexError(__pyx_t_9);
       __PYX_ERR(0, 793, __pyx_L1_error)
     }
-    *((double *) ( /* dim=0 */ (__pyx_v_self->s_buffer.data + __pyx_t_8 * __pyx_v_self->s_buffer.strides[0]) )) = (__pyx_v_self->samples[__pyx_v_i]);
+    *((float *) ( /* dim=0 */ (__pyx_v_self->s_buffer.data + __pyx_t_8 * __pyx_v_self->s_buffer.strides[0]) )) = (__pyx_v_self->samples[__pyx_v_i]);
   }
 
   /* "api.pyx":794
  *         for i in range(self.n_samples):
  *             self.s_buffer[i] = self.samples[i]
  *         self.unlocksamples()             # <<<<<<<<<<<<<<
- *         cdef double[:] res = self.s_buffer
+ *         cdef float[:] res = self.s_buffer
  *         return res
  */
   __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_unlocksamples); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 794, __pyx_L1_error)
@@ -33910,7 +33914,7 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
   /* "api.pyx":795
  *             self.s_buffer[i] = self.samples[i]
  *         self.unlocksamples()
- *         cdef double[:] res = self.s_buffer             # <<<<<<<<<<<<<<
+ *         cdef float[:] res = self.s_buffer             # <<<<<<<<<<<<<<
  *         return res
  * 
  */
@@ -33923,13 +33927,13 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
 
   /* "api.pyx":796
  *         self.unlocksamples()
- *         cdef double[:] res = self.s_buffer
+ *         cdef float[:] res = self.s_buffer
  *         return res             # <<<<<<<<<<<<<<
  * 
- *     def set_samples(self, double[:] samples):
+ *     def set_samples(self, float[:] samples):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_res, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 796, __pyx_L1_error)
+  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_res, 1, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 796, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
@@ -33961,7 +33965,7 @@ static PyObject *__pyx_pf_3api_6Buffer_50get_samples(struct __pyx_obj_3api_Buffe
 /* "api.pyx":798
  *         return res
  * 
- *     def set_samples(self, double[:] samples):             # <<<<<<<<<<<<<<
+ *     def set_samples(self, float[:] samples):             # <<<<<<<<<<<<<<
  *         """set samples from a memoryview"""
  *         # assert samples.shape[0] <= self.n_samples
  */
@@ -34032,7 +34036,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
     } else {
       values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
     }
-    __pyx_v_samples = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_samples.memview)) __PYX_ERR(0, 798, __pyx_L3_error)
+    __pyx_v_samples = __Pyx_PyObject_to_MemoryviewSlice_ds_float(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_samples.memview)) __PYX_ERR(0, 798, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
@@ -34191,7 +34195,7 @@ static PyObject *__pyx_pf_3api_6Buffer_52set_samples(struct __pyx_obj_3api_Buffe
       __Pyx_RaiseBufferIndexError(__pyx_t_9);
       __PYX_ERR(0, 807, __pyx_L1_error)
     }
-    (__pyx_v_self->samples[__pyx_v_i]) = (*((double *) ( /* dim=0 */ (__pyx_v_samples.data + __pyx_t_8 * __pyx_v_samples.strides[0]) )));
+    (__pyx_v_self->samples[__pyx_v_i]) = (*((float *) ( /* dim=0 */ (__pyx_v_samples.data + __pyx_t_8 * __pyx_v_samples.strides[0]) )));
   }
 
   /* "api.pyx":808
@@ -34230,7 +34234,7 @@ static PyObject *__pyx_pf_3api_6Buffer_52set_samples(struct __pyx_obj_3api_Buffe
   /* "api.pyx":798
  *         return res
  * 
- *     def set_samples(self, double[:] samples):             # <<<<<<<<<<<<<<
+ *     def set_samples(self, float[:] samples):             # <<<<<<<<<<<<<<
  *         """set samples from a memoryview"""
  *         # assert samples.shape[0] <= self.n_samples
  */
@@ -65945,6 +65949,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_error, __pyx_k_error, sizeof(__pyx_k_error), 0, 0, 1, 1},
     {&__pyx_n_s_ext, __pyx_k_ext, sizeof(__pyx_k_ext), 0, 0, 1, 1},
     {&__pyx_n_s_f, __pyx_k_f, sizeof(__pyx_k_f), 0, 0, 1, 1},
+    {&__pyx_n_u_f, __pyx_k_f, sizeof(__pyx_k_f), 0, 1, 0, 1},
     {&__pyx_n_s_failure_bang, __pyx_k_failure_bang, sizeof(__pyx_k_failure_bang), 0, 0, 1, 1},
     {&__pyx_n_u_fgcount, __pyx_k_fgcount, sizeof(__pyx_k_fgcount), 0, 1, 0, 1},
     {&__pyx_n_s_filename, __pyx_k_filename, sizeof(__pyx_k_filename), 0, 0, 1, 1},
@@ -66856,7 +66861,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "api.pyx":798
  *         return res
  * 
- *     def set_samples(self, double[:] samples):             # <<<<<<<<<<<<<<
+ *     def set_samples(self, float[:] samples):             # <<<<<<<<<<<<<<
  *         """set samples from a memoryview"""
  *         # assert samples.shape[0] <= self.n_samples
  */
@@ -70301,7 +70306,7 @@ if (!__Pyx_RefNanny) {
   /* "api.pyx":798
  *         return res
  * 
- *     def set_samples(self, double[:] samples):             # <<<<<<<<<<<<<<
+ *     def set_samples(self, float[:] samples):             # <<<<<<<<<<<<<<
  *         """set samples from a memoryview"""
  *         # assert samples.shape[0] <= self.n_samples
  */
@@ -78117,7 +78122,7 @@ no_fail:
 }
 
 /* ObjectToMemviewSlice */
-  static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_double(PyObject *obj, int writable_flag) {
+  static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_float(PyObject *obj, int writable_flag) {
     __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
     __Pyx_BufFmt_StackElem stack[1];
     int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED) };
@@ -78128,7 +78133,7 @@ no_fail:
     }
     retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, 0,
                                                  PyBUF_RECORDS_RO | writable_flag, 1,
-                                                 &__Pyx_TypeInfo_double, stack,
+                                                 &__Pyx_TypeInfo_float, stack,
                                                  &result, obj);
     if (unlikely(retcode == -1))
         goto __pyx_fail;
@@ -78140,14 +78145,14 @@ __pyx_fail:
 }
 
 /* MemviewDtypeToObject */
-  static CYTHON_INLINE PyObject *__pyx_memview_get_double(const char *itemp) {
-    return (PyObject *) PyFloat_FromDouble(*(double *) itemp);
+  static CYTHON_INLINE PyObject *__pyx_memview_get_float(const char *itemp) {
+    return (PyObject *) PyFloat_FromDouble(*(float *) itemp);
 }
-static CYTHON_INLINE int __pyx_memview_set_double(const char *itemp, PyObject *obj) {
-    double value = __pyx_PyFloat_AsDouble(obj);
-    if (unlikely((value == (double)-1) && PyErr_Occurred()))
+static CYTHON_INLINE int __pyx_memview_set_float(const char *itemp, PyObject *obj) {
+    float value = __pyx_PyFloat_AsFloat(obj);
+    if (unlikely((value == (float)-1) && PyErr_Occurred()))
         return 0;
-    *(double *) itemp = value;
+    *(float *) itemp = value;
     return 1;
 }
 

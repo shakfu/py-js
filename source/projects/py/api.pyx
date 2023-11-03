@@ -490,7 +490,7 @@ cdef class Buffer:
     cdef mp.t_buffer_ref *ref
     cdef bint is_locked
     cdef float* samples
-    cdef double[:] s_buffer # cython memoryview
+    cdef float[:] s_buffer # cython memoryview
     cdef Py_ssize_t shape
     cdef Py_ssize_t strides
 
@@ -787,15 +787,15 @@ cdef class Buffer:
         """get samples as a memoryview"""
         cdef int i;
         self.s_buffer = cvarray(
-            shape=(self.n_samples,), itemsize=sizeof(double), format="d")
+            shape=(self.n_samples,), itemsize=sizeof(float), format="f")
         self.locksamples()
         for i in range(self.n_samples):
             self.s_buffer[i] = self.samples[i]
         self.unlocksamples()
-        cdef double[:] res = self.s_buffer
+        cdef float[:] res = self.s_buffer
         return res
 
-    def set_samples(self, double[:] samples):
+    def set_samples(self, float[:] samples):
         """set samples from a memoryview"""
         # assert samples.shape[0] <= self.n_samples
         cdef int n_samples = samples.shape[0]
