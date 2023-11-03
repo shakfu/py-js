@@ -66,9 +66,6 @@ def test_buffer_protocol_write():
     api.post("buffer.set_sample example with numpy and scipy.signal")
     api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
     api.post(f"framecount: {buf.framecount}")
-    n_samples = buf.n_samples
-    xs = np.asarray(buf)
-    t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float64)
+    xs = np.asarray(buf, dtype=np.float32)
+    t = np.linspace(0, 1, buf.framecount, endpoint=False, dtype=np.float32)
     xs[:] = signal.sawtooth(2 * np.pi * 5 * t)
-    # xs[:] = 0.5
-
