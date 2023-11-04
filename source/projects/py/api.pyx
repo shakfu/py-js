@@ -1,18 +1,16 @@
 # api.pyx
-"""
-# `api`: a cython module which wraps part of the Max/MSP c-api 
-         for use by the `py` external.
+""" 
+A cython 'builtin' module which wraps parts of the Max/MSP c-api
+for the `py` external.
 
 The `api` module consists of:
     - api.pyx: main cython (https://cython.org) wrapper
-    - api_max.pxd: exposes max api to api.pyx
-    - api_msp.pxd: provides msp api to api.pyx
-    _ api_py.pxd: provides `py` external api to to api.pyx
+    - api_max.pxd: exposes Max api headers to api.pyx
+    - api_msp.pxd: exposes MSP api headers to api.pyx
+    _ api_py.pxd: exposes the `py` external api to api.pyx
 
 Cython classes, functions, and constants defined here are optionally
 available for use by python code running in a `py` external instance.
-
-The api module is considered is builtin module.
 
 ## Usage
 
@@ -322,7 +320,7 @@ cdef class Atom:
     """
     cdef mx.t_atom *ptr
     cdef bint ptr_owner
-    cdef public int size
+    cdef public long size
 
     def __cinit__(self):
         self.ptr_owner = False
@@ -430,6 +428,7 @@ cdef class Atom:
         return (self.ptr + idx).a_type == mx.A_FLOAT
 
     def to_list(self) -> list:
+        cdef int i
         _res = []
         for i in range(self.size):
             if self.is_symbol(i):
@@ -445,6 +444,7 @@ cdef class Atom:
     #         return np.array(self.to_list(), dtype=np.float64)
 
     def display(self):
+        cdef int i
         for i in range(self.size):
             if self.is_float(i):
                 print("is_float:", i)
@@ -456,7 +456,7 @@ cdef class Atom:
                 print("other:", i)
 
     @staticmethod
-    cdef Atom from_ptr(mx.t_atom *ptr, int size, bint owner=False):
+    cdef Atom from_ptr(mx.t_atom *ptr, long size, bint owner=False):
         # Call to __new__ bypasses __init__ constructor
         cdef Atom atom = Atom.__new__(Atom)
         atom.ptr = ptr
@@ -465,7 +465,7 @@ cdef class Atom:
         return atom
 
     @staticmethod
-    cdef Atom new(int size):
+    cdef Atom new(long size):
         """create an empty Atom instance with an aribitrary length"""
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
@@ -484,7 +484,7 @@ cdef class Atom:
 
     @staticmethod
     def from_seq(seq: object) -> Atom:
-        cdef int size = len(seq)
+        cdef long size = len(seq)
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
@@ -874,7 +874,7 @@ cdef class Buffer:
     def set_samples(self, float[:] samples):
         """set samples from a memoryview"""
         # assert samples.shape[0] <= self.n_samples
-        cdef int n_samples = samples.shape[0]
+        cdef long n_samples = <Py_ssize_t>samples.shape[0]
         cdef int i
         # resize buffer to samples.shape[0]
         self.set_framecount(n_samples)
@@ -1024,6 +1024,8 @@ cdef class Buffer:
 
 # ----------------------------------------------------------------------------
 # api.Dictionary
+
+# TODO: dict to api.Dict conversion
 
 cdef class Dictionary:
     """A wrapper class for a Max t_dictionary
@@ -1806,7 +1808,7 @@ cdef class Binbuf:
         Use it to evaluate a text file or text line entry into a  Binbuf.
         """
         cdef char* src_text = <char *>mx.sysmem_newptr((len(text)+1) * sizeof(char))
-        cdef int n = len(text) + 1
+        cdef long n = len(text) + 1
         cdef short err = 0
 
         strcpy(src_text, text.encode('utf8'))

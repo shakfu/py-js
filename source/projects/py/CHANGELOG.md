@@ -3,15 +3,17 @@
 
 ## [0.2.x]
 
-- Added tests and tested methods for `api.Binbuf` object
+- Added generic `api.MaxObject` object.
+
+- Added tests and tested methods for `api.Binbuf` object.
 
 - Added [buffer protocol support](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html#buffer) to `api.Buffer` with numpy test
 
 - Combined buffer tests (except numpy and array tests) into `test_buffer.py` and `test_buffer.maxpat`
 
-- Added additional message method support for api.Buffer
+- Added additional message method support for `api.Buffer`
 
-- Added auto-resizing to buffer.set_samples and methods to set duration, samplerate as well as methods for generic message sending to a buffer for examples "fill" operations.
+- Added auto-resizing to `api.Buffer.set_samples` and methods to set duration, samplerate as well as methods for generic message sending to a buffer for examples "fill" operations.
 
 - Added `api.Patcher` object to facilitate patcher-scripting from python.
 

@@ -67,6 +67,7 @@ void py_init(t_py* x);
 void py_info(t_py* x, char* fmt, ...);
 void py_debug(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
+void py_postargs(t_symbol *s, long argc, t_atom *argv);
 
 /*--------------------------------------------------------------------------*/
 /* Helpers */

@@ -437,6 +437,31 @@ void py_free(t_py* x)
 /* Helpers */
 
 /**
+ * @brief Print the contents of an array of atoms to the Max window.
+ *
+ * @param argc The count of atoms in argv.
+ * @param argv The address to the first of an array of atoms. 
+ * @return void*
+ *
+ * Thanks to Luigi Castelli for original code in this post
+ * https://cycling74.com/forums/is-the-sdk's-postargs-function-really-accessible
+ */
+void py_postargs(t_symbol *s, long argc, t_atom *argv)
+{
+    long textsize = 0;
+    char *text = NULL;
+    t_max_err err;
+    
+    err = atom_gettext(argc, argv, &textsize, &text, OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err == MAX_ERR_NONE && textsize && text) {
+        post("%s %s", s->s_name, text);
+    }
+    if (text) {
+        sysmem_freeptr(text);
+    }
+}
+
+/**
  * @brief Get the outlet object
  *
  * @param x pointer to object struct
@@ -778,7 +803,7 @@ char *str_replace(char *orig, char *rep, char *with) {
     //    orig points to the remainder of orig after "end of rep"
     while (count--) {
         ins = strstr(orig, rep);
-        len_front = ins - orig;
+        len_front = ins - (long)orig;
         tmp = strncpy(tmp, orig, len_front) + len_front;
         tmp = strcpy(tmp, with) + len_with;
         orig += len_front + len_rep; // move to next "end of rep"
