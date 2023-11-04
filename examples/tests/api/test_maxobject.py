@@ -18,18 +18,14 @@ def test_maxobject_init():
 def test_maxobject_from_str():
     memory["buf"] = api.MaxObject.from_str("buffer~", "buf jongly.aif")
 
+def test_maxobject_call_replace():
+    memory["buf"].call("replace", "vibes-a1.aif")
 
-def test_maxobject_method_replace():
-    memory["buf"].method("replace", "vibes-a1.aif")
+def test_maxobject_call_open():
+    memory["buf"].call("open")
 
-
-def test_maxobject_method_open():
-    memory["buf"].method("open")
-
-
-def test_maxobject_method_close():
-    memory["buf"].method("wclose")
-
+def test_maxobject_call_wclose():
+    memory["buf"].call("wclose")
 
 def test_maxobject_delete():
     del memory["buf"]

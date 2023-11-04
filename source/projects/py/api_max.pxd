@@ -84,6 +84,14 @@ cdef extern from "ext_atombuf.h":
     void atombuf_set(t_atombuf *x, long start, long num)
     long atombuf_replacepoundargs(t_atombuf *x, long argc, t_atom *argv)
 
+# cdef extern from "ext_critical.h":
+
+#     ctypedef struct pthread_mutex_t* t_critical;
+#     void critical_new(t_critical *x)
+#     void critical_enter(t_critical x)
+#     void critical_exit(t_critical x)
+#     void critical_free(t_critical x)
+#     short critical_tryenter(t_critical x)
 
 cdef extern from "max_types.h":
     ctypedef unsigned int t_uint            # an unsigned int as defined by the architecture / platform  @ingroup misc

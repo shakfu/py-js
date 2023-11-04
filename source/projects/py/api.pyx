@@ -79,6 +79,7 @@ in the Max api and provide a Python-like interface to them.
 
 So far the following extension types are planned or implemented (partial or otherwise)
 
+- [x] MaxObject: general max t_object class
 - [x] Atom
 - [x] Atom Array: container for an array of atoms
 - [x] Binbuf
@@ -255,8 +256,8 @@ cdef class MaxObject:
             return
         return error(f"method '{name}' call failed")
 
-    def method(self, str name, *args):
-        """strongly typed object method call"""
+    def call(self, str name, *args):
+        """call object method (strongly typed)"""
         if len(args) == 0:
             return self._method_noargs(name)
         else:
@@ -1725,21 +1726,23 @@ cdef class Linklist:
 # api.Binbuf
 
 cdef class Binbuf:
-    cdef mx.t_binbuf* buf
+    cdef mx.t_binbuf* ptr
+    cdef mx.t_systhread_mutex* mutex_ptr
 
     def __cinit__(self):
-        self.buf = <mx.t_binbuf*>mx.binbuf_new()
-        if not self.buf:
+        self.ptr = <mx.t_binbuf*>mx.binbuf_new()
+        self.mutex_ptr = NULL
+        if not self.ptr:
             raise MemoryError
 
     def __dealloc__(self):
-        mx.object_free(self.buf)
+        mx.object_free(self.ptr)
 
-    def append(self, *args):
+    def append(self, str receiver, *args):
         """Append t_atoms to a Binbuf without modifying them."""
-        cdef Atom atom = Atom(*args)
-        assert isinstance(args[0], str), f"binbuf.append error: first argument as receiver must be a symbol"
-        mx.binbuf_append(self.buf, NULL, atom.size, atom.ptr)
+        _args = [receiver] + list(args)
+        cdef Atom atom = Atom(*_args)
+        mx.binbuf_append(self.ptr, NULL, atom.size, atom.ptr)
 
     def insert(self, *args):
         """Used if you want to saving your object into a Binbuf.
@@ -1750,30 +1753,64 @@ cdef class Binbuf:
         """
         cdef Atom atom = Atom(*args)
         assert isinstance(args[0], str), f"binbuf.insert error: first argument as receiver must be a symbol"
-        mx.binbuf_insert(self.buf, NULL, atom.size, atom.ptr)
+        mx.binbuf_insert(self.ptr, NULL, atom.size, atom.ptr)
 
     # cdef void vinsert(self, char *fmt, ...):
-    #     mx.binbuf_vinsert(self.buf, fmt, ...)
+    #     mx.binbuf_vinsert(self.ptr, fmt, ...)
 
-    cdef void * eval(self, short ac, mx.t_atom *av, void *to):
-        return mx.binbuf_eval(self.buf, ac, av, to)
+    # TODO: see https://cycling74.com/forums/deadlock-with-object_free
+    # def lock_binbuf(self):
+    #     """Create a new mutex, which can be used to place thread locks around critical code."""
+    #     cdef mx.t_max_err err = mx.systhread_mutex_newlock(self.mutex_ptr, mx.SYSTHREAD_MUTEX_NORMAL)
+    #     if err != mx.MAX_ERR_NONE:
+    #         return error("cannot lock binbuf")
 
-    cdef short getatom(self, long *p1, long *p2, mx.t_atom *ap):
-        return mx.binbuf_getatom(self.buf, p1, p2, ap)
+    # def unlock_binbuf(self):
+    #     cdef mx.t_max_err err = 0
+    #     err = mx.systhread_mutex_unlock (self.mutex_ptr)
+    #     if err != mx.MAX_ERR_NONE:
+    #         return error("cannot unlock binbuf")
+
+    #     err = mx.systhread_mutex_free(self.mutex_ptr)
+    #     if err != mx.MAX_ERR_NONE:
+    #         return error("cannot free binbuf mutex")
+
+    def eval(self):
+        # mx.critical_enter(0)
+        # self.lock_binbuf()
+        self.eval_msg_to(0, NULL, NULL)
+        # self.unlock_binbuf()
+        # mx.critical_exit(0)
+
+    cdef void * eval_msg_to(self, short ac, mx.t_atom *av, void *to):
+        """evaluate a Max message in a Binbuf, passing it arguments.
+
+        Evaluates the message in a Binbuf with arguments in argv, and sends
+        it to receiver.
+                        
+        @ingroup binbuf
+        @param  x   Binbuf containing the message.
+        @param  ac  Count of items in the argv array.
+        @param  av  Array of t_atoms as the arguments to the message. 
+        @param  to  Receiver of the message. 
+
+        @return     The result of sending the message.
+        void *binbuf_eval(t_binbuf *x, short ac, t_atom *av, void *to);
+        """
+        return mx.binbuf_eval(self.ptr, ac, av, to)
 
     def add_text(self, str text):
         """Used binbuf_text() to convert a text handle to a Binbuf.
 
-        binbuf_text() parses the text in the handle srcText and converts it 
-        into binary format. Use it to evaluate a text file or text line entry into a 
-        Binbuf.
+        binbuf_text() parses the text and converts it into binary format. 
+        Use it to evaluate a text file or text line entry into a  Binbuf.
         """
         cdef char* src_text = <char *>mx.sysmem_newptr((len(text)+1) * sizeof(char))
         cdef int n = len(text) + 1
         cdef short err = 0
 
         strcpy(src_text, text.encode('utf8'))
-        err = mx.binbuf_text(self.buf, &src_text, n)
+        err = mx.binbuf_text(self.ptr, &src_text, n)
         mx.sysmem_freeptr(src_text)
         if err:
             return error("binbuf.add_text failed")
@@ -1787,24 +1824,29 @@ cdef class Binbuf:
         them. binbuf_text can read the output of binbuf_totext and
         make the same Binbuf.
         """
-        cdef char* dst_text
-        cdef mx.t_ptr_size size
-        cdef short err = 0
+        cdef mx.t_handle contents = mx.sysmem_newhandle(0)
+        cdef mx.t_ptr_size size = 0
         cdef bytes result
-        err = mx.binbuf_totext(<mx.t_binbuf *>self.buf, &dst_text, &size)
-        if err:
-            return error("binbuf.to_text failed")
-        result = <bytes>dst_text
-        return result.encode('utf-8')
+        if mx.binbuf_totext(<mx.t_binbuf *>self.ptr, contents, &size):
+            error("could convert binbuf to text")
+            raise MemoryError
+
+        if size:
+            result = <bytes>contents[0]
+        mx.sysmem_freehandle(contents)
+        return result.decode()
+
+    cdef short getatom(self, long *p1, long *p2, mx.t_atom *ap):
+        return mx.binbuf_getatom(self.ptr, p1, p2, ap)
 
     cdef void set(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
-        mx.binbuf_set(self.buf, s, argc, argv)
+        mx.binbuf_set(self.ptr, s, argc, argv)
 
     cdef void delete(self, long from_type, long to_type, long from_data, long to_data):
-        mx.binbuf_delete(self.buf, from_type, to_type, from_data, to_data)
+        mx.binbuf_delete(self.ptr, from_type, to_type, from_data, to_data)
 
     cdef void addtext(self, char **text, long size):
-        mx.binbuf_addtext(self.buf, text, size)
+        mx.binbuf_addtext(self.ptr, text, size)
 
     cdef short readatom(self, char *outstr, char **text, long *n, long e, mx.t_atom *ap):
         """Use readatom() to read a single t_atom from a text buffer."""
