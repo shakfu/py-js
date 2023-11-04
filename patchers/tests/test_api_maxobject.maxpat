@@ -40,6 +40,19 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-8",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 485.0, 113.0, 145.0, 21.0 ],
+					"presentation_linecount" : 2,
+					"text" : "test_maxobject_from_str()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-6",
 					"maxclass" : "message",
 					"numinlets" : 2,
@@ -105,7 +118,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 485.0, 108.0, 118.0, 21.0 ],
+					"patching_rect" : [ 485.0, 76.0, 118.0, 21.0 ],
 					"text" : "test_maxobject_init()"
 				}
 
@@ -171,7 +184,6 @@
 					"patching_rect" : [ 325.5, 199.0, 98.0, 21.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
-						"debug" : 0,
 						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_maxobject.py",
 						"pythonpath" : ""
 					}
@@ -576,6 +588,13 @@
 					"midpoints" : [ 382.0, 588.0, 143.5, 588.0 ],
 					"order" : 1,
 					"source" : [ "obj-7", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-20", 0 ],
+					"source" : [ "obj-8", 0 ]
 				}
 
 			}

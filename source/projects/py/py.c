@@ -87,13 +87,16 @@ void ext_main(void* module_ref)
     c = class_new("py", (method)py_new, (method)py_free, (long)sizeof(t_py),
                   0L, A_GIMME, 0);
 
+    // class flags
+    c->c_flags |= CLASS_FLAG_NEWDICTIONARY;
+
     // object methods
     //------------------------------------------------------------------------
     // clang-format off
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",                  0);
-    class_addmethod(c, (method)py_info,       "info",                  0);
+    class_addmethod(c, (method)py_metadata,   "info",                  0);
 
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
@@ -166,13 +169,13 @@ void ext_main(void* module_ref)
     CLASS_ATTR_BASIC(c,     "run_on_close", 0);
     CLASS_ATTR_SAVE(c,      "run_on_close", 0);
 
-    CLASS_ATTR_LABEL(c,     "run_on", 0,  "set run_on to run on save or close");
-    CLASS_ATTR_SYM(c,       "run_on", 0,  t_py, p_run_on);
-    CLASS_ATTR_STYLE(c,     "run_on", 0,  "enum");
-    CLASS_ATTR_ENUM(c,      "run_on", 0,  "close save");
-    CLASS_ATTR_DEFAULT(c,   "run_on", 0,  "close");
-    CLASS_ATTR_BASIC(c,     "run_on", 0);
-    CLASS_ATTR_SAVE(c,      "run_on", 0);
+    // CLASS_ATTR_LABEL(c,     "run_on", 0,  "set run_on to run on save or close");
+    // CLASS_ATTR_SYM(c,       "run_on", 0,  t_py, p_run_on);
+    // CLASS_ATTR_STYLE(c,     "run_on", 0,  "enum");
+    // CLASS_ATTR_ENUM(c,      "run_on", 0,  "close save");
+    // CLASS_ATTR_DEFAULT(c,   "run_on", 0,  "close");
+    // CLASS_ATTR_BASIC(c,     "run_on", 0);
+    // CLASS_ATTR_SAVE(c,      "run_on", 0);
 
     CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "patch-wide pythonpath");
     CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
@@ -184,6 +187,7 @@ void ext_main(void* module_ref)
     CLASS_ATTR_LABEL(c,     "debug", 0,  "debug log to console");
     CLASS_ATTR_LONG(c,      "debug", 0,  t_py, p_debug);
     CLASS_ATTR_STYLE(c,     "debug", 0, "onoff");
+    CLASS_ATTR_DEFAULT(c,   "debug", 0,     "0");
     CLASS_ATTR_BASIC(c,     "debug", 0);
     CLASS_ATTR_SAVE(c,      "debug", 0);
 
@@ -290,9 +294,9 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         post("initialized python version: %s", PY_VERSION);
 
-        py_log(x, "object created");
+        py_debug(x, "object created");
         for (int i = 0; i < argc; i++) {
-            py_log(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
+            py_debug(x, "%d: %s", i, atom_getsym(argv + i)->s_name);
             post("argc: %d  argv: %s", i, atom_getsym(argv + i)->s_name);
         }
 
@@ -305,15 +309,15 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         }
 
         // process autoload
-        py_log(x, "checking autoload / code_filepath / pythonpath");
-        py_log(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s",
+        py_debug(x, "checking autoload / code_filepath / pythonpath");
+        py_debug(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s",
                x->p_autoload, x->p_code_filepath->s_name,
                x->p_pythonpath->s_name);
-        py_log(x, "via object_attr_getsym: %s",
+        py_debug(x, "via object_attr_getsym: %s",
                object_attr_getsym(x, gensym("file"))->s_name);
 
         if ((x->p_autoload == 1) && (x->p_code_filepath != gensym(""))) {
-            py_log(x, "autoloading: %s", x->p_code_filepath->s_name);
+            py_debug(x, "autoloading: %s", x->p_code_filepath->s_name);
             py_load(x, x->p_code_filepath);
         }
 
@@ -416,7 +420,7 @@ void py_free(t_py* x)
 
     Py_XDECREF(x->p_globals);
     // python objects cleanup
-    py_log(x, "will be deleted");
+    py_debug(x, "will be deleted");
     py_global_obj_count--;
     if (py_global_obj_count == 0) {
         /* WARNING: don't call x here or max will crash */
@@ -446,7 +450,7 @@ void* get_outlet(t_py* x)
 }
 
 /**
- * @brief Post msg to Max console.
+ * @brief Post INFO msg to Max console.
  *
  * @param x pointer to object struct
  * @param fmt character string with format codes
@@ -458,7 +462,33 @@ void* get_outlet(t_py* x)
  * WARNING: if PY_MAX_ELEMS is less than
  * the length of the log or err message, Max will crash.
  */
-void py_log(t_py* x, char* fmt, ...)
+void py_info(t_py* x, char* fmt, ...)
+{
+    char msg[PY_MAX_ELEMS];
+
+    va_list va;
+    va_start(va, fmt);
+    vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
+    va_end(va);
+
+    object_post((t_object*)x, "[INFO] (%s) %s", x->p_name->s_name, msg);
+
+}
+
+/**
+ * @brief Post DEBUG msg to Max console.
+ *
+ * @param x pointer to object struct
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ *
+ * This log function is a variadic function which does not `post` its message
+ * if the object struct member `x->p_debug` is 0.
+ *
+ * WARNING: if PY_MAX_ELEMS is less than
+ * the length of the log or err message, Max will crash.
+ */
+void py_debug(t_py* x, char* fmt, ...)
 {
     if (x->p_debug) {
         char msg[PY_MAX_ELEMS];
@@ -468,12 +498,12 @@ void py_log(t_py* x, char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        post("[py %s]: %s", x->p_name->s_name, msg);
+        object_post((t_object*)x, "[DEBUG] (%s) %s", x->p_name->s_name, msg);
     }
 }
 
 /**
- * @brief Post error message to Max console.
+ * @brief Post ERROR message to Max console.
  *
  * @param x pointer to object struct
  * @param fmt character string with format codes
@@ -488,7 +518,7 @@ void py_error(t_py* x, char* fmt, ...)
     vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
     va_end(va);
 
-    error("[py %s]: %s", x->p_name->s_name, msg);
+    object_post((t_object*)x, "[ERROR] (%s) %s", x->p_name->s_name, msg);
 }
 
 /**
@@ -833,11 +863,11 @@ void path_join(char* destination, const char* path1, const char* path2)
 
 
 /**
- * @brief      Displays info about the external
+ * @brief      Displays metadata about the external
  *
  * @param      x     pointer to object struct.
  */
-void py_info(t_py* x)
+void py_metadata(t_py* x)
 {
     char output_path[MAX_PATH_CHARS];
 
@@ -1044,7 +1074,7 @@ t_max_err py_task(t_py* x)
         py_error(x, "atomarray arg initialization failed");
         return MAX_ERR_GENERIC;
     }
-    py_log(x, "%lx instance is executing at time %.2f", x, time);
+    py_debug(x, "%lx instance is executing at time %.2f", x, time);
     py_call(x, gensym(""), argc, argv);
     py_bang_success(x);
     return MAX_ERR_NONE;
@@ -1086,7 +1116,8 @@ void py_handle_error(t_py* x, char* fmt, ...)
 
         Py_XDECREF(ptraceback);
 
-        error("[py %s] %s: %s", x->p_name->s_name, msg, pvalue_str);
+        object_error((t_object*)x, "[ERROR] (%s) %s: %s", 
+            x->p_name->s_name, msg, pvalue_str);
     }
 }
 
@@ -1211,7 +1242,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
         int is_dynamic = 0;
 
         Py_ssize_t seq_size = PySequence_Length(plist);
-        py_log(x, "seq_size: %d", seq_size);
+        py_debug(x, "seq_size: %d", seq_size);
 
         if (seq_size == 0) {
             py_error(x, "cannot convert py list of length 0 to atoms");
@@ -1219,7 +1250,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
         }
 
         if (seq_size > PY_MAX_ELEMS) {
-            py_log(x, "dynamically increasing size of atom array");
+            py_debug(x, "dynamically increasing size of atom array");
             atoms = atom_dynamic_start(atoms_static, PY_MAX_ELEMS,
                                        seq_size + 1);
             is_dynamic = 1;
@@ -1231,7 +1262,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
         if ((iter = PyObject_GetIter(plist)) == NULL) {
             goto error;
         }
-        py_log(x, "seq_size2: %d", seq_size);
+        py_debug(x, "seq_size2: %d", seq_size);
 
         while ((item = PyIter_Next(iter)) != NULL) {
             if (PyLong_Check(item)) {
@@ -1240,7 +1271,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
                     goto error;
                 }
                 atom_setlong(atoms + i, long_item);
-                py_log(x, "%d long: %ld\n", i, long_item);
+                py_debug(x, "%d long: %ld\n", i, long_item);
                 i++;
             }
 
@@ -1250,7 +1281,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
                     goto error;
                 }
                 atom_setfloat(atoms + i, float_item);
-                py_log(x, "%d float: %f\n", i, float_item);
+                py_debug(x, "%d float: %f\n", i, float_item);
                 i++;
             }
 
@@ -1260,7 +1291,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
                     goto error;
                 }
                 atom_setsym(atoms + i, gensym(unicode_item));
-                py_log(x, "%d unicode: %s\n", i, unicode_item);
+                py_debug(x, "%d unicode: %s\n", i, unicode_item);
                 i++;
             }
             Py_DECREF(item);
@@ -1268,10 +1299,10 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
 
         outlet_list(x->p_outlet_left, NULL, i, atoms);
         py_bang_success(x);
-        py_log(x, "end iter op: %d", i);
+        py_debug(x, "end iter op: %d", i);
 
         if (is_dynamic) {
-            py_log(x, "restoring to static atom array");
+            py_debug(x, "restoring to static atom array");
             atom_dynamic_end(atoms_static, atoms);
         }
     }
@@ -1434,7 +1465,7 @@ PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
             break;
         }
         default:
-            py_log(x, "cannot process unknown type");
+            py_debug(x, "cannot process unknown type");
             break;
         }
     }
@@ -1471,7 +1502,7 @@ t_max_err py_import(t_py* x, t_symbol* s)
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
         PyGILState_Release(gstate);
         py_bang_success(x);
-        py_log(x, "imported: %s", s->s_name);
+        py_debug(x, "imported: %s", s->s_name);
     }
     return MAX_ERR_NONE;
 
@@ -1497,7 +1528,7 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     gstate = PyGILState_Ensure();
 
     char* py_argv = atom_getsym(argv)->s_name;
-    py_log(x, "%s %s", s->s_name, py_argv);
+    py_debug(x, "%s %s", s->s_name, py_argv);
 
     PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
                                   x->p_globals);
@@ -1544,7 +1575,7 @@ t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     PyGILState_Release(gstate);
 
     py_bang_success(x);
-    py_log(x, "exec %s", py_argv);
+    py_debug(x, "exec %s", py_argv);
     return MAX_ERR_NONE;
 
 error:
@@ -1586,7 +1617,7 @@ t_max_err py_execfile(t_py* x, t_symbol* s)
 
     // assume x->p_code_filepath has be been set without errors
 
-    py_log(x, "pathname: %s", x->p_code_filepath->s_name);
+    py_debug(x, "pathname: %s", x->p_code_filepath->s_name);
     fhandle = fopen(x->p_code_filepath->s_name, "r+");
 
     if (fhandle == NULL) {
@@ -1643,7 +1674,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     int res = 0;
 
     if (s != gensym(""))
-        py_log(x, "s: %s", s->s_name);
+        py_debug(x, "s: %s", s->s_name);
 
     // first atom in argv must be a symbol
     if (argv->a_type != A_SYM) {
@@ -1652,7 +1683,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     } else {
         varname = atom_getsym(argv)->s_name;
-        py_log(x, "varname: %s", varname);
+        py_debug(x, "varname: %s", varname);
     }
 
     list = py_atoms_to_list(x, argc, argv, 1);
@@ -1665,11 +1696,11 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_error(x, "PyList_Size(list) != argc - 1");
         goto error;
     } else {
-        py_log(x, "length of list: %d", PyList_Size(list));
+        py_debug(x, "length of list: %d", PyList_Size(list));
     }
 
     // finally, assign list to varname in object namespace
-    py_log(x, "setting %s to list in namespace", varname);
+    py_debug(x, "setting %s to list in namespace", varname);
     // following does not steal ref to list
     res = PyDict_SetItemString(x->p_globals, varname, list);
     if (res != 0) {
@@ -1712,7 +1743,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
-        py_log(x, ">>> %s", text);
+        py_debug(x, ">>> %s", text);
     } else {
         goto error;
     }
@@ -1821,7 +1852,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
             break;
         }
         default:
-            py_log(x, "cannot process unknown type");
+            py_debug(x, "cannot process unknown type");
             break;
         }
     }
@@ -2028,11 +2059,11 @@ long py_scan_callback(t_py* x, t_object* box)
     varname = jbox_get_varname(box);
     obj = jbox_get_object(box);
 
-    // STRANGE BUG: single quotes in py_log cause a crash but not with post!!
+    // STRANGE BUG: single quotes in py_debug cause a crash but not with post!!
     // perhaps because post is a macro for object_post?
     if (varname && varname != gensym("")) {
         // post("XXXX -> '%s'", varname->s_name);
-        py_log(x, "storing object %s in the global registry", varname->s_name);
+        py_debug(x, "storing object %s in the global registry", varname->s_name);
         hashtab_store(py_global_registry, varname, obj);
 
         obj_id = jbox_get_id(box);
@@ -2133,7 +2164,7 @@ t_max_err py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
         break;
     }
     default:
-        py_log(x, "cannot process unknown type");
+        py_debug(x, "cannot process unknown type");
         break;
     }
 
@@ -2286,7 +2317,7 @@ void py_edclose(t_py* x, char** text, long size)
 void py_okclose(t_py* x, char *s, short *result)
 {
     // see: https://cycling74.com/forums/text-editor-without-dirty-bit
-    py_log(x, "okclose: called -- run-on-close: %d", x->p_run_on_close);
+    py_debug(x, "okclose: called -- run-on-close: %d", x->p_run_on_close);
     *result = 3; // don't put up a dialog
     // const char *string = "custom save text";
     // memcpy(s, string, strlen(string)+1);
@@ -2309,7 +2340,7 @@ t_max_err py_edsave(t_py* x, char** text, long size)
 
     if (x->p_run_on_save) {
 
-        py_log(x, "run-on-save activated");
+        py_debug(x, "run-on-save activated");
 
         pval = PyRun_String(*text, Py_file_input, x->p_globals, x->p_globals);
         if (pval == NULL) {
@@ -2321,14 +2352,14 @@ t_max_err py_edsave(t_py* x, char** text, long size)
         Py_DECREF(pval);
     }
     PyGILState_Release(gstate);
-    py_log(x, "py_edsave: returning 0");
+    py_debug(x, "py_edsave: returning 0");
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_edsave with (possible) execution failed");
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
-    py_log(x, "py_edsave: returning 1");
+    py_debug(x, "py_edsave: returning 1");
     return MAX_ERR_GENERIC;
 }
 
@@ -2399,7 +2430,7 @@ t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
             elem = PyList_GetItem(plist, i);
             value = PyLong_AsLong(elem);
             *((*storage)+i) = value;
-            py_log(x, "storage[%d] = %d", i, value);
+            py_debug(x, "storage[%d] = %d", i, value);
         }
     }
     Py_XDECREF(plist);
@@ -2428,14 +2459,14 @@ PyObject* py_table_to_list(t_py* x, char* table_name)
     long **storage, size, value;
 
     if ((plist = PyList_New(0)) == NULL) {
-        py_log(x, "could not create an empty python list");
+        py_debug(x, "could not create an empty python list");
         goto error;
     }
 
     if (table_get(gensym(table_name), &storage, &size) == 0) {
         for(int i = 0; i < size; i++) {
             value = *((*storage)+i);
-            py_log(x, "storage[%d] = %d", i, value);
+            py_debug(x, "storage[%d] = %d", i, value);
             PyObject* p_long = PyLong_FromLong(value);
             if (p_long == NULL) {
                 goto error;

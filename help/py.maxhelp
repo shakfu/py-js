@@ -244,8 +244,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 505.0, 165.0, 158.0, 22.0 ],
-									"text" : "44100."
+									"patching_rect" : [ 505.0, 165.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -664,8 +663,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 48.0, 22.0 ],
-									"text" : "44100."
+									"patching_rect" : [ 376.0, 359.0, 48.0, 22.0 ]
 								}
 
 							}
@@ -2234,14 +2232,16 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 22.0 ],
-									"text" : "44100."
+									"presentation_linecount" : 12,
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
+									"text" : "\"3.11.6 (main, Nov  2 2023, 04:39:43) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
 								}
 
 							}
@@ -2266,7 +2266,7 @@
 									}
 ,
 									"text" : "py @name bob",
-									"varname" : "bob"
+									"varname" : "__main__"
 								}
 
 							}

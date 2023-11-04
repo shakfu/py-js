@@ -11,7 +11,8 @@ cdef extern from "py.h":
 
     ctypedef struct t_py
 
-    cdef void py_log(t_py* x, char* fmt, ...)
+    cdef void py_info(t_py* x, char* fmt, ...)
+    cdef void py_debug(t_py* x, char* fmt, ...)
     cdef void py_error(t_py* x, char* fmt, ...)
 
     # api module helpers
@@ -61,7 +62,7 @@ cdef extern from "py.h":
 
     # Information Methods
 
-    cdef void py_info(t_py* x)
+    cdef void py_metadata(t_py* x)
     cdef void py_count(t_py* x)
     cdef void py_assist(t_py* x, void* b, long m, long a, char* s)
     cdef void py_appendtodict(t_py* x, mx.t_dictionary* dict)

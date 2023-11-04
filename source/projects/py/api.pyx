@@ -226,6 +226,18 @@ cdef class MaxObject:
         self.ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
 
+    @staticmethod
+    def from_str(classname: str, parsestr: str, namespace: str = "box") -> MaxObject:
+        """Create a new object with one or more atoms parsed from a C-string. 
+
+        The object's new method must have an A_GIMME signature.
+        """
+        cdef MaxObject obj = MaxObject.__new__(MaxObject)
+        obj.ptr_owner = True
+        obj.ptr = <mx.t_object*>mx.object_new_parse(
+            str_to_sym(namespace), str_to_sym(classname), parsestr.encode("utf8"))
+        return obj
+
     def _method_noargs(self, str name):
         """object method call with no arguments"""
         cdef mx.t_max_err err = mx.object_method_typed(
@@ -250,6 +262,57 @@ cdef class MaxObject:
         else:
             return self._method_args(name, *args)
 
+    def get_attr_sym(self, str name) -> str:
+        """Retrieves the value of an attribute, given its parent object and name."""
+        cdef mx.t_symbol *attr_sym = <mx.t_symbol *>mx.object_attr_getsym(
+            self.ptr, str_to_sym(name))
+        return sym_to_str(attr_sym)
+
+    def set_attr_sym(self, str name, str value):
+        """Sets the value of an attribute, given its parent object and name."""
+        cdef mx.t_max_err err = mx.object_attr_setsym(self.ptr, 
+            str_to_sym(name), str_to_sym(value))
+        if err != mx.MAX_ERR_NONE:
+            return error(f"could not set attr '{name}' value '{value}'");
+
+    def get_attr_long(self, str name) -> int:
+        """Retrieves the value of an attribute, given its parent object and name."""
+        return mx.object_attr_getlong(self.ptr, str_to_sym(name))
+
+    def set_attr_long(self, str name, int value):
+        """Sets the value of an attribute, given its parent object and name."""
+        cdef mx.t_max_err err = mx.object_attr_setlong(self.ptr, 
+            str_to_sym(name), value)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"could not set attr '{name}' value '{value}'");
+
+    def get_attr_float(self, str name) -> float:
+        """Retrieves the value of an attribute, given its parent object and name."""
+        return mx.object_attr_getfloat (self.ptr, str_to_sym(name))
+
+    def set_attr_float(self, str name, float value):
+        """Sets the value of an attribute, given its parent object and name."""
+        cdef mx.t_max_err err = mx.object_attr_setfloat(self.ptr,
+            str_to_sym(name), value)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"could not set attr '{name}' value '{value}'");
+
+    def get_attr_char(self, str name) -> bool:
+        """Retrieves the value of an attribute, given its parent and name"""
+        return mx.object_attr_getchar(self.ptr, str_to_sym(name))
+
+    def set_attr_char(self, str name, bint value):
+        """Sets the value of an attribute, given its parent object and name."""
+        cdef mx.t_max_err err = mx.object_attr_setchar(self.ptr, str_to_sym(name), value)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"could not set attr '{name}' value '{value}'");
+
+    def set_attr_from_str(self, str name, str value):
+        """Set an attribute value with one or more atoms parsed from a C-string."""
+        cdef mx.t_max_err err = mx.object_attr_setparse(self.ptr, 
+            str_to_sym(name), value.encode('utf-8'))
+
+
 # ----------------------------------------------------------------------------
 # api.Atom
 
@@ -258,7 +321,7 @@ cdef class Atom:
     """
     cdef mx.t_atom *ptr
     cdef bint ptr_owner
-    cdef int size
+    cdef public int size
 
     def __cinit__(self):
         self.ptr_owner = False
@@ -402,9 +465,20 @@ cdef class Atom:
 
     @staticmethod
     cdef Atom new(int size):
+        """create an empty Atom instance with an aribitrary length"""
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
+        return Atom.from_ptr(ptr, size, owner=True)
+
+    @staticmethod
+    def from_str(parsestr: str) -> Atom:
+        """Parse a string into an Atom instance."""
+        cdef mx.t_atom *ptr = NULL
+        cdef long size = 0
+        cdef mx.t_max_err err = mx.atom_setparse(&size, &ptr, parsestr.encode("utf8"))
+        if err != mx.MAX_ERR_NONE:
+            raise TypeError
         return Atom.from_ptr(ptr, size, owner=True)
 
     @staticmethod
@@ -1733,6 +1807,7 @@ cdef class Binbuf:
         mx.binbuf_addtext(self.buf, text, size)
 
     cdef short readatom(self, char *outstr, char **text, long *n, long e, mx.t_atom *ap):
+        """Use readatom() to read a single t_atom from a text buffer."""
         mx.readatom(outstr, text, n, e, ap)
 
 # ---------------------------------------------------------------------------
@@ -2090,8 +2165,16 @@ cdef class PyExternal:
     cpdef bang(self):
         px.py_bang(self.obj)
 
-    def log(self, str s):
-        px.py_log(self.obj, s.encode('utf-8'))
+    def log(self, str s, type="info"):
+        msg = s.encode('utf-8')
+        if type=="info":
+            px.py_info(self.obj, msg)
+        elif type=="debug":
+            px.py_debug(self.obj, msg)
+        elif type=="error":
+            px.py_error(self.obj, msg)
+        else:
+            px.py_error(self.obj, "log type not recognized")
 
     def error(self, str s):
         px.py_error(self.obj, s.encode('utf-8'))

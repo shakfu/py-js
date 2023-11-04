@@ -15,6 +15,9 @@ memory = {}
 def test_maxobject_init():
     memory["buf"] = api.MaxObject("buffer~", "buf", "jongly.aif")
 
+def test_maxobject_from_str():
+    memory["buf"] = api.MaxObject.from_str("buffer~", "buf jongly.aif")
+
 
 def test_maxobject_method_replace():
     memory["buf"].method("replace", "vibes-a1.aif")

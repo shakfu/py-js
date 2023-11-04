@@ -62,10 +62,15 @@ void py_free(t_py* x);
 void py_init(t_py* x);
 
 /*--------------------------------------------------------------------------*/
+/* Logging */
+
+void py_info(t_py* x, char* fmt, ...);
+void py_debug(t_py* x, char* fmt, ...);
+void py_error(t_py* x, char* fmt, ...);
+
+/*--------------------------------------------------------------------------*/
 /* Helpers */
 
-void py_log(t_py* x, char* fmt, ...);
-void py_error(t_py* x, char* fmt, ...);
 void py_init_builtins(t_py* x);
 void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
@@ -126,8 +131,8 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /*--------------------------------------------------------------------------*/
 /* Information Methods */
 
-void py_info(t_py* x);
 void py_count(t_py* x);
+void py_metadata(t_py* x);
 void py_assist(t_py* x, void* b, long m, long a, char* s);
 
 /*--------------------------------------------------------------------------*/
