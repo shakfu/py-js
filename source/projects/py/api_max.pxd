@@ -87,9 +87,11 @@ cdef extern from "ext_atombuf.h":
     void atombuf_set(t_atombuf *x, long start, long num)
     long atombuf_replacepoundargs(t_atombuf *x, long argc, t_atom *argv)
 
+## if requireed
 # cdef extern from "ext_critical.h":
-
-#     ctypedef struct pthread_mutex_t* t_critical;
+#     ctypedef struct pthread_mutex_t:
+#        pass
+#     ctypedef pthread_mutex_t* t_critical
 #     void critical_new(t_critical *x)
 #     void critical_enter(t_critical x)
 #     void critical_exit(t_critical x)

@@ -171,10 +171,66 @@ cdef class MaxObject:
             return
         return error(f"method '{name}' call failed")
 
-    def call(self, str name, *args):
-        """call object method (strongly typed)"""
+    def _method_parsestr(self, str name, str parsestr):
+        """combines object_method_typed() + atom_setparse() to define method arguments."""
+        cdef mx.t_max_err err = mx.object_method_parse(
+            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_float(self, str name, float number):
+        """wrapper for object_method_typed() that passes a single float as an argument"""
+        cdef mx.t_max_err err = mx.object_method_float(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_double(self, str name, double number):
+        """wrapper for object_method_typed() that passes a single double as an argument"""
+        cdef mx.t_max_err err = mx.object_method_double(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_long(self, str name, long number):
+        """wrapper for object_method_typed() that passes a single long as an argument"""
+        cdef mx.t_max_err err = mx.object_method_long(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_sym(self, str name, str symbol):
+        """wrapper for object_method_typed() that passes a single t_symbol as an argument"""
+        cdef mx.t_max_err err = mx.object_method_sym(
+            <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def call(self, str name, *args, parse=False):
+        """general call object method function (strongly typed)"""
         if len(args) == 0:
             return self._method_noargs(name)
+        elif len(args) == 1:
+            if isinstance(args[0], str):
+                if parse:
+                    return self._method_parsestr(name, args[0])
+                else:
+                    return self._method_sym(name, args[0])
+            elif isinstance(args[0], float):
+                return self._method_double(name, args[0])
+            elif isinstance(args[0], int):
+                return self._method_long(name, args[0])
+            elif isinstance(args[0], list):
+                return self.call(name, *args[0])
+            elif isinstance(args[0], tuple):
+                return self.call(name, *args[0])
+            elif isinstance(args[0], set):
+                return self.call(name, *args[0])
         else:
             return self._method_args(name, *args)
 
@@ -228,6 +284,9 @@ cdef class MaxObject:
         cdef mx.t_max_err err = mx.object_attr_setparse(self.ptr, 
             str_to_sym(name), value.encode('utf-8'))
 
+    cdef mx.t_object * clone(self):
+        """return clone of object"""
+        return <mx.t_object *>mx.object_clone(self.ptr)
 
 # ----------------------------------------------------------------------------
 # api.Atom
@@ -356,6 +415,23 @@ cdef class Atom:
                 _res.append(self.get_float(i))
         return _res
 
+    def to_string(self) -> str:
+        """Convert an array of atoms into a C-string.
+        """
+        cdef mx.t_handle contents = mx.sysmem_newhandle(0)
+        cdef long textsize = 0
+        cdef bytes result
+
+        if mx.atom_gettext(self.size, <mx.t_atom *>self.ptr, &textsize, 
+                          contents, mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT):
+            error("could convert atoms to text")
+            raise MemoryError
+
+        if textsize:
+            result = <bytes>contents[0]
+        mx.sysmem_freehandle(contents)
+        return result.decode()
+
     # if INCLUDE_NUMPY:
     #     def to_np_array(self):
     #         return np.array(self.to_list(), dtype=np.float64)
@@ -426,6 +502,128 @@ cdef class Atom:
                 continue
 
         return Atom.from_ptr(ptr, size, owner=True)
+
+    def is_string(self, int idx = 0) -> bool:
+        """Determines whether or not an atom represents a t_string object."""
+        return bool(mx.atomisstring(self.ptr + idx))
+
+    def is_atomarray(self, int idx = 0) -> bool:
+        """Determines whether or not an atom represents a t_atomarray object."""
+        return bool(mx.atomisatomarray(self.ptr + idx))
+
+    def is_dictionary(self, int idx = 0) -> bool:
+        """Determines whether or not an atom represents a t_dictionary object."""
+        return bool(mx.atomisdictionary(self.ptr + idx))
+
+    cdef resize_ptr(self, mx.t_ptr_size new_size):
+        """Resize an existing pointer."""
+        self.ptr = <mx.t_atom *>mx.sysmem_resizeptr(<mx.t_atom *>self.ptr, 
+            new_size * sizeof(mx.t_atom))
+
+    cdef mx.t_max_err setchar_array(self, long ac, long count, unsigned char *vals):
+        """Assign an array of char values to an array of atoms.
+        """
+        if ac > self.size:
+            self.resize_ptr(ac)
+        return mx.atom_setchar_array(ac, self.ptr, count, vals)
+
+    cdef mx.t_max_err getchar_array(self, long count, unsigned char *vals):
+        """Fetch an array of char values from an array of atoms.
+        """
+        return mx.atom_getchar_array(self.size, self.ptr, count, vals)
+
+    cdef mx.t_max_err setlong_array(self, long ac, long count, mx.t_atom_long *vals):
+        """Assign an array of long values to an array of atoms.
+        """
+        if ac > self.size:
+            self.resize_ptr(ac)
+        return mx.atom_setlong_array(ac, self.ptr, count, vals)
+
+    cdef mx.t_max_err getlong_array(self, long count, mx.t_atom_long *vals):
+        """Fetch an array of long values from an array of atoms.
+        """
+        return mx.atom_getlong_array(self.size, self.ptr, count, vals)
+
+    cdef mx.t_max_err setfloat_array(self, long ac, long count, float *vals):
+        """Assign an array of float values to an array of atoms.
+        """
+        if ac > self.size:
+            self.resize_ptr(ac)
+        return mx.atom_setfloat_array(ac, self.ptr, count, vals)
+
+    cdef mx.t_max_err getfloat_array(self, long count, float *vals):
+        """Fetch an array of float values from an array of atoms.
+        """
+        return mx.atom_getfloat_array(self.size, self.ptr, count, vals)
+
+    cdef mx.t_max_err setdouble_array(self, long ac, long count, double *vals):
+        """Assign an array of double values to an array of atoms.
+        """
+        if ac > self.size:
+            self.resize_ptr(ac)
+        return mx.atom_setdouble_array(ac, self.ptr, count, vals)
+
+    cdef mx.t_max_err getdouble_array(self, long count, double *vals):
+        """Fetch an array of double values from an array of atoms.
+        """
+        return mx.atom_getdouble_array(self.size, self.ptr, count, vals)
+
+    cdef mx.t_max_err setsym_array(self, long ac, long count, mx.t_symbol **vals):
+        """Assign an array of t_symbol values to an array of atoms.
+        """
+        if ac > self.size:
+            self.resize_ptr(ac)
+        return mx.atom_setsym_array(ac, self.ptr, count, vals)
+
+    cdef mx.t_max_err getsym_array(self, long count, mx.t_symbol **vals):
+        """Fetch an array of t_symbol values from an array of atoms.
+        """
+        return mx.atom_getsym_array(self.size, self.ptr, count, vals)
+
+    cdef mx.t_max_err setatom_array(self, long ac, long count, mx.t_atom *vals):
+        """Assign an array of t_atom values to an array of atoms.
+        """
+        if ac > self.size:
+            self.resize_ptr(ac)
+        return mx.atom_setatom_array(ac, self.ptr, count, vals)
+
+    cdef mx.t_max_err getatom_array(self, long count, mx.t_atom *vals):
+        """Fetch an array of t_symbol values from an array of atoms.
+        """
+        return mx.atom_getatom_array(self.size, self.ptr, count, vals)
+
+    cdef mx.t_max_err setobj_array(self, long ac, long count, mx.t_object **vals):
+        """Assign an array of t_object values to an array of atoms.
+        """
+        if ac > self.size:
+            self.resize_ptr(ac)
+        return mx.atom_setobj_array(ac, self.ptr, count, vals)
+
+    cdef mx.t_max_err getobj_array(self, long count, mx.t_object **vals):
+        """Fetch an array of t_object values from an array of atoms.
+        """
+        return mx.atom_getobj_array(self.size, self.ptr, count, vals)
+
+    cdef mx.t_max_err setparse(self, const char *parsestr):
+        """Parse a C-string into an array of atoms.
+        """
+        return mx.atom_setparse(&self.size, <mx.t_atom **>&self.ptr, parsestr)
+
+    cdef mx.t_max_err setbinbuf(self, void *buf):
+        """set binbuf content into an array of atoms.
+        """
+        return mx.atom_setbinbuf(&self.size, <mx.t_atom **>&self.ptr, buf)
+
+    cdef mx.t_max_err setattrval(self, mx.t_symbol *attrname, mx.t_object *obj):
+        """set attribute value into an array of atoms.
+        """
+        return mx.atom_setattrval(&self.size, <mx.t_atom **>&self.ptr, attrname, obj)
+
+    cdef mx.t_max_err setobjval(self, mx.t_object *obj):
+        """set object value into an array of atoms.
+        """
+        return mx.atom_setobjval(&self.size, <mx.t_atom **>&self.ptr, obj)
+
 
 # ----------------------------------------------------------------------------
 # api.Table
@@ -1646,11 +1844,9 @@ cdef class Linklist:
 
 cdef class Binbuf:
     cdef mx.t_binbuf* ptr
-    # cdef mx.t_systhread_mutex* mutex_ptr
 
     def __cinit__(self):
         self.ptr = <mx.t_binbuf*>mx.binbuf_new()
-        # self.mutex_ptr = NULL
         if not self.ptr:
             raise MemoryError
 
@@ -1677,29 +1873,10 @@ cdef class Binbuf:
     # cdef void vinsert(self, char *fmt, ...):
     #     mx.binbuf_vinsert(self.ptr, fmt, ...)
 
-    # TODO: see https://cycling74.com/forums/deadlock-with-object_free
-    # def lock_binbuf(self):
-    #     """Create a new mutex, which can be used to place thread locks around critical code."""
-    #     cdef mx.t_max_err err = mx.systhread_mutex_newlock(self.mutex_ptr, mx.SYSTHREAD_MUTEX_NORMAL)
-    #     if err != mx.MAX_ERR_NONE:
-    #         return error("cannot lock binbuf")
-
-    # def unlock_binbuf(self):
-    #     cdef mx.t_max_err err = 0
-    #     err = mx.systhread_mutex_unlock (self.mutex_ptr)
-    #     if err != mx.MAX_ERR_NONE:
-    #         return error("cannot unlock binbuf")
-
-    #     err = mx.systhread_mutex_free(self.mutex_ptr)
-    #     if err != mx.MAX_ERR_NONE:
-    #         return error("cannot free binbuf mutex")
-
     def eval(self):
-        # mx.critical_enter(0)
-        # self.lock_binbuf()
+        # mx.critical_enter(<mx.t_critical>0)
         self.eval_msg_to(0, NULL, NULL)
-        # self.unlock_binbuf()
-        # mx.critical_exit(0)
+        # mx.critical_exit(<mx.t_critical>0)
 
     cdef void * eval_msg_to(self, short ac, mx.t_atom *av, void *to):
         """evaluate a Max message in a Binbuf, passing it arguments.
@@ -1948,17 +2125,22 @@ cdef class Hashtab:
 # api.AtomArray
 
 cdef class AtomArray:
-    cdef mx.t_atomarray *x
+    cdef mx.t_atomarray *ptr
     cdef bint owner
 
     def __cinit__(self):
-        self.x = NULL
+        self.ptr = NULL
         self.owner = False
+
+    def __init__(self, *args):
+        cdef Atom atom = Atom(*args)
+        self.ptr = mx.atomarray_new(atom.size, atom.ptr)
+        self.owner = True
 
     @staticmethod
     cdef AtomArray from_atom(mx.t_atom *av, int ac, bint owner=False):
         cdef AtomArray atom_array = AtomArray.__new__(AtomArray)
-        atom_array.x = mx.atomarray_new(ac, av)
+        atom_array.ptr = mx.atomarray_new(ac, av)
         atom_array.owner = owner
         return atom_array
 
@@ -1970,49 +2152,49 @@ cdef class AtomArray:
         return AtomArray.from_atom(ptr, size, owner=True)
 
     cdef void flags(self, long flags):
-        mx.atomarray_flags(self.x, flags)
+        mx.atomarray_flags(self.ptr, flags)
 
     cdef long getflags(self):
-        return mx.atomarray_getflags(self.x)
+        return mx.atomarray_getflags(self.ptr)
 
     cdef mx.t_max_err setatoms(self, long ac, mx.t_atom* av):
-        return mx.atomarray_setatoms(self.x, ac, av)
+        return mx.atomarray_setatoms(self.ptr, ac, av)
 
     cdef mx.t_max_err getatoms(self, long* ac, mx.t_atom** av):
-        return mx.atomarray_getatoms(self.x, ac, av)
+        return mx.atomarray_getatoms(self.ptr, ac, av)
 
     cdef mx.t_max_err copyatoms(self, long* ac, mx.t_atom** av):
-        return mx.atomarray_copyatoms(self.x, ac, av)
+        return mx.atomarray_copyatoms(self.ptr, ac, av)
 
     cdef mx.t_atom_long getsize(self):
-        return mx.atomarray_getsize(self.x)
+        return mx.atomarray_getsize(self.ptr)
 
     cdef mx.t_max_err getindex(self, long index, mx.t_atom* av):
-        return mx.atomarray_getindex(self.x, index, av)
+        return mx.atomarray_getindex(self.ptr, index, av)
 
     # cdef mx.t_max_err setindex(self, long index, mx.t_atom* av):
-    #     return mx.atomarray_setindex(self.x, index, av)
+    #     return mx.atomarray_setindex(self.ptr, index, av)
 
     cdef void* duplicate(self):
-        return mx.atomarray_duplicate(self.x)
+        return mx.atomarray_duplicate(self.ptr)
 
     cdef void* clone(self):
-        return mx.atomarray_clone(self.x)
+        return mx.atomarray_clone(self.ptr)
 
     cdef void appendatom(self, mx.t_atom* a):
-        mx.atomarray_appendatom(self.x, a)
+        mx.atomarray_appendatom(self.ptr, a)
 
     cdef void appendatoms(self, long ac, mx.t_atom* av):
-        mx.atomarray_appendatoms(self.x, ac, av)
+        mx.atomarray_appendatoms(self.ptr, ac, av)
 
     cdef void chuckindex(self, long index):
-        mx.atomarray_chuckindex(self.x, index)
+        mx.atomarray_chuckindex(self.ptr, index)
 
     cdef void clear(self):
-        mx.atomarray_clear(self.x)
+        mx.atomarray_clear(self.ptr)
 
     cdef void funall(self, mx.method fun, void* arg):
-        mx.atomarray_funall(self.x, fun, arg)
+        mx.atomarray_funall(self.ptr, fun, arg)
 
 
 # ----------------------------------------------------------------------------
