@@ -1,119 +1,30 @@
 # api.pyx
-""" 
-A cython 'builtin' module which wraps parts of the Max/MSP c-api
+""" This is a cython 'builtin' module which wraps parts of the Max/MSP c-api
 for the `py` external.
 
-The `api` module consists of:
-    - api.pyx: main cython (https://cython.org) wrapper
-    - api_max.pxd: exposes Max api headers to api.pyx
-    - api_msp.pxd: exposes MSP api headers to api.pyx
-    _ api_py.pxd: exposes the `py` external api to api.pyx
-
-Cython classes, functions, and constants defined here are optionally
-available for use by python code running in a `py` external instance.
-
-## Usage
-
-Either 
-
-1a. Send the `py` object an `import api` message or 
-
-2b. Import a module on the pythonpath which imports the `api` module or
-
-3b. [load <file.py]` which contains python code which imports the `api`
-module.
-
-Then
-
-2. Call one of the functions or classes in this file 
-   making sure to prefix it with `api.`
-
-
-        1.
-   ( import api )
-        |
-        |                      2.
-      [ py ] ------ ( api.post('hello world') )
-
-
-## Development
-
-A lot of the painful laborious work of creating header mappings has been
-done and can be reviewed (and corrected) in
-the `api_max.pxd` and `api_msp.pxd` files.
-
-This provides the benefit that we can import the max api via its header
-declarations as follows:
-
-    cimport api_max as mx
-
-Then you can start using Max api symbols or functions in the cython code 
-by prefixing with `mx.` For example
-
-    gensym()    -> mx.gensym()
-    post()      -> mx.post()
-    ...
-
-In addition the `py` external api is also mapped for use by cython
-(see below) in api_py.pxd file:
-
-    cimport api_py as px
-
-
-Again please note any function exposed from the `py` external must
-be prefixed as `px`:
-
-    py_scan()   -> px.py_scan()
-
-
-This separation of namespaces is clearly very useful when you are
-wrapping code.
-
-
-## Extension Types
-
-We use cython extension types to wrap related C data structures and functions
-in the Max api and provide a Python-like interface to them.
-
-So far the following extension types are planned or implemented (partial or otherwise)
-
-- [x] MaxObject: general max t_object class
-- [x] Atom
-- [x] Atom Array: container for an array of atoms
-- [x] Binbuf
-- [x] Buffer
-- [x] Database: SQLite database access
-- [x] Dictionary: structured/hierarchical data that is both sortable and fast
-- [x] Hash Table: hash table for mapping symbols to data
-- [ ] Index Map: managed array of pointers
-- [x] Linked List: doubly-linked-list
-- [ ] Quick Map: a double hash with keys mapped to values and vice-versa
-- [x] String Object: wrapper for C-strings with an API for manipulating them
-- [ ] Symbol Object: wrapper for symbols
-- [x] Table
-- [x] Patcher
-
-- [x] PyExternal
-
-Workarounds for max types which are not exposed in the c-api:
-
-- coll: import and export the contents of a coll into a dict by
-  sending a message to the dict object.
-
-- jit.cellblock: link a coll to a cellblock and data sent to the
-  coll will be sent to the cellblock.
-
-- jit.matrix: can be populated via jit.fill from a coll
-
-
-## Table of Contents
-
 - imports
-- compile time conditional imports
-- compile time constants
-- helper cdef functions (type-translation)
-- extension types
-- helper def functions
+- compile-time conditional imports
+- compile-time constants
+- python c-api imports
+- helper cdef functions
+- extensions types
+    - [x] MaxObject
+    - [x] Atom
+    - [x] Table
+    - [x] Buffer
+    - [x] Dictionary
+    - [x] Database
+    - [ ] Linklist
+    - [x] Binbuf
+    - [x] Atombuf
+    - [ ] Hashtab
+    - [ ] AtomArray
+    - [x] Patcher
+    - [x] PyExternal
+- helper functions
+
+
+see: `py-js/source/projects/py/api.md` for further details
 """
 
 # ----------------------------------------------------------------------------
@@ -236,6 +147,12 @@ cdef class MaxObject:
         obj.ptr = <mx.t_object*>mx.object_new_parse(
             str_to_sym(namespace), str_to_sym(classname), parsestr.encode("utf8"))
         return obj
+
+    def method_exists(self, str name) -> bool:
+        """checks if named method exists"""
+        if mx.getfn(<mx.t_object *>self.ptr, str_to_sym(name)):
+            return True
+        return False
 
     def _method_noargs(self, str name):
         """object method call with no arguments"""
@@ -1729,11 +1646,11 @@ cdef class Linklist:
 
 cdef class Binbuf:
     cdef mx.t_binbuf* ptr
-    cdef mx.t_systhread_mutex* mutex_ptr
+    # cdef mx.t_systhread_mutex* mutex_ptr
 
     def __cinit__(self):
         self.ptr = <mx.t_binbuf*>mx.binbuf_new()
-        self.mutex_ptr = NULL
+        # self.mutex_ptr = NULL
         if not self.ptr:
             raise MemoryError
 
@@ -1853,6 +1770,81 @@ cdef class Binbuf:
     cdef short readatom(self, char *outstr, char **text, long *n, long e, mx.t_atom *ap):
         """Use readatom() to read a single t_atom from a text buffer."""
         mx.readatom(outstr, text, n, e, ap)
+
+# ---------------------------------------------------------------------------
+# api.Atombuf
+
+cdef class Atombuf:
+    """An alternative to Binbufs for temporary storage of atoms.
+    """
+    cdef mx.t_atombuf* ptr
+    cdef bint ptr_owner
+
+    def __cinit__(self):
+        self.ptr = NULL
+        self.ptr_owner = False
+
+    def __dealloc__(self):
+        # De-allocate if not null and flag is set
+        if self.ptr is not NULL and self.ptr_owner is True:
+            mx.atombuf_free(self.ptr)
+            self.ptr = NULL
+
+    def __init__(self, *args):
+        cdef Atom atom = Atom(*args) 
+        self.ptr = <mx.t_atombuf*>mx.atombuf_new(atom.size, atom.ptr)
+        self.ptr_owner = True
+        if not self.ptr:
+            raise MemoryError
+
+    @staticmethod
+    cdef Atombuf from_ptr(mx.t_atombuf *ptr, bint owner=False):
+        cdef Atombuf atombuf = Atombuf.__new__(Atombuf)
+        atombuf.ptr = ptr
+        atombuf.ptr_owner = owner
+        return atombuf
+
+    @staticmethod
+    def new() -> Atombuf:
+        """create an empty Atombuf instance"""
+        cdef mx.t_atombuf *ptr = <mx.t_atombuf*>mx.atombuf_new(0, NULL)
+        if ptr is NULL:
+            raise MemoryError
+        return Atombuf.from_ptr(ptr, owner=True)
+
+    def add_text(self, str text):
+        """Adds a text -- convert text to a t_atom array in a t_atombuf.
+
+        To use this routine to create a new Atombuf from the text buffer, 
+        first create a new empty t_atombuf with a call to atombuf_new(0,NULL).
+        """
+        cdef char* src_text = <char *>mx.sysmem_newptr((len(text)+1) * sizeof(char))
+        cdef long n = len(text) + 1
+        strcpy(src_text, text.encode('utf8'))
+        mx.atombuf_text(&self.ptr, &src_text, n)
+        mx.sysmem_freeptr(src_text)
+
+    def to_text(self) -> str:
+        """Convert an atombuf into a text handle.
+        """
+        cdef mx.t_handle contents = mx.sysmem_newhandle(0)
+        cdef long size = 0
+        cdef bytes result
+        if mx.atombuf_totext(<mx.t_atombuf *>self.ptr, contents, &size):
+            error("could convert atombuf to text")
+            raise MemoryError
+
+        if size:
+            result = <bytes>contents[0]
+        mx.sysmem_freehandle(contents)
+        return result.decode()
+
+
+    def to_list(self) -> list:
+        """convert contents of atombuf to a list"""
+        cdef Atom atom = Atom.from_ptr(self.ptr.a_argv, self.ptr.a_argc)
+        return atom.to_list()
+
 
 # ---------------------------------------------------------------------------
 # api.Hashtab

@@ -1,9 +1,7 @@
-import math
-
-import numpy as np
-
 import api
 
+import numpy as np
+from scipy import signal
 
 
 def test_create_empty_buffer():
@@ -29,12 +27,13 @@ def test_buffer_set_samples():
     name = "drum1"
     duration_ms = 500
     buf = api.create_empty_buffer(name, duration_ms)
-    api.post("buffer.set_samples example with numpy")
+    api.post("buffer.set_sample example with numpy and scipy.signal")
     api.post(f"created buffer name: '{name}' duration(ms): '{duration_ms}'")
     api.post(f"framecount: {buf.framecount}")
     n_samples = buf.n_samples
     t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float32)
-    xs = np.sin(t * 2 * math.pi * 5)
+    # returns dtype('float64') by default needs to be converted to np.float32
+    xs = signal.sawtooth(2 * np.pi * 5 * t).astype(np.float32)
     buf.set_samples(xs)
     api.post(f"set {n_samples} samples to buffer {name}")
 
@@ -49,7 +48,8 @@ def test_buffer_set_samples2():
     api.post(f"framecount: {buf.framecount}")
     n_samples = buf.n_samples * 2
     t = np.linspace(0, 1, n_samples, endpoint=False, dtype=np.float32)
-    xs = np.sin(t * 2 * math.pi * 5)
+    # returns dtype('float64') by default needs to be converted to np.float32
+    xs = signal.sawtooth(2 * np.pi * 5 * t).astype(np.float32)
     buf.set_samples(xs)
     api.post(f"set {buf.n_samples} samples to buffer {name}")
 
@@ -81,4 +81,4 @@ def test_buffer_protocol_write():
     api.post(f"framecount: {buf.framecount}")
     xs = np.asarray(buf, dtype=np.float32)
     t = np.linspace(0, 1, buf.framecount, endpoint=False, dtype=np.float32)
-    xs[:] = np.sin(t * 2 * math.pi * 5)
+    xs[:] = signal.sawtooth(2 * np.pi * 5 * t)

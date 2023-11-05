@@ -27,5 +27,9 @@ def test_maxobject_call_open():
 def test_maxobject_call_wclose():
     memory["buf"].call("wclose")
 
+def test_maxobject_method_exists():
+    if memory["buf"].method_exists("wclose"):
+        api.post("wclose method exists")
+
 def test_maxobject_delete():
     del memory["buf"]

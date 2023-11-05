@@ -654,7 +654,7 @@ make staple-dmg
 make collect-dmg
 ```
 
-Note that the it is important to sign externals (this is done by Xcode automatically) if you want to to distribute to others (or in the case of Apple Silicon, even use yourself). If the externals are signed, then you can proceed to the notarization step if you have an Apple Developer License (100 USD/year) or, alternatively, you can ask users to remove the product's quarantine state or let Max do this automatically on opening the external.
+Note that it is important to sign externals (this is done by Xcode automatically) if you want to to distribute to others (or in the case of Apple Silicon, even use yourself). If the externals are signed, then you can proceed to the notarization step if you have an Apple Developer License (100 USD/year) or, alternatively, you can ask users to remove the product's quarantine state or let Max do this automatically on opening the external.
 
 
 ### Github Actions

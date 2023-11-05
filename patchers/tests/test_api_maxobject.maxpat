@@ -40,6 +40,19 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-9",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 485.0, 249.0, 175.0, 21.0 ],
+					"presentation_linecount" : 2,
+					"text" : "test_maxobject_method_exists()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-8",
 					"maxclass" : "message",
 					"numinlets" : 2,
@@ -81,7 +94,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 485.0, 244.0, 133.0, 21.0 ],
+					"patching_rect" : [ 485.0, 282.0, 133.0, 21.0 ],
 					"text" : "test_maxobject_delete()"
 				}
 
@@ -594,6 +607,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-20", 0 ],
 					"source" : [ "obj-8", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-20", 0 ],
+					"source" : [ "obj-9", 0 ]
 				}
 
 			}

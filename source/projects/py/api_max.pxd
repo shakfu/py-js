@@ -75,7 +75,10 @@ cdef extern from "ext.h":
     pass
 
 cdef extern from "ext_atombuf.h":
-    ctypedef struct t_atombuf
+    ctypedef struct t_atombuf:
+        long a_argc
+        t_atom *a_argv
+
     void *atombuf_new(long argc, t_atom *argv)
     void atombuf_free(t_atombuf *x)
     void atombuf_text(t_atombuf **x, char **text, long size)
