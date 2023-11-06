@@ -22,7 +22,9 @@ Builder
             SharedPythonBuilder
                 SharedPythonForExtBuilder
                 SharedPythonForPkgBuilder
+            TinySharedPythonBuilder
             StaticPythonBuilder
+            TinyStaticPythonBuilder
             RelocatablePythonBuilder
         PyJsBuilder
             LocalSystemBuilder
@@ -1458,7 +1460,6 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
                         "pydoc_data",
                         "sqlite3",
                         "ssl.py",
-                        "urllib",
                         "wsgiref",
                         "xml",
                         "zoneinfo",
