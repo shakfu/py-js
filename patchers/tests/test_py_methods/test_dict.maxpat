@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 5,
+			"minor" : 5,
+			"revision" : 6,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -64,26 +64,13 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-2",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 68.0, 61.0, 103.0, 22.0 ],
-					"text" : "eval api.out_dict()"
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"id" : "obj-10",
-					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 65.5, 296.0, 116.0, 35.0 ],
-					"text" : "a : 1 2 a b : 1.3 c : 100 d : e"
+					"patching_rect" : [ 65.5, 296.0, 116.0, 22.0 ],
+					"text" : "a : 0 1 2 3 4"
 				}
 
 			}
@@ -94,8 +81,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 104.0, 96.0, 179.0, 22.0 ],
-					"text" : "eval \"api.out_dict(a=3, b=[1, 2])\""
+					"patching_rect" : [ 104.0, 96.0, 180.0, 22.0 ],
+					"text" : "eval \"api.out(dict(a=3, b=[1, 2]))\""
 				}
 
 			}
@@ -119,7 +106,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
-					"outlettype" : [ "", "", "" ],
+					"outlettype" : [ "", "bang", "bang" ],
 					"patching_rect" : [ 152.0, 206.0, 40.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
@@ -230,13 +217,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-11", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-2", 0 ]
 				}
 
 			}

@@ -103,5 +103,4 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/demo)
 # thirdparty externals
 if(BUILD_THIRDPARTY_EXTERNALS)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/shell)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/oscar)
 endif()

@@ -153,7 +153,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 694.5, 511.0, 68.0, 21.0 ],
+					"patching_rect" : [ 689.5, 512.0, 68.0, 21.0 ],
 					"text" : "test_write()"
 				}
 
@@ -550,7 +550,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer.py",
 					"id" : "obj-20",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -559,8 +559,7 @@
 					"patching_rect" : [ 325.5, 199.0, 98.0, 21.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
-						"debug" : 0,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_buffer.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer.py",
 						"pythonpath" : ""
 					}
 ,
@@ -586,11 +585,11 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 325.5, 108.0, 106.0, 21.0 ],
+					"patching_rect" : [ 325.5, 108.0, 125.0, 21.0 ],
 					"presentation" : 1,
 					"presentation_linecount" : 3,
 					"presentation_rect" : [ 690.0, 346.0, 76.0, 45.0 ],
-					"text" : "load test_buffer.py"
+					"text" : "load test_api_buffer.py"
 				}
 
 			}
@@ -602,7 +601,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 12.0, 13.0, 516.0, 24.0 ],
-					"text" : "Demo of buffer~ resizing from a Max external using api.Buffer.resize()"
+					"text" : "Demo of buffer~ resizing from a Max external using api.Buffer methods"
 				}
 
 			}

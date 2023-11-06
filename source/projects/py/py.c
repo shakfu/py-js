@@ -1139,10 +1139,30 @@ void py_handle_error(t_py* x, char* fmt, ...)
         Py_XDECREF(pvalue);
         Py_XDECREF(pvalue_pstr);
 
-        Py_XDECREF(ptraceback);
-
         object_error((t_object*)x, "[ERROR] (%s) %s: %s", 
             x->p_name->s_name, msg, pvalue_str);
+
+        if (PyTraceBack_Check(ptraceback))
+        {
+            PyTracebackObject* trace_root = (PyTracebackObject*)ptraceback;
+            PyTracebackObject* ptrace = trace_root;
+            
+            while (ptrace != NULL)
+            {
+                PyFrameObject* frame = ptrace->tb_frame;
+                PyCodeObject* code = PyFrame_GetCode(frame);
+                // PyCodeObject* code = frame->f_code;
+
+                int linenum = PyFrame_GetLineNumber(frame);
+                const char *codename = PyUnicode_AsUTF8(code->co_name);
+                const char *filename = PyUnicode_AsUTF8(code->co_filename);
+
+                error("at %s (%s:%d); ", codename, filename, linenum);
+                ptrace = ptrace->tb_next;
+            }
+        }
+        // TODO: make one `object_error` call
+        Py_XDECREF(ptraceback);
     }
 }
 

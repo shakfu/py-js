@@ -484,7 +484,7 @@ cdef extern from "ext_dictionary.h":
     cdef t_max_err dictionary_clone_to_existing(const t_dictionary *d, t_dictionary *dc)
     cdef t_max_err dictionary_copy_to_existing(const t_dictionary *d, t_dictionary *dc)
     cdef t_max_err dictionary_merge_to_existing(const t_dictionary *d, t_dictionary *dc)
-    cdef t_max_err dictionary_copy_nonunique_to_existing(const t_dictionary *d, t_dictionary *dc)
+    # cdef t_max_err dictionary_copy_nonunique_to_existing(const t_dictionary *d, t_dictionary *dc)
     cdef void dictionary_funall(t_dictionary *d, method fun, void *arg)
     cdef t_symbol* dictionary_entry_getkey(t_dictionary_entry *x)
     cdef void dictionary_entry_getvalue(t_dictionary_entry *x, t_atom *value)

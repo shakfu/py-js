@@ -46,7 +46,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 485.0, 249.0, 175.0, 21.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_maxobject_method_exists()"
 				}
 
@@ -222,11 +221,11 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 325.5, 108.0, 127.0, 21.0 ],
+					"patching_rect" : [ 325.5, 76.0, 148.0, 21.0 ],
 					"presentation" : 1,
 					"presentation_linecount" : 3,
 					"presentation_rect" : [ 690.0, 346.0, 76.0, 45.0 ],
-					"text" : "load test_maxobject.py"
+					"text" : "load test_api_maxobject.py"
 				}
 
 			}
@@ -250,7 +249,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 325.5, 87.0, 75.0, 19.0 ],
+					"patching_rect" : [ 325.5, 55.0, 75.0, 19.0 ],
 					"text" : "start here "
 				}
 
@@ -436,7 +435,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 253.0, 76.0, 54.0, 21.0 ],
+					"patching_rect" : [ 253.0, 166.0, 54.0, 21.0 ],
 					"text" : "loadbang"
 				}
 
@@ -523,16 +522,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-107", 0 ],
-					"order" : 0,
-					"source" : [ "obj-3", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-35", 0 ],
-					"order" : 1,
 					"source" : [ "obj-3", 0 ]
 				}
 

@@ -46,7 +46,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 396.0, 454.0, 97.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_dict_bytes()"
 				}
 
@@ -59,32 +58,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 396.0, 424.0, 101.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_dict_atoms()"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-15",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "bang", "bang" ],
-					"patching_rect" : [ 299.0, 63.0, 32.0, 22.0 ],
-					"text" : "t b b"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-12",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 299.0, 21.0, 58.0, 22.0 ],
-					"text" : "loadbang"
 				}
 
 			}
@@ -183,8 +157,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 195.0, 224.0, 127.0, 22.0 ],
-					"text" : "load test_dictionary.py"
+					"patching_rect" : [ 325.5, 206.0, 150.0, 22.0 ],
+					"text" : "load test_api_dictionary.py"
 				}
 
 			}
@@ -197,28 +171,6 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 396.0, 308.0, 83.0, 22.0 ],
 					"text" : "test_dict_init()"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"bgcolor" : [ 0.043137254901961, 0.419607843137255, 0.890196078431372, 1.0 ],
-					"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
-					"bgfillcolor_angle" : 270.0,
-					"bgfillcolor_autogradient" : 0.0,
-					"bgfillcolor_color" : [ 0.043137254901961, 0.419607843137255, 0.890196078431372, 1.0 ],
-					"bgfillcolor_color1" : [ 0.043137254901961, 0.419607843137255, 0.890196078431372, 1.0 ],
-					"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
-					"bgfillcolor_proportion" : 0.5,
-					"bgfillcolor_type" : "gradient",
-					"gradient" : 1,
-					"id" : "obj-19",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 326.5, 224.0, 61.0, 22.0 ],
-					"text" : "import api"
 				}
 
 			}
@@ -357,36 +309,8 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-15", 0 ],
-					"source" : [ "obj-12", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-13", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-19", 0 ],
-					"source" : [ "obj-15", 1 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-3", 0 ],
-					"source" : [ "obj-15", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-19", 0 ]
 				}
 
 			}

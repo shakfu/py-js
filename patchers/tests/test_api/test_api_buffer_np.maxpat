@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 183.0, 128.0, 750.0, 480.0 ],
+		"rect" : [ 183.0, 128.0, 682.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -45,21 +45,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 543.0, 212.5, 179.0, 22.0 ],
-					"presentation_linecount" : 2,
-					"text" : "test_buffer_memoryview_write()"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-22",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 509.0, 178.5, 178.0, 22.0 ],
-					"text" : "test_buffer_memoryview_read()"
+					"patching_rect" : [ 507.0, 119.0, 154.0, 22.0 ],
+					"text" : "test_buffer_set_samples3()"
 				}
 
 			}
@@ -70,7 +57,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 509.0, 146.5, 154.0, 22.0 ],
+					"patching_rect" : [ 507.0, 205.5, 154.0, 22.0 ],
 					"text" : "test_buffer_protocol_write()"
 				}
 
@@ -82,7 +69,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 509.0, 114.0, 160.0, 22.0 ],
+					"patching_rect" : [ 507.0, 173.0, 160.0, 22.0 ],
 					"text" : "test_buffer_protocol_read()"
 				}
 
@@ -94,7 +81,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 492.0, 84.0, 155.0, 22.0 ],
+					"patching_rect" : [ 501.0, 87.0, 154.0, 22.0 ],
 					"text" : "test_buffer_set_samples2()"
 				}
 
@@ -106,7 +93,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 305.0, 27.0, 310.0, 20.0 ],
-					"text" : "These two methods use python's builtin array.array"
+					"text" : "These two methods use numpy"
 				}
 
 			}
@@ -133,18 +120,6 @@
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 584.0, 441.0, 24.0, 24.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-14",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 83.0, 16.0, 58.0, 22.0 ],
-					"text" : "loadbang"
 				}
 
 			}
@@ -177,7 +152,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 480.0, 212.5, 47.0, 22.0 ],
+					"patching_rect" : [ 480.0, 265.5, 47.0, 22.0 ],
 					"text" : "s to_py"
 				}
 
@@ -311,7 +286,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 301.0, 69.0, 148.0, 22.0 ],
+					"patching_rect" : [ 301.0, 63.0, 148.0, 22.0 ],
 					"text" : "test_buffer_get_samples()"
 				}
 
@@ -364,7 +339,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 468.0, 57.0, 147.0, 22.0 ],
+					"patching_rect" : [ 468.0, 63.0, 147.0, 22.0 ],
 					"text" : "test_buffer_set_samples()"
 				}
 
@@ -383,13 +358,23 @@
 			}
 , 			{
 				"box" : 				{
+					"bgcolor" : [ 0.011765, 0.396078, 0.752941, 1.0 ],
+					"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
+					"bgfillcolor_angle" : 270.0,
+					"bgfillcolor_autogradient" : 0.0,
+					"bgfillcolor_color" : [ 0.011765, 0.396078, 0.752941, 1.0 ],
+					"bgfillcolor_color1" : [ 0.011765, 0.396078, 0.752941, 1.0 ],
+					"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
+					"bgfillcolor_proportion" : 0.5,
+					"bgfillcolor_type" : "gradient",
+					"gradient" : 1,
 					"id" : "obj-21",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 83.0, 45.0, 140.0, 22.0 ],
-					"text" : "load test_buffer_array.py"
+					"patching_rect" : [ 83.0, 45.0, 150.0, 22.0 ],
+					"text" : "load test_api_buffer_np.py"
 				}
 
 			}
@@ -407,7 +392,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_array.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_np.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -416,8 +401,7 @@
 					"patching_rect" : [ 528.0, 400.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
-						"debug" : 0,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_array.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_np.py",
 						"pythonpath" : ""
 					}
 ,
@@ -478,13 +462,6 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-21", 0 ],
-					"source" : [ "obj-14", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-16", 0 ],
 					"source" : [ "obj-15", 0 ]
 				}
@@ -536,13 +513,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-4", 0 ],
 					"source" : [ "obj-21", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-16", 0 ],
-					"source" : [ "obj-22", 0 ]
 				}
 
 			}

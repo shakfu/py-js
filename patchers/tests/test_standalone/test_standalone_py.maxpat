@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 3,
-			"revision" : 1,
+			"minor" : 5,
+			"revision" : 6,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -49,8 +49,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 3,
-							"revision" : 1,
+							"minor" : 5,
+							"revision" : 6,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -401,7 +401,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 40.5, 336.0, 397.5, 35.0 ],
-					"text" : "/usr/local/opt/python@3.9/Frameworks/Python.framework/Versions/3.9/lib/python3.9/os.py"
+					"text" : "/opt/homebrew/opt/python@3.11/Frameworks/Python.framework/Versions/3.11"
 				}
 
 			}
@@ -431,8 +431,7 @@
 						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
-						"pythonpath" : "",
-						"run_on_save" : 0
+						"pythonpath" : ""
 					}
 ,
 					"text" : "py",
@@ -586,6 +585,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-16", 0 ],
+					"midpoints" : [ 416.0, 134.5, 359.5, 134.5 ],
 					"source" : [ "obj-9", 1 ]
 				}
 
@@ -600,6 +600,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-7", 0 ],
+					"midpoints" : [ 404.5, 124.5, 39.5, 124.5 ],
 					"source" : [ "obj-9", 0 ]
 				}
 
@@ -611,8 +612,8 @@
 			}
 , 			{
 				"name" : "py_repl.maxpat",
-				"bootpath" : "~/Downloads/projects/py-js/patchers",
-				"patcherrelativepath" : ".",
+				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
+				"patcherrelativepath" : "../../bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}

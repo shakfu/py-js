@@ -467,7 +467,7 @@ numpy:
 
 # Styling
 # -----------------------------------------------------------------------
-.PHONY: docs style clang-format duplo cflow
+.PHONY: docs style clang-format duplo cflow projects dev 
 
 docs:
 	@doxygen
@@ -499,6 +499,9 @@ cflow:
 
 projects:
 	@bash $(SCRIPTS)/build_projects.sh
+
+dev:
+	@bash $(SCRIPTS)/build_dev.sh
 
 
 # fat:

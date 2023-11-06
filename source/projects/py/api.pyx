@@ -341,17 +341,17 @@ cdef class Atom:
 
     def __setitem__(self, int idx, object value):
         if isinstance(value, str):
-            self.set_symbol(value, idx)
+            self.set_symbol(idx, value)
         elif isinstance(value, float):
-            self.set_float(value, idx)
+            self.set_float(idx, value)
         elif isinstance(value, int):
-            self.set_long(value, idx)
+            self.set_long(idx, value)
         elif isinstance(value, bytes):
-            self.set_bytes(value, idx)
+            self.set_bytes(idx, value)
         else:
             raise TypeError
 
-    def set_float(self, float f, int idx=0):
+    def set_float(self, int idx, float f):
         """Inserts a float into a t_atom and change its type to A_FLOAT."""
         mx.atom_setfloat(self.ptr + idx, f)
 
@@ -359,7 +359,7 @@ cdef class Atom:
         """Retrieves a float value from a t_atom."""
         return <float>mx.atom_getfloat(self.ptr + idx)
 
-    def set_long(self, long x, int idx=0):
+    def set_long(self, int idx, long x):
         """Inserts an integer into a t_atom and change its type to A_LONG."""
         mx.atom_setlong(self.ptr + idx, x)
 
@@ -371,7 +371,7 @@ cdef class Atom:
         """Retrieves an integer value from a t_atom."""
         return <int>mx.atom_getlong(self.ptr + idx)
 
-    def set_symbol(self, str symbol, int idx=0):
+    def set_symbol(self, int idx, str symbol):
         """Inserts a t_symbol∗ into a t_atom and change its type to A_SYM."""
         mx.atom_setsym(self.ptr + idx, str_to_sym(symbol))
 
@@ -383,7 +383,7 @@ cdef class Atom:
         """Retrieves a string value from a symbol t_atom."""
         return sym_to_str(self.get_symbol(idx))
 
-    def set_bytes(self, bytes x, int idx=0):
+    def set_bytes(self, int idx, bytes x):
         """Inserts an integer into a t_atom and change its type to A_LONG."""
         mx.atom_setsym(self.ptr + idx, bytes_to_sym(x))
 
@@ -418,18 +418,20 @@ cdef class Atom:
     def to_string(self) -> str:
         """Convert an array of atoms into a C-string.
         """
-        cdef mx.t_handle contents = mx.sysmem_newhandle(0)
+
         cdef long textsize = 0
+        cdef char *text = NULL
+        cdef mx.t_max_err err
         cdef bytes result
+        
+        err = mx.atom_gettext(self.size, <mx.t_atom *>self.ptr,  &textsize, 
+            &text, mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
+        if (err == mx.MAX_ERR_NONE and textsize and text):
+           result = <bytes>text
 
-        if mx.atom_gettext(self.size, <mx.t_atom *>self.ptr, &textsize, 
-                          contents, mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT):
-            error("could convert atoms to text")
-            raise MemoryError
+        if (text):
+            mx.sysmem_freeptr(text)
 
-        if textsize:
-            result = <bytes>contents[0]
-        mx.sysmem_freehandle(contents)
         return result.decode()
 
     # if INCLUDE_NUMPY:
@@ -1368,9 +1370,6 @@ cdef class Dictionary:
 
     cdef mx.t_max_err merge_to_existing(self, mx.t_dictionary* dc):
         return mx.dictionary_merge_to_existing(self.d, dc)
-
-    cdef mx.t_max_err copy_nonunique_to_existing(self, mx.t_dictionary* dc):
-        return mx.dictionary_copy_nonunique_to_existing(self.d, dc)
 
     cdef void funall(self, mx.method fun, void* arg):
         """Call the specified function for every entry in the dictionary."""
@@ -2519,24 +2518,42 @@ cdef class PyExternal:
 
     cdef out_list(self, list arg):
         """note: not recursive...(yet) still cannot deal with list in list"""
-        cdef long argc = <long>len(arg)
-        cdef mx.t_atom argv[PY_MAX_ATOMS]
-
-        if argc >= PY_MAX_ATOMS :
-            self.error("number of args exceeded app limit")
-            return
+        cdef Atom atom = Atom.from_seq(arg)
+        cdef int i
 
         for i, elem in enumerate(arg):
             if type(elem) == float:
-                mx.atom_setfloat(&argv[i], <double>elem)
+                atom.set_float(i, <double>elem)
             elif type(elem) == int:
-                mx.atom_setlong((&argv[i]), <long>elem)
+                atom.set_long(i, <long>elem)
             elif type(elem) == str:
-                mx.atom_setsym((&argv[i]), str_to_sym(elem))
+                atom.set_symbol(i, elem)
             else:
                 continue
+        mx.outlet_list(<void*>px.get_outlet(self.obj),
+            mx.gensym("list"), atom.size, atom.ptr)
 
-        mx.outlet_list(<void*>px.get_outlet(self.obj), mx.gensym("list"), argc, argv)
+
+    # cdef out_list(self, list arg):
+    #     """note: not recursive...(yet) still cannot deal with list in list"""
+    #     cdef long argc = <long>len(arg)
+    #     cdef mx.t_atom argv[PY_MAX_ATOMS]
+
+    #     if argc >= PY_MAX_ATOMS :
+    #         self.error("number of args exceeded app limit")
+    #         return
+
+    #     for i, elem in enumerate(arg):
+    #         if type(elem) == float:
+    #             mx.atom_setfloat(&argv[i], <double>elem)
+    #         elif type(elem) == int:
+    #             mx.atom_setlong((&argv[i]), <long>elem)
+    #         elif type(elem) == str:
+    #             mx.atom_setsym((&argv[i]), str_to_sym(elem))
+    #         else:
+    #             continue
+
+    #     mx.outlet_list(<void*>px.get_outlet(self.obj), mx.gensym("list"), argc, argv)
 
     cdef out_dict(self, dict arg):
         """note: not recursive...(yet) still cannot deal with dict in dict"""
@@ -2569,6 +2586,24 @@ cdef class PyExternal:
         return mx.object_method_binbuf(<mx.t_object*>self.obj, s, buf, rv)
 
 
+
+# ----------------------------------------------------------------------------
+# Alternative external extension type (obj pointer retrieved via uintptr_t
+
+cdef class PyMxObject:
+    cdef px.t_py *x
+
+    def __cinit__(self):
+        self.x = <px.t_py*>px.py_get_object_ref()
+
+    cpdef bang(self):
+        px.py_bang(self.x)
+
+def test_ref():
+    ext = PyMxObject()
+    ext.bang()
+
+
 # ----------------------------------------------------------------------------
 # numpy c-api import example
 
@@ -2591,6 +2626,13 @@ if INCLUDE_NUMPY:
 # ----------------------------------------------------------------------------
 # helper functions
 
+
+## general helpers
+
+def hello():
+    ext = PyExternal()
+    ext.out("Hello World")
+
 def get_globals():
     return list(globals().keys())
 
@@ -2606,98 +2648,43 @@ def failure_bang():
     ext = PyExternal()
     ext.failure_bang()
 
-def out_sym(s='hello outlet!'):
+def out(object obj):
     ext = PyExternal()
-    ext.out(s)
+    ext.out(obj)
 
-def out_int(n=100):
-    ext = PyExternal()
-    ext.out(n)
-
-def out_float(n=12.75):
-    ext = PyExternal()
-    ext.out(n)
-
-def out_list(xs=None):
-    if not xs:
-        xs = [1, 'a', 'c', 4, 5]
-    ext = PyExternal()
-    ext.out(xs)
-
-def out_dict(**kwargs):
-    if not kwargs:
-        kwargs = {'a': [1, 2, 'a'], 'b': 1.3, 'c': 100, 'd': 'e'}
-    ext = PyExternal()
-    ext.out(kwargs)
-
+def out2(object obj):
+    cdef px.t_py* x = <px.t_py*>px.py_get_object_ref()
+    px.py_handle_output(x, <PyObject *>obj)
 
 def send(name, *args):
     ext = PyExternal()
     ext.send(name, list(args))
 
-
 def lookup(name):
     ext = PyExternal()
     ext.lookup(name)
 
-
 def post(str s):
     mx.post(s.encode('utf-8'))
-
 
 def error(str s):
     mx.error(s.encode('utf-8'))
 
 
-# object helpers
+## buffer helpers
 
-def create_object(classname: str, *args, namespace: str = "box"):
-    """Creates an object from classname"""
-    cdef atom = Atom.from_seq(args)
-    return atom.create_object(classname, namespace)
-
-
-# table helpers
-
-def table_exists(str name):
+def get_buffer(name: str) -> Buffer:
     ext = PyExternal()
-    return ext.table_exists(name)
+    buf = ext.get_buffer(name)
+    return buf
 
-
-# buffer helpers
-
-def create_buffer(str name, str sample_file) -> Buffer:
+def create_buffer(name: str, sample_file: str) -> Buffer:
     ext = PyExternal()
     buf = ext.create_buffer(name, sample_file)
     return buf
 
-def create_empty_buffer(str name, int duration_ms) -> Buffer:
+def create_empty_buffer(name: str, duration_ms: int) -> Buffer:
     ext = PyExternal()
     buf = ext.create_empty_buffer(name, duration_ms)
     return buf
 
-def get_buffer(str name) -> Buffer:
-    ext = PyExternal()
-    buf = ext.get_buffer(name)
-    return buf
-
-def view_buffer(str name):
-    ext = PyExternal()
-    buf = ext.get_buffer(name)
-    buf.view()
-
-# ----------------------------------------------------------------------------
-# Alternative external extension type (obj pointer retrieved via uintptr_t
-
-cdef class PyMxObject:
-    cdef px.t_py *x
-
-    def __cinit__(self):
-        self.x = <px.t_py*>px.py_get_object_ref()
-
-    cpdef bang(self):
-        px.py_bang(self.x)
-
-def test_ref():
-    ext = PyMxObject()
-    ext.bang()

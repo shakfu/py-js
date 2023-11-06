@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 181.0, 153.0, 675.0, 609.0 ],
+		"rect" : [ 181.0, 126.0, 675.0, 609.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -45,7 +45,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 459.0, 124.0, 22.0 ],
+					"patching_rect" : [ 448.0, 369.0, 124.0, 22.0 ],
 					"text" : "test_atombuf_to_list()"
 				}
 
@@ -57,7 +57,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 422.0, 129.0, 22.0 ],
+					"patching_rect" : [ 448.0, 332.0, 129.0, 22.0 ],
 					"text" : "test_atombuf_to_text()"
 				}
 
@@ -69,32 +69,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 373.0, 139.0, 22.0 ],
+					"patching_rect" : [ 448.0, 283.0, 139.0, 22.0 ],
 					"text" : "test_atombuf_add_text()"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-15",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "bang", "bang" ],
-					"patching_rect" : [ 317.0, 198.0, 32.0, 22.0 ],
-					"text" : "t b b"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-12",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 317.0, 156.0, 58.0, 22.0 ],
-					"text" : "loadbang"
 				}
 
 			}
@@ -115,8 +91,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 217.0, 359.0, 120.0, 22.0 ],
-					"text" : "load test_atombuf.py"
+					"patching_rect" : [ 346.0, 162.0, 143.0, 22.0 ],
+					"text" : "load test_api_atombuf.py"
 				}
 
 			}
@@ -127,30 +103,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 318.0, 108.0, 22.0 ],
+					"patching_rect" : [ 448.0, 228.0, 108.0, 22.0 ],
 					"text" : "test_atombuf_init()"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"bgcolor" : [ 0.043137254901961, 0.419607843137255, 0.890196078431372, 1.0 ],
-					"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
-					"bgfillcolor_angle" : 270.0,
-					"bgfillcolor_autogradient" : 0.0,
-					"bgfillcolor_color" : [ 0.043137254901961, 0.419607843137255, 0.890196078431372, 1.0 ],
-					"bgfillcolor_color1" : [ 0.043137254901961, 0.419607843137255, 0.890196078431372, 1.0 ],
-					"bgfillcolor_color2" : [ 0.2, 0.2, 0.2, 1.0 ],
-					"bgfillcolor_proportion" : 0.5,
-					"bgfillcolor_type" : "gradient",
-					"gradient" : 1,
-					"id" : "obj-19",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 344.5, 359.0, 61.0, 22.0 ],
-					"text" : "import api"
 				}
 
 			}
@@ -161,7 +115,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 213.0, 526.0, 35.0, 22.0 ],
+					"patching_rect" : [ 218.0, 436.0, 35.0, 22.0 ],
 					"text" : "clear"
 				}
 
@@ -175,7 +129,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 372.5, 556.0, 24.0, 24.0 ]
+					"patching_rect" : [ 377.5, 466.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -187,7 +141,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 176.5, 526.0, 29.5, 22.0 ],
+					"patching_rect" : [ 181.5, 436.0, 29.5, 22.0 ],
 					"text" : "set"
 				}
 
@@ -200,7 +154,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 176.5, 491.0, 58.0, 22.0 ],
+					"patching_rect" : [ 181.5, 401.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -214,7 +168,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 400.5, 556.0, 24.0, 24.0 ]
+					"patching_rect" : [ 405.5, 466.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -225,24 +179,24 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 176.5, 556.0, 187.0, 22.0 ]
+					"patching_rect" : [ 181.5, 466.0, 187.0, 22.0 ]
 				}
 
 			}
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_atombuf.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_atombuf.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "bang", "bang" ],
-					"patching_rect" : [ 344.5, 516.0, 75.0, 22.0 ],
+					"patching_rect" : [ 349.5, 426.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_atombuf.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_atombuf.py",
 						"pythonpath" : ""
 					}
 ,
@@ -270,34 +224,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-7", 1 ],
 					"source" : [ "obj-1", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-15", 0 ],
-					"source" : [ "obj-12", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-19", 0 ],
-					"source" : [ "obj-15", 1 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-3", 0 ],
-					"source" : [ "obj-15", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-19", 0 ]
 				}
 
 			}
