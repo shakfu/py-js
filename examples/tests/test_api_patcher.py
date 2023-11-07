@@ -1,7 +1,18 @@
 import api
 
 
-def test_patcher():
+def test_patcher_init():
+    ext = api.PyExternal()
+    p = ext.get_patcher()
+    assert p.is_patcher(), "object is not a patcher!"
+
+
+def test_patcher_misc():
+    ext = api.PyExternal()
+    p = ext.get_patcher()
+    api.post(f"filepath: {p.get_filepath()}")
+
+def test_patcher_attrs():
     ext = api.PyExternal()
     p = ext.get_patcher()
     # dump patch attributes
@@ -27,8 +38,29 @@ def test_patcher():
     api.post(f"patcher.rect: {p.rect}")
 
 
-def test_patcher_create():
+def test_patcher_add_box():
+    ext = api.PyExternal()
+    p = ext.get_patcher()
+    p.add_box("toggle", 240.0, 150.0)
+
+def test_patcher_add_textbox():
     ext = api.PyExternal()
     p = ext.get_patcher()
     p.add_textbox("metro 400", 100.0, 150.0)
-    p.add_box("toggle", 240.0, 150.0)
+
+def test_patcher_add_tbox():
+    ext = api.PyExternal()
+    p = ext.get_patcher()
+    p.add_tbox("buffer~ buf jongly.aif")
+
+def test_patcher_newdefault():
+    ext = api.PyExternal()
+    p = ext.get_patcher()
+    p.newdefault("var3", )
+
+def test_patcher_connect():
+    ext = api.PyExternal()
+    p = ext.get_patcher()
+    # p.assign("var1", "number", 1)
+    # p.assign("var2", "number", 2)
+    p.connect("var1", 0, "var2", 0)

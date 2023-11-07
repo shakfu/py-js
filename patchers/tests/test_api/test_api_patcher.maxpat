@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 406.0, 127.0, 675.0, 609.0 ],
+		"rect" : [ 346.0, 121.0, 675.0, 609.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -40,13 +40,100 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-10",
+					"id" : "obj-13",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 476.0, 156.0, 22.0 ],
-					"text" : "test_binbuf_add_textblock()"
+					"patching_rect" : [ 443.0, 441.0, 135.0, 22.0 ],
+					"text" : "test_patcher_add_box()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-11",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 443.0, 409.0, 139.0, 22.0 ],
+					"text" : "test_patcher_add_tbox()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-8",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 443.0, 526.0, 114.0, 22.0 ],
+					"text" : "test_patcher_misc()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-17",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 207.5, 41.0, 276.0, 20.0 ],
+					"text" : "script <action> <variable> <maxclass> <index>"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"bgcolor" : [ 0.156863, 0.8, 0.54902, 1.0 ],
+					"fontname" : "Arial",
+					"fontsize" : 11.595186999999999,
+					"htricolor" : [ 0.87, 0.82, 0.24, 1.0 ],
+					"id" : "obj-21",
+					"maxclass" : "number",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 102.0, 82.0, 50.0, 21.0 ],
+					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
+					"tricolor" : [ 0.75, 0.75, 0.75, 1.0 ],
+					"triscale" : 0.9,
+					"varname" : "var2"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"bgcolor" : [ 0.156863, 0.8, 0.54902, 1.0 ],
+					"fontname" : "Arial",
+					"fontsize" : 11.595186999999999,
+					"htricolor" : [ 0.87, 0.82, 0.24, 1.0 ],
+					"id" : "obj-22",
+					"maxclass" : "number",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 102.0, 41.0, 50.0, 21.0 ],
+					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
+					"tricolor" : [ 0.75, 0.75, 0.75, 1.0 ],
+					"triscale" : 0.9,
+					"varname" : "var1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-12",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 236.0, 376.0, 34.0, 22.0 ],
+					"text" : "scan"
 				}
 
 			}
@@ -64,25 +151,13 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-8",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 445.0, 118.0, 22.0 ],
-					"text" : "test_binbuf_to_text()"
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"id" : "obj-6",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 414.0, 128.0, 22.0 ],
-					"text" : "test_binbuf_add_text()"
+					"patching_rect" : [ 443.0, 489.0, 131.0, 22.0 ],
+					"text" : "test_patcher_connect()"
 				}
 
 			}
@@ -93,8 +168,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 382.0, 111.0, 22.0 ],
-					"text" : "test_binbuf_insert()"
+					"patching_rect" : [ 443.0, 382.0, 155.0, 22.0 ],
+					"text" : "test_patcher_add_textbox()"
 				}
 
 			}
@@ -105,8 +180,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 351.0, 122.0, 22.0 ],
-					"text" : "test_binbuf_append()"
+					"patching_rect" : [ 443.0, 351.0, 113.0, 22.0 ],
+					"text" : "test_patcher_attrs()"
 				}
 
 			}
@@ -127,8 +202,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 344.5, 138.0, 132.0, 22.0 ],
-					"text" : "load test_api_binbuf.py"
+					"patching_rect" : [ 344.5, 138.0, 139.0, 22.0 ],
+					"text" : "load test_api_patcher.py"
 				}
 
 			}
@@ -139,8 +214,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 318.0, 97.0, 22.0 ],
-					"text" : "test_binbuf_init()"
+					"patching_rect" : [ 443.0, 318.0, 105.0, 22.0 ],
+					"text" : "test_patcher_init()"
 				}
 
 			}
@@ -222,7 +297,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_binbuf.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_patcher.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -232,12 +307,12 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_binbuf.py",
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_patcher.py",
 						"pythonpath" : ""
 					}
 ,
 					"text" : "py",
-					"varname" : "u245000883"
+					"varname" : "__main__"
 				}
 
 			}
@@ -266,7 +341,21 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-10", 0 ]
+					"source" : [ "obj-11", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-12", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-13", 0 ]
 				}
 
 			}

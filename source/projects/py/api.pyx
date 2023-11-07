@@ -7,7 +7,7 @@ for the `py` external.
 - compile-time constants
 - python c-api imports
 - helper cdef functions
-- extensions types
+- extension classes
     - [x] MaxObject
     - [x] Atom
     - [x] Table
@@ -34,7 +34,6 @@ from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
 from cpython cimport Py_buffer
 from libc.stdint cimport uintptr_t
-# from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy, strlen
 
 cimport api_max as mx  # api is a cython keyword!
@@ -84,34 +83,30 @@ cdef mx.t_symbol* str_to_sym(str string):
 
 
 cdef str sym_to_str(mx.t_symbol* symbol):
-    """converts a max symbol to a python string
-
-    sym_to_str(symbol) -> python str
-    """
+    """converts a max symbol to a python string"""
     return symbol.s_name.decode()
 
 
 cdef mx.t_symbol* bytes_to_sym(bytes string):
-    """converts a python string to a t_symbol*
-
-    gensym(bytes s) -> t_symbol*
-    """
+    """converts a python string to a t_symbol*"""
     return mx.gensym(string)
 
 
 cdef bytes sym_to_bytes(mx.t_symbol* symbol):
-    """converts a max symbol to a python string
-
-    sym_to_str(symbol) -> python str
-    """
+    """converts a max symbol to a python string"""
     return <bytes>symbol.s_name
 
 
 # ============================================================================
 # EXTENSION TYPES
 
+
+
+
+
 # ----------------------------------------------------------------------------
 # api.MaxObject
+
 
 cdef class MaxObject:
     """A wrapper for a Max t_object
@@ -237,56 +232,57 @@ cdef class MaxObject:
     def get_attr_sym(self, str name) -> str:
         """Retrieves the value of an attribute, given its parent object and name."""
         cdef mx.t_symbol *attr_sym = <mx.t_symbol *>mx.object_attr_getsym(
-            self.ptr, str_to_sym(name))
+             <mx.t_object *>self.ptr, str_to_sym(name))
         return sym_to_str(attr_sym)
 
     def set_attr_sym(self, str name, str value):
         """Sets the value of an attribute, given its parent object and name."""
-        cdef mx.t_max_err err = mx.object_attr_setsym(self.ptr, 
+        cdef mx.t_max_err err = mx.object_attr_setsym(<mx.t_object *>self.ptr, 
             str_to_sym(name), str_to_sym(value))
         if err != mx.MAX_ERR_NONE:
             return error(f"could not set attr '{name}' value '{value}'");
 
     def get_attr_long(self, str name) -> int:
         """Retrieves the value of an attribute, given its parent object and name."""
-        return mx.object_attr_getlong(self.ptr, str_to_sym(name))
+        return mx.object_attr_getlong(<mx.t_object *>self.ptr, str_to_sym(name))
 
     def set_attr_long(self, str name, int value):
         """Sets the value of an attribute, given its parent object and name."""
-        cdef mx.t_max_err err = mx.object_attr_setlong(self.ptr, 
+        cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object *>self.ptr, 
             str_to_sym(name), value)
         if err != mx.MAX_ERR_NONE:
             return error(f"could not set attr '{name}' value '{value}'");
 
     def get_attr_float(self, str name) -> float:
         """Retrieves the value of an attribute, given its parent object and name."""
-        return mx.object_attr_getfloat (self.ptr, str_to_sym(name))
+        return mx.object_attr_getfloat (<mx.t_object *>self.ptr, str_to_sym(name))
 
     def set_attr_float(self, str name, float value):
         """Sets the value of an attribute, given its parent object and name."""
-        cdef mx.t_max_err err = mx.object_attr_setfloat(self.ptr,
+        cdef mx.t_max_err err = mx.object_attr_setfloat(<mx.t_object *>self.ptr,
             str_to_sym(name), value)
         if err != mx.MAX_ERR_NONE:
             return error(f"could not set attr '{name}' value '{value}'");
 
     def get_attr_char(self, str name) -> bool:
         """Retrieves the value of an attribute, given its parent and name"""
-        return mx.object_attr_getchar(self.ptr, str_to_sym(name))
+        return mx.object_attr_getchar(<mx.t_object *>self.ptr, str_to_sym(name))
 
     def set_attr_char(self, str name, bint value):
         """Sets the value of an attribute, given its parent object and name."""
-        cdef mx.t_max_err err = mx.object_attr_setchar(self.ptr, str_to_sym(name), value)
+        cdef mx.t_max_err err = mx.object_attr_setchar(<mx.t_object *>self.ptr,
+            str_to_sym(name), value)
         if err != mx.MAX_ERR_NONE:
             return error(f"could not set attr '{name}' value '{value}'");
 
     def set_attr_from_str(self, str name, str value):
         """Set an attribute value with one or more atoms parsed from a C-string."""
-        cdef mx.t_max_err err = mx.object_attr_setparse(self.ptr, 
+        cdef mx.t_max_err err = mx.object_attr_setparse(<mx.t_object *>self.ptr, 
             str_to_sym(name), value.encode('utf-8'))
 
     cdef mx.t_object * clone(self):
         """return clone of object"""
-        return <mx.t_object *>mx.object_clone(self.ptr)
+        return <mx.t_object *>mx.object_clone(<mx.t_object *>self.ptr)
 
 # ----------------------------------------------------------------------------
 # api.Atom
@@ -2216,6 +2212,15 @@ cdef class Patcher:
             raise MemoryError
         return patcher
 
+    def is_patcher(self) -> bool:
+        """determine if a t_object is a patcher"""
+        return bool(mx.jpatcher_is_patcher(self.ptr))
+
+    def get_filepath(self) -> str:
+        """get the patchers filepath"""
+        cdef mx.t_symbol* fp = mx.jpatcher_get_filepath(self.ptr)
+        return sym_to_str(fp)
+
     def get_sym_attr(self, name) -> str:
         cdef mx.t_symbol *attr_sym = <mx.t_symbol *>mx.object_attr_getsym(
             self.ptr, str_to_sym(name))
@@ -2229,7 +2234,6 @@ cdef class Patcher:
 
     # array props
 
-    # FIXME
     def get_arr_attr(self, str name) -> list:
         """t_max_err object_attr_getvalueof(void *x, t_symbol *s, long *argc, t_atom **argv)"""
         cdef mx.t_atom *argv = NULL
@@ -2329,27 +2333,144 @@ cdef class Patcher:
 
     # array props
 
-    # FIXME
     @property
     def rect(self) -> list:
         return self.get_arr_attr("rect")
 
+    cdef mx.t_object *newobject_sprintf(self, str text):
+        """Create a new object in a specified patcher with values using a 
+        combination of attribute and sprintf syntax.
+        """
+        return <mx.t_object *>mx.newobject_sprintf(
+            <mx.t_object *>self.ptr, text.encode('utf-8'))
 
-    def add_box(self, maxclass, x, y) -> bool:
-        cdef mx.t_object *obj
-        _text = f"@maxclass {maxclass} @patching_position {x} {y}"
-        obj = <mx.t_object *>mx.newobject_sprintf(self.ptr, _text.encode('utf-8'));
+    def add_box(self, maxclass: str, x: float, y: float) -> bool:
+        cdef mx.t_object *obj = self.newobject_sprintf(
+            f"@maxclass {maxclass} @patching_position {x} {y}"
+        )
         if obj is not NULL:
             return True
         return False
 
-    def add_textbox(self, text, x, y, maxclass='newobj') -> bool:
-        cdef mx.t_object *obj
-        _text = fr'@maxclass {maxclass} @text "{text}" @patching_position {x} {y}'
-        obj = <mx.t_object *>mx.newobject_sprintf(self.ptr, _text.encode('utf-8'))
+    def add_textbox(self, text: str, x: float, y: float, maxclass='newobj') -> bool:
+        cdef mx.t_object *obj = self.newobject_sprintf(
+           f'@maxclass {maxclass} @text "{text}" @patching_position {x} {y}'
+        )
         if obj is not NULL:
             return True
         return False
+
+    cdef mx.t_object *newobject_fromboxtext(self, str text):
+        """Create an object from the passed in text.
+
+        The passed in text is in the same format as would be typed into an object box.
+        It can be used for UI objects or text objects so this is the simplest way to 
+        create objects from C.
+        """
+        return mx.newobject_fromboxtext(self.ptr, text.encode('utf-8'))
+
+    def add_tbox(self, str text) -> bool:
+        """Create an object from the passed in text."""
+        cdef mx.t_object *obj = self.newobject_fromboxtext(text)
+        if obj is not NULL:
+            return True
+        return False
+
+    def _method_noargs(self, str name):
+        """object method call with no arguments"""
+        cdef mx.t_max_err err = mx.object_method_typed(
+            <mx.t_object *>self.ptr, str_to_sym(name), 0, NULL, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_args(self, str name, *args):
+        """strongly typed object method call with arguments"""
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_max_err err = mx.object_method_typed(
+            <mx.t_object *>self.ptr, str_to_sym(name), atom.size, atom.ptr, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_parsestr(self, str name, str parsestr):
+        """combines object_method_typed() + atom_setparse() to define method arguments."""
+        cdef mx.t_max_err err = mx.object_method_parse(
+            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_float(self, str name, float number):
+        """wrapper for object_method_typed() that passes a single float as an argument"""
+        cdef mx.t_max_err err = mx.object_method_float(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_double(self, str name, double number):
+        """wrapper for object_method_typed() that passes a single double as an argument"""
+        cdef mx.t_max_err err = mx.object_method_double(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_long(self, str name, long number):
+        """wrapper for object_method_typed() that passes a single long as an argument"""
+        cdef mx.t_max_err err = mx.object_method_long(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_sym(self, str name, str symbol):
+        """wrapper for object_method_typed() that passes a single t_symbol as an argument"""
+        cdef mx.t_max_err err = mx.object_method_sym(
+            <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def call(self, str name, *args, parse=False):
+        """general call object method function (strongly typed)"""
+        if len(args) == 0:
+            return self._method_noargs(name)
+        elif len(args) == 1:
+            if isinstance(args[0], str):
+                if parse:
+                    return self._method_parsestr(name, args[0])
+                else:
+                    return self._method_sym(name, args[0])
+            elif isinstance(args[0], float):
+                return self._method_double(name, args[0])
+            elif isinstance(args[0], int):
+                return self._method_long(name, args[0])
+            elif isinstance(args[0], list):
+                return self.call(name, *args[0])
+            elif isinstance(args[0], tuple):
+                return self.call(name, *args[0])
+            elif isinstance(args[0], set):
+                return self.call(name, *args[0])
+        else:
+            return self._method_args(name, *args)
+
+    def script(self, *args):
+        """calls a patcher script command"""
+        self.call("script", *args)
+
+    def assign(self, var1: str, maxclass: str, index: int):
+        """assign the nth instance of the class to the variable. """
+        self.script("nth", var1, maxclass, index)
+
+    def newdefault(self, varname: str, x: int, y: int, maxclass: str, *args):
+        """creates an object with varname (scripting name) from args"""
+        self.script("newdefault", varname, x, y, maxclass, *args)
+
+    def connect(self, var1: str, outlet: int, var2: str, inlet: int):
+        """connect two objects with varnames"""
+        self.script("connect", var1, outlet, var2, inlet)
 
 
 # ----------------------------------------------------------------------------
@@ -2432,33 +2553,6 @@ cdef class PyExternal:
         buf = Buffer.empty(<mx.t_object*>self.obj, name, duration_ms)
         return buf
 
-    # UNTESTED
-    cdef str atoms_to_pstring(self, long argc, mx.t_atom* argv):
-        """atoms -> python string"""
-        cdef long textsize = 0
-        cdef char* text = NULL
-        cdef mx.t_max_err _err = mx.atom_gettext(argc, argv, &textsize, &text,
-            mx.OBEX_UTIL_ATOM_GETTEXT_DEFAULT)
-        pstr = PyUnicode_FromString(text)
-        mx.sysmem_freeptr(text)
-        return pstr
-
-    # UNTESTED
-    cdef int pstring_to_atoms(self, str parsestr, long argc, mx.t_atom *argv) except -1:
-        cdef char cparsestring[MAX_CHARS]
-        cparsestring = PyUnicode_AsUTF8(parsestr)
-        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, cparsestring)
-        if err != mx.MAX_ERR_NONE:  # test this!!
-            raise Exception("cannot convert c parsestring to atom array")
-
-    # UNTESTED
-    cdef int cstring_to_atoms(self, char *parsestr, long argc, mx.t_atom *argv) except -1:
-        cdef mx.t_max_err err = mx.atom_setparse(&argc, &argv, parsestr)
-        if err != mx.MAX_ERR_NONE:  # test this!!
-            raise Exception("cannot convert c parsestring to atom array")
-        else:
-            return 0
-
     cdef send(self, str name, list args):
         cdef long argc = <long>len(args) + 1
         cdef mx.t_atom argv[PY_MAX_ATOMS]
@@ -2485,12 +2579,12 @@ cdef class PyExternal:
         px.py_send(self.obj, mx.gensym(""), argc, argv)
 
     # UNTESTED
-    cdef mx.t_object * create(self, str classname, list args):
-        """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
-        """
-        atoms = Atom.from_seq(list(args))
-        cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
-        return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
+    # cdef mx.t_object * create(self, str classname, list args):
+    #     """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
+    #     """
+    #     atoms = Atom.from_seq(list(args))
+    #     cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
+    #     return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
 
     cdef bint table_exists(self, str table_name):
         return px.py_table_exists(self.obj, table_name.encode('utf-8'))
@@ -2532,28 +2626,6 @@ cdef class PyExternal:
                 continue
         mx.outlet_list(<void*>px.get_outlet(self.obj),
             mx.gensym("list"), atom.size, atom.ptr)
-
-
-    # cdef out_list(self, list arg):
-    #     """note: not recursive...(yet) still cannot deal with list in list"""
-    #     cdef long argc = <long>len(arg)
-    #     cdef mx.t_atom argv[PY_MAX_ATOMS]
-
-    #     if argc >= PY_MAX_ATOMS :
-    #         self.error("number of args exceeded app limit")
-    #         return
-
-    #     for i, elem in enumerate(arg):
-    #         if type(elem) == float:
-    #             mx.atom_setfloat(&argv[i], <double>elem)
-    #         elif type(elem) == int:
-    #             mx.atom_setlong((&argv[i]), <long>elem)
-    #         elif type(elem) == str:
-    #             mx.atom_setsym((&argv[i]), str_to_sym(elem))
-    #         else:
-    #             continue
-
-    #     mx.outlet_list(<void*>px.get_outlet(self.obj), mx.gensym("list"), argc, argv)
 
     cdef out_dict(self, dict arg):
         """note: not recursive...(yet) still cannot deal with dict in dict"""
