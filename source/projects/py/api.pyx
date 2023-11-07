@@ -2472,6 +2472,29 @@ cdef class Patcher:
         """connect two objects with varnames"""
         self.script("connect", var1, outlet, var2, inlet)
 
+    def get_count(self) -> bool:
+        """Determine the number of boxes in a patcher."""
+        return mx.jpatcher_get_count(self.ptr)
+
+    def get_presentation(self) -> bool:
+        """Determine whether a patcher is currently in presentation mode."""
+        return mx.jpatcher_get_presentation(self.ptr)
+
+    cdef mx.t_object* get_first_box(self):
+        """Get the first box in a patcher."""
+        return mx.jpatcher_get_firstobject(self.ptr)
+
+    cdef mx.t_object* get_last_box(self):
+        """Get the last box in a patcher."""
+        return mx.jpatcher_get_lastobject(self.ptr)
+
+    cdef mx.t_object* get_first_line(self):
+        """Get the first line (patch-cord) in a patcher."""
+        return mx.jpatcher_get_firstline(self.ptr)
+
+    cdef mx.t_object* get_first_view(self):
+        """Get the first view (jpatcherview) for a given patcher."""
+        return mx.jpatcher_get_firstview(self.ptr)
 
 # ----------------------------------------------------------------------------
 # api.PyExternal extension type
