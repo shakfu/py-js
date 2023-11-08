@@ -1110,7 +1110,7 @@ t_max_err py_task(t_py* x)
 /* Handlers */
 
 /**
- * @brief Generic python error handler
+ * @brief Generic python error handler with tracebacks
  *
  * @param x pointer to object struct
  * @param fmt format string
@@ -1120,7 +1120,6 @@ void py_handle_error(t_py* x, char* fmt, ...)
 {
     if (PyErr_Occurred()) {
 
-        // build custom msg
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -1139,11 +1138,11 @@ void py_handle_error(t_py* x, char* fmt, ...)
         Py_XDECREF(pvalue);
         Py_XDECREF(pvalue_pstr);
 
-        object_error((t_object*)x, "[ERROR] (%s) %s: %s", 
-            x->p_name->s_name, msg, pvalue_str);
-
         if (PyTraceBack_Check(ptraceback))
         {
+            char traceback_str[PY_MAX_ERROR];
+            char linebuffer[PY_MAX_ELEMS];
+
             PyTracebackObject* trace_root = (PyTracebackObject*)ptraceback;
             PyTracebackObject* ptrace = trace_root;
             
@@ -1151,20 +1150,22 @@ void py_handle_error(t_py* x, char* fmt, ...)
             {
                 PyFrameObject* frame = ptrace->tb_frame;
                 PyCodeObject* code = PyFrame_GetCode(frame);
-                // PyCodeObject* code = frame->f_code;
 
                 int linenum = PyFrame_GetLineNumber(frame);
                 const char *codename = PyUnicode_AsUTF8(code->co_name);
                 const char *filename = PyUnicode_AsUTF8(code->co_filename);
 
-                error("at %s (%s:%d); ", codename, filename, linenum);
+                snprintf_zero(linebuffer, PY_MAX_ELEMS, "at %s (%s:%d); \n",  codename, filename, linenum);
+                strncat_zero(traceback_str, linebuffer, PY_MAX_ERROR);
                 ptrace = ptrace->tb_next;
             }
+            object_error((t_object*)x, "[ERROR] (%s) %s: %s\n%s", 
+                x->p_name->s_name, msg, pvalue_str, traceback_str);
         }
-        // TODO: make one `object_error` call
         Py_XDECREF(ptraceback);
     }
 }
+
 
 /**
  * @brief Handler to output python float as max float
