@@ -29,6 +29,8 @@ see: `py-js/source/projects/py/api.md` for further details
 
 # ----------------------------------------------------------------------------
 # imports
+from collections import namedtuple
+
 
 from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
@@ -97,6 +99,13 @@ cdef bytes sym_to_bytes(mx.t_symbol* symbol):
     return <bytes>symbol.s_name
 
 # ============================================================================
+# Named Tuples
+
+Rgb = namedtuple('Rgb', ['red', 'green', 'blue'])
+Rgba = namedtuple('Rgba', ['red', 'green', 'blue', 'alpha'])
+Rect = namedtuple('Rect', ['x', 'y', 'width', 'height'])
+
+# ============================================================================
 # EXTENSION TYPES
 
 
@@ -140,6 +149,14 @@ cdef class MaxObject:
         obj.ptr_owner = True
         obj.ptr = <mx.t_object*>mx.object_new_parse(
             str_to_sym(namespace), str_to_sym(classname), parsestr.encode("utf8"))
+        return obj
+
+    @staticmethod
+    cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
+        # Call to __new__ bypasses __init__ constructor
+        cdef MaxObject obj = MaxObject.__new__(MaxObject)
+        obj.ptr = ptr
+        obj.ptr_owner = owner
         return obj
 
     def method_exists(self, str name) -> bool:
@@ -1453,14 +1470,6 @@ cdef class Dictionary:
         """Serialize the specified t_dictionary object to a JSON file."""
         return mx.dictionary_write(self.d, filename, path)
 
-    # cdef mx.t_max_err read_yaml(self, const char* filename, const short path, mx.t_dictionary** d):
-    #     """Read the specified JSON file and return a t_dictionary object."""
-    #     return mx.dictionary_read_yaml(filename, path, d)
-
-    # cdef mx.t_max_err dictionary_write_yaml(self, const char *filename, const short path):
-    #     """Serialize the specified t_dictionary object to a YAML file."""
-    #     return mx.dictionary_write_yaml(self.d, filename, path)
-
     cdef void post(self):
         """Print the contents of a dictionary to the Max window."""
         mx.postdictionary(<mx.t_object*>self.x)
@@ -1800,40 +1809,6 @@ cdef class Linklist:
 
     cdef void funall(self, mx.method fun, void* arg):
         mx.linklist_funall(self.lst, fun, arg)
-
-    # cdef mx.t_llelem* index2ptr(self, long index):
-    #     return mx.linklist_index2ptr(self.lst, index)
-
-    # cdef long ptr2index(self, mx.t_llelem* p):
-    #     return mx.linklist_ptr2index(self.lst, p)
-
-    # cdef mx.t_llelem* insertptr(self, void* o, mx.t_llelem* p):
-    #     return mx.linklist_insertptr(self.lst, o, p)
-
-    # cdef long deleteptr(self, mx.t_llelem* p):
-    #     return mx.linklist_deleteptr(self.lst, p)
-
-    # cdef long insertnodeindex(self, mx.t_llelem* p, long index):
-    #     return mx.linklist_insertnodeindex(self.lst, p, index)
-
-    # cdef mx.t_llelem* insertnodeptr(self, mx.t_llelem* p1, mx.t_llelem* p2):
-    #     return mx.linklist_insertnodeptr(self.lst, p1, p2)
-
-    # cdef long appendnode(self, mx.t_llelem* p):
-    #     return mx.linklist_appendnode(self.lst, p)
-
-    # cdef void free(self, mx.t_llelem* elem):
-    #     mx.linklistelem_free(self.lst, elem)
-
-    # ERRORS
-
-    # cdef t_llelem *linklistelem_new()
-    # cdef long linklist_insert_sorted(t_linklist *x, void *o, long cmpfn(void *, void *))
-    # cdef t_atom_long linklist_findfirst(t_linklist *x, void **o, long cmpfn(void *, void *), void *cmpdata)
-    # cdef void linklist_findall(t_linklist *x, t_linklist **out, long cmpfn(void *, void *), void *cmpdata)
-    # cdef void linklist_methodall(t_linklist *x, t_symbol *s, ...)
-    # cdef void *linklist_methodindex(t_linklist *x, t_atom_long i, t_symbol *s, ...)
-    # cdef void linklist_sort(t_linklist *x, long cmpfn(void *, void *))
 
 # ----------------------------------------------------------------------------
 # api.Binbuf
@@ -2216,11 +2191,6 @@ cdef class Patcher:
     def is_patcher(self) -> bool:
         """determine if a t_object is a patcher"""
         return bool(mx.jpatcher_is_patcher(self.ptr))
-
-    def get_filepath(self) -> str:
-        """get the patchers filepath"""
-        cdef mx.t_symbol* fp = mx.jpatcher_get_filepath(self.ptr)
-        return sym_to_str(fp)
 
     def get_sym_attr(self, name) -> str:
         cdef mx.t_symbol *attr_sym = <mx.t_symbol *>mx.object_attr_getsym(
@@ -2608,6 +2578,127 @@ cdef class Patcher:
     cdef mx.t_object* get_first_view(self):
         """Get the first view (jpatcherview) for a given patcher."""
         return mx.jpatcher_get_firstview(self.ptr)
+
+    # def get_view(self) -> MaxObject:
+    #     """Get the first view (jpatcherview) for a given patcher."""
+    #     cdef mx.t_object* view = mx.jpatcher_get_firstview(self.ptr)
+    #     return MaxObject.from_ptr(<mx.t_object*>view)
+
+    def get_title(self) -> str:
+        """Retrieve a patcher's title."""
+        cdef mx.t_symbol* title = mx.jpatcher_get_name(self.ptr)
+        return sym_to_str(title)
+
+    def get_name(self) -> str:
+        """Retrieve a patcher's name."""
+        cdef mx.t_symbol* name = mx.jpatcher_get_name(self.ptr)
+        return sym_to_str(name)
+
+    def get_filepath(self) -> str:
+        """get the patchers filepath"""
+        cdef mx.t_symbol* fpath = mx.jpatcher_get_filepath(self.ptr)
+        return sym_to_str(fpath)
+
+    def get_filename(self) -> str:
+        """Retrieve a patcher's file name."""
+        cdef mx.t_symbol* fname = mx.jpatcher_get_filename(self.ptr)
+        return sym_to_str(fname)
+
+    cdef char get_dirty(self):
+        """Determine whether a patcher's dirty bit has been set."""
+        return mx.jpatcher_get_dirty(self.ptr)
+
+    # cdef mx.t_max_err set_dirty(self, char c):
+    #     """Set a patcher's dirty bit."""
+    #     return mx.jpatcher_set_dirty(self.ptr, c)
+
+    def get_bglocked(self) -> bool:
+        """Determine whether a patcher's background layer is locked."""
+        return mx.jpatcher_get_bglocked(self.ptr)
+
+    def get_bgcolor(self) -> Rgba:
+        """Retrieve a patcher's unlocked background color."""
+        cdef mx.t_jrgba c
+        cdef mx.t_max_err err = mx.jpatcher_get_bgcolor(self.ptr, &c)
+        if err == mx.MAX_ERR_NONE:
+            return Rgba(c.red, c.green, c.blue, c.alpha)
+        return error("could not get patcher bgcolor")
+
+    def set_bgcolor(self, c: Rgba):
+        """Set a patcher's unlocked background color."""
+        cdef mx.t_jrgba rgba = c
+        cdef mx.t_max_err err = mx.jpatcher_set_bgcolor(self.ptr, &rgba)
+        if err != mx.MAX_ERR_NONE:
+            return error("could not set patcher bgcolor")
+
+    def get_gridsize(self) -> tuple:
+        """Retrieve a patcher's grid size."""
+        cdef double grid_size_x
+        cdef double grid_size_y
+        cdef mx.t_max_err err = mx.jpatcher_get_gridsize(
+            self.ptr, &grid_size_x, &grid_size_y)
+        if err == mx.MAX_ERR_NONE:
+            return (grid_size_x, grid_size_y)
+        return error("could not get patcher gridsize")
+
+    def set_gridsize(self, grid_size_x: float, grid_size_y: float):
+        """Set a patcher's grid size."""
+        cdef mx.t_max_err err = mx.jpatcher_set_gridsize(
+            self.ptr, grid_size_x, grid_size_y)
+        if err != mx.MAX_ERR_NONE:
+            return error("could not set patcher gridsize")
+
+    def get_rect(self) -> Rect:
+        """Query a patcher to determine its location and size."""
+        cdef mx.t_rect r
+        cdef mx.t_max_err err = mx.jpatcher_get_rect(self.ptr, &r)
+        if err == mx.MAX_ERR_NONE:
+            return Rect(r.x, r.y, r.width, r.height)
+        return error("could not get patcher rect")
+
+    def set_rect(self, r: Rect):
+        """Set a patcher's location and size."""
+        cdef mx.t_rect rect = r
+        cdef mx.t_max_err err = mx.jpatcher_set_rect(self.ptr, &rect)
+        if err != mx.MAX_ERR_NONE:
+            return error("could not set patcher rect")
+
+    cdef void deleteobj(self, mx.t_jbox *b):
+        """Delete an object that is in a patcher."""
+        mx.jpatcher_deleteobj(self.ptr, b)
+
+    def get_fileversion(self) -> int:
+        """Return the file version of the patcher."""
+        return mx.jpatcher_get_fileversion(self.ptr)
+
+    def get_currentfileversion(self) -> int:
+        """Return the file version for any new patchers, e.g. the current version created by Max."""
+        return mx.jpatcher_get_currentfileversion()
+
+    cdef mx.t_object* get_parentpatcher(self):
+        """Given a patcher, return its parent patcher."""
+        return mx.jpatcher_get_parentpatcher(self.ptr)
+
+    cdef mx.t_object* get_toppatcher(self):
+        """Given a patcher, return the top-level patcher for the tree in which it exists."""
+        return mx.jpatcher_get_toppatcher(self.ptr)
+
+    cdef mx.t_object* get_hubholder(self):
+        """Given a patcher, return the patcher that will be responsible for holding the parameter hub."""
+        return mx.jpatcher_get_hubholder(self.ptr)
+
+    cdef mx.t_symbol *uniqueboxname(self, mx.t_symbol *classname):
+        """Generate a unique name for a box in patcher."""
+        return mx.jpatcher_uniqueboxname(self.ptr, classname)
+
+
+# ----------------------------------------------------------------------------
+# api.Box
+
+# cdef class Box:
+#     """Wraps a Max t_jbox object"""
+
+
 
 # ----------------------------------------------------------------------------
 # api.PyExternal

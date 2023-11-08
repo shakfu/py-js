@@ -2,13 +2,13 @@
 
 ## Important
 
+- Consider moving `py` to its own project and keep this as incubator
 
 ## General Improvements
 
 
 ## Refactor
 
-- [ ] Move `api` module tests to `examples/scripts` or `examples/tests`
 
 ## Bugs
 
@@ -22,7 +22,7 @@
 
 ## api
 
-- [x] Added buffer creation, retrieval and sample setting / getting, resizing from python code with a `test_buffer.maxpat` test.
+
 
 ### Core
 
@@ -32,20 +32,9 @@
 
 ### Extensibility
 
-- [ ] consider to add a folder which would contain the following single-header libs along the line of the mamba `py.h`:
+- [ ] create script to shrink numpy from source for inclusion in a build.
 
-  - py_data.h (parent)
-    - py_buffer.h
-    - py_dict.h
-    - py_table.h
-    - py_patcher.h
-    - py_database.h
-    - ...
-
-  The idea is that `#include "py_data.h` would provide a `t_py_data` struct which contains the child objects which can be used on demand.
-
-
-- [ ] add an additional the containing package `support` folder or `scripts` folder to `PYTHONPATH` for self-contained externals
+- [ ] add the containing package `support` folder or `scripts` folder to `PYTHONPATH` for self-contained externals
 
 - [ ] add script which to create throwaway virtualenv environments: `virtualenv venv` to install python packages and then copy targeted to appropriate place in external or package and then delete remove the `venv` after done.
 
@@ -64,6 +53,8 @@
   - [ ] complete max test suite
 
 ### Attributes
+
+- [ ] BUG: Fix p_name attribute not being set properly.
 
 - [ ] add set/get for attributes as appropriate to trigger actions or methods calls
       after changes (NO REASON for using this found so far)
@@ -112,6 +103,5 @@
 - Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
 
 - [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
-
 
 - [ ] add step in bundle-creation to prepopulate site-packages with list of packages (this is alread done with `relocatable python` variations)

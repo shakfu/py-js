@@ -4903,11 +4903,22 @@ cdef extern from "jpatcher_api.h":
     cdef double fontinfo_getsize(short oldsize)
     cdef t_symbol *fontinfo_getname(short number)
     cdef short fontinfo_getnumber(t_symbol *s)
-    ctypedef struct t_rect
+    ctypedef struct t_rect:
+        double x
+        double y
+        double width
+        double height
     ctypedef struct t_pt
     ctypedef struct t_size
-    ctypedef struct t_jrgb
-    ctypedef struct t_jrgba
+    ctypedef struct t_jrgb:
+        double red
+        double green
+        double blue
+    ctypedef struct t_jrgba:
+        double red
+        double green
+        double blue
+        double alpha
     ctypedef struct t_jboxdrawparams
 
     cdef int JBOX_SPOOL_CONTENTS

@@ -3,6 +3,10 @@
 
 ## [0.2.x]
 
+- Added full error tracebacks to `py_error_handler`
+
+- Added patcher scripting methods to `api.Patcher`
+
 - Added generic `api.MaxObject` object.
 
 - Added tests and tested methods for `api.Binbuf` object.
