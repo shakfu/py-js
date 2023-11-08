@@ -96,7 +96,6 @@ cdef bytes sym_to_bytes(mx.t_symbol* symbol):
     """converts a max symbol to a python string"""
     return <bytes>symbol.s_name
 
-
 # ============================================================================
 # EXTENSION TYPES
 
@@ -475,6 +474,8 @@ cdef class Atom:
 
     @staticmethod
     def from_seq(seq: object) -> Atom:
+        # if not seq:
+        #     return
         cdef long size = len(seq)
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
@@ -999,7 +1000,7 @@ cdef class Buffer:
     def send(self, str msg, *args):
         """generic message sender
 
-        Used for all message methos except those modifying
+        Used for all message methods except those modifying
         the buffer structure (size, framecount, ..)
         i.e. not for structural changes which require
         re-allocation of memory.
@@ -2609,15 +2610,14 @@ cdef class Patcher:
         return mx.jpatcher_get_firstview(self.ptr)
 
 # ----------------------------------------------------------------------------
-# api.PyExternal extension type
+# api.PyExternal
 
 cdef class PyExternal:
-    """
-    Wraps the `py` external object and its methods.
+    """Wraps the `py` external object and its methods.
 
     Should expose as much functionality as possible.
     """
-    cdef px.t_py *obj
+    cdef px.t_py *ptr
     cdef bytes name
 
     def __cinit__(self):
@@ -2632,61 +2632,81 @@ cdef class PyExternal:
         """
         PY_OBJ_NAME = getattr(__builtins__, 'PY_OBJ_NAME')
         self.name = PY_OBJ_NAME.encode('utf-8')
-        self.obj = <px.t_py *>mx.object_findregistered(
+        self.ptr = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(self.name))
 
-    cpdef bang(self):
-        px.py_bang(self.obj)
+    def bang(self):
+        """Send bang out of left (default) outlet"""
+        px.py_bang(self.ptr)
 
-    def log(self, str s, type="info"):
-        msg = s.encode('utf-8')
-        if type=="info":
-            px.py_info(self.obj, msg)
-        elif type=="debug":
-            px.py_debug(self.obj, msg)
-        elif type=="error":
-            px.py_error(self.obj, msg)
-        else:
-            px.py_error(self.obj, "log type not recognized")
+    def bang_success(self):
+        """signal success by banging out of right outliet outlet"""
+        px.py_bang_success(self.ptr)
 
-    def error(self, str s):
-        px.py_error(self.obj, s.encode('utf-8'))
+    def bang_failure(self):
+        """signal failure by banging out of middle outlet"""
+        px.py_bang_failure(self.ptr)
 
-    cdef scan(self):
-        px.py_scan(self.obj)
+    def log_info(self, str msg):
+        """log info using object_post"""
+        px.py_info(self.ptr, msg.encode('utf8'))
 
-    cdef lookup(self, str name):
+    def log_debug(self, str msg):
+        """log debug using object_post"""
+        px.py_debug(self.ptr, msg.encode('utf8'))
+
+    def log_error(self, str s):
+        """log error using object_error"""
+        px.py_error(self.ptr, s.encode('utf8'))
+
+    def scan(self):
+        """scanned patcher for named objects"""
+        px.py_scan(self.ptr)
+
+    def lookup(self, str name) -> bool:
+        """lookup varname in object registry"""
         cdef mx.t_hashtab* registry = px.py_get_global_registry()
         cdef mx.t_object* obj = NULL
         cdef mx.t_max_err err
 
         if (mx.hashtab_getsize(registry) == 0):
-            self.error("registry not populated")
+            self.log_error("registry not populated")
             return
 
         err = mx.hashtab_lookup(registry, str_to_sym(name), &obj)
 
         if ((err != mx.MAX_ERR_NONE) or (obj == NULL)):
-            self.error("no object found with name")
+            self.log_error("no object found with name")
+            return False
         else:
-            self.log("found object")
+            self.log_debug("found object")
+            return True
 
-    def get_patcher(self):
+    def get_patcher(self) -> Patcher:
         """get containing patcher"""
-        patcher = Patcher.from_object(<mx.t_object*>self.obj)
+        patcher = Patcher.from_object(<mx.t_object*>self.ptr)
         return patcher
 
-    def get_buffer(self, str name):
-        buf = Buffer.from_name(<mx.t_object*>self.obj, name)
+    def get_buffer(self, name: str) -> Buffer:
+        """retrieve buffer by name"""
+        buf = Buffer.from_name(<mx.t_object*>self.ptr, name)
         return buf
 
-    def create_buffer(self, str name, str sample_file):
-        buf = Buffer.new(<mx.t_object*>self.obj, name, sample_file)
+    def create_buffer(self, name: str, sample_file: str) -> Buffer:
+        """create buffer with name from file"""
+        buf = Buffer.new(<mx.t_object*>self.ptr, name, sample_file)
         return buf
 
     def create_empty_buffer(self, str name, int duration_ms):
-        buf = Buffer.empty(<mx.t_object*>self.obj, name, duration_ms)
+        """creates empty named buffer with duration in milliseconds"""
+        buf = Buffer.empty(<mx.t_object*>self.ptr, name, duration_ms)
         return buf
+
+    # def send(self, *args):
+    #     """general message send to receiver"""
+    #     cdef Atom atom = Atom(*args)
+    #     assert isinstance(args[0], str), "send first arg must be str name of receiver"
+    #     px.py_send(self.ptr, mx.gensym(""), atom.size, atom.ptr)
 
     cdef send(self, str name, list args):
         cdef long argc = <long>len(args) + 1
@@ -2711,39 +2731,27 @@ cdef class PyExternal:
             else:
                 continue
         # mx.postatom(argv)
-        px.py_send(self.obj, mx.gensym(""), argc, argv)
-
-    # UNTESTED
-    # cdef mx.t_object * create(self, str classname, list args):
-    #     """ implements void *newinstance(const t_symbol *s, short argc, const t_atom *argv)
-    #     """
-    #     atoms = Atom.from_seq(list(args))
-    #     cdef mx.t_symbol * sym = <mx.t_symbol *>str_to_sym(classname)
-    #     return <mx.t_object *>mx.newinstance(sym, <long>atoms.size, <mx.t_atom *>atoms.ptr)
+        px.py_send(self.ptr, mx.gensym(""), argc, argv)
 
     cdef bint table_exists(self, str table_name):
-        return px.py_table_exists(self.obj, table_name.encode('utf-8'))
+        return px.py_table_exists(self.ptr, table_name.encode('utf-8'))
 
     cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
-        return px.py_list_to_table(self.obj, table_name, plist)
+        return px.py_list_to_table(self.ptr, table_name, plist)
 
     cdef PyObject* table_to_list(self, char* table_name):
-        return px.py_table_to_list(self.obj, table_name)
+        return px.py_table_to_list(self.ptr, table_name)
 
-    cdef success_bang(self):
-        px.py_bang_success(self.obj)
 
-    cdef failure_bang(self):
-        px.py_bang_failure(self.obj)
 
     cdef out_sym(self, str arg):
-        mx.outlet_anything(<void*>px.get_outlet(self.obj), str_to_sym(arg), 0, NULL)
+        mx.outlet_anything(<void*>px.get_outlet(self.ptr), str_to_sym(arg), 0, NULL)
 
     cdef out_float(self, float arg):
-        mx.outlet_float(<void*>px.get_outlet(self.obj), <double>arg)
+        mx.outlet_float(<void*>px.get_outlet(self.ptr), <double>arg)
 
     cdef out_int(self, int arg):
-        mx.outlet_int(<void*>px.get_outlet(self.obj), <long>arg)
+        mx.outlet_int(<void*>px.get_outlet(self.ptr), <long>arg)
 
     cdef out_list(self, list arg):
         """note: not recursive...(yet) still cannot deal with list in list"""
@@ -2759,7 +2767,7 @@ cdef class PyExternal:
                 atom.set_symbol(i, elem)
             else:
                 continue
-        mx.outlet_list(<void*>px.get_outlet(self.obj),
+        mx.outlet_list(<void*>px.get_outlet(self.ptr),
             mx.gensym("list"), atom.size, atom.ptr)
 
     cdef out_dict(self, dict arg):
@@ -2775,7 +2783,7 @@ cdef class PyExternal:
                 res.append(v)
         self.out_list(res)
 
-    def out(self, arg: object) -> obj:
+    def out(self, arg: object):
         if isinstance(arg, float):
             self.out_float(arg)
         elif isinstance(arg, int):
@@ -2790,7 +2798,7 @@ cdef class PyExternal:
             return
 
     cdef mx.t_max_err method_binbuf(self, mx.t_symbol* s, void* buf, mx.t_atom* rv):
-        return mx.object_method_binbuf(<mx.t_object*>self.obj, s, buf, rv)
+        return mx.object_method_binbuf(<mx.t_object*>self.ptr, s, buf, rv)
 
 
 
@@ -2878,12 +2886,21 @@ def error(str s):
     mx.error(s.encode('utf-8'))
 
 
-## buffer helpers
+## get object helpers
 
+def get_patcher() -> Patcher:
+    ext = PyExternal()
+    patcher = ext.get_patcher()
+    return patcher
+    
 def get_buffer(name: str) -> Buffer:
     ext = PyExternal()
     buf = ext.get_buffer(name)
     return buf
+
+
+
+## buffer helpers
 
 def create_buffer(name: str, sample_file: str) -> Buffer:
     ext = PyExternal()
