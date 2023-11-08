@@ -2702,9 +2702,12 @@ cdef class PyExternal:
         buf = Buffer.empty(<mx.t_object*>self.ptr, name, duration_ms)
         return buf
 
-    # def send(self, *args):
+    # def send(self, str name, list args):
     #     """general message send to receiver"""
-    #     cdef Atom atom = Atom(*args)
+    #     cdef long argc = <long>len(args) + 1
+    #     cdef mx.t_atom argv[PY_MAX_ATOMS]
+    #     _args = [name] + args
+    #     cdef Atom atom = Atom(*_args)
     #     assert isinstance(args[0], str), "send first arg must be str name of receiver"
     #     px.py_send(self.ptr, mx.gensym(""), atom.size, atom.ptr)
 
