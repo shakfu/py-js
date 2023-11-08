@@ -61,6 +61,9 @@ def test_patcher_newdefault():
 def test_patcher_connect():
     ext = api.PyExternal()
     p = ext.get_patcher()
-    # p.assign("var1", "number", 1)
-    # p.assign("var2", "number", 2)
     p.connect("var1", 0, "var2", 0)
+
+def test_patcher_disconnect():
+    ext = api.PyExternal()
+    p = ext.get_patcher()
+    p.disconnect("var1", 0, "var2", 0)

@@ -2456,21 +2456,133 @@ cdef class Patcher:
         else:
             return self._method_args(name, *args)
 
+    # patcher scripting
+
+    def set_dirty(self):
+        """set dirty bit in the window (user will be asked to save changes)"""
+        self.call("dirty")
+
+    def set_clean(self):
+        """reverse setting dirty bit"""
+        self.call("clean")
+
+    def save(self):
+        """save current patcher"""
+        self.call("write")
+
+    def set_title(self, title: str):
+        """set current patcher's title"""
+        self.call("title", f'"{title}"')
+
+    def front(self):
+        """bring the window to the front, or open it and bring it to the front"""
+        self.call("front")
+
+    def set_active_tab(self, name: str):
+        """set named tab to be active"""
+        self.call("setactivetab", name)
+
+    def fullsize(self, on: bool):
+        """switch window fullsize on and off"""
+        self.call("fullsize", on)
+
+    # TODO patcher window commands
+
+
+    # patcher box scripting
+
     def script(self, *args):
         """calls a patcher script command"""
         self.call("script", *args)
 
-    def assign(self, var1: str, maxclass: str, index: int):
-        """assign the nth instance of the class to the variable. """
+    def assign_name_by_index(self, var1: str, maxclass: str, index: int):
+        """mame the nth box instance of the class"""
         self.script("nth", var1, maxclass, index)
 
+    def assign_name_by_text(self, var1: str, text: str):
+        """name a box with created from the exact provided text"""
+        self.script("class", var1, text)
+
+    def newobject(self, varname: str, x: int, y: int, maxclass: str, *args):
+        """creates an object with varname from args"""
+        self.script("newobject", maxclass, "@varname", varname, "@patching_position", x, y, *args)
+
     def newdefault(self, varname: str, x: int, y: int, maxclass: str, *args):
-        """creates an object with varname (scripting name) from args"""
+        """creates an object with varname from args"""
         self.script("newdefault", varname, x, y, maxclass, *args)
 
+    def delete(self, var1: str):
+        """delete a named variable"""
+        self.script("delete", var1)
+
     def connect(self, var1: str, outlet: int, var2: str, inlet: int):
-        """connect two objects with varnames"""
+        """connect two named objects"""
         self.script("connect", var1, outlet, var2, inlet)
+
+    def disconnect(self, var1: str, outlet: int, var2: str, inlet: int):
+        """diconnect an existing connection between two named variabless"""
+        self.script("disconnect", var1, outlet, var2, inlet)
+
+    def send(self, var1: str, *args):
+        """send an object-level message to a named box"""
+        self.script("send", var1, *args)
+
+    def sendbox(self, var1: str, *args):
+        """send a box-level message to a a named box"""
+        self.script("sendbox", var1, *args)
+
+    def sendpatchline(self, from_var: str, outlet: int, to_var: str, inlet: int, *args):
+        """sends a message to a patchline specified from the connection."""
+        self.script("sendpatchline", from_var, outlet, to_var, inlet, *args)
+
+    def hide(self, var1: str):
+        """hide a named box"""
+        self.script("hide", var1)
+
+    def show(self, var1: str):
+        """show a named box"""
+        self.script("show", var1)
+
+    def move(self, var1: str, x: int, y: int):
+        """move a named box"""
+        self.script("move", x, y)
+
+    def offset(self, var1: str, x: int, y: int):
+        """relative 'offset' move of named box"""
+        self.script("offset", x, y)
+
+    def offset_from(self, var2: str, var1: str, from_bottom_right: int,
+                    from_top_left: int, x_distance: int, y_distance: int = 0):
+        """relative 'offset' move of named box relative to another"""
+        self.script("offsetfrom", var2, var1,
+            from_bottom_right, from_top_left, x_distance, y_distance)
+
+    def size(self, var1: str, width: int, height: int):
+        """resize a named box"""
+        self.script("size", var1, width, height)
+
+    def ignore_click(self, var1: str):
+        """make a named box ignore clicks"""
+        self.script("ignoreclick", var1)
+
+    def respond_to_click(self, var1: str):
+        """make a named box respond to clicks"""
+        self.script("respondtoclick", var1)
+
+    def send_to_back(self, var1: str):
+        """send named box to back layer a """
+        self.script("sendtoback", var1)
+
+    def bring_to_front(self, var1: str):
+        """bring named box to front layer"""
+        self.script("bringtofront", var1)
+
+    def background(self, var1: str):
+        """bring named box to background??"""
+        self.script("background", var1)
+
+
+    # box related
 
     def get_count(self) -> bool:
         """Determine the number of boxes in a patcher."""
