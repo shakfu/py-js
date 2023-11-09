@@ -1855,15 +1855,6 @@ cdef class Binbuf:
 
         Evaluates the message in a Binbuf with arguments in argv, and sends
         it to receiver.
-                        
-        @ingroup binbuf
-        @param  x   Binbuf containing the message.
-        @param  ac  Count of items in the argv array.
-        @param  av  Array of t_atoms as the arguments to the message. 
-        @param  to  Receiver of the message. 
-
-        @return     The result of sending the message.
-        void *binbuf_eval(t_binbuf *x, short ac, t_atom *av, void *to);
         """
         return mx.binbuf_eval(self.ptr, ac, av, to)
 
@@ -1882,6 +1873,21 @@ cdef class Binbuf:
         mx.sysmem_freeptr(src_text)
         if err:
             return error("binbuf.add_text failed")
+
+    def eval_to_clipboard(self, str text):
+        """evaluate a Max message in a Binbuf and sends it the Max clipboard
+        
+        Thanks to @11OLSEN for the solution, see:
+        https://cycling74.com/forums/on-the-current-utility-of-binbufs-and-atombufs
+        """ 
+        cdef mx.t_object *max_obj = NULL
+        cdef mx.t_object* clipboard = <mx.t_object*>mx.object_new(
+            mx.gensym("nobox"), mx.gensym("clipboard"))
+        self.add_text(text)
+        mx.object_obex_lookup(self.ptr, mx.gensym("max"), &max_obj)
+        mx.object_method(clipboard, mx.gensym("frombinbuf"), self.ptr)
+        mx.object_method(max_obj, mx.gensym("newfromclipboard"))
+        mx.object_free(clipboard)
 
     def to_text(self) -> str:
         """Convert a Binbuf into a text handle.
@@ -2467,14 +2473,20 @@ cdef class Patcher:
         """switch window fullsize on and off"""
         self.call("fullsize", on)
 
+    def dispose(self):
+        """Closes the patcher or destroy the subpatcher (with thispatcher)."""
+        self.script("dispose")
+
     # TODO patcher window commands
 
 
-    # patcher box scripting
+    # box scripting
 
     def script(self, *args):
         """calls a patcher script command"""
         self.call("script", *args)
+
+    ## assigning varnames
 
     def assign_name_by_index(self, var1: str, maxclass: str, index: int):
         """mame the nth box instance of the class"""
@@ -2484,17 +2496,29 @@ cdef class Patcher:
         """name a box with created from the exact provided text"""
         self.script("class", var1, text)
 
+    ## object creation / deletion
+
     def newobject(self, varname: str, x: int, y: int, maxclass: str, *args):
         """creates an object with varname from args"""
         self.script("newobject", maxclass, "@varname", varname, "@patching_position", x, y, *args)
 
     def newdefault(self, varname: str, x: int, y: int, maxclass: str, *args):
-        """creates an object with varname from args"""
+        """Creates a new named object with default properties in a patcher window."""
         self.script("newdefault", varname, x, y, maxclass, *args)
 
+    def new(self, varname: str, maxclass: str, x: int, y: int, w: int, h: int=0, *args):
+        """Creates a new object in a patcher window and gives it a name.
+        
+        The format of the arguments (after the class name) are based
+        on the legacy Max file format.
+        """
+        self.script("new", varname, maxclass, x, y, w, h, *args)
+
     def delete(self, var1: str):
-        """delete a named variable"""
+        """delete a named box"""
         self.script("delete", var1)
+
+    ## connecting patchlines
 
     def connect(self, var1: str, outlet: int, var2: str, inlet: int):
         """connect two named objects"""
@@ -2504,25 +2528,48 @@ cdef class Patcher:
         """diconnect an existing connection between two named variabless"""
         self.script("disconnect", var1, outlet, var2, inlet)
 
+    def connectcolor(self, var1: str, outlet: int, var2: str, inlet: int, color: int):
+        """Modify the color of an existing patch cord, setting it to one of Max's 16 standard colors."""
+        assert color < 16, "color index is only from 0 to 15 inclusive"
+        self.script("connectcolor", var1, outlet, var2, inlet, color)
+
+    ## sending messages
+
     def send(self, var1: str, *args):
-        """send an object-level message to a named box"""
+        """send an message to the object contained by a named box"""
         self.script("send", var1, *args)
 
     def sendbox(self, var1: str, *args):
-        """send a box-level message to a a named box"""
+        """send a message to a a named box
+
+        There is currently only one object, bpatcher, in which the object and box
+        are different objects.
+        """
         self.script("sendbox", var1, *args)
 
     def sendpatchline(self, from_var: str, outlet: int, to_var: str, inlet: int, *args):
         """sends a message to a patchline specified from the connection."""
         self.script("sendpatchline", from_var, outlet, to_var, inlet, *args)
 
+    ## box visibility / responsiveness
+
     def hide(self, var1: str):
         """hide a named box"""
         self.script("hide", var1)
 
     def show(self, var1: str):
-        """show a named box"""
+        """show a hidden named box"""
         self.script("show", var1)
+
+    def ignore_click(self, var1: str):
+        """make a named box ignore clicks"""
+        self.script("ignoreclick", var1)
+
+    def respond_to_click(self, var1: str):
+        """make a named box respond to clicks"""
+        self.script("respondtoclick", var1)
+
+    ## moving / resizing boxes
 
     def move(self, var1: str, x: int, y: int):
         """move a named box"""
@@ -2542,14 +2589,6 @@ cdef class Patcher:
         """resize a named box"""
         self.script("size", var1, width, height)
 
-    def ignore_click(self, var1: str):
-        """make a named box ignore clicks"""
-        self.script("ignoreclick", var1)
-
-    def respond_to_click(self, var1: str):
-        """make a named box respond to clicks"""
-        self.script("respondtoclick", var1)
-
     def send_to_back(self, var1: str):
         """send named box to back layer a """
         self.script("sendtoback", var1)
@@ -2561,7 +2600,6 @@ cdef class Patcher:
     def background(self, var1: str):
         """bring named box to background??"""
         self.script("background", var1)
-
 
     # box related
 
@@ -2866,16 +2904,15 @@ cdef class Box:
             return Patcher.from_ptr(<mx.t_object*>patcher)
         error("box does not have an associated patcher""")
 
-    # def mx.t_object* get_object(self) -> MaxObject:
-    #     """Retrieve a pointer to the box's object."""
-    #     return mx.jbox_get_object(self.ptr)
+    def get_nextobject(self) -> Box:
+        """The next box in the patcher's (linked) list of boxes."""
+        cdef mx.t_object* next_box = mx.jbox_get_nextobject(self.ptr)
+        return Box.from_ptr(next_box)
 
-    # cdef mx.t_object* get_patcher(self):
-    #     """Retrieve a box's patcher."""
-    #     cdef mx.t_object* patcher = mx.jbox_get_patcher(self.ptr)
-    #     if patcher is not NULL:
-    #         return patcher
-    #     error("box does not have an associated patcher""")
+    def get_prevobject(self) -> Box:
+        """The prior box in the patcher's (linked) list of boxes."""
+        cdef mx.t_object* next_box = mx.jbox_get_prevobject(self.ptr)
+        return Box.from_ptr(next_box)
 
     def is_hidden(self) -> bool:
         """Return true if box is hidden"""
@@ -2923,16 +2960,6 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            return error("could not set box's color")
  
-    def get_nextobject(self) -> Box:
-        """The next box in the patcher's (linked) list of boxes."""
-        cdef mx.t_object* next_box = mx.jbox_get_nextobject(self.ptr)
-        return Box.from_ptr(next_box)
-
-    def get_prevobject(self) -> Box:
-        """The prior box in the patcher's (linked) list of boxes."""
-        cdef mx.t_object* next_box = mx.jbox_get_prevobject(self.ptr)
-        return Box.from_ptr(next_box)
-
     def get_varname(self) -> str:
         """Retrieve a box's scripting name."""
         cdef mx.t_symbol* varname = mx.jbox_get_varname(self.ptr)
@@ -2948,6 +2975,121 @@ cdef class Box:
         """Retrieve a box's unique id."""
         cdef mx.t_symbol* _id = mx.jbox_get_id(self.ptr)
         return sym_to_str(_id)
+
+
+# ----------------------------------------------------------------------------
+# api.MaxApp
+
+cdef class MaxApp:
+    """a class to enable messages to the 'max' application"""
+    cdef mx.t_object *ptr
+
+    def __cinit__(self):
+        self.ptr = <mx.t_object*>mx.object_new(
+            mx.gensym("nobox"), mx.gensym("max"))
+
+    def __dealloc__(self):
+        if self.ptr:
+            mx.object_free(self.ptr)
+
+    def _method_noargs(self, str name):
+        """object method call with no arguments"""
+        cdef mx.t_max_err err = mx.object_method_typed(
+            <mx.t_object *>self.ptr, str_to_sym(name), 0, NULL, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_args(self, str name, *args):
+        """strongly typed object method call with arguments"""
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_max_err err = mx.object_method_typed(
+            <mx.t_object *>self.ptr, str_to_sym(name), atom.size, atom.ptr, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_parsestr(self, str name, str parsestr):
+        """combines object_method_typed() + atom_setparse() to define method arguments."""
+        cdef mx.t_max_err err = mx.object_method_parse(
+            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_float(self, str name, float number):
+        """wrapper for object_method_typed() that passes a single float as an argument"""
+        cdef mx.t_max_err err = mx.object_method_float(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_double(self, str name, double number):
+        """wrapper for object_method_typed() that passes a single double as an argument"""
+        cdef mx.t_max_err err = mx.object_method_double(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_long(self, str name, long number):
+        """wrapper for object_method_typed() that passes a single long as an argument"""
+        cdef mx.t_max_err err = mx.object_method_long(
+            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def _method_sym(self, str name, str symbol):
+        """wrapper for object_method_typed() that passes a single t_symbol as an argument"""
+        cdef mx.t_max_err err = mx.object_method_sym(
+            <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
+        if err == mx.MAX_ERR_NONE:
+            return
+        return error(f"method '{name}' call failed")
+
+    def call(self, str name, *args, parse=False):
+        """general call object method function (strongly typed)"""
+        if len(args) == 0:
+            return self._method_noargs(name)
+        elif len(args) == 1:
+            if isinstance(args[0], str):
+                if parse:
+                    return self._method_parsestr(name, args[0])
+                else:
+                    return self._method_sym(name, args[0])
+            elif isinstance(args[0], float):
+                return self._method_double(name, args[0])
+            elif isinstance(args[0], int):
+                return self._method_long(name, args[0])
+            elif isinstance(args[0], list):
+                return self.call(name, *args[0])
+            elif isinstance(args[0], tuple):
+                return self.call(name, *args[0])
+        else:
+            return self._method_args(name, *args)
+
+    def clearmaxwindow(self):
+        self.call("clearmaxwindow")
+
+    def midilist(self):
+        self.call("midilist")
+
+    def clean(self):
+        self.call("clean")
+
+    def maxwindow(self):
+        self.call("maxwindow")
+
+    def paths(self):
+        self.call("paths")
+
+    def clearmaxwindow(self):
+        self.call("clearmaxwindow")
+
+    def externaleditor(self, str name):
+        self.call("externaleditor". str_to_sym(name))
 
 
 # ----------------------------------------------------------------------------
@@ -3241,6 +3383,13 @@ def get_buffer(name: str) -> Buffer:
     ext = PyExternal()
     buf = ext.get_buffer(name)
     return buf
+
+def get_max():
+    cdef mx.t_object *maxobj = <mx.t_object*>mx.object_new(
+            mx.gensym("nobox"), mx.gensym("max"))
+    if maxobj is NULL:
+        error("could not get max object")
+
 
 
 

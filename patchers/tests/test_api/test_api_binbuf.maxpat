@@ -40,12 +40,25 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-11",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 443.0, 483.0, 176.0, 22.0 ],
+					"presentation_linecount" : 2,
+					"text" : "test_binbuf_eval_to_clipboard()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-10",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 476.0, 156.0, 22.0 ],
+					"patching_rect" : [ 443.0, 452.0, 156.0, 22.0 ],
 					"text" : "test_binbuf_add_textblock()"
 				}
 
@@ -69,7 +82,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 445.0, 118.0, 22.0 ],
+					"patching_rect" : [ 443.0, 421.0, 118.0, 22.0 ],
 					"text" : "test_binbuf_to_text()"
 				}
 
@@ -81,7 +94,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 414.0, 128.0, 22.0 ],
+					"patching_rect" : [ 443.0, 390.0, 128.0, 22.0 ],
 					"text" : "test_binbuf_add_text()"
 				}
 
@@ -93,7 +106,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 382.0, 111.0, 22.0 ],
+					"patching_rect" : [ 443.0, 358.0, 111.0, 22.0 ],
 					"text" : "test_binbuf_insert()"
 				}
 
@@ -105,7 +118,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 351.0, 122.0, 22.0 ],
+					"patching_rect" : [ 443.0, 327.0, 122.0, 22.0 ],
 					"text" : "test_binbuf_append()"
 				}
 
@@ -139,7 +152,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 318.0, 97.0, 22.0 ],
+					"patching_rect" : [ 443.0, 294.0, 97.0, 22.0 ],
 					"text" : "test_binbuf_init()"
 				}
 
@@ -237,7 +250,7 @@
 					}
 ,
 					"text" : "py",
-					"varname" : "u245000883"
+					"varname" : "__main__"
 				}
 
 			}
@@ -267,6 +280,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-11", 0 ]
 				}
 
 			}
