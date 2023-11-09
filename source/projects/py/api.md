@@ -77,23 +77,19 @@ in the Max api. This them accessible to python code and gives them a python-frie
 
 So far the following extension types are planned or implemented (partial or otherwise)
 
-- [x] MaxObject: general max t_object class
+- [x] MaxObject
 - [x] Atom
-- [x] Atom Array: container for an array of atoms
-- [ ] Atombuf: an alternative to Binbufs for temporary storage of atoms.
-- [x] Binbuf
-- [x] Buffer
-- [x] Database: SQLite database access
-- [x] Dictionary: structured/hierarchical data that is both sortable and fast
-- [x] Hash Table: hash table for mapping symbols to data
-- [ ] Index Map: managed array of pointers
-- [x] Linked List: doubly-linked-list
-- [ ] Quick Map: a double hash with keys mapped to values and vice-versa
-- [x] String Object: wrapper for C-strings with an API for manipulating them
-- [ ] Symbol Object: wrapper for symbols
 - [x] Table
+- [x] Buffer
+- [x] Dictionary
+- [x] Database
+- [ ] Linklist
+- [x] Binbuf
+- [x] Atombuf
+- [ ] Hashtab
+- [ ] AtomArray
 - [x] Patcher
-
+- [ ] Box
 - [x] PyExternal
 
 Workarounds for max types which are not exposed in the c-api:

@@ -104,4 +104,32 @@ cdef class Linklist:
     cdef void *linklist_methodindex(t_linklist *x, t_atom_long i, t_symbol *s, ...)
     cdef void linklist_sort(t_linklist *x, long cmpfn(void *, void *))
 
-    
+
+cdef class Box:
+    def get_hint(self) -> str:
+        """Retrieve a box's 'hint' attribute."""
+        cdef mx.t_symbol* hint = mx.jbox_get_hint(self.ptr)
+        return sym_to_str(hint)
+
+    def set_hint(self, hint: str):
+        """Set a box's 'hint' attribute."""
+        cdef mx.t_max_err err = mx.jbox_set_hint(self.ptr, str_to_sym(hint))
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set box's hint attribute")
+
+    def get_annotation(self):
+        """Retrieve a box's annotation string, if the user has given it an annotation."""
+        cdef const char * annotation = mx.jbox_get_annotation(self.ptr)
+        return annotation.encode('utf8')
+
+    def set_annotation(self, annotation: str):
+        """set a box's scripting name."""
+        mx.jbox_set_annotation(self.ptr, annotation.decode())
+
+    def get_presentation(self) -> bool:
+        """Determine if a box is included in the presentation view."""
+        return bool(mx.jbox_get_presentation(self.ptr))
+
+    def set_presentation(self, on: bool):
+        """Set box in the presentation view."""
+        return mx.jbox_set_presentation(self.ptr, on)

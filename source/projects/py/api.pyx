@@ -20,7 +20,7 @@ for the `py` external.
     - [ ] Hashtab
     - [ ] AtomArray
     - [x] Patcher
-    - [ ] Box
+    - [x] Box
     - [x] PyExternal
 - helper functions
 
@@ -2849,7 +2849,6 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            return error("could not set the size of a box for the presentation view.")
 
-
     def get_maxclass(self) -> str:
         """Retrieve the name of the class of the box's object."""
         cdef mx.t_symbol* name = mx.jbox_get_maxclass(self.ptr)
@@ -2879,14 +2878,76 @@ cdef class Box:
     #     error("box does not have an associated patcher""")
 
     def is_hidden(self) -> bool:
-        """return true if box is hidden"""
+        """Return true if box is hidden"""
         return bool(mx.jbox_get_hidden(self.ptr))
 
     def set_hidden(self, on: bool):
-        """set a box hidden attribute"""
+        """Set a box hidden attribute"""
         cdef mx.t_max_err err = mx.jbox_set_hidden(self.ptr, on)
         if err != mx.MAX_ERR_NONE:
            return error("could not set box's hidden attribute")
+
+    def get_fontname(self) -> str:
+        """Retrieve a box's 'fontname' attribute."""
+        cdef mx.t_symbol* name = mx.jbox_get_fontname(self.ptr)
+        return sym_to_str(name)
+
+    def set_fontname(self, name: str):
+        """Set a box's 'fontname' attribute."""
+        cdef mx.t_max_err err = mx.jbox_set_fontname(self.ptr, str_to_sym(name))
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set box's fontname attribute")
+
+    def get_fontsize(self) -> float:
+        """Retrieve a box's 'fontsize' attribute."""
+        return mx.jbox_get_fontsize(self.ptr)
+
+    def set_fontsize(self, size: float):
+        """Set a box's 'fontsize' attribute."""
+        cdef mx.t_max_err err = mx.jbox_set_fontsize(self.ptr, size)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set box's fontsize attribute")
+
+    def get_color(self) -> Rgba:
+        """Retrieve a box's 'color' attribute."""
+        cdef mx.t_jrgba c
+        cdef mx.t_max_err err = mx.jbox_get_color(self.ptr, &c)
+        if err == mx.MAX_ERR_NONE:
+            return Rgba(c.red, c.green, c.blue, c.alpha)
+        return error("could not get box's color")
+
+    def set_color(self, color: Rgba):
+        """Set a box's 'color' attribute."""
+        cdef mx.t_jrgba c = color
+        cdef mx.t_max_err err = mx.jbox_set_color(self.ptr, &c)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set box's color")
+ 
+    def get_nextobject(self) -> Box:
+        """The next box in the patcher's (linked) list of boxes."""
+        cdef mx.t_object* next_box = mx.jbox_get_nextobject(self.ptr)
+        return Box.from_ptr(next_box)
+
+    def get_prevobject(self) -> Box:
+        """The prior box in the patcher's (linked) list of boxes."""
+        cdef mx.t_object* next_box = mx.jbox_get_prevobject(self.ptr)
+        return Box.from_ptr(next_box)
+
+    def get_varname(self) -> str:
+        """Retrieve a box's scripting name."""
+        cdef mx.t_symbol* varname = mx.jbox_get_varname(self.ptr)
+        return sym_to_str(varname)
+
+    def set_varname(self, varname: str):
+        """set a box's scripting name."""
+        cdef mx.t_max_err err = mx.jbox_set_varname(self.ptr, str_to_sym(varname))
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set box's scripting name")
+
+    def get_id(self) -> str:
+        """Retrieve a box's unique id."""
+        cdef mx.t_symbol* _id = mx.jbox_get_id(self.ptr)
+        return sym_to_str(_id)
 
 
 # ----------------------------------------------------------------------------
