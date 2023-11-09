@@ -3408,6 +3408,7 @@ cdef extern from "commonsyms.h":
     cdef void common_symbols_init()
     cdef t_common_symbols_table *common_symbols_gettable()
 
+    # these are globals
     cdef t_symbol* _sym__preset
     cdef t_symbol* _sym_abbrev
     cdef t_symbol* _sym_abbrev_rowcomponent
@@ -4908,8 +4909,12 @@ cdef extern from "jpatcher_api.h":
         double y
         double width
         double height
-    ctypedef struct t_pt
-    ctypedef struct t_size
+    ctypedef struct t_pt:
+        double x
+        double y
+    ctypedef struct t_size:
+        double width
+        double height        
     ctypedef struct t_jrgb:
         double red
         double green

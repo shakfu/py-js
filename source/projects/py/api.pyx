@@ -20,6 +20,7 @@ for the `py` external.
     - [ ] Hashtab
     - [ ] AtomArray
     - [x] Patcher
+    - [ ] Box
     - [x] PyExternal
 - helper functions
 
@@ -2175,9 +2176,11 @@ cdef class Patcher:
     """A wrapper class for a Max patcher
     """
     cdef mx.t_object *ptr
+    cdef bint owner
 
     def __cinit__(self):
         self.ptr = NULL
+        self.owner = False
 
     @staticmethod
     cdef Patcher from_object(mx.t_object *x):
@@ -2186,6 +2189,13 @@ cdef class Patcher:
         mx.object_obex_lookup(x, mx.gensym("#P"), &patcher.ptr)
         if patcher.ptr is NULL:
             raise MemoryError
+        return patcher
+
+    @staticmethod
+    cdef Patcher from_ptr(mx.t_object *x, bint owner=False):
+        cdef Patcher patcher = Patcher.__new__(Patcher)
+        patcher.ptr = x
+        patcher.owner = owner
         return patcher
 
     def is_patcher(self) -> bool:
@@ -2695,9 +2705,188 @@ cdef class Patcher:
 # ----------------------------------------------------------------------------
 # api.Box
 
-# cdef class Box:
-#     """Wraps a Max t_jbox object"""
+cdef class Box:
+    """Wraps a Max t_jbox user-interface object"""
+    cdef mx.t_object *ptr
+    cdef mx.t_object *patcherview
 
+    def __cinit__(self):
+        self.ptr = NULL
+        self.patcherview = NULL
+
+    @staticmethod
+    cdef Box from_ptr(mx.t_object *x):
+        """Create a box object from a box pointer"""
+        cdef Box box = Box.__new__(Box)
+        mx.object_obex_lookup(x, mx.gensym("#P"), &box.ptr)
+        if box.ptr is NULL:
+            raise MemoryError
+        return box
+
+    def get_rect_for_view(self) -> Rect:
+        """Find the rect for a box in a given patcherview."""
+        cdef mx.t_rect pr
+        cdef mx.t_max_err err = mx.jbox_get_rect_for_view(self.ptr, self.patcherview, &pr)
+        if err != mx.MAX_ERR_NONE:
+            return error("could not get rect from patcherview's box")
+        return Rect(pr.x, pr.y, pr.width, pr.height)
+
+    def set_rect_for_view(self, rect: Rect):
+        """Change the rect for a box in a given patcherview."""
+        cdef mx.t_rect pr = rect
+        cdef mx.t_max_err err = mx.jbox_set_rect_for_view(self.ptr, self.patcherview, &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set rect for box in patcherview")
+
+    def get_rect_for_sym(self, which: str) -> Rect:
+        """Find the rect for a box with a given attribute name."""
+        cdef mx.t_rect pr
+        cdef mx.t_max_err err = mx.jbox_get_rect_for_sym(self.ptr, str_to_sym(which), &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not get rect for box given attribute name")
+        return Rect(pr.x, pr.y, pr.width, pr.height)
+
+    def set_rect_for_sym(self, which: str, rect: Rect):
+        """Change the rect for a box with a given attribute name."""
+        cdef mx.t_rect pr  = rect
+        cdef mx.t_max_err err = mx.jbox_set_rect_for_sym(self.ptr, str_to_sym(which), &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set rect for box with given attribute name")
+
+    def set_rect(self, rect: Rect):
+        """Set both the presentation rect and the patching rect."""
+        cdef mx.t_rect pr  = rect
+        cdef mx.t_max_err err = mx.jbox_set_rect(self.ptr, &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set rect for box")
+
+    def get_patching_rect(self):
+        """Retrieve the patching rect of a box."""
+        cdef mx.t_rect pr
+        cdef mx.t_max_err err = mx.jbox_get_patching_rect(self.ptr, &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not get patching rect for box")
+        return Rect(pr.x, pr.y, pr.width, pr.height)
+
+    def set_patching_rect(self, rect: Rect):
+        """Change the patching rect of a box."""
+        cdef mx.t_rect pr  = rect
+        cdef mx.t_max_err err = mx.jbox_set_patching_rect(self.ptr, &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set patching rect for box")
+
+    def get_presentation_rect(self):
+        """Retrieve the presentation rect of a box."""
+        cdef mx.t_rect pr
+        cdef mx.t_max_err err = mx.jbox_get_presentation_rect(self.ptr, &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not get presentation rect for box")
+        return Rect(pr.x, pr.y, pr.width, pr.height)
+
+    def set_presentation_rect(self, rect: Rect):
+        """Change the presentation rect of a box."""
+        cdef mx.t_rect pr  = rect
+        cdef mx.t_max_err err = mx.jbox_set_presentation_rect(self.ptr, &pr)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set presentation rect for box")
+
+    def set_position(self, x: float, y: float):
+        """Set the position of a box for both presentation and patching views."""
+        cdef mx.t_pt pos  = (x, y)
+        cdef mx.t_max_err err = mx.jbox_set_position(self.ptr, &pos)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set the position of a box for both views")
+
+    def get_patching_position(self) -> tuple:
+        """Fetch the position of a box for the patching view."""
+        cdef mx.t_pt pos
+        cdef mx.t_max_err err = mx.jbox_get_patching_position(self.ptr, &pos)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not get patching position for box")
+        return (pos.x, pos.y)
+
+    def set_presentation_position(self, x: float, y: float):
+        """Set the position of a box for the presentation view."""
+        cdef mx.t_pt pos  = (x, y)
+        cdef mx.t_max_err err = mx.jbox_set_presentation_position(self.ptr, &pos)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set the position of a box for presentation view")
+
+    def set_size(self, width: float, height: float):
+        """Set the size of a box for both the presentation and patching views."""
+        cdef mx.t_size size  = (width, height)
+        cdef mx.t_max_err err = mx.jbox_set_size(self.ptr, &size)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set the size of a box for both views")
+
+    def get_patching_size(self) -> tuple:
+        """Fetch the size of a box for the patching view."""
+        cdef mx.t_size size
+        cdef mx.t_max_err err = mx.jbox_get_patching_size(self.ptr, &size)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not get patching size for box")
+        return (size.width, size.height)
+
+    def set_patching_size(self, width: float, height: float):
+        """Set the size of a box for the patching view."""
+        cdef mx.t_size size  = (width, height)
+        cdef mx.t_max_err err = mx.jbox_set_patching_size(self.ptr, &size)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set the size of a box for the patching view.")
+
+    def get_presentation_size(self) -> tuple:
+        """Fetch the size of a box for the presentation view."""
+        cdef mx.t_size size
+        cdef mx.t_max_err err = mx.jbox_get_presentation_size(self.ptr, &size)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not get presentation size for box")
+        return (size.width, size.height)
+
+    def set_presentation_size(self, width: float, height: float):
+        """Set the size of a box for the presentation view."""
+        cdef mx.t_size size  = (width, height)
+        cdef mx.t_max_err err = mx.jbox_set_presentation_size(self.ptr, &size)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set the size of a box for the presentation view.")
+
+
+    def get_maxclass(self) -> str:
+        """Retrieve the name of the class of the box's object."""
+        cdef mx.t_symbol* name = mx.jbox_get_maxclass(self.ptr)
+        return sym_to_str(name)
+
+    def get_object(self) -> MaxObject:
+        """Retrieve the box's object."""
+        cdef mx.t_object* obj = mx.jbox_get_object(self.ptr)
+        return MaxObject.from_ptr(<mx.t_object*>obj)
+
+    def get_patcher(self) -> Patcher:
+        """Retrieve a box's patcher."""
+        cdef mx.t_object* patcher = mx.jbox_get_patcher(self.ptr)
+        if patcher is not NULL:
+            return Patcher.from_ptr(<mx.t_object*>patcher)
+        error("box does not have an associated patcher""")
+
+    # def mx.t_object* get_object(self) -> MaxObject:
+    #     """Retrieve a pointer to the box's object."""
+    #     return mx.jbox_get_object(self.ptr)
+
+    # cdef mx.t_object* get_patcher(self):
+    #     """Retrieve a box's patcher."""
+    #     cdef mx.t_object* patcher = mx.jbox_get_patcher(self.ptr)
+    #     if patcher is not NULL:
+    #         return patcher
+    #     error("box does not have an associated patcher""")
+
+    def is_hidden(self) -> bool:
+        """return true if box is hidden"""
+        return bool(mx.jbox_get_hidden(self.ptr))
+
+    def set_hidden(self, on: bool):
+        """set a box hidden attribute"""
+        cdef mx.t_max_err err = mx.jbox_set_hidden(self.ptr, on)
+        if err != mx.MAX_ERR_NONE:
+           return error("could not set box's hidden attribute")
 
 
 # ----------------------------------------------------------------------------
