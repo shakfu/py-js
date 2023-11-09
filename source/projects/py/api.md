@@ -13,6 +13,20 @@ The `api` module consists of:
 Cython classes, functions, and constants defined here are optionally
 available for use by python code running in a `py` external instance.
 
+## Design Notes
+
+- The primary benefit of the `api` module is that it provides access to max c-api functionality in an interpreted language. This benefit is even apparent during development which entails writing compiled c/cython code and interpreted python test code. If the former is robust, the tests can quickly be written and debugged to produce a desired outcome.
+
+- [ ] to refactor the object_method_typed calls which are being duplicated in `Patcher`, `MaxObect`, `MaxApp`, etc..
+
+
+- [ ] There should be sufficient number of wrapper classes (which wrap pointers)  to enable productive scripting. So instead of returning a `mx.t_object*` one returns a `MaxObject`
+
+
+
+
+
+
 ## Usage
 
 Either 
@@ -89,7 +103,7 @@ So far the following extension types are planned or implemented (partial or othe
 - [ ] Hashtab
 - [ ] AtomArray
 - [x] Patcher
-- [ ] Box
+- [x] Box
 - [x] PyExternal
 
 Workarounds for max types which are not exposed in the c-api:
@@ -101,13 +115,3 @@ Workarounds for max types which are not exposed in the c-api:
   coll will be sent to the cellblock.
 
 - jit.matrix: can be populated via jit.fill from a coll
-
-
-## Table of Contents
-
-- imports
-- compile time conditional imports
-- compile time constants
-- helper cdef functions (type-translation)
-- extension types
-- helper def functions

@@ -2,19 +2,13 @@ import api
 
 
 def test_patcher_init():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
+    p = api.get_patcher()
     assert p.is_patcher(), "object is not a patcher!"
+    api.bang_success()
 
-
-def test_patcher_misc():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
-    api.post(f"filepath: {p.get_filepath()}")
 
 def test_patcher_attrs():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
+    p = api.get_patcher()
     # dump patch attributes
     # symbol attrs
     api.post(f"patcher.name: {p.name}")
@@ -36,34 +30,45 @@ def test_patcher_attrs():
     api.post(f"patcher.toolbarvisible: {p.toolbarvisible}")
     # array attr
     api.post(f"patcher.rect: {p.rect}")
+    api.bang_success()
 
 
 def test_patcher_add_box():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
+    p = api.get_patcher()
     p.add_box("toggle", 240.0, 150.0)
+    api.bang_success()
 
 def test_patcher_add_textbox():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
+    p = api.get_patcher()
     p.add_textbox("metro 400", 100.0, 150.0)
+    api.bang_success()
 
 def test_patcher_add_tbox():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
+    p = api.get_patcher()
     p.add_tbox("buffer~ buf jongly.aif")
+    api.bang_success()
 
-def test_patcher_newdefault():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
-    p.newdefault("var3", )
+def test_patcher_script_newdefault():
+    p = api.get_patcher()
+    p.newdefault("var3", 200, 150, "number")
+    api.bang_success()
 
-def test_patcher_connect():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
+def test_patcher_script_connect():
+    p = api.get_patcher()
     p.connect("var1", 0, "var2", 0)
+    api.bang_success()
 
-def test_patcher_disconnect():
-    ext = api.PyExternal()
-    p = ext.get_patcher()
+def test_patcher_script_disconnect():
+    p = api.get_patcher()
     p.disconnect("var1", 0, "var2", 0)
+    api.bang_success()
+
+def test_patcher_script_hide():
+    p = api.get_patcher()
+    p.hide("var1")
+    api.bang_success()
+
+def test_patcher_script_show():
+    p = api.get_patcher()
+    p.show("var1")
+    api.bang_success()

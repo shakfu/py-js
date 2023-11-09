@@ -1875,9 +1875,9 @@ cdef class Binbuf:
             return error("binbuf.add_text failed")
 
     def new_from_clipboard(self, str text):
-        """evaluate a Max message by sending it the Max clipboard
+        """Evaluate the text in the binbuf by sending it the Max clipboard
         
-        Thanks to @11OLSEN for the novel solution
+        Thanks to 11OLSEN for the nifty solution
         https://cycling74.com/forums/on-the-current-utility-of-binbufs-and-atombufs
         """ 
         cdef MaxApp app = MaxApp()
@@ -3377,13 +3377,13 @@ def bang():
     ext = PyExternal()
     ext.bang()
 
-def success_bang():
+def bang_success():
     ext = PyExternal()
-    ext.success_bang()
+    ext.bang_success()
 
-def failure_bang():
+def bang_failure():
     ext = PyExternal()
-    ext.failure_bang()
+    ext.bang_failure()
 
 def out(object obj):
     ext = PyExternal()
