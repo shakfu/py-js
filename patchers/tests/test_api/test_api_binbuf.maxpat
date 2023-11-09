@@ -45,9 +45,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 443.0, 483.0, 176.0, 22.0 ],
-					"presentation_linecount" : 2,
-					"text" : "test_binbuf_eval_to_clipboard()"
+					"patching_rect" : [ 443.0, 483.0, 190.0, 22.0 ],
+					"text" : "test_binbuf_new_from_clipboard()"
 				}
 
 			}

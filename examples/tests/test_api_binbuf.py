@@ -65,6 +65,6 @@ def test_binbuf_add_textblock():
     buf.add_text(eg) 
     buf.eval()
 
-def test_binbuf_eval_to_clipboard():
+def test_binbuf_new_from_clipboard():
     buf = api.Binbuf()
-    buf.eval_to_clipboard(eg)
+    buf.new_from_clipboard(eg)

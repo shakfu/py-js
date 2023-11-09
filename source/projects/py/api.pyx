@@ -1874,19 +1874,18 @@ cdef class Binbuf:
         if err:
             return error("binbuf.add_text failed")
 
-    def eval_to_clipboard(self, str text):
-        """evaluate a Max message in a Binbuf and sends it the Max clipboard
+    def new_from_clipboard(self, str text):
+        """evaluate a Max message by sending it the Max clipboard
         
-        Thanks to @11OLSEN for the solution, see:
+        Thanks to @11OLSEN for the novel solution
         https://cycling74.com/forums/on-the-current-utility-of-binbufs-and-atombufs
         """ 
-        cdef mx.t_object *max_obj = NULL
+        cdef MaxApp app = MaxApp()
         cdef mx.t_object* clipboard = <mx.t_object*>mx.object_new(
             mx.gensym("nobox"), mx.gensym("clipboard"))
         self.add_text(text)
-        mx.object_obex_lookup(self.ptr, mx.gensym("max"), &max_obj)
         mx.object_method(clipboard, mx.gensym("frombinbuf"), self.ptr)
-        mx.object_method(max_obj, mx.gensym("newfromclipboard"))
+        mx.object_method(app.ptr, mx.gensym("newfromclipboard"))
         mx.object_free(clipboard)
 
     def to_text(self) -> str:
@@ -3070,14 +3069,24 @@ cdef class MaxApp:
         else:
             return self._method_args(name, *args)
 
-    def clearmaxwindow(self):
-        self.call("clearmaxwindow")
-
-    def midilist(self):
-        self.call("midilist")
 
     def clean(self):
         self.call("clean")
+
+    def clearmaxwindow(self):
+        self.call("clearmaxwindow")
+
+    def htmlref(self, name: str):
+        self.call("htmlref", name)
+
+    def openfile(self, name: str):
+        self.call("openfile", name)
+
+    def closefile(self, name: str):
+        self.call("closefile", name)
+
+    def midilist(self):
+        self.call("midilist")
 
     def maxwindow(self):
         self.call("maxwindow")
@@ -3085,11 +3094,38 @@ cdef class MaxApp:
     def paths(self):
         self.call("paths")
 
-    def clearmaxwindow(self):
-        self.call("clearmaxwindow")
+    def externaleditor(self, name: str):
+        self.call("externaleditor", name)
 
-    def externaleditor(self, str name):
-        self.call("externaleditor". str_to_sym(name))
+    def useexternaleditor(self, on: bool = True):
+        self.call("useexternaleditor", on)
+
+    def hidemenubar(self):
+        self.call("hidemenubar")
+
+    def showmenubar(self):
+        self.call("showmenubar")
+
+    def externs(self):
+        self.call("externs")
+
+    def getsystem(self, receiver: str):
+        self.call("getsystem", receiver)
+
+    def getversion(self, receiver: str):
+        self.call("getversion", receiver)
+
+    def sendapppath(self, receiver: str):
+        self.call("sendapppath", receiver)
+
+    def launchbrowser(self, url: str):
+        self.call("launchbrowser", url)
+
+    def preempt(self, on: bool = True):
+        self.call("preempt", on)
+
+    def quit(self):
+        self.call("quit")
 
 
 # ----------------------------------------------------------------------------

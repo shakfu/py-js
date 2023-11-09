@@ -6,7 +6,7 @@ import api
 def test_maxapp_init():
     app = api.MaxApp()
 
-def test_maxapp_midilistr():
+def test_maxapp_midilist():
     app = api.MaxApp()
     app.midilist()
 
@@ -29,4 +29,4 @@ def test_maxapp_paths():
 
 def test_maxapp_externaleditor():
     app = api.MaxApp()
-    app.externaleditor("Sublime Editor")
+    app.externaleditor("Sublime Text.app")
