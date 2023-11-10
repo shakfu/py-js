@@ -308,8 +308,8 @@ cdef class Atom:
     """A wrapper class for a Max t_atom
     """
     cdef mx.t_atom *ptr
-    cdef bint ptr_owner
     cdef public long size
+    cdef bint ptr_owner
 
     def __cinit__(self):
         self.ptr_owner = False
@@ -2087,21 +2087,18 @@ cdef class Hashtab:
     cdef mx.t_max_err getkeys(self, long* kc, mx.t_symbol*** kv):
         return mx.hashtab_getkeys(self.x, kc, kv)
 
-    # ERRORS
-    # cdef mx.t_hashtab_entry* entry_new(self, mx.t_symbol* key, mx.t_object* val):
-    #      return mx.hashtab_entry_new(key, val)
-
-    # cdef void entry_free(self, mx.t_hashtab_entry *x):
-    #      mx.hashtab_entry_free(x)
-
-    # cdef t_max_err hashtab_findfirst(t_hashtab *x, void **o, long cmpfn(void *, void *), void *cmpdata)
-
-    # cdef t_max_err hashtab_methodall(t_hashtab *x, t_symbol *s, ...)
-
 # ---------------------------------------------------------------------------
 # api.AtomArray
 
 cdef class AtomArray:
+    """Wrapper around the t_atomarray object.
+    
+    An atomarray is basically just a container for the typical
+    pair of long arg and t_atom* argv.
+
+    Note that atoms provided to atomarray_new are copied.
+    """
+
     cdef mx.t_atomarray *ptr
     cdef bint owner
 
@@ -2109,15 +2106,26 @@ cdef class AtomArray:
         self.ptr = NULL
         self.owner = False
 
+    def __dealloc__(self):
+        if self.ptr and self.owner:
+            mx.object_free(self.ptr)
+
     def __init__(self, *args):
         cdef Atom atom = Atom(*args)
         self.ptr = mx.atomarray_new(atom.size, atom.ptr)
         self.owner = True
 
     @staticmethod
-    cdef AtomArray from_atom(mx.t_atom *av, int ac, bint owner=False):
+    cdef AtomArray from_atom(mx.t_atom *av, int ac):
         cdef AtomArray atom_array = AtomArray.__new__(AtomArray)
         atom_array.ptr = mx.atomarray_new(ac, av)
+        atom_array.owner = True
+        return atom_array
+
+    @staticmethod
+    cdef AtomArray from_ptr(mx.t_atomarray *ptr, bint owner=False):
+        cdef AtomArray atom_array = AtomArray.__new__(AtomArray)
+        atom_array.ptr = ptr
         atom_array.owner = owner
         return atom_array
 
@@ -2126,51 +2134,70 @@ cdef class AtomArray:
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
-        return AtomArray.from_atom(ptr, size, owner=True)
+        return AtomArray.from_atom(ptr, size)
 
-    cdef void flags(self, long flags):
+    cdef void set_flags(self, long flags):
+        """Set the atomarray flags."""
         mx.atomarray_flags(self.ptr, flags)
 
     cdef long getflags(self):
+        """Get the atomarray flags."""
         return mx.atomarray_getflags(self.ptr)
 
     cdef mx.t_max_err setatoms(self, long ac, mx.t_atom* av):
+        """Replace the existing array with a new (copied) set of atoms."""
         return mx.atomarray_setatoms(self.ptr, ac, av)
 
     cdef mx.t_max_err getatoms(self, long* ac, mx.t_atom** av):
+        """Retrieve a pointer to the first atom in the internal array of atoms."""
         return mx.atomarray_getatoms(self.ptr, ac, av)
 
     cdef mx.t_max_err copyatoms(self, long* ac, mx.t_atom** av):
+        """Retrieve a copy of the atoms in the array."""
         return mx.atomarray_copyatoms(self.ptr, ac, av)
 
-    cdef mx.t_atom_long getsize(self):
+    def getsize(self) -> int:
+        """Return the number of atoms in the array."""
         return mx.atomarray_getsize(self.ptr)
 
     cdef mx.t_max_err getindex(self, long index, mx.t_atom* av):
+        """Copy an a specific atom from the array."""
         return mx.atomarray_getindex(self.ptr, index, av)
 
     # cdef mx.t_max_err setindex(self, long index, mx.t_atom* av):
     #     return mx.atomarray_setindex(self.ptr, index, av)
 
     cdef void* duplicate(self):
+        """Create a new atomarray object which is a copy of another atomarray object."""
         return mx.atomarray_duplicate(self.ptr)
 
     cdef void* clone(self):
+        """Create a new atomarray object which is a full clone of another atomarray object."""
         return mx.atomarray_clone(self.ptr)
 
     cdef void appendatom(self, mx.t_atom* a):
+        """Copy a new atom onto the end of the array."""
         mx.atomarray_appendatom(self.ptr, a)
 
     cdef void appendatoms(self, long ac, mx.t_atom* av):
+        """Copy multiple new atoms onto the end of the array."""
         mx.atomarray_appendatoms(self.ptr, ac, av)
 
     cdef void chuckindex(self, long index):
+        """Remove an atom from any location within the array.
+        
+        The array will be resized and collapsed to fill in the gap.
+        """
         mx.atomarray_chuckindex(self.ptr, index)
 
     cdef void clear(self):
+        """Clear the array.
+
+        Frees all of the atoms and sets the size to zero."""
         mx.atomarray_clear(self.ptr)
 
     cdef void funall(self, mx.method fun, void* arg):
+        """Call the specified function for every item in the atom array."""
         mx.atomarray_funall(self.ptr, fun, arg)
 
 

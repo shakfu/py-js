@@ -2,6 +2,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmak
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
 option(INCLUDE_NUMPY "include numpy headers if available")
+option(INCLUDE_COMMONSYMS "include commmonsym.c")
 
 
 set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
@@ -44,6 +45,7 @@ add_library(
 	${PROJECT_NAME} 
 	MODULE
 	${PROJECT_SRC}
+	$<$<BOOL:${INCLUDE_COMMONSYMS}>:${MAX_SDK_INCLUDES}/common/commonsyms.c>
 )
 
 set(PY_INCLUDE "${Python3_INCLUDE_DIRS}")

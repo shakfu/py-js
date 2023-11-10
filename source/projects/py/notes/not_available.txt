@@ -1,5 +1,11 @@
 # in header but not public
 
+cdef class AtomArray:
+
+    cdef mx.t_max_err setindex(self, long index, mx.t_atom* av):
+        return mx.atomarray_setindex(self.ptr, index, av)
+
+
 cdef class Dictionary:
 
     cdef mx.t_max_err set_bglocked(self, char c):
@@ -133,3 +139,15 @@ cdef class Box:
     def set_presentation(self, on: bool):
         """Set box in the presentation view."""
         return mx.jbox_set_presentation(self.ptr, on)
+
+cdef class Hashtab:
+
+    cdef mx.t_hashtab_entry* entry_new(self, mx.t_symbol* key, mx.t_object* val):
+         return mx.hashtab_entry_new(key, val)
+
+    cdef void entry_free(self, mx.t_hashtab_entry *x):
+         mx.hashtab_entry_free(x)
+
+    cdef t_max_err hashtab_findfirst(t_hashtab *x, void **o, long cmpfn(void *, void *), void *cmpdata)
+
+    cdef t_max_err hashtab_methodall(t_hashtab *x, t_symbol *s, ...)
