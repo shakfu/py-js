@@ -24,7 +24,7 @@ using namespace pkpy;
 /**
  * @brief      specifies three logging levels
  */
-enum log_level { PKTPY_ERROR, PKTPY_INFO, PKTPY_DEBUG };
+enum log_level { PKTPY_DEBUG, PKTPY_INFO, PKTPY_WARN, PKTPY_ERROR};
 
 
 /**
@@ -33,10 +33,10 @@ enum log_level { PKTPY_ERROR, PKTPY_INFO, PKTPY_DEBUG };
  */
 class PktpyInterpreter : public VM {
 private:
-    t_symbol* name;        //!< unique python object name
-    t_symbol* pythonpath;  //!< path to python directory
-    log_level loglevel;    //!< object-level log level (error, info, debug)
-    bool disable_stderr;   //!< disable stderr output;
+    t_symbol* name;             //!< unique python object name
+    t_symbol* pythonpath;       //!< path to python directory
+    log_level loglevel;         //!< log level (debug, info, warn, error)
+    bool disable_stderr;        //!< disable stderr output;
 
 public:
     t_symbol* source_name; //!< base name of python file to execfile
@@ -49,6 +49,7 @@ public:
     // logging methods
     void log_debug(char* fmt, ...);
     void log_info(char* fmt, ...);
+    void log_warn(char* fmt, ...);
     void log_error(char* fmt, ...);
     void print_atom(int argc, t_atom* argv);
 
@@ -87,7 +88,7 @@ public:
     
     // anything message method helpers
     PyObject* eval_text(char* text);
-    t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
+    t_max_err eval_text_to_outlet(long argc, t_atom* argv, void* outlet);
 
     // core message methods
     t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
@@ -137,7 +138,7 @@ PktpyInterpreter::~PktpyInterpreter() { delete this; }
 
 
 /**
- * @brief Post msg to Max console.
+ * @brief Log debug msg to Max console.
  *
  * @param fmt character string with format codes
  * @param ... other arguments
@@ -152,13 +153,13 @@ void PktpyInterpreter::log_debug(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        post("[pktpy debug %s]: %s", this->name->s_name, msg);
+        post((char*)"pktpy [DEBUG] (%s): %s", this->name->s_name, msg);
     }
 }
 
 
 /**
- * @brief Post msg to Max console.
+ * @brief Log info msg to Max console.
  *
  * @param fmt character string with format codes
  * @param ... other arguments
@@ -173,13 +174,34 @@ void PktpyInterpreter::log_info(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        post("[pktpy info %s]: %s", this->name->s_name, msg);
+        post((char*)"pktpy [INFO] (%s): %s", this->name->s_name, msg);
     }
 }
 
 
 /**
- * @brief Post error message to Max console.
+ * @brief Log warn msg to Max console.
+ *
+ * @param fmt character string with format codes
+ * @param ... other arguments
+ */
+void PktpyInterpreter::log_warn(char* fmt, ...)
+{
+    if (this->loglevel >= log_level::PKTPY_WARN) {
+        char msg[PY_MAX_ELEMS];
+
+        va_list va;
+        va_start(va, fmt);
+        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
+        va_end(va);
+
+        post((char*)"pktpy [WARN] (%s): %s", this->name->s_name, msg);
+    }
+}
+
+
+/**
+ * @brief Log error message to Max console.
  *
  * @param fmt character string with format codes
  * @param ... other arguments
@@ -194,7 +216,7 @@ void PktpyInterpreter::log_error(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        error((char*)"[pktpy error %s]: %s", this->name->s_name, msg);
+        error((char*)"pktpy [ERROR] (%s): %s", this->name->s_name, msg);
     }
 }
 
@@ -407,10 +429,8 @@ PyObject* PktpyInterpreter::atom_to_pobject(t_atom* atom)
         return this->None;
 
     default:
-        // FIXME: should be this->log_warning
-        this->log_error(
-            (char*)"Warning: type %d unsupported for conversion to Python.",
-            atom->a_type);
+        this->log_warn(
+            (char*)"type %d unsupported for conversion to Python.", atom->a_type);
         return this->None;
     }
 }
@@ -838,18 +858,16 @@ PyObject* PktpyInterpreter::eval_text(char* text)
  *
  * @param argc atom argument count
  * @param argv atom argument vector
- * @param offset offset of atom vector from which to evaluate
  * @param outlet object outlet
  *
  * @return t_max_err error code
  */
-t_max_err PktpyInterpreter::eval_text_to_outlet(long argc, t_atom* argv,
-                                                int offset, void* outlet)
+t_max_err PktpyInterpreter::eval_text_to_outlet(long argc, t_atom* argv, void* outlet)
 {
     long textsize = 0;
     char* text = NULL;
 
-    t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
+    t_max_err err = atom_gettext(argc, argv, &textsize, &text,
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         this->log_debug((char*)">>> %s", text);
@@ -981,7 +999,7 @@ t_max_err PktpyInterpreter::anything(t_symbol* s, long argc, t_atom* argv,
         }
     }
 
-    return this->eval_text_to_outlet(argc, atoms, 1, outlet);
+    return this->eval_text_to_outlet(argc+1, atoms, outlet);
 
 }
 
