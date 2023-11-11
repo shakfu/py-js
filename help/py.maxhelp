@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 238.0, 87.0, 878.0, 769.0 ],
+		"rect" : [ 171.0, 87.0, 878.0, 769.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -244,7 +244,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 505.0, 165.0, 158.0, 22.0 ]
+									"patching_rect" : [ 505.0, 165.0, 158.0, 22.0 ],
+									"text" : "21"
 								}
 
 							}
@@ -663,7 +664,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 48.0, 22.0 ]
+									"patching_rect" : [ 376.0, 359.0, 49.0, 22.0 ],
+									"text" : "21"
 								}
 
 							}
@@ -1058,7 +1060,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 238.0, 113.0, 878.0, 743.0 ],
+						"rect" : [ 171.0, 113.0, 878.0, 743.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1088,6 +1090,30 @@
 						"showontab" : 1,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-122",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 642.0, 207.0, 88.0, 22.0 ],
+									"text" : "get pythonpath"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-121",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 748.25, 207.0, 98.0, 22.0 ],
+									"text" : "pythonpath ~/src"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"hidden" : 1,
 									"id" : "obj-118",
@@ -2052,12 +2078,13 @@
 							}
 , 							{
 								"box" : 								{
-									"bgcolor" : [ 0.498039215686275, 0.282352941176471, 0.282352941176471, 1.0 ],
+									"bgcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
 									"id" : "obj-45",
 									"maxclass" : "button",
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
+									"outlinecolor" : [ 0.92549, 0.364706, 0.341176, 1.0 ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 211.5, 312.0, 24.0, 24.0 ],
 									"presentation" : 1,
@@ -2067,12 +2094,13 @@
 							}
 , 							{
 								"box" : 								{
-									"bgcolor" : [ 0.235294117647059, 0.474509803921569, 0.258823529411765, 1.0 ],
+									"bgcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
 									"id" : "obj-46",
 									"maxclass" : "button",
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
+									"outlinecolor" : [ 0.0, 0.533333, 0.168627, 1.0 ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 247.0, 312.0, 24.0, 24.0 ],
 									"presentation" : 1,
@@ -2232,16 +2260,14 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
-									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
 									"presentation" : 1,
-									"presentation_linecount" : 12,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
-									"text" : "\"3.11.6 (main, Nov  2 2023, 04:39:43) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 22.0 ],
+									"text" : "21"
 								}
 
 							}
@@ -2262,11 +2288,11 @@
 										"autoload" : 0,
 										"debug" : 1,
 										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_api.py",
-										"pythonpath" : ""
+										"pythonpath" : "/Users/sa/src"
 									}
 ,
 									"text" : "py @name bob",
-									"varname" : "__main__"
+									"varname" : "bob"
 								}
 
 							}
@@ -2935,6 +2961,22 @@
 									"destination" : [ "obj-7", 0 ],
 									"hidden" : 1,
 									"source" : [ "obj-12", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-7", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-121", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-7", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-122", 0 ]
 								}
 
 							}

@@ -55,7 +55,7 @@ struct t_py {
     short p_code_path;          /*!< short code for max file system */
     long p_run_on_save;         /*!< evaluate/run code in editor on save */
     long p_run_on_close;        /*!< evaluate/run code in editor on close */
-    t_symbol* p_run_on;
+    // t_symbol* p_run_on;
 
     t_symbol* p_code_filepath;  /*!< default python filepath to load into
                                   the code editor and 'globals' namespace */
@@ -88,7 +88,9 @@ void ext_main(void* module_ref)
                   0L, A_GIMME, 0);
 
     // class flags
+#if PY_ATTRS_WITH_DEFAULTS
     c->c_flags |= CLASS_FLAG_NEWDICTIONARY;
+#endif
 
     // object methods
     //------------------------------------------------------------------------
@@ -96,7 +98,6 @@ void ext_main(void* module_ref)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",                  0);
-    class_addmethod(c, (method)py_metadata,   "info",                  0);
 
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
@@ -118,7 +119,9 @@ void ext_main(void* module_ref)
 
     // meta
     class_addmethod(c, (method)py_assist,     "assist",     A_CANT,    0);
+    class_addmethod(c, (method)py_metadata,   "info",                  0);
     class_addmethod(c, (method)py_count,      "count",      A_NOTHING, 0);
+    class_addmethod(c, (method)py_get,        "get",        A_DEFSYM,  0);
 
     // interobject
     class_addmethod(c, (method)py_scan,       "scan",       A_NOTHING, 0);
@@ -177,12 +180,11 @@ void ext_main(void* module_ref)
     // CLASS_ATTR_BASIC(c,     "run_on", 0);
     // CLASS_ATTR_SAVE(c,      "run_on", 0);
 
-    CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "patch-wide pythonpath");
+    CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "object pythonpath");
     CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
-    // disabled since it provides a dialogue only for file instead of dir
-    // CLASS_ATTR_STYLE(c,     "pythonpath", 0,  "file");
     CLASS_ATTR_BASIC(c,     "pythonpath", 0);
     CLASS_ATTR_SAVE(c,      "pythonpath", 0);
+    CLASS_ATTR_ACCESSORS(c, "pythonpath", py_pythonpath_attr_get, py_pythonpath_attr_set);
 
     CLASS_ATTR_LABEL(c,     "debug", 0,  "debug log to console");
     CLASS_ATTR_LONG(c,      "debug", 0,  t_py, p_debug);
@@ -196,9 +198,9 @@ void ext_main(void* module_ref)
     CLASS_ATTR_ORDER(c,     "autoload",     0,  "3");
     CLASS_ATTR_ORDER(c,     "run_on_save",  0,  "4");
     CLASS_ATTR_ORDER(c,     "run_on_close", 0,  "5");
-    CLASS_ATTR_ORDER(c,     "run_on",       0,  "6");
-    CLASS_ATTR_ORDER(c,     "pythonpath",   0,  "7");
-    CLASS_ATTR_ORDER(c,     "debug",        0,  "8");
+    // CLASS_ATTR_ORDER(c,     "run_on",       0,  "6");
+    CLASS_ATTR_ORDER(c,     "pythonpath",   0,  "6");
+    CLASS_ATTR_ORDER(c,     "debug",        0,  "7");
 
     // clang-format on
     //------------------------------------------------------------------------
@@ -231,8 +233,10 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
     if (x) {
 
+        //py_postargs(s, argc, argv);
+
         if (py_global_obj_count == 0) {
-            // first py obj is called '__main__'
+            // first py obj is called '__main__' by default
             x->p_name = gensym("__main__");
         } else {
             x->p_name = symbol_unique();
@@ -253,12 +257,11 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_code_outtype = 0;
         x->p_code_filename[0] = 0;
         x->p_code_pathname[0] = 0;
-        // short p_code_path;
         x->p_code_filepath = gensym("");
         x->p_autoload = 0;
         x->p_run_on_save = 0;
         x->p_run_on_close = 1;
-        x->p_run_on = gensym("close");
+        // x->p_run_on = gensym("close");
 
         // set default debug level
         x->p_debug = 0;
@@ -281,12 +284,12 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
         if (x->p_box == NULL)
-            error("patcher object not created.");
+            error("box object not created.");
 
         // create scripting name
         t_max_err err = jbox_set_varname(x->p_box, x->p_name);
         if (err != MAX_ERR_NONE) {
-            error("could not set scripting name");
+            error("could not set scripting name to box");
         }
 
         // python init
@@ -322,9 +325,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         }
 
         if (x->p_pythonpath != gensym("")) {
-            PyObject* sys_path = PySys_GetObject((char*)"path");
-            PyObject* py_path = PyUnicode_FromString(x->p_pythonpath->s_name);
-            PyList_Append(sys_path, py_path);
+            py_pythonpath_add(x, x->p_pythonpath);
         }
     }
     return (x);
@@ -432,6 +433,108 @@ void py_free(t_py* x)
     }
 }
 
+
+/*--------------------------------------------------------------------------*/
+/* Attribute Accessors and Helpers */
+
+/**
+ * @brief      Getter for 'pythonpath' attribute
+ *
+ * @param      x     pointer to object struct
+ * @param      attr  The attribute
+ * @param      argc  The count of arguments
+ * @param      argv  The atom arguments array
+ *
+ * @return     t_max_err value
+ */
+t_max_err py_pythonpath_attr_get(t_py *x, t_object *attr, long *argc, t_atom **argv)
+{
+    char alloc;
+
+    if (argc && argv) {
+        if (atom_alloc(argc, argv, &alloc)) {
+                return MAX_ERR_OUT_OF_MEM;
+            }
+            if (alloc) {
+                atom_setsym(*argv, x->p_pythonpath);
+                // post("py_pythonpath_attr_get: %s", x->p_pythonpath->s_name);
+        }
+    }
+    return MAX_ERR_NONE;
+}
+
+/**
+ * @brief      Setter for 'pythonpath' attribute
+ *
+ * @param      x     pointer to object struct
+ * @param      attr  The attribute
+ * @param[in]  argc  The count of arguments
+ * @param      argv  The atom arguments array
+ *
+ * @return     t_max_err value
+ */
+t_max_err py_pythonpath_attr_set(t_py *x, t_object *attr, long argc, t_atom *argv)
+{
+    char conform_path[MAX_PATH_CHARS];
+
+    if (argc && argv) {
+
+        // expand path vars like $HOME
+        path_nameconform(atom_getsym(argv)->s_name, conform_path,
+            PATH_STYLE_MAX, PATH_TYPE_BOOT);
+
+        if (x->p_pythonpath != gensym(conform_path)) {
+            x->p_pythonpath = gensym(conform_path);
+            py_pythonpath_add(x, x->p_pythonpath);
+        }
+        post("py_pythonpath_attr_set: %s", x->p_pythonpath->s_name);
+    }
+    return MAX_ERR_NONE;
+}
+
+/**
+ * @brief      Add path to pythonpath
+ *
+ * @param      x     pointer to object struct
+ * @param      path  The path
+ *
+ * @return     t_max_err value
+ */
+t_max_err py_pythonpath_add(t_py* x, t_symbol* path)
+{
+    PyObject* sys_path = PySys_GetObject((char*)"path");
+    PyObject* py_path = PyUnicode_FromString(path->s_name);
+    if (!sys_path || !py_path) {
+        py_error(x, "could not set pythonpath");
+        return MAX_ERR_GENERIC;
+    }
+    PyList_Append(sys_path, py_path);
+    py_info(x, "added to pythonpath: %s", path->s_name);
+    return MAX_ERR_NONE;
+}
+
+/**
+ * @brief      Get attribute values
+ *
+ * @param      x     pointer to object struct
+ * @param      s     name of attribute
+ *
+ * @return     The t maximum error.
+ * 
+ */
+t_max_err py_get(t_py* x, t_symbol* s)
+{
+    if (s == gensym("pythonpath")) {
+        outlet_anything(x->p_outlet_left, x->p_pythonpath, 0, NULL);
+    }
+    else if (s == gensym("name")) {
+        outlet_anything(x->p_outlet_left, x->p_name, 0, NULL);
+    }
+    else if (s == gensym("file")) {
+        outlet_anything(x->p_outlet_left, x->p_code_filename, 0, NULL);
+    }
+    return MAX_ERR_NONE;
+}
 
 /*--------------------------------------------------------------------------*/
 /* Helpers */
@@ -631,7 +734,6 @@ t_string* py_get_path_to_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
-    char conform_path[MAX_PATH_CHARS];
     short path_id = class_getpath(c);
     t_string* result;
 
@@ -642,8 +744,6 @@ t_string* py_get_path_to_external(t_class* c, char* subpath)
 #endif
     snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename, c->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
-    path_nameconform(external_path, conform_path, PATH_STYLE_MAX,
-                     PATH_TYPE_BOOT);
     result = string_new(external_path);
     if (subpath != NULL) {
         string_append(result, subpath);
@@ -803,7 +903,9 @@ char *str_replace(char *orig, char *rep, char *with) {
     //    orig points to the remainder of orig after "end of rep"
     while (count--) {
         ins = strstr(orig, rep);
-        len_front = ins - (long)orig;
+        // len_front = ins - (long)orig;
+        // len_front = strlen(ins) - strlen(orig);
+        len_front = ins - orig;
         tmp = strncpy(tmp, orig, len_front) + len_front;
         tmp = strcpy(tmp, with) + len_with;
         orig += len_front + len_rep; // move to next "end of rep"
@@ -1109,61 +1211,87 @@ t_max_err py_task(t_py* x)
 /*--------------------------------------------------------------------------*/
 /* Handlers */
 
+// to enable tracebacks in py_handle_error
+// for versions of python < 3.11
+#if PY_VERSION_HEX < 0x030900B1
+#include <frameobject.h>
+static inline PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)
+{
+    Py_INCREF(frame->f_code);
+    return frame->f_code;
+}
+#endif
+
+
 /**
  * @brief Generic python error handler with tracebacks
  *
  * @param x pointer to object struct
  * @param fmt format string
  * @param ... other args
+ * 
+ * see: https://stackoverflow.com/questions/56430908/cpython-print-traceback
  */
 void py_handle_error(t_py* x, char* fmt, ...)
 {
-    if (PyErr_Occurred()) {
 
-        char msg[PY_MAX_ELEMS];
+    if (!PyErr_Occurred())
+        return;
 
-        va_list va;
-        va_start(va, fmt);
-        vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
-        va_end(va);
+    char msg[PY_MAX_ELEMS];
 
-        // get error info
-        PyObject *ptype, *pvalue, *ptraceback;
-        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-        Py_XDECREF(ptype);
+    va_list va;
+    va_start(va, fmt);
+    vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
+    va_end(va);
 
-        PyObject* pvalue_pstr = PyObject_Repr(pvalue);
-        const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(pvalue_pstr);
+    // get error info
+    PyObject *ptype, *pvalue, *ptraceback;
+    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+    PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+    Py_XDECREF(ptype);
 
-        if (PyTraceBack_Check(ptraceback))
+    PyObject* pvalue_pstr = PyObject_Repr(pvalue);
+    const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
+    Py_XDECREF(pvalue);
+    Py_XDECREF(pvalue_pstr);
+
+    if (ptraceback != NULL && PyTraceBack_Check(ptraceback))
+    {
+        char traceback_str[PY_MAX_ERROR];
+        char linebuffer[PY_MAX_ELEMS];
+
+        PyTracebackObject* trace_root = (PyTracebackObject*)ptraceback;
+        PyTracebackObject* ptrace = trace_root;
+        
+        while (ptrace != NULL)
         {
-            char traceback_str[PY_MAX_ERROR];
-            char linebuffer[PY_MAX_ELEMS];
+            PyFrameObject* frame = ptrace->tb_frame;
+            if (!frame)
+                goto no_traceback;
+            PyCodeObject* code = PyFrame_GetCode(frame);
+            if (!code)
+                goto no_traceback;
 
-            PyTracebackObject* trace_root = (PyTracebackObject*)ptraceback;
-            PyTracebackObject* ptrace = trace_root;
-            
-            while (ptrace != NULL)
-            {
-                PyFrameObject* frame = ptrace->tb_frame;
-                PyCodeObject* code = PyFrame_GetCode(frame);
+            int linenum = PyFrame_GetLineNumber(frame);
+            const char *codename = PyUnicode_AsUTF8(code->co_name);
+            const char *filename = PyUnicode_AsUTF8(code->co_filename);
 
-                int linenum = PyFrame_GetLineNumber(frame);
-                const char *codename = PyUnicode_AsUTF8(code->co_name);
-                const char *filename = PyUnicode_AsUTF8(code->co_filename);
-
-                snprintf_zero(linebuffer, PY_MAX_ELEMS, "at %s (%s:%d); \n",  codename, filename, linenum);
-                strncat_zero(traceback_str, linebuffer, PY_MAX_ERROR);
-                ptrace = ptrace->tb_next;
-            }
-            object_error((t_object*)x, "[ERROR] (%s) %s: %s\n%s", 
-                x->p_name->s_name, msg, pvalue_str, traceback_str);
+            snprintf_zero(linebuffer, PY_MAX_ELEMS, "at %s (%s:%d); \n",
+                codename, filename, linenum);
+            strncat_zero(traceback_str, linebuffer, PY_MAX_ERROR);
+            ptrace = ptrace->tb_next;
         }
+        object_error((t_object*)x, "[ERROR] (%s) %s: %s\n%s", 
+            x->p_name->s_name, msg, pvalue_str, traceback_str);
         Py_XDECREF(ptraceback);
+        return;
     }
+
+    no_traceback:
+        object_error((t_object*)x, "[ERROR] (%s) %s: %s", 
+            x->p_name->s_name, msg, pvalue_str);
+        Py_XDECREF(ptraceback);
 }
 
 
@@ -1173,6 +1301,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
  * @param x pointer to object struct
  * @param pfloat python float
  * @return t_max_err error code
+ * 
  */
 t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
 {
@@ -1633,7 +1762,7 @@ error:
 }
 
 /**
- * @brief Execute contents of a file (obtained from symbol) as python code
+ * @brief Execute contents of a file (filename obtained from symbol) as python code
  *
  * @param x pointer to object structure
  * @param s symbol
@@ -1768,15 +1897,14 @@ error:
 
 
 /**
- * @brief A helper function to evaluate Max text as a Python expression.
+ * @brief Evaluate atoms converted to a string as a Python expression.
  *
  * @param x pointer to object structure
  * @param argc atom argument count
  * @param argv atom argument vector
- * @param offset offset of atom vector from which to evaluate
  * @return t_max_err error code
  */
-t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
@@ -1786,7 +1914,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     PyObject* co = NULL;
     PyObject* pval = NULL;
 
-    t_max_err err = atom_gettext(argc + offset, argv, &textsize, &text,
+    t_max_err err = atom_gettext(argc, argv, &textsize, &text,
                                  OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         py_debug(x, ">>> %s", text);
@@ -1800,7 +1928,6 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     // co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
     co = Py_CompileString(new_text, x->p_name->s_name, Py_eval_input);
 
-
     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
         PyErr_Clear();
         co = Py_CompileString(new_text, x->p_name->s_name, Py_single_input);
@@ -1813,6 +1940,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
     if (co == NULL) { // can be eval-co or exec-co or NULL here
         goto error;
     }
+
     sysmem_freeptr(text);
 
     pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
@@ -1833,6 +1961,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset)
 
 error:
     py_handle_error(x, "python code evaluation failed");
+
     // fail bang
     PyGILState_Release(gstate);
     py_bang_failure(x);
@@ -1850,11 +1979,8 @@ error:
  */
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_eval_text(x, argc, argv, 0);
+    return py_eval_text(x, argc, argv);
 }
-
-
-
 
 
 /**
@@ -1903,9 +2029,8 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         }
     }
 
-    return py_eval_text(x, argc, atoms, 1);
+    return py_eval_text(x, argc+1, atoms);
 }
-
 
 /*--------------------------------------------------------------------------*/
 /* Wrapped Python Methods */

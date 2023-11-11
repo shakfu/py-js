@@ -7,12 +7,24 @@ option(C74_BUILD_FAT "Build Universal Externals") # not supported (you're on you
 option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals")
 option(BUILD_ZMQ_EXTERNALS "Enable building zeromq externals")
 option(BUILD_MICROPYTHON_EXTERNAL "Enable building of micropython external")
+option(ENABLE_LTO "enable link-time / interprocedural optimization")
 
 # use ccache if available
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     message(STATUS "Found ccache in ${CCACHE_PROGRAM}")
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+endif()
+
+if (ENABLE_LTO_IPO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_lto_supported OUTPUT check_lto_ipo_error)
+    if(ipo_lto_supported)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+        message(STATUS "IPO / LTO enabled")
+    else()
+        message(STATUS "IPO / LTO not supported: <${check_lto_ipo_error}>")
+    endif()
 endif()
 
 message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")

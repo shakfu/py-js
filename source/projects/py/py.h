@@ -31,6 +31,7 @@
 
 #define PY_MAX_ELEMS 1024
 #define PY_MAX_ERROR 4096
+#define PY_ATTRS_WITH_DEFAULTS 0
 
 /*--------------------------------------------------------------------------*/
 /* Macros */
@@ -63,6 +64,14 @@ void py_free(t_py* x);
 void py_init(t_py* x);
 
 /*--------------------------------------------------------------------------*/
+/* Attribute Getters / Setters and Helpers */
+
+t_max_err py_pythonpath_attr_get(t_py *x, t_object *attr, long *argc, t_atom **argv);
+t_max_err py_pythonpath_attr_set(t_py *x, t_object *attr, long argc, t_atom *argv);
+t_max_err py_pythonpath_add(t_py* x, t_symbol* path);
+t_max_err py_get(t_py* x, t_symbol* s);
+
+/*--------------------------------------------------------------------------*/
 /* Logging */
 
 void py_info(t_py* x, char* fmt, ...);
@@ -77,7 +86,7 @@ void py_init_builtins(t_py* x);
 void py_init_osx_set_home_static_ext(void);
 void py_init_osx_set_home_shared_pkg(void);
 void py_init_osx_set_home_framework_ext(void);
-t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset);
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv);
 
 /* api module helpers */
 

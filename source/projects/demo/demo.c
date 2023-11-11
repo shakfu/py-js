@@ -8,6 +8,8 @@ typedef struct _demo {
     void *ob_proxy_2;     // inlet proxy
     long ob_inletnum;     // # of inlet currently in use
 
+    t_symbol* name;
+
     // params
     float param0;
     float param1;
@@ -22,6 +24,9 @@ void* demo_new(t_symbol* s, long argc, t_atom* argv);
 void demo_free(t_demo* x);
 void demo_bang(t_demo* x);
 void demo_float(t_demo *x, double f);
+t_max_err demo_name_get(t_demo *x, t_object *attr, long *argc, t_atom **argv);
+t_max_err demo_name_set(t_demo *x, t_object *attr, long argc, t_atom *argv);
+
 
 // global class pointer variable
 static t_class* demo_class = NULL;
@@ -35,6 +40,12 @@ void ext_main(void* r)
 
     class_addmethod(c, (method)demo_bang,  "bang", 0);
     class_addmethod(c, (method)demo_float, "float", A_FLOAT, 0);
+
+    CLASS_ATTR_LABEL(c,     "name", 0,  "patch-wide name");
+    CLASS_ATTR_SYM(c,       "name", 0,  t_demo, name);
+    CLASS_ATTR_BASIC(c,     "name", 0);
+    CLASS_ATTR_SAVE(c,      "name", 0);
+    CLASS_ATTR_ACCESSORS(c, "name", demo_name_get, demo_name_set);
 
     class_register(CLASS_BOX, c);
     demo_class = c;
@@ -56,13 +67,19 @@ void* demo_new(t_symbol* s, long argc, t_atom* argv)
         x->ob_proxy_2 = proxy_new(x, 2, NULL);
         x->ob_proxy_1 = proxy_new(x, 1, NULL);
 
+        x->name = gensym("");
+
         x->param0 = 7.0;
         x->param1 = 500.0;
         x->param2 = 250.0;
 
+        attr_args_process(x, argc, argv);
+
         post("x->param0: %f", x->param0);
         post("x->param1: %f", x->param1);
         post("x->param2: %f", x->param2);
+
+        post("x->name: %s", x->name->s_name);
     }
     return (x);
 }
@@ -118,5 +135,31 @@ void demo_bang(t_demo* x) {
 
 
     outlet_bang(x->ob_proxy_1); 
+}
+
+
+t_max_err demo_name_get(t_demo *x, t_object *attr, long *argc, t_atom **argv)
+{
+    char alloc;
+
+    if (argc && argv) {
+        if (atom_alloc(argc, argv, &alloc)) {
+                return MAX_ERR_OUT_OF_MEM;
+            }
+            if (alloc) {
+                atom_setsym(*argv, x->name);
+                post("demo_name_get: %s", x->name->s_name);
+        }
+    }
+    return MAX_ERR_NONE;
+}
+
+t_max_err demo_name_set(t_demo *x, t_object *attr, long argc, t_atom *argv)
+{
+    if (argc && argv) {
+        x->name = atom_getsym(argv);
+        post("demo_name_set: %s", x->name->s_name);
+    }
+    return MAX_ERR_NONE;
 }
 
