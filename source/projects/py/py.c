@@ -26,45 +26,46 @@ static uintptr_t py_global_obj_ref = 0;
 
 struct t_py {
     /* object header */
-    t_object p_ob;              /*!< object header */
+    t_object p_ob; /*!< object header */
 
     /* object attributes */
-    t_symbol* p_name;           /*!< unique object name */
+    t_symbol* p_name; /*!< unique object name */
 
     /* python-related */
-    t_symbol* p_pythonpath;     /*!< path to python directory */
-    t_bool p_debug;             /*!< bool to switch per-object debug state */
-    PyObject* p_globals;        /*!< per object 'globals' python namespace */
+    t_symbol* p_pythonpath; /*!< path to python directory */
+    t_bool p_debug;         /*!< bool to switch per-object debug state */
+    PyObject* p_globals;    /*!< per object 'globals' python namespace */
 
     /* infrastructure objects */
-    t_patcher* p_patcher;       /*!< to send msgs to objects */
-    t_box* p_box;               /*!< the ui box of the py instance? */
+    t_patcher* p_patcher; /*!< to send msgs to objects */
+    t_box* p_box;         /*!< the ui box of the py instance? */
 
     /* time-based ops */
-    void* p_clock;              /*!< a clock in case of scheduled ops */
-    t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
+    void* p_clock; /*!< a clock in case of scheduled ops */
+    t_atomarray*
+        p_sched_atoms; /*!< atomarray for scheduled python function call */
 
     /* text editor attrs */
-    t_object* p_code_editor;    /*!< code editor object */
-    char** p_code;              /*!< handle to code buffer for code editor */
-    long p_code_size;           /*!< length of code buffer */
-    t_fourcc p_code_filetype;   /*!< filetype four char code of 'TEXT' */
-    t_fourcc p_code_outtype;    /*!< savetype four char code of 'TEXT' */
+    t_object* p_code_editor;  /*!< code editor object */
+    char** p_code;            /*!< handle to code buffer for code editor */
+    long p_code_size;         /*!< length of code buffer */
+    t_fourcc p_code_filetype; /*!< filetype four char code of 'TEXT' */
+    t_fourcc p_code_outtype;  /*!< savetype four char code of 'TEXT' */
     char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
     char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
-    short p_code_path;          /*!< short code for max file system */
-    long p_run_on_save;         /*!< evaluate/run code in editor on save */
-    long p_run_on_close;        /*!< evaluate/run code in editor on close */
+    short p_code_path;   /*!< short code for max file system */
+    long p_run_on_save;  /*!< evaluate/run code in editor on save */
+    long p_run_on_close; /*!< evaluate/run code in editor on close */
     // t_symbol* p_run_on;
 
-    t_symbol* p_code_filepath;  /*!< default python filepath to load into
-                                  the code editor and 'globals' namespace */
-    t_bool p_autoload;          /*!< bool to autoload of p_code_filepath  */
+    t_symbol* p_code_filepath; /*!< default python filepath to load into
+                                 the code editor and 'globals' namespace */
+    t_bool p_autoload;         /*!< bool to autoload of p_code_filepath  */
 
     /* outlet creation */
-    void* p_outlet_right;       /*!< right outlet to bang success */
-    void* p_outlet_middle;      /*!< middle outleet to bang error */
-    void* p_outlet_left;        /*!< left outleet for msg output  */
+    void* p_outlet_right;  /*!< right outlet to bang success */
+    void* p_outlet_middle; /*!< middle outleet to bang error */
+    void* p_outlet_left;   /*!< left outleet for msg output  */
 };
 
 
@@ -233,7 +234,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
     if (x) {
 
-        //py_postargs(s, argc, argv);
+        // py_postargs(s, argc, argv);
 
         if (py_global_obj_count == 0) {
             // first py obj is called '__main__' by default
@@ -314,10 +315,10 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // process autoload
         py_debug(x, "checking autoload / code_filepath / pythonpath");
         py_debug(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s",
-               x->p_autoload, x->p_code_filepath->s_name,
-               x->p_pythonpath->s_name);
+                 x->p_autoload, x->p_code_filepath->s_name,
+                 x->p_pythonpath->s_name);
         py_debug(x, "via object_attr_getsym: %s",
-               object_attr_getsym(x, gensym("file"))->s_name);
+                 object_attr_getsym(x, gensym("file"))->s_name);
 
         if ((x->p_autoload == 1) && (x->p_code_filepath != gensym(""))) {
             py_debug(x, "autoloading: %s", x->p_code_filepath->s_name);
@@ -330,7 +331,6 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
     }
     return (x);
 }
-
 
 
 /**
@@ -447,17 +447,18 @@ void py_free(t_py* x)
  *
  * @return     t_max_err value
  */
-t_max_err py_pythonpath_attr_get(t_py *x, t_object *attr, long *argc, t_atom **argv)
+t_max_err py_pythonpath_attr_get(t_py* x, t_object* attr, long* argc,
+                                 t_atom** argv)
 {
     char alloc;
 
     if (argc && argv) {
         if (atom_alloc(argc, argv, &alloc)) {
-                return MAX_ERR_OUT_OF_MEM;
-            }
-            if (alloc) {
-                atom_setsym(*argv, x->p_pythonpath);
-                // post("py_pythonpath_attr_get: %s", x->p_pythonpath->s_name);
+            return MAX_ERR_OUT_OF_MEM;
+        }
+        if (alloc) {
+            atom_setsym(*argv, x->p_pythonpath);
+            // post("py_pythonpath_attr_get: %s", x->p_pythonpath->s_name);
         }
     }
     return MAX_ERR_NONE;
@@ -473,7 +474,8 @@ t_max_err py_pythonpath_attr_get(t_py *x, t_object *attr, long *argc, t_atom **a
  *
  * @return     t_max_err value
  */
-t_max_err py_pythonpath_attr_set(t_py *x, t_object *attr, long argc, t_atom *argv)
+t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc,
+                                 t_atom* argv)
 {
     char conform_path[MAX_PATH_CHARS];
 
@@ -481,7 +483,7 @@ t_max_err py_pythonpath_attr_set(t_py *x, t_object *attr, long argc, t_atom *arg
 
         // expand path vars like $HOME
         path_nameconform(atom_getsym(argv)->s_name, conform_path,
-            PATH_STYLE_MAX, PATH_TYPE_BOOT);
+                         PATH_STYLE_MAX, PATH_TYPE_BOOT);
 
         if (x->p_pythonpath != gensym(conform_path)) {
             x->p_pythonpath = gensym(conform_path);
@@ -520,18 +522,16 @@ t_max_err py_pythonpath_add(t_py* x, t_symbol* path)
  * @param      s     name of attribute
  *
  * @return     The t maximum error.
- * 
+ *
  */
 t_max_err py_get(t_py* x, t_symbol* s)
 {
     if (s == gensym("pythonpath")) {
         outlet_anything(x->p_outlet_left, x->p_pythonpath, 0, NULL);
-    }
-    else if (s == gensym("name")) {
+    } else if (s == gensym("name")) {
         outlet_anything(x->p_outlet_left, x->p_name, 0, NULL);
-    }
-    else if (s == gensym("file")) {
-        outlet_anything(x->p_outlet_left, x->p_code_filename, 0, NULL);
+    } else if (s == gensym("file")) {
+        outlet_anything(x->p_outlet_left, gensym(x->p_code_filename), 0, NULL);
     }
     return MAX_ERR_NONE;
 }
@@ -543,19 +543,20 @@ t_max_err py_get(t_py* x, t_symbol* s)
  * @brief Print the contents of an array of atoms to the Max window.
  *
  * @param argc The count of atoms in argv.
- * @param argv The address to the first of an array of atoms. 
+ * @param argv The address to the first of an array of atoms.
  * @return void*
  *
  * Thanks to Luigi Castelli for original code in this post
  * https://cycling74.com/forums/is-the-sdk's-postargs-function-really-accessible
  */
-void py_postargs(t_symbol *s, long argc, t_atom *argv)
+void py_postargs(t_symbol* s, long argc, t_atom* argv)
 {
     long textsize = 0;
-    char *text = NULL;
+    char* text = NULL;
     t_max_err err;
-    
-    err = atom_gettext(argc, argv, &textsize, &text, OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+
+    err = atom_gettext(argc, argv, &textsize, &text,
+                       OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
         post("%s %s", s->s_name, text);
     }
@@ -572,10 +573,7 @@ void py_postargs(t_symbol *s, long argc, t_atom *argv)
  *
  * Returns a reference to the main object outlet
  */
-void* get_outlet(t_py* x)
-{
-    return (void*)x->p_outlet_left;
-}
+void* get_outlet(t_py* x) { return (void*)x->p_outlet_left; }
 
 /**
  * @brief Post INFO msg to Max console.
@@ -600,7 +598,6 @@ void py_info(t_py* x, char* fmt, ...)
     va_end(va);
 
     object_post((t_object*)x, "[INFO] (%s) %s", x->p_name->s_name, msg);
-
 }
 
 /**
@@ -680,8 +677,8 @@ void py_init_builtins(t_py* x)
     if (err == -1)
         goto error;
 
-    p_code_obj = PyRun_String(PY_PRELUDE_MODULE,
-        Py_file_input, x->p_globals, x->p_globals);
+    p_code_obj = PyRun_String(PY_PRELUDE_MODULE, Py_file_input, x->p_globals,
+                              x->p_globals);
 
     if (p_code_obj == NULL) {
         py_error(x, "cannot import PY_PRELUDE_MODULE");
@@ -705,21 +702,16 @@ error:
  *
  * This is only used in the api module
  */
-t_hashtab* py_get_global_registry(void)
-{
-    return py_global_registry;
-}
+t_hashtab* py_get_global_registry(void) { return py_global_registry; }
 
 /**
  * @brief      Return a ref the t_py *x pointer via the global_ref
  *
  * @return     unitptr ref to the object struct
- * 
+ *
  * This is only used in the api module
  */
-uintptr_t py_get_object_ref(void) {
-    return py_global_obj_ref;
-}
+uintptr_t py_get_object_ref(void) { return py_global_obj_ref; }
 
 
 /**
@@ -742,7 +734,8 @@ t_string* py_get_path_to_external(t_class* c, char* subpath)
 #else
     const char* ext_filename = "%s.mxe64";
 #endif
-    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename, c->c_sym->s_name);
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename,
+                  c->c_sym->s_name);
     path_toabsolutesystempath(path_id, external_name, external_path);
     result = string_new(external_path);
     if (subpath != NULL) {
@@ -770,8 +763,9 @@ t_string* py_get_path_to_package(t_class* c, char* subpath)
 
     const char* ext_path_c = string_getptr(external_path);
 
-    path_splitnames(ext_path_c, externals_folder, _dummy);     // ignore filename
-    path_splitnames(externals_folder, package_folder, _dummy); // ignore filename
+    path_splitnames(ext_path_c, externals_folder, _dummy); // ignore filename
+    path_splitnames(externals_folder, package_folder,
+                    _dummy); // ignore filename
 
     result = string_new((char*)package_folder);
 
@@ -781,7 +775,6 @@ t_string* py_get_path_to_package(t_class* c, char* subpath)
 
     return result;
 }
-
 
 
 /**
@@ -805,7 +798,7 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
                         &x->p_code_outtype, &x->p_code_filetype, 1))
             /* non-zero: cancelled */
             ret = MAX_ERR_GENERIC;
-            goto finally;
+        goto finally;
 
     } else {
 
@@ -861,19 +854,20 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
  * @param      with  what to replace with
  *
  * @return     a new string with replaced strings
- * 
+ *
  * NOTE: You must free the result if result is non-NULL.
- * 
+ *
  */
-char *str_replace(char *orig, char *rep, char *with) {
+char* str_replace(char* orig, char* rep, char* with)
+{
     // from: https://stackoverflow.com/questions/779875
-    char *result; // the return string
-    char *ins;    // the next insert point
-    char *tmp;    // varies
-    int len_rep;  // length of rep (the string to remove)
-    int len_with; // length of with (the string to replace rep with)
+    char* result;  // the return string
+    char* ins;     // the next insert point
+    char* tmp;     // varies
+    int len_rep;   // length of rep (the string to remove)
+    int len_with;  // length of with (the string to replace rep with)
     int len_front; // distance between rep and end of last rep
-    int count;    // number of replacements
+    int count;     // number of replacements
 
     // sanity checks and initialization
     if (!orig || !rep)
@@ -942,10 +936,7 @@ void py_assist(t_py* x, void* b, long m, long a, char* s)
  *
  * @param x pointer to object struct.
  */
-void py_count(t_py* x)
-{
-    outlet_int(x->p_outlet_left, py_global_obj_count);
-}
+void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
 
 
 /**
@@ -957,32 +948,29 @@ void py_count(t_py* x)
  */
 void path_join(char* destination, const char* path1, const char* path2)
 {
-    //char filename[MAX_FILENAME_CHARS];
-    //strncpy_zero(filename,str->s_name, MAX_FILENAME_CHARS);
+    // char filename[MAX_FILENAME_CHARS];
+    // strncpy_zero(filename,str->s_name, MAX_FILENAME_CHARS);
 
-    if(path1 == NULL && path2 == NULL) {
+    if (path1 == NULL && path2 == NULL) {
         strcpy(destination, "");
-    }
-    else if(path2 == NULL || strlen(path2) == 0) {
+    } else if (path2 == NULL || strlen(path2) == 0) {
         strcpy(destination, path1);
-    }
-    else if(path1 == NULL || strlen(path1) == 0) {
+    } else if (path1 == NULL || strlen(path1) == 0) {
         strcpy(destination, path2);
-    }
-    else {
+    } else {
         char directory_separator[] = "/";
 #ifdef WIN32
         directory_separator[0] = '\\';
 #endif
-        const char *last_char = path1;
-        while(*last_char != '\0')
+        const char* last_char = path1;
+        while (*last_char != '\0')
             last_char++;
         int append_directory_separator = 0;
-        if(strcmp(last_char, directory_separator) != 0) {
+        if (strcmp(last_char, directory_separator) != 0) {
             append_directory_separator = 1;
         }
         strcpy(destination, path1);
-        if(append_directory_separator)
+        if (append_directory_separator)
             strcat(destination, directory_separator);
         strcat(destination, path2);
     }
@@ -1006,12 +994,12 @@ void py_metadata(t_py* x)
     short defaultpath_id = path_getdefault();
 
     // patcher info
-    t_object *patcher;
- 
+    t_object* patcher;
+
     object_obex_lookup(x, gensym("#P"), &patcher);
     post("my patcher is at address %lx", patcher);
-    t_symbol *name = object_attr_getsym(patcher, gensym("name"));
-    t_symbol *path = object_attr_getsym(patcher, gensym("filepath"));
+    t_symbol* name = object_attr_getsym(patcher, gensym("name"));
+    t_symbol* path = object_attr_getsym(patcher, gensym("filepath"));
     post("patcher.name: %s", name->s_name);
     post("patcher.path: %s", path->s_name);
 
@@ -1035,7 +1023,7 @@ void py_metadata(t_py* x)
     path_toabsolutesystempath(defaultpath_id, "", output_path);
     post("defaultpath: %s", output_path);
 
-    const char * external_path = string_getptr(
+    const char* external_path = string_getptr(
         py_get_path_to_external(py_class, NULL));
 
     post("externalpath: %s", external_path);
@@ -1069,7 +1057,6 @@ void py_metadata(t_py* x)
 
     post("external_resources_path: %s", external_resources_path);
     post("python_path: %s", python_path);
-
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1091,20 +1078,14 @@ void py_bang(t_py* x)
  *
  * @param x pointer to object struct.
  */
-void py_bang_success(t_py* x)
-{
-    outlet_bang(x->p_outlet_right);
-}
+void py_bang_success(t_py* x) { outlet_bang(x->p_outlet_right); }
 
 /**
  * @brief Output bang from middle outlet.
  *
  * @param x pointer to object struct.
  */
-void py_bang_failure(t_py* x)
-{
-    outlet_bang(x->p_outlet_middle);
-}
+void py_bang_failure(t_py* x) { outlet_bang(x->p_outlet_middle); }
 
 /*--------------------------------------------------------------------------*/
 /* Time-based */
@@ -1150,7 +1131,8 @@ t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // atom after the name of the time
     if ((argv + 1)->a_type != A_SYM) {
-        py_error(x, "2nd elem of sched atom needs to be the name of the callable");
+        py_error(
+            x, "2nd elem of sched atom needs to be the name of the callable");
         goto error;
     }
 
@@ -1215,7 +1197,7 @@ t_max_err py_task(t_py* x)
 // for versions of python < 3.11
 #if PY_VERSION_HEX < 0x030900B1
 #include <frameobject.h>
-static inline PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)
+static inline PyCodeObject* PyFrame_GetCode(PyFrameObject* frame)
 {
     Py_INCREF(frame->f_code);
     return frame->f_code;
@@ -1229,7 +1211,7 @@ static inline PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)
  * @param x pointer to object struct
  * @param fmt format string
  * @param ... other args
- * 
+ *
  * see: https://stackoverflow.com/questions/56430908/cpython-print-traceback
  */
 void py_handle_error(t_py* x, char* fmt, ...)
@@ -1256,16 +1238,14 @@ void py_handle_error(t_py* x, char* fmt, ...)
     Py_XDECREF(pvalue);
     Py_XDECREF(pvalue_pstr);
 
-    if (ptraceback != NULL && PyTraceBack_Check(ptraceback))
-    {
+    if (ptraceback != NULL && PyTraceBack_Check(ptraceback)) {
         char traceback_str[PY_MAX_ERROR];
         char linebuffer[PY_MAX_ELEMS];
 
         PyTracebackObject* trace_root = (PyTracebackObject*)ptraceback;
         PyTracebackObject* ptrace = trace_root;
-        
-        while (ptrace != NULL)
-        {
+
+        while (ptrace != NULL) {
             PyFrameObject* frame = ptrace->tb_frame;
             if (!frame)
                 goto no_traceback;
@@ -1274,24 +1254,24 @@ void py_handle_error(t_py* x, char* fmt, ...)
                 goto no_traceback;
 
             int linenum = PyFrame_GetLineNumber(frame);
-            const char *codename = PyUnicode_AsUTF8(code->co_name);
-            const char *filename = PyUnicode_AsUTF8(code->co_filename);
+            const char* codename = PyUnicode_AsUTF8(code->co_name);
+            const char* filename = PyUnicode_AsUTF8(code->co_filename);
 
             snprintf_zero(linebuffer, PY_MAX_ELEMS, "at %s (%s:%d); \n",
-                codename, filename, linenum);
+                          codename, filename, linenum);
             strncat_zero(traceback_str, linebuffer, PY_MAX_ERROR);
             ptrace = ptrace->tb_next;
         }
-        object_error((t_object*)x, "[ERROR] (%s) %s: %s\n%s", 
-            x->p_name->s_name, msg, pvalue_str, traceback_str);
+        object_error((t_object*)x, "[ERROR] (%s) %s: %s\n%s",
+                     x->p_name->s_name, msg, pvalue_str, traceback_str);
         Py_XDECREF(ptraceback);
         return;
     }
 
-    no_traceback:
-        object_error((t_object*)x, "[ERROR] (%s) %s: %s", 
-            x->p_name->s_name, msg, pvalue_str);
-        Py_XDECREF(ptraceback);
+no_traceback:
+    object_error((t_object*)x, "[ERROR] (%s) %s: %s", x->p_name->s_name, msg,
+                 pvalue_str);
+    Py_XDECREF(ptraceback);
 }
 
 
@@ -1301,7 +1281,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
  * @param x pointer to object struct
  * @param pfloat python float
  * @return t_max_err error code
- * 
+ *
  */
 t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
 {
@@ -1542,7 +1522,8 @@ error:
 }
 
 /**
- * @brief Generic handler to output arbitrarily-typed python object as max object
+ * @brief Generic handler to output arbitrarily-typed python object as max
+ * object
  *
  * @param x pointer to object struct
  * @param pval python object
@@ -1762,7 +1743,8 @@ error:
 }
 
 /**
- * @brief Execute contents of a file (filename obtained from symbol) as python code
+ * @brief Execute contents of a file (filename obtained from symbol) as python
+ * code
  *
  * @param x pointer to object structure
  * @param s symbol
@@ -1835,9 +1817,9 @@ error:
  * @param argv atom argument vector
  * @return t_max_err error code
  *
- * The first item of the Max list must be a symbol. This is converted into a python variable
- * and the rest of the list is assignment to this variable in the object's python
- * namespace.
+ * The first item of the Max list must be a symbol. This is converted into a
+ * python variable and the rest of the list is assignment to this variable in
+ * the object's python namespace.
  */
 t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
@@ -1984,7 +1966,8 @@ t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 
 /**
- * @brief Anything method converting all of the atom to text and evaluate as python code.
+ * @brief Anything method converting all of the atom to text and evaluate as
+ * python code.
  *
  * @param x pointer to object structure
  * @param s symbol
@@ -2029,7 +2012,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
         }
     }
 
-    return py_eval_text(x, argc+1, atoms);
+    return py_eval_text(x, argc + 1, atoms);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -2047,7 +2030,8 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
  *
  * @return     t_max_err error code
  */
-t_max_err py_apply_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_apply_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc,
+                          t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -2077,7 +2061,8 @@ t_max_err py_apply_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_
     // depends on definition in py_mod.h
     pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
     if (pyfunc == NULL) {
-        py_error(x, "retrieving python func '%s' from globals failed", pyfunc_name);
+        py_error(x, "retrieving python func '%s' from globals failed",
+                 pyfunc_name);
         goto error;
     }
 
@@ -2141,7 +2126,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
  * @param argc atom argument count
  * @param argv atom argument vector
  * @return t_max_err error code
- * 
+ *
  * The first elem in the list is treated as the accumulator
  */
 t_max_err py_fold(t_py* x, t_symbol* s, long argc, t_atom* argv)
@@ -2210,7 +2195,8 @@ void py_scan(t_py* x)
 }
 
 /**
- * @brief A help function used by scan to scan registry and retrieve object IDs.
+ * @brief A help function used by scan to scan registry and retrieve object
+ * IDs.
  *
  * @param x object instance
  * @param box box type instance
@@ -2234,7 +2220,8 @@ long py_scan_callback(t_py* x, t_object* box)
     // perhaps because post is a macro for object_post?
     if (varname && varname != gensym("")) {
         // post("XXXX -> '%s'", varname->s_name);
-        py_debug(x, "storing object %s in the global registry", varname->s_name);
+        py_debug(x, "storing object %s in the global registry",
+                 varname->s_name);
         hashtab_store(py_global_registry, varname, obj);
 
         obj_id = jbox_get_id(box);
@@ -2485,7 +2472,7 @@ void py_edclose(t_py* x, char** text, long size)
  *                     how the system responds when the editor
  *                     window is closed.
  */
-void py_okclose(t_py* x, char *s, short *result)
+void py_okclose(t_py* x, char* s, short* result)
 {
     // see: https://cycling74.com/forums/text-editor-without-dirty-bit
     py_debug(x, "okclose: called -- run-on-close: %d", x->p_run_on_close);
@@ -2547,7 +2534,6 @@ void py_load(t_py* x, t_symbol* s)
 }
 
 
-
 /*--------------------------------------------------------------------------*/
 /* Max Datastructures Support */
 
@@ -2597,10 +2583,10 @@ t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
         if (len > size)
             goto error;
 
-        for(int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             elem = PyList_GetItem(plist, i);
             value = PyLong_AsLong(elem);
-            *((*storage)+i) = value;
+            *((*storage) + i) = value;
             py_debug(x, "storage[%d] = %d", i, value);
         }
     }
@@ -2635,8 +2621,8 @@ PyObject* py_table_to_list(t_py* x, char* table_name)
     }
 
     if (table_get(gensym(table_name), &storage, &size) == 0) {
-        for(int i = 0; i < size; i++) {
-            value = *((*storage)+i);
+        for (int i = 0; i < size; i++) {
+            value = *((*storage) + i);
             py_debug(x, "storage[%d] = %d", i, value);
             PyObject* p_long = PyLong_FromLong(value);
             if (p_long == NULL) {
@@ -2652,5 +2638,3 @@ error:
     py_error(x, "table to list conversion failed");
     Py_RETURN_NONE;
 }
-
-

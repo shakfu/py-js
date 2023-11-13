@@ -98,6 +98,7 @@ jobs:
         product-path: "${{ env.PRODUCT_DMG }}"
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
+        appstore-connect-team-id: ${{ secrets.DEV_ID }}
         primary-bundle-id: org.me.py-dmg
 
     - name: Staple dmg
