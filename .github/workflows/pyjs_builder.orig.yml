@@ -88,22 +88,28 @@ jobs:
 
     - name: Create package, convert it to a .dmg
       run: make dmg PKG_NAME=${{ github.event.inputs.variant }}
+      #run: cd source/projects/py && python3 -m builder dmg ${{ github.event.inputs.variant }}
 
     - name: Sign .dmg
       run: make sign-dmg
 
     - name: Notarize dmg
-      uses: lando/notarize-action@v2.0.2
+      uses: devbotsxyz/xcode-notarize@v1
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
         appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
         primary-bundle-id: org.me.py-dmg
 
-  - name: Staple dmg
-    uses: BoundfoxStudios/action-xcode-staple@v1
-    with:
-      product-path: "${{ env.PRODUCT_DMG }}"
+    - name: Staple dmg
+      uses: devbotsxyz/xcode-staple@v1
+      with:
+        product-path: "${{ env.PRODUCT_DMG }}"
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
+        path: "${{ env.PRODUCT_DMG }}"
 
     # - uses: ncipollo/release-action@v1.7.1
     #   with:
