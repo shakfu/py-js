@@ -100,10 +100,10 @@ jobs:
         appstore-connect-password: ${{ secrets.NOTARIZATION_PWD }}
         primary-bundle-id: org.me.py-dmg
 
-  - name: Staple dmg
-    uses: BoundfoxStudios/action-xcode-staple@v1
-    with:
-      product-path: "${{ env.PRODUCT_DMG }}"
+    - name: Staple dmg
+      uses: BoundfoxStudios/action-xcode-staple@v1
+      with:
+        product-path: "${{ env.PRODUCT_DMG }}"
 
     # - uses: ncipollo/release-action@v1.7.1
     #   with:
