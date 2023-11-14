@@ -322,8 +322,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 107.0, 487.0, 98.0, 22.0 ],
-					"text" : "prepend execbuf"
+					"patching_rect" : [ 107.0, 487.0, 81.0, 22.0 ],
+					"text" : "prepend exec"
 				}
 
 			}

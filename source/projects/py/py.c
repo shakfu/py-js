@@ -173,14 +173,6 @@ void ext_main(void* module_ref)
     CLASS_ATTR_BASIC(c,     "run_on_close", 0);
     CLASS_ATTR_SAVE(c,      "run_on_close", 0);
 
-    // CLASS_ATTR_LABEL(c,     "run_on", 0,  "set run_on to run on save or close");
-    // CLASS_ATTR_SYM(c,       "run_on", 0,  t_py, p_run_on);
-    // CLASS_ATTR_STYLE(c,     "run_on", 0,  "enum");
-    // CLASS_ATTR_ENUM(c,      "run_on", 0,  "close save");
-    // CLASS_ATTR_DEFAULT(c,   "run_on", 0,  "close");
-    // CLASS_ATTR_BASIC(c,     "run_on", 0);
-    // CLASS_ATTR_SAVE(c,      "run_on", 0);
-
     CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "object pythonpath");
     CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_BASIC(c,     "pythonpath", 0);
@@ -199,7 +191,6 @@ void ext_main(void* module_ref)
     CLASS_ATTR_ORDER(c,     "autoload",     0,  "3");
     CLASS_ATTR_ORDER(c,     "run_on_save",  0,  "4");
     CLASS_ATTR_ORDER(c,     "run_on_close", 0,  "5");
-    // CLASS_ATTR_ORDER(c,     "run_on",       0,  "6");
     CLASS_ATTR_ORDER(c,     "pythonpath",   0,  "6");
     CLASS_ATTR_ORDER(c,     "debug",        0,  "7");
 
@@ -207,10 +198,6 @@ void ext_main(void* module_ref)
     //------------------------------------------------------------------------
 
     class_register(CLASS_BOX, c);
-
-    /* for js registration (can't be both box and nobox) */
-    // c->c_flags = CLASS_FLAG_POLYGLOT;
-    // class_register(CLASS_NOBOX, c);
 
     py_class = c;
 }
@@ -234,9 +221,8 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
     if (x) {
 
-        // py_postargs(s, argc, argv);
-
         if (py_global_obj_count == 0) {
+            // if name is not set as argument then
             // first py obj is called '__main__' by default
             x->p_name = gensym("__main__");
         } else {
@@ -262,7 +248,6 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_autoload = 0;
         x->p_run_on_save = 0;
         x->p_run_on_close = 1;
-        // x->p_run_on = gensym("close");
 
         // set default debug level
         x->p_debug = 0;
@@ -279,10 +264,12 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // process @arg attributes
         attr_args_process(x, argc, argv);
 
+        // set patcher object
         object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
         if (x->p_patcher == NULL)
             error("patcher object not created.");
 
+        // set box object
         object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
         if (x->p_box == NULL)
             error("box object not created.");
@@ -325,6 +312,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
             py_load(x, x->p_code_filepath);
         }
 
+        // if pythonpath is set, add it to sys.path
         if (x->p_pythonpath != gensym("")) {
             py_pythonpath_add(x, x->p_pythonpath);
         }
@@ -820,8 +808,7 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
             }
         }
 
-        // success
-        // set attribute from pathname symbol
+        // success: set attribute from pathname symbol
         x->p_code_filepath = gensym(x->p_code_pathname);
         assert(ret == MAX_ERR_NONE);
     }
@@ -847,64 +834,50 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
 
 
 /**
- * @brief      replace a string with a string
+ * @brief      replace part of a target string with another string
  *
- * @param      orig  The original
- * @param      rep   what to replace
- * @param      with  what to replace with
+ * @param      s     target string
+ * @param      old   substring to be replaced
+ * @param      new   replacement string
  *
  * @return     a new string with replaced strings
  *
- * NOTE: You must free the result if result is non-NULL.
+ * NOTE: Must free the result if result is non-NULL.
  *
  */
-char* str_replace(char* orig, char* rep, char* with)
+char* str_replace(const char* s, const char* old, const char* new)
 {
-    // from: https://stackoverflow.com/questions/779875
-    char* result;  // the return string
-    char* ins;     // the next insert point
-    char* tmp;     // varies
-    int len_rep;   // length of rep (the string to remove)
-    int len_with;  // length of with (the string to replace rep with)
-    int len_front; // distance between rep and end of last rep
-    int count;     // number of replacements
+    char* result;
+    int i, cnt = 0;
+    size_t new_len = strlen(new);
+    size_t old_len = strlen(old);
 
-    // sanity checks and initialization
-    if (!orig || !rep)
-        return NULL;
-    len_rep = (int)strlen(rep);
-    if (len_rep == 0)
-        return NULL; // empty rep causes infinite loop during count
-    if (!with)
-        with = "";
-    len_with = (int)strlen(with);
+    // Counting the number of times old word occurs in the string
+    for (i = 0; s[i] != '\0'; i++) {
+        if (strstr(&s[i], old) == &s[i]) {
+            cnt++;
 
-    // count the number of replacements needed
-    ins = orig;
-    for (count = 0; (tmp = strstr(ins, rep)); ++count) {
-        ins = tmp + len_rep;
+            // Jumping to index after the old word.
+            i += old_len - 1;
+        }
     }
 
-    tmp = result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
+    // Making new string of enough length
+    size_t maxlen = i + cnt * (new_len - old_len) + 1;
+    result = (char*)sysmem_newptr(maxlen);
 
-    if (!result)
-        return NULL;
-
-    // first time through the loop, all the variable are set correctly
-    // from here on,
-    //    tmp points to the end of the result string
-    //    ins points to the next occurrence of rep in orig
-    //    orig points to the remainder of orig after "end of rep"
-    while (count--) {
-        ins = strstr(orig, rep);
-        // len_front = ins - (long)orig;
-        // len_front = strlen(ins) - strlen(orig);
-        len_front = ins - orig;
-        tmp = strncpy(tmp, orig, len_front) + len_front;
-        tmp = strcpy(tmp, with) + len_with;
-        orig += len_front + len_rep; // move to next "end of rep"
+    i = 0;
+    while (*s) {
+        // compare the substring with the result
+        if (strstr(s, old) == s) {
+            strncpy_zero(&result[i], new, maxlen);
+            i += new_len;
+            s += old_len;
+        } else
+            result[i++] = *s++;
     }
-    strcpy(tmp, orig);
+
+    result[i] = '\0';
     return result;
 }
 
@@ -948,15 +921,12 @@ void py_count(t_py* x) { outlet_int(x->p_outlet_left, py_global_obj_count); }
  */
 void path_join(char* destination, const char* path1, const char* path2)
 {
-    // char filename[MAX_FILENAME_CHARS];
-    // strncpy_zero(filename,str->s_name, MAX_FILENAME_CHARS);
-
     if (path1 == NULL && path2 == NULL) {
-        strcpy(destination, "");
+        strncpy_zero(destination, "", MAX_PATH_CHARS);
     } else if (path2 == NULL || strlen(path2) == 0) {
-        strcpy(destination, path1);
+        strncpy_zero(destination, path1, MAX_PATH_CHARS);
     } else if (path1 == NULL || strlen(path1) == 0) {
-        strcpy(destination, path2);
+        strncpy_zero(destination, path2, MAX_PATH_CHARS);
     } else {
         char directory_separator[] = "/";
 #ifdef WIN32
@@ -969,18 +939,18 @@ void path_join(char* destination, const char* path1, const char* path2)
         if (strcmp(last_char, directory_separator) != 0) {
             append_directory_separator = 1;
         }
-        strcpy(destination, path1);
+        strncpy_zero(destination, path1, MAX_PATH_CHARS);
         if (append_directory_separator)
-            strcat(destination, directory_separator);
-        strcat(destination, path2);
+            strncat_zero(destination, directory_separator, MAX_PATH_CHARS);
+        strncat_zero(destination, path2, MAX_PATH_CHARS);
     }
 }
 
 
 /**
- * @brief      Displays metadata about the external
+ * @brief  Displays metadata about the external
  *
- * @param      x     pointer to object struct.
+ * @param  x     pointer to object struct.
  */
 void py_metadata(t_py* x)
 {
@@ -997,7 +967,7 @@ void py_metadata(t_py* x)
     t_object* patcher;
 
     object_obex_lookup(x, gensym("#P"), &patcher);
-    post("my patcher is at address %lx", patcher);
+    post("this patcher is at address %lx", patcher);
     t_symbol* name = object_attr_getsym(patcher, gensym("name"));
     t_symbol* path = object_attr_getsym(patcher, gensym("filepath"));
     post("patcher.name: %s", name->s_name);
@@ -1904,26 +1874,25 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv)
         goto error;
     }
 
-    // char* new_text = str_replace(text, "\\,", ",");
     char* new_text = str_replace(text, "\\", "");
 
-    // co = Py_CompileString(text, x->p_name->s_name, Py_eval_input);
     co = Py_CompileString(new_text, x->p_name->s_name, Py_eval_input);
 
     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
         PyErr_Clear();
-        co = Py_CompileString(new_text, x->p_name->s_name, Py_single_input);
-        // co = Py_CompileString(text, x->p_name->s_name, Py_single_input);
+        // co = Py_CompileString(new_text, x->p_name->s_name, Py_single_input);
+        co = Py_CompileString(new_text, x->p_name->s_name, Py_file_input);
         is_eval = 0;
     }
 
-    free(new_text);
+    sysmem_freeptr(new_text);
+    sysmem_freeptr(text);
 
     if (co == NULL) { // can be eval-co or exec-co or NULL here
         goto error;
     }
 
-    sysmem_freeptr(text);
+    // sysmem_freeptr(text);
 
     pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
     if (pval == NULL) {
