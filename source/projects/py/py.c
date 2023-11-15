@@ -99,6 +99,7 @@ void ext_main(void* module_ref)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",                  0);
+    class_addmethod(c, (method)py_hello,      "hello",      A_GIMME,   0);
 
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
@@ -446,7 +447,7 @@ t_max_err py_pythonpath_attr_get(t_py* x, t_object* attr, long* argc,
         }
         if (alloc) {
             atom_setsym(*argv, x->p_pythonpath);
-            // post("py_pythonpath_attr_get: %s", x->p_pythonpath->s_name);
+            // py_debug(x, "py_pythonpath_attr_get: %s", x->p_pythonpath->s_name);
         }
     }
     return MAX_ERR_NONE;
@@ -477,7 +478,7 @@ t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc,
             x->p_pythonpath = gensym(conform_path);
             py_pythonpath_add(x, x->p_pythonpath);
         }
-        post("py_pythonpath_attr_set: %s", x->p_pythonpath->s_name);
+        py_debug(x, "py_pythonpath_attr_set: %s", x->p_pythonpath->s_name);
     }
     return MAX_ERR_NONE;
 }
@@ -546,7 +547,7 @@ void py_postargs(t_symbol* s, long argc, t_atom* argv)
     err = atom_gettext(argc, argv, &textsize, &text,
                        OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err == MAX_ERR_NONE && textsize && text) {
-        post("%s %s", s->s_name, text);
+        post("<%s> %s", s->s_name, text);
     }
     if (text) {
         sysmem_freeptr(text);
@@ -570,8 +571,8 @@ void* get_outlet(t_py* x) { return (void*)x->p_outlet_left; }
  * @param fmt character string with format codes
  * @param ... other arguments
  *
- * This log function is a variadic function which does not `post` its message
- * if the object struct member `x->p_debug` is 0.
+ * This log function is a variadic function to post 'info' to the user
+ * in the console.
  *
  * WARNING: if PY_MAX_ELEMS is less than
  * the length of the log or err message, Max will crash.
@@ -2141,18 +2142,25 @@ t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
  * @brief Scan object registry and populate object IDs.
  *
  * @param x object instance
+ * 
+ * PI_WANTBOX means pass iterator function to box, rather than
+ * the object contained in the box.
+ * 
+ * PI_DEEP flag means that the iteration will descend, depth 
+ * first, into subpatchers.
+ * 
+ * The result parameter is returns the last value returned by the iterator. 
+ * 
+ * For example, if the iterator terminates early by returning a non-zero
+ * value, it will contain that value. 
+ * 
+ * If the iterator function does not terminate early, result will be 0.
  */
 void py_scan(t_py* x)
 {
     long result = 0;
 
     hashtab_clear(py_global_registry);
-
-    if (x->p_patcher == NULL) {
-        post("p_patcher == NULL");
-    } else {
-        post("p_patcher != NULL");
-    }
 
     if (x->p_patcher) {
         object_method(x->p_patcher, gensym("iterate"),
@@ -2161,7 +2169,8 @@ void py_scan(t_py* x)
     } else {
         py_error(x, "scan failed");
     }
-}
+    py_debug(x, "scan result: %d", result);
+ }
 
 /**
  * @brief A help function used by scan to scan registry and retrieve object
@@ -2188,7 +2197,6 @@ long py_scan_callback(t_py* x, t_object* box)
     // STRANGE BUG: single quotes in py_debug cause a crash but not with post!!
     // perhaps because post is a macro for object_post?
     if (varname && varname != gensym("")) {
-        // post("XXXX -> '%s'", varname->s_name);
         py_debug(x, "storing object %s in the global registry",
                  varname->s_name);
         hashtab_store(py_global_registry, varname, obj);
@@ -2196,8 +2204,7 @@ long py_scan_callback(t_py* x, t_object* box)
         obj_id = jbox_get_id(box);
         s = jpatcher_get_name(p);
 
-        object_post(
-            (t_object*)x,
+        py_debug(x,
             "in patcher:%s, varname:%s id:%s box @ x %ld y %ld, w %ld, h %ld",
             s->s_name, varname->s_name, obj_id->s_name, (long)jr.x, (long)jr.y,
             (long)jr.width, (long)jr.height);

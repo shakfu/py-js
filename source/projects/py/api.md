@@ -13,9 +13,21 @@ The `api` module consists of:
 Cython classes, functions, and constants defined here are optionally
 available for use by python code running in a `py` external instance.
 
-## Design Notes
+## Features
 
-- The primary benefit of the `api` module is that it provides access to max c-api functionality in an interpreted language. This benefit is even apparent during development which entails writing compiled c/cython code and interpreted python test code. If the former is robust, the tests can quickly be written and debugged to produce a desired outcome.
+- provides access to max c-api functionality in an interpreted language. 
+
+- wraps a decent subset of the max c-api for python code running in a `py` external instance.
+
+- write max methods in cython which can be called in c
+
+- all c is exposed via cython to python
+
+- wrap max types as cython extension classes, e.g. `api.Atom`, `api.Patcher`, ..
+
+- errors in python don't crash Max (or crash max less!)
+
+## Design Notes
 
 - [ ] to refactor the object_method_typed calls which are being duplicated in `Patcher`, `MaxObect`, `MaxApp`, etc..
 

@@ -2350,6 +2350,14 @@ cdef class Patcher:
     def rect(self) -> list:
         return self.get_arr_attr("rect")
 
+
+    # object methods
+
+    cdef mx.t_object* get_namedbox(self, str name):
+        """get named box in patcher"""
+        return <mx.t_object *>mx.object_method(
+            self.ptr, mx.gensym("getnamedbox"), str_to_sym(name))
+
     cdef mx.t_object *newobject_sprintf(self, str text):
         """Create a new object in a specified patcher with values using a 
         combination of attribute and sprintf syntax.
@@ -3387,8 +3395,30 @@ if INCLUDE_NUMPY:
 
         return out
 
+
 # ----------------------------------------------------------------------------
-# helper functions
+# c-level helper functions for the `py` external
+# 
+# This section makes available c types, variables and functions defined here
+# to the py.c file that is linked together with the cython-generated api.c file
+
+
+cdef public mx.t_max_err py_hello(px.t_py* x, mx.t_symbol* s, long argc, mx.t_atom* argv):
+    """A demo of a Max method in cython!
+
+    This works exactly as a A_GIMME method
+    """
+    cdef mx.t_symbol* name
+    if argc > 0:
+        name = mx.atom_getsym(argv)
+        if name:
+            mx.post("hello %s: a method defined in api.pyx", name.s_name)
+            return mx.MAX_ERR_NONE
+    return mx.MAX_ERR_GENERIC
+
+
+# ----------------------------------------------------------------------------
+# python-level helper functions
 
 
 ## general helpers
@@ -3454,8 +3484,6 @@ def get_max():
         error("could not get max object")
 
 
-
-
 ## buffer helpers
 
 def create_buffer(name: str, sample_file: str) -> Buffer:
@@ -3467,4 +3495,7 @@ def create_empty_buffer(name: str, duration_ms: int) -> Buffer:
     ext = PyExternal()
     buf = ext.create_empty_buffer(name, duration_ms)
     return buf
+
+
+
 

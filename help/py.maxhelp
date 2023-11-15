@@ -258,7 +258,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 17.0, 52.0, 596.0, 132.0 ],
+									"patching_rect" : [ 17.0, 39.0, 596.0, 132.0 ],
 									"text" : "Due to how Max special cases commas and spaces in messages, one such characters along the following lines:\n\n1. Escape a space with \\\\ unless it's after an escaped comma\n\n2. Escape a comma with \\\n\n"
 								}
 
@@ -266,12 +266,12 @@
 , 							{
 								"box" : 								{
 									"fontface" : 1,
-									"fontsize" : 14.0,
+									"fontsize" : 16.0,
 									"id" : "obj-13",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 17.0, 15.0, 400.0, 22.0 ],
+									"patching_rect" : [ 4.0, 8.0, 456.0, 24.0 ],
 									"text" : "Rules of Escaping Spaces and Commas in Max Messages"
 								}
 
@@ -437,8 +437,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 31.0, 689.0, 158.0, 22.0 ],
-									"text" : "3"
+									"patching_rect" : [ 31.0, 689.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -801,8 +800,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 709.0, 158.0, 22.0 ],
-									"text" : "3"
+									"patching_rect" : [ 23.0, 709.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -1221,8 +1219,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 49.0, 22.0 ],
-									"text" : "3"
+									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -1647,6 +1644,18 @@
 						"showontab" : 1,
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-123",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 705.0, 308.0, 66.0, 22.0 ],
+									"text" : "hello world"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-122",
 									"maxclass" : "message",
@@ -2817,21 +2826,23 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 22.0 ],
-									"text" : "3"
+									"presentation_linecount" : 12,
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
+									"text" : "\"3.11.6 (main, Nov  2 2023, 04:39:43) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
 								}
 
 							}
 , 							{
 								"box" : 								{
 									"autoload" : 0,
-									"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_api.py",
+									"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api.py",
 									"id" : "obj-7",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -2844,7 +2855,7 @@
 									"saved_object_attributes" : 									{
 										"autoload" : 0,
 										"debug" : 1,
-										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_api.py",
+										"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api.py",
 										"pythonpath" : "/Users/sa/src"
 									}
 ,
@@ -3534,6 +3545,14 @@
 									"destination" : [ "obj-7", 0 ],
 									"hidden" : 1,
 									"source" : [ "obj-122", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-7", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-123", 0 ]
 								}
 
 							}
