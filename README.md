@@ -65,7 +65,6 @@ Note: zeromq externals are not enabled by default since they require zeromq libr
 [jmx]: source/projects/mpy
 [zthread]: source/projects/mpy
 
-
 The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
 At the time of this writing, and since the switch to the new [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project has the following compatibility:
@@ -210,7 +209,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ```
 
-Open one of the `.maxhelp` files or any one of the files in the `patchers` folders to see how things work.
+Open one of the `.maxhelp` files or any of the files in the `patchers` folders to see how things work.
 
 ### macOS
 
