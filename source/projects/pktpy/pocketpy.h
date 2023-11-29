@@ -103,60 +103,33 @@ namespace pkpy{
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
     //define something for Windows (32-bit and 64-bit, this part is common)
     #define PK_EXPORT __declspec(dllexport)
-    #ifdef PK_USE_DYLIB
-        #define PK_SUPPORT_DYLIB    1
-    #else
-        #define PK_SUPPORT_DYLIB    0
-    #endif
     #define PK_SYS_PLATFORM     "win32"
 #elif __EMSCRIPTEN__
     #include <emscripten.h>
     #define PK_EXPORT EMSCRIPTEN_KEEPALIVE
-    #define PK_SUPPORT_DYLIB    0
     #define PK_SYS_PLATFORM     "emscripten"
 #elif __APPLE__
     #include <TargetConditionals.h>
     #if TARGET_IPHONE_SIMULATOR
         // iOS, tvOS, or watchOS Simulator
         #define PK_SYS_PLATFORM     "ios"
-        #define PK_SUPPORT_DYLIB    4
     #elif TARGET_OS_IPHONE
         // iOS, tvOS, or watchOS device
         #define PK_SYS_PLATFORM     "ios"
-        #define PK_SUPPORT_DYLIB    4
     #elif TARGET_OS_MAC
         #define PK_SYS_PLATFORM     "darwin"
-        #ifdef PK_USE_DYLIB
-            #include <dlfcn.h>
-            #define PK_SUPPORT_DYLIB    2
-        #else
-            #define PK_SUPPORT_DYLIB    0
-        #endif
     #else
     #   error "Unknown Apple platform"
     #endif
     #define PK_EXPORT __attribute__((visibility("default")))
 #elif __ANDROID__
-    #ifdef PK_USE_DYLIB
-        #include <dlfcn.h>
-        #define PK_SUPPORT_DYLIB    3
-    #else
-        #define PK_SUPPORT_DYLIB    0
-    #endif
     #define PK_EXPORT __attribute__((visibility("default")))
     #define PK_SYS_PLATFORM     "android"
 #elif __linux__
-    #ifdef PK_USE_DYLIB
-        #include <dlfcn.h>
-        #define PK_SUPPORT_DYLIB    2
-    #else
-        #define PK_SUPPORT_DYLIB    0
-    #endif
     #define PK_EXPORT __attribute__((visibility("default")))
     #define PK_SYS_PLATFORM     "linux"
 #else
     #define PK_EXPORT
-    #define PK_SUPPORT_DYLIB    0
     #define PK_SYS_PLATFORM     "unknown"
 #endif
 
@@ -184,7 +157,7 @@ namespace pkpy{
 #include <bitset>
 #include <deque>
 
-#define PK_VERSION				"1.3.0"
+#define PK_VERSION				"1.3.1"
 
 #ifdef min
 #undef min
@@ -4626,7 +4599,7 @@ public:
 
     PrintFunc _stdout;
     PrintFunc _stderr;
-    Bytes (*_import_handler)(const Str& name);
+    unsigned char* (*_import_handler)(const char*, int, int*);
 
     // for quick access
     Type tp_object, tp_type, tp_int, tp_float, tp_bool, tp_str;
@@ -5226,9 +5199,11 @@ namespace pkpy{
         callstack.reserve(8);
         _main = nullptr;
         _last_exception = nullptr;
-        _import_handler = [](const Str& name) {
-            PK_UNUSED(name);
-            return Bytes();
+        _import_handler = [](const char* name_p, int name_size, int* out_size) -> unsigned char*{
+            PK_UNUSED(name_p);
+            PK_UNUSED(name_size);
+            PK_UNUSED(out_size);
+            return nullptr;
         };
         init_builtin_types();
     }
@@ -5479,17 +5454,20 @@ namespace pkpy{
         bool is_init = false;
         auto it = _lazy_modules.find(name);
         if(it == _lazy_modules.end()){
-            Bytes b = _import_handler(filename);
-            if(!b){
+            int out_size;
+            unsigned char* out = _import_handler(filename.data, filename.size, &out_size);
+            if(out == nullptr){
                 filename = path.replace('.', kPlatformSep).str() + kPlatformSep + "__init__.py";
                 is_init = true;
-                b = _import_handler(filename);
+                out = _import_handler(filename.data, filename.size, &out_size);
             }
-            if(!b){
+            if(out == nullptr){
                 if(throw_err) ImportError(fmt("module ", path.escape(), " not found"));
                 else return nullptr;
             }
-            source = Str(b.str());
+            PK_ASSERT(out_size >= 0)
+            source = Str(std::string_view((char*)out, out_size));
+            free(out);
         }else{
             source = it->second;
             _lazy_modules.erase(it);
@@ -8115,7 +8093,7 @@ namespace pkpy{
             }
         }
         // name or name.name
-        std::regex pattern(R"(^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*){0,1}$)");
+        PK_LOCAL_STATIC const std::regex pattern(R"(^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*){0,1}$)");
         if(std::regex_match(expr.str(), pattern)){
             int dot = expr.index(".");
             if(dot < 0){
@@ -8138,36 +8116,73 @@ namespace pkpy{
 
     void FStringExpr::emit_(CodeEmitContext* ctx){
         VM* vm = ctx->vm;
-        PK_LOCAL_STATIC const std::regex pattern(R"(\{(.*?)\})");
-        std::cregex_iterator begin(src.begin(), src.end(), pattern);
-        std::cregex_iterator end;
-        int size = 0;
-        int i = 0;
-        for(auto it = begin; it != end; it++) {
-            std::cmatch m = *it;
-            if (i < m.position()) {
-                Str literal = src.substr(i, m.position() - i);
-                ctx->emit_(OP_LOAD_CONST, ctx->add_const(VAR(literal)), line);
-                size++;
-            }
-            Str expr = m[1].str();
-            int conon = expr.index(":");
-            if(conon >= 0){
-                _load_simple_expr(ctx, expr.substr(0, conon));
-                Str spec = expr.substr(conon+1);
-                ctx->emit_(OP_FORMAT_STRING, ctx->add_const(VAR(spec)), line);
+        int i = 0;              // left index
+        int j = 0;              // right index
+        int count = 0;          // how many string parts
+        bool flag = false;      // true if we are in a expression
+
+        while(j < src.size){
+            if(flag){
+                if(src[j] == '}'){
+                    // add expression
+                    Str expr = src.substr(i, j-i);
+                    int conon = expr.index(":");
+                    if(conon >= 0){
+                        _load_simple_expr(ctx, expr.substr(0, conon));
+                        Str spec = expr.substr(conon+1);
+                        ctx->emit_(OP_FORMAT_STRING, ctx->add_const(VAR(spec)), line);
+                    }else{
+                        _load_simple_expr(ctx, expr);
+                    }
+                    flag = false;
+                    count++;
+                }
             }else{
-                _load_simple_expr(ctx, expr);
+                if(src[j] == '{'){
+                    // look at next char
+                    if(j+1 < src.size && src[j+1] == '{'){
+                        // {{ -> {
+                        j++;
+                        ctx->emit_(OP_LOAD_CONST, ctx->add_const(VAR("{")), line);
+                        count++;
+                    }else{
+                        // { -> }
+                        flag = true;
+                        i = j+1;
+                    }
+                }else if(src[j] == '}'){
+                    // look at next char
+                    if(j+1 < src.size && src[j+1] == '}'){
+                        // }} -> }
+                        j++;
+                        ctx->emit_(OP_LOAD_CONST, ctx->add_const(VAR("}")), line);
+                        count++;
+                    }else{
+                        // } -> error
+                        // throw std::runtime_error("f-string: unexpected }");
+                        // just ignore
+                    }
+                }else{
+                    // literal
+                    i = j;
+                    while(j < src.size && src[j] != '{' && src[j] != '}') j++;
+                    Str literal = src.substr(i, j-i);
+                    ctx->emit_(OP_LOAD_CONST, ctx->add_const(VAR(literal)), line);
+                    count++;
+                    continue;   // skip j++
+                }
             }
-            size++;
-            i = (int)(m.position() + m.length());
+            j++;
         }
-        if (i < src.length()) {
-            Str literal = src.substr(i, src.length() - i);
+
+        if(flag){
+            // literal
+            Str literal = src.substr(i, src.size-i);
             ctx->emit_(OP_LOAD_CONST, ctx->add_const(VAR(literal)), line);
-            size++;
+            count++;
         }
-        ctx->emit_(OP_BUILD_STRING, size, line);
+
+        ctx->emit_(OP_BUILD_STRING, count, line);
     }
 
 
@@ -9718,7 +9733,7 @@ namespace pkpy {
 
 }
 
-// generated on 2023-11-10 16:22:45
+// generated on 2023-11-29 11:18:37
 #include <map>
 #include <string>
 
@@ -10298,7 +10313,7 @@ void _bind(VM* vm, PyObject* obj, const char* sig, Ret(T::*func)(Params...)){
 namespace pkpy{
 
 struct RangeIter{
-    PY_CLASS(RangeIter, builtins, "_range_iterator")
+    PY_CLASS(RangeIter, builtins, _range_iterator)
     Range r;
     i64 current;
     RangeIter(Range r) : r(r), current(r.start) {}
@@ -10307,7 +10322,7 @@ struct RangeIter{
 };
 
 struct ArrayIter{
-    PY_CLASS(ArrayIter, builtins, "_array_iterator")
+    PY_CLASS(ArrayIter, builtins, _array_iterator)
     PyObject* ref;
     PyObject** begin;
     PyObject** end;
@@ -10321,7 +10336,7 @@ struct ArrayIter{
 };
 
 struct StringIter{
-    PY_CLASS(StringIter, builtins, "_string_iterator")
+    PY_CLASS(StringIter, builtins, _string_iterator)
     PyObject* ref;
     Str* str;
     int index;      // byte index
@@ -10334,7 +10349,7 @@ struct StringIter{
 };
 
 struct Generator{
-    PY_CLASS(Generator, builtins, "generator")
+    PY_CLASS(Generator, builtins, generator)
     Frame frame;
     int state;      // 0,1,2
     List s_backup;
@@ -10636,6 +10651,104 @@ void add_module_base64(VM* vm){
 }	// namespace pkpy
 
 
+namespace pkpy {
+
+void add_module_csv(VM* vm);
+
+} // namespace pkpy
+namespace pkpy{
+
+void add_module_csv(VM *vm){
+    PyObject* mod = vm->new_module("csv");
+
+    vm->bind(mod, "reader(csvfile: list[str]) -> list[list]", [](VM* vm, ArgsView args){
+        const List& csvfile = CAST(List&, args[0]);
+        List ret;
+        for(int i=0; i<csvfile.size(); i++){
+            std::string_view line = CAST(Str&, csvfile[i]).sv();
+            if(i == 0){
+                // Skip utf8 BOM if there is any.
+                if (strncmp(line.data(), "\xEF\xBB\xBF", 3) == 0) line = line.substr(3);
+            }
+            List row;
+            int j;
+            bool in_quote = false;
+            std::string buffer;
+__NEXT_LINE:
+            j = 0;
+            while(j < line.size()){
+                switch(line[j]){
+                    case '"':
+                        if(in_quote){
+                            if(j+1 < line.size() && line[j+1] == '"'){
+                                buffer += '"';
+                                j++;
+                            }else{
+                                in_quote = false;
+                            }
+                        }else{
+                            in_quote = true;
+                        }
+                        break;
+                    case ',':
+                        if(in_quote){
+                            buffer += line[j];
+                        }else{
+                            row.push_back(VAR(buffer));
+                            buffer.clear();
+                        }
+                        break;
+                    case '\r':
+                        break;  // ignore
+                    default:
+                        buffer += line[j];
+                        break;
+                }
+                j++;
+            }
+            if(in_quote){
+                if(i == csvfile.size()-1){
+                    vm->ValueError("unterminated quote");
+                }else{
+                    buffer += '\n';
+                    i++;
+                    line = CAST(Str&, csvfile[i]).sv();
+                    goto __NEXT_LINE;
+                }
+            }
+            row.push_back(VAR(buffer));
+            ret.push_back(VAR(std::move(row)));
+        }
+        return VAR(std::move(ret));
+    });
+
+    vm->bind(mod, "DictReader(csvfile: list[str]) -> list[dict]", [](VM* vm, ArgsView args){
+        PyObject* csv_reader = vm->_modules["csv"]->attr("reader");
+        PyObject* ret_obj = vm->call(csv_reader, args[0]);
+        const List& ret = CAST(List&, ret_obj);
+        if(ret.size() == 0){
+            vm->ValueError("empty csvfile");
+        }
+        List header = CAST(List&, ret[0]);
+        List new_ret;
+        for(int i=1; i<ret.size(); i++){
+            const List& row = CAST(List&, ret[i]);
+            if(row.size() != header.size()){
+                vm->ValueError("row.size() != header.size()");
+            }
+            Dict row_dict(vm);
+            for(int j=0; j<header.size(); j++){
+                row_dict.set(header[j], row[j]);
+            }
+            new_ret.push_back(VAR(std::move(row_dict)));
+        }
+        return VAR(std::move(new_ret));
+    });
+}
+
+}   // namespace pkpy
+
+
 namespace pkpy
 {
     void add_module_collections(VM *vm);
@@ -10644,7 +10757,7 @@ namespace pkpy
 {
     struct PyDequeIter // Iterator for the deque type
     {
-        PY_CLASS(PyDequeIter, builtins, "_deque_iterator")
+        PY_CLASS(PyDequeIter, builtins, _deque_iterator)
         PyObject *ref;
         bool is_reversed;
         std::deque<PyObject *>::iterator begin, end, current;
@@ -10697,7 +10810,7 @@ namespace pkpy
         void insertObj(bool front, bool back, int index, PyObject *item); // insert at index, used purely for internal purposes: append, appendleft, insert methods
         PyObject *popObj(bool front, bool back, PyObject *item, VM *vm);  // pop at index, used purely for internal purposes: pop, popleft, remove methods
         int findIndex(VM *vm, PyObject *obj, int start, int stop);        // find the index of the given object in the deque
-        std::stringstream getRepr(VM *vm, PyObject* thisObj);                                // get the string representation of the deque
+        std::string getRepr(VM *vm, PyObject* thisObj);                                // get the string representation of the deque
         // Special methods
         static void _register(VM *vm, PyObject *mod, PyObject *type); // register the type
         void _gc_mark() const;                                        // needed for container types, mark all objects in the deque for gc
@@ -10766,16 +10879,14 @@ namespace pkpy
                  [](VM *vm, ArgsView args)
                  {
                      PyDeque &self = _CAST(PyDeque &, args[0]);
-                     std::stringstream ss = self.getRepr(vm, args[0]);
-                     return VAR(ss.str());
+                     return VAR(self.getRepr(vm, args[0]));
                  });
         // returns a string representation of the deque
         vm->bind(type, "__str__(self) -> str",
                  [](VM *vm, ArgsView args)
                  {
                      PyDeque &self = _CAST(PyDeque &, args[0]);
-                     std::stringstream ss = self.getRepr(vm, args[0]);
-                     return VAR(ss.str());
+                     return VAR(self.getRepr(vm, args[0]));
                  });
         // enables comparison between two deques, == and != are supported
         vm->bind(type, "__eq__(self, other) -> bool",
@@ -11068,7 +11179,7 @@ namespace pkpy
             }
         }
     }
-    std::stringstream PyDeque::getRepr(VM *vm, PyObject *thisObj)
+    std::string PyDeque::getRepr(VM *vm, PyObject *thisObj)
     {
         std::stringstream ss;
         ss << "deque([";
@@ -11082,7 +11193,7 @@ namespace pkpy
                 ss << ", ";
         }
         this->bounded ? ss << "], maxlen=" << this->maxlen << ")" : ss << "])";
-        return ss;
+        return ss.str();
     }
     int PyDeque::findIndex(VM *vm, PyObject *obj, int start, int stop)
     {
@@ -12362,7 +12473,7 @@ void add_module_easing(VM* vm){
     PyObject* mod = vm->new_module("easing");
 
 #define EASE(name)  \
-    vm->bind_func<1>(mod, "Ease"#name, [](VM* vm, ArgsView args){  \
+    vm->bind_func<1>(mod, #name, [](VM* vm, ArgsView args){  \
         f64 t = CAST(f64, args[0]); \
         return VAR(ease##name(t));   \
     });
@@ -12405,7 +12516,7 @@ void add_module_easing(VM* vm){
 
 
 namespace pkpy{
-    Bytes _default_import_handler(const Str& name);
+    unsigned char* _default_import_handler(const char*, int, int*);
     void add_module_os(VM* vm);
     void add_module_io(VM* vm);
 }
@@ -12454,14 +12565,13 @@ static size_t io_fread(void* buffer, size_t size, size_t count, FILE* fp){
 }
 
 
-Bytes _default_import_handler(const Str& name){
+unsigned char* _default_import_handler(const char* name_p, int name_size, int* out_size){
 #if PK_ENABLE_OS
-    std::filesystem::path path(name.sv());
-    bool exists = std::filesystem::exists(path);
-    if(!exists) return Bytes();
-    std::string cname = name.str();
-    FILE* fp = io_fopen(cname.c_str(), "rb");
-    if(!fp) return Bytes();
+    std::string name(name_p, name_size);
+    bool exists = std::filesystem::exists(std::filesystem::path(name));
+    if(!exists) return nullptr;
+    FILE* fp = io_fopen(name.c_str(), "rb");
+    if(!fp) return nullptr;
     fseek(fp, 0, SEEK_END);
     int buffer_size = ftell(fp);
     unsigned char* buffer = new unsigned char[buffer_size];
@@ -12469,9 +12579,10 @@ Bytes _default_import_handler(const Str& name){
     size_t sz = io_fread(buffer, 1, buffer_size, fp);
     PK_UNUSED(sz);
     fclose(fp);
-    return Bytes(buffer, buffer_size);
+    *out_size = buffer_size;
+    return buffer;
 #else
-    return Bytes();
+    return nullptr;
 #endif
 };
 
@@ -12657,73 +12768,7 @@ void add_module_gc(VM* vm);
 #include "cJSONw.hpp"
 #endif
 
-#if defined (_WIN32) && PK_SUPPORT_DYLIB == 1
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
-
 namespace pkpy{
-
-using dylib_entry_t = const char* (*)(void*, const char*);
-
-#if PK_ENABLE_OS
-
-#if PK_SUPPORT_DYLIB == 1
-// win32
-static dylib_entry_t load_dylib(const char* path){
-    std::error_code ec;
-    auto p = std::filesystem::absolute(path, ec);
-    if(ec) return nullptr;
-    HMODULE handle = LoadLibraryA(p.string().c_str());
-    if(!handle){
-        DWORD errorCode = GetLastError();
-        // Convert the error code to text
-        LPSTR errorMessage = nullptr;
-        FormatMessageA(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            nullptr,
-            errorCode,
-            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-            (LPSTR)&errorMessage,
-            0,
-            nullptr
-        );
-        printf("%lu: %s\n", errorCode, errorMessage);
-        LocalFree(errorMessage);
-        return nullptr;
-    }
-    return (dylib_entry_t)GetProcAddress(handle, "pkpy_module__init__");
-}
-#elif PK_SUPPORT_DYLIB == 2
-// linux/darwin
-static dylib_entry_t load_dylib(const char* path){
-    std::error_code ec;
-    auto p = std::filesystem::absolute(path, ec);
-    if(ec) return nullptr;
-    void* handle = dlopen(p.c_str(), RTLD_LAZY);
-    if(!handle) return nullptr;
-    return (dylib_entry_t)dlsym(handle, "pkpy_module__init__");
-}
-
-#elif PK_SUPPORT_DYLIB == 3
-// android
-static dylib_entry_t load_dylib(const char* path){
-    void* handle = dlopen(path, RTLD_LAZY);
-    if(!handle) return nullptr;
-    return (dylib_entry_t)dlsym(handle, "pkpy_module__init__");
-}
-
-#else
-static dylib_entry_t load_dylib(const char* path){
-    return nullptr;
-}
-#endif
-
-#else
-static dylib_entry_t load_dylib(const char* path){
-    return nullptr;
-}
-#endif
 
 void init_builtins(VM* _vm) {
 #define BIND_NUM_ARITH_OPT(name, op)                                                                    \
@@ -12854,23 +12899,6 @@ void init_builtins(VM* _vm) {
 
     _vm->bind_builtin_func<1>("__import__", [](VM* vm, ArgsView args) {
         const Str& name = CAST(Str&, args[0]);
-        auto dot = name.sv().find_last_of(".");
-        if(dot != std::string_view::npos){
-            auto ext = name.sv().substr(dot);
-            if(ext == ".so" || ext == ".dll" || ext == ".dylib"){
-                dylib_entry_t entry = load_dylib(name.c_str());
-                if(!entry){
-                    vm->ImportError("cannot load dynamic library: " + name.escape());
-                }
-                vm->_c.s_view.push(ArgsView(vm->s_data.end(), vm->s_data.end()));
-                const char* name = entry(vm, PK_VERSION);
-                vm->_c.s_view.pop();
-                if(name == nullptr){
-                    vm->ImportError("module initialization failed: " + Str(name).escape());
-                }
-                return vm->_modules[name];
-            }
-        }
         return vm->py_import(name);
     });
 
@@ -13276,6 +13304,15 @@ void init_builtins(VM* _vm) {
         }else{
             parts = self.split(sep);
         }
+        List ret(parts.size());
+        for(int i=0; i<parts.size(); i++) ret[i] = VAR(Str(parts[i]));
+        return VAR(std::move(ret));
+    });
+
+    _vm->bind(_vm->_t(_vm->tp_str), "splitlines(self)", [](VM* vm, ArgsView args) {
+        const Str& self = _CAST(Str&, args[0]);
+        std::vector<std::string_view> parts;
+        parts = self.split('\n');
         List ret(parts.size());
         for(int i=0; i<parts.size(); i++) ret[i] = VAR(Str(parts[i]));
         return VAR(std::move(ret));
@@ -14378,6 +14415,7 @@ void VM::post_init(){
     add_module_base64(this);
     add_module_timeit(this);
     add_module_operator(this);
+    add_module_csv(this);
 
     for(const char* name: {"this", "functools", "heapq", "bisect", "pickle", "_long", "colorsys", "typing", "datetime"}){
         _lazy_modules[name] = kPythonLibs[name];
@@ -14441,6 +14479,7 @@ extern "C" {
 typedef struct pkpy_vm_handle pkpy_vm;
 typedef int (*pkpy_CFunction)(pkpy_vm*);
 typedef void (*pkpy_COutputHandler)(pkpy_vm*, const char*, int);
+typedef unsigned char* (*pkpy_CImportHandler)(const char*, int, int*);
 typedef int pkpy_CName;
 typedef int pkpy_CType;
 
@@ -14523,6 +14562,7 @@ PK_EXPORT pkpy_CName pkpy_name(const char* s);
 PK_EXPORT pkpy_CString pkpy_name_to_string(pkpy_CName name);
 PK_EXPORT void pkpy_compile_to_string(pkpy_vm*, const char* source, const char* filename, int mode, bool* ok, char** out);
 PK_EXPORT void pkpy_set_output_handler(pkpy_vm*, pkpy_COutputHandler handler);
+PK_EXPORT void pkpy_set_import_handler(pkpy_vm*, pkpy_CImportHandler handler);
 
 /* REPL */
 PK_EXPORT void* pkpy_new_repl(pkpy_vm*);
@@ -15116,6 +15156,11 @@ void pkpy_compile_to_string(pkpy_vm* vm_handle, const char* source, const char* 
 void pkpy_set_output_handler(pkpy_vm* vm_handle, pkpy_COutputHandler handler){
     VM* vm = (VM*) vm_handle;
     vm->_stdout = reinterpret_cast<PrintFunc>(handler);
+}
+
+void pkpy_set_import_handler(pkpy_vm* vm_handle, pkpy_CImportHandler handler){
+    VM* vm = (VM*) vm_handle;
+    vm->_import_handler = handler;
 }
 
 void* pkpy_new_repl(pkpy_vm* vm_handle){
