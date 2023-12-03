@@ -182,4 +182,32 @@ bool py_table_exists(t_py* x, char* table_name);
 t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist);
 PyObject* py_table_to_list(t_py* x, char* table_name);
 
+/*--------------------------------------------------------------------------*/
+/* Python Compatibility Section */
+
+/*
+ * This section is for backwards compatibility code as the python c-api
+ * evolves and some apis are deprecated and removed.
+ * 
+ * Python >= 3.7 is supported
+ *
+ */
+
+
+// to enable tracebacks in py_handle_error
+// for versions of python < 3.11
+#if PY_VERSION_HEX < 0x030900B1
+#include <frameobject.h>
+static inline PyCodeObject* PyFrame_GetCode(PyFrameObject* frame)
+{
+    Py_INCREF(frame->f_code);
+    return frame->f_code;
+}
+#endif
+
+#if PY_VERSION_HEX < 0x030A00B1 && !defined(Py_IsNone)
+#  define Py_IsNone(x) Py_Is(x, Py_None)
+#endif
+
+
 #endif // PY_H

@@ -1164,18 +1164,6 @@ t_max_err py_task(t_py* x)
 /*--------------------------------------------------------------------------*/
 /* Handlers */
 
-// to enable tracebacks in py_handle_error
-// for versions of python < 3.11
-#if PY_VERSION_HEX < 0x030900B1
-#include <frameobject.h>
-static inline PyCodeObject* PyFrame_GetCode(PyFrameObject* frame)
-{
-    Py_INCREF(frame->f_code);
-    return frame->f_code;
-}
-#endif
-
-
 /**
  * @brief Generic python error handler with tracebacks
  *
@@ -1528,7 +1516,7 @@ t_max_err py_handle_output(t_py* x, PyObject* pval)
         return py_handle_dict_output(x, pval);
     }
 
-    else if (pval == Py_None) {
+    else if (Py_IsNone(pval)) {
         return MAX_ERR_GENERIC;
     }
 
