@@ -67,8 +67,7 @@ public:
     ~PktpyInterpreter();
 
     // stderr helpers
-    void disable_stderr(void);
-    void restore_stderr(void);
+    void disable_stderr(bool b);
 
     // logging methods
     void log_debug(char* fmt, ...);
@@ -149,22 +148,16 @@ PktpyInterpreter::~PktpyInterpreter() { delete this; }
 // stdout/stderr helper methods
 
 /**
- * @brief Disable stderr output
+ * @brief Disable / Re-enable stderr output
  *
  */
-void PktpyInterpreter::disable_stderr(void)
+void PktpyInterpreter::disable_stderr(bool b)
 {
-    this->_stderr = &::stderr_nowrite;
-}
-
-
-/**
- * @brief Disable stderr output
- *
- */
-void PktpyInterpreter::restore_stderr(void)
-{
-    this->_stderr = &::stderr_write;
+    if (b) { // disable
+        this->_stderr = &::stderr_nowrite;
+    } else { // re-enable
+        this->_stderr = &::stderr_write;
+    }
 }
 
 
@@ -872,12 +865,11 @@ t_max_err PktpyInterpreter::execfile_path(char* path)
  */
 PyObject* PktpyInterpreter::eval_text(char* text)
 {
-    // Str ctext = this->remove_escape(text); // works but not used
-    // this->disable_stderr = true;
-    this->disable_stderr();
+    this->disable_stderr(true); // eval fails silently
+
     PyObject* result = this->exec(text, "<eval>", EVAL_MODE);
-    this->restore_stderr();
-    // this->disable_stderr = false;
+
+    this->disable_stderr(false); // execs do not fail silently
  
     if (result == NULL) {
         if (this->exec(text, "main.py", EXEC_MODE) != NULL) {
