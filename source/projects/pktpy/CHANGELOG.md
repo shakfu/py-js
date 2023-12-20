@@ -3,6 +3,8 @@
 
 ## [0.0.2]
 
+- Updated to 1.3.2 with fix for breaking change re: changed `_stdout` and `_stderr` signatures.
+
 - Updated to [pocketpy](https://github.com/blueloveTH/pocketpy) to ver 1.2.0
 
 - Changed `PktpyInterpreter` to be a subclass of `pkpy::VM`

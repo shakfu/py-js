@@ -26,6 +26,7 @@ using namespace pkpy;
  */
 enum log_level { PKTPY_DEBUG, PKTPY_INFO, PKTPY_WARN, PKTPY_ERROR};
 
+
 /**
  * @brief      stdout / stderr funcs
  */
@@ -151,9 +152,9 @@ PktpyInterpreter::~PktpyInterpreter() { delete this; }
  * @brief Disable / Re-enable stderr output
  *
  */
-void PktpyInterpreter::disable_stderr(bool b)
+void PktpyInterpreter::disable_stderr(bool disable)
 {
-    if (b) { // disable
+    if (disable) {
         this->_stderr = &::stderr_nowrite;
     } else { // re-enable
         this->_stderr = &::stderr_write;
