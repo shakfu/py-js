@@ -1645,6 +1645,18 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-126",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 429.0, 640.0, 178.0, 33.0 ],
+									"text" : "load this before running functions on the right"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-123",
 									"maxclass" : "message",
 									"numinlets" : 2,
@@ -1742,7 +1754,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 429.0, 668.5, 194.0, 33.0 ],
+									"patching_rect" : [ 429.0, 669.5, 194.0, 33.0 ],
 									"text" : "see test_buffer_np..maxpat for numpy get/set with buffer~"
 								}
 
@@ -3408,6 +3420,30 @@
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 13.0, 75.0, 22.0 ],
 									"text" : "import string"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-120",
+									"maxclass" : "newobj",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "bang" ],
+									"patching_rect" : [ 100.0, 150.0, 100.0, 22.0 ],
+									"text" : "metro 400"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-124",
+									"maxclass" : "toggle",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "int" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 240.0, 150.0, 24.0, 24.0 ]
 								}
 
 							}

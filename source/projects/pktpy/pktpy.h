@@ -26,6 +26,26 @@ using namespace pkpy;
  */
 enum log_level { PKTPY_DEBUG, PKTPY_INFO, PKTPY_WARN, PKTPY_ERROR};
 
+/**
+ * @brief      stdout / stderr funcs
+ */
+
+void stdout_write(const char * txt, int size)
+{
+    Str stdout_output = Str(txt, size);
+    post((const char*)stdout_output.c_str());           
+};
+
+void stderr_write(const char * txt, int size) {
+    Str stderr_output = Str(txt, size);
+    error((const char*)stderr_output.c_str());
+};
+
+void stderr_nowrite(const char * txt, int size) {
+    // do nothing
+};
+
+
 
 /**
  * @brief      This class describes a pocketpy interpreter,
@@ -36,7 +56,7 @@ private:
     t_symbol* name;             //!< unique python object name
     t_symbol* pythonpath;       //!< path to python directory
     log_level loglevel;         //!< log level (debug, info, warn, error)
-    bool disable_stderr;        //!< disable stderr output;
+    // bool disable_stderr;        //!< disable stderr output;
 
 public:
     t_symbol* source_name; //!< base name of python file to execfile
@@ -46,6 +66,10 @@ public:
     PktpyInterpreter();
     ~PktpyInterpreter();
 
+    // stderr helpers
+    void disable_stderr(void);
+    void restore_stderr(void);
+
     // logging methods
     void log_debug(char* fmt, ...);
     void log_info(char* fmt, ...);
@@ -54,7 +78,6 @@ public:
     void print_atom(int argc, t_atom* argv);
 
     // error handling methods
-
 
     // text handling methods
     Str remove_escape(char* text);
@@ -111,19 +134,8 @@ PktpyInterpreter::PktpyInterpreter()
     this->source_path = gensym("");
     this->path_code = 0;
     this->loglevel = log_level::PY_LOG_LEVEL;
-    this->disable_stderr = false;
-
-    this->_stdout = [](VM* vm, const char * txt, int size) {
-        Str stdout_output = Str(txt, size);
-        post((const char*)stdout_output.c_str());           
-    };
-
-    this->_stderr = [](VM* vm, const char * txt, int size) {
-        if (!static_cast<PktpyInterpreter*>(vm)->disable_stderr) {
-            Str stderr_output = Str(txt, size);
-            error((const char*)stderr_output.c_str());
-        }
-    };
+    this->_stdout = &::stdout_write;
+    this->_stderr = &::stderr_write;
 }
 
 
@@ -131,6 +143,29 @@ PktpyInterpreter::PktpyInterpreter()
  * @brief      PktpyInterpreter destructor method.
  */
 PktpyInterpreter::~PktpyInterpreter() { delete this; }
+
+
+// ---------------------------------------------------------------------------
+// stdout/stderr helper methods
+
+/**
+ * @brief Disable stderr output
+ *
+ */
+void PktpyInterpreter::disable_stderr(void)
+{
+    this->_stderr = &::stderr_nowrite;
+}
+
+
+/**
+ * @brief Disable stderr output
+ *
+ */
+void PktpyInterpreter::restore_stderr(void)
+{
+    this->_stderr = &::stderr_write;
+}
 
 
 // ---------------------------------------------------------------------------
@@ -838,9 +873,11 @@ t_max_err PktpyInterpreter::execfile_path(char* path)
 PyObject* PktpyInterpreter::eval_text(char* text)
 {
     // Str ctext = this->remove_escape(text); // works but not used
-    this->disable_stderr = true;
+    // this->disable_stderr = true;
+    this->disable_stderr();
     PyObject* result = this->exec(text, "<eval>", EVAL_MODE);
-    this->disable_stderr = false;
+    this->restore_stderr();
+    // this->disable_stderr = false;
  
     if (result == NULL) {
         if (this->exec(text, "main.py", EXEC_MODE) != NULL) {
