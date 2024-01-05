@@ -3,10 +3,20 @@
 /*************** feature settings ***************/
 
 // Whether to compile os-related modules or not
+#ifndef PK_ENABLE_OS                // can be overrided by cmake
 #define PK_ENABLE_OS                1
+#endif
+
 // Enable this if you are working with multi-threading (experimental)
 // This triggers necessary locks to make the VM thread-safe
+#ifndef PK_ENABLE_THREAD            // can be overrided by cmake
 #define PK_ENABLE_THREAD            1
+#endif
+
+// Enable this for `vm->_ceval_on_step`
+#ifndef PK_ENABLE_CEVAL_CALLBACK    // can be overrided by cmake
+#define PK_ENABLE_CEVAL_CALLBACK    0
+#endif
 
 // Whether to use `std::function` to do bindings or not
 // By default, functions to be binded must be a C function pointer without capture
@@ -18,17 +28,17 @@
 /*************** debug settings ***************/
 
 // Enable this may help you find bugs
-#define DEBUG_EXTRA_CHECK           0
+#define PK_DEBUG_EXTRA_CHECK        0
 
 // Do not edit the following settings unless you know what you are doing
-#define DEBUG_NO_BUILTIN_MODULES    0
-#define DEBUG_DIS_EXEC              0
-#define DEBUG_CEVAL_STEP            0
-#define DEBUG_FULL_EXCEPTION        0
-#define DEBUG_MEMORY_POOL           0
-#define DEBUG_NO_MEMORY_POOL        0
-#define DEBUG_NO_AUTO_GC            0
-#define DEBUG_GC_STATS              0
+#define PK_DEBUG_NO_BUILTINS        0
+#define PK_DEBUG_DIS_EXEC           0
+#define PK_DEBUG_CEVAL_STEP         0
+#define PK_DEBUG_FULL_EXCEPTION     0
+#define PK_DEBUG_MEMORY_POOL        0
+#define PK_DEBUG_NO_MEMORY_POOL     0
+#define PK_DEBUG_NO_AUTO_GC         0
+#define PK_DEBUG_GC_STATS           0
 
 /*************** internal settings ***************/
 
@@ -38,45 +48,38 @@
 
 // This is the maximum number of arguments in a function declaration
 // including positional arguments, keyword-only arguments, and varargs
-// (not recommended to change this)
-#define PK_MAX_CO_VARNAMES          255
+// (not recommended to change this / it should be less than 200)
+#define PK_MAX_CO_VARNAMES          32
 
 // Hash table load factor (smaller ones mean less collision but more memory)
 // For class instance
-inline const float kInstAttrLoadFactor = 0.67f;
+#define PK_INST_ATTR_LOAD_FACTOR    0.67
 // For class itself
-inline const float kTypeAttrLoadFactor = 0.5f;
+#define PK_TYPE_ATTR_LOAD_FACTOR    0.5
 
 #ifdef _WIN32
-    inline const char kPlatformSep = '\\';
+    #define PK_PLATFORM_SEP '\\'
 #else
-    inline const char kPlatformSep = '/';
+    #define PK_PLATFORM_SEP '/'
 #endif
 
 #ifdef _MSC_VER
 #pragma warning (disable:4267)
-#pragma warning (disable:4101)
+#pragma warning (disable:4100)
 #pragma warning (disable:4244)
-#define _CRT_NONSTDC_NO_DEPRECATE
+#pragma warning (disable:4996)
 #endif
 
 #ifdef _MSC_VER
-#define PK_ENABLE_COMPUTED_GOTO     0
-#define UNREACHABLE()               __assume(0)
+#define PK_ENABLE_COMPUTED_GOTO		0
+#define PK_UNREACHABLE()				__assume(0)
 #else
-#define PK_ENABLE_COMPUTED_GOTO     1
-#define UNREACHABLE()               __builtin_unreachable()
+#define PK_ENABLE_COMPUTED_GOTO		1
+#define PK_UNREACHABLE()				__builtin_unreachable()
 #endif
 
-#if DEBUG_CEVAL_STEP && defined(PK_ENABLE_COMPUTED_GOTO)
+
+#if PK_DEBUG_CEVAL_STEP && defined(PK_ENABLE_COMPUTED_GOTO)
 #undef PK_ENABLE_COMPUTED_GOTO
 #endif
 
-/*************** module settings ***************/
-
-#define PK_MODULE_RE                1
-#define PK_MODULE_RANDOM            1
-#define PK_MODULE_BASE64            1
-#define PK_MODULE_LINALG            1
-#define PK_MODULE_EASING            1
-#define PK_MODULE_REQUESTS          0
