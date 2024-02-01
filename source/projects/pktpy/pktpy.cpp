@@ -453,43 +453,66 @@ int add100(int a) { return a + 100; }
 
 void add_custom_builtins(t_pktpy* x)
 {
-    // add dsp native module
-    x->mod_dsp = x->py->new_module("dsp");
 
-    x->py->bind_func<2>(x->mod_dsp, "add", [](VM* vm, ArgsView args) {
-        f64 x = CAST(f64, args[0]);
-        f64 y = CAST(f64, args[1]);
-        return VAR(x + y);
+
+    // --------------------------------------------------------------
+    // os module
+
+    PyObject* mod_os = x->py->_modules["os"];
+
+    x->py->bind(mod_os, "system(cmd: str) -> int", [](VM* vm, ArgsView args){
+        const char* cmd = py_cast<CString>(vm, args[0]);
+        int code = system(cmd);
+        return py_var(vm, code);
     });
 
+    // --------------------------------------------------------------
+    // dsp module
+
+    PyObject* mod_dsp = x->py->new_module("dsp");
+
+    x->py->bind(mod_dsp, "add(x: float, y: float) -> float", [](VM* vm, ArgsView args) {
+        f64 x = py_cast<f64>(vm, args[0]);
+        f64 y = py_cast<f64>(vm, args[1]);
+        return py_var(vm, x + y);
+    });
+
+
+    // --------------------------------------------------------------
+    // builtin module
+
+    // builtins
+    x->py->bind(x->py->builtins, "add10(a: int) -> int", [](VM* vm, ArgsView args) {
+        i64 a = py_cast<i64>(vm, args[0]);
+        return py_var(vm, a + 10);
+    });
+
+    x->py->bind(x->py->builtins, "add10(a: int) -> int", [](VM* vm, ArgsView args) {
+        i64 a = py_cast<i64>(vm, args[0]);
+        return py_var(vm, a + 10);
+    });
+
+    x->py->bind(x->py->builtins, "add100(a: int) -> int", [](VM* vm, ArgsView args) {
+        i64 a = py_cast<i64>(vm, args[0]);
+        return py_var(vm, add100(a));
+    });
 
     PyObject* obj; // to handle `x` pointer capture case
     // see: https://github.com/blueloveTH/pocketpy/issues/89
 
-    // builtins
-    x->py->bind_builtin_func<1>("add10", [](VM* vm, ArgsView args) {
-        i64 a = CAST(i64, args[0]);
-        return VAR(a + 10);
-    });
-
-    x->py->bind_builtin_func<1>("add100", [](VM* vm, ArgsView args) {
-        i64 a = CAST(i64, args[0]);
-        return VAR(add100(a));
-    });
-
     // example of wrapping a max api function
     // bind: void *outlet_int(t_outlet *x, t_atom_long n);
     // >>> out_int(10) -> sends 10 out of outlet
-    obj = x->py->bind_builtin_func<1>("out_int", [](VM* vm, ArgsView args) {
+    obj = x->py->bind(x->py->builtins, "out_int(a: int)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
-        i64 a = CAST(i64, args[0]);
+        i64 a = py_cast<i64>(vm, args[0]);
         outlet_int(x->outlet, a);
         return vm->None;
     });
     py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
     // wrap existing function pktpy_get_path_to_external
-    obj = x->py->bind_builtin_func<0>("location", [](VM* vm, ArgsView args) {
+    obj = x->py->bind(x->py->builtins, "location()", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         t_symbol* sym = pktpy_get_path_to_external(x);
         outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
@@ -498,9 +521,9 @@ void add_custom_builtins(t_pktpy* x)
     py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
     // wrap existing function pktpy_load
-    obj = x->py->bind_builtin_func<1>("load", [](VM* vm, ArgsView args) {
+    obj = x->py->bind(x->py->builtins, "load(path: str)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
-        Str path = CAST(Str, args[0]);
+        Str path = py_cast<Str>(vm, args[0]);
         const char* path_cstr = path.c_str_dup();
         pktpy_load(x, gensym(path_cstr)); 
         return vm->None;
@@ -508,9 +531,9 @@ void add_custom_builtins(t_pktpy* x)
     py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
     // wrap max-api function newobject_fromboxtext as create(text: str)
-    obj = x->py->bind_builtin_func<1>("create", [](VM* vm, ArgsView args) {
+    obj = x->py->bind(x->py->builtins, "create(text: str)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
-        Str text = CAST(Str, args[0]);
+        Str text = py_cast<Str>(vm, args[0]);
         const char* text_cstr = text.c_str_dup();
         t_object *patcher;//, *obj;
         // t_max_err err;
@@ -521,7 +544,9 @@ void add_custom_builtins(t_pktpy* x)
     });
     py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
 
-    // create 'test' module
+    // --------------------------------------------------------------
+    // test module
+
     PyObject* mod_test = x->py->new_module("test");
 
     // register class for 'test' module
@@ -531,9 +556,9 @@ void add_custom_builtins(t_pktpy* x)
     mod_test->attr().set("pi",  py_var(x->py, 3.14));
 
     // register functions for 'test' module
-    x->py->bind_func<1>(mod_test, "square", [](VM* vm, ArgsView args){
-        i64 a = CAST(i64, args[0]);
-        return VAR(a * a);
+    x->py->bind(mod_test, "square(x: int) -> int", [](VM* vm, ArgsView args){
+        i64 a = py_cast<i64>(vm, args[0]);
+        return py_var(vm, a * a);
     });
 }
 

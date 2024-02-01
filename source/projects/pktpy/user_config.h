@@ -18,6 +18,11 @@
 #define PK_ENABLE_CEVAL_CALLBACK    0
 #endif
 
+// GC min threshold
+#ifndef PK_GC_MIN_THRESHOLD         // can be overrided by cmake
+#define PK_GC_MIN_THRESHOLD         32768
+#endif
+
 // Whether to use `std::function` to do bindings or not
 // By default, functions to be binded must be a C function pointer without capture
 // However, someone thinks it's not convenient.
@@ -46,10 +51,9 @@
 // The actual size in bytes equals `sizeof(void*) * PK_VM_STACK_SIZE`
 #define PK_VM_STACK_SIZE            32768
 
-// This is the maximum number of arguments in a function declaration
-// including positional arguments, keyword-only arguments, and varargs
+// This is the maximum number of local variables in a function
 // (not recommended to change this / it should be less than 200)
-#define PK_MAX_CO_VARNAMES          32
+#define PK_MAX_CO_VARNAMES          64
 
 // Hash table load factor (smaller ones mean less collision but more memory)
 // For class instance
@@ -71,15 +75,14 @@
 #endif
 
 #ifdef _MSC_VER
-#define PK_ENABLE_COMPUTED_GOTO		0
-#define PK_UNREACHABLE()				__assume(0)
+#define PK_ENABLE_COMPUTED_GOTO     0
+#define PK_UNREACHABLE()            __assume(0);
 #else
-#define PK_ENABLE_COMPUTED_GOTO		1
-#define PK_UNREACHABLE()				__builtin_unreachable()
+#define PK_ENABLE_COMPUTED_GOTO     1
+#define PK_UNREACHABLE()            __builtin_unreachable();
 #endif
 
 
 #if PK_DEBUG_CEVAL_STEP && defined(PK_ENABLE_COMPUTED_GOTO)
 #undef PK_ENABLE_COMPUTED_GOTO
 #endif
-

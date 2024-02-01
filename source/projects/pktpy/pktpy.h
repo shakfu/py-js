@@ -4,6 +4,7 @@
 #include "ext.h"
 #include "ext_obex.h"
 
+#include <sstream>
 #include <fstream>
 
 #define PK_USER_CONFIG_H
