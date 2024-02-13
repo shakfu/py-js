@@ -349,9 +349,9 @@ class Application(Commander):
     # ----------------------------------------------------------------------------
     # utility methods
 
-    def do_fix(self, args):
-        """fix references and things"""
-        package()
+    # def do_fix(self, args):
+    #     """fix references and things"""
+    #     package()
 
     @option(
         "--path",

@@ -1,0 +1,2 @@
+npx static-handler --coi .
+

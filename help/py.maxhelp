@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"minor" : 6,
+			"revision" : 0,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -50,8 +50,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 6,
+							"minor" : 6,
+							"revision" : 0,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -606,8 +606,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 6,
+							"minor" : 6,
+							"revision" : 0,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -939,8 +939,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 6,
+							"minor" : 6,
+							"revision" : 0,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1607,8 +1607,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 6,
+							"minor" : 6,
+							"revision" : 0,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -2845,9 +2845,9 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_linecount" : 12,
-									"presentation_rect" : [ 76.0, 353.0, 49.0, 169.0 ],
-									"text" : "\"3.11.6 (main, Nov  2 2023, 04:39:43) [Clang 14.0.3 (clang-1403.0.22.14.1)]\""
+									"presentation_linecount" : 11,
+									"presentation_rect" : [ 76.0, 353.0, 49.0, 156.0 ],
+									"text" : "\"3.11.7 (main, Feb 12 2024, 23:35:13) [Clang 15.0.0 (clang-1500.1.0.2.5)]\""
 								}
 
 							}
@@ -3420,30 +3420,6 @@
 									"presentation" : 1,
 									"presentation_rect" : [ 387.0, 13.0, 75.0, 22.0 ],
 									"text" : "import string"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-120",
-									"maxclass" : "newobj",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "bang" ],
-									"patching_rect" : [ 100.0, 150.0, 100.0, 22.0 ],
-									"text" : "metro 400"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-124",
-									"maxclass" : "toggle",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "int" ],
-									"parameter_enable" : 0,
-									"patching_rect" : [ 240.0, 150.0, 24.0, 24.0 ]
 								}
 
 							}

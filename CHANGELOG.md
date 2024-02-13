@@ -1,6 +1,6 @@
 # CHANGELOG
 
-All notable project-wide changes will be documented in this file.
+All notable project-wide changes will be documented in this file. Note that each subproject has its own CHANGELOG.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Commons Changelog](https://common-changelog.org). This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -17,7 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.2.x]
 
-- Switched to building `make projects`, on macOS, using `cmake -GXcode ..` to skip signing requirement on Apple Silicon macs.
+
+- Switched to building `make projects`, on macOS, using `cmake -GXcode ..` to skip signing requirement on Apple Silicon macs. Use `make dev` for development with better error reporting (and an additional codesigning step).
 
 - All python3 externals + `pktpy` now work on Windows via the following sequence:
 

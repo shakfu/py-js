@@ -3,7 +3,9 @@
 
 ## [0.2.x]
 
-- Added full error tracebacks to `py_error_handler`
+- Fixed broken `static-ext` build with improved setup config
+
+- Added full error tracebacks to `py_error_handler` (WIP)
 
 - Added patcher scripting methods to `api.Patcher`
 

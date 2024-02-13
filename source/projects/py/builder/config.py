@@ -25,7 +25,7 @@ HOME = os.environ["HOME"]
 
 CURRENT_PYTHON_VERSION = platform.python_version()
 DEFAULT_BZ2_VERSION = "1.0.8"
-DEFAULT_SSL_VERSION = "1.1.1n"
+DEFAULT_SSL_VERSION = "1.1.1w"
 DEFAULT_XZ_VERSION = "5.2.5"
 
 # BASEDIR=f"{HOME}/.build_pyjs"
@@ -287,7 +287,6 @@ PYJS_CMAKE_DEFAULT_OPTIONS.update(
         "USE_SYSTEM_LIBRARIES": "OFF",
         "USE_SYSTEM_ZLIB": "OFF",
         "PYTHON_APPLY_PATCHES": "OFF",
-        "ENABLE_LOCALE": "OFF",
         "WITH_C_LOCALE_COERCION": "OFF",
         # extensions
         "ENABLE_AUDIOOP": "OFF",

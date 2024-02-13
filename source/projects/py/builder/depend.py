@@ -10,10 +10,12 @@ from pathlib import Path
 from pprint import pprint
 from typing import Union
 
-Pathlike = Union[str, Path]
-
 from .config import LOG_FORMAT, LOG_LEVEL
 from .shell import ShellCmd
+
+
+Pathlike = Union[str, Path]
+
 
 PATTERNS_TO_FIX = [
     "/usr/local",

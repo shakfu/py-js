@@ -449,7 +449,7 @@ class Builder:
     ):
         """python wrapper around command-line xcodebuild"""
 
-        if self.product.ver == "3.7" and not "PY_37" in preprocessor_flags:
+        if self.product.ver == "3.7" and "PY_37" not in preprocessor_flags:
             preprocessor_flags = list(preprocessor_flags)
             preprocessor_flags.append("PY_37")
 
@@ -1107,7 +1107,7 @@ class FrameworkPythonBuilder(PythonSrcBuilder):
             # "with_lto",
             # "without_doc_strings",
             "without_ensurepip",
-            # "disable_test_modules",
+            "disable_test_modules",
             # "with_system_libmpdec",
             **kwargs,
         )
@@ -1177,7 +1177,7 @@ class StaticPythonBuilder(PythonSrcBuilder):
             # "with_lto",
             # "without_doc_strings",
             "without_ensurepip",
-            # "disable_test_modules",
+            "disable_test_modules",
             prefix=quote(self.prefix),
             with_openssl=quote(self.project.build_lib / "openssl"),
         )
@@ -1365,7 +1365,7 @@ class TinyStaticPythonBuilder(PythonSrcBuilder):
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
-        ver = self.product.ver
+        # ver = self.product.ver
         self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
 
     def build(self):
@@ -1484,7 +1484,7 @@ class TinySharedPythonBuilder(PythonSrcBuilder):
 
     def remove_binaries(self):
         """remove list of non-critical executables"""
-        ver = self.product.ver
+        # ver = self.product.ver
         self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
 
     def build(self):
