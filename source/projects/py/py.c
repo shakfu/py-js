@@ -144,43 +144,36 @@ void ext_main(void* module_ref)
     // class attributes
     //------------------------------------------------------------------------
 
-    CLASS_ATTR_LABEL(c,     "name", 0,      "unique object id");
     CLASS_ATTR_SYM(c,       "name", 0,      t_py, p_name);
     CLASS_ATTR_BASIC(c,     "name", 0);
 
-    CLASS_ATTR_LABEL(c,     "file", 0,     "default python script");
     CLASS_ATTR_SYM(c,       "file", 0,     t_py,  p_code_filepath);
     CLASS_ATTR_STYLE(c,     "file", 0,     "file");
     CLASS_ATTR_BASIC(c,     "file", 0);
     CLASS_ATTR_SAVE(c,      "file", 0);
 
-    CLASS_ATTR_LABEL(c,     "autoload", 0,     "autoload default python script");
     CLASS_ATTR_LONG(c,      "autoload", 0,     t_py, p_autoload);
     CLASS_ATTR_STYLE(c,     "autoload", 0,     "onoff");
     CLASS_ATTR_BASIC(c,     "autoload", 0);
     CLASS_ATTR_SAVE(c,      "autoload", 0);
 
-    CLASS_ATTR_LABEL(c,     "run_on_save", 0,  "run content of editor on save");
     CLASS_ATTR_LONG(c,      "run_on_save", 0,  t_py, p_run_on_save);
     CLASS_ATTR_STYLE(c,     "run_on_save", 0, "onoff");
     CLASS_ATTR_DEFAULT(c,   "run_on_save", 0, "0");
     CLASS_ATTR_BASIC(c,     "run_on_save", 0);
     CLASS_ATTR_SAVE(c,      "run_on_save", 0);
 
-    CLASS_ATTR_LABEL(c,     "run_on_close", 0,  "run content of editor on close");
     CLASS_ATTR_LONG(c,      "run_on_close", 0,  t_py, p_run_on_close);
     CLASS_ATTR_STYLE(c,     "run_on_close", 0, "onoff");
     CLASS_ATTR_DEFAULT(c,   "run_on_close", 0, "1");
     CLASS_ATTR_BASIC(c,     "run_on_close", 0);
     CLASS_ATTR_SAVE(c,      "run_on_close", 0);
 
-    CLASS_ATTR_LABEL(c,     "pythonpath", 0,  "object pythonpath");
     CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
     CLASS_ATTR_BASIC(c,     "pythonpath", 0);
     CLASS_ATTR_SAVE(c,      "pythonpath", 0);
     CLASS_ATTR_ACCESSORS(c, "pythonpath", py_pythonpath_attr_get, py_pythonpath_attr_set);
 
-    CLASS_ATTR_LABEL(c,     "debug", 0,  "debug log to console");
     CLASS_ATTR_LONG(c,      "debug", 0,  t_py, p_debug);
     CLASS_ATTR_STYLE(c,     "debug", 0, "onoff");
     CLASS_ATTR_DEFAULT(c,   "debug", 0,     "0");
@@ -1165,20 +1158,19 @@ t_max_err py_task(t_py* x)
 /* Handlers */
 
 /**
- * @brief Generic python error handler with tracebacks
+ * @brief Generic python error handler
  *
  * @param x pointer to object struct
  * @param fmt format string
  * @param ... other args
  *
- * see: https://stackoverflow.com/questions/56430908/cpython-print-traceback
  */
 void py_handle_error(t_py* x, char* fmt, ...)
 {
-
     if (!PyErr_Occurred())
         return;
 
+    // char msg[PY_MAX_ELEMS];
     char msg[PY_MAX_ELEMS];
 
     va_list va;
@@ -1197,37 +1189,6 @@ void py_handle_error(t_py* x, char* fmt, ...)
     Py_XDECREF(pvalue);
     Py_XDECREF(pvalue_pstr);
 
-    if (ptraceback != NULL && PyTraceBack_Check(ptraceback)) {
-        char traceback_str[PY_MAX_ERROR];
-        char linebuffer[PY_MAX_ELEMS];
-
-        PyTracebackObject* trace_root = (PyTracebackObject*)ptraceback;
-        PyTracebackObject* ptrace = trace_root;
-
-        while (ptrace != NULL) {
-            PyFrameObject* frame = ptrace->tb_frame;
-            if (!frame)
-                goto no_traceback;
-            PyCodeObject* code = PyFrame_GetCode(frame);
-            if (!code)
-                goto no_traceback;
-
-            int linenum = PyFrame_GetLineNumber(frame);
-            const char* codename = PyUnicode_AsUTF8(code->co_name);
-            const char* filename = PyUnicode_AsUTF8(code->co_filename);
-
-            snprintf_zero(linebuffer, PY_MAX_ELEMS, "at %s (%s:%d); \n",
-                          codename, filename, linenum);
-            strncat_zero(traceback_str, linebuffer, PY_MAX_ERROR);
-            ptrace = ptrace->tb_next;
-        }
-        object_error((t_object*)x, "[ERROR] (%s) %s: %s\n%s",
-                     x->p_name->s_name, msg, pvalue_str, traceback_str);
-        Py_XDECREF(ptraceback);
-        return;
-    }
-
-no_traceback:
     object_error((t_object*)x, "[ERROR] (%s) %s: %s", x->p_name->s_name, msg,
                  pvalue_str);
     Py_XDECREF(ptraceback);

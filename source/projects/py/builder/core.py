@@ -21,10 +21,10 @@ Builder
                 FrameworkPythonForPkgBuilder
             SharedPythonBuilder
                 SharedPythonForExtBuilder
+                    TinySharedPythonBuilder
                 SharedPythonForPkgBuilder
-            TinySharedPythonBuilder
             StaticPythonBuilder
-            TinyStaticPythonBuilder
+                TinyStaticPythonBuilder
             RelocatablePythonBuilder
         PyJsBuilder
             LocalSystemBuilder
@@ -1266,245 +1266,6 @@ class BeewarePythonBuilder(StaticPythonBuilder):
         )
 
 
-class TinyStaticPythonBuilder(PythonSrcBuilder):
-    """builds python in a static format."""
-
-    setup_local = "setup-static-min6.local"
-
-    @property
-    def prefix(self) -> Path:
-        return self.project.build_lib / self.product.build_dir
-
-    def rm_exts(self, names):
-        """remove all named extensions"""
-        for name in names:
-            self.cmd.remove(
-                self.python_lib
-                / "lib-dynload"
-                / f"{name}.cpython-{self.product.ver_nodot}-darwin.so"
-            )
-
-    def remove_extensions(self):
-        """remove extensions"""
-        self.rm_exts(
-            self.product.DEFAULT_EXTS_TO_RM.union(
-                set(
-                    [
-                        "_blake2",
-                        "_csv",
-                        "_elementtree",
-                        "_json",
-                        "_multiprocessing",
-                        "_pickle",
-                        "_zoneinfo",
-                        "pyexpat",
-                        # "unicodedata",
-                    ]
-                )
-            )
-        )
-
-    def remove_encodings(self):
-        """remove all uneeded encodings"""
-        keep = [
-            "__init__.py",
-            "aliases.py",
-            "ascii.py",
-            "latin_1.py",
-            "utf_8.py",
-        ]
-        encodings = self.python_lib / "encodings"
-        for filename in encodings.iterdir():
-            if filename.name in keep:
-                continue
-            self.cmd.remove(filename)
-
-    def remove_packages(self):
-        """remove list of non-critical packages"""
-        self.remove_encodings()
-        self.rm_libs(
-            self.product.DEFAULT_PKGS_TO_RM.union(
-                set(
-                    [
-                        "argparse.py",
-                        "dbm",
-                        "difflib.py",
-                        "email",
-                        "html",
-                        "mailbox",
-                        "mailbox.py",
-                        "multiprocessing",
-                        "optparse.py",
-                        "pickletools.py",
-                        "pydoc.py",
-                        "pydoc_data",
-                        "sqlite3",
-                        "ssl.py",
-                        "urllib",
-                        "wsgiref",
-                        "xml",
-                        "zoneinfo",
-                    ]
-                )
-            )
-        )
-
-    def install(self):
-        """install and build compilation product"""
-        # self.configure()
-        self.reset()
-        self.download()
-        self.pre_process()
-        self.build()
-        self.post_process()
-
-    def post_process(self):
-        """post-build operations"""
-        self.clean()
-        self.ziplib()
-
-    def remove_binaries(self):
-        """remove list of non-critical executables"""
-        # ver = self.product.ver
-        self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
-
-    def build(self):
-        self.cmd.chdir(self.src_path)
-
-        self.configure(
-            # "enable_ipv6",
-            # "enable_optimizations",
-            # "with_lto",
-            # "without_doc_strings",
-            "without_ensurepip",
-            # "disable_test_modules",
-            prefix=quote(self.prefix),
-            # with_openssl=quote(self.project.build_lib / "openssl"),
-        )
-
-        self.cmd("make altinstall")
-        self.cmd.chdir(self.project.pydir)
-
-
-class TinySharedPythonBuilder(PythonSrcBuilder):
-    """builds python in a tiny shared format."""
-
-    setup_local = "setup-static-min6.local"
-
-    @property
-    def prefix(self) -> Path:
-        return self.project.build_lib / self.product.build_dir
-
-    def rm_exts(self, names):
-        """remove all named extensions"""
-        for name in names:
-            self.cmd.remove(
-                self.python_lib
-                / "lib-dynload"
-                / f"{name}.cpython-{self.product.ver_nodot}-darwin.so"
-            )
-
-    def remove_extensions(self):
-        """remove extensions"""
-        self.rm_exts(
-            self.product.DEFAULT_EXTS_TO_RM.union(
-                set(
-                    [
-                        "_blake2",
-                        "_csv",
-                        "_elementtree",
-                        "_json",
-                        "_multiprocessing",
-                        "_pickle",
-                        "_zoneinfo",
-                        "pyexpat",
-                        # "unicodedata",
-                    ]
-                )
-            )
-        )
-
-    def remove_encodings(self):
-        """remove all uneeded encodings"""
-        keep = [
-            "__init__.py",
-            "aliases.py",
-            "ascii.py",
-            "latin_1.py",
-            "utf_8.py",
-        ]
-        encodings = self.python_lib / "encodings"
-        for filename in encodings.iterdir():
-            if filename.name in keep:
-                continue
-            self.cmd.remove(filename)
-
-    def remove_packages(self):
-        """remove list of non-critical packages"""
-        self.remove_encodings()
-        self.rm_libs(
-            self.product.DEFAULT_PKGS_TO_RM.union(
-                set(
-                    [
-                        "argparse.py",
-                        "dbm",
-                        "difflib.py",
-                        "email",
-                        "html",
-                        "mailbox",
-                        "mailbox.py",
-                        "multiprocessing",
-                        "optparse.py",
-                        "pickletools.py",
-                        "pydoc.py",
-                        "pydoc_data",
-                        "sqlite3",
-                        "ssl.py",
-                        "wsgiref",
-                        "xml",
-                        "zoneinfo",
-                    ]
-                )
-            )
-        )
-
-    def install(self):
-        """install and build compilation product"""
-        # self.configure()
-        self.reset()
-        self.download()
-        self.pre_process()
-        self.build()
-        self.post_process()
-
-    def post_process(self):
-        """post-build operations"""
-        self.clean()
-        self.ziplib()
-
-    def remove_binaries(self):
-        """remove list of non-critical executables"""
-        # ver = self.product.ver
-        self.rm_bins(self.product.DEFAULT_BINS_TO_RM)
-
-    def build(self):
-        self.cmd.chdir(self.src_path)
-
-        self.configure(
-            # "enable_ipv6",
-            # "enable_optimizations",
-            # "with_lto",
-            "without_doc_strings",
-            "enable_shared",
-            "without_static_libpython",
-            "without_ensurepip",
-            "disable_test_modules",
-            prefix=quote(self.prefix),
-            # with_openssl=quote(self.project.build_lib / "openssl"),
-        )
-
-        self.cmd("make altinstall")
-        self.cmd.chdir(self.project.pydir)
 
 
 # ------------------------------------------------------------------------------------
@@ -1767,6 +1528,172 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
                 self.prefix_resources / "Python.app" / "Contents" / "MacOS" / "Python"
             ),
         )
+
+
+# ------------------------------------------------------------------------------------
+# PYTHON BUILDERS (TINY)
+
+class TinySharedPythonBuilder(SharedPythonForExtBuilder):
+    """builds python in a tiny shared format."""
+
+    setup_local = "setup-static-min6.0.local"
+
+    def remove_extensions(self):
+        """remove extensions"""
+        self.rm_exts(
+            self.product.DEFAULT_EXTS_TO_RM.union(
+                set(
+                    [
+                        "_blake2",
+                        "_csv",
+                        "_elementtree",
+                        "_json",
+                        "_multiprocessing",
+                        "_pickle",
+                        "_zoneinfo",
+                        "pyexpat",
+                        # "unicodedata",
+                    ]
+                )
+            )
+        )
+
+    def remove_encodings(self):
+        """remove all uneeded encodings"""
+        keep = [
+            "__init__.py",
+            "aliases.py",
+            "ascii.py",
+            "latin_1.py",
+            "utf_8.py",
+        ]
+        encodings = self.python_lib / "encodings"
+        for filename in encodings.iterdir():
+            if filename.name in keep:
+                continue
+            self.cmd.remove(filename)
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.remove_encodings()
+        self.rm_libs(
+            self.product.DEFAULT_PKGS_TO_RM.union(
+                set(
+                    [
+                        "argparse.py",
+                        "dbm",
+                        "difflib.py",
+                        "email",
+                        "html",
+                        "mailbox",
+                        "mailbox.py",
+                        "multiprocessing",
+                        "optparse.py",
+                        "pickletools.py",
+                        "pydoc.py",
+                        "pydoc_data",
+                        "sqlite3",
+                        "ssl.py",
+                        "wsgiref",
+                        "xml",
+                        "zoneinfo",
+                    ]
+                )
+            )
+        )
+
+    # def build(self):
+    #     self.cmd.chdir(self.src_path)
+
+    #     self.configure(
+    #         # "enable_ipv6",
+    #         # "enable_optimizations",
+    #         # "with_lto",
+    #         "without_doc_strings",
+    #         "enable_shared",
+    #         "without_static_libpython",
+    #         "without_ensurepip",
+    #         "disable_test_modules",
+    #         prefix=quote(self.prefix),
+    #     )
+
+    #     self.cmd("make altinstall")
+    #     self.cmd.chdir(self.project.pydir)
+
+
+class TinyStaticPythonBuilder(StaticPythonBuilder):
+    """builds python in a static format."""
+
+    setup_local = "setup-static-min6.0.local"
+    # setup_local = "setup-static-min6.local"
+
+    def remove_encodings(self):
+        """remove all uneeded encodings"""
+        keep = [
+            "__init__.py",
+            "aliases.py",
+            "ascii.py",
+            "latin_1.py",
+            "utf_8.py",
+        ]
+        encodings = self.python_lib / "encodings"
+        for filename in encodings.iterdir():
+            if filename.name in keep:
+                continue
+            self.cmd.remove(filename)
+
+    def remove_packages(self):
+        """remove list of non-critical packages"""
+        self.remove_encodings()
+        self.rm_libs(
+            self.product.DEFAULT_PKGS_TO_RM.union(
+                set(
+                    [
+                        "argparse.py",
+                        "dbm",
+                        "difflib.py",
+                        "email",
+                        "html",
+                        "mailbox",
+                        "mailbox.py",
+                        "multiprocessing",
+                        "optparse.py",
+                        "pickletools.py",
+                        "pydoc.py",
+                        "pydoc_data",
+                        "sqlite3",
+                        "ssl.py",
+                        "urllib",
+                        "wsgiref",
+                        "xml",
+                        "zoneinfo",
+                    ]
+                )
+            )
+        )
+
+
+    def build(self):
+        for builder in self.depends_on:
+            builder.build()
+
+        self.cmd.chdir(self.src_path)
+
+        self.configure(
+            # "enable_ipv6",
+            "enable_optimizations",
+            "with_lto",
+            "without_doc_strings",
+            "without_ensurepip",
+            "disable_test_modules",
+            prefix=quote(self.prefix),
+        )
+
+        self.cmd("make altinstall")
+        self.cmd.chdir(self.project.pydir)
+
+
+
 
 
 # ------------------------------------------------------------------------------------
@@ -2172,3 +2099,8 @@ class BeewareExtBuilder(PyJsBuilder):
 
         if self.product_exists:
             self.xcodebuild(self.NAME, targets=["py", "pyjs"])
+
+
+
+
+
