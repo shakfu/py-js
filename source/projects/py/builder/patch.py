@@ -1,6 +1,6 @@
 """patch.py or setup_local.py
 
-Generates the Setup.local using during python compilation from source.
+Generates the Setup.local used during python compilation from source.
 
 Versions = ['3.7', '3.8', ...]
 Levels = (0, range(4), range(4), range(4), range(4))
@@ -107,7 +107,7 @@ class Module:
 class Action(Enum):
     exclude  = 0
     static   = 1
-    shaed    = 2
+    shared   = 2
     disabled = 3
 
 
@@ -246,7 +246,7 @@ update('3.9',
 )
 
 update('3.10',
-   _json                 = Module('_json',             'optional', levels=(0, 1, 0, 1, 1), elems=['-I$(srcdir)/Include/internal', '-DPy_BUILD_CORE_BUILTIN', '_json.c']),
+    _json                = Module('_json',             'optional', levels=(0, 1, 0, 1, 1), elems=['-I$(srcdir)/Include/internal', '-DPy_BUILD_CORE_BUILTIN', '_json.c']),
     _peg_parser          = Module('_peg_parser',       'core',     levels=(1, 1, 1, 1, 1), elems=['_peg_parser.c']),
     _statistics          = Module('_statistics',       'optional', levels=(0, 1, 0, 1, 1), elems=['_statisticsmodule.c']),
     _testinternalcapi    = Module('_testinternalcapi', 'optional', levels=(0, 3, 3, 3, 3), elems=['_testinternalcapi.c', '-I$(srcdir)/Include/internal', '-DPy_BUILD_CORE_MODULE']),
