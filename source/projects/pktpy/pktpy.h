@@ -495,7 +495,7 @@ t_max_err PktpyInterpreter::pobject_to_atom(PyObject* value, t_atom* atom)
 
     else if (is_type(value, this->tp_str)) {
         Str str_value = py_cast<Str>(this, value);
-        const char* cstr = str_value.c_str_dup();
+        const char* cstr = str_value.c_str();
         atom_setsym(atom, gensym(cstr));
     }
 
@@ -648,7 +648,7 @@ t_max_err PktpyInterpreter:: handle_plist_output(List plist, void* outlet)
 
         if (is_type(obj, this->tp_str)) {
             Str str_obj = py_cast<Str>(this, obj);
-            const char* cstr = str_obj.c_str_dup();
+            const char* cstr = str_obj.c_str();
             atom_setsym(atoms + i, gensym(cstr));
             this->log_debug((char*)"%d string: %s\n", i, cstr);
             i += 1;
@@ -690,7 +690,7 @@ t_max_err PktpyInterpreter::handle_pyvar_output(PyObject* pval, void* outlet)
 
     else if (is_type(pval, this->tp_str)) {
         Str str_result = py_cast<Str>(this, pval);
-        const char* cstr = str_result.c_str_dup();
+        const char* cstr = str_result.c_str();
         outlet_anything(outlet, gensym(cstr), 0, (t_atom*)NIL);
         return MAX_ERR_NONE;
     }
@@ -752,7 +752,7 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
 
         else if (is_type(result, this->tp_str)) {
             Str str_result = py_cast<Str>(this, result);
-            const char* cstr = str_result.c_str_dup();
+            const char* cstr = str_result.c_str();
             outlet_anything(outlet, gensym(cstr), 0, (t_atom*)NIL);
         }
 

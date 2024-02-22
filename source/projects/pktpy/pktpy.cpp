@@ -524,7 +524,7 @@ void add_custom_builtins(t_pktpy* x)
     obj = x->py->bind(x->py->builtins, "load(path: str)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         Str path = py_cast<Str>(vm, args[0]);
-        const char* path_cstr = path.c_str_dup();
+        const char* path_cstr = path.c_str();
         pktpy_load(x, gensym(path_cstr)); 
         return vm->None;
     });
@@ -534,11 +534,10 @@ void add_custom_builtins(t_pktpy* x)
     obj = x->py->bind(x->py->builtins, "create(text: str)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         Str text = py_cast<Str>(vm, args[0]);
-        const char* text_cstr = text.c_str_dup();
+        const char* text_cstr = text.c_str();
         t_object *patcher;//, *obj;
         // t_max_err err;
         if (object_obex_lookup(x, gensym("#P"), &patcher) == MAX_ERR_NONE)
-            // obj = newobject_fromboxtext(patcher, text_cstr);
             newobject_fromboxtext(patcher, text_cstr);
         return vm->None;
     });
