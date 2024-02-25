@@ -19,6 +19,13 @@ LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
 LOG_FORMAT = "%(relativeCreated)-4d %(levelname)-5s: %(name)-10s %(message)s"
 
 # ----------------------------------------------------------------------------
+# HELPERS
+
+def getenv(key: str, default: bool = False) -> bool:
+    """convert '0','1' env values to bool {True, False}"""
+    return bool(int(os.getenv(key, default)))
+
+# ----------------------------------------------------------------------------
 # CONSTANTS
 
 HOME = os.environ["HOME"]
@@ -47,12 +54,14 @@ MAGENTA = "\033[1;35m"
 CYAN = "\033[1;36m"
 RESET = "\033[m"
 
+OPTIMIZE = getenv("OPTIMIZE", default=False)
+
 DEFAULT_CONFIGURE_OPTIONS = [
-    "disable_profiling",
+    # "disable_profiling",
     "disable_test_modules",
-    "enable_ipv6",
-    "enable_optimizations",
-    "with_lto",
+    # "enable_ipv6",
+    # "enable_optimizations",
+    # "with_lto",
     "without_doc_strings",
     "without_readline",
     # "with_readline=editline",
@@ -67,6 +76,13 @@ DEFAULT_CONFIGURE_OPTIONS = [
     # "enable_framework",
     # "enable_framework=INSTALLDIR",
 ]
+
+if OPTIMIZE:
+    DEFAULT_CONFIGURE_OPTIONS.extend([
+        "enable_optimizations",
+        "with_lto",
+    ])
+
 
 PYJS_TARGETS = {
     "default": dict(

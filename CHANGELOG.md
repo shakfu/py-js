@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.2.x]
 
+- Changed default configuration in order to speed up builds. Now optimizations options ["enable_optimizations", "with_lto"] are not enabled by default but can now be enabled by setting OPTIMIZE=1 environment variable.
+
+- Added `make strip` option (with script) to recursively strip externals in the externals folder (currently macOS only)
 
 - Switched to building `make projects`, on macOS, using `cmake -GXcode ..` to skip signing requirement on Apple Silicon macs. Use `make dev` for development with better error reporting (and an additional codesigning step).
 

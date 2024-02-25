@@ -349,7 +349,13 @@ max-check:
 # DEPLOYING
 # -----------------------------------------------------------------------
 
-.PHONY: sign collect dmg sign-dmg notarize-dmg staple-dmg fix-framework
+.PHONY: strip sign collect dmg sign-dmg notarize-dmg staple-dmg fix-framework
+
+strip:
+	$(call section,"strip then sign externals")
+	@python3 source/scripts/strip.py
+	$(call section,"re-sign externals")
+	$(call call-builder,"package" "sign")
 
 sign:
 	$(call section,"sign externals and binary dependencies")
