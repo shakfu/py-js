@@ -40,7 +40,7 @@ target_compile_options(
 	$<$<PLATFORM_ID:Darwin>:-Wfatal-errors>
 	$<$<PLATFORM_ID:Darwin>:-Wall>	
 	$<$<PLATFORM_ID:Darwin>:-O2>
-	$<$<PLATFORM_ID:Darwin>:-fno-rtti>
+	$<$<PLATFORM_ID:Darwin>:-frtti>
 	$<$<PLATFORM_ID:Darwin>:-stdlib=libc++>
 	$<$<PLATFORM_ID:Darwin>:--std=c++17>
 	$<$<PLATFORM_ID:Windows>:/std:c++17>
