@@ -85,8 +85,9 @@ class FactoryManager:
         return core.Product(
             name="xz",
             version="5.2.5",
-            url_template="http://tukaani.org/xz/{name}-{version}.tar.gz",
-            libs_static=["libxz.a"],
+            url_template="https://github.com/python/cpython-source-deps/archive/refs/tags/{name}-{version}.tar.gz",
+            # url_template="http://tukaani.org/xz/{name}-{version}.tar.gz",
+            libs_static=["liblzma.a"],
         )
 
     # -----------------------------------------------------------------------------

@@ -58,6 +58,7 @@ from typing import Dict, List, Optional
 from .config import (
     CURRENT_PYTHON_VERSION,
     DEFAULT_CONFIGURE_OPTIONS,
+    DEFAULT_XZ_VERSION,
     LOG_FORMAT,
     LOG_LEVEL,
     URL_GETPIP,
@@ -673,17 +674,58 @@ class OpensslBuilder(ConfiguredBuilder):
 class XzBuilder(ConfiguredBuilder):
     """Xz static library builder"""
 
+    def download(self, include_dependencies=True):
+        """download src using curl and tar.
+
+        curl and tar are automatically available on mac platforms.
+        """
+        self.project.build_downloads.mkdir(parents=True, exist_ok=True)
+        if include_dependencies:
+            for dep in self.depends_on:
+                dep.download()
+
+        # download
+        if self.download_path and not self.download_path.exists():
+            self.project.build_downloads.mkdir(parents=True, exist_ok=True)
+            self.log.info("downloading %s to %s", self.url, self.download_path)
+            self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
+            assert (
+                self.download_path.exists()
+            ), f"could not download: {self.download_path}"
+
+        # unpack
+        if not self.src_path.exists():
+            self.project.build_src.mkdir(parents=True, exist_ok=True)
+            self.log.info("unpacking %s", self.src_path)
+            self.cmd(
+                f"tar -xvf '{self.download_path}'"
+                f" --directory '{self.project.build_src}'"
+            )
+            downloaded = self.project.build_src / f"cpython-source-deps-xz-{DEFAULT_XZ_VERSION}"            
+            self.cmd.move(downloaded, self.src_path)
+            assert self.src_path.exists(), f"{self.src_path} not created"
+
+    def pre_process(self):
+        """pre-build operations"""
+        os.chmod(self.src_path / "configure", 0o755)
+        os.chmod(self.src_path / "build-aux" / "install-sh", 0o755)
+
     @property
     def product_exists(self):
         return self.prefix.exists()
 
     def build(self):
+        self.pre_process()
         if not self.product_exists:
             self.download()
             self.cmd.chdir(self.src_path)
             self.configure(
-                "disable_shared",
-                "enable_static",
+                "disable-dependency-tracking",
+                "disable-xzdec",
+                "disable-lzmadec",
+                "disable-nls",
+                "enable-small",
+                "disable-shared",
                 prefix=quote(self.prefix),
             )
             self.cmd(
