@@ -3,6 +3,10 @@
 
 ## [0.2.x]
 
+- Fixed codesigning bug in `homebrew-ext` and `homebrew-pkg`, both are codesigned by default
+
+- Fixed error caused by removal of `distutils` in 3.12
+
 - Fix for broken `xz-utils` dependency due to its main repo being taken offline due to a well-known security issue. `xz-5.2.5`, which is known to be safe, is now only downloaded from the [cpython dependencies repo](https://github.com/python/cpython-source-deps) instead.
 
 - Fixed broken `static-ext` build with improved setup config

@@ -124,9 +124,11 @@ local-sys: clean-local-sys api
 
 homebrew-pkg: clean-homebrew-pkg
 	$(call call-builder,"pyjs" "homebrew_pkg")
+	@make sign
 
 homebrew-ext: clean-homebrew-ext
 	$(call call-builder,"pyjs" "homebrew_ext")
+	@make sign
 
 shared-pkg: clean-shared-pkg
 	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build" "-p" "$(PYTHON_VERSION)")

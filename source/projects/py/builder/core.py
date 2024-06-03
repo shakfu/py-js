@@ -854,8 +854,9 @@ class PythonBuilder(Builder):
         self.clean_python_tests(self.python_lib)
         self.clean_python_site_packages()
 
-        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
-            self.cmd.remove(i)
+        if (self.python_lib / "distutils").exists():
+            for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+                self.cmd.remove(i)
 
         self.cmd.remove(self.prefix_lib / "pkgconfig")
         self.cmd.remove(self.prefix / "share")
@@ -1367,8 +1368,10 @@ class RelocatablePythonBuilder(PythonBuilder):
         self.clean_python_tests(self.python_lib)
         # self.clean_python_site_packages(self.python_lib)
         self.restore_site_packages(tmp_dir)
-        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
-            self.cmd.remove(i)
+
+        if (self.python_lib / "distutils").exists():
+            for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+                self.cmd.remove(i)
 
         self.cmd.remove(self.prefix_lib / "pkgconfig")
         self.cmd.remove(self.prefix / "share")
@@ -1776,7 +1779,8 @@ class HomebrewExtBuilder(PyJsBuilder):
     def cp_pkgs(self, pkgs):
         """copy package dirs from homebrew python lib to target python lib"""
         for pkg in pkgs:
-            self.cmd.copy(self.project.python.pkgs / pkg, self.python_lib / pkg)
+            if (self.project.python.pkgs / pkg).exists():
+                self.cmd.copy(self.project.python.pkgs / pkg, self.python_lib / pkg)
 
     def rm_libs(self, names):
         """remove all named python dylib libraries"""
@@ -1787,8 +1791,10 @@ class HomebrewExtBuilder(PyJsBuilder):
         """clean everything."""
         self.clean_python_pyc(self.prefix)
         self.clean_python_tests(self.python_lib)
-        for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
-            self.cmd.remove(i)
+
+        if (self.python_lib / "distutils").exists():
+            for i in (self.python_lib / "distutils" / "command").glob("*.exe"):
+                self.cmd.remove(i)
 
         self.remove_packages()
         self.remove_extensions()
