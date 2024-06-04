@@ -37,7 +37,7 @@ name       | sdk        | lang   | description
 [pktpy]    | max-sdk    | c++    | uses the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
 [mpy] [2]  | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
 
-[2] `mpy` is not enabled by default since it is still in early stages and requires a download of its source. To build it use the `-DBUILD_MICROPYTHON_EXTERNAL` option with cmake.
+[2] `mpy` is not enabled by default since it is still in early stages and more of a proof-of-concept to embed micropython in an external. To build it use the `-DBUILD_MICROPYTHON_EXTERNAL` option with cmake.
 
 
 **ZeroMQ-related Externals**
@@ -62,8 +62,8 @@ Note: zeromq externals are not enabled by default since they require zeromq libr
 [pktpy]: source/projects/pktpy
 [zedit]: source/projects/zedit
 [mpy]: source/projects/mpy
-[jmx]: source/projects/mpy
-[zthread]: source/projects/mpy
+[jmx]: source/projects/jmx
+[zthread]: source/projects/zthread
 
 The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
 
