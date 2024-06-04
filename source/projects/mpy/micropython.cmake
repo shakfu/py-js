@@ -1,29 +1,33 @@
-include(FetchContent)
+# optional fetch micropython otherwise default to local source
+if(FETCH_MICROPYTHON)
+	include(FetchContent)
 
-set(MP_INSTALL_DIR "${CMAKE_BINARY_DIR}/_deps")
-set(MP_EMBEDDING "${MP_INSTALL_DIR}/micropython-src/examples/embedding")
-set(EMBED_DIR "${MP_EMBEDDING}/micropython_embed")
+	set(MP_INSTALL_DIR "${CMAKE_BINARY_DIR}/_deps")
+	set(MP_EMBEDDING "${MP_INSTALL_DIR}/micropython-src/examples/embedding")
+	set(EMBED_DIR "${MP_EMBEDDING}/micropython_embed")
 
-FetchContent_Declare(
-	micropython
-	GIT_REPOSITORY https://github.com/micropython/micropython.git
-	# GIT_TAG b525f1c9ec8ffa9009754578932f3fad5f63026b
-	GIT_SUBMODULES "docs" # hack to prevent recursive clone
-	GIT_SHALLOW TRUE
-	GIT_PROGRESS TRUE
-)
-
-FetchContent_MakeAvailable(
-    micropython
-)
-
-if(NOT EXISTS ${EMBED_DIR})
-	execute_process(
-		COMMAND make -f micropython_embed.mk
-		WORKING_DIRECTORY ${MP_EMBEDDING}
+	FetchContent_Declare(
+		micropython
+		GIT_REPOSITORY https://github.com/micropython/micropython.git
+		# GIT_TAG b525f1c9ec8ffa9009754578932f3fad5f63026b
+		GIT_SUBMODULES "docs" # hack to prevent recursive clone
+		GIT_SHALLOW TRUE
+		GIT_PROGRESS TRUE
 	)
-endif()
 
+	FetchContent_MakeAvailable(
+	    micropython
+	)
+
+	if(NOT EXISTS ${EMBED_DIR})
+		execute_process(
+			COMMAND make -f micropython_embed.mk
+			WORKING_DIRECTORY ${MP_EMBEDDING}
+		)
+	endif()
+else()
+	set(EMBED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/micropython_embed")
+endif()
 
 set(MPY_EXE "${PROJECT_NAME}_exe")
 set(MPY_LIB "${PROJECT_NAME}_lib")
@@ -90,7 +94,7 @@ set(MPY_SOURCE_FILES
 	${EMBED_DIR}/py/modstruct.c
 	${EMBED_DIR}/py/modsys.c
 	${EMBED_DIR}/py/modthread.c
-	${EMBED_DIR}/py/moduerrno.c
+	# ${EMBED_DIR}/py/moduerrno.c
 	${EMBED_DIR}/py/mpprint.c
 	${EMBED_DIR}/py/mpstate.c
 	${EMBED_DIR}/py/mpz.c
@@ -212,7 +216,7 @@ set(MPY_SOURCE_FILES
 	${EMBED_DIR}/py/modstruct.c
 	${EMBED_DIR}/py/modsys.c
 	${EMBED_DIR}/py/modthread.c
-	${EMBED_DIR}/py/moduerrno.c
+	# ${EMBED_DIR}/py/moduerrno.c
 	${EMBED_DIR}/py/mpprint.c
 	${EMBED_DIR}/py/mpstate.c
 	${EMBED_DIR}/py/mpz.c

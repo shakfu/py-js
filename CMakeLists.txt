@@ -4,10 +4,13 @@ string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
 project(${THIS_FOLDER_NAME})
 
 option(C74_BUILD_FAT "Build Universal Externals") # not supported (you're on your own! :-)
+option(ENABLE_LTO "enable link-time / interprocedural optimization")
+
 option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals")
 option(BUILD_ZMQ_EXTERNALS "Enable building zeromq externals")
 option(BUILD_MICROPYTHON_EXTERNAL "Enable building of micropython external")
-option(ENABLE_LTO "enable link-time / interprocedural optimization")
+option(FETCH_MICROPYTHON "Download latest micropython and use that to build external")
+
 
 # use ccache if available
 find_program(CCACHE_PROGRAM ccache)

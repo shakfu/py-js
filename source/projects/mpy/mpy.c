@@ -104,7 +104,10 @@ void mpy_free(t_mpy* x)
 
 void mpy_bang(t_mpy* x) {
     // test embedded MicroPython
-    mp_embed_init(&HEAP[0], sizeof(HEAP));
+    int stack_top;
+    mp_embed_init(&HEAP[0], sizeof(HEAP), &stack_top);
+    
+    // mp_embed_init(&HEAP[0], sizeof(HEAP));
     mp_embed_exec_str(example_1);
     mp_embed_exec_str(example_2);
     mp_embed_deinit();
