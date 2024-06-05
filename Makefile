@@ -29,7 +29,7 @@ PKG_NAME = py-js
 
 DEPENDENCIES = "cmake zmq czmq"
 
-# system python override
+# system python override: eg. `make shared-ext PYTHON_VERSION=3.11.9`
 # PYTHON_VERSION = 3.8.17
 
 MAX_APP := "/Applications/Studio/Max.app"

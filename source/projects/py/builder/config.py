@@ -83,7 +83,6 @@ if OPTIMIZE:
         "with_lto",
     ])
 
-
 PYJS_TARGETS = {
     "default": dict(
         desc="non-portable pyjs externals linked to your system", lines=210
@@ -114,6 +113,7 @@ PYJS_TARGETS = {
 PYTHON_TARGETS = {
     "python-shared": "minimal shared python build",
     "python-shared-ext": "minimal shared python build for externals",
+    "python-shared-tiny": "tiny shared python build",
     "python-shared-pkg": "minimal shared python build for packages",
     "python-static": "minimal statically-linked python build",
     "python-static-tiny": "tiny statically-linked python build",
