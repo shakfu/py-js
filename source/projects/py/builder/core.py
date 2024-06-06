@@ -1670,7 +1670,6 @@ class TinyStaticPythonBuilder(StaticPythonBuilder):
     """builds python in a static format."""
 
     setup_local = "setup-static-min6.0.local"
-    # setup_local = "setup-static-min6.local"
 
     def remove_encodings(self):
         """remove all uneeded encodings"""
@@ -1726,8 +1725,8 @@ class TinyStaticPythonBuilder(StaticPythonBuilder):
 
         self.configure(
             # "enable_ipv6",
-            "enable_optimizations",
-            "with_lto",
+            # "enable_optimizations",
+            # "with_lto",
             "without_doc_strings",
             "without_ensurepip",
             "disable_test_modules",

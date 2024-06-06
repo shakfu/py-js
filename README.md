@@ -6,7 +6,7 @@ Cross-platform: currently builds 'natively' on macOS (`x86_64` or `arm64`) and W
 
 repo - <https://github.com/shakfu/py-js>
 
-[![py-js test](./media/screenshot.png)](patchers/py_test_standalone.maxpat)
+[![py-js py.maxhelp](./media/py-maxhelp.png)](patchers/py_test_anything.maxpat)
 
 ## Preface
 
@@ -154,7 +154,7 @@ py max external
         right outlet             : bang on success 
 ```
 
-[![py-js test_py](./media/test_py.png)](patchers/py_test_anything.maxpat)
+
 
 ### `pyjs` external
 
@@ -283,7 +283,7 @@ idx  | command                | type       | format     | py size |  pyjs size
 4    | `make shared-tiny-ext` | shared     | external   | 6.7     | 6.2  [2]
 5    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8 [3]
 
-[2] These 'tiny' variants are intended to be the smallest possible portable pyjs externals. Note that the static and shared tiny variants don't currently work on python3.12 (for a still undiscovered reason). If you need the smallest builds, use as a lower python version such as `make shared-tiny-ext PYTHON_VERSION=3.11.9`. Otherwise, in this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoreticla minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo.
+[2] In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoreticla minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo.
 
 [3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
 
@@ -729,13 +729,6 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 
 - *isolated*: if yes, then different external types can run concurrently without issue
 
-#### Python Version Compatibility
-
-![py-js testing](./media/python_compatibility.png)
-
-[1] Homebrew only tested on current relase (3.9.10), other versions are expected to work without issues.
-
-[2] Relocatable python can select its own version of python (Only tested with python 3.9.10, other versions should work without issues)
 
 #### Packages vs Self-contained Externals
 
