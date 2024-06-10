@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"minor" : 6,
+			"revision" : 2,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -40,13 +40,25 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-1",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "bang" ],
+					"patching_rect" : [ 38.0, 257.0, 58.0, 22.0 ],
+					"text" : "loadbang"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-8",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 38.0, 274.0, 79.0, 22.0 ],
-					"text" : "loadmess set"
+					"patching_rect" : [ 38.0, 293.0, 29.5, 22.0 ],
+					"text" : "set"
 				}
 
 			}
@@ -68,7 +80,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 401.0, 134.0, 150.0, 33.0 ],
+					"patching_rect" : [ 417.0, 132.5, 150.0, 33.0 ],
 					"text" : "toggle; switches the filewatcher on/off  "
 				}
 
@@ -80,7 +92,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 297.0, 172.0, 271.0, 87.0 ],
+					"patching_rect" : [ 297.0, 172.0, 274.0, 87.0 ],
 					"text" : "This bpatcher wraps the filewatcher and opens a watched file in an external editor.\n\nIf the the watched file is saved by the editor, it will be sent out as text via the outlet to enable reloading python code after save."
 				}
 
@@ -114,6 +126,7 @@
 					"fontname" : "Courier New",
 					"fontsize" : 12.0,
 					"id" : "obj-18",
+					"linecount" : 9,
 					"maxclass" : "textedit",
 					"numinlets" : 1,
 					"numoutlets" : 4,
@@ -121,6 +134,7 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 38.0, 336.0, 456.0, 117.0 ],
 					"readonly" : 1,
+					"text" : "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python312.zip /opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12 /opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/lib-dynload /Users/sa/Library/Python/3.12/lib/python/site-packages /opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages /",
 					"textcolor" : [ 0.968627450980392, 0.968627450980392, 0.968627450980392, 1.0 ]
 				}
 
@@ -176,13 +190,12 @@
 					"patching_rect" : [ 182.0, 202.0, 76.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
-						"debug" : 0,
 						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/demos/hello.py",
-						"pythonpath" : ""
+						"pythonpath" : "/"
 					}
 ,
 					"text" : "py",
-					"varname" : "u251000784"
+					"varname" : "__main__"
 				}
 
 			}
@@ -202,13 +215,20 @@
 					"numoutlets" : 2,
 					"offset" : [ 0.0, 0.0 ],
 					"outlettype" : [ "", "bang" ],
-					"patching_rect" : [ 182.0, 134.0, 213.0, 30.0 ],
+					"patching_rect" : [ 182.0, 134.0, 230.0, 26.0 ],
 					"viewvisibility" : 1
 				}
 
 			}
  ],
 		"lines" : [ 			{
+				"patchline" : 				{
+					"destination" : [ "obj-8", 0 ],
+					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
 				"patchline" : 				{
 					"destination" : [ "obj-18", 0 ],
 					"midpoints" : [ 191.5, 325.0, 47.5, 325.0 ],
@@ -266,7 +286,7 @@
 , 			{
 				"name" : "py_extedit.maxpat",
 				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
-				"patcherrelativepath" : "../bpatchers_ui",
+				"patcherrelativepath" : "../../bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}

@@ -42,8 +42,7 @@ struct t_py {
 
     /* time-based ops */
     void* p_clock; /*!< a clock in case of scheduled ops */
-    t_atomarray*
-        p_sched_atoms; /*!< atomarray for scheduled python function call */
+    t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
 
     /* text editor attrs */
     t_object* p_code_editor;  /*!< code editor object */
@@ -99,7 +98,6 @@ void ext_main(void* module_ref)
 
     // testing
     class_addmethod(c, (method)py_bang,       "bang",                  0);
-    class_addmethod(c, (method)py_hello,      "hello",      A_GIMME,   0);
 
     // core
     class_addmethod(c, (method)py_import,     "import",     A_SYM,     0);
@@ -246,7 +244,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         // set default debug level
         x->p_debug = 0;
 
-        // test tasks
+        // clocked tasks
         x->p_clock = clock_new((t_object*)x, (method)py_task);
         x->p_sched_atoms = NULL;
 
@@ -672,7 +670,7 @@ void py_init_builtins(t_py* x)
     return;
 
 error:
-    py_handle_error(x, "could not update object namespace with object name");
+    py_handle_error(x, "failed to initialize python builtins");
     Py_XDECREF(p_name);
 }
 
@@ -1635,7 +1633,7 @@ t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    char* py_argv = NULL;
+    const char* py_argv = NULL;
     PyObject* pval = NULL;
 
     py_argv = atom_getsym(argv)->s_name;
@@ -1868,6 +1866,7 @@ error:
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
+
 
 /**
  * @brief Converts all of the atom to text and evaluate as python code.
