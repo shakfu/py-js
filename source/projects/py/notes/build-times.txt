@@ -7,3 +7,5 @@ make shared-ext  	 757.44s  user 72.90s system 98% cpu 13:59.00 total
 make shared-pkg      771.23s  user 73.14s system 98% cpu 14:15.28 total
 make static-ext  	 1061.85s user 75.18s system 88% cpu 21:20.65 total
 make tiny-static-ext 878.85s  user 67.33s system 88% cpu 17:46.19 total
+
+depends on version and machine (3.12 on macbook air m1?)

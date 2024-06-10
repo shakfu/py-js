@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 6,
-			"revision" : 0,
+			"revision" : 2,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -51,7 +51,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 6,
-							"revision" : 0,
+							"revision" : 2,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -607,7 +607,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 6,
-							"revision" : 0,
+							"revision" : 2,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -644,6 +644,63 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-6",
+									"linecount" : 4,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 533.0, 295.0, 293.0, 60.0 ],
+									"presentation_linecount" : 3,
+									"text" : "A simple textedit bpatcher which can contain multiline python code. Runs code inside the box as a python file and can be populated via a set \"<code>\" message."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontface" : 1,
+									"id" : "obj-8",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 533.0, 273.0, 136.0, 20.0 ],
+									"text" : "py_textedit.maxpat"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-4",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 474.0, 272.0, 47.0, 22.0 ],
+									"text" : "s to_py"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"bgmode" : 0,
+									"border" : 0,
+									"clickthrough" : 0,
+									"enablehscroll" : 0,
+									"enablevscroll" : 0,
+									"id" : "obj-1",
+									"lockeddragscroll" : 0,
+									"lockedsize" : 0,
+									"maxclass" : "bpatcher",
+									"name" : "py_textedit.maxpat",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"offset" : [ 0.0, 0.0 ],
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 474.0, 57.0, 358.0, 196.0 ],
+									"viewvisibility" : 1
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"bgmode" : 0,
 									"border" : 0,
 									"clickthrough" : 0,
@@ -671,7 +728,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 124.0, 295.0, 326.0, 47.0 ],
-									"text" : "This is a bpatcher which has to parts: the top editor part which can be a multiline python program and the lower part which is a basic evaluation termal. "
+									"text" : "This bpatcher has two parts: the top editor part which can be a multiline python program and the lower part which is a basic evaluation termal. "
 								}
 
 							}
@@ -867,6 +924,13 @@
  ],
 						"lines" : [ 							{
 								"patchline" : 								{
+									"destination" : [ "obj-4", 0 ],
+									"source" : [ "obj-1", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-10", 0 ],
 									"source" : [ "obj-2", 0 ]
 								}
@@ -940,7 +1004,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 6,
-							"revision" : 0,
+							"revision" : 2,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1608,7 +1672,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 6,
-							"revision" : 0,
+							"revision" : 2,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -2847,7 +2911,7 @@
 									"presentation" : 1,
 									"presentation_linecount" : 11,
 									"presentation_rect" : [ 76.0, 353.0, 49.0, 156.0 ],
-									"text" : "\"3.11.7 (main, Feb 12 2024, 23:35:13) [Clang 15.0.0 (clang-1500.1.0.2.5)]\""
+									"text" : "\"3.12.3 (main, Apr  9 2024, 08:09:14) [Clang 15.0.0 (clang-1500.3.9.4)]\""
 								}
 
 							}
@@ -4122,6 +4186,13 @@
 			}
 , 			{
 				"name" : "py_repl.maxpat",
+				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
+				"patcherrelativepath" : "../patchers/bpatchers_ui",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "py_textedit.maxpat",
 				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
 				"patcherrelativepath" : "../patchers/bpatchers_ui",
 				"type" : "JSON",
