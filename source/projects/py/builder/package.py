@@ -187,7 +187,10 @@ class PackageManager:
                     self.cmd.copy(p, destination)
         for f in self.project.root.glob("*.md"):
             self.cmd.copy(f, PACKAGE)
-
+        # cleanup unrelated .maxhelp files
+        for helpfile in (destination / 'help').glob("*.maxhelp"):
+            if helpfile.stem not in ["py", "pyjs"]:
+                helpfile.unlink()
         return PACKAGE
 
     def package_as_dmg(self):
@@ -232,7 +235,7 @@ class PackageManager:
             self.product_dmg.exists() and self.dev_id
         ), f"{self.product_dmg} and KEYCHAIN_PROFILE not set"
         self.cmd(
-            f'xcrun notarytool submit "{self.product_dmg}" --keychain-profile "{self.keychain_profile}"'
+            f'xcrun notarytool submit "{self.product_dmg}" --keychain-profile "{self.keychain_profile}" --wait'
         )
 
     def staple_dmg(self):

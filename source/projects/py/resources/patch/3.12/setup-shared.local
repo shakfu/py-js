@@ -98,6 +98,7 @@ _testinternalcapi _testinternalcapi.c
 _testmultiphase _testmultiphase.c
 _tkinter _tkinter.c tkappinit.c -DWITH_APPINIT $(TCLTK_INCLUDES) $(TCLTK_LIBS) \
 _uuid _uuidmodule.c -luuid
+_xxinterpchannels _xxinterpchannelsmodule.c
 _xxsubinterpreters _xxsubinterpretersmodule.c
 _xxtestfuzz _xxtestfuzz/_xxtestfuzz.c _xxtestfuzz/fuzzer.c
 nis nismodule.c -I/usr/include/tirpc -lnsl -ltirpc

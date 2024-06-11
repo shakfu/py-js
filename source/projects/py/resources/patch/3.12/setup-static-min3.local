@@ -151,6 +151,7 @@ xxlimited
 xxlimited_35
 xxsubtype
 _xxsubinterpreters
+_xxinterpchannels
 
 #_multibytecodec
 _codecs_cn

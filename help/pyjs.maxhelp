@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"minor" : 6,
+			"revision" : 2,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -370,7 +370,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 121.5, 300.0, 24.0, 24.0 ]
+					"patching_rect" : [ 123.5, 300.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -646,8 +646,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 31.5, 387.0, 109.0, 76.0 ],
-					"text" : "\"3.12.0 (main, Oct  9 2023, 18:00:28) [Clang 15.0.0 (clang-1500.0.40.1)]\""
+					"patching_rect" : [ 31.5, 387.0, 111.0, 76.0 ],
+					"text" : "\"3.12.3 (main, Jun 11 2024, 01:58:55) [Clang 15.0.0 (clang-1500.3.9.4)]\""
 				}
 
 			}
@@ -658,7 +658,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 121.5, 352.0, 141.0, 22.0 ],
+					"patching_rect" : [ 123.5, 352.0, 141.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"filename" : "test_pyjs.js",
 						"parameter_enable" : 0

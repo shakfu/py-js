@@ -351,7 +351,7 @@ max-check:
 # DEPLOYING
 # -----------------------------------------------------------------------
 
-.PHONY: strip sign collect dmg sign-dmg notarize-dmg staple-dmg fix-framework
+.PHONY: strip sign collect dmg sign-dmg notarize-dmg staple-dmg fix-framework release
 
 strip:
 	$(call section,"strip then sign externals")
@@ -386,6 +386,9 @@ staple-dmg:
 collect-dmg:
 	$(call section,"collect dmg")
 	$(call call-builder,"package" "collect_dmg")
+
+release: sign dmg sign-dmg notarize-dmg staple-dmg collect-dmg
+	@echo "DONE"
 
 fix-framework:
 	$(call section,"fix framework in support")
