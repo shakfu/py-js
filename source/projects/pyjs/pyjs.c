@@ -108,7 +108,7 @@ void pyjs_free(t_pyjs* x)
      */
     pyjs_global_obj_count--;
     if (pyjs_global_obj_count == 0) {
-        Py_FinalizeEx();
+        Py_FinalizeEx(); // or Py_Finalize()
     }
 }
 

@@ -1,39 +1,40 @@
-
 # FAQ
 
 ## Compatibility
 
 ### Does this project work with Windows?
 
-Yes, although Windows support came relatively recently, all python externals and also the `pktpy` external can be compiled using the default MSVC buildsystem. 
+Yes, although Windows support came relatively recently, all python externals and also the `pktpy` external can be compiled using the default MSVC buildsystem.
 
 Currently only building via cmake with dynamic linking of externals is supported. Refer to the README quickstart for compilation instructions.
 
 ### Does this project work with macOS?
 
-Yes, macOS support is the most mature for both x86_64 (Intel) and arm64 (Apple silicon). Note that externals are only built natively (no univeral binaries).
+Yes, macOS support is the most mature for both x86_64 (Intel) and arm64 (Apple silicon). Note that externals are only built natively (no univeral binaries to keep the size of externals under control).
+
+Python3 installed from python.org works as expected, and even Apple installed system python3 has been tested to work on the default build and some but not all of the other build variants.
+
+Basically, there is no intrinsic reason why it shouldn't work with python3 on your system if the python3 version >= 3.7
 
 Refer to the README quickstart for compilation instructions.
 
-### Does it only work with Homebrew python?
+### Can I use Homebrew python on macOS?
 
-It used to work, by default, with [Homebrew](https://brew.sh) installed python but current versions don't require Homebrew python. Python3 installed from python.org works as expected, and even Apple installed system python3 has been tested to work on the default build and some but not all of the other build variants.
-
-Basically, there is no intrinsic reason why it shouldn't work with python3 on your system if the python3 version >= 3.7
+Definitely, if python is installed using [Homebrew](https://brew.sh) you can create externals using `make`, `make projects`, `make homebrew-ext` and `homebrew-pkg` depending on your requirement. See `make help` for some guidance on which target to build.
 
 ## Implementation
 
 ### Is the python interpreter embedded in the external or does the external basically use the host's python interpreter?
 
-The default build creates a lightweight external dynamically linked to your local python3 interpreter; another variant embeds python3 into an external that is dynamically linked to a python3 interpreter which is part of the containing Max package; and another embeds python into the external itself without any dependencies. There are other ways as well. The project [README](https://github.com/shakfu/py-js) gives an overview of differences between approaches.
+The default build creates a lightweight external dynamically linked to your local python3 interpreter; another variant embeds python3 into an external that is dynamically linked to a python3 interpreter which is part of the containing Max package; and another embeds python into the external itself without any dependencies. There are other ways as well. The project [README](https://github.com/shakfu/py-js) gives an overview of the different approaches.
 
 ## Installation
 
 ### Can I use two different python3 externals in the same patch?
 
-Python3 external types which are not 'isolated' (see the [build variations](README.md#build-variations) section) cannot be loaded at the same time. So for example, if you build a `framework-ext` variation, `py.mxo` and `pyjs.mxo` will not work together in the same patch, but if you built a `framework-pkg` variation of the same two externals they should work fine without issues.
+Python3 external types which are not 'isolated' (see the [build variations](README.md#build-variations) section) cannot be loaded at the same time. So for example, if you build a `framework-ext` variation, `py.mxo` and `pyjs.mxo` will not work together in the same patch, but if you built a `framework-pkg` variation of the same two externals, they should work fine without issues.
 
-Of course, it would be considered redundant to install two different python3 externals in your project.
+Of course, it would be considered redundant to install two different python3 external types in your project.
 
 ## Logging
 

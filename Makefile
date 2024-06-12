@@ -507,7 +507,6 @@ cflow:
 	@cflow2dot -x $(CFLOW)/ignore.txt -i source/projects/mamba/py.h -f pdf -o $(CFLOW)/mamba_cflow
 	@rm -f $(CFLOW)/*.dot
 
-
 projects:
 	@bash $(SCRIPTS)/build_projects.sh
 
@@ -615,7 +614,6 @@ clean-relocatable-pkg: clean-externals clean-support
 # -----------------------------------------------------------------------
 # python clean targets
 
-
 clean-python-shared:
 	$(call xcleanlib,"python-shared")
 
@@ -640,7 +638,6 @@ clean-python-framework-pkg: clean-externals clean-support
 clean-python-cmake:
 	$(call xcleanlib,"python-cmake")
 
-
 demo: README.md FAQ.md CHANGELOG.md
 	@echo "target: '$@'"
 	@echo "first-prereq: '$<'"
@@ -649,4 +646,3 @@ demo: README.md FAQ.md CHANGELOG.md
 
 version:
 	@echo $(PYTHON_VERSION)
-

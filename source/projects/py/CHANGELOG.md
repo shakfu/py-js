@@ -3,6 +3,8 @@
 
 ## [0.2.x]
 
+- Fixed a bug which caused Max to crash if more than one `py` instance was created.
+
 - Added `py_textedit` bpatcher to handle python code in the patcher.
 
 - Fixed codesigning bug in `homebrew-ext` and `homebrew-pkg`, both are codesigned by default

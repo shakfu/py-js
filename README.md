@@ -154,8 +154,6 @@ py max external
         right outlet             : bang on success 
 ```
 
-
-
 ### `pyjs` external
 
 General purpose python3 jsextension, which means that it's a c-based Max external which can only be accessed via the javascript `js` interface.
@@ -200,7 +198,7 @@ Currently, the externals which are enabled by default in this project can be bui
 
 After installation of the above you can build the externals inside your `Documents/Max 8/Packages` folder as follows:
 
-```powershell
+```sh
 git clone https://github.com/shakfu/py-js
 cd py-js
 mkdir build
@@ -235,7 +233,7 @@ If you'd rather build them or any of the other externals yourself then the proce
 
 5. To build only the `py` and `pyjs` externals, type the following in the root directory of the `py-js` project (other installation options are detailed below):
 
-    ```bash
+    ```sh
     make
     ```
 
@@ -251,13 +249,13 @@ You can also use `cmake` to build **all** externals using similar methods to the
 
 First make sure you have completed the [Quickstart](#quickstart) section above. Next you will install `cmake` if necessary and a couple of additional dependencies for some of the subprojects. Of course, skip what is already installed:
 
-```bash
+```sh
 brew install cmake zmq czmq
 ```
 
 Now you can build all externals (including `py` and `pyjs`) in one shot using cmake:
 
-```bash
+```sh
 make projects
 ```
 
@@ -295,31 +293,31 @@ If you don't mind compiling (and have xcode installed) then pick one of the foll
 
 1. To build statically-compiled self-contained python3 externals:
 
-    ```bash
+    ```sh
     make static-ext
     ```
 
     You may also prefer the tiny variant:
 
-    ```bash
+    ```sh
     make static-tiny-ext
     ```
 
 2. To build self-contained python3 exernals which include a dynamically linked libpythonX.Y.dylib:
 
-    ```bash
+    ```sh
     make shared-ext
     ```
 
     or for the corresponding tiny variant:
 
-    ```bash
+    ```sh
     make shared-tiny-ext
     ```    
 
 3. To build python3 externals in a package, linked to a python installation in its `support` folder
 
-    ```bash
+    ```sh
     make framework-pkg
     ```
 
@@ -333,7 +331,7 @@ Depending on your choice above, the python interpreter in each external is eithe
 
 There are other [build variations](#build-variations) which are discussed in more detail below. You can always see which ones are available via typing `make help` in the `py-js` project folder:
 
-```bash
+```sh
 $ make help
 
 >>> general
@@ -367,7 +365,7 @@ make python-relocatable   : custom relocatable python framework build
 
 If you would like to see which build variations are compatible with your current setup, there's an automated test which attempts to compile all build variations in sequence and will log all results to a `logs` directory:
 
-```bash
+```sh
 make test
 ````
 
@@ -375,8 +373,7 @@ This can take a long time, but it is worth doing to understand which variants wo
 
 If you want to test or retest one individual variant, just prefix `test-` to the name of variant as follows:
 
-```bash
-
+```sh
 make test-shared-pkg
 ```
 
@@ -582,7 +579,7 @@ These features are implemented in `py-js/source/project/py/builder/packaging.py`
 
 ### The `argparse`-based interface of `builder`:
 
-```bash
+```sh
 $ python3 -m builder package --help
 usage: builder package [-h] [-v VARIANT] [-d] [-k KEYCHAIN_PROFILE]
                            [-i DEV_ID]
@@ -609,8 +606,6 @@ package subcommands:
     sign                sign all required folders recursively
     sign_dmg            sign dmg
     staple_dmg          staple dmg
-
-
 ```
 
 ### The Project's `Makefile` frontend:
@@ -619,37 +614,37 @@ Since the `Makefile` frontend basically just calls the `builder` interface in a 
 
 1. Recursively sign all externals in the `external folder` and/or binaries in the `support` folder
 
-    ```bash
+    ```sh
     make sign
     ```
 
 2. Gather all project resources into a distribution folder and then convert it into a `.dmg`
 
-    ```bash
+    ```sh
     make dmg
     ```
 
 3. Sign the DMG
 
-    ```bash
+    ```sh
     make sign-dmg
     ```
 
 4. Notarize the DMG (send it to Apple for validation and notarization)
 
-```bash
+```sh
 make notarize-dmg
 ```
 
 5. Staple a valid notarization ticket to the DMG
 
-```bash
+```sh
 make staple-dmg
 ```
 
 6. Zip the DMG and collect into in the `$HOME/Downloads/PY-JS` folder
 
-```bash
+```sh
 make collect-dmg
 ```
 
@@ -673,7 +668,7 @@ The only issue is that currently Github only provide `x86_64` runners so one has
 
 - `Numpy`, the popular python numerical analysis package, falls in the above category. As of python 3.9.x, it thankfully doesn't crash but gives the following error:
 
-```bash
+```sh
 [py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
 ```
 
@@ -689,7 +684,7 @@ To fix it, just restart Max and use it normally in your patch. Treat each patch 
 
 As mentioned earlier, as of this writing this project uses a combination of a `Makefile` in the project root, a basic `cmake` build option and a custom python build system, `builder`, which resides in the `py-js/source/py/builder` package. The `Makefile` is a kind of 'frontend' to the more complex python build system. The latter can be used directly of course. A view into its many options can be obtained by typing the following:
 
-```bash
+```sh
 cd py-js/source/py
 python3 -m builder --help
 ```
@@ -705,8 +700,8 @@ There is generally tradeoff of size vs. portability:
 build command       | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
 :-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
 make                | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
-make brew-ext       | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
-make brew-pkg       | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
+make homebrew-ext   | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
+make homebrew-pkg   | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
 make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
 make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
 make shared-pkg     | shared       | 18.7     | package   | yes      | no [4]   | yes      | yes      |
@@ -766,13 +761,13 @@ It works so well, that its been included in the `builder` application as an exte
 
 It can be seen in the `relocatable-pkg` make option which will download a nice default `Python.framework` to the `support` directory used for compiled both `py` and `pyjs` externals:
 
-```bash
+```sh
 make relocatable-pkg
 ```
 
 More options are available if you use the `builder` package directly:
 
-```bash
+```sh
 $ python3 -m builder pyjs relocatable_pkg --help
 usage: __main__.py pyjs relocatable_pkg [-h] [--destination DESTINATION]
                                         [--baseurl BASEURL]
@@ -826,7 +821,7 @@ I've tried this several times and and it works (for "sign to run locally" case a
 
 The coding style for this project can be applied automatically during the build process with `clang-format`. On OS X, you can easily install this using brew:
 
-```bash
+```sh
 brew install clang-format
 ```
 

@@ -2,7 +2,7 @@
 
 ## Important
 
-- [ ] Create CHANGELOG and TODO files for each subproject
+- [x] Create CHANGELOG and TODO files for each subproject
 
 - [ ] Fix `import api` which currently requires numpy to be in sys.path
 

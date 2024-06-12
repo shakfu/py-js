@@ -322,10 +322,16 @@ void py_init(t_py* x)
 {
     wchar_t* python_home = NULL;
 
-    /* Add the cythonized 'api' built-in module, before Py_Initialize */
-    if (PyImport_AppendInittab("api", PyInit_api) == -1) {
-        py_error(x, "could not add api module to builtin modules table");
+    if (!Py_IsInitialized()) {
+        // without the above test, add more than on instance of py will cause a crash
+        // https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/18
+        
+        /* Add the cythonized 'api' built-in module, before Py_Initialize */
+        if (PyImport_AppendInittab("api", PyInit_api) == -1) {
+            py_error(x, "could not add api module to builtin modules table");
+        }
     }
+
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
