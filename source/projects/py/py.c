@@ -332,7 +332,6 @@ void py_init(t_py* x)
         }
     }
 
-
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
         py_get_path_to_external(py_class, "/Contents/Resources"));
