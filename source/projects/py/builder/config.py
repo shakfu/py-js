@@ -545,7 +545,7 @@ class Project:
         name = self.name
         system = self.system.lower()
         arch = self.arch
-        ver = self.python.version
+        ver = os.getenv("PYTHON_VERSION", self.python.version)
         return f"{name}-{variant}-{system}-{arch}-{ver}"
 
     def get_dmg(self, variant):

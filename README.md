@@ -700,10 +700,10 @@ There is generally tradeoff of size vs. portability:
 build command       | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
 :-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
 make                | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
-make homebrew-ext   | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | no       |
+make homebrew-ext   | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | yes      |
 make homebrew-pkg   | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
 make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
-make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | no       |
+make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | yes      |
 make shared-pkg     | shared       | 18.7     | package   | yes      | no [4]   | yes      | yes      |
 make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
 make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
@@ -714,7 +714,7 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 
 [3] *hybrid* means that the source system was a `framework` and the destination system is `shared`.
 
-[4] the shared-pkg variant does build a compliant 'Framework-type' bundle and hence cannot be notarized.
+[4] the shared-pkg variant does not build a compliant 'Framework-type' bundle and hence cannot be notarized.
 
 - *pip*: the build allows or provides for pip installation
 
