@@ -281,7 +281,21 @@ idx  | command                | type       | format     | py size |  pyjs size
 4    | `make shared-tiny-ext` | shared     | external   | 6.7     | 6.2  [2]
 5    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8 [3]
 
-[2] In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoreticla minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo.
+[2] In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoretical minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo. Note the size of externals in Python 3.12.4:
+
+Variant              | Size (MB) |
+:------------------- | :-------: |
+framework-py         | 22.5      |
+framework-pyjs       | 20.8      |
+shared-py            | 20.4      |
+shared-pyjs          | 18.7      |
+static-py            | 15.0      |
+static-pyjs          | 13.3      |
+static-tiny-py       | 11.4      |
+shared-tiny-py       | 11.4      |
+static-tiny-pyjs     | 9.8       |
+shared-tiny-pyjs     | 9.6       |
+
 
 [3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
 
@@ -721,24 +735,6 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 - *portable*: the externals can be deployed as portable packages or standalones
 
 - *numpy*: numpy compatibility
-
-#### Size Differences between Variances
-
-Variant              | Size (MB) |
-:------------------- | :-------: |
-framework-py         | 22.5      |
-framework-pyjs       | 20.8      |
-shared-py            | 20.4      |
-shared-pyjs          | 18.7      |
-static-py            | 15.0      |
-static-pyjs          | 13.3      |
-static-tiny-py       | 11.4      |
-shared-tiny-py       | 11.4      |
-static-tiny-pyjs     | 9.8       |
-shared-tiny-pyjs     | 9.6       |
-
-Sizes are for Python 3.12.4. In general, it has been observed that the lower the version the smaller the size, so if you need smaller sized externals pick a lower a lower version.
-
 
 #### Packages vs Self-contained Externals
 
