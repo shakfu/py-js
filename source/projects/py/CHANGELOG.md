@@ -1,7 +1,11 @@
 # CHANGELOG for `py` object
 
 
-## [0.2.x]
+## [0.2.1]
+
+- Added `make release` for automatic packaging, codesigning, notarizing of pyjs externals.
+
+- Improved `shared-ext`, `static-ext`, `shared-tiny-ext`, `static-tiny-ext` variants for python 3.12
 
 - Fixed a bug which caused Max to crash if more than one `py` instance was created.
 
