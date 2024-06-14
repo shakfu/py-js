@@ -722,22 +722,23 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 
 - *numpy*: numpy compatibility
 
-#### Size Differences between Variants
+#### Size Differences between Variances
 
-Variant              | Size (MB)
-:------------------- | : -------
-framework-py         | 22.5
-framework-pyjs       | 20.8
-shared-py            | 20.4
-shared-pyjs          | 18.7
-static-py            | 15.0
-static-pyjs          | 13.3
-static-tiny-py       | 11.4
-shared-tiny-py       | 11.4
-static-tiny-pyjs     | 9.8
-shared-tiny-pyjs     | 9.6
+Variant              | Size (MB) |
+:------------------- | :-------: |
+framework-py         | 22.5      |
+framework-pyjs       | 20.8      |
+shared-py            | 20.4      |
+shared-pyjs          | 18.7      |
+static-py            | 15.0      |
+static-pyjs          | 13.3      |
+static-tiny-py       | 11.4      |
+shared-tiny-py       | 11.4      |
+static-tiny-pyjs     | 9.8       |
+shared-tiny-pyjs     | 9.6       |
 
 Sizes are for Python 3.12.4. In general, it has been observed that the lower the version the smaller the size, so if you need smaller sized externals pick a lower a lower version.
+
 
 #### Packages vs Self-contained Externals
 
