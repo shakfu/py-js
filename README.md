@@ -697,16 +697,16 @@ One of the objectives of this project is to cater to a number of build variation
 
 There is generally tradeoff of size vs. portability:
 
-build command       | format       | size_mb  | deploy_as | pip      | portable | numpy    | isolated |
-:-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:| :-------:|
-make                | framework    | 0.3      | external  | yes [1]  | no       | yes      | yes      |
-make homebrew-ext   | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      | yes      |
-make homebrew-pkg   | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      | yes      |
-make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   | yes      |
-make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      | yes      |
-make shared-pkg     | shared       | 18.7     | package   | yes      | no [4]   | yes      | yes      |
-make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes      | no       |
-make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes      | yes      |
+build command       | format       | size_mb  | deploy_as | pip      | portable | numpy    |
+:-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:|
+make                | framework    | 0.3      | external  | yes [1]  | no       | yes      |
+make homebrew-ext   | hybrid  [3]  | 13.6     | external  | no       | yes      | yes      |
+make homebrew-pkg   | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes      |
+make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]   |
+make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes      |
+make shared-pkg     | shared       | 18.7     | package   | yes      | no [4]   | yes      |
+make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes      |
+make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes      |
 
 [1] has automatic access to your system python's site-packages
 
@@ -721,8 +721,6 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 - *portable*: the externals can be deployed as portable packages or standalones
 
 - *numpy*: numpy compatibility
-
-- *isolated*: if yes, then different external types can run concurrently without issue
 
 
 #### Packages vs Self-contained Externals
