@@ -1,7 +1,7 @@
 # CHANGELOG for `py` object
 
 
-## [0.2.1]
+## [0.2.6]
 
 - Added `make release` for automatic packaging, codesigning, notarizing of pyjs externals.
 
