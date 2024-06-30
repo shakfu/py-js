@@ -7,7 +7,9 @@
 #include <sstream>
 #include <fstream>
 
-#define PK_USER_CONFIG_H
+#define PK_ENABLE_OS     1
+#define PK_ENABLE_THREAD 1
+
 #include "pocketpy.h"
 
 using namespace pkpy;
@@ -792,11 +794,11 @@ t_max_err PktpyInterpreter::eval_pcode(char* pcode, void* outlet)
             outlet_anything(outlet, gensym("function"), 0, (t_atom*)NIL);
         }
 
-        else if (is_type(result, this->tp_native_func)) {
-            NativeFunc func_result = py_cast<NativeFunc>(this, result);
-            outlet_anything(outlet, gensym("native_function"), 0,
-                            (t_atom*)NIL);
-        }
+        // else if (is_type(result, this->tp_native_func)) {
+        //     NativeFunc func_result = py_cast<NativeFunc>(this, result);
+        //     outlet_anything(outlet, gensym("native_function"), 0,
+        //                     (t_atom*)NIL);
+        // }
 
         else if (is_type(result, this->tp_module)) {
             outlet_anything(outlet, gensym("module"), 0, (t_atom*)NIL);

@@ -417,30 +417,13 @@ void pktpy_load(t_pktpy* x, t_symbol* s)
  * custom class wrappers (can be used as python classes)
  */
 
-class PyPoint {
-private:
-    float x;
-    float y;
 
-public:
-    PY_CLASS(PyPoint, test, PyPoint)
-
-    PyPoint(float x, float y) : x(x), y(y) {}
-
-    static void _register(VM* vm, PyObject* mod, PyObject* type){
-        vm->bind_constructor<3>(type, [](VM* vm, ArgsView args){
-            float x = CAST_F(args[1]);
-            float y = CAST_F(args[2]);
-            return VAR_T(PyPoint, x, y);
-        });
-        vm->bind_method<0>(type, "__repr__", [](VM* vm, ArgsView args){
-            PyPoint& self = CAST(PyPoint&, args[0]);
-            std::stringstream ss;
-            ss << "PyPoint(" << self.x << ", " << self.y << ")";
-            return VAR(ss.str());
-        });
-    }
+struct PyPoint{
+    int x;
+    int y;
 };
+
+
 
 
 /* -------------------------------------------------------------------------
@@ -497,41 +480,34 @@ void add_custom_builtins(t_pktpy* x)
         return py_var(vm, add100(a));
     });
 
-    PyObject* obj; // to handle `x` pointer capture case
-    // see: https://github.com/blueloveTH/pocketpy/issues/89
-
-    // example of wrapping a max api function
-    // bind: void *outlet_int(t_outlet *x, t_atom_long n);
-    // >>> out_int(10) -> sends 10 out of outlet
-    obj = x->py->bind(x->py->builtins, "out_int(a: int)", [](VM* vm, ArgsView args) {
+    // with capture (new style)
+    x->py->bind(x->py->builtins, "out_int(a: int)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         i64 a = py_cast<i64>(vm, args[0]);
         outlet_int(x->outlet, a);
         return vm->None;
-    });
-    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
+    }, x);
+
 
     // wrap existing function pktpy_get_path_to_external
-    obj = x->py->bind(x->py->builtins, "location()", [](VM* vm, ArgsView args) {
+    x->py->bind(x->py->builtins, "location()", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         t_symbol* sym = pktpy_get_path_to_external(x);
         outlet_anything(x->outlet, sym, 0, (t_atom*)NIL);
         return vm->None;
-    });
-    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
+    }, x);
 
     // wrap existing function pktpy_load
-    obj = x->py->bind(x->py->builtins, "load(path: str)", [](VM* vm, ArgsView args) {
+    x->py->bind(x->py->builtins, "load(path: str)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         Str path = py_cast<Str>(vm, args[0]);
         const char* path_cstr = path.c_str();
         pktpy_load(x, gensym(path_cstr)); 
         return vm->None;
-    });
-    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
+    }, x);
 
     // wrap max-api function newobject_fromboxtext as create(text: str)
-    obj = x->py->bind(x->py->builtins, "create(text: str)", [](VM* vm, ArgsView args) {
+    x->py->bind(x->py->builtins, "create(text: str)", [](VM* vm, ArgsView args) {
         t_pktpy *x = lambda_get_userdata<t_pktpy *>(args.begin());
         Str text = py_cast<Str>(vm, args[0]);
         const char* text_cstr = text.c_str();
@@ -540,8 +516,7 @@ void add_custom_builtins(t_pktpy* x)
         if (object_obex_lookup(x, gensym("#P"), &patcher) == MAX_ERR_NONE)
             newobject_fromboxtext(patcher, text_cstr);
         return vm->None;
-    });
-    py_cast<NativeFunc&>(x->py, obj).set_userdata(x);
+    }, x);
 
     // --------------------------------------------------------------
     // test module
@@ -549,7 +524,32 @@ void add_custom_builtins(t_pktpy* x)
     PyObject* mod_test = x->py->new_module("test");
 
     // register class for 'test' module
-    PyPoint::register_class(x->py, mod_test);
+    x->py->register_user_class<PyPoint>(mod_test, "PyPoint",
+        [](VM* vm, PyVar mod, PyVar type){
+            // wrap field x
+            vm->bind_field(type, "x", &PyPoint::x);
+            // wrap field y
+            vm->bind_field(type, "y", &PyPoint::y);
+
+            // __init__ method
+            vm->bind(type, "__init__(self, x, y)", [](VM* vm, ArgsView args){
+                PyPoint& self = _py_cast<PyPoint&>(vm, args[0]);
+                self.x = py_cast<int>(vm, args[1]);
+                self.y = py_cast<int>(vm, args[2]);
+                return vm->None;
+            });
+
+            // __repr__ method
+            vm->bind(type, "__repr__(self) -> str", [](VM* vm, ArgsView args){
+                PyPoint& self = _py_cast<PyPoint&>(vm, args[0]);
+                std::stringstream ss;
+                ss << "PyPoint(" << self.x << ", " << self.y << ")";
+                return py_var(vm, ss.str());
+            });
+        }
+    );
+
+
 
     // register variables / constants for 'test' module
     mod_test->attr().set("pi",  py_var(x->py, 3.14));

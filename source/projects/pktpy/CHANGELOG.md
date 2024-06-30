@@ -3,6 +3,8 @@
 
 ## [0.0.2]
 
+- Update `pocketpy` to `v1.4.6`
+
 - Updated `pocketpy` to `v1.4.0` with simplified binding-logic
 
 - Updated to 1.3.2 with fix for breaking change re: changed `_stdout` and `_stderr` signatures.
