@@ -1,8 +1,16 @@
 import os
 import shutil
+import subprocess
+from fnmatch import fnmatch
 from pathlib import Path
+from typing import Callable, Optional, Union
 
 from .config import DEBUG
+
+# type aliases
+Pathlike = Union[str, Path]
+MatchFn = Callable[[Path], bool]
+ActionFn = Callable[[Path], None]
 
 
 class ShellCmd:
@@ -11,11 +19,20 @@ class ShellCmd:
     def __init__(self, log):
         self.log = log
 
-    def cmd(self, shellcmd, *args, **kwargs):
-        """Run shell command with args and keywords"""
-        _cmd = shellcmd.format(*args, **kwargs)
-        self.log.info(_cmd)
-        os.system(_cmd)
+    # def cmd(self, shellcmd, *args, **kwargs):
+    #     """Run shell command with args and keywords"""
+    #     _cmd = shellcmd.format(*args, **kwargs)
+    #     self.log.info(_cmd)
+    #     os.system(_cmd)
+
+    def cmd(self, shellcmd: str, cwd: Pathlike = "."):
+        """Run shell command within working directory"""
+        self.log.info(shellcmd)
+        try:
+            subprocess.check_call(shellcmd, shell=True, cwd=str(cwd))
+        except subprocess.CalledProcessError:
+            self.log.critical("", exc_info=True)
+            sys.exit(1)
 
     __call__ = cmd
 
@@ -63,8 +80,65 @@ class ShellCmd:
             except FileNotFoundError:
                 self.log.warning("file not found: %s", path)
 
+    def walk(
+        self,
+        root: Pathlike,
+        match_func: MatchFn,
+        action_func: ActionFn,
+        skip_patterns: list[str],
+    ):
+        """general recursive walk from root path with match and action functions"""
+        for root_, dirs, filenames in os.walk(root):
+            _root = Path(root_)
+            if skip_patterns:
+                for skip_pat in skip_patterns:
+                    if skip_pat in dirs:
+                        dirs.remove(skip_pat)
+            for _dir in dirs:
+                current = _root / _dir
+                if match_func(current):
+                    action_func(current)
+
+            for _file in filenames:
+                current = _root / _file
+                if match_func(current):
+                    action_func(current)
+
+    def glob_remove(self, root: Pathlike, patterns: list[str], skip_dirs: list[str]):
+        """applies recursive glob remove using a list of patterns"""
+
+        def match(entry: Path) -> bool:
+            # return any(fnmatch(entry, p) for p in patterns)
+            return any(fnmatch(entry.name, p) for p in patterns)
+
+        def remove(entry: Path):
+            self.remove(entry)
+
+        self.walk(root, match_func=match, action_func=remove,
+                  skip_patterns=skip_dirs)
+
     def install_name_tool(self, src, dst, mode="id"):
         """change dynamic shared library install names"""
         _cmd = f"install_name_tool -{mode} {src} {dst}"
         self.log.info(_cmd)
         self.cmd(_cmd)
+
+    def git_clone(
+        self,
+        url: str,
+        branch: Optional[str] = None,
+        directory: Optional[str] = None,
+        recurse: bool = False,
+        cwd: Pathlike = ".",
+    ):
+        """git clone a repository source tree from a url"""
+        _cmds = ["git clone --depth 1"]
+        if branch:
+            _cmds.append(f"--branch {branch}")
+        if recurse:
+            _cmds.append("--recurse-submodules --shallow-submodules")
+        _cmds.append(url)
+        if directory:
+            _cmds.append(str(directory))
+        self.cmd(" ".join(_cmds), cwd=cwd)
+

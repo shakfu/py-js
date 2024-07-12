@@ -1,6 +1,11 @@
 # CHANGELOG for `py` object
 
 
+## [0.2.x]
+
+- Add `make install-numpy` for automatically building and adding a shrunk version of numpy to the previously built external or package
+
+
 ## [0.2.6]
 
 - Added `make release` for automatic packaging, codesigning, notarizing of pyjs externals.

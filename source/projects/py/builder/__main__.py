@@ -31,6 +31,7 @@ from .ext.relocatable_python import relocatable_options, fix_framework
 from .factory import FactoryManager
 from .package import PackageManager
 from .config import Project
+from .install import Installer
 
 # ----------------------------------------------------------------------------
 # Commandline interface
@@ -345,6 +346,22 @@ class Application(Commander):
         """collect dmg"""
         mgr = PackageManager()
         mgr.collect_dmg()
+
+    # ----------------------------------------------------------------------------
+    # install methods
+
+    @option("-p", "--pkgs", help="install pkgs", type=str, nargs="+", metavar="PKG")
+    def do_install(self, args):
+        """install python packages"""
+        installer = Installer(*args.pkgs)
+        print("not yet implemented")
+
+    @option("-p", "--pkgs", help="install pkgs", type=str, nargs="+", metavar="PKG")
+    def do_install_numpy(self, args):
+        """install python packages"""
+        installer = Installer()
+        installer.install_numpy()
+
 
     # ----------------------------------------------------------------------------
     # utility methods

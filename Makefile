@@ -472,8 +472,16 @@ check_logs:
 	$(call section,"checking all test results")
 	$(call call-builder,"logs" "check_all")
 
+
+# Install python packages
+# -----------------------------------------------------------------------
+.PHONY: install-numpy
+
 numpy:
-	echo $(NUMPY_INCL)
+	$(call section,"installing numpy into external / package")
+	$(call call-builder,"install" "numpy")	
+
+install-numpy: numpy sign
 
 
 # Styling
