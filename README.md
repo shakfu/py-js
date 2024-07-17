@@ -181,6 +181,22 @@ pyjs max external (jsextension)
 
 ## Quickstart
 
+This repo has a git submodule dependency with [max-sdk-base](https://github.com/cycling74/max-sdk-base). This is quite typical for Max externals.
+
+This means you should `git clone` as follows:
+
+```sh
+git clone https://github.com/shakfu/py-js.git
+git submodule init
+git submodule update
+```
+
+or more concisely:
+
+```
+git clone --recursive https://github.com/shakfu/py-js.git
+```
+
 ### Windows
 
 Since Windows support still is relatively new, no releases have been made pending further testing.
@@ -196,7 +212,7 @@ Currently, the externals which are enabled by default in this project can be bui
 After installation of the above you can build the externals inside your `Documents/Max 8/Packages` folder as follows:
 
 ```sh
-git clone https://github.com/shakfu/py-js
+git clone --recursive https://github.com/shakfu/py-js
 cd py-js
 mkdir build
 cd build
@@ -216,7 +232,7 @@ If you'd rather build them or any of the other externals yourself then the proce
 
 2. Make sure you also have [Xcode](https://xcodereleases.com/) installed.
 
-3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) to a path without a space and without possible icloud syncing (i.e don't clone to `$HOME/Documents/Max 8/Packages`) [?] and run the following in the cloned repo:
+3. Git clone the `py-js` [repo](https://github.com/shakfu/py-js) as per the above method to a path without a space and without possible icloud syncing (i.e don't clone to `$HOME/Documents/Max 8/Packages`) [?] and run the following in the cloned repo:
 
     ```bash
     make setup
