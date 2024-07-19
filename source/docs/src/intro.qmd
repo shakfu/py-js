@@ -5,6 +5,7 @@ This is a book created from markdown and executable code.
 See @knuth84 for additional discussion of literate programming.
 
 
+
 ## r-based plot
 
 ```{r}
@@ -21,6 +22,7 @@ plot(rnorm(1000, 0, 1))
 ```{python}
 #| label: fig-polar2
 #| echo: false
+#| warning: false
 #| fig-cap: "A curve"
 
 import matplotlib.pyplot as plt

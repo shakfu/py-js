@@ -1,0 +1,111 @@
+# Packaging
+
+As mentioned previously, the py-js `builder` subproject can be used to build fit-for-purpose python variants for python3 externals. In addition, it can also package, sign, notarize and deploy the same externals for distribution.
+
+These features are implemented in `py-js/source/project/py/builder/packaging.py` and are exposed via two interfaces:
+
+## The `argparse`-based interface of `builder`
+
+```sh
+$ python3 -m builder package --help
+usage: builder package [-h] [-v VARIANT] [-d] [-k KEYCHAIN_PROFILE]
+                           [-i DEV_ID]
+                           ...
+
+options:
+  -h, --help            show this help message and exit
+  -v VARIANT, --variant VARIANT
+                        build variant name
+  -d, --dry-run         run without actual changes.
+  -k KEYCHAIN_PROFILE, --keychain-profile KEYCHAIN_PROFILE
+                        Keychain Profile
+  -i DEV_ID, --dev-id DEV_ID
+                        Developer ID
+
+package subcommands:
+  package, sign and release external
+
+                        additional help
+    collect_dmg         collect dmg
+    dist                create project distribution folder
+    dmg                 package distribution folder as .dmg
+    notarize_dmg        notarize dmg
+    sign                sign all required folders recursively
+    sign_dmg            sign dmg
+    staple_dmg          staple dmg
+```
+
+## The Project's `Makefile` frontend
+
+Since the `Makefile` frontend basically just calls the `builder` interface in a simplified way, we will use it to explain the basic sequential packaging steps.
+
+1. Recursively sign all externals in the `external folder` and/or binaries in the `support` folder
+
+    ```sh
+    make sign
+    ```
+
+2. Gather all project resources into a distribution folder and then convert it into a `.dmg`
+
+    ```sh
+    make dmg
+    ```
+
+3. Sign the DMG
+
+    ```sh
+    make sign-dmg
+    ```
+
+4. Notarize the DMG (send it to Apple for validation and notarization)
+
+    ```sh
+    make notarize-dmg
+    ```
+
+5. Staple a valid notarization ticket to the DMG
+
+    ```sh
+    make staple-dmg
+    ```
+
+6. Zip the DMG and collect into in the `$HOME/Downloads/PY-JS` folder
+
+    ```sh
+    make collect-dmg
+    ```
+
+To do all of the above in one step:
+
+```sh
+make release
+```
+
+Note that it is important to sign externals (this is done by Xcode automatically) if you want to to distribute to others (or in the case of Apple Silicon, even use yourself). If the externals are signed, then you can proceed to the notarization step if you have an Apple Developer License (100 USD/year) or, alternatively, you can ask users to remove the product's quarantine state or let Max do this automatically on opening the external.
+
+## Notarization Requirements
+
+To complete the notarization process, an Apple Developer Account and an [app-specific password](https://support.apple.com/en-sa/102654) are required.
+
+1. Create local credentials based on your apple developer id and app-specific password
+
+    ```sh
+    xcrun notarytool store-credentials "<keychain-profile-name>" --apple-id "<apple-id>" --team-id <developer-team-id> --password "<app-specific-password>"
+    ```
+
+2. Export `DEV_ID` and `KEYCHAIN_PROFILE` environment variables:
+
+    ```sh
+    export DEV_ID="<first> <lastname>"
+    export KEYCHAIN_PROFILE="<name-of-credentials>"
+    ```
+
+3. Run the whole process (i.e. steps 1-6) with one command:
+
+    ```sh
+    make release
+    ```
+
+## Github Actions
+
+There are a number of Github actions in the project which basically automate the testing, packaging, and possibly the notariztion steps described above.

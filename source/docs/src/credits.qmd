@@ -1,7 +1,7 @@
 # Prior Art and Credits
 
 
-![py-js testing](./media/xkcd-python-environment.png)
+![py-js testing](../../../media/xkcd-python-environment.png)
 
 
 I was motivated to start this project because I found myself recurrently wanting to use some python libraries or functions in Max.
