@@ -1,1 +1,0 @@
-../../../projects/zedit/README.md

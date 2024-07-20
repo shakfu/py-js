@@ -1,1 +1,0 @@
-../../../projects/mamba/README.md

@@ -1,1 +1,0 @@
-../../../projects/pyjs/README.md

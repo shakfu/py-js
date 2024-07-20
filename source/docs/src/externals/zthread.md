@@ -1,1 +1,0 @@
-../../../projects/zthread/README.md

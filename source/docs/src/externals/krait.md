@@ -1,1 +1,0 @@
-../../../projects/krait/README.md

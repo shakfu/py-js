@@ -1,1 +1,0 @@
-../../../projects/pktpy/README.md

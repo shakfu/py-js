@@ -1,1 +1,0 @@
-../../../projects/cobra/README.md
