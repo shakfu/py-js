@@ -67,7 +67,7 @@ py max external
         right outlet             : bang on success 
 ```
 
-[![py-js test_py](../media/test_py.png)]
+
 
 
 

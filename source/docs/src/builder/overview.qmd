@@ -47,7 +47,7 @@ make framework-pkg  | framework    | 16.8     | package   | yes      | yes      
 
 ### Python Version Compatibility
 
-![py-js testing](../media/python_compatibility.png)
+
 
 [1] Homebrew only tested on current relase (3.9.10), other versions are expected to work without issues.
 

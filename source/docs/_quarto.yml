@@ -26,62 +26,62 @@ book:
 
     - part: "The Externals"
       chapters:
-        # - src/externals/py.qmd
+        - src/externals/py.qmd
         - src/externals/pyjs.qmd
         - src/externals/krait.qmd
         - src/externals/mamba.qmd
         - src/externals/cobra.qmd
         - src/externals/cmx.qmd
-    #     - src/externals/jmx.qmd
-    #     - src/externals/mpy.qmd
+        - src/externals/jmx.qmd
+        - src/externals/mpy.qmd
         - src/externals/mxpy.qmd
         - src/externals/pktpy.qmd
         - src/externals/zedit.qmd
         - src/externals/zpy.qmd
         - src/externals/zthread.qmd
   
-    # - part: "Builder"
-    #   chapters:
-    #     - src/builder/overview.qmd
-    #     - src/builder/building-on-apple-silicon.qmd
-    #     - src/builder/building-pyext-flext.qmd
-    #     - src/builder/cmake.qmd
-    #     - src/builder/codesign-notarize.qmd
-    #     - src/builder/fix_arm64_bug.qmd
-    #     - src/builder/github-actions.qmd
-    #     - src/builder/make-dmg.qmd
-    #     - src/builder/mappings.qmd
-    #     - src/builder/packaging.qmd
-    #     - src/builder/relocatable-python.qmd
-    #     - src/builder/remove-detritus.qmd
-    #     - src/builder/switching-between-modes.qmd
-    #     - src/builder/xcconfig.qmd
-    #     - src/builder/xcode-concepts.qmd
+    - part: "Builder"
+      chapters:
+        - src/builder/overview.qmd
+        - src/builder/building-on-apple-silicon.qmd
+        - src/builder/building-pyext-flext.qmd
+        - src/builder/cmake.qmd
+        - src/builder/codesign-notarize.qmd
+        - src/builder/fix_arm64_bug.qmd
+        - src/builder/github-actions.qmd
+        - src/builder/make-dmg.qmd
+        - src/builder/mappings.qmd
+        - src/builder/packaging.qmd
+        - src/builder/relocatable-python.qmd
+        - src/builder/remove-detritus.qmd
+        - src/builder/switching-between-modes.qmd
+        - src/builder/xcconfig.qmd
+        - src/builder/xcode-concepts.qmd
       
     - part: "Development Guide"
       chapters:
         - src/dev/overview.qmd
-    #     - src/dev/py/bugs.qmd
-    #     - src/dev/py/cython.qmd
-    #     - src/dev/py/design.qmd
-    #     - src/dev/py/dont.qmd
-    #     - src/dev/py/editor.qmd
-    #     - src/dev/py/escape_text.qmd
-    #     - src/dev/py/experiments.qmd
-    #     - src/dev/py/max-c-api.qmd
-    #     - src/dev/py/max-fileformats.qmd
-    #     - src/dev/py/numpy-error.qmd
-    #     - src/dev/py/numpy-shared-python.qmd
-    #     - src/dev/py/python-c-api.qmd
-    #     - src/dev/py/python-shell-via-nodejs.qmd
-    #     - src/dev/py/repl.qmd
-    #     - src/dev/py/scripting-tips.qmd
-    #     - src/dev/py/shared-python-problem.qmd
-    #     - src/dev/py/snippets.qmd
-    #     - src/dev/py/threading.qmd
-    #     - src/dev/py/type-translation.qmd
-    #     - src/dev/py/types.qmd
-    #     - src/dev/pyjs/javascript.qmd
+        - src/dev/py/bugs.qmd
+        - src/dev/py/cython.qmd
+        - src/dev/py/design.qmd
+        - src/dev/py/dont.qmd
+        - src/dev/py/editor.qmd
+        - src/dev/py/escape_text.qmd
+        - src/dev/py/experiments.qmd
+        - src/dev/py/max-c-api.qmd
+        - src/dev/py/max-fileformats.qmd
+        - src/dev/py/numpy-error.qmd
+        - src/dev/py/numpy-shared-python.qmd
+        - src/dev/py/python-c-api.qmd
+        - src/dev/py/python-shell-via-nodejs.qmd
+        - src/dev/py/repl.qmd
+        - src/dev/py/scripting-tips.qmd
+        - src/dev/py/shared-python-problem.qmd
+        - src/dev/py/snippets.qmd
+        - src/dev/py/threading.qmd
+        - src/dev/py/type-translation.qmd
+        - src/dev/py/types.qmd
+        - src/dev/pyjs/javascript.qmd
 
 
 
