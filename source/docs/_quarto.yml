@@ -13,12 +13,10 @@ book:
     - index.qmd
     - part: "The Project"
       chapters:
-        - src/intro.qmd
-        - src/summary.qmd
         - src/overview.qmd
         - src/quickstart.qmd
         - src/building.qmd
-        - src/packaging.qmd 
+        - src/packaging.qmd
         - src/faq.qmd
         - src/links.qmd
         - src/references.qmd
