@@ -151,7 +151,7 @@
 <v t="sta.20240722222153.1"><vh>@auto-md xcode-concepts.qmd</vh></v>
 </v>
 <v t="sta.20240722221338.1"><vh>dev</vh>
-<v t="sta.20240722231128.1"><vh>@auto-md overview.qmd</vh></v>
+<v t="sta.20240722231128.1"><vh>@auto-md devguide.qmd</vh></v>
 <v t="sta.20240722231208.1"><vh>py</vh>
 <v t="sta.20240722231243.1"><vh>@auto-md buffer.qmd</vh></v>
 <v t="sta.20240722231306.1"><vh>@auto-md bugs.qmd</vh></v>
@@ -196,7 +196,6 @@
 <v t="sta.20240722211853.1"><vh>@auto-md quickstart.qmd</vh></v>
 <v t="sta.20240722211912.1"><vh>@auto-md building.qmd</vh></v>
 <v t="sta.20240722211950.1"><vh>@auto-md credits.qmd</vh></v>
-<v t="sta.20240722212034.1"><vh>@auto-md intro.qmd</vh></v>
 <v t="sta.20240722212036.1"><vh>@auto-md references.qmd</vh></v>
 </v>
 </vnodes>
