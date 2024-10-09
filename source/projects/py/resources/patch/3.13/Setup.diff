@@ -1,0 +1,27 @@
+139a140,142
+> #_interpchannels _interpchannelsmodule.c
+> #_interpqueues _interpqueuesmodule.c
+> #_interpreters _interpretersmodule.c
+153d155
+< #audioop audioop.c
+158a161
+> #_sysconfig _sysconfig.c
+187d189
+< #ossaudiodev ossaudiodev.c
+189d190
+< #spwd spwdmodule.c
+193,197d193
+< # Modules with UNIX dependencies that require external libraries
+< 
+< #_crypt _cryptmodule.c -lcrypt
+< #nis nismodule.c -I/usr/include/tirpc -lnsl -ltirpc
+< 
+265c261
+< # Some system have -lcurses 
+---
+> # Some system have -lcurses
+281,282d276
+< #_xxsubinterpreters _xxsubinterpretersmodule.c
+< #_xxinterpchannels _xxinterpchannelsmodule.c
+293a288
+> #_testexternalinspection _testexternalinspection.c

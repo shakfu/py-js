@@ -1,0 +1,112 @@
+# -*- makefile -*-
+# -----------------------------------------------------------------------------
+# VARS
+
+DESTLIB=$(LIBDEST)
+DESTLIB=$(LIBDEST)
+MACHDESTLIB=$(BINLIBDEST)
+DESTPATH=
+SITEPATH=
+TESTPATH=
+COREPYTHONPATH=$(DESTPATH)$(SITEPATH)$(TESTPATH)
+PYTHONPATH=$(COREPYTHONPATH)
+
+# -----------------------------------------------------------------------------
+# SHARED
+
+*shared*
+
+_asyncio _asynciomodule.c
+_bisect _bisectmodule.c
+_blake2 _blake2/blake2module.c _blake2/blake2b_impl.c _blake2/blake2s_impl.c
+_bz2 _bz2module.c -I$(srcdir)/../../lib/bzip2/include -L$(srcdir)/../../lib/bzip2/lib -lbz2
+#_bz2 _bz2module.c -lbz2
+_contextvars _contextvarsmodule.c
+_csv _csv.c
+_datetime _datetimemodule.c
+_decimal _decimal/_decimal.c
+_elementtree _elementtree.c
+_heapq _heapqmodule.c
+_interpchannels _interpchannelsmodule.c
+_interpqueues _interpqueuesmodule.c
+_interpreters _interpretersmodule.c
+_json _json.c
+_lsprof _lsprof.c rotatingtree.c
+#_lzma _lzmamodule.c -llzma
+_lzma _lzmamodule.c -I$(srcdir)/../../lib/xz/include -L$(srcdir)/../../lib/xz/lib -llzma
+_multiprocessing -I$(srcdir)/Modules/_multiprocessing _multiprocessing/multiprocessing.c _multiprocessing/semaphore.c
+_opcode _opcode.c
+_pickle _pickle.c
+_posixshmem -I$(srcdir)/Modules/_multiprocessing _multiprocessing/posixshmem.c
+_posixsubprocess _posixsubprocess.c
+_queue _queuemodule.c
+_random _randommodule.c
+_md5 md5module.c -I$(srcdir)/Modules/_hacl/include _hacl/Hacl_Hash_MD5.c -D_BSD_SOURCE -D_DEFAULT_SOURCE
+_sha1 sha1module.c -I$(srcdir)/Modules/_hacl/include _hacl/Hacl_Hash_SHA1.c -D_BSD_SOURCE -D_DEFAULT_SOURCE
+_sha2 sha2module.c -I$(srcdir)/Modules/_hacl/include Modules/_hacl/libHacl_Hash_SHA2.a
+_sha3 sha3module.c -I$(srcdir)/Modules/_hacl/include _hacl/Hacl_Hash_SHA3.c -D_BSD_SOURCE -D_DEFAULT_SOURCE
+_socket socketmodule.c
+_sqlite3 _sqlite/blob.c _sqlite/connection.c _sqlite/cursor.c _sqlite/microprotocols.c _sqlite/module.c _sqlite/prepare_protocol.c _sqlite/row.c _sqlite/statement.c _sqlite/util.c
+_statistics _statisticsmodule.c
+_struct _struct.c
+#_typing _typingmodule.c
+_sysconfig _sysconfig.c
+_zoneinfo _zoneinfo.c
+
+array arraymodule.c
+binascii binascii.c
+cmath cmathmodule.c
+fcntl fcntlmodule.c
+grp grpmodule.c
+math mathmodule.c
+mmap mmapmodule.c
+pyexpat pyexpat.c
+resource resource.c
+select selectmodule.c
+syslog syslogmodule.c
+termios termios.c
+zlib  zlibmodule.c -lz
+
+unicodedata unicodedata.c
+_multibytecodec cjkcodecs/multibytecodec.c
+
+#_hashlib _hashopenssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) -lcrypto
+_hashlib _hashopenssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
+
+#_ssl _ssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) $(OPENSSL_LIBS)
+_ssl _ssl.c -I$(srcdir)/../../lib/openssl/include -L$(srcdir)/../../lib/openssl/lib -lssl -lcrypto -DUSE_SSL
+
+# -----------------------------------------------------------------------------
+# DISABLED
+
+*disabled*
+
+_codecs_cn cjkcodecs/_codecs_cn.c
+_codecs_hk cjkcodecs/_codecs_hk.c
+_codecs_iso2022 cjkcodecs/_codecs_iso2022.c
+_codecs_jp cjkcodecs/_codecs_jp.c
+_codecs_kr cjkcodecs/_codecs_kr.c
+_codecs_tw cjkcodecs/_codecs_tw.c
+_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -ldl -lffi -DHAVE_FFI_PREP_CIF_VAR -DHAVE_FFI_PREP_CLOSURE_LOC -DHAVE_FFI_CLOSURE_ALLOC
+_ctypes_test _ctypes/_ctypes_test.c
+_curses -lncurses -lncursesw -ltermcap _cursesmodule.c
+_curses_panel -lpanel -lncurses _curses_panel.c
+_dbm _dbmmodule.c -lgdbm_compat -DUSE_GDBM_COMPAT
+_gdbm _gdbmmodule.c -lgdbm
+#_multibytecodec cjkcodecs/multibytecodec.c
+_testbuffer _testbuffer.c
+_testcapi _testcapimodule.c
+_testimportmultiple _testimportmultiple.c
+_testinternalcapi _testinternalcapi.c
+_testmultiphase _testmultiphase.c
+_testexternalinspection _testexternalinspection
+_tkinter _tkinter.c tkappinit.c -DWITH_APPINIT $(TCLTK_INCLUDES) $(TCLTK_LIBS) \
+_uuid _uuidmodule.c -luuid
+_xxtestfuzz _xxtestfuzz/_xxtestfuzz.c _xxtestfuzz/fuzzer.c
+ossaudiodev ossaudiodev.c
+readline readline.c -lreadline -ltermcap
+#unicodedata unicodedata.c
+xx xxmodule.c
+xxlimited xxlimited.c
+xxlimited_35 xxlimited_35.c
+xxsubtype xxsubtype.c

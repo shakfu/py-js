@@ -228,7 +228,7 @@ As mentioned earlier, the `py` and `pyjs` objects are the most mature and best d
 
 If you'd rather build them or any of the other externals yourself then the process is straightforward:
 
-1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.8 to 3.12 are tested and known to work.
+1. You should have a modern `python3` cpython implementation installed on your Mac: preferably either from [python.org](https://www.python.org) or from [Homebrew](https://brew.sh). Note that even system python3 provided by Apple will work in a number of cases. Python versions from 3.8 to 3.13 are tested and known to work.
 
 2. Make sure you also have [Xcode](https://xcodereleases.com/) installed.
 

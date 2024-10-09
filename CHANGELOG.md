@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.2.x]
 
+- Added support for Python 3.13.x
+
 - Changed default configuration in order to speed up builds. Now optimizations options ["enable_optimizations", "with_lto"] are not enabled by default but can now be enabled by setting OPTIMIZE=1 environment variable.
 
 - Added `make strip` option (with script) to recursively strip externals in the externals folder (currently macOS only)
