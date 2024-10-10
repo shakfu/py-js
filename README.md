@@ -282,7 +282,7 @@ The following section addresses this requirement.
 
 ### Building self-contained Python3 Externals for Packages and Standalones
 
-Currently, the `py` and `pyjs` externals can be additionally custom-built for the express purpose of packaging these for standalone and Max packages using a custom python [build manager](https://github.com/shakfu/py-js/tree/main/source/projects/py/builder). This allows highly-customized `build variants` to be produced.
+The `py` and `pyjs` externals have a custom python [build manager](https://github.com/shakfu/py-js/tree/main/source/projects/py/builder) which provides the flexibility to create a number of `build variants` which can vary in size and features, or be selected depending on whether the external is to be packaged in standalones or Max packages.
 
 The `Makefile` in the project root provides a simplified interface to this builder. See the [Current Status of Builders](https://github.com/shakfu/py-js#current-status-of-builders) section for further information.
 
@@ -296,6 +296,8 @@ idx  | command                | type       | format     | py size |  pyjs size
 
 [2] In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoretical minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo. Note the size of externals in Python 3.12.4 (although some of extra size is attributed improved ssl integration):
 
+[3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
+
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
 1    | `make static-ext`      | static     | external   | 15.0    | 13.3
@@ -304,7 +306,16 @@ idx  | command                | type       | format     | py size |  pyjs size
 4    | `make shared-tiny-ext` | shared     | external   | 11.4    | 9.6
 5    | `make framework-ext`   | shared     | external   | 22.5    | 20.8
 
-[3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
+for Python 3.13.0, which implemented a number of deprecations, external sizes have come down a little:
+
+idx  | command                | type       | format     | py size |  pyjs size
+:--: | :--------------------- | :--------- | :--------- | :------ | :----------
+1    | `make static-ext`      | static     | external   | 14.4    | 12.6
+2    | `make static-tiny-ext` | static     | external   | 10.2    | 8.5
+3    | `make shared-ext`      | shared     | external   | 19.1    | 17.3
+4    | `make shared-tiny-ext` | shared     | external   | 10.6    | 8.8
+5    | `make framework-ext`   | shared     | external   | 21.2    | 20.2
+
 
 This section assumes that you have completed the [Quickstart](#quickstart) above and have a recent python3 installation (python.org, homebrew or otherwise).
 
