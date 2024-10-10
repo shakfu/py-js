@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"minor" : 6,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -132,7 +132,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 584.0, 441.0, 24.0, 24.0 ]
+					"patching_rect" : [ 584.0, 442.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -231,7 +231,7 @@
 , 			{
 				"box" : 				{
 					"bgcolor" : [ 0.501961, 0.717647, 0.764706, 1.0 ],
-					"buffername" : "drum",
+					"buffername" : "",
 					"gridcolor" : [ 0.352941, 0.337255, 0.521569, 1.0 ],
 					"id" : "obj-28",
 					"maxclass" : "waveform~",
@@ -399,14 +399,14 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 478.0, 442.0, 69.0, 22.0 ],
-					"text" : "1.26.1"
+					"text" : "1.65.5"
 				}
 
 			}
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_np.py",
+					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_buffer_np.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -415,8 +415,8 @@
 					"patching_rect" : [ 528.0, 400.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_buffer_np.py",
-						"pythonpath" : ""
+						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_buffer_np.py",
+						"pythonpath" : "/"
 					}
 ,
 					"text" : "py",

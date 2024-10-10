@@ -34,6 +34,7 @@ CURRENT_PYTHON_VERSION = platform.python_version()
 DEFAULT_BZ2_VERSION = "1.0.8"
 DEFAULT_SSL_VERSION = "1.1.1w"
 DEFAULT_XZ_VERSION = "5.2.5"
+DEFAULT_NP_VERSION = "1.26.5" # 2.0.0 - 2.1.2 also tested (but hey are slight larger)
 
 # BASEDIR=f"{HOME}/.build_pyjs"
 BASEDIR = Path(__file__).parent.parent.parent.parent.parent

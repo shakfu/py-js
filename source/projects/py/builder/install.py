@@ -12,7 +12,7 @@ from pathlib import Path
 
 from typing import Optional
 
-from .config import Project, LOG_FORMAT, LOG_LEVEL
+from .config import Project, LOG_FORMAT, LOG_LEVEL, DEFAULT_NP_VERSION
 from .shell import ShellCmd
 
 logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
@@ -48,7 +48,7 @@ class Installer:
         )
         return Path(dirs[self.variant].format(**dikt))
 
-    def install_numpy(self, version="2.0.0"):
+    def install_numpy(self, version=DEFAULT_NP_VERSION):
         np_ver = int(version[0])
         py_ver = self.project.python.version_short
         src = self.project.build_src
