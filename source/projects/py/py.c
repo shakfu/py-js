@@ -323,9 +323,10 @@ void py_init(t_py* x)
     wchar_t* python_home = NULL;
 
     if (!Py_IsInitialized()) {
-        // without the above test, add more than on instance of py will cause a crash
+        // without the above test, addding more than one instance of `py` will
+        // cause a crash.
         // https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/18
-        
+
         /* Add the cythonized 'api' built-in module, before Py_Initialize */
         if (PyImport_AppendInittab("api", PyInit_api) == -1) {
             py_error(x, "could not add api module to builtin modules table");
@@ -2095,18 +2096,18 @@ t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
  * @brief Scan object registry and populate object IDs.
  *
  * @param x object instance
- * 
- * PI_WANTBOX means pass iterator function to box, rather than
+ *
+ * PI_WANTBOX flag means pass iterator function to box, rather than
  * the object contained in the box.
- * 
- * PI_DEEP flag means that the iteration will descend, depth 
+ *
+ * PI_DEEP flag means that the iteration will descend, depth
  * first, into subpatchers.
- * 
- * The result parameter is returns the last value returned by the iterator. 
- * 
+ *
+ * The result parameter is returns the last value returned by the iterator.
+ *
  * For example, if the iterator terminates early by returning a non-zero
- * value, it will contain that value. 
- * 
+ * value, it will contain that value.
+ *
  * If the iterator function does not terminate early, result will be 0.
  */
 void py_scan(t_py* x)

@@ -1,10 +1,14 @@
 # CHANGELOG for `py` object
 
 
-## [0.2.x]
+## [0.3.x]
 
-- Add `make install-numpy` for automatically building and adding a shrunk version of numpy to the previously built external or package
 
+## [0.3.0]
+
+- Added support for Python 3.13.x
+
+- Added `make install-numpy` for automatically building and adding a shrunk version of numpy to the previously built external or package
 
 ## [0.2.6]
 
