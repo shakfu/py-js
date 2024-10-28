@@ -3,6 +3,7 @@
 
     Experiment to defer the evaluation of a python function
     via the ITM-based sequencing.
+
 */
 
 #include "ext.h"
@@ -83,15 +84,25 @@ void ext_main(void *r)
     s_cobra_class = c;
 }
 
-// initial optional arg is delay time
 
+/**
+ * @brief Initializes the cobra object
+ *
+ * @param s symbol value
+ * @param argc number of arguments
+ * @param argv array of atom values
+ *
+ * @return pointer to cobra object
+ *
+ * @note: initial optional arg is delay time
+ */
 void *cobra_new(t_symbol *s, long argc, t_atom *argv)
 {
     t_cobra *x = (t_cobra *)object_alloc(s_cobra_class);
     long attrstart = attr_args_offset(argc, argv);
     t_atom a;
 
-    x->py = py_init(); // This is all that is need to init the `py` obj
+    x->py = (t_py*)py_init(); // Initialize and allocate python interpreter instance
 
     x->c_inletnum = 0;
     x->c_proxy = proxy_new(x, 1, &x->c_inletnum);
@@ -119,7 +130,13 @@ void *cobra_new(t_symbol *s, long argc, t_atom *argv)
     return x;
 }
 
-
+/**
+ * @brief Frees the cobra object
+ *
+ * @param x pointer to cobra object
+ *
+ * @note: `py_free` is called to cleanup the python instance
+ */
 void cobra_free(t_cobra *x)
 {
     freeobject(x->c_timeobj);
@@ -129,6 +146,9 @@ void cobra_free(t_cobra *x)
     py_free(x->py); // cleanup python.
 }
 
+/**
+ * @brief Handles assist messages
+ */
 void cobra_assist(t_cobra *x, void *b, long m, long a, char *s)
 {
     if (m == ASSIST_INLET) {    // Inlets
@@ -145,17 +165,32 @@ void cobra_assist(t_cobra *x, void *b, long m, long a, char *s)
     }
 }
 
+/**
+ * @brief Handles inlet info
+ */
 void cobra_inletinfo(t_cobra *x, void *b, long a, char *t)
 {
     if (a)
         *t = 1;
 }
 
+/**
+ * @brief Handles int messages
+ *
+ * @param x pointer to cobra object
+ * @param n int value
+ */
 void cobra_int(t_cobra *x, long n)
 {
     cobra_float(x, n);
 }
 
+/**
+ * @brief Handles float messages
+ *
+ * @param x pointer to cobra object
+ * @param f float value
+ */
 void cobra_float(t_cobra *x, double f)
 {
     t_atom a;
@@ -167,11 +202,27 @@ void cobra_float(t_cobra *x, double f)
         cobra_bang(x);
 }
 
+/**
+ * @brief Handles list messages
+ *
+ * @param x pointer to cobra object
+ * @param s symbol value
+ * @param argc number of arguments
+ * @param argv array of atom values
+ */
 void cobra_list(t_cobra *x, t_symbol *s, long argc, t_atom *argv)
 {
     cobra_anything(x, NULL, argc, argv);
 }
 
+/**
+ * @brief Sets the delay time
+ *
+ * @param x pointer to cobra object
+ * @param msg symbol value
+ * @param argc number of arguments
+ * @param argv array of atom values
+ */
 void cobra_anything(t_cobra *x, t_symbol *msg, long argc, t_atom *argv)
 {
     time_setvalue(x->c_timeobj, msg, argc, argv);
@@ -180,10 +231,11 @@ void cobra_anything(t_cobra *x, t_symbol *msg, long argc, t_atom *argv)
         cobra_bang(x);
 }
 
-// void cobra_tick(t_cobra *x)
-// {
-//     outlet_bang(x->c_outlet);
-// }
+/**
+ * @brief Calls the python function
+ *
+ * @param x pointer to cobra object
+ */
 void cobra_tick(t_cobra *x)
 {
     if (x->c_func != NULL) {
@@ -205,6 +257,11 @@ void cobra_tick(t_cobra *x)
     outlet_bang(x->c_outlet);
 }
 
+/**
+ * @brief Schedules the delay time
+ *
+ * @param x pointer to cobra object
+ */
 void cobra_bang(t_cobra *x)
 {
     double ms, tix;
@@ -216,11 +273,21 @@ void cobra_bang(t_cobra *x)
     clock_fdelay(x->c_clock, ms);
 }
 
+/**
+ * @brief Handles the clock tick
+ *
+ * @param x pointer to cobra object
+ */
 void cobra_clocktick(t_cobra *x)
 {
     outlet_bang(x->c_outlet2);
 }
 
+/**
+ * @brief Stops the delay time
+ *
+ * @param x pointer to cobra object
+ */
 void cobra_stop(t_cobra *x)
 {
     post("stop");
@@ -229,12 +296,30 @@ void cobra_stop(t_cobra *x)
     x->c_func = NULL; // reset the function
 }
 
+/**
+ * @brief Imports a python module
+ *
+ * @param x pointer to cobra object
+ * @param s symbol value
+ *
+ * @return t_max_err
+ */
 t_max_err cobra_import(t_cobra* x, t_symbol* s)
 {
     return py_import(x->py, s); // returns t_max_err
 }
 
 
+/**
+ * @brief Defers the python function
+ *
+ * @param x pointer to cobra object
+ * @param s symbol value
+ * @param argc number of arguments
+ * @param argv array of atom values
+ *
+ * @return t_max_err
+ */
 t_max_err cobra_defer(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;

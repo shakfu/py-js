@@ -6,9 +6,7 @@
 
 ## General Improvements
 
-
 ## Refactor
-
 
 ## Bugs
 
@@ -22,13 +20,9 @@
 
 ## api
 
-
-
 ### Core
 
-
 ### Usability
-
 
 ### Extensibility
 

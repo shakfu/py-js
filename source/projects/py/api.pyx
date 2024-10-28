@@ -120,9 +120,9 @@ Rect = namedtuple('Rect', ['x', 'y', 'width', 'height'])
 cdef class MaxObject:
     """A wrapper for a Max t_object
     """
-    cdef public classname
     cdef mx.t_object *ptr
     cdef bint ptr_owner
+    cdef public str classname
 
     def __cinit__(self):
         self.ptr = NULL
@@ -136,9 +136,10 @@ cdef class MaxObject:
 
     def __init__(self, classname: str, *args, namespace: str = "box"):
         cdef Atom atom = Atom(*args)
-        self.ptr_owner = True
+        self.classname = classname
         self.ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+        self.ptr_owner = True        
 
     @staticmethod
     def from_str(classname: str, parsestr: str, namespace: str = "box") -> MaxObject:

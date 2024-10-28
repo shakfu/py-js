@@ -6,7 +6,7 @@ A general purpose Max external which embeds a python3 interpreter and is made up
 
 2. A pure python module, `py_prelude.py` which is converted to `py_prelude.h` and compiled with `py` and then pre-loaded into the `globals()` namespace of every `py` instance.
 
-3. A builtin `api` module which is derived from a cython-wrapper of a subset of the Max c-api. 
+3. A builtin `api` module which is derived from a cython-wrapper of a subset of the Max c-api.
 
 The following provides a brief view of key attributes and methods:
 
@@ -69,9 +69,6 @@ py max external
 
 [![py-js test_py](../media/test_py.png)]
 
-
-
-
 ## Overview
 
 This overview will cover the following two external implementations:
@@ -92,9 +89,9 @@ As of this writing all three deployment scenarios are availabe, however it is wo
 
 Deployment Scenario    | `py`
 :--------------------- | :--:
-Linked to sys python   | yes 
-Embeddded in package   | yes 
-Embeddded in external  | yes 
+Linked to sys python   | yes
+Embeddded in package   | yes
+Embeddded in external  | yes
 
 ### Key Features
 
@@ -180,5 +177,3 @@ To fix it, just restart Max and use it normally in your patch. Treat each patch 
 - `core` features relying on pure python code are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
 
 - The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
-
-

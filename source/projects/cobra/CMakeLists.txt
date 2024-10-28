@@ -5,9 +5,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 find_package(Python3 COMPONENTS Interpreter Development)
 
 file(GLOB PROJECT_SRC
-     "*.h"
+    "*.h"
 	"*.c"
-     "*.cpp"
+    "*.cpp"
 )
 
 include_directories( 
@@ -29,7 +29,7 @@ target_include_directories(
 	${PROJECT_NAME}
 	PUBLIC
 	${PY_INCLUDE}
-	${CMAKE_CURRENT_SOURCE_DIR}/../mamba
+	${CMAKE_SOURCE_DIR}/source/projects/mamba
 )
 
 target_compile_definitions(

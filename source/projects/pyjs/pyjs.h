@@ -5,14 +5,25 @@
 
 
 
-/** \file pyjs.h
-    \brief Documentation of pyjs external header interface.
-
-    This is the main header file for the `pyjs` external.
-
-    Note that the external structure is not directly
-    exposed at the header level.
-*/
+/**
+ * @file pyjs.h
+ * 
+ * @brief Python scripting external for Max/MSP with JavaScript integration
+ * 
+ * This is the main header file for the `pyjs` external. It provides Python 
+ * scripting capabilities within Max/MSP with additional JavaScript integration.
+ * Key features include:
+ * - Full Python interpreter integration with the Max/MSP js object api which 
+ *  allows you to use python within js objects.
+ * - Running Python code directly in Max via messages
+ * - Loading Python scripts from files 
+ * - Importing Python modules
+ * - Converting Python objects to JSON for JavaScript interop
+ * - Support for Python packages via PYTHONPATH
+ * 
+ * Note that the external structure is not directly exposed at the header level.
+ * 
+ */
 
 
 /*--------------------------------------------------------------------------*/

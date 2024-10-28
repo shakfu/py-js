@@ -26,45 +26,45 @@ static uintptr_t py_global_obj_ref = 0;
 
 struct t_py {
     /* object header */
-    t_object p_ob; /*!< object header */
+    t_object p_ob;              /*!< object header */
 
     /* object attributes */
-    t_symbol* p_name; /*!< unique object name */
+    t_symbol* p_name;           /*!< unique object name */
 
     /* python-related */
-    t_symbol* p_pythonpath; /*!< path to python directory */
-    t_bool p_debug;         /*!< bool to switch per-object debug state */
-    PyObject* p_globals;    /*!< per object 'globals' python namespace */
+    t_symbol* p_pythonpath;     /*!< path to python directory */
+    t_bool p_debug;             /*!< bool to switch per-object debug state */
+    PyObject* p_globals;        /*!< per object 'globals' python namespace */
 
     /* infrastructure objects */
-    t_patcher* p_patcher; /*!< to send msgs to objects */
-    t_box* p_box;         /*!< the ui box of the py instance? */
+    t_patcher* p_patcher;       /*!< to send msgs to objects */
+    t_box* p_box;               /*!< the ui box of the py instance? */
 
     /* time-based ops */
-    void* p_clock; /*!< a clock in case of scheduled ops */
+    void* p_clock;              /*!< a clock in case of scheduled ops */
     t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
 
     /* text editor attrs */
-    t_object* p_code_editor;  /*!< code editor object */
-    char** p_code;            /*!< handle to code buffer for code editor */
-    long p_code_size;         /*!< length of code buffer */
-    t_fourcc p_code_filetype; /*!< filetype four char code of 'TEXT' */
-    t_fourcc p_code_outtype;  /*!< savetype four char code of 'TEXT' */
+    t_object* p_code_editor;    /*!< code editor object */
+    char** p_code;              /*!< handle to code buffer for code editor */
+    long p_code_size;           /*!< length of code buffer */
+    t_fourcc p_code_filetype;   /*!< filetype four char code of 'TEXT' */
+    t_fourcc p_code_outtype;    /*!< savetype four char code of 'TEXT' */
     char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
     char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
-    short p_code_path;   /*!< short code for max file system */
-    long p_run_on_save;  /*!< evaluate/run code in editor on save */
-    long p_run_on_close; /*!< evaluate/run code in editor on close */
+    short p_code_path;          /*!< short code for max file system */
+    long p_run_on_save;         /*!< evaluate/run code in editor on save */
+    long p_run_on_close;        /*!< evaluate/run code in editor on close */
     // t_symbol* p_run_on;
 
-    t_symbol* p_code_filepath; /*!< default python filepath to load into
+    t_symbol* p_code_filepath;  /*!< default python filepath to load into
                                  the code editor and 'globals' namespace */
-    t_bool p_autoload;         /*!< bool to autoload of p_code_filepath  */
+    t_bool p_autoload;          /*!< bool to autoload of p_code_filepath  */
 
     /* outlet creation */
-    void* p_outlet_right;  /*!< right outlet to bang success */
-    void* p_outlet_middle; /*!< middle outleet to bang error */
-    void* p_outlet_left;   /*!< left outleet for msg output  */
+    void* p_outlet_right;      /*!< right outlet to bang success */
+    void* p_outlet_middle;     /*!< middle outleet to bang error */
+    void* p_outlet_left;       /*!< left outleet for msg output  */
 };
 
 
@@ -323,7 +323,7 @@ void py_init(t_py* x)
     wchar_t* python_home = NULL;
 
     if (!Py_IsInitialized()) {
-        // without the above test, addding more than one instance of `py` will
+        // NOTE: without the above test, addding more than one instance of `py` will
         // cause a crash.
         // https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/18
 
@@ -433,8 +433,7 @@ void py_free(t_py* x)
  *
  * @return     t_max_err value
  */
-t_max_err py_pythonpath_attr_get(t_py* x, t_object* attr, long* argc,
-                                 t_atom** argv)
+t_max_err py_pythonpath_attr_get(t_py* x, t_object* attr, long* argc,t_atom** argv)
 {
     char alloc;
 
@@ -460,8 +459,7 @@ t_max_err py_pythonpath_attr_get(t_py* x, t_object* attr, long* argc,
  *
  * @return     t_max_err value
  */
-t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc,
-                                 t_atom* argv)
+t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc,t_atom* argv)
 {
     char conform_path[MAX_PATH_CHARS];
 
