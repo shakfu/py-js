@@ -61,8 +61,9 @@ if INCLUDE_NUMPY:
 # ----------------------------------------------------------------------------
 # compile-time constants
 
-DEF MAX_CHARS = 32767
-DEF PY_MAX_ATOMS = 1024
+cpdef enum:
+    MAX_CHARS = 32767
+    PY_MAX_ATOMS = 1024
 
 
 # ----------------------------------------------------------------------------
@@ -120,9 +121,9 @@ Rect = namedtuple('Rect', ['x', 'y', 'width', 'height'])
 cdef class MaxObject:
     """A wrapper for a Max t_object
     """
-    cdef public classname
     cdef mx.t_object *ptr
     cdef bint ptr_owner
+    cdef public str classname
 
     def __cinit__(self):
         self.ptr = NULL
@@ -139,6 +140,7 @@ cdef class MaxObject:
         self.ptr_owner = True
         self.ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+        self.classname = classname
 
     @staticmethod
     def from_str(classname: str, parsestr: str, namespace: str = "box") -> MaxObject:
@@ -150,14 +152,20 @@ cdef class MaxObject:
         obj.ptr_owner = True
         obj.ptr = <mx.t_object*>mx.object_new_parse(
             str_to_sym(namespace), str_to_sym(classname), parsestr.encode("utf8"))
+        obj.classname = classname
         return obj
 
     @staticmethod
-    cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
+    cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False) -> MaxObject:
         # Call to __new__ bypasses __init__ constructor
         cdef MaxObject obj = MaxObject.__new__(MaxObject)
+        cdef mx.t_symbol * name = mx.object_classname(<mx.t_object *>ptr)
         obj.ptr = ptr
         obj.ptr_owner = owner
+        if name is not NULL:
+            obj.classname = sym_to_str(name)
+        else:
+            obj.classname = "newobj"
         return obj
 
     def method_exists(self, str name) -> bool:
