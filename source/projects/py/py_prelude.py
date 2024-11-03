@@ -1,5 +1,7 @@
 """py_prelude.py: extends the `py` external with pure python functions
 
+This module is automatically loaded into the global namespace of every `py`
+object instance.
 """
 import os
 import subprocess

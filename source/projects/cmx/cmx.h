@@ -113,7 +113,13 @@ t_string* get_path_to_package(t_class* c, char* subpath)
 }
 
 
-
+/**
+ * @brief Create a new object from a box text
+ *
+ * @param x
+ * @param text
+ * @return t_object*
+ */
 t_object* create_object(t_object* x, const char* text)
 {
     t_object* patcher;
@@ -128,9 +134,11 @@ t_object* create_object(t_object* x, const char* text)
 
 
 
-/** Load a patcher file located in the Max search path by name.
+/**
+ * @brief Open a patch file located in the Max search path by name
  * 
-*/
+ * @param name
+ */
 void open_patch(const char *name)
 {
 	if (stringload(name) == 0) 

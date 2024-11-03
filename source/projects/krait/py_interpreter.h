@@ -1,5 +1,5 @@
-/** \file py_interpreter.h
-    \brief A single-header python3 c++ library for Max externals.
+/** @file py_interpreter.h
+    @brief A single-header python3 c++ library for Max externals.
 
     Provides a `PythonInterpreter` implementation which can be dropped into any
     arbitrary Max external. 
@@ -12,6 +12,7 @@
 
     Usage example:
 
+        ```cpp
         #define PY_INTERPRETER_IMPLEMENTATION // <-- activate the implementation
         #include "py_interpreter.h"
 
@@ -32,7 +33,7 @@
         {
             return x->py->eval(s, argc, argv, x->outlet);
         }
-
+        ```
 
     This library is placed in the public domain.
 

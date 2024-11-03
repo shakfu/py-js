@@ -4,12 +4,26 @@
 #define PY_H
 
 
-/** \file py.h
-    \brief Documentation of py external header interface.
-
-    This is the main header file for the `py` external. Note that the external
-    structure is not directly exposed at the header level.
-*/
+/**
+ * @file py.h
+ * 
+ * @brief Python scripting external for Max/MSP
+ * 
+ *  This is the main header file for the `py` external. Note that the external
+ *  structure is not directly exposed at the header level.
+ * 
+ * The py external provides Python scripting capabilities within Max/MSP. It allows:
+ * - Running Python code directly in Max via messages
+ * - Loading Python scripts from files
+ * - Importing Python modules
+ * - Bidirectional communication between Python and Max
+ * - Access to Max objects and methods from Python code
+ * - Support for Python packages via PYTHONPATH
+ * 
+ * The external manages Python interpreter initialization/finalization and provides
+ * a sandboxed environment for each py object instance. It includes a built-in API
+ * module for Max integration.
+ */
 
 
 /*--------------------------------------------------------------------------*/
