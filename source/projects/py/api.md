@@ -1,6 +1,6 @@
 # apy.pyx
 
-api.pyx is a cython 'builtin' module which wraps parts of the Max/MSP c-api
+`api.pyx` is a cython 'builtin' module which wraps parts of the Max/MSP c-api
 for the `py` external.
 
 The `api` module consists of:
@@ -15,17 +15,17 @@ available for use by python code running in a `py` external instance.
 
 ## Features
 
-- provides access to max c-api functionality in an interpreted language. 
+- Provides access to max c-api functionality in an interpreted language. 
 
-- wraps a decent subset of the max c-api for python code running in a `py` external instance.
+- Wraps a decent subset of the max c-api for python code running in a `py` external instance.
 
-- write max methods in cython which can be called in c
+- Write max methods in cython which can be called in c
 
-- all c is exposed via cython to python
+- All c is exposed via cython to python
 
-- wrap max types as cython extension classes, e.g. `api.Atom`, `api.Patcher`, ..
+- Wrap max types as cython extension classes, e.g. `api.Atom`, `api.Patcher`, ..
 
-- errors in python don't crash Max (or crash max less!)
+- Errors in python don't crash Max (or crash max less!)
 
 ## Design Notes
 
@@ -33,11 +33,6 @@ available for use by python code running in a `py` external instance.
 
 
 - [ ] There should be sufficient number of wrapper classes (which wrap pointers)  to enable productive scripting. So instead of returning a `mx.t_object*` one returns a `MaxObject`
-
-
-
-
-
 
 ## Usage
 
@@ -54,13 +49,13 @@ Then
 4. Call one of the functions or classes in this file 
    making sure to prefix it with `api.`
 
-
+```text
         1.
    ( import api )
         |
         |                      2.
       [ py ] ------ ( api.post('hello world') )
-
+```
 
 ## Development
 

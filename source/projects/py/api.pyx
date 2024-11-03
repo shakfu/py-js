@@ -1,29 +1,34 @@
-# api.pyx
-""" This is a cython 'builtin' module which wraps parts of the Max/MSP c-api
-for the `py` external.
+"""api.pyx
 
-- imports
-- compile-time conditional imports
-- compile-time constants
-- python c-api imports
-- helper cdef functions
-- extension classes
-    - [x] MaxObject
-    - [x] Atom
-    - [x] Table
-    - [x] Buffer
-    - [x] Dictionary
-    - [x] Database
-    - [ ] Linklist
-    - [x] Binbuf
-    - [x] Atombuf
-    - [ ] Hashtab
-    - [ ] AtomArray
-    - [x] Patcher
-    - [x] Box
-    - [x] PyExternal
-- helper functions
+This is a 'builtin' module which provides a Cython wrapper around parts of the Max/MSP C API 
+for use in the `py` external.
 
+Key components:
+
+Extension Classes:
+- MaxObject: Base wrapper for Max t_object
+- Atom: Wrapper for Max atoms/messages 
+- Table: Interface to Max tables
+- Buffer: Interface to MSP buffers
+- Dictionary: Interface to Max dictionaries
+- Database: Interface to Max databases
+- Linklist: Interface to Max linked lists
+- Binbuf: Interface to Max binbufs
+- Atombuf: Interface to Max atom buffers
+- Hashtab: Interface to Max hash tables
+- AtomArray: Interface to Max atom arrays
+- Patcher: Interface to Max patchers
+- Box: Interface to Max boxes/objects
+- PyExternal: Main interface for Python externals
+
+Helper Functions:
+- Global utility functions for common Max operations
+- Type conversion between Python and Max data types
+- Memory management utilities
+- Message passing and scripting helpers
+
+The module provides both low-level Cython access to the C API as well as higher-level
+Python interfaces for easier use in Max externals written in Python.
 
 see: `py-js/source/projects/py/api.md` for further details
 """
@@ -124,7 +129,6 @@ cdef class MaxObject:
     cdef mx.t_object *ptr
     cdef bint ptr_owner
     cdef public str classname
-    cdef public str classname
 
     def __cinit__(self):
         self.ptr = NULL
@@ -141,7 +145,6 @@ cdef class MaxObject:
         self.classname = classname
         self.ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
-        self.classname = classname
 
     @staticmethod
     def from_str(classname: str, parsestr: str, namespace: str = "box") -> MaxObject:
@@ -157,7 +160,8 @@ cdef class MaxObject:
         return obj
 
     @staticmethod
-    cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False) -> MaxObject:
+    cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
+        """Create a MaxObject from an existing pointer."""
         # Call to __new__ bypasses __init__ constructor
         cdef MaxObject obj = MaxObject.__new__(MaxObject)
         cdef mx.t_symbol * name = mx.object_classname(<mx.t_object *>ptr)
@@ -314,11 +318,11 @@ cdef class MaxObject:
 # api.Atom
 
 cdef class Atom:
-    """A wrapper class for a Max t_atom
-    """
+    """A wrapper class for a Max t_atom"""
+
     cdef mx.t_atom *ptr
-    cdef public long size
     cdef bint ptr_owner
+    cdef public long size
 
     def __cinit__(self):
         self.ptr_owner = False
@@ -426,6 +430,7 @@ cdef class Atom:
         return (self.ptr + idx).a_type == mx.A_FLOAT
 
     def to_list(self) -> list:
+        """Convert an array of atoms into a list."""
         cdef int i
         _res = []
         for i in range(self.size):
@@ -438,8 +443,7 @@ cdef class Atom:
         return _res
 
     def to_string(self) -> str:
-        """Convert an array of atoms into a C-string.
-        """
+        """Convert an array of atoms into a C-string."""
 
         cdef long textsize = 0
         cdef char *text = NULL
@@ -461,6 +465,7 @@ cdef class Atom:
     #         return np.array(self.to_list(), dtype=np.float64)
 
     def display(self):
+        """Display the contents of an atom array."""
         cdef int i
         for i in range(self.size):
             if self.is_float(i):
@@ -474,6 +479,7 @@ cdef class Atom:
 
     @staticmethod
     cdef Atom from_ptr(mx.t_atom *ptr, long size, bint owner=False):
+        """Create an Atom instance from an existing pointer."""
         # Call to __new__ bypasses __init__ constructor
         cdef Atom atom = Atom.__new__(Atom)
         atom.ptr = ptr
@@ -483,7 +489,7 @@ cdef class Atom:
 
     @staticmethod
     cdef Atom new(long size):
-        """create an empty Atom instance with an aribitrary length"""
+        """Create an empty Atom instance with an aribitrary length"""
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
@@ -501,6 +507,7 @@ cdef class Atom:
 
     @staticmethod
     def from_seq(seq: object) -> Atom:
+        """Create an Atom instance from a sequence of objects."""
         # if not seq:
         #     return
         cdef long size = len(seq)
@@ -547,107 +554,89 @@ cdef class Atom:
             new_size * sizeof(mx.t_atom))
 
     cdef mx.t_max_err setchar_array(self, long ac, long count, unsigned char *vals):
-        """Assign an array of char values to an array of atoms.
-        """
+        """Assign an array of char values to an array of atoms."""
         if ac > self.size:
             self.resize_ptr(ac)
         return mx.atom_setchar_array(ac, self.ptr, count, vals)
 
     cdef mx.t_max_err getchar_array(self, long count, unsigned char *vals):
-        """Fetch an array of char values from an array of atoms.
-        """
+        """Fetch an array of char values from an array of atoms."""
         return mx.atom_getchar_array(self.size, self.ptr, count, vals)
 
     cdef mx.t_max_err setlong_array(self, long ac, long count, mx.t_atom_long *vals):
-        """Assign an array of long values to an array of atoms.
-        """
+        """Assign an array of long values to an array of atoms."""
         if ac > self.size:
             self.resize_ptr(ac)
         return mx.atom_setlong_array(ac, self.ptr, count, vals)
 
     cdef mx.t_max_err getlong_array(self, long count, mx.t_atom_long *vals):
-        """Fetch an array of long values from an array of atoms.
-        """
+        """Fetch an array of long values from an array of atoms."""
         return mx.atom_getlong_array(self.size, self.ptr, count, vals)
 
     cdef mx.t_max_err setfloat_array(self, long ac, long count, float *vals):
-        """Assign an array of float values to an array of atoms.
-        """
+        """Assign an array of float values to an array of atoms."""
         if ac > self.size:
             self.resize_ptr(ac)
         return mx.atom_setfloat_array(ac, self.ptr, count, vals)
 
     cdef mx.t_max_err getfloat_array(self, long count, float *vals):
-        """Fetch an array of float values from an array of atoms.
-        """
+        """Fetch an array of float values from an array of atoms."""
         return mx.atom_getfloat_array(self.size, self.ptr, count, vals)
 
     cdef mx.t_max_err setdouble_array(self, long ac, long count, double *vals):
-        """Assign an array of double values to an array of atoms.
-        """
+        """Assign an array of double values to an array of atoms."""
         if ac > self.size:
             self.resize_ptr(ac)
         return mx.atom_setdouble_array(ac, self.ptr, count, vals)
 
     cdef mx.t_max_err getdouble_array(self, long count, double *vals):
-        """Fetch an array of double values from an array of atoms.
-        """
+        """Fetch an array of double values from an array of atoms."""
         return mx.atom_getdouble_array(self.size, self.ptr, count, vals)
 
     cdef mx.t_max_err setsym_array(self, long ac, long count, mx.t_symbol **vals):
-        """Assign an array of t_symbol values to an array of atoms.
-        """
+        """Assign an array of t_symbol values to an array of atoms."""
         if ac > self.size:
             self.resize_ptr(ac)
         return mx.atom_setsym_array(ac, self.ptr, count, vals)
 
     cdef mx.t_max_err getsym_array(self, long count, mx.t_symbol **vals):
-        """Fetch an array of t_symbol values from an array of atoms.
-        """
+        """Fetch an array of t_symbol values from an array of atoms."""
         return mx.atom_getsym_array(self.size, self.ptr, count, vals)
 
     cdef mx.t_max_err setatom_array(self, long ac, long count, mx.t_atom *vals):
-        """Assign an array of t_atom values to an array of atoms.
-        """
+        """Assign an array of t_atom values to an array of atoms."""
         if ac > self.size:
             self.resize_ptr(ac)
         return mx.atom_setatom_array(ac, self.ptr, count, vals)
 
     cdef mx.t_max_err getatom_array(self, long count, mx.t_atom *vals):
-        """Fetch an array of t_symbol values from an array of atoms.
-        """
+        """Fetch an array of t_symbol values from an array of atoms."""
         return mx.atom_getatom_array(self.size, self.ptr, count, vals)
 
     cdef mx.t_max_err setobj_array(self, long ac, long count, mx.t_object **vals):
-        """Assign an array of t_object values to an array of atoms.
-        """
+        """Assign an array of t_object values to an array of atoms."""
         if ac > self.size:
             self.resize_ptr(ac)
         return mx.atom_setobj_array(ac, self.ptr, count, vals)
 
     cdef mx.t_max_err getobj_array(self, long count, mx.t_object **vals):
-        """Fetch an array of t_object values from an array of atoms.
-        """
+        """Fetch an array of t_object values from an array of atoms."""
         return mx.atom_getobj_array(self.size, self.ptr, count, vals)
 
     cdef mx.t_max_err setparse(self, const char *parsestr):
-        """Parse a C-string into an array of atoms.
-        """
+        """Parse a C-string into an array of atoms."""
         return mx.atom_setparse(&self.size, <mx.t_atom **>&self.ptr, parsestr)
 
     cdef mx.t_max_err setbinbuf(self, void *buf):
-        """set binbuf content into an array of atoms.
-        """
+        """set binbuf content into an array of atoms."""
         return mx.atom_setbinbuf(&self.size, <mx.t_atom **>&self.ptr, buf)
 
     cdef mx.t_max_err setattrval(self, mx.t_symbol *attrname, mx.t_object *obj):
-        """set attribute value into an array of atoms.
-        """
+        """set attribute value into an array of atoms."""
         return mx.atom_setattrval(&self.size, <mx.t_atom **>&self.ptr, attrname, obj)
 
     cdef mx.t_max_err setobjval(self, mx.t_object *obj):
-        """set object value into an array of atoms.
-        """
+        """set object value into an array of atoms."""
         return mx.atom_setobjval(&self.size, <mx.t_atom **>&self.ptr, obj)
 
 
@@ -659,8 +648,8 @@ cdef class Atom:
 #       mx.CLASS_BOX, mx.gensym("table"), argc, argv)
 
 cdef class Table:
-    """A wrapper class to acess a pre-existing Max table
-    """
+    """A wrapper class to acess a pre-existing Max table"""
+
     cdef public str name
     cdef long **storage
     cdef readonly long size
@@ -676,7 +665,7 @@ cdef class Table:
         assert check == 0, f"table with name '{name}' doesn't exist"
 
     def populate(self, list[int] xs):
-        """populate table from python list[int]"""
+        """Populate a table from a python list of ints"""
         if len(xs) <= self.size:
             for i, x in enumerate(xs):
                 self.storage[0][i] = <long>x
@@ -685,15 +674,12 @@ cdef class Table:
                 self.storage[0][i] = <long>xs[i]
 
     def as_list(self):
-        """converts table to python list of ints"""
-
+        """Convert a table to a python list of ints"""
         cdef long value
         cdef list[int] xs = []
-
         for i in range(self.size):
             value = self.storage[0][i]
             xs.append(<int>value)
-
         return xs
 
 # ----------------------------------------------------------------------------
@@ -701,6 +687,7 @@ cdef class Table:
 
 cdef class Buffer:
     """A wrapper class for a Max buffer~ object"""
+
     cdef public str name
     cdef mp.t_buffer_obj *obj
     cdef mp.t_buffer_ref *ref
@@ -724,14 +711,7 @@ cdef class Buffer:
             self.ref = NULL
 
     def __init__(self, str name, str filename, int duration = -1, int channels = 1):
-        """create a buffer from scratch given name and file to load
-
-        params:
-            name: str
-            filename: str
-            duration: int (ms) (default -1)
-            channels: int      (default 1)
-        """
+        """Create a buffer from scratch given name and file to load"""
         cdef mx.t_atom[4] argv
         cdef int argc = 4
         mx.atom_setsym(argv, str_to_sym(name))
@@ -780,14 +760,7 @@ cdef class Buffer:
 
     @staticmethod
     cdef Buffer new(mx.t_object *x, str name, str filename, int duration = -1, int channels = 1):
-        """create a buffer from scratch given name and file to load
-
-        params:
-            name: str
-            filename: str
-            duration: int (ms) (default -1)
-            channels: int      (default 1)
-        """
+        """Create a buffer from scratch given name and file to load"""
         # create a buffer
         cdef mx.t_atom[4] argv
         cdef int argc = 4
@@ -808,13 +781,7 @@ cdef class Buffer:
 
     @staticmethod
     cdef Buffer empty(mx.t_object *x, str name, int duration_ms, int channels=1):
-        """create a new buffer
-
-        params:
-            name: str
-            duration: int (ms)
-            channels: int      (default 1)
-        """
+        """Create a new empty buffer"""
         # create a buffer
         cdef mx.t_atom argv[3];
 
@@ -995,12 +962,12 @@ cdef class Buffer:
         mp.buffer_edit_begin(self.obj)
 
     def buffer_edit_end(self, int valid=1):
-        """end buffer_edit block"""
+        """End a buffer_edit block"""
         mp.buffer_edit_end(self.obj, valid)
 
     # TODO: add start:end slice
     def get_samples(self):
-        """get samples as a memoryview"""
+        """Get samples as a memoryview"""
         cdef int i;
         self.s_buffer = cvarray(
             shape=(self.n_samples,), itemsize=sizeof(float), format="f")
@@ -1013,7 +980,7 @@ cdef class Buffer:
 
     # float32 is the default in Max/MSP
     def set_samples(self, float[:] samples):
-        """set samples from a memoryview"""
+        """Set samples from a memoryview"""
         # assert samples.shape[0] <= self.n_samples
         cdef long n_samples = <Py_ssize_t>samples.shape[0]
         cdef int i
@@ -1025,7 +992,7 @@ cdef class Buffer:
         self.unlocksamples()
 
     def send(self, str msg, *args):
-        """generic message sender
+        """Generic message sender
 
         Used for all message methods except those modifying
         the buffer structure (size, framecount, ..)
@@ -1040,14 +1007,13 @@ cdef class Buffer:
             self._send_multi(msg, *args)
 
     def _send_single(self, str msg):
-        """generic message sender for a one word message
-        """
+        """Generic message sender for a one word message"""
         if (self.obj):
             mx.object_method_typed(
                 <mx.t_object*>self.obj, str_to_sym(msg), 0, NULL, NULL)
 
     def _send_multi(self, str msg, *args):
-        """generic message sender for a msg with a list of arguments
+        """Generic message sender for a message with a list of arguments
 
         >>> buf.send("fill", "sin", 24)
         """
@@ -1060,11 +1026,11 @@ cdef class Buffer:
             self.setdirty()
 
     def bang(self):
-        """redraw buffer display"""
+        """Redraw the buffer display"""
         self.send("bang")
 
     def apply(self, *args):
-        """apply a function to buffer contents
+        """Apply a function to buffer contents
 
         funcs:
             triangle, hamming, hanning, blackman, welch, (kaiser beta) (windowing)
@@ -1075,34 +1041,34 @@ cdef class Buffer:
         self.send("apply", *args)
 
     def clear(self):
-        """erase contents of buffer"""
+        """Erase the contents of the buffer"""
         self.send("clear")
 
     def clearlow(self):
-        """erase contents of buffer via a low priority thread"""
+        """Erase the contents of the buffer via a low priority thread"""
         self.send("clearlow")
 
     def crop(self, int start, int end):
-        """trim audio data in buffer and resize it accordingly"""
+        """Trim audio data in buffer and resize it accordingly"""
         self.change("crop", start, end)
 
     def duplicate(self, str name):
-        """import contents of named buffer"""
+        """Import the contents of a named buffer"""
         self.change("duplicate", name)
 
     def enumerate(self):
-        """lists (on console) all objects referencing buffer"""
+        """List all objects referencing the buffer"""
         self.send("enumerate")
 
     def fill(self, *args):
-        """generic fill method
+        """Generic fill method
 
         >>> buf.fill("sin", 24)
         """
         self.send("fill", *args)
 
     def import_(self, path: str, start: int = 0, duration: int = -1, channels: int = 0):
-        """file import
+        """Import a file
 
         params:
             filename: str
@@ -1116,7 +1082,8 @@ cdef class Buffer:
             self.change("import", path, start, duration)
 
     def importreplace(self, path: str, start: int = 0, channels: int = 0):
-        """same as import but imports are performed with automatic duration and channel resizing enabled by default
+        """Same as import but imports are performed with automatic duration
+        and channel resizing enabled by default.
         """
         if channels:
             self.change("importreplace", path, start, channels)
@@ -1124,23 +1091,21 @@ cdef class Buffer:
             self.change("importreplace", path, start)
 
     def rename(self, str name):
-        """combine 'name' and 'set' in one method
-
-        renames buffer to new <name> and tells other objects to refer to it by new name
+        """Rename the buffer and tell other objects to refer to it by the new name.
         """
         self.send("set", name)
         self.send("name", name)
 
     def normalize(self, float amount):
-        """normalize audio in buffer"""
+        """Normalize the audio in the buffer"""
         self.send("normalize", amount)
 
     def open(self):
-        """open sample display"""
+        """Open the sample display"""
         self.send("open")
 
     def printmodtime(self):
-        """posts last modification time to console"""
+        """Post the last modification time to the console"""
         self.send("printmodtime")
 
     read = import_ # read is a synonym for import
@@ -1148,11 +1113,11 @@ cdef class Buffer:
     replace = importreplace # replace is a synonym for importreplace
 
     def close(self):
-        """close view window"""
+        """Close the view window"""
         self.send("wclose")
 
     def write(self, str path):
-        """write contents of buffer to audio file"""
+        """Write the contents of the buffer to an audio file"""
         if path.endswith(".wav"):
             self.send("writewave", path)
         elif path.endswith(".aiff"):
@@ -1169,8 +1134,8 @@ cdef class Buffer:
 # TODO: dict to api.Dict conversion
 
 cdef class Dictionary:
-    """A wrapper class for a Max t_dictionary
-    """
+    """A wrapper class for a Max t_dictionary"""
+
     cdef mx.t_dictionary *d
     cdef dict type_map
 
@@ -1383,9 +1348,11 @@ cdef class Dictionary:
         return mx.dictionary_clear(self.d)
 
     cdef mx.t_dictionary* clone(self):
+        """Create a copy of the dictionary."""
         return mx.dictionary_clone(self.d)
 
     cdef mx.t_max_err clone_to_existing(self, mx.t_dictionary* dc):
+        """Create a copy of the dictionary and add it to an existing dictionary."""
         return mx.dictionary_clone_to_existing(self.d, dc)
 
     # MAX_SDK BUG
@@ -1393,6 +1360,7 @@ cdef class Dictionary:
     #     return mx.dictionary_copy_to_existing(self.d, dc)
 
     cdef mx.t_max_err merge_to_existing(self, mx.t_dictionary* dc):
+        """Merge the contents of the dictionary into an existing dictionary."""
         return mx.dictionary_merge_to_existing(self.d, dc)
 
     cdef void funall(self, mx.method fun, void* arg):
@@ -1579,6 +1547,8 @@ cdef class Dictionary:
 # api.Database
 
 cdef class Database:
+    """Wraps the t_database object."""
+
     cdef mx.t_database *db
     cdef mx.t_symbol* db_name
     cdef bytes db_path
@@ -1605,15 +1575,19 @@ cdef class Database:
         self.db_path = None
 
     def open(self):
+        """Open the database."""
         mx.db_open(self.db_name, self.db_path, &self.db)
 
     def close(self):
+        """Close the database."""
         mx.db_close(&self.db)
 
     def query_table_new(self, str tablename):
+        """Create a new table."""
         mx.db_query_table_new(self.db, tablename.encode('utf-8'))
 
     def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags):
+        """Add a column to a table."""
         mx.db_query_table_addcolumn(
             self.db,
             tablename.encode('utf-8'),
@@ -1623,24 +1597,31 @@ cdef class Database:
         )
 
     def transaction_start(self):
+        """Start a transaction."""
         mx.db_transaction_start(self.db)
 
     def transaction_end(self):
+        """End a transaction."""
         mx.db_transaction_end(self.db)
 
     def transaction_flush(self):
+        """Flush a transaction."""
         mx.db_transaction_flush(self.db)
 
     cdef mx.t_max_err query_direct(self, mx.t_db_result **dbresult, const char *sql):
+        """Execute a direct query."""
         return mx.db_query_direct(self.db, dbresult, sql)
 
     cdef mx.t_max_err query_getlastinsertid(self, long *idx):
+        """Get the last insert ID."""
         return mx.db_query_getlastinsertid(self.db, idx)
 
     def query_table_new(self, str tablename) -> int:
+        """Create a new table."""
         return mx.db_query_table_new(self.db, tablename.encode('utf-8'))
 
     def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags) -> int:
+        """Add a column to a table."""
         return mx.db_query_table_addcolumn(
             self.db,
             tablename.encode('utf-8'),
@@ -1650,51 +1631,67 @@ cdef class Database:
         )
 
     cdef mx.t_max_err view_create(self, const char *sql, mx.t_db_view **dbview):
+        """Create a view."""
         return mx.db_view_create(self.db, sql, dbview)
 
     cdef mx.t_max_err view_remove(self, mx.t_db_view **dbview):
+        """Remove a view."""
         return mx.db_view_remove(self.db, dbview)
 
     cdef mx.t_max_err view_getresult(self, mx.t_db_view *dbview, mx.t_db_result **result):
+        """Get the result of a view."""
         return mx.db_view_getresult(dbview, result)
 
     cdef mx.t_max_err view_setquery(self, mx.t_db_view *dbview, char *newquery):
+        """Set the query of a view."""
         return mx.db_view_setquery(dbview, newquery)
 
     cdef char** result_nextrecord(self, mx.t_db_result *result):
+        """Get the next record from the result."""
         return mx.db_result_nextrecord(result)
 
     cdef void result_reset(self, mx.t_db_result *result):
+        """Reset the result."""
         mx.db_result_reset(result)
 
     cdef void result_clear(self, mx.t_db_result *result):
+        """Clear the result."""
         mx.db_result_clear(result)
 
     cdef long result_numrecords(self, mx.t_db_result *result):
+        """Get the number of records in the result."""
         return mx.db_result_numrecords(result)
 
     cdef long result_numfields(self, mx.t_db_result *result):
+        """Get the number of fields in the result."""
         return mx.db_result_numfields(result)
 
     cdef char* result_fieldname(self, mx.t_db_result *result, long fieldindex):
+        """Get the name of a field."""
         return mx.db_result_fieldname(result, fieldindex)
 
     cdef char* result_string(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        """Get the string value of a field."""
         return mx.db_result_string(result, recordindex, fieldindex)
 
     cdef long result_long(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        """Get the long value of a field."""
         return mx.db_result_long(result, recordindex, fieldindex)
 
     cdef float result_float(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        """Get the float value of a field."""
         return mx.db_result_float(result, recordindex, fieldindex)
 
     cdef mx.t_ptr_uint result_datetimeinseconds(self, mx.t_db_result *result, long recordindex, long fieldindex):
+        """Get the datetime in seconds of a field."""
         return mx.db_result_datetimeinseconds(result, recordindex, fieldindex)
 
     cdef void util_stringtodate(self, const char *string, mx.t_ptr_uint *date):
+        """Convert a string to a date."""
         mx.db_util_stringtodate(string, date)
 
     cdef void util_datetostring(self, const mx.t_ptr_uint date, char *string):
+        """Convert a date to a string."""
         mx.db_util_datetostring(date, string)
 
     # cdef t_max_err db_query(t_database *db, t_db_result **dbresult, const char *sql, ...)
@@ -1704,6 +1701,8 @@ cdef class Database:
 # api.Linklist
 
 cdef class Linklist:
+    """Wraps the t_linklist object."""
+
     cdef mx.t_linklist* lst
 
     def __cinit__(self):
@@ -1716,114 +1715,151 @@ cdef class Linklist:
 
     @property
     def size(self) -> int:
+        """Get the size of the linklist."""
         return mx.linklist_getsize(self.lst)
 
     cdef void* getindex(self, long index):
+        """Get the object at a given index."""
         return mx.linklist_getindex(self.lst, index)
 
-    cdef void chuck(self):
+    def chuck(self):
+        """Free the linklist."""
         mx.linklist_chuck(self.lst)
 
-    cdef mx.t_atom_long getsize(self):
+    def getsize(self) -> int:
+        """Get the size of the linklist."""
         return mx.linklist_getsize(self.lst)
 
     cdef mx.t_atom_long objptr2index(self, void* p):
+        """Get the index of an object."""
         return mx.linklist_objptr2index(self.lst, p)
 
     cdef mx.t_atom_long append(self, void* o):
+        """Append an object to the linklist."""
         return mx.linklist_append(self.lst, o)
 
     cdef mx.t_atom_long insertindex(self, void* o, long index):
+        """Insert an object at a given index."""
         return mx.linklist_insertindex(self.lst, o, index)
 
     cdef mx.t_llelem* insertafterobjptr(self, void* o, void* objptr):
+        """Insert an object after a given object."""
         return mx.linklist_insertafterobjptr(self.lst, o, objptr)
 
     cdef mx.t_llelem* insertbeforeobjptr(self, void* o, void* objptr):
+        """Insert an object before a given object."""
         return mx.linklist_insertbeforeobjptr(self.lst, o, objptr)
 
     cdef mx.t_llelem* moveafterobjptr(self, void* o, void* objptr):
+        """Move an object after a given object."""
         return mx.linklist_moveafterobjptr(self.lst, o, objptr)
 
     cdef mx.t_llelem* movebeforeobjptr(self, void* o, void* objptr):
+        """Move an object before a given object."""
         return mx.linklist_movebeforeobjptr(self.lst, o, objptr)
 
     cdef mx.t_atom_long deleteindex(self, long index):
+        """Delete an object at a given index."""
         return mx.linklist_deleteindex(self.lst, index)
 
     cdef long chuckindex(self, long index):
+        """Chuck an object at a given index."""
         return mx.linklist_chuckindex(self.lst, index)
 
     cdef long chuckobject(self, void* o):
+        """Chuck an object."""
         return mx.linklist_chuckobject(self.lst, o)
 
     cdef long deleteobject(self, void* o):
+        """Delete an object."""
         return mx.linklist_deleteobject(self.lst, o)
 
     cdef long chuckptr(self, mx.t_llelem* p):
+        """Chuck a pointer."""
         return mx.linklist_chuckptr(self.lst, p)
 
-    cdef void clear(self):
+    def clear(self):
+        """Clear the linklist."""
         mx.linklist_clear(self.lst)
 
     cdef mx.t_atom_long makearray(self, void** a, long max):
+        """Make an array from the linklist."""
         return mx.linklist_makearray(self.lst, a, max)
 
-    cdef void reverse(self, mx.t_linklist* x):
+    def reverse(self):
+        """Reverse the linklist."""
         mx.linklist_reverse(self.lst)
 
-    cdef void rotate(self, long i):
+    def rotate(self, long i):
+        """Rotate the linklist."""
         mx.linklist_rotate(self.lst, i)
 
-    cdef void shuffle(self, mx.t_linklist* x):
+    def shuffle(self):
+        """Shuffle the linklist."""
         mx.linklist_shuffle(self.lst)
 
-    cdef void swap(self, long a, long b):
+    def swap(self, long a, long b):
+        """Swap two objects."""
         mx.linklist_swap(self.lst, a, b)
 
     cdef void methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
+        """Call a method on all objects in the linklist."""
         mx.linklist_methodall_imp(x, sym, p1, p2, p3, p4, p5, p6, p7, p8)
 
     cdef void* methodindex_imp(self, void* x, void* i, void* s, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7):
+        """Call a method on an object at a given index."""
         mx.linklist_methodindex_imp(x, i, s, p1, p2, p3, p4, p5, p6, p7)
 
     cdef mx.t_atom_long funall_break(self, mx.method fun, void* arg):
+        """Call a function on all objects in the linklist."""
         return mx.linklist_funall_break(self.lst, fun, arg)
 
     cdef void* funindex(self, long i, mx.method fun, void* arg):
+        """Call a function on an object at a given index."""
         return mx.linklist_funindex(self.lst, i, fun, arg)
 
     cdef void* substitute(self, void* p, void* newp):
+        """Substitute an object with a new object."""
         return mx.linklist_substitute(self.lst, p, newp)
 
     cdef void* next(self, void* p, void** next):
+        """Get the next object."""
         return mx.linklist_next(self.lst, p, next)
 
     cdef void* prev(self, void* p, void** prev):
+        """Get the previous object."""
         return mx.linklist_prev(self.lst, p, prev)
 
     cdef void* last(self, void** item):
+        """Get the last object."""
         return mx.linklist_last(self.lst, item)
 
     cdef void readonly(self, long readonly):
+        """Set the readonly flag."""
         mx.linklist_readonly(self.lst, readonly)
 
     cdef void flags(self, long flags):
+        """Set the flags."""
         mx.linklist_flags(self.lst, flags)
 
-    cdef mx.t_atom_long getflags(self, mx.t_linklist* x):
+    cdef mx.t_atom_long getflags(self):
+        """Get the flags."""
         return mx.linklist_getflags(self.lst)
 
     cdef long match(self, void* a, void* b):
+        """Match two objects."""
         return mx.linklist_match(a, b)
 
     cdef void funall(self, mx.method fun, void* arg):
+        """Call a function on all objects in the linklist."""
         mx.linklist_funall(self.lst, fun, arg)
 
 # ----------------------------------------------------------------------------
 # api.Binbuf
 
 cdef class Binbuf:
+    """Wraps the t_binbuf object."""
+
     cdef mx.t_binbuf* ptr
 
     def __cinit__(self):
@@ -1855,12 +1891,13 @@ cdef class Binbuf:
     #     mx.binbuf_vinsert(self.ptr, fmt, ...)
 
     def eval(self):
+        """Evaluate a Max message in a Binbuf."""
         # mx.critical_enter(<mx.t_critical>0)
         self.eval_msg_to(0, NULL, NULL)
         # mx.critical_exit(<mx.t_critical>0)
 
     cdef void * eval_msg_to(self, short ac, mx.t_atom *av, void *to):
-        """evaluate a Max message in a Binbuf, passing it arguments.
+        """Evaluate a Max message in a Binbuf, passing it arguments.
 
         Evaluates the message in a Binbuf with arguments in argv, and sends
         it to receiver.
@@ -1919,15 +1956,19 @@ cdef class Binbuf:
         return result.decode()
 
     cdef short getatom(self, long *p1, long *p2, mx.t_atom *ap):
+        """Get an atom from a Binbuf."""
         return mx.binbuf_getatom(self.ptr, p1, p2, ap)
 
     cdef void set(self, mx.t_symbol *s, short argc, mx.t_atom *argv):
+        """Set the contents of a Binbuf."""
         mx.binbuf_set(self.ptr, s, argc, argv)
 
     cdef void delete(self, long from_type, long to_type, long from_data, long to_data):
+        """Delete a range of data from a Binbuf."""
         mx.binbuf_delete(self.ptr, from_type, to_type, from_data, to_data)
 
     cdef void addtext(self, char **text, long size):
+        """Add text to a Binbuf."""
         mx.binbuf_addtext(self.ptr, text, size)
 
     cdef short readatom(self, char *outstr, char **text, long *n, long e, mx.t_atom *ap):
@@ -1938,7 +1979,9 @@ cdef class Binbuf:
 # api.Atombuf
 
 cdef class Atombuf:
-    """An alternative to Binbufs for temporary storage of atoms.
+    """Wrapper around the t_atombuf object.
+
+    An alternative to Binbufs for temporary storage of atoms.
     """
     cdef mx.t_atombuf* ptr
     cdef bint ptr_owner
@@ -1962,6 +2005,7 @@ cdef class Atombuf:
 
     @staticmethod
     cdef Atombuf from_ptr(mx.t_atombuf *ptr, bint owner=False):
+        """Create an Atombuf from a pointer."""
         cdef Atombuf atombuf = Atombuf.__new__(Atombuf)
         atombuf.ptr = ptr
         atombuf.ptr_owner = owner
@@ -1969,7 +2013,7 @@ cdef class Atombuf:
 
     @staticmethod
     def new() -> Atombuf:
-        """create an empty Atombuf instance"""
+        """Create an empty Atombuf instance."""
         cdef mx.t_atombuf *ptr = <mx.t_atombuf*>mx.atombuf_new(0, NULL)
         if ptr is NULL:
             raise MemoryError
@@ -1988,8 +2032,7 @@ cdef class Atombuf:
         mx.sysmem_freeptr(src_text)
 
     def to_text(self) -> str:
-        """Convert an atombuf into a text handle.
-        """
+        """Convert an atombuf into a text handle."""
         cdef mx.t_handle contents = mx.sysmem_newhandle(0)
         cdef long size = 0
         cdef bytes result
@@ -2004,7 +2047,7 @@ cdef class Atombuf:
 
 
     def to_list(self) -> list:
-        """convert contents of atombuf to a list"""
+        """Convert contents of atombuf to a list."""
         cdef Atom atom = Atom.from_ptr(self.ptr.a_argv, self.ptr.a_argc)
         return atom.to_list()
 
@@ -2013,6 +2056,8 @@ cdef class Atombuf:
 # api.Hashtab
 
 cdef class Hashtab:
+    """Wrapper around the t_hashtab object."""
+
     cdef mx.t_hashtab* x
 
     def __cinit__(self, long slotcount):
@@ -2022,78 +2067,103 @@ cdef class Hashtab:
         mx.object_free(self.x)
 
     cdef mx.t_max_err store(self, mx.t_symbol* key, mx.t_object* val):
+        """Store an object in the hashtab."""
         return mx.hashtab_store(self.x, key, val)
 
     cdef mx.t_max_err storelong(self, mx.t_symbol* key, mx.t_atom_long val):
+        """Store a long in the hashtab."""
         return mx.hashtab_storelong(self.x, key, val)
 
     cdef mx.t_max_err storesym(self, mx.t_symbol* key, mx.t_symbol* val):
+        """Store a symbol in the hashtab."""
         return mx.hashtab_storesym(self.x, key, val)
 
     cdef mx.t_max_err store_safe(self, mx.t_symbol* key, mx.t_object* val):
+        """Store an object in the hashtab safely."""
         return mx.hashtab_store_safe(self.x, key, val)
 
     cdef mx.t_max_err storeflags(self, mx.t_symbol* key, mx.t_object* val, long flags):
+        """Store an object in the hashtab with flags."""
         return mx.hashtab_storeflags(self.x, key, val, flags)
 
     cdef mx.t_max_err lookup(self, mx.t_symbol* key, mx.t_object** val):
+        """Lookup an object in the hashtab."""
         return mx.hashtab_lookup(self.x, key, val)
 
     cdef mx.t_max_err lookuplong(self, mx.t_symbol* key, mx.t_atom_long* val):
+        """Lookup a long in the hashtab."""
         return mx.hashtab_lookuplong(self.x, key, val)
 
     cdef mx.t_max_err lookupsym(self, mx.t_symbol* key, mx.t_symbol** val):
+        """Lookup a symbol in the hashtab."""
         return mx.hashtab_lookupsym(self.x, key, val)
 
     cdef mx.t_max_err lookupentry(self, mx.t_symbol* key, mx.t_hashtab_entry** entry):
+        """Lookup an entry in the hashtab."""
         return mx.hashtab_lookupentry(self.x, key, entry)
 
     cdef mx.t_max_err lookupflags(self, mx.t_symbol* key, mx.t_object** val, long* flags):
+        """Lookup an object in the hashtab with flags."""
         return mx.hashtab_lookupflags(self.x, key, val, flags)
 
     cdef mx.t_max_err delete(self, mx.t_symbol* key):
+        """Delete an object from the hashtab."""
         return mx.hashtab_delete(self.x, key)
 
     cdef mx.t_max_err clear(self):
+        """Clear the hashtab."""
         return mx.hashtab_clear(self.x)
 
     cdef mx.t_max_err chuckkey(self, mx.t_symbol* key):
+        """Chuck a key from the hashtab."""
         return mx.hashtab_chuckkey(self.x, key)
 
     cdef mx.t_max_err chuck(self):
+        """Chuck the hashtab."""
         return mx.hashtab_chuck(self.x)
 
     cdef mx.t_max_err methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
+        """Call a method on all objects in the hashtab."""
         return mx.hashtab_methodall_imp(self.x, sym, p1, p2, p3, p4, p5, p6, p7, p8)
 
     cdef mx.t_max_err funall(self, mx.method fun, void* arg):
+        """Call a function on all objects in the hashtab."""
         return mx.hashtab_funall(self.x, fun, arg)
 
     cdef mx.t_max_err objfunall(self, mx.method fun, void* arg):
+        """Call a function on all objects in the hashtab."""
         return mx.hashtab_objfunall(self.x, fun, arg)
 
     cdef mx.t_atom_long getsize(self):
+        """Get the size of the hashtab."""
         return mx.hashtab_getsize(self.x)
 
     cdef void print(self):
+        """Print the hashtab."""
         mx.hashtab_print(self.x)
 
     cdef void readonly(self, long readonly):
+        """Set the readonly flag."""
         mx.hashtab_readonly(self.x, readonly)
 
     cdef void flags(self, long flags):
+        """Set the flags."""
         mx.hashtab_flags(self.x, flags)
 
     cdef mx.t_atom_long getflags(self):
+        """Get the flags."""
         return mx.hashtab_getflags(self.x)
 
     cdef mx.t_max_err keyflags(self, mx.t_symbol* key, long flags):
+        """Set the flags for a key."""
         return mx.hashtab_keyflags(self.x, key, flags)
 
     cdef mx.t_atom_long getkeyflags(self, mx.t_symbol* key):
+        """Get the flags for a key."""
         return mx.hashtab_getkeyflags(self.x, key)
 
     cdef mx.t_max_err getkeys(self, long* kc, mx.t_symbol*** kv):
+        """Get the keys from the hashtab."""
         return mx.hashtab_getkeys(self.x, kc, kv)
 
 # ---------------------------------------------------------------------------
@@ -2126,6 +2196,7 @@ cdef class AtomArray:
 
     @staticmethod
     cdef AtomArray from_atom(mx.t_atom *av, int ac):
+        """Create an AtomArray from an atom array."""
         cdef AtomArray atom_array = AtomArray.__new__(AtomArray)
         atom_array.ptr = mx.atomarray_new(ac, av)
         atom_array.owner = True
@@ -2133,6 +2204,7 @@ cdef class AtomArray:
 
     @staticmethod
     cdef AtomArray from_ptr(mx.t_atomarray *ptr, bint owner=False):
+        """Create an AtomArray from a pointer."""
         cdef AtomArray atom_array = AtomArray.__new__(AtomArray)
         atom_array.ptr = ptr
         atom_array.owner = owner
@@ -2140,6 +2212,7 @@ cdef class AtomArray:
 
     @staticmethod
     cdef AtomArray new(int size):
+        """Create an AtomArray with a given size."""
         cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
         if ptr is NULL:
             raise MemoryError
@@ -2214,8 +2287,8 @@ cdef class AtomArray:
 # api.Patcher
 
 cdef class Patcher:
-    """A wrapper class for a Max patcher
-    """
+    """A wrapper class for a Max patcher."""
+
     cdef mx.t_object *ptr
     cdef bint owner
 
@@ -2234,6 +2307,7 @@ cdef class Patcher:
 
     @staticmethod
     cdef Patcher from_ptr(mx.t_object *x, bint owner=False):
+        """Create a reference to a patcher object from a pointer."""
         cdef Patcher patcher = Patcher.__new__(Patcher)
         patcher.ptr = x
         patcher.owner = owner
@@ -2244,14 +2318,17 @@ cdef class Patcher:
         return bool(mx.jpatcher_is_patcher(self.ptr))
 
     def get_sym_attr(self, name) -> str:
+        """Get a symbol attribute."""
         cdef mx.t_symbol *attr_sym = <mx.t_symbol *>mx.object_attr_getsym(
             self.ptr, str_to_sym(name))
         return sym_to_str(attr_sym)
 
     def get_long_attr(self, name) -> int:
+        """Get a long attribute."""
         return mx.object_attr_getlong(self.ptr, str_to_sym(name))
 
     def get_char_attr(self, name) -> bool:
+        """Get a char attribute."""
         return mx.object_attr_getchar(self.ptr, str_to_sym(name))
 
     # array props
@@ -2271,99 +2348,120 @@ cdef class Patcher:
 
     @property
     def locked(self) -> bool:
+        """Get the locked flag."""
         return self.get_char_attr("locked")
 
     @property
     def bglocked(self) -> bool:
+        """Get the background locked flag."""
         return self.get_char_attr("bglocked")
 
     @property
     def presentation(self) -> bool:
+        """Get the presentation flag."""
         return self.get_char_attr("presentation")
 
     @property
     def openinpresentation(self) -> bool:
+        """Get the open in presentation flag."""
         return self.get_char_attr("openinpresentation")
 
     @property
     def cansave(self) -> bool:
+        """Get the can save flag."""
         return self.get_char_attr("cansave")
 
     @property
     def dirty(self) -> bool:
+        """Get the dirty flag."""
         return self.get_char_attr("dirty")
 
     @property
     def toolbarvisible(self) -> bool:
+        """Get the toolbar visible flag."""
         return self.get_char_attr("toolbarvisible")
 
     # sym props
 
     @property
     def title(self) -> str:
+        """Get the title."""
         return self.get_sym_attr("title")
 
     @property
     def fulltitle(self) -> str:
+        """Get the full title."""
         return self.get_sym_attr("fulltitle")
 
     @property
     def name(self) -> str:
+        """Get the name."""
         return self.get_sym_attr("name")
 
     @property
     def filename(self) -> str:
+        """Get the filename."""
         return self.get_sym_attr("filename")
 
     @property
     def filepath(self) -> str:
+        """Get the filepath."""
         return self.get_sym_attr("filepath")
 
     # int/long props
 
     @property
     def count(self) -> int:
+        """Get the count."""
         return self.get_long_attr("count")
 
     @property
     def fgcount(self) -> int:
+        """Get the foreground count."""
         return self.get_long_attr("fgcount")
 
     @property
     def bgcount(self) -> int:
+        """Get the background count."""
         return self.get_long_attr("bgcount")
 
     @property
     def fileversion(self) -> int:
+        """Get the file version."""
         return self.get_long_attr("fileversion")
 
     @property
     def numviews(self) -> int:
+        """Get the number of views."""
         return self.get_long_attr("numviews")
 
     @property
     def numwindowviews(self) -> int:
+        """Get the number of window views."""
         return self.get_long_attr("numwindowviews")
 
     @property
     def default_fontface(self) -> int:
+        """Get the default font face."""
         return self.get_long_attr("default_fontface")
 
     @property
     def toolbarheight(self) -> int:
+        """Get the toolbar height."""
         return self.get_long_attr("toolbarheight")
 
     # array props
 
     @property
     def rect(self) -> list:
+        """Get the rect coordinates."""
         return self.get_arr_attr("rect")
 
 
     # object methods
 
     cdef mx.t_object* get_namedbox(self, str name):
-        """get named box in patcher"""
+        """Get a named box in the patcher."""
         return <mx.t_object *>mx.object_method(
             self.ptr, mx.gensym("getnamedbox"), str_to_sym(name))
 
@@ -2375,6 +2473,7 @@ cdef class Patcher:
             <mx.t_object *>self.ptr, text.encode('utf-8'))
 
     def add_box(self, maxclass: str, x: float, y: float) -> bool:
+        """Create a new box in the patcher."""
         cdef mx.t_object *obj = self.newobject_sprintf(
             f"@maxclass {maxclass} @patching_position {x} {y}"
         )
@@ -2383,6 +2482,7 @@ cdef class Patcher:
         return False
 
     def add_textbox(self, text: str, x: float, y: float, maxclass='newobj') -> bool:
+        """Create a new textbox in the patcher."""
         cdef mx.t_object *obj = self.newobject_sprintf(
            f'@maxclass {maxclass} @text "{text}" @patching_position {x} {y}'
         )
@@ -2407,7 +2507,7 @@ cdef class Patcher:
         return False
 
     def _method_noargs(self, str name):
-        """object method call with no arguments"""
+        """Call an object method with no arguments."""
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), 0, NULL, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -2415,7 +2515,7 @@ cdef class Patcher:
         return error(f"method '{name}' call failed")
 
     def _method_args(self, str name, *args):
-        """strongly typed object method call with arguments"""
+        """Call a strongly typed object method with arguments."""
         cdef Atom atom = Atom(*args)
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), atom.size, atom.ptr, NULL)
@@ -2424,7 +2524,10 @@ cdef class Patcher:
         return error(f"method '{name}' call failed")
 
     def _method_parsestr(self, str name, str parsestr):
-        """combines object_method_typed() + atom_setparse() to define method arguments."""
+        """Call a method with a parsed string.
+        
+        Combines object_method_typed() + atom_setparse() to define method arguments.
+        """
         cdef mx.t_max_err err = mx.object_method_parse(
             <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
         if err == mx.MAX_ERR_NONE:
@@ -2432,7 +2535,10 @@ cdef class Patcher:
         return error(f"method '{name}' call failed")
 
     def _method_float(self, str name, float number):
-        """wrapper for object_method_typed() that passes a single float as an argument"""
+        """Call an object method with a single float argument.
+        
+        A wrapper for object_method_typed() that passes a single float as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_float(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -2440,7 +2546,10 @@ cdef class Patcher:
         return error(f"method '{name}' call failed")
 
     def _method_double(self, str name, double number):
-        """wrapper for object_method_typed() that passes a single double as an argument"""
+        """Call an object method with a single double argument.
+        
+        A wrapper for object_method_typed() that passes a single double as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_double(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -2448,7 +2557,10 @@ cdef class Patcher:
         return error(f"method '{name}' call failed")
 
     def _method_long(self, str name, long number):
-        """wrapper for object_method_typed() that passes a single long as an argument"""
+        """Call an object method with a single long argument.
+        
+        A wrapper for object_method_typed() that passes a single long as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_long(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -2456,7 +2568,10 @@ cdef class Patcher:
         return error(f"method '{name}' call failed")
 
     def _method_sym(self, str name, str symbol):
-        """wrapper for object_method_typed() that passes a single t_symbol as an argument"""
+        """Call an object method with a single symbol argument.
+        
+        A wrapper for object_method_typed() that passes a single symbol as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_sym(
             <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
         if err == mx.MAX_ERR_NONE:
@@ -2464,7 +2579,10 @@ cdef class Patcher:
         return error(f"method '{name}' call failed")
 
     def call(self, str name, *args, parse=False):
-        """general call object method function (strongly typed)"""
+        """Call a strongly typed object method with arguments.
+        
+        If no arguments are provided, call a method with no arguments.
+        """
         if len(args) == 0:
             return self._method_noargs(name)
         elif len(args) == 1:
@@ -2489,31 +2607,31 @@ cdef class Patcher:
     # patcher scripting
 
     def set_dirty(self):
-        """set dirty bit in the window (user will be asked to save changes)"""
+        """Set the dirty bit in the window (user will be asked to save changes)."""
         self.call("dirty")
 
     def set_clean(self):
-        """reverse setting dirty bit"""
+        """Reverse setting the dirty bit."""
         self.call("clean")
 
     def save(self):
-        """save current patcher"""
+        """Save the current patcher."""
         self.call("write")
 
     def set_title(self, title: str):
-        """set current patcher's title"""
+        """Set the current patcher's title."""
         self.call("title", f'"{title}"')
 
     def front(self):
-        """bring the window to the front, or open it and bring it to the front"""
+        """Bring the window to the front, or open it and bring it to the front."""
         self.call("front")
 
     def set_active_tab(self, name: str):
-        """set named tab to be active"""
+        """Set a named tab to be active."""
         self.call("setactivetab", name)
 
     def fullsize(self, on: bool):
-        """switch window fullsize on and off"""
+        """Switch the window fullsize on and off."""
         self.call("fullsize", on)
 
     def dispose(self):
@@ -2526,31 +2644,31 @@ cdef class Patcher:
     # box scripting
 
     def script(self, *args):
-        """calls a patcher script command"""
+        """Call a patcher script command."""
         self.call("script", *args)
 
     ## assigning varnames
 
     def assign_name_by_index(self, var1: str, maxclass: str, index: int):
-        """mame the nth box instance of the class"""
+        """Name the nth box instance of the class."""
         self.script("nth", var1, maxclass, index)
 
     def assign_name_by_text(self, var1: str, text: str):
-        """name a box with created from the exact provided text"""
+        """Name a box created from the exact provided text."""
         self.script("class", var1, text)
 
     ## object creation / deletion
 
     def newobject(self, varname: str, x: int, y: int, maxclass: str, *args):
-        """creates an object with varname from args"""
+        """Create an object with the given name from the provided arguments."""
         self.script("newobject", maxclass, "@varname", varname, "@patching_position", x, y, *args)
 
     def newdefault(self, varname: str, x: int, y: int, maxclass: str, *args):
-        """Creates a new named object with default properties in a patcher window."""
+        """Create a new named object with default properties in a patcher window."""
         self.script("newdefault", varname, x, y, maxclass, *args)
 
     def new(self, varname: str, maxclass: str, x: int, y: int, w: int, h: int=0, *args):
-        """Creates a new object in a patcher window and gives it a name.
+        """Create a new object in a patcher window and give it a name.
         
         The format of the arguments (after the class name) are based
         on the legacy Max file format.
@@ -2558,17 +2676,17 @@ cdef class Patcher:
         self.script("new", varname, maxclass, x, y, w, h, *args)
 
     def delete(self, var1: str):
-        """delete a named box"""
+        """Delete a named box."""
         self.script("delete", var1)
 
     ## connecting patchlines
 
     def connect(self, var1: str, outlet: int, var2: str, inlet: int):
-        """connect two named objects"""
+        """Connect two named objects."""
         self.script("connect", var1, outlet, var2, inlet)
 
     def disconnect(self, var1: str, outlet: int, var2: str, inlet: int):
-        """diconnect an existing connection between two named variabless"""
+        """Disconnect an existing connection between two named variables."""
         self.script("disconnect", var1, outlet, var2, inlet)
 
     def connectcolor(self, var1: str, outlet: int, var2: str, inlet: int, color: int):
@@ -2579,11 +2697,11 @@ cdef class Patcher:
     ## sending messages
 
     def send(self, var1: str, *args):
-        """send an message to the object contained by a named box"""
+        """Send a message to the object contained by a named box."""
         self.script("send", var1, *args)
 
     def sendbox(self, var1: str, *args):
-        """send a message to a a named box
+        """Send a message to a named box.
 
         There is currently only one object, bpatcher, in which the object and box
         are different objects.
@@ -2591,62 +2709,62 @@ cdef class Patcher:
         self.script("sendbox", var1, *args)
 
     def sendpatchline(self, from_var: str, outlet: int, to_var: str, inlet: int, *args):
-        """sends a message to a patchline specified from the connection."""
+        """Send a message to a patchline specified from the connection."""
         self.script("sendpatchline", from_var, outlet, to_var, inlet, *args)
 
     ## box visibility / responsiveness
 
     def hide(self, var1: str):
-        """hide a named box"""
+        """Hide a named box."""
         self.script("hide", var1)
 
     def show(self, var1: str):
-        """show a hidden named box"""
+        """Show a hidden named box."""
         self.script("show", var1)
 
     def ignore_click(self, var1: str):
-        """make a named box ignore clicks"""
+        """Make a named box ignore clicks."""
         self.script("ignoreclick", var1)
 
     def respond_to_click(self, var1: str):
-        """make a named box respond to clicks"""
+        """Make a named box respond to clicks."""
         self.script("respondtoclick", var1)
 
     ## moving / resizing boxes
 
     def move(self, var1: str, x: int, y: int):
-        """move a named box"""
+        """Move a named box."""
         self.script("move", x, y)
 
     def offset(self, var1: str, x: int, y: int):
-        """relative 'offset' move of named box"""
+        """Relative 'offset' move of a named box."""
         self.script("offset", x, y)
 
     def offset_from(self, var2: str, var1: str, from_bottom_right: int,
                     from_top_left: int, x_distance: int, y_distance: int = 0):
-        """relative 'offset' move of named box relative to another"""
+        """Relative 'offset' move of a named box relative to another."""
         self.script("offsetfrom", var2, var1,
             from_bottom_right, from_top_left, x_distance, y_distance)
 
     def size(self, var1: str, width: int, height: int):
-        """resize a named box"""
+        """Resize a named box."""
         self.script("size", var1, width, height)
 
     def send_to_back(self, var1: str):
-        """send named box to back layer a """
+        """Send a named box to the back layer."""
         self.script("sendtoback", var1)
 
     def bring_to_front(self, var1: str):
-        """bring named box to front layer"""
+        """Bring a named box to the front layer."""
         self.script("bringtofront", var1)
 
     def background(self, var1: str):
-        """bring named box to background??"""
+        """Bring a named box to the background layer."""
         self.script("background", var1)
 
     # box related
 
-    def get_count(self) -> bool:
+    def get_count(self) -> int:
         """Determine the number of boxes in a patcher."""
         return mx.jpatcher_get_count(self.ptr)
 
@@ -2787,7 +2905,8 @@ cdef class Patcher:
 # api.Box
 
 cdef class Box:
-    """Wraps a Max t_jbox user-interface object"""
+    """Wraps a Max t_jbox user-interface object."""
+
     cdef mx.t_object *ptr
     cdef mx.t_object *patcherview
 
@@ -2797,7 +2916,7 @@ cdef class Box:
 
     @staticmethod
     cdef Box from_ptr(mx.t_object *x):
-        """Create a box object from a box pointer"""
+        """Create a box object from a box pointer."""
         cdef Box box = Box.__new__(Box)
         mx.object_obex_lookup(x, mx.gensym("#P"), &box.ptr)
         if box.ptr is NULL:
@@ -3024,7 +3143,8 @@ cdef class Box:
 # api.MaxApp
 
 cdef class MaxApp:
-    """a class to enable messages to the 'max' application"""
+    """A class to enable messages to the 'max' application."""
+
     cdef mx.t_object *ptr
 
     def __cinit__(self):
@@ -3036,7 +3156,7 @@ cdef class MaxApp:
             mx.object_free(self.ptr)
 
     def _method_noargs(self, str name):
-        """object method call with no arguments"""
+        """Call an object method with no arguments."""
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), 0, NULL, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -3044,7 +3164,7 @@ cdef class MaxApp:
         return error(f"method '{name}' call failed")
 
     def _method_args(self, str name, *args):
-        """strongly typed object method call with arguments"""
+        """Call a strongly typed object method with arguments."""
         cdef Atom atom = Atom(*args)
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), atom.size, atom.ptr, NULL)
@@ -3053,7 +3173,10 @@ cdef class MaxApp:
         return error(f"method '{name}' call failed")
 
     def _method_parsestr(self, str name, str parsestr):
-        """combines object_method_typed() + atom_setparse() to define method arguments."""
+        """Call a method and define its arguments using object_method_parse().
+        
+        Combines object_method_typed() and atom_setparse() to define method arguments.
+        """
         cdef mx.t_max_err err = mx.object_method_parse(
             <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
         if err == mx.MAX_ERR_NONE:
@@ -3061,7 +3184,10 @@ cdef class MaxApp:
         return error(f"method '{name}' call failed")
 
     def _method_float(self, str name, float number):
-        """wrapper for object_method_typed() that passes a single float as an argument"""
+        """Call an object's method using a single float as an argument.
+
+        A wrapper for object_method_typed() that passes a single float as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_float(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -3069,7 +3195,10 @@ cdef class MaxApp:
         return error(f"method '{name}' call failed")
 
     def _method_double(self, str name, double number):
-        """wrapper for object_method_typed() that passes a single double as an argument"""
+        """Call an object's method using a single double as an argument.
+
+        A wrapper for object_method_typed() that passes a single double as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_double(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -3077,7 +3206,10 @@ cdef class MaxApp:
         return error(f"method '{name}' call failed")
 
     def _method_long(self, str name, long number):
-        """wrapper for object_method_typed() that passes a single long as an argument"""
+        """Call an object's method using a single long as an argument.
+
+        A wrapper for object_method_typed() that passes a single long as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_long(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
         if err == mx.MAX_ERR_NONE:
@@ -3085,7 +3217,10 @@ cdef class MaxApp:
         return error(f"method '{name}' call failed")
 
     def _method_sym(self, str name, str symbol):
-        """wrapper for object_method_typed() that passes a single t_symbol as an argument"""
+        """Call an object's method using a single t_symbol as an argument.
+
+        A wrapper for object_method_typed() that passes a single t_symbol as an argument.
+        """
         cdef mx.t_max_err err = mx.object_method_sym(
             <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
         if err == mx.MAX_ERR_NONE:
@@ -3093,7 +3228,10 @@ cdef class MaxApp:
         return error(f"method '{name}' call failed")
 
     def call(self, str name, *args, parse=False):
-        """general call object method function (strongly typed)"""
+        """Call an object's method (strongly typed).
+
+        A general call function for object methods that are strongly typed.
+        """
         if len(args) == 0:
             return self._method_noargs(name)
         elif len(args) == 1:
@@ -3115,60 +3253,79 @@ cdef class MaxApp:
 
 
     def clean(self):
+        """Call the 'clean' method on the application object."""
         self.call("clean")
 
     def clearmaxwindow(self):
+        """Call the 'clearmaxwindow' method on the application object."""
         self.call("clearmaxwindow")
 
     def htmlref(self, name: str):
+        """Call the 'htmlref' method on the application object."""
         self.call("htmlref", name)
 
     def openfile(self, name: str):
+        """Call the 'openfile' method on the application object."""
         self.call("openfile", name)
 
     def closefile(self, name: str):
+        """Call the 'closefile' method on the application object."""
         self.call("closefile", name)
 
     def midilist(self):
+        """Call the 'midilist' method on the application object."""
         self.call("midilist")
 
     def maxwindow(self):
+        """Call the 'maxwindow' method on the application object."""
         self.call("maxwindow")
 
     def paths(self):
+        """Call the 'paths' method on the application object."""
         self.call("paths")
 
     def externaleditor(self, name: str):
+        """Call the 'externaleditor' method on the application object."""
         self.call("externaleditor", name)
 
     def useexternaleditor(self, on: bool = True):
+        """Call the 'useexternaleditor' method on the application object."""
         self.call("useexternaleditor", on)
 
     def hidemenubar(self):
+        """Call the 'hidemenubar' method on the application object."""
         self.call("hidemenubar")
 
     def showmenubar(self):
+        """Call the 'showmenubar' method on the application object."""
         self.call("showmenubar")
 
     def externs(self):
+        """Call the 'externs' method on the application object."""
         self.call("externs")
 
     def getsystem(self, receiver: str):
+        """Call the 'getsystem' method on the application object."""
         self.call("getsystem", receiver)
 
     def getversion(self, receiver: str):
+        """Call the 'getversion' method on the application object."""
         self.call("getversion", receiver)
 
     def sendapppath(self, receiver: str):
+        """Call the 'sendapppath' method on the application object."""
         self.call("sendapppath", receiver)
 
     def launchbrowser(self, url: str):
+        """Call the 'launchbrowser' method on the application object."""
         self.call("launchbrowser", url)
 
     def preempt(self, on: bool = True):
+        """Call the 'preempt' method on the application object."""
         self.call("preempt", on)
 
     def quit(self):
+        """Call the 'quit' method on the application object."""
         self.call("quit")
 
 
@@ -3203,31 +3360,31 @@ cdef class PyExternal:
         px.py_bang(self.ptr)
 
     def bang_success(self):
-        """signal success by banging out of right outliet outlet"""
+        """Signal success by banging out of right outlet."""
         px.py_bang_success(self.ptr)
 
     def bang_failure(self):
-        """signal failure by banging out of middle outlet"""
+        """Signal failure by banging out of middle outlet."""
         px.py_bang_failure(self.ptr)
 
     def log_info(self, str msg):
-        """log info using object_post"""
+        """Log info using object_post."""
         px.py_info(self.ptr, msg.encode('utf8'))
 
     def log_debug(self, str msg):
-        """log debug using object_post"""
+        """Log debug using object_post."""
         px.py_debug(self.ptr, msg.encode('utf8'))
 
     def log_error(self, str s):
-        """log error using object_error"""
+        """Log error using object_error."""
         px.py_error(self.ptr, s.encode('utf8'))
 
     def scan(self):
-        """scanned patcher for named objects"""
+        """Scan patcher for named objects."""
         px.py_scan(self.ptr)
 
     def lookup(self, str name) -> bool:
-        """lookup varname in object registry"""
+        """Lookup a variable name in the object registry."""
         cdef mx.t_hashtab* registry = px.py_get_global_registry()
         cdef mx.t_object* obj = NULL
         cdef mx.t_max_err err
@@ -3246,22 +3403,22 @@ cdef class PyExternal:
             return True
 
     def get_patcher(self) -> Patcher:
-        """get containing patcher"""
+        """Get the containing patcher."""
         patcher = Patcher.from_object(<mx.t_object*>self.ptr)
         return patcher
 
     def get_buffer(self, name: str) -> Buffer:
-        """retrieve buffer by name"""
+        """Retrieve a buffer by name."""
         buf = Buffer.from_name(<mx.t_object*>self.ptr, name)
         return buf
 
     def create_buffer(self, name: str, sample_file: str) -> Buffer:
-        """create buffer with name from file"""
+        """Create a buffer with a given name from a sample file."""
         buf = Buffer.new(<mx.t_object*>self.ptr, name, sample_file)
         return buf
 
     def create_empty_buffer(self, str name, int duration_ms):
-        """creates empty named buffer with duration in milliseconds"""
+        """Create an empty buffer with a given name and duration in milliseconds."""
         buf = Buffer.empty(<mx.t_object*>self.ptr, name, duration_ms)
         return buf
 
@@ -3275,6 +3432,10 @@ cdef class PyExternal:
     #     px.py_send(self.ptr, mx.gensym(""), atom.size, atom.ptr)
 
     cdef send(self, str name, list args):
+        """Send a message to a receiver.
+
+        A general send function for object methods that are strongly typed.
+        """
         cdef long argc = <long>len(args) + 1
         cdef mx.t_atom argv[PY_MAX_ATOMS]
         _args = [name] + args
@@ -3300,27 +3461,34 @@ cdef class PyExternal:
         px.py_send(self.ptr, mx.gensym(""), argc, argv)
 
     cdef bint table_exists(self, str table_name):
+        """Return true if a table exists."""
         return px.py_table_exists(self.ptr, table_name.encode('utf-8'))
 
     cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
+        """Convert a Python list to a table."""
         return px.py_list_to_table(self.ptr, table_name, plist)
 
     cdef PyObject* table_to_list(self, char* table_name):
+        """Convert a table to python list"""
         return px.py_table_to_list(self.ptr, table_name)
 
-
-
     cdef out_sym(self, str arg):
+        """Send a symbol to the outlet."""
         mx.outlet_anything(<void*>px.get_outlet(self.ptr), str_to_sym(arg), 0, NULL)
 
     cdef out_float(self, float arg):
+        """Send a float to the outlet."""
         mx.outlet_float(<void*>px.get_outlet(self.ptr), <double>arg)
 
     cdef out_int(self, int arg):
+        """Send an integer to the outlet."""
         mx.outlet_int(<void*>px.get_outlet(self.ptr), <long>arg)
 
     cdef out_list(self, list arg):
-        """note: not recursive...(yet) still cannot deal with list in list"""
+        """Send a list to the outlet.
+
+        Note: not recursive...(yet) still cannot deal with list in list
+        """
         cdef Atom atom = Atom.from_seq(arg)
         cdef int i
 
@@ -3337,7 +3505,10 @@ cdef class PyExternal:
             mx.gensym("list"), atom.size, atom.ptr)
 
     cdef out_dict(self, dict arg):
-        """note: not recursive...(yet) still cannot deal with dict in dict"""
+        """Send a dictionary to the outlet.
+
+        Note: not recursive...(yet) still cannot deal with dict in dict
+        """
         res = []
         for k, v in arg.items():
             res.append(k)
@@ -3350,6 +3521,7 @@ cdef class PyExternal:
         self.out_list(res)
 
     def out(self, arg: object):
+        """Send an object to the outlet."""
         if isinstance(arg, float):
             self.out_float(arg)
         elif isinstance(arg, int):
@@ -3364,6 +3536,7 @@ cdef class PyExternal:
             return
 
     cdef mx.t_max_err method_binbuf(self, mx.t_symbol* s, void* buf, mx.t_atom* rv):
+        """Call a method with a binary buffer."""
         return mx.object_method_binbuf(<mx.t_object*>self.ptr, s, buf, rv)
 
 
@@ -3372,15 +3545,19 @@ cdef class PyExternal:
 # Alternative external extension type (obj pointer retrieved via uintptr_t
 
 cdef class PyMxObject:
+    """Alternative external extension type (obj pointer retrieved via uintptr_t)."""
+    
     cdef px.t_py *x
 
     def __cinit__(self):
         self.x = <px.t_py*>px.py_get_object_ref()
 
     cpdef bang(self):
+        """send a bang"""
         px.py_bang(self.x)
 
 def test_ref():
+    """Test the reference to the py object."""
     ext = PyMxObject()
     ext.bang()
 
@@ -3392,6 +3569,7 @@ if INCLUDE_NUMPY:
 
     # @cython.boundscheck(False)
     def zadd(in1, in2):
+        """Add two numpy arrays of complex numbers."""
         cdef double complex[:] a = in1.ravel()
         cdef double complex[:] b = in2.ravel()
 
@@ -3429,64 +3607,79 @@ cdef public mx.t_max_err py_hello(px.t_py* x, mx.t_symbol* s, long argc, mx.t_at
 # ----------------------------------------------------------------------------
 # python-level helper functions
 
-
-## general helpers
+## obligatory hello world demo
 
 def hello():
+    """Send 'Hello World' to the outlet."""
     ext = PyExternal()
     ext.out("Hello World")
 
+## general helpers
+
 def get_globals():
+    """Get the global variables."""
     return list(globals().keys())
 
 def bang():
+    """Send a bang to the outlet."""
     ext = PyExternal()
     ext.bang()
 
 def bang_success():
+    """Send a success signal by banging out of right outlet."""
     ext = PyExternal()
     ext.bang_success()
 
 def bang_failure():
+    """Send a failure signal by banging out of middle outlet."""
     ext = PyExternal()
     ext.bang_failure()
 
 def out(object obj):
+    """Send an object to the outlet."""
     ext = PyExternal()
     ext.out(obj)
 
 def out2(object obj):
+    """Send an object to the outlet."""
     cdef px.t_py* x = <px.t_py*>px.py_get_object_ref()
     px.py_handle_output(x, <PyObject *>obj)
 
 def send(name, *args):
+    """Send a message to a receiver."""
     ext = PyExternal()
     ext.send(name, list(args))
 
 def lookup(name):
+    """Lookup a variable name in the object registry."""
     ext = PyExternal()
     ext.lookup(name)
 
 def post(str s):
+    """Post a message to the console."""
     mx.post(s.encode('utf-8'))
 
 def error(str s):
+    """Post an error message to the console."""
     mx.error(s.encode('utf-8'))
 
 
 ## get object helpers
 
 def get_patcher() -> Patcher:
+    """Get the containing patcher."""
     ext = PyExternal()
     patcher = ext.get_patcher()
     return patcher
-    
+
 def get_buffer(name: str) -> Buffer:
+    """Retrieve a buffer by name."""
     ext = PyExternal()
     buf = ext.get_buffer(name)
     return buf
 
 def get_max():
+    """Get the Max object."""
     cdef mx.t_object *maxobj = <mx.t_object*>mx.object_new(
             mx.gensym("nobox"), mx.gensym("max"))
     if maxobj is NULL:
@@ -3496,15 +3689,14 @@ def get_max():
 ## buffer helpers
 
 def create_buffer(name: str, sample_file: str) -> Buffer:
+    """Create a buffer with a given name from a sample file."""
     ext = PyExternal()
     buf = ext.create_buffer(name, sample_file)
     return buf
 
 def create_empty_buffer(name: str, duration_ms: int) -> Buffer:
+    """Create an empty buffer with a given name and duration in milliseconds."""
     ext = PyExternal()
     buf = ext.create_empty_buffer(name, duration_ms)
     return buf
-
-
-
 

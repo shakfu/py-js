@@ -3,6 +3,7 @@
 
 ## [0.3.x]
 
+- Added extensive documentation to `api.pyx`
 
 ## [0.3.0]
 
