@@ -56,8 +56,7 @@ t_max_err py_execfile(t_py* x, t_symbol* s);
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv,
-                      void* outlet);
+t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv,void* outlet);
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
 // code execution methods
@@ -120,8 +119,7 @@ t_max_err py_handle_string_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_list_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_dict_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_output(t_py* x, void* outlet, PyObject* pval);
-t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset,
-                       void* outlet);
+t_max_err py_eval_text(t_py* x, long argc, t_atom* argv, int offset, void* outlet);
 
 PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from);
 
