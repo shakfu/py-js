@@ -18,6 +18,7 @@
 .quarto
 .vs
 .vscode
+.venv
 __pycache__
 archive
 build

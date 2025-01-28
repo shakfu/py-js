@@ -701,8 +701,8 @@ class XzBuilder(ConfiguredBuilder):
                 f"tar -xvf '{self.download_path}'"
                 f" --directory '{self.project.build_src}'"
             )
-            downloaded = self.project.build_src / f"cpython-source-deps-xz-{DEFAULT_XZ_VERSION}"            
-            self.cmd.move(downloaded, self.src_path)
+            downloaded = self.project.build_src / f"cpython-source-deps-xz-{DEFAULT_XZ_VERSION}"
+            # self.cmd.move(downloaded, self.src_path)
             assert self.src_path.exists(), f"{self.src_path} not created"
 
     def pre_process(self):
