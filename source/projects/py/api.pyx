@@ -1324,12 +1324,31 @@ cdef class Dictionary:
         """Return the number of keys in a dictionary."""
         return mx.dictionary_getentrycount(self.d)
 
-    cdef mx.t_max_err getkeys(self, long* numkeys, mx.t_symbol*** keys):
+    def getkeys(self) -> list[str]:
         """Retrieve all of the key names stored in a dictionary."""
-        return mx.dictionary_getkeys(self.d, numkeys, keys)
+        cdef long numkeys = 0
+        cdef mx.t_symbol** keys
+        cdef mx.t_max_err err = mx.dictionary_getkeys(self.d, &numkeys, &keys)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not retrieve keys")
+        results = []
+        for i in range(numkeys):
+            results.append(sym_to_str(keys[i]))
+        self.freekeys(numkeys, keys)
+        return results
 
-    cdef mx.t_max_err getkeys_ordered(self, long* numkeys, mx.t_symbol*** keys):
-        return mx.dictionary_getkeys_ordered(self.d, numkeys, keys)
+    def getkeys_ordered(self) -> list[str]:
+        """Retrieve all of the key names stored in a dictionary in order."""
+        cdef long numkeys = 0
+        cdef mx.t_symbol** keys
+        cdef mx.t_max_err err = mx.dictionary_getkeys_ordered(self.d, &numkeys, &keys)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not retrieve keys")
+        results = []
+        for i in range(numkeys):
+            results.append(sym_to_str(keys[i]))        
+        self.freekeys(numkeys, keys)
+        return results
 
     cdef void freekeys(self, long numkeys, mx.t_symbol** keys):
         """Free memory allocated by the dictionary_getkeys() method."""

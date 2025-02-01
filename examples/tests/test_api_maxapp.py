@@ -10,7 +10,6 @@ def test_maxapp_midilist():
     app = api.MaxApp()
     app.midilist()
 
-
 def test_maxapp_clean():
     app = api.MaxApp()
     app.clean()

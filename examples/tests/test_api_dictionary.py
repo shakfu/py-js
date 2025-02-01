@@ -56,12 +56,20 @@ def test_dict_bytes():
     assert d[key] == value, f"{d[key]} != {value}"
 
 
-def test_dict_update():
+def test_dict_entrycount():
     pydict = {"sam": 100, "abc": 121.10, "def": [1, b"pod", "sa", 4.1]}
     d = api.Dictionary()
     for key,value in pydict.items():
         d[key] = value
-    return d.getentrycount()
+    return d.getentrycount() # should be 3
+
+def test_dict_getkeys():
+    pydict = {"sam": 100, "abc": 121.10, "def": [1, b"pod", "sa", 4.1]}
+    d = api.Dictionary()
+    for key,value in pydict.items():
+        d[key] = value
+    return d.getkeys()
+
 
 
 
