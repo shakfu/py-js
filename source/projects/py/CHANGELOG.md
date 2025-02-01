@@ -3,6 +3,8 @@
 
 ## [0.3.x]
 
+- Added `Dictionary.getkeys` and `Dictionary.getkeys_ordered` to api
+
 - Added extensive documentation to `api.pyx`
 
 ## [0.3.0]
