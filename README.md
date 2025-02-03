@@ -1,8 +1,4 @@
----
-title: "py-js: python3 objects for max"
----
-
-{{< pagebreak >}}
+# py-js: python3 objects for max"
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
 
@@ -12,13 +8,11 @@ repo - <https://github.com/shakfu/py-js>
 
 [![py-js py.maxhelp](./media/py-maxhelp.png)](patchers/py_test_anything.maxpat)
 
-{{< pagebreak >}}
-
 ## Overview
 
 This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for Max/MSP. It then evolved into an umbrella project for exploring different ways of using python3 in Max/MSP.
 
-Along the way, a number of externals have been developed for use in a live Max environment:
+Along the way, a number of externals have been developed for use in a live Max environment (click on the links to see more detailed documentation):
 
 **Python3 Externals:**
 
