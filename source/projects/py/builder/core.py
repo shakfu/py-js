@@ -29,7 +29,7 @@ Builder
         PyJsBuilder
             LocalSystemBuilder
             HomebrewExtBuilder
-            HomebrewPkgBuilder            
+            HomebrewPkgBuilder
             StaticExtBuilder
             StaticPkgBuilder (not implemented, useless)
             SharedExtBuilder
@@ -37,7 +37,7 @@ Builder
             FrameworkExtBuilder
             FrameworkPkgBuilder
             RelocatablePkgBuilder
-        
+
 
 install:
     configure -> reset -> download -> pre_process -> build -> post_process
@@ -58,7 +58,6 @@ from typing import Dict, List, Optional
 from .config import (
     CURRENT_PYTHON_VERSION,
     DEFAULT_CONFIGURE_OPTIONS,
-    DEFAULT_XZ_VERSION,
     LOG_FORMAT,
     LOG_LEVEL,
     URL_GETPIP,
@@ -532,9 +531,9 @@ class Builder:
         #         builder.reset()
         self.cmd.remove(self.src_path)
         self.cmd.remove(self.prefix)
-        assert not (
-            self.src_path.exists() or self.prefix.exists()
-        ), "reset not completed"
+        assert not (self.src_path.exists() or self.prefix.exists()), (
+            "reset not completed"
+        )
 
     def download(self, include_dependencies=True):
         """download src using curl and tar.
@@ -551,9 +550,9 @@ class Builder:
             self.project.build_downloads.mkdir(parents=True, exist_ok=True)
             self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
-            assert (
-                self.download_path.exists()
-            ), f"could not download: {self.download_path}"
+            assert self.download_path.exists(), (
+                f"could not download: {self.download_path}"
+            )
 
         # unpack
         if not self.src_path.exists():
@@ -689,9 +688,9 @@ class XzBuilder(ConfiguredBuilder):
             self.project.build_downloads.mkdir(parents=True, exist_ok=True)
             self.log.info("downloading %s to %s", self.url, self.download_path)
             self.cmd(f"curl -L --fail '{self.url}' -o '{self.download_path}'")
-            assert (
-                self.download_path.exists()
-            ), f"could not download: {self.download_path}"
+            assert self.download_path.exists(), (
+                f"could not download: {self.download_path}"
+            )
 
         # unpack
         if not self.src_path.exists():
@@ -701,7 +700,9 @@ class XzBuilder(ConfiguredBuilder):
                 f"tar -xvf '{self.download_path}'"
                 f" --directory '{self.project.build_src}'"
             )
-            downloaded = self.project.build_src / f"cpython-source-deps-xz-{DEFAULT_XZ_VERSION}"
+            # downloaded = (
+            #     self.project.build_src / f"cpython-source-deps-xz-{DEFAULT_XZ_VERSION}"
+            # )
             # self.cmd.move(downloaded, self.src_path)
             assert self.src_path.exists(), f"{self.src_path} not created"
 
@@ -1309,8 +1310,6 @@ class BeewarePythonBuilder(StaticPythonBuilder):
         )
 
 
-
-
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (BINARY)
 
@@ -1578,6 +1577,7 @@ class FrameworkPythonForPkgBuilder(FrameworkPythonBuilder):
 # ------------------------------------------------------------------------------------
 # PYTHON BUILDERS (TINY)
 
+
 class TinySharedPythonBuilder(SharedPythonForExtBuilder):
     """builds python in a tiny shared format."""
 
@@ -1716,7 +1716,6 @@ class TinyStaticPythonBuilder(StaticPythonBuilder):
             )
         )
 
-
     def build(self):
         for builder in self.depends_on:
             builder.build()
@@ -1735,9 +1734,6 @@ class TinyStaticPythonBuilder(StaticPythonBuilder):
 
         self.cmd("make altinstall")
         self.cmd.chdir(self.project.pydir)
-
-
-
 
 
 # ------------------------------------------------------------------------------------
@@ -1921,7 +1917,7 @@ class HomebrewPkgBuilder(PyJsBuilder):
     def copy_python(self):
         """copy python framework from homebrew to support directory"""
         src = self.project.python.prefix.parent.parent
-        self.cmd(f'ditto {src} {self.project.support / "Python.framework"}')
+        self.cmd(f"ditto {src} {self.project.support / 'Python.framework'}")
         self.clean()
         self.ziplib()
 
@@ -2146,8 +2142,3 @@ class BeewareExtBuilder(PyJsBuilder):
 
         if self.product_exists:
             self.xcodebuild(self.NAME, targets=["py", "pyjs"])
-
-
-
-
-

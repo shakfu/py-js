@@ -1,7 +1,12 @@
 # CHANGELOG for `py` object
 
-
 ## [0.3.x]
+
+- Added `Atom.setdouble_array` and `Atom.getdouble_array` to api
+
+- Added `Atom.setfloat_array` and `Atom.getfloat_array` to api
+
+- Added `Atom.setlong_array` and `Atom.getlong_array` to api
 
 - Added `Dictionary.getkeys` and `Dictionary.getkeys_ordered` to api
 
@@ -79,7 +84,7 @@
   # and then use that to build the external
 
   make build-shared-ext PYTHON_VERSION=3.7.17
-  ``` 
+  ```
 
 - Added `patch/3.8/setup-static-min6.local` to enable tiny variants in python 3.8
 
@@ -115,7 +120,6 @@
 
 - Fix a bug where python-static was not building its dependencies
 
-
 ## [0.2.0]
 
 - Removed most platform specific code related to finding external path and use the builtin `class_getpath`
@@ -145,10 +149,7 @@
   - Hashtab
   - AtomArray
 
-
-
 ## [0.1.1]
-
 
 - Added initial msp buffer object support
 
@@ -163,7 +164,6 @@
 - Changed functions signatures between `py.c` so they return Max errors instead of being void functions
 
 - Changed `py_code` and `py_anything` to used refactored `py_eval_text`
-
 
 ## [0.1.0]
 
@@ -190,7 +190,6 @@
 - Fixed: `_hashlib` and `_ssl` are now built for `static-ext` build.
 
 - Fixed `framework-ext` and `framework-pkg` options which were not building under new python build system
-
 
 ## [0.0.1]
 

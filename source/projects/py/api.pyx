@@ -270,7 +270,7 @@ cdef class MaxObject:
         cdef mx.t_max_err err = mx.object_attr_setsym(<mx.t_object *>self.ptr, 
             str_to_sym(name), str_to_sym(value))
         if err != mx.MAX_ERR_NONE:
-            return error(f"could not set attr '{name}' value '{value}'");
+            return error(f"could not set attr '{name}' value '{value}'")
 
     def get_attr_long(self, str name) -> int:
         """Retrieves the value of an attribute, given its parent object and name."""
@@ -281,7 +281,7 @@ cdef class MaxObject:
         cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object *>self.ptr, 
             str_to_sym(name), value)
         if err != mx.MAX_ERR_NONE:
-            return error(f"could not set attr '{name}' value '{value}'");
+            return error(f"could not set attr '{name}' value '{value}'")
 
     def get_attr_float(self, str name) -> float:
         """Retrieves the value of an attribute, given its parent object and name."""
@@ -292,7 +292,7 @@ cdef class MaxObject:
         cdef mx.t_max_err err = mx.object_attr_setfloat(<mx.t_object *>self.ptr,
             str_to_sym(name), value)
         if err != mx.MAX_ERR_NONE:
-            return error(f"could not set attr '{name}' value '{value}'");
+            return error(f"could not set attr '{name}' value '{value}'")
 
     def get_attr_char(self, str name) -> bool:
         """Retrieves the value of an attribute, given its parent and name"""
@@ -303,7 +303,7 @@ cdef class MaxObject:
         cdef mx.t_max_err err = mx.object_attr_setchar(<mx.t_object *>self.ptr,
             str_to_sym(name), value)
         if err != mx.MAX_ERR_NONE:
-            return error(f"could not set attr '{name}' value '{value}'");
+            return error(f"could not set attr '{name}' value '{value}'")
 
     def set_attr_from_str(self, str name, str value):
         """Set an attribute value with one or more atoms parsed from a C-string."""
@@ -563,35 +563,83 @@ cdef class Atom:
         """Fetch an array of char values from an array of atoms."""
         return mx.atom_getchar_array(self.size, self.ptr, count, vals)
 
-    cdef mx.t_max_err setlong_array(self, long ac, long count, mx.t_atom_long *vals):
+    def setlong_array(self, list[int] values):
         """Assign an array of long values to an array of atoms."""
+        cdef long count = len(values)
+        cdef long ac = count
         if ac > self.size:
             self.resize_ptr(ac)
-        return mx.atom_setlong_array(ac, self.ptr, count, vals)
+        cdef mx.t_atom_long *vals = <mx.t_atom_long *>mx.sysmem_newptr(count * sizeof(mx.t_atom_long))
+        for i in range(count):
+            vals[i] = <long>values[i]
+        cdef mx.t_max_err err = mx.atom_setlong_array(ac, self.ptr, count, vals)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not set long array")
+        mx.sysmem_freeptr(vals)
 
-    cdef mx.t_max_err getlong_array(self, long count, mx.t_atom_long *vals):
+    def getlong_array(self, long count) -> list[int]:
         """Fetch an array of long values from an array of atoms."""
-        return mx.atom_getlong_array(self.size, self.ptr, count, vals)
+        cdef mx.t_atom_long *vals = <mx.t_atom_long *>mx.sysmem_newptr(count * sizeof(mx.t_atom_long))
+        cdef mx.t_max_err err = mx.atom_getlong_array(self.size, self.ptr, count, vals)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get long array")
+        cdef list[int] values = []
+        for i in range(count):
+            values.append(<int>vals[i])
+        mx.sysmem_freeptr(vals)
+        return values
 
-    cdef mx.t_max_err setfloat_array(self, long ac, long count, float *vals):
+    def setfloat_array(self, list[float] values):
         """Assign an array of float values to an array of atoms."""
+        cdef long count = len(values)
+        cdef long ac = count
         if ac > self.size:
             self.resize_ptr(ac)
-        return mx.atom_setfloat_array(ac, self.ptr, count, vals)
+        cdef float *vals = <float *>mx.sysmem_newptr(count * sizeof(float))
+        for i in range(count):
+            vals[i] = <float>values[i]
+        cdef mx.t_max_err err = mx.atom_setfloat_array(ac, self.ptr, count, vals)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not set float array")
+        mx.sysmem_freeptr(vals)
 
-    cdef mx.t_max_err getfloat_array(self, long count, float *vals):
+    def getfloat_array(self, long count) -> list[float]:
         """Fetch an array of float values from an array of atoms."""
-        return mx.atom_getfloat_array(self.size, self.ptr, count, vals)
+        cdef float *vals = <float *>mx.sysmem_newptr(count * sizeof(float))
+        cdef mx.t_max_err err = mx.atom_getfloat_array(self.size, self.ptr, count, vals)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get float array")
+        cdef list[float] values = []
+        for i in range(count):
+            values.append(<float>vals[i])
+        mx.sysmem_freeptr(vals)
+        return values
 
-    cdef mx.t_max_err setdouble_array(self, long ac, long count, double *vals):
+    def setdouble_array(self, list[float] values):
         """Assign an array of double values to an array of atoms."""
+        cdef long count = len(values)
+        cdef long ac = count
         if ac > self.size:
             self.resize_ptr(ac)
-        return mx.atom_setdouble_array(ac, self.ptr, count, vals)
+        cdef double *vals = <double *>mx.sysmem_newptr(count * sizeof(double))
+        for i in range(count):
+            vals[i] = <double>values[i]
+        cdef mx.t_max_err err = mx.atom_setdouble_array(ac, self.ptr, count, vals)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not set double array")
+        mx.sysmem_freeptr(vals)
 
-    cdef mx.t_max_err getdouble_array(self, long count, double *vals):
+    def getdouble_array(self, long count) -> list[float]:
         """Fetch an array of double values from an array of atoms."""
-        return mx.atom_getdouble_array(self.size, self.ptr, count, vals)
+        cdef double *vals = <double *>mx.sysmem_newptr(count * sizeof(double))
+        cdef mx.t_max_err err = mx.atom_getdouble_array(self.size, self.ptr, count, vals)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get double array")
+        cdef list[float] values = []
+        for i in range(count):
+            values.append(<float>vals[i])
+        mx.sysmem_freeptr(vals)
+        return values
 
     cdef mx.t_max_err setsym_array(self, long ac, long count, mx.t_symbol **vals):
         """Assign an array of t_symbol values to an array of atoms."""
@@ -1251,11 +1299,8 @@ cdef class Dictionary:
 
     def get_bytes(self, str key) -> bytes:
         """Retrieve a bytes object from the dictionary."""
-        cdef const char* value
-        cdef mx.t_max_err err = mx.dictionary_getstring(self.d, str_to_sym(key), &value)
-        if err == mx.MAX_ERR_NONE:
-            return <bytes>value
-        return error(f"could not get bytes from dict with key {key}")
+        string = self.get_string(key)
+        return string.encode()
 
     def get_atoms(self, str key) -> list:
         """Retrieve the address of a t_atom array of in the dictionary."""
@@ -1268,17 +1313,32 @@ cdef class Dictionary:
             return atom.to_list()
         return error(f"could not get atoms from dict with key {key}")
 
-    # cdef mx.t_max_err getstring(self, mx.t_symbol* key, const char** value):
-    #     """Retrieve a C-string pointer from the dictionary."""
-    #     return mx.dictionary_getstring(self.d, key, value)
+    def get_string(self, str key) -> str:
+        """Retrieve a C-string pointer from the dictionary."""
+        cdef const char* value
+        cdef mx.t_max_err err = mx.dictionary_getstring(self.d, str_to_sym(key), &value)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not retrieve string from dictionary")
+        return value.decode()
+
+    # FIXME: crashing
+    # def get_atom(self, str key) -> Atom:
+    #     """Retrieve an Atom instance given a string key from the dictionary"""
+    #     cdef mx.t_atom* atom
+    #     cdef Atom _atom
+    #     cdef mx.t_max_err err = mx.dictionary_getatom(self.d, str_to_sym(key), atom)
+    #     if err != mx.MAX_ERR_NONE:
+    #         raise ValueError("could not retrieve atom from dictionary")
+    #     _atom = Atom.from_ptr(atom, 1)
+    #     return _atom
 
     cdef mx.t_max_err getatom(self, mx.t_symbol* key, mx.t_atom* value):
         """Copy a t_atom from the dictionary."""
         return mx.dictionary_getatom(self.d, key, value)
 
-    # cdef mx.t_max_err getatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv):
-    #     """Retrieve the address of a t_atom array of in the dictionary."""
-    #     return mx.dictionary_getatoms(self.d, key, argc, argv)
+    cdef mx.t_max_err getatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv):
+        """Retrieve the address of a t_atom array of in the dictionary."""
+        return mx.dictionary_getatoms(self.d, key, argc, argv)
 
     cdef mx.t_max_err getatoms_ext(self, mx.t_symbol* key, long stringstosymbols, long* argc, mx.t_atom** argv):
         """Retrieve the address of a t_atom array of in the dictionary."""

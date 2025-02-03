@@ -2,50 +2,96 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"major" : 9,
+			"minor" : 0,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 217.0, 154.0, 675.0, 609.0 ],
-		"bglocked" : 0,
-		"openinpresentation" : 0,
-		"default_fontsize" : 12.0,
-		"default_fontface" : 0,
-		"default_fontname" : "Arial",
-		"gridonopen" : 1,
+		"rect" : [ 471.0, 159.0, 675.0, 609.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 1,
-		"objectsnaponopen" : 1,
-		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
-		"lefttoolbarpinned" : 0,
-		"toptoolbarpinned" : 0,
-		"righttoolbarpinned" : 0,
-		"bottomtoolbarpinned" : 0,
-		"toolbars_unpinned_last_save" : 0,
-		"tallnewobj" : 0,
-		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
-		"devicewidth" : 0.0,
-		"description" : "",
-		"digest" : "",
-		"tags" : "",
-		"style" : "",
-		"subpatcher_template" : "",
-		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-16",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 451.0, 240.0, 150.0, 22.0 ],
+					"text" : "test_atom_getfloat_array()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-14",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 456.0, 274.0, 163.0, 22.0 ],
+					"text" : "test_atom_getdouble_array()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-12",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 292.0, 274.0, 162.0, 22.0 ],
+					"text" : "test_atom_setdouble_array()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-11",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 298.0, 240.0, 149.0, 22.0 ],
+					"text" : "test_atom_setfloat_array()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-10",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 449.0, 210.0, 149.0, 22.0 ],
+					"text" : "test_atom_getlong_array()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-9",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 298.0, 210.0, 149.0, 22.0 ],
+					"text" : "test_atom_setlong_array()"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-6",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 408.0, 311.0, 106.0, 22.0 ],
+					"patching_rect" : [ 423.0, 180.0, 106.0, 22.0 ],
 					"text" : "test_atom_to_str()"
 				}
 
@@ -57,7 +103,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 401.5, 281.0, 120.0, 22.0 ],
+					"patching_rect" : [ 298.0, 180.0, 120.0, 22.0 ],
 					"text" : "test_atom_from_str()"
 				}
 
@@ -69,7 +115,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 393.0, 249.0, 126.0, 22.0 ],
+					"patching_rect" : [ 289.0, 148.0, 126.0, 22.0 ],
 					"text" : "test_atom_from_seq()"
 				}
 
@@ -91,7 +137,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 345.5, 163.0, 126.0, 22.0 ],
+					"patching_rect" : [ 249.0, 83.0, 126.0, 22.0 ],
 					"text" : "load test_api_atom.py"
 				}
 
@@ -103,7 +149,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 380.5, 219.0, 91.0, 22.0 ],
+					"patching_rect" : [ 277.0, 118.0, 91.0, 22.0 ],
 					"text" : "test_atom_init()"
 				}
 
@@ -115,7 +161,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 214.0, 389.0, 35.0, 22.0 ],
+					"patching_rect" : [ 118.0, 392.0, 35.0, 22.0 ],
 					"text" : "clear"
 				}
 
@@ -129,7 +175,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 373.5, 419.0, 24.0, 24.0 ]
+					"patching_rect" : [ 277.0, 422.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -141,7 +187,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 177.5, 389.0, 29.5, 22.0 ],
+					"patching_rect" : [ 81.0, 392.0, 29.5, 22.0 ],
 					"text" : "set"
 				}
 
@@ -154,7 +200,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 177.5, 354.0, 58.0, 22.0 ],
+					"patching_rect" : [ 81.0, 357.0, 58.0, 22.0 ],
 					"text" : "loadbang"
 				}
 
@@ -168,7 +214,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 401.5, 419.0, 24.0, 24.0 ]
+					"patching_rect" : [ 305.0, 422.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -179,25 +225,25 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 177.5, 419.0, 187.0, 22.0 ]
+					"patching_rect" : [ 81.0, 422.0, 187.0, 22.0 ]
 				}
 
 			}
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_atom.py",
+					"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_api_atom.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "bang", "bang" ],
-					"patching_rect" : [ 345.5, 379.0, 75.0, 22.0 ],
+					"patching_rect" : [ 249.0, 382.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/api/test_atom.py",
-						"pythonpath" : ""
+						"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_api_atom.py",
+						"pythonpath" : "/"
 					}
 ,
 					"text" : "py",
@@ -224,6 +270,41 @@
 				"patchline" : 				{
 					"destination" : [ "obj-7", 1 ],
 					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-11", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-12", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-14", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-16", 0 ]
 				}
 
 			}
@@ -286,7 +367,15 @@
 				}
 
 			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-9", 0 ]
+				}
+
+			}
  ],
+		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"

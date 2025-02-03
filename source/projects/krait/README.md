@@ -6,7 +6,6 @@ Note that `krait.cpp` is just a demonstration of an external using `py_interpret
 
 I called it `krait`, in honour of the 'Krait Lightspeeder' in the original [Elite](https://en.wikipedia.org/wiki/Elite_(video_game)).
 
-
 ## Building
 
 From the root of the `py-js` project

@@ -35,5 +35,4 @@ Also according to the above forum post, one must include `common_symbols_init();
 ```
 
 > The session id in a message header identifies a unique entity with state, such as a kernel process or client process.
-
 > A client session id, in message headers from a client, should be unique among all clients connected to a kernel. When a client reconnects to a kernel, it should use the same client session id in its message headers. When a client restarts, it should generate a new client session id.
