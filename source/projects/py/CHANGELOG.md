@@ -2,6 +2,14 @@
 
 ## [0.3.x]
 
+- Added `Dictionary.clone` and `Dictionary.clear` to api
+
+- Added `Dictionary.clone_to_self` and `Dictionary.clone_to_existing` to api
+
+- Added `Dictionary.merge_to_self` and `Dictionary.merge_to_existing` to api
+
+- Added `Dictionary.delete_entry` and `Dictionary.chuck_entry` to api
+
 - Added `Atom.setdouble_array` and `Atom.getdouble_array` to api
 
 - Added `Atom.setfloat_array` and `Atom.getfloat_array` to api

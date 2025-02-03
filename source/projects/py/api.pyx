@@ -1186,20 +1186,33 @@ cdef class Dictionary:
 
     cdef mx.t_dictionary *d
     cdef dict type_map
+    cdef bint ptr_owner
 
     def __cinit__(self):
         self.d = NULL
         self.type_map = None
-
+        self.ptr_owner = False
+    
     def __init__(self):
         self.d = mx.dictionary_new()
         self.type_map = dict()
+        self.ptr_owner = True
 
     def __dealloc__(self):
         # De-allocate if not null
-        if self.d is not NULL:
+        if self.d is not NULL and self.ptr_owner:
             mx.object_free(self.d)
             self.d = NULL
+
+    @staticmethod
+    cdef Dictionary from_ptr(mx.t_dictionary *ptr, bint owner=False):
+        """Create a Dictionary from an existing pointer."""
+        # Call to __new__ bypasses __init__ constructor
+        cdef Dictionary _dict = Dictionary.__new__(Dictionary)
+        _dict.d = ptr
+        _dict.ptr_owner = owner
+        _dict.type_map = dict()
+        return _dict
 
     def __setitem__(self, str key, object value):
         if isinstance(value, float):
@@ -1414,33 +1427,56 @@ cdef class Dictionary:
         """Free memory allocated by the dictionary_getkeys() method."""
         mx.dictionary_freekeys(self.d, numkeys, keys)
 
-    cdef mx.t_max_err deleteentry(self, mx.t_symbol* key):
+    def delete_entry(self, str key):
         """Remove a value from the dictionary."""
-        return mx.dictionary_deleteentry(self.d, key)
+        cdef mx.t_max_err err = mx.dictionary_deleteentry(self.d, str_to_sym(key))
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not delete entry {key} from dictionary")
 
-    cdef mx.t_max_err chuckentry(self, mx.t_symbol* key):
+    def chuck_entry(self, str key):
         """Remove a value from the dictionary without freeing it."""
-        return mx.dictionary_chuckentry(self.d, key)
+        cdef mx.t_max_err err = mx.dictionary_chuckentry(self.d, str_to_sym(key))
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not chuck entry {key} from dictionary")
 
-    cdef mx.t_max_err clear(self):
+    def clear(self):
         """Delete all values from a dictionary."""
-        return mx.dictionary_clear(self.d)
+        cdef mx.t_max_err err = mx.dictionary_clear(self.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not clear dictionary")
 
-    cdef mx.t_dictionary* clone(self):
+    def clone(self) -> Dictionary:
         """Create a copy of the dictionary."""
-        return mx.dictionary_clone(self.d)
+        cdef mx.t_dictionary* clone =  mx.dictionary_clone(self.d)
+        return Dictionary.from_ptr(clone, True)
 
-    cdef mx.t_max_err clone_to_existing(self, mx.t_dictionary* dc):
+    def clone_to_self(self, Dictionary dict_to_clone):
+        """Create a copy of the dictionary and add it to the current dictionary."""
+        cdef mx.t_max_err err = mx.dictionary_clone_to_existing(dict_to_clone.d, self.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not clone dictionary to self")
+
+    def clone_to_existing(self, Dictionary existing_dict):
         """Create a copy of the dictionary and add it to an existing dictionary."""
-        return mx.dictionary_clone_to_existing(self.d, dc)
+        cdef mx.t_max_err err = mx.dictionary_clone_to_existing(self.d, existing_dict.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not clone dictionary to existing dictionary")    
 
     # MAX_SDK BUG
     # cdef mx.t_max_err copy_to_existing(self, mx.t_dictionary* dc):
     #     return mx.dictionary_copy_to_existing(self.d, dc)
 
-    cdef mx.t_max_err merge_to_existing(self, mx.t_dictionary* dc):
+    def merge_to_existing(self, Dictionary existing_dict):
         """Merge the contents of the dictionary into an existing dictionary."""
-        return mx.dictionary_merge_to_existing(self.d, dc)
+        cdef mx.t_max_err err = mx.dictionary_merge_to_existing(self.d, existing_dict.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not merge dictionary to existing dictionary")
+
+    def merge_to_self(self, Dictionary dict_to_merge):
+        """Merge the contents of the dictionary into the current dictionary."""
+        cdef mx.t_max_err err = mx.dictionary_merge_to_existing(dict_to_merge.d, self.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not merge dictionary to self")
 
     cdef void funall(self, mx.method fun, void* arg):
         """Call the specified function for every entry in the dictionary."""
@@ -1631,11 +1667,6 @@ cdef class Database:
     cdef mx.t_database *db
     cdef mx.t_symbol* db_name
     cdef bytes db_path
-
-    # def __cinit__(self, str db_name, str db_path):
-    #     self.db_name = str_to_sym(db_name)
-    #     self.db_path = db_path.encode('utf-8')
-    #     mx.db_open(self.db_name, self.db_path, &self.db)
 
     def __cinit__(self):
         self.db = NULL

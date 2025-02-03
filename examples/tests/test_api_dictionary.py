@@ -4,7 +4,6 @@ import api
 def test_dict_init():
     d = api.Dictionary()
 
-
 def test_dict():
     d = api.Dictionary()
     d["myfloat"] = 10.1
@@ -13,14 +12,12 @@ def test_dict():
     assert d.getentrycount() == 3
     return d.getentrycount()
 
-
 def test_dict_symbol():
     d = api.Dictionary()
     key, value = "hello", "world"
     d[key] = value
     assert d.getentrycount() == 1
     assert d[key] == value, f"{d[key]} != {value}"
-
 
 def test_dict_float():
     d = api.Dictionary()
@@ -29,14 +26,12 @@ def test_dict_float():
     assert d.getentrycount() == 1
     assert round(d[key], 2) == round(value, 2), f"{d[key]} != {value}"
 
-
 def test_dict_int():
     d = api.Dictionary()
     key, value = "myint", 3
     d[key] = value
     assert d.getentrycount() == 1
     assert d[key] == value, f"{d[key]} != {value}"
-
 
 def test_dict_atoms():
     d = api.Dictionary()
@@ -46,7 +41,6 @@ def test_dict_atoms():
     _value = d[key]
     assert len(_value) == len(value)
     api.post(f"key '{key}' returned {_value}")
-
 
 def test_dict_bytes():
     d = api.Dictionary()
@@ -74,13 +68,55 @@ def test_dict_getstring():
     d['abc'] = "def"
     return d.get_string('abc')
 
+def test_dict_delete_entry():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d.delete_entry('abc')
+    return d.getentrycount()
 
+def test_dict_chuck_entry():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d.chuck_entry('abc')
+    return d.getentrycount()
 
+def test_dict_clear():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d.clear()
+    return d.getentrycount()
 
+def test_dict_clone():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d2 = d.clone()
+    return d2.get_string('abc')
 
+def test_dict_clone_to_existing():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d2 = api.Dictionary()
+    d.clone_to_existing(d2)
+    return d2.get_string('abc')
 
+def test_dict_clone_to_self():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d2 = api.Dictionary()
+    d2.clone_to_self(d)
+    return d2.get_string('abc')
 
+def test_dict_merge_to_existing():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d2 = api.Dictionary()
+    d.merge_to_existing(d2)
+    return d2.get_string('abc')
 
-
-
+def test_dict_merge_to_self():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d2 = api.Dictionary()
+    d2.merge_to_self(d)
+    return d2.get_string('abc')
 
