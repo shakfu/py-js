@@ -14,13 +14,8 @@ book:
     - part: "The Project"
       chapters:
         - src/overview.qmd
-        - src/quickstart.qmd
-        - src/building.qmd
-        - src/packaging.qmd
         - src/faq.qmd
-        - src/links.qmd
-        - src/references.qmd
-        - src/credits.qmd
+        #- src/references.qmd
 
     - part: "The Externals"
       chapters:
@@ -101,7 +96,7 @@ format:
     monofont: inconsolata
 
     toc-title: Table of Contents
-    # toc-depth: 3
+    toc-depth: 2
     lof: true
     lot: true
     number-sections: true

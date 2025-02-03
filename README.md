@@ -175,9 +175,9 @@ After doing the above, the recommended iterative development workflow is to make
 
 Note that for some of the less developed externals and more experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
-Also note that for `py` and `pyjs` externals the `cmake` build method described does not yet create self-contained python externals which can be used in Max Packages and Standalones.
+Also note that for `py` and `pyjs` externals the `cmake` build method described does not yet create self-contained python externals which can be used in Max Packages and Standalones. The [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones) section addresses this requirement.
 
-The following section addresses this requirement.
+Visit the project-specific links above for more detailed documentation.
 
 ## Related projects
 

@@ -1,8 +1,14 @@
-# cobra: an ITM-based python evaluator
+---
+title: "cobra: an ITM-based python evaluator"
+---
 
-This project is an experimental attempt to defer the evaluation of a python function via Max's ITM-based sequencing.
+This project provide a proof-of-concept to defer the evaluation of a python function via Max's ITM-based sequencing.
 
-Note that it has a dependency on another subproject: it includes mamba's single header c library, `py.h`, to reduce boilerplate and provide python interpreter 'services'.                                               
+Note that it has a dependency on another subproject: it includes mamba's single header c library, `py.h`, to reduce boilerplate and provide python interpreter 'services'.
+
+## Current Status
+
+Crashes on Python3.13 (this is under investigation)
 
 ## Building
 

@@ -1,4 +1,6 @@
-# mamba: a single-header c-based python3 library for max externals
+---
+title: "mamba: a single-header c-based python3 library for max externals"
+---
 
 This project is a single-header python3 library for Max externals. It is the result of an attempt to modularize the python interpreter for Max and make it re-usable so that it can be easily nested inside another external.
 

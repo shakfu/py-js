@@ -1,7 +1,9 @@
-# mxpy: pdpython for max
+---
+title: "mxpy: pdpython for max"
+---
 
 This is an ongoing attempt to translate pdpython to maxmsp
-from <https://github.com/garthz/pdpython> and 
+from <https://github.com/garthz/pdpython> and
 my fork <https://github.com/shakfu/pdpython>
 
 ```text

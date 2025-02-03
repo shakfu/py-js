@@ -22,5 +22,18 @@ for p in PROJECTS_DIR.iterdir():
         src = PROJECTS_DIR / p.stem / 'README.md'
         try:
             shutil.copy(src, dst)
+            with open(dst) as f:
+                newlines = []
+                lines = f.readlines()
+                for line in lines:
+                    if line.startswith("# "):
+                        title = line.lstrip("# ").strip()
+                        newlines.append("---\n")
+                        newlines.append(f'title: "{title}"\n')
+                        newlines.append("---\n")
+                    else:
+                        newlines.append(line)
+            with open(dst, 'w') as f:
+                f.writelines(newlines)
         except FileNotFoundError:
             print(f"failed: {dst}")

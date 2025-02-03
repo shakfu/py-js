@@ -1,4 +1,6 @@
-# jmx: jupyter client/kernel for Max/MSP
+---
+title: "jmx: jupyter client/kernel for Max/MSP"
+---
 
 This is a proof-of-concept subproject to embed a [jupyter client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) or jupyter [kernel](https://github.com/jupyter-xeus/xeus-python) in a Max/MSP external.
 
@@ -35,5 +37,4 @@ Also according to the above forum post, one must include `common_symbols_init();
 ```
 
 > The session id in a message header identifies a unique entity with state, such as a kernel process or client process.
-
 > A client session id, in message headers from a client, should be unique among all clients connected to a kernel. When a client reconnects to a kernel, it should use the same client session id in its message headers. When a client restarts, it should generate a new client session id.

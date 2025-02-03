@@ -1,4 +1,6 @@
-# pktpy: a pocketpy max external
+---
+title: "pktpy: a pocketpy max external"
+---
 
 This external embeds [pocketpy](https://github.com/blueloveTH/pocketpy), a nifty C++17 header-only Python interpreter for game engines, in a Max external.
 
@@ -54,4 +56,3 @@ pktpy.cpp -includes-> pktpy.h -includes-> pocketpy.h
 - examples of wrapped functions and builtins (local, max api, etc.).
 
 - see `pktpy.maxhelp` for a demo
-
