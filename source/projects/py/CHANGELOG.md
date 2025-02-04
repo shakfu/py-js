@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Changed `api.Linklist` to use `ptr` instead of `lst`, and other objects similarly.
+
 - Added `Dictionary.transaction_lock` and `Dictionary.transaction_unlock` to api
 
 - Added `Dictionary.dump` to api

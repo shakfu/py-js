@@ -1184,32 +1184,32 @@ cdef class Buffer:
 cdef class Dictionary:
     """A wrapper class for a Max t_dictionary"""
 
-    cdef mx.t_dictionary *d
+    cdef mx.t_dictionary *ptr
     cdef dict type_map
     cdef bint ptr_owner
 
     def __cinit__(self):
-        self.d = NULL
+        self.ptr = NULL
         self.type_map = None
         self.ptr_owner = False
     
     def __init__(self):
-        self.d = mx.dictionary_new()
+        self.ptr = mx.dictionary_new()
         self.type_map = dict()
         self.ptr_owner = True
 
     def __dealloc__(self):
         # De-allocate if not null
-        if self.d is not NULL and self.ptr_owner:
-            mx.object_free(self.d)
-            self.d = NULL
+        if self.ptr is not NULL and self.ptr_owner:
+            mx.object_free(self.ptr)
+            self.ptr = NULL
 
     @staticmethod
     cdef Dictionary from_ptr(mx.t_dictionary *ptr, bint owner=False):
         """Create a Dictionary from an existing pointer."""
         # Call to __new__ bypasses __init__ constructor
         cdef Dictionary _dict = Dictionary.__new__(Dictionary)
-        _dict.d = ptr
+        _dict.ptr = ptr
         _dict.ptr_owner = owner
         _dict.type_map = dict()
         return _dict
@@ -1244,52 +1244,52 @@ cdef class Dictionary:
 
     def set_long(self, str key, int value):
         """Add a long integer value to the dictionary."""
-        return mx.dictionary_appendlong(self.d, str_to_sym(key), value)
+        return mx.dictionary_appendlong(self.ptr, str_to_sym(key), value)
 
     def set_float(self, str key, double value):
         """Add a double-precision float value to the dictionary."""
-        return mx.dictionary_appendfloat(self.d, str_to_sym(key), value)
+        return mx.dictionary_appendfloat(self.ptr, str_to_sym(key), value)
 
     def set_sym(self, str key, str value):
         """Add a t_symbol* value to the dictionary."""
-        return mx.dictionary_appendsym(self.d, str_to_sym(key), str_to_sym(value))
+        return mx.dictionary_appendsym(self.ptr, str_to_sym(key), str_to_sym(value))
 
     def set_atom(self, str key, object obj):
         """Add a t_atom* value to the dictionary."""
         cdef Atom atom = Atom(obj)
-        return mx.dictionary_appendatom(self.d, str_to_sym(key), atom.ptr)
+        return mx.dictionary_appendatom(self.ptr, str_to_sym(key), atom.ptr)
 
     def set_atoms(self, str key, *args):
         """Add an array of atoms to the dictionary."""
         cdef Atom atom = Atom(*args)
-        return mx.dictionary_appendatoms(self.d, str_to_sym(key), atom.size, atom.ptr)
+        return mx.dictionary_appendatoms(self.ptr, str_to_sym(key), atom.size, atom.ptr)
 
     def set_bytes(self, str key, bytes value):
         """Add a c-string to the dictionary."""
-        return mx.dictionary_appendstring(self.d, str_to_sym(key), value)
+        return mx.dictionary_appendstring(self.ptr, str_to_sym(key), value)
 
     cdef mx.t_max_err appendatomarray(self, mx.t_symbol* key, mx.t_object* value):
         """Add an Atom Array object to the dictionary."""
-        return mx.dictionary_appendatomarray(self.d, key, value)
+        return mx.dictionary_appendatomarray(self.ptr, key, value)
 
     cdef mx.t_max_err appenddictionary(self, mx.t_symbol* key, mx.t_object* value):
         """Add a dictionary object to the dictionary."""
-        return mx.dictionary_appenddictionary(self.d, key, value)
+        return mx.dictionary_appenddictionary(self.ptr, key, value)
 
     cdef mx.t_max_err appendobject(self, mx.t_symbol* key, mx.t_object* value):
         """Add an object to the dictionary."""
-        return mx.dictionary_appendobject(self.d, key, value)
+        return mx.dictionary_appendobject(self.ptr, key, value)
 
     cdef mx.t_max_err appendobject_flags(self, mx.t_symbol* key, mx.t_object* value, long flags):
-        return mx.dictionary_appendobject_flags(self.d, key, value, flags)
+        return mx.dictionary_appendobject_flags(self.ptr, key, value, flags)
 
     cdef mx.t_max_err appendbinbuf(self, mx.t_symbol* key, void* value):
-        return mx.dictionary_appendbinbuf(self.d, key, value)
+        return mx.dictionary_appendbinbuf(self.ptr, key, value)
 
     def get_long(self, str key) -> int:
         """Retrieve a long integer from the dictionary."""
         cdef mx.t_atom_long value
-        cdef mx.t_max_err err = mx.dictionary_getlong(self.d, str_to_sym(key), &value)
+        cdef mx.t_max_err err = mx.dictionary_getlong(self.ptr, str_to_sym(key), &value)
         if err == mx.MAX_ERR_NONE:
             return <int>value
         return error(f"could not get long value from dict with key {key}")
@@ -1297,7 +1297,7 @@ cdef class Dictionary:
     def get_float(self, str key) -> float:
         """Retrieve a double-precision float from the dictionary."""
         cdef double value
-        cdef mx.t_max_err err = mx.dictionary_getfloat(self.d, str_to_sym(key), &value)
+        cdef mx.t_max_err err = mx.dictionary_getfloat(self.ptr, str_to_sym(key), &value)
         if err == mx.MAX_ERR_NONE:
             return <float>value
         return error(f"could not get float value from dict with key {key}")
@@ -1305,7 +1305,7 @@ cdef class Dictionary:
     def get_sym(self, str key) -> str:
         """Retrieve a t_symbol* as a python string from the dictionary."""
         cdef mx.t_symbol* value
-        cdef mx.t_max_err err = mx.dictionary_getsym(self.d, str_to_sym(key), &value)
+        cdef mx.t_max_err err = mx.dictionary_getsym(self.ptr, str_to_sym(key), &value)
         if err == mx.MAX_ERR_NONE:
             return sym_to_str(value)
         return error(f"could not get symbol as str from dict with key {key}")
@@ -1320,7 +1320,7 @@ cdef class Dictionary:
         cdef long argc
         cdef mx.t_atom* argv
         cdef Atom atom
-        cdef mx.t_max_err err = mx.dictionary_getatoms(self.d, str_to_sym(key), &argc, &argv)
+        cdef mx.t_max_err err = mx.dictionary_getatoms(self.ptr, str_to_sym(key), &argc, &argv)
         if err == mx.MAX_ERR_NONE:
             atom = Atom.from_ptr(argv, argc)
             return atom.to_list()
@@ -1329,7 +1329,7 @@ cdef class Dictionary:
     def get_string(self, str key) -> str:
         """Retrieve a C-string pointer from the dictionary."""
         cdef const char* value
-        cdef mx.t_max_err err = mx.dictionary_getstring(self.d, str_to_sym(key), &value)
+        cdef mx.t_max_err err = mx.dictionary_getstring(self.ptr, str_to_sym(key), &value)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not retrieve string from dictionary")
         return value.decode()
@@ -1347,61 +1347,61 @@ cdef class Dictionary:
 
     cdef mx.t_max_err getatom(self, mx.t_symbol* key, mx.t_atom* value):
         """Copy a t_atom from the dictionary."""
-        return mx.dictionary_getatom(self.d, key, value)
+        return mx.dictionary_getatom(self.ptr, key, value)
 
     cdef mx.t_max_err getatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv):
         """Retrieve the address of a t_atom array of in the dictionary."""
-        return mx.dictionary_getatoms(self.d, key, argc, argv)
+        return mx.dictionary_getatoms(self.ptr, key, argc, argv)
 
     cdef mx.t_max_err getatoms_ext(self, mx.t_symbol* key, long stringstosymbols, long* argc, mx.t_atom** argv):
         """Retrieve the address of a t_atom array of in the dictionary."""
-        return mx.dictionary_getatoms_ext(self.d, key, stringstosymbols, argc, argv)
+        return mx.dictionary_getatoms_ext(self.ptr, key, stringstosymbols, argc, argv)
 
     cdef mx.t_max_err copyatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv):
         """Retrieve copies of a t_atom array in the dictionary."""
-        return mx.dictionary_copyatoms(self.d, key, argc, argv)
+        return mx.dictionary_copyatoms(self.ptr, key, argc, argv)
 
     cdef mx.t_max_err getatomarray(self, mx.t_symbol* key, mx.t_object** value):
         """Retrieve a t_atomarray pointer from the dictionary."""
-        return mx.dictionary_getatomarray(self.d, key, value)
+        return mx.dictionary_getatomarray(self.ptr, key, value)
 
     cdef mx.t_max_err getdictionary(self, mx.t_symbol* key, mx.t_object** value):
         """Retrieve a t_dictionary pointer from the dictionary."""
-        return mx.dictionary_getdictionary(self.d, key, value)
+        return mx.dictionary_getdictionary(self.ptr, key, value)
 
     cdef mx.t_max_err get_ex(self, mx.t_symbol* key, long* ac, mx.t_atom** av, char* errstr):
         """Retrieve the address of a t_atom array of in the dictionary within nested dictionaries."""
-        return mx.dictionary_get_ex(self.d, key, ac, av, errstr)
+        return mx.dictionary_get_ex(self.ptr, key, ac, av, errstr)
 
     cdef mx.t_max_err getobject(self, mx.t_symbol* key, mx.t_object** value):
         """Retrieve a t_object pointer from the dictionary."""
-        return mx.dictionary_getobject(self.d, key, value)
+        return mx.dictionary_getobject(self.ptr, key, value)
 
     def has_string_value(self, str key) -> bool:
         """Test a key to set if the data stored with that key contains a t_string object."""
-        return mx.dictionary_entryisstring(self.d, str_to_sym(key))
+        return mx.dictionary_entryisstring(self.ptr, str_to_sym(key))
 
     def has_atomarray_value(self, str key) -> bool:
         """Test a key to set if the data stored with that key contains a t_atomarray object."""
-        return mx.dictionary_entryisatomarray(self.d, str_to_sym(key))
+        return mx.dictionary_entryisatomarray(self.ptr, str_to_sym(key))
 
     def has_dictionary_value(self, str key) -> bool:
         """Test a key to set if the data stored with that key contains a t_dictionary object."""
-        return mx.dictionary_entryisdictionary(self.d, str_to_sym(key))
+        return mx.dictionary_entryisdictionary(self.ptr, str_to_sym(key))
 
     def has_entry(self, str key) -> bool:
         """Test a key to set if it exists in the dictionary."""
-        return mx.dictionary_hasentry(self.d, str_to_sym(key))
+        return mx.dictionary_hasentry(self.ptr, str_to_sym(key))
 
     def getentrycount(self) -> long:
         """Return the number of keys in a dictionary."""
-        return mx.dictionary_getentrycount(self.d)
+        return mx.dictionary_getentrycount(self.ptr)
 
     def getkeys(self) -> list[str]:
         """Retrieve all of the key names stored in a dictionary."""
         cdef long numkeys = 0
         cdef mx.t_symbol** keys
-        cdef mx.t_max_err err = mx.dictionary_getkeys(self.d, &numkeys, &keys)
+        cdef mx.t_max_err err = mx.dictionary_getkeys(self.ptr, &numkeys, &keys)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not retrieve keys")
         results = []
@@ -1414,7 +1414,7 @@ cdef class Dictionary:
         """Retrieve all of the key names stored in a dictionary in order."""
         cdef long numkeys = 0
         cdef mx.t_symbol** keys
-        cdef mx.t_max_err err = mx.dictionary_getkeys_ordered(self.d, &numkeys, &keys)
+        cdef mx.t_max_err err = mx.dictionary_getkeys_ordered(self.ptr, &numkeys, &keys)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not retrieve keys")
         results = []
@@ -1425,40 +1425,40 @@ cdef class Dictionary:
 
     cdef void freekeys(self, long numkeys, mx.t_symbol** keys):
         """Free memory allocated by the dictionary_getkeys() method."""
-        mx.dictionary_freekeys(self.d, numkeys, keys)
+        mx.dictionary_freekeys(self.ptr, numkeys, keys)
 
     def delete_entry(self, str key):
         """Remove a value from the dictionary."""
-        cdef mx.t_max_err err = mx.dictionary_deleteentry(self.d, str_to_sym(key))
+        cdef mx.t_max_err err = mx.dictionary_deleteentry(self.ptr, str_to_sym(key))
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not delete entry {key} from dictionary")
 
     def chuck_entry(self, str key):
         """Remove a value from the dictionary without freeing it."""
-        cdef mx.t_max_err err = mx.dictionary_chuckentry(self.d, str_to_sym(key))
+        cdef mx.t_max_err err = mx.dictionary_chuckentry(self.ptr, str_to_sym(key))
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not chuck entry {key} from dictionary")
 
     def clear(self):
         """Delete all values from a dictionary."""
-        cdef mx.t_max_err err = mx.dictionary_clear(self.d)
+        cdef mx.t_max_err err = mx.dictionary_clear(self.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not clear dictionary")
 
     def clone(self) -> Dictionary:
         """Create a copy of the dictionary."""
-        cdef mx.t_dictionary* clone =  mx.dictionary_clone(self.d)
+        cdef mx.t_dictionary* clone =  mx.dictionary_clone(self.ptr)
         return Dictionary.from_ptr(clone, True)
 
     def clone_to_self(self, Dictionary dict_to_clone):
         """Create a copy of the dictionary and add it to the current dictionary."""
-        cdef mx.t_max_err err = mx.dictionary_clone_to_existing(dict_to_clone.d, self.d)
+        cdef mx.t_max_err err = mx.dictionary_clone_to_existing(dict_to_clone.ptr, self.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not clone dictionary to self")
 
     def clone_to_existing(self, Dictionary existing_dict):
         """Create a copy of the dictionary and add it to an existing dictionary."""
-        cdef mx.t_max_err err = mx.dictionary_clone_to_existing(self.d, existing_dict.d)
+        cdef mx.t_max_err err = mx.dictionary_clone_to_existing(self.ptr, existing_dict.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not clone dictionary to existing dictionary")    
 
@@ -1468,19 +1468,19 @@ cdef class Dictionary:
 
     def merge_to_existing(self, Dictionary existing_dict):
         """Merge the contents of the dictionary into an existing dictionary."""
-        cdef mx.t_max_err err = mx.dictionary_merge_to_existing(self.d, existing_dict.d)
+        cdef mx.t_max_err err = mx.dictionary_merge_to_existing(self.ptr, existing_dict.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not merge dictionary to existing dictionary")
 
     def merge_to_self(self, Dictionary dict_to_merge):
         """Merge the contents of the dictionary into the current dictionary."""
-        cdef mx.t_max_err err = mx.dictionary_merge_to_existing(dict_to_merge.d, self.d)
+        cdef mx.t_max_err err = mx.dictionary_merge_to_existing(dict_to_merge.ptr, self.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not merge dictionary to self")
 
     cdef void funall(self, mx.method fun, void* arg):
         """Call the specified function for every entry in the dictionary."""
-        mx.dictionary_funall(self.d, fun, arg)
+        mx.dictionary_funall(self.ptr, fun, arg)
 
     cdef mx.t_symbol* entry_getkey(self, mx.t_dictionary_entry* x):
         """Given a t_dictionary_entry*, return the key associated with that entry."""
@@ -1496,14 +1496,14 @@ cdef class Dictionary:
 
     def copy_unique(self, Dictionary copyfrom):
         """Given 2 dictionaries, copy the keys unique to one of the dictionaries to the other dictionary."""
-        cdef mx.t_max_err err = mx.dictionary_copyunique(self.d, copyfrom.d)
+        cdef mx.t_max_err err = mx.dictionary_copyunique(self.ptr, copyfrom.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not copy unique keys fromdictionary")
 
     def get_default_long(self, str key, long default_value) -> int:
         """Retrieve a long integer from the dictionary or a default value if the key is not found."""
         cdef mx.t_atom_long value
-        cdef mx.t_max_err err = mx.dictionary_getdeflong(self.d, str_to_sym(key), &value, default_value)
+        cdef mx.t_max_err err = mx.dictionary_getdeflong(self.ptr, str_to_sym(key), &value, default_value)
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not get long value from dict with key {key}")
         return <int>value
@@ -1511,7 +1511,7 @@ cdef class Dictionary:
     def get_default_float(self, str key, float default_value) -> float:
         """Retrieve a double-precision float from the dictionary or a default value if the key is not found."""
         cdef double value
-        cdef mx.t_max_err err = mx.dictionary_getdeffloat(self.d, str_to_sym(key), &value, default_value)
+        cdef mx.t_max_err err = mx.dictionary_getdeffloat(self.ptr, str_to_sym(key), &value, default_value)
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not get float value from dict with key {key}")
         return <float>value
@@ -1519,19 +1519,19 @@ cdef class Dictionary:
     def get_default_sym(self, str key, str default_value) -> str:
         """Retrieve a t_symbol* from the dictionary or a default value if the key is not found."""
         cdef mx.t_symbol* value
-        cdef mx.t_max_err err = mx.dictionary_getdefsym(self.d, str_to_sym(key), &value, str_to_sym(default_value))
+        cdef mx.t_max_err err = mx.dictionary_getdefsym(self.ptr, str_to_sym(key), &value, str_to_sym(default_value))
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not get symbol as str from dict with key {key}")
         return sym_to_str(value)
 
     # cdef mx.t_max_err getdefatom(self, mx.t_symbol* key, mx.t_atom* value, mx.t_atom* dfn):
     #     """Retrieve a t_atom* from the dictionary."""
-    #     return mx.dictionary_getdefatom(self.d, key, value, dfn)
+    #     return mx.dictionary_getdefatom(self.ptr, key, value, dfn)
 
     def get_default_atom(self, str key, Atom default_value) -> Atom:
         """Retrieve a t_atom* from the dictionary or a default value if the key is not found."""
         cdef mx.t_atom* value
-        cdef mx.t_max_err err = mx.dictionary_getdefatom(self.d, str_to_sym(key), value, default_value.ptr)
+        cdef mx.t_max_err err = mx.dictionary_getdefatom(self.ptr, str_to_sym(key), value, default_value.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not get atom from dict with key {key}")
         return Atom.from_ptr(value, 1)
@@ -1539,18 +1539,18 @@ cdef class Dictionary:
     def get_default_string(self, str key, str default_value) -> str:
         """Retrieve a c-string from the dictionary or a default value if the key is not found."""
         cdef const char* value
-        cdef mx.t_max_err err = mx.dictionary_getdefstring(self.d, str_to_sym(key), &value, default_value.encode())
+        cdef mx.t_max_err err = mx.dictionary_getdefstring(self.ptr, str_to_sym(key), &value, default_value.encode())
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not get string from dict with key {key}")
         return value.decode()
 
     cdef mx.t_max_err getdefatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv, mx.t_atom* dfn):
         """Retrieve the address of a t_atom array in the dictionary."""
-        return mx.dictionary_getdefatoms(self.d, key, argc, argv, dfn)
+        return mx.dictionary_getdefatoms(self.ptr, key, argc, argv, dfn)
 
     cdef mx.t_max_err copydefatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv, mx.t_atom* dfn):
         """Retrieve copies of a t_atom array in the dictionary."""
-        return mx.dictionary_copydefatoms(self.d, key, argc, argv, dfn)
+        return mx.dictionary_copydefatoms(self.ptr, key, argc, argv, dfn)
 
     def dump(self, long recurse=1, long console=0):
         """Print the contents of a dictionary to the Max window.
@@ -1561,7 +1561,7 @@ cdef class Dictionary:
                         On the Mac you can view this using Console.app.
                         On Windows you can use the free DbgView program which can be downloaded from Microsoft.
         """
-        cdef mx.t_max_err err = mx.dictionary_dump(self.d, recurse, console)
+        cdef mx.t_max_err err = mx.dictionary_dump(self.ptr, recurse, console)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not dump dictionary")
 
@@ -1569,7 +1569,7 @@ cdef class Dictionary:
         cdef mx.t_symbol** keys_ptr = <mx.t_symbol**>mx.sysmem_newptr(len(keys) * sizeof(mx.t_symbol*))
         for i, key in enumerate(keys):
             keys_ptr[i] = str_to_sym(key)
-        cdef mx.t_max_err err = mx.dictionary_copyentries(self.d, dst.d, keys_ptr)
+        cdef mx.t_max_err err = mx.dictionary_copyentries(self.ptr, dst.ptr, keys_ptr)
         mx.sysmem_freeptr(keys_ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not copy entries")
@@ -1584,7 +1584,7 @@ cdef class Dictionary:
         For preventing dictionary lock for transactions across multiple calls, or holding
         on to internal dictionary element pointers for complex operations.
         """
-        cdef mx.t_max_err err = mx.dictionary_transaction_lock(self.d)
+        cdef mx.t_max_err err = mx.dictionary_transaction_lock(self.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not lock dictionary")
 
@@ -1594,7 +1594,7 @@ cdef class Dictionary:
         For preventing dictionary lock for transactions across multiple calls, or holding
         on to internal dictionary element pointers for complex operations.
         """
-        cdef mx.t_max_err err = mx.dictionary_transaction_unlock(self.d)
+        cdef mx.t_max_err err = mx.dictionary_transaction_unlock(self.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not unlock dictionary")
 
@@ -1606,11 +1606,11 @@ cdef class Dictionary:
 
     cdef mx.t_max_err write(self, const char* filename, short path):
         """Serialize the specified t_dictionary object to a JSON file."""
-        return mx.dictionary_write(self.d, filename, path)
+        return mx.dictionary_write(self.ptr, filename, path)
 
     cdef void post(self):
         """Print the contents of a dictionary to the Max window."""
-        mx.postdictionary(<mx.t_object*>self.x)
+        mx.postdictionary(<mx.t_object*>self.ptr)
 
     # ----------------------------------------------------------------------------
     # t_dictionary passing api - ext_dictobj.h
@@ -1621,11 +1621,11 @@ cdef class Dictionary:
         If the t_symbol pointer has a NULL value then a unique name will be generated and filled-in
         upon return.
         """
-        return mx.dictobj_register(self.d, name)
+        return mx.dictobj_register(self.ptr, name)
 
     cdef mx.t_max_err dictobj_unregister(self):
         """unregister dictionary (not required if dict is object-freed)"""
-        return mx.dictobj_unregister(self.d)
+        return mx.dictobj_unregister(self.ptr)
 
     cdef mx.t_dictionary *dictobj_findregistered_clone(self, mx.t_symbol *name):
         """Find the t_dictionary for a given name, and return a copy of that dictionary.
@@ -1647,11 +1647,11 @@ cdef class Dictionary:
         """For a t_dictionary/name previously retained with dictobj_findregistered_retain(),
         release it (decrement its reference count).
         """
-        return mx.dictobj_release(self.d)
+        return mx.dictobj_release(self.ptr)
 
     cdef mx.t_symbol *dictobj_namefromptr(self):
         """Find the name associated with a given t_dictionary."""
-        return mx.dictobj_namefromptr(self.d)
+        return mx.dictobj_namefromptr(self.ptr)
 
     cdef void dictobj_outlet_atoms(self, void *out, long argc, mx.t_atom *argv):
         """Send atoms to an outlet in your Max object, handling complex datatypes
@@ -1698,7 +1698,7 @@ cdef class Dictionary:
 
     cdef mx.t_max_err dictobj_dictionarytoatoms(self, long *argc, mx.t_atom **argv):
         """Serialize the contents of a t_dictionary into Dictionary Syntax."""
-        return mx.dictobj_dictionarytoatoms(self.d, argc, argv)
+        return mx.dictobj_dictionarytoatoms(self.ptr, argc, argv)
 
     # cdef t_max_err dictobj_key_parse(t_object *x, t_dictionary *d, t_atom *akey, t_bool create, t_dictionary **targetdict, t_symbol **targetkey, t_int32 *index):
     #     """Given a complex key (one that includes potential heirarchy or array-member access), return the actual key and the dictionary in which the key should be referenced."""
@@ -1709,12 +1709,12 @@ cdef class Dictionary:
 cdef class Database:
     """Wraps the t_database object."""
 
-    cdef mx.t_database *db
+    cdef mx.t_database *ptr
     cdef mx.t_symbol* db_name
     cdef bytes db_path
 
     def __cinit__(self):
-        self.db = NULL
+        self.ptr = NULL
         self.db_name = NULL
         self.db_path = None
 
@@ -1724,27 +1724,27 @@ cdef class Database:
         # mx.db_open(self.db_name, self.db_path, &self.db)
 
     def __dealloc__(self):
-        mx.db_close(&self.db)
-        self.db = NULL
+        mx.db_close(&self.ptr)
+        self.ptr = NULL
         self.db_name = NULL
         self.db_path = None
 
     def open(self):
         """Open the database."""
-        mx.db_open(self.db_name, self.db_path, &self.db)
+        mx.db_open(self.db_name, self.db_path, &self.ptr)
 
     def close(self):
         """Close the database."""
-        mx.db_close(&self.db)
+        mx.db_close(&self.ptr)
 
     def query_table_new(self, str tablename):
         """Create a new table."""
-        mx.db_query_table_new(self.db, tablename.encode('utf-8'))
+        mx.db_query_table_new(self.ptr, tablename.encode('utf-8'))
 
     def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags):
         """Add a column to a table."""
         mx.db_query_table_addcolumn(
-            self.db,
+            self.ptr,
             tablename.encode('utf-8'),
             columnname.encode('utf-8'),
             columntype.encode('utf-8'),
@@ -1753,32 +1753,32 @@ cdef class Database:
 
     def transaction_start(self):
         """Start a transaction."""
-        mx.db_transaction_start(self.db)
+        mx.db_transaction_start(self.ptr)
 
     def transaction_end(self):
         """End a transaction."""
-        mx.db_transaction_end(self.db)
+        mx.db_transaction_end(self.ptr)
 
     def transaction_flush(self):
         """Flush a transaction."""
-        mx.db_transaction_flush(self.db)
+        mx.db_transaction_flush(self.ptr)
 
     cdef mx.t_max_err query_direct(self, mx.t_db_result **dbresult, const char *sql):
         """Execute a direct query."""
-        return mx.db_query_direct(self.db, dbresult, sql)
+        return mx.db_query_direct(self.ptr, dbresult, sql)
 
     cdef mx.t_max_err query_getlastinsertid(self, long *idx):
         """Get the last insert ID."""
-        return mx.db_query_getlastinsertid(self.db, idx)
+        return mx.db_query_getlastinsertid(self.ptr, idx)
 
     def query_table_new(self, str tablename) -> int:
         """Create a new table."""
-        return mx.db_query_table_new(self.db, tablename.encode('utf-8'))
+        return mx.db_query_table_new(self.ptr, tablename.encode('utf-8'))
 
     def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags) -> int:
         """Add a column to a table."""
         return mx.db_query_table_addcolumn(
-            self.db,
+            self.ptr,
             tablename.encode('utf-8'),
             columnname.encode('utf-8'),
             columntype.encode('utf-8'),
@@ -1787,11 +1787,11 @@ cdef class Database:
 
     cdef mx.t_max_err view_create(self, const char *sql, mx.t_db_view **dbview):
         """Create a view."""
-        return mx.db_view_create(self.db, sql, dbview)
+        return mx.db_view_create(self.ptr, sql, dbview)
 
     cdef mx.t_max_err view_remove(self, mx.t_db_view **dbview):
         """Remove a view."""
-        return mx.db_view_remove(self.db, dbview)
+        return mx.db_view_remove(self.ptr, dbview)
 
     cdef mx.t_max_err view_getresult(self, mx.t_db_view *dbview, mx.t_db_result **result):
         """Get the result of a view."""
@@ -1858,104 +1858,104 @@ cdef class Database:
 cdef class Linklist:
     """Wraps the t_linklist object."""
 
-    cdef mx.t_linklist* lst
+    cdef mx.t_linklist* ptr
 
     def __cinit__(self):
-        self.lst = <mx.t_linklist*>mx.linklist_new()
+        self.ptr = <mx.t_linklist*>mx.linklist_new()
 
     def __dealloc__(self):
-        mx.linklist_chuck(self.lst)  # will free list but contained objects
+        mx.linklist_chuck(self.ptr)  # will free list but contained objects
         #  or
-        #  object_free(self.lst)  # will free all in list
+        #  object_free(self.ptr)  # will free all in list
 
     @property
     def size(self) -> int:
         """Get the size of the linklist."""
-        return mx.linklist_getsize(self.lst)
+        return mx.linklist_getsize(self.ptr)
 
     cdef void* getindex(self, long index):
         """Get the object at a given index."""
-        return mx.linklist_getindex(self.lst, index)
+        return mx.linklist_getindex(self.ptr, index)
 
     def chuck(self):
         """Free the linklist."""
-        mx.linklist_chuck(self.lst)
+        mx.linklist_chuck(self.ptr)
 
     def getsize(self) -> int:
         """Get the size of the linklist."""
-        return mx.linklist_getsize(self.lst)
+        return mx.linklist_getsize(self.ptr)
 
     cdef mx.t_atom_long objptr2index(self, void* p):
         """Get the index of an object."""
-        return mx.linklist_objptr2index(self.lst, p)
+        return mx.linklist_objptr2index(self.ptr, p)
 
     cdef mx.t_atom_long append(self, void* o):
         """Append an object to the linklist."""
-        return mx.linklist_append(self.lst, o)
+        return mx.linklist_append(self.ptr, o)
 
     cdef mx.t_atom_long insertindex(self, void* o, long index):
         """Insert an object at a given index."""
-        return mx.linklist_insertindex(self.lst, o, index)
+        return mx.linklist_insertindex(self.ptr, o, index)
 
     cdef mx.t_llelem* insertafterobjptr(self, void* o, void* objptr):
         """Insert an object after a given object."""
-        return mx.linklist_insertafterobjptr(self.lst, o, objptr)
+        return mx.linklist_insertafterobjptr(self.ptr, o, objptr)
 
     cdef mx.t_llelem* insertbeforeobjptr(self, void* o, void* objptr):
         """Insert an object before a given object."""
-        return mx.linklist_insertbeforeobjptr(self.lst, o, objptr)
+        return mx.linklist_insertbeforeobjptr(self.ptr, o, objptr)
 
     cdef mx.t_llelem* moveafterobjptr(self, void* o, void* objptr):
         """Move an object after a given object."""
-        return mx.linklist_moveafterobjptr(self.lst, o, objptr)
+        return mx.linklist_moveafterobjptr(self.ptr, o, objptr)
 
     cdef mx.t_llelem* movebeforeobjptr(self, void* o, void* objptr):
         """Move an object before a given object."""
-        return mx.linklist_movebeforeobjptr(self.lst, o, objptr)
+        return mx.linklist_movebeforeobjptr(self.ptr, o, objptr)
 
     cdef mx.t_atom_long deleteindex(self, long index):
         """Delete an object at a given index."""
-        return mx.linklist_deleteindex(self.lst, index)
+        return mx.linklist_deleteindex(self.ptr, index)
 
     cdef long chuckindex(self, long index):
         """Chuck an object at a given index."""
-        return mx.linklist_chuckindex(self.lst, index)
+        return mx.linklist_chuckindex(self.ptr, index)
 
     cdef long chuckobject(self, void* o):
         """Chuck an object."""
-        return mx.linklist_chuckobject(self.lst, o)
+        return mx.linklist_chuckobject(self.ptr, o)
 
     cdef long deleteobject(self, void* o):
         """Delete an object."""
-        return mx.linklist_deleteobject(self.lst, o)
+        return mx.linklist_deleteobject(self.ptr, o)
 
     cdef long chuckptr(self, mx.t_llelem* p):
         """Chuck a pointer."""
-        return mx.linklist_chuckptr(self.lst, p)
+        return mx.linklist_chuckptr(self.ptr, p)
 
     def clear(self):
         """Clear the linklist."""
-        mx.linklist_clear(self.lst)
+        mx.linklist_clear(self.ptr)
 
     cdef mx.t_atom_long makearray(self, void** a, long max):
         """Make an array from the linklist."""
-        return mx.linklist_makearray(self.lst, a, max)
+        return mx.linklist_makearray(self.ptr, a, max)
 
     def reverse(self):
         """Reverse the linklist."""
-        mx.linklist_reverse(self.lst)
+        mx.linklist_reverse(self.ptr)
 
     def rotate(self, long i):
         """Rotate the linklist."""
-        mx.linklist_rotate(self.lst, i)
+        mx.linklist_rotate(self.ptr, i)
 
     def shuffle(self):
         """Shuffle the linklist."""
-        mx.linklist_shuffle(self.lst)
+        mx.linklist_shuffle(self.ptr)
 
     def swap(self, long a, long b):
         """Swap two objects."""
-        mx.linklist_swap(self.lst, a, b)
+        mx.linklist_swap(self.ptr, a, b)
 
     cdef void methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
         """Call a method on all objects in the linklist."""
@@ -1967,39 +1967,39 @@ cdef class Linklist:
 
     cdef mx.t_atom_long funall_break(self, mx.method fun, void* arg):
         """Call a function on all objects in the linklist."""
-        return mx.linklist_funall_break(self.lst, fun, arg)
+        return mx.linklist_funall_break(self.ptr, fun, arg)
 
     cdef void* funindex(self, long i, mx.method fun, void* arg):
         """Call a function on an object at a given index."""
-        return mx.linklist_funindex(self.lst, i, fun, arg)
+        return mx.linklist_funindex(self.ptr, i, fun, arg)
 
     cdef void* substitute(self, void* p, void* newp):
         """Substitute an object with a new object."""
-        return mx.linklist_substitute(self.lst, p, newp)
+        return mx.linklist_substitute(self.ptr, p, newp)
 
     cdef void* next(self, void* p, void** next):
         """Get the next object."""
-        return mx.linklist_next(self.lst, p, next)
+        return mx.linklist_next(self.ptr, p, next)
 
     cdef void* prev(self, void* p, void** prev):
         """Get the previous object."""
-        return mx.linklist_prev(self.lst, p, prev)
+        return mx.linklist_prev(self.ptr, p, prev)
 
     cdef void* last(self, void** item):
         """Get the last object."""
-        return mx.linklist_last(self.lst, item)
+        return mx.linklist_last(self.ptr, item)
 
     cdef void readonly(self, long readonly):
         """Set the readonly flag."""
-        mx.linklist_readonly(self.lst, readonly)
+        mx.linklist_readonly(self.ptr, readonly)
 
     cdef void flags(self, long flags):
         """Set the flags."""
-        mx.linklist_flags(self.lst, flags)
+        mx.linklist_flags(self.ptr, flags)
 
     cdef mx.t_atom_long getflags(self):
         """Get the flags."""
-        return mx.linklist_getflags(self.lst)
+        return mx.linklist_getflags(self.ptr)
 
     cdef long match(self, void* a, void* b):
         """Match two objects."""
@@ -2007,7 +2007,7 @@ cdef class Linklist:
 
     cdef void funall(self, mx.method fun, void* arg):
         """Call a function on all objects in the linklist."""
-        mx.linklist_funall(self.lst, fun, arg)
+        mx.linklist_funall(self.ptr, fun, arg)
 
 # ----------------------------------------------------------------------------
 # api.Binbuf
@@ -2213,113 +2213,113 @@ cdef class Atombuf:
 cdef class Hashtab:
     """Wrapper around the t_hashtab object."""
 
-    cdef mx.t_hashtab* x
+    cdef mx.t_hashtab* ptr
 
     def __cinit__(self, long slotcount):
-        self.x = mx.hashtab_new(slotcount)
+        self.ptr = mx.hashtab_new(slotcount)
 
     def __dealloc__(self):
-        mx.object_free(self.x)
+        mx.object_free(self.ptr)
 
     cdef mx.t_max_err store(self, mx.t_symbol* key, mx.t_object* val):
         """Store an object in the hashtab."""
-        return mx.hashtab_store(self.x, key, val)
+        return mx.hashtab_store(self.ptr, key, val)
 
     cdef mx.t_max_err storelong(self, mx.t_symbol* key, mx.t_atom_long val):
         """Store a long in the hashtab."""
-        return mx.hashtab_storelong(self.x, key, val)
+        return mx.hashtab_storelong(self.ptr, key, val)
 
     cdef mx.t_max_err storesym(self, mx.t_symbol* key, mx.t_symbol* val):
         """Store a symbol in the hashtab."""
-        return mx.hashtab_storesym(self.x, key, val)
+        return mx.hashtab_storesym(self.ptr, key, val)
 
     cdef mx.t_max_err store_safe(self, mx.t_symbol* key, mx.t_object* val):
         """Store an object in the hashtab safely."""
-        return mx.hashtab_store_safe(self.x, key, val)
+        return mx.hashtab_store_safe(self.ptr, key, val)
 
     cdef mx.t_max_err storeflags(self, mx.t_symbol* key, mx.t_object* val, long flags):
         """Store an object in the hashtab with flags."""
-        return mx.hashtab_storeflags(self.x, key, val, flags)
+        return mx.hashtab_storeflags(self.ptr, key, val, flags)
 
     cdef mx.t_max_err lookup(self, mx.t_symbol* key, mx.t_object** val):
         """Lookup an object in the hashtab."""
-        return mx.hashtab_lookup(self.x, key, val)
+        return mx.hashtab_lookup(self.ptr, key, val)
 
     cdef mx.t_max_err lookuplong(self, mx.t_symbol* key, mx.t_atom_long* val):
         """Lookup a long in the hashtab."""
-        return mx.hashtab_lookuplong(self.x, key, val)
+        return mx.hashtab_lookuplong(self.ptr, key, val)
 
     cdef mx.t_max_err lookupsym(self, mx.t_symbol* key, mx.t_symbol** val):
         """Lookup a symbol in the hashtab."""
-        return mx.hashtab_lookupsym(self.x, key, val)
+        return mx.hashtab_lookupsym(self.ptr, key, val)
 
     cdef mx.t_max_err lookupentry(self, mx.t_symbol* key, mx.t_hashtab_entry** entry):
         """Lookup an entry in the hashtab."""
-        return mx.hashtab_lookupentry(self.x, key, entry)
+        return mx.hashtab_lookupentry(self.ptr, key, entry)
 
     cdef mx.t_max_err lookupflags(self, mx.t_symbol* key, mx.t_object** val, long* flags):
         """Lookup an object in the hashtab with flags."""
-        return mx.hashtab_lookupflags(self.x, key, val, flags)
+        return mx.hashtab_lookupflags(self.ptr, key, val, flags)
 
     cdef mx.t_max_err delete(self, mx.t_symbol* key):
         """Delete an object from the hashtab."""
-        return mx.hashtab_delete(self.x, key)
+        return mx.hashtab_delete(self.ptr, key)
 
     cdef mx.t_max_err clear(self):
         """Clear the hashtab."""
-        return mx.hashtab_clear(self.x)
+        return mx.hashtab_clear(self.ptr)
 
     cdef mx.t_max_err chuckkey(self, mx.t_symbol* key):
         """Chuck a key from the hashtab."""
-        return mx.hashtab_chuckkey(self.x, key)
+        return mx.hashtab_chuckkey(self.ptr, key)
 
     cdef mx.t_max_err chuck(self):
         """Chuck the hashtab."""
-        return mx.hashtab_chuck(self.x)
+        return mx.hashtab_chuck(self.ptr)
 
     cdef mx.t_max_err methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
         """Call a method on all objects in the hashtab."""
-        return mx.hashtab_methodall_imp(self.x, sym, p1, p2, p3, p4, p5, p6, p7, p8)
+        return mx.hashtab_methodall_imp(self.ptr, sym, p1, p2, p3, p4, p5, p6, p7, p8)
 
     cdef mx.t_max_err funall(self, mx.method fun, void* arg):
         """Call a function on all objects in the hashtab."""
-        return mx.hashtab_funall(self.x, fun, arg)
+        return mx.hashtab_funall(self.ptr, fun, arg)
 
     cdef mx.t_max_err objfunall(self, mx.method fun, void* arg):
         """Call a function on all objects in the hashtab."""
-        return mx.hashtab_objfunall(self.x, fun, arg)
+        return mx.hashtab_objfunall(self.ptr, fun, arg)
 
     cdef mx.t_atom_long getsize(self):
         """Get the size of the hashtab."""
-        return mx.hashtab_getsize(self.x)
+        return mx.hashtab_getsize(self.ptr)
 
     cdef void print(self):
         """Print the hashtab."""
-        mx.hashtab_print(self.x)
+        mx.hashtab_print(self.ptr)
 
     cdef void readonly(self, long readonly):
         """Set the readonly flag."""
-        mx.hashtab_readonly(self.x, readonly)
+        mx.hashtab_readonly(self.ptr, readonly)
 
     cdef void flags(self, long flags):
         """Set the flags."""
-        mx.hashtab_flags(self.x, flags)
+        mx.hashtab_flags(self.ptr, flags)
 
     cdef mx.t_atom_long getflags(self):
         """Get the flags."""
-        return mx.hashtab_getflags(self.x)
+        return mx.hashtab_getflags(self.ptr)
 
     cdef mx.t_max_err keyflags(self, mx.t_symbol* key, long flags):
         """Set the flags for a key."""
-        return mx.hashtab_keyflags(self.x, key, flags)
+        return mx.hashtab_keyflags(self.ptr, key, flags)
 
     cdef mx.t_atom_long getkeyflags(self, mx.t_symbol* key):
         """Get the flags for a key."""
-        return mx.hashtab_getkeyflags(self.x, key)
+        return mx.hashtab_getkeyflags(self.ptr, key)
 
     cdef mx.t_max_err getkeys(self, long* kc, mx.t_symbol*** kv):
         """Get the keys from the hashtab."""
-        return mx.hashtab_getkeys(self.x, kc, kv)
+        return mx.hashtab_getkeys(self.ptr, kc, kv)
 
 # ---------------------------------------------------------------------------
 # api.AtomArray
