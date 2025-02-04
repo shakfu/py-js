@@ -1177,7 +1177,7 @@ cdef class Buffer:
 
 
 # ----------------------------------------------------------------------------
-# api.Dictionary
+# api.Dictionary - ext_dictionary.h
 
 # TODO: dict to api.Dict conversion
 
@@ -1494,29 +1494,55 @@ cdef class Dictionary:
         """Given a t_dictionary_entry*, return the values associated with that entry."""
         mx.dictionary_entry_getvalues(x, argc, argv)
 
-    cdef mx.t_max_err copyunique(self, mx.t_dictionary* copyfrom):
+    def copy_unique(self, Dictionary copyfrom):
         """Given 2 dictionaries, copy the keys unique to one of the dictionaries to the other dictionary."""
-        return mx.dictionary_copyunique(self.d, copyfrom)
+        cdef mx.t_max_err err = mx.dictionary_copyunique(self.d, copyfrom.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not copy unique keys fromdictionary")
 
-    cdef mx.t_max_err getdeflong(self, mx.t_symbol* key, mx.t_atom_long* value, mx.t_atom_long dfn):
-        """Retrieve a long integer from the dictionary."""
-        return mx.dictionary_getdeflong(self.d, key, value, dfn)
+    def get_default_long(self, str key, long default_value) -> int:
+        """Retrieve a long integer from the dictionary or a default value if the key is not found."""
+        cdef mx.t_atom_long value
+        cdef mx.t_max_err err = mx.dictionary_getdeflong(self.d, str_to_sym(key), &value, default_value)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get long value from dict with key {key}")
+        return <int>value
 
-    cdef mx.t_max_err getdeffloat(self, mx.t_symbol* key, double* value, double dfn):
-        """Retrieve a double-precision float from the dictionary."""
-        return mx.dictionary_getdeffloat(self.d, key, value, dfn)
+    def get_default_float(self, str key, float default_value) -> float:
+        """Retrieve a double-precision float from the dictionary or a default value if the key is not found."""
+        cdef double value
+        cdef mx.t_max_err err = mx.dictionary_getdeffloat(self.d, str_to_sym(key), &value, default_value)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get float value from dict with key {key}")
+        return <float>value
 
-    cdef mx.t_max_err getdefsym(self, mx.t_symbol* key, mx.t_symbol** value, mx.t_symbol* dfn):
-        """Retrieve a t_symbol* from the dictionary."""
-        return mx.dictionary_getdefsym(self.d, key, value, dfn)
+    def get_default_sym(self, str key, str default_value) -> str:
+        """Retrieve a t_symbol* from the dictionary or a default value if the key is not found."""
+        cdef mx.t_symbol* value
+        cdef mx.t_max_err err = mx.dictionary_getdefsym(self.d, str_to_sym(key), &value, str_to_sym(default_value))
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get symbol as str from dict with key {key}")
+        return sym_to_str(value)
 
-    cdef mx.t_max_err getdefatom(self, mx.t_symbol* key, mx.t_atom* value, mx.t_atom* dfn):
-        """Retrieve a t_atom* from the dictionary."""
-        return mx.dictionary_getdefatom(self.d, key, value, dfn)
+    # cdef mx.t_max_err getdefatom(self, mx.t_symbol* key, mx.t_atom* value, mx.t_atom* dfn):
+    #     """Retrieve a t_atom* from the dictionary."""
+    #     return mx.dictionary_getdefatom(self.d, key, value, dfn)
 
-    cdef mx.t_max_err getdefstring(self, mx.t_symbol* key, const char** value, char* dfn):
-        """Retrieve a c-string from the dictionary."""
-        return mx.dictionary_getdefstring(self.d, key, value, dfn)
+    def get_default_atom(self, str key, Atom default_value) -> Atom:
+        """Retrieve a t_atom* from the dictionary or a default value if the key is not found."""
+        cdef mx.t_atom* value
+        cdef mx.t_max_err err = mx.dictionary_getdefatom(self.d, str_to_sym(key), value, default_value.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get atom from dict with key {key}")
+        return Atom.from_ptr(value, 1)
+
+    def get_default_string(self, str key, str default_value) -> str:
+        """Retrieve a c-string from the dictionary or a default value if the key is not found."""
+        cdef const char* value
+        cdef mx.t_max_err err = mx.dictionary_getdefstring(self.d, str_to_sym(key), &value, default_value.encode())
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get string from dict with key {key}")
+        return value.decode()
 
     cdef mx.t_max_err getdefatoms(self, mx.t_symbol* key, long* argc, mx.t_atom** argv, mx.t_atom* dfn):
         """Retrieve the address of a t_atom array in the dictionary."""
@@ -1526,33 +1552,52 @@ cdef class Dictionary:
         """Retrieve copies of a t_atom array in the dictionary."""
         return mx.dictionary_copydefatoms(self.d, key, argc, argv, dfn)
 
-    cdef mx.t_max_err dump(self, long recurse, long console):
-        """Print the contents of a dictionary to the Max window."""
-        return mx.dictionary_dump(self.d, recurse, console)
+    def dump(self, long recurse=1, long console=0):
+        """Print the contents of a dictionary to the Max window.
+        
+        @param	recurse	If non-zero, the dictionary will be recursively unravelled to the Max window.  
+                        Otherwise it will only print the top level.  
+        @param	console	If non-zero, the dictionary will be posted to the console rather than the Max window.
+                        On the Mac you can view this using Console.app.
+                        On Windows you can use the free DbgView program which can be downloaded from Microsoft.
+        """
+        cdef mx.t_max_err err = mx.dictionary_dump(self.d, recurse, console)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not dump dictionary")
 
-    cdef mx.t_max_err copyentries(self, mx.t_dictionary *dst, mx.t_symbol **keys):
-        """Copy specified entries from one dictionary to another."""
-        return mx.dictionary_copyentries(self.d, dst, keys)
+    def copy_entries(self, Dictionary dst, list[str] keys):
+        cdef mx.t_symbol** keys_ptr = <mx.t_symbol**>mx.sysmem_newptr(len(keys) * sizeof(mx.t_symbol*))
+        for i, key in enumerate(keys):
+            keys_ptr[i] = str_to_sym(key)
+        cdef mx.t_max_err err = mx.dictionary_copyentries(self.d, dst.d, keys_ptr)
+        mx.sysmem_freeptr(keys_ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not copy entries")
 
     # cdef mx.t_dictionary* sprintf(self, char* fmt, ...):
     #   """Create a new dictionary populated with values using a combination of attribute and sprintf syntax."""
     #   return mx.dictionary_sprintf(char* fmt, ...)
 
-    cdef long transaction_lock(self):
+    def transaction_lock(self):
         """Take a lock on a dictionary.
-
+        
         For preventing dictionary lock for transactions across multiple calls, or holding
         on to internal dictionary element pointers for complex operations.
         """
-        return mx.dictionary_transaction_lock(self.d)
+        cdef mx.t_max_err err = mx.dictionary_transaction_lock(self.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not lock dictionary")
 
-    cdef long transaction_unlock(self):
+    def transaction_unlock(self):
         """Release a lock on a dictionary.
 
         For preventing dictionary lock for transactions across multiple calls, or holding
         on to internal dictionary element pointers for complex operations.
         """
-        return mx.dictionary_transaction_unlock(self.d)
+        cdef mx.t_max_err err = mx.dictionary_transaction_unlock(self.d)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not unlock dictionary")
+
 
     # FIXME: add staticmethod as well
     cdef mx.t_max_err read(self, const char* filename, short path, mx.t_dictionary** d):
@@ -1568,7 +1613,7 @@ cdef class Dictionary:
         mx.postdictionary(<mx.t_object*>self.x)
 
     # ----------------------------------------------------------------------------
-    # t_dictionary passing api
+    # t_dictionary passing api - ext_dictobj.h
 
     cdef mx.t_dictionary *dictobj_register(self, mx.t_symbol **name):
         """Register a t_dictdictobj_registerionary with the dictionary passing system and map it to a unique name.

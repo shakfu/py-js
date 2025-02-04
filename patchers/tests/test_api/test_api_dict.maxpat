@@ -10,16 +10,88 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 217.0, 154.0, 675.0, 609.0 ],
+		"rect" : [ 458.0, 156.0, 675.0, 609.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-30",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 349.5, 435.0, 196.0, 22.0 ],
+					"text" : "test_dict_transaction_lock_unlock()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-29",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 488.0, 408.0, 131.0, 22.0 ],
+					"text" : "test_get_default_float()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-28",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 349.5, 408.0, 131.0, 22.0 ],
+					"text" : "test_get_default_long()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-25",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 351.0, 463.0, 98.0, 22.0 ],
+					"text" : "test_dict_dump()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-23",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 488.0, 376.0, 136.0, 22.0 ],
+					"text" : "test_dict_copy_unique()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-19",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 347.0, 376.0, 136.0, 22.0 ],
+					"text" : "test_dict_copy_entries()"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-21",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.5, 451.0, 94.0, 22.0 ],
+					"patching_rect" : [ 346.0, 349.0, 94.0, 22.0 ],
 					"text" : "test_dict_clear()"
 				}
 
@@ -31,7 +103,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 348.5, 421.0, 134.0, 22.0 ],
+					"patching_rect" : [ 348.0, 319.0, 134.0, 22.0 ],
 					"text" : "test_dict_delete_entry()"
 				}
 
@@ -43,7 +115,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 394.0, 144.0, 22.0 ],
+					"patching_rect" : [ 345.0, 292.0, 144.0, 22.0 ],
 					"text" : "test_dict_merge_to_self()"
 				}
 
@@ -55,7 +127,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 368.0, 166.0, 22.0 ],
+					"patching_rect" : [ 345.0, 266.0, 166.0, 22.0 ],
 					"text" : "test_dict_merge_to_existing()"
 				}
 
@@ -67,7 +139,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 341.0, 139.0, 22.0 ],
+					"patching_rect" : [ 345.0, 239.0, 139.0, 22.0 ],
 					"text" : "test_dict_clone_to_self()"
 				}
 
@@ -79,7 +151,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 457.0, 314.0, 161.0, 22.0 ],
+					"patching_rect" : [ 456.0, 212.0, 161.0, 22.0 ],
 					"text" : "test_dict_clone_to_existing()"
 				}
 
@@ -91,7 +163,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 314.0, 97.0, 22.0 ],
+					"patching_rect" : [ 345.0, 212.0, 97.0, 22.0 ],
 					"text" : "test_dict_clone()"
 				}
 
@@ -103,7 +175,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 457.0, 286.0, 114.0, 22.0 ],
+					"patching_rect" : [ 456.0, 184.0, 114.0, 22.0 ],
 					"text" : "test_dict_getstring()"
 				}
 
@@ -115,7 +187,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 80.0, 109.0, 22.0 ],
+					"patching_rect" : [ 345.5, 57.0, 109.0, 22.0 ],
 					"text" : "test_dict_getkeys()"
 				}
 
@@ -127,7 +199,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 112.0, 124.0, 22.0 ],
+					"patching_rect" : [ 462.0, 57.0, 124.0, 22.0 ],
 					"text" : "test_dict_entrycount()"
 				}
 
@@ -139,7 +211,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 286.0, 97.0, 22.0 ],
+					"patching_rect" : [ 345.0, 184.0, 97.0, 22.0 ],
 					"text" : "test_dict_bytes()"
 				}
 
@@ -151,7 +223,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 348.0, 256.0, 101.0, 22.0 ],
+					"patching_rect" : [ 349.5, 156.0, 101.0, 22.0 ],
 					"text" : "test_dict_atoms()"
 				}
 
@@ -194,7 +266,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 441.0, 140.0, 61.0, 22.0 ],
+					"patching_rect" : [ 439.5, 89.0, 61.0, 22.0 ],
 					"text" : "test_dict()"
 				}
 
@@ -206,7 +278,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 225.0, 81.0, 22.0 ],
+					"patching_rect" : [ 558.0, 126.0, 81.0, 22.0 ],
 					"text" : "test_dict_int()"
 				}
 
@@ -218,7 +290,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 347.0, 194.0, 91.0, 22.0 ],
+					"patching_rect" : [ 462.0, 126.0, 91.0, 22.0 ],
 					"text" : "test_dict_float()"
 				}
 
@@ -230,7 +302,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 168.0, 106.0, 22.0 ],
+					"patching_rect" : [ 347.0, 126.0, 106.0, 22.0 ],
 					"text" : "test_dict_symbol()"
 				}
 
@@ -252,7 +324,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 325.5, 47.0, 150.0, 22.0 ],
+					"patching_rect" : [ 325.5, 24.0, 150.0, 22.0 ],
 					"text" : "load test_api_dictionary.py"
 				}
 
@@ -264,7 +336,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 346.0, 140.0, 83.0, 22.0 ],
+					"patching_rect" : [ 344.5, 89.0, 83.0, 22.0 ],
 					"text" : "test_dict_init()"
 				}
 
@@ -340,8 +412,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 157.5, 535.0, 187.0, 22.0 ],
-					"text" : "def"
+					"patching_rect" : [ 157.5, 535.0, 187.0, 22.0 ]
 				}
 
 			}
@@ -448,6 +519,13 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-19", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-2", 0 ]
 				}
 
@@ -476,7 +554,21 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-23", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-24", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-25", 0 ]
 				}
 
 			}
@@ -490,7 +582,28 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-28", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-29", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-3", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-30", 0 ]
 				}
 
 			}
@@ -547,7 +660,7 @@
 
 			}
  ],
-		"originid" : "pat-4",
+		"originid" : "pat-10",
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"

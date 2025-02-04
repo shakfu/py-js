@@ -2,6 +2,14 @@
 
 ## [0.3.x]
 
+- Added `Dictionary.transaction_lock` and `Dictionary.transaction_unlock` to api
+
+- Added `Dictionary.dump` to api
+
+- Added `Dictionary.get_default_long`, `Dictionary.get_default_float`,
+`Dictionary.get_default_sym`, `Dictionary.get_default_atom`,
+`Dictionary.get_default_string` to api
+
 - Added `Dictionary.clone` and `Dictionary.clear` to api
 
 - Added `Dictionary.clone_to_self` and `Dictionary.clone_to_existing` to api

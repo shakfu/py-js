@@ -120,3 +120,54 @@ def test_dict_merge_to_self():
     d2.merge_to_self(d)
     return d2.get_string('abc')
 
+def test_dict_copy_entries():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d2 = api.Dictionary()
+    d.copy_entries(d2, ['abc'])
+    return d2.get_string('abc')
+
+def test_dict_copy_unique():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d2 = api.Dictionary()
+    d2.copy_unique(d)
+    return d2.get_string('abc')
+
+def test_get_default_long():
+    d = api.Dictionary()
+    d['abc'] = 200
+    return d.get_default_long('abc', 100)
+
+def test_get_default_float():
+    d = api.Dictionary()
+    d['abc'] = 20.53
+    return d.get_default_float('abc', 100.0)
+
+def test_get_default_sym():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    return d.get_default_sym('abc', 'boo')
+
+def test_get_default_atom():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    return d.get_default_atom('abc', api.Atom(100))
+
+def test_get_default_string():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    return d.get_default_string('abc', 'def')
+
+def test_dict_dump():
+    d = api.Dictionary()
+    d['abc'] = "def"
+    d.dump()
+
+def test_dict_transaction_lock_unlock():
+    d = api.Dictionary()
+    d.transaction_lock()
+    d['abc'] = "def"
+    d.transaction_unlock()
+    return d.get_string('abc')
+
