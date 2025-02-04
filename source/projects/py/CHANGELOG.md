@@ -9,8 +9,7 @@
 - Added `Dictionary.dump` to api
 
 - Added `Dictionary.get_default_long`, `Dictionary.get_default_float`,
-`Dictionary.get_default_sym`, `Dictionary.get_default_atom`,
-`Dictionary.get_default_string` to api
+`Dictionary.get_default_sym`, `Dictionary.get_default_string` to api
 
 - Added `Dictionary.clone` and `Dictionary.clear` to api
 

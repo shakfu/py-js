@@ -159,6 +159,12 @@ def test_get_default_string():
     d['abc'] = "def"
     return d.get_default_string('abc', 'def')
 
+# def test_get_default_atom():
+#     d = api.Dictionary()
+#     d['abc'] = api.Atom("def")
+#     boo = api.Atom("boo")
+#     return d.get_default_atom('abc', boo)
+
 def test_dict_dump():
     d = api.Dictionary()
     d['abc'] = "def"

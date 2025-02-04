@@ -1268,6 +1268,13 @@ cdef class Dictionary:
         """Add a c-string to the dictionary."""
         return mx.dictionary_appendstring(self.ptr, str_to_sym(key), value)
 
+    def append_atomarray(self, str key, AtomArray atomarray):
+        """Add an Atom Array object to the dictionary."""
+        cdef mx.t_max_err err = mx.dictionary_appendatomarray(self.ptr, 
+            str_to_sym(key), <mx.t_object*>atomarray.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not append atomarray to dictionary")
+
     cdef mx.t_max_err appendatomarray(self, mx.t_symbol* key, mx.t_object* value):
         """Add an Atom Array object to the dictionary."""
         return mx.dictionary_appendatomarray(self.ptr, key, value)
@@ -1524,17 +1531,14 @@ cdef class Dictionary:
             raise ValueError(f"could not get symbol as str from dict with key {key}")
         return sym_to_str(value)
 
-    # cdef mx.t_max_err getdefatom(self, mx.t_symbol* key, mx.t_atom* value, mx.t_atom* dfn):
-    #     """Retrieve a t_atom* from the dictionary."""
-    #     return mx.dictionary_getdefatom(self.ptr, key, value, dfn)
-
-    def get_default_atom(self, str key, Atom default_value) -> Atom:
-        """Retrieve a t_atom* from the dictionary or a default value if the key is not found."""
-        cdef mx.t_atom* value
-        cdef mx.t_max_err err = mx.dictionary_getdefatom(self.ptr, str_to_sym(key), value, default_value.ptr)
-        if err != mx.MAX_ERR_NONE:
-            raise ValueError(f"could not get atom from dict with key {key}")
-        return Atom.from_ptr(value, 1)
+    # def get_default_atom(self, str key, Atom default_value) -> Atom:
+    #     """Retrieve a t_atom* from the dictionary or a default value if the key is not found."""
+    #     cdef mx.t_atom* value = <mx.t_atom*>mx.sysmem_newptr(1 * sizeof(mx.t_atom))
+    #     # cdef mx.t_atom* value = NULL
+    #     cdef mx.t_max_err err = mx.dictionary_getdefatom(self.ptr, str_to_sym(key), value, default_value.ptr)
+    #     if err != mx.MAX_ERR_NONE:
+    #         raise ValueError(f"could not get atom from dict with key {key}")
+    #     return Atom.from_ptr(value, 1)
 
     def get_default_string(self, str key, str default_value) -> str:
         """Retrieve a c-string from the dictionary or a default value if the key is not found."""
