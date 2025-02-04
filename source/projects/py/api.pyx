@@ -11,6 +11,8 @@ Extension Classes:
 - Table: Interface to Max tables
 - Buffer: Interface to MSP buffers
 - Dictionary: Interface to Max dictionaries
+- DatabaseView: Interface to Max database views
+- DatabaseResult: Interface to Max database results
 - Database: Interface to Max databases
 - Linklist: Interface to Max linked lists
 - Binbuf: Interface to Max binbufs
@@ -1612,7 +1614,7 @@ cdef class Dictionary:
         """Serialize the specified t_dictionary object to a JSON file."""
         return mx.dictionary_write(self.ptr, filename, path)
 
-    cdef void post(self):
+    def post(self):
         """Print the contents of a dictionary to the Max window."""
         mx.postdictionary(<mx.t_object*>self.ptr)
 
@@ -1710,6 +1712,124 @@ cdef class Dictionary:
 # ----------------------------------------------------------------------------
 # api.Database
 
+cdef class DatabaseResult:
+    """Wraps the t_db_result object."""
+
+    cdef mx.t_db_result* ptr
+    cdef bint ptr_owner
+
+    def __cinit__(self):
+        self.ptr = NULL
+        self.ptr_owner = True
+
+    def __dealloc__(self):
+        if self.ptr and self.ptr_owner:
+            mx.object_free(self.ptr)
+
+    @staticmethod
+    cdef from_ptr(mx.t_db_result* ptr, bint ptr_owner=False):
+        cdef DatabaseResult result = DatabaseResult.__new__(DatabaseResult)
+        result.ptr = ptr
+        result.ptr_owner = ptr_owner
+        return result
+
+    def nextrecord(self) -> list[str]:
+        """Get the next record from the result."""
+        cdef char** record = mx.db_result_nextrecord(self.ptr)
+        return [record[i].decode() for i in range(self.numfields())]
+
+    def reset(self):
+        """Reset the result."""
+        mx.db_result_reset(self.ptr)
+
+    def clear(self):
+        """Clear the result."""
+        mx.db_result_clear(self.ptr)
+
+    def numrecords(self) -> int:
+        """Get the number of records in the result."""
+        cdef int result = <int>mx.db_result_numrecords(self.ptr)
+        return result
+
+    def numfields(self) -> int:
+        """Get the number of fields in the result."""
+        return <int>mx.db_result_numfields(self.ptr)
+
+    def fieldname(self, long fieldindex) -> str:
+        """Get the name of a field."""
+        cdef char* fieldname = mx.db_result_fieldname(self.ptr, fieldindex)
+        return fieldname.decode()
+
+    def string(self, long recordindex, long fieldindex) -> str:
+        """Get the string value of a field."""
+        cdef char* fieldvalue = mx.db_result_string(self.ptr, recordindex, fieldindex)
+        return fieldvalue.decode()
+
+    def long(self, long recordindex, long fieldindex) -> int:
+        """Get the long value of a field."""
+        cdef long fieldvalue = mx.db_result_long(self.ptr, recordindex, fieldindex)
+        return <int>fieldvalue
+
+    def float(self, long recordindex, long fieldindex) -> float:
+        """Get the float value of a field."""
+        cdef float fieldvalue = mx.db_result_float(self.ptr, recordindex, fieldindex)
+        return <float>fieldvalue
+
+    def datetimeinseconds(self, long recordindex, long fieldindex) -> int:
+        """Get the datetime in seconds of a field."""
+        cdef mx.t_ptr_uint fieldvalue = mx.db_result_datetimeinseconds(self.ptr, recordindex, fieldindex)
+        return <int>fieldvalue
+
+
+cdef class DatabaseView:
+    """Wraps the t_db_view object."""
+    cdef mx.t_db_view* ptr
+    cdef bint ptr_owner
+    cdef public str sql
+    cdef Database db
+
+    def __cinit__(self):
+        self.db = None
+        self.ptr = NULL
+        self.ptr_owner = True
+        self.sql = ""
+
+    def __init__(self, Database db, str sql):
+        self.db = db
+        self.ptr = NULL
+        self.ptr_owner = True
+        self.sql = sql
+        mx.db_view_create(db.ptr, sql.encode('utf-8'), &self.ptr)
+
+    def __dealloc__(self):
+        if self.ptr is not NULL and self.db and self.ptr_owner:
+            mx.db_view_remove(self.db.ptr, &self.ptr)
+
+    @staticmethod
+    cdef DatabaseView from_ptr(Database db, mx.t_db_view* ptr, str sql,bint ptr_owner=False):
+        cdef DatabaseView view = DatabaseView.__new__(DatabaseView)
+        view.ptr = ptr
+        view.db = db
+        view.sql = sql
+        view.ptr_owner = ptr_owner
+        return view
+
+    def getresult(self) -> DatabaseResult:
+        """Get the result of a view."""
+        cdef mx.t_db_result* result = NULL
+        cdef mx.t_max_err err = mx.db_view_getresult(self.ptr, &result)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get result")
+        return DatabaseResult.from_ptr(result, True)
+
+    def setquery(self, str sql):
+        """Set the query of a view."""
+        self.sql = sql
+        cdef mx.t_max_err err = mx.db_view_setquery(self.ptr, sql.encode('utf-8'))
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not set query")
+
+
 cdef class Database:
     """Wraps the t_database object."""
 
@@ -1767,9 +1887,13 @@ cdef class Database:
         """Flush a transaction."""
         mx.db_transaction_flush(self.ptr)
 
-    cdef mx.t_max_err query_direct(self, mx.t_db_result **dbresult, const char *sql):
+    def query_direct(self, str sql) -> DatabaseResult:
         """Execute a direct query."""
-        return mx.db_query_direct(self.ptr, dbresult, sql)
+        cdef mx.t_db_result* dbresult = NULL
+        cdef mx.t_max_err err = mx.db_query_direct(self.ptr, &dbresult, sql.encode('utf-8'))
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not execute direct query")
+        return DatabaseResult.from_ptr(dbresult, True)
 
     cdef mx.t_max_err query_getlastinsertid(self, long *idx):
         """Get the last insert ID."""
@@ -1789,61 +1913,17 @@ cdef class Database:
             flags.encode('utf-8')
         )
 
-    cdef mx.t_max_err view_create(self, const char *sql, mx.t_db_view **dbview):
+    def view_create(self, str sql) -> DatabaseView:
         """Create a view."""
-        return mx.db_view_create(self.ptr, sql, dbview)
+        cdef DatabaseView view = DatabaseView(self, sql)
+        return view
 
-    cdef mx.t_max_err view_remove(self, mx.t_db_view **dbview):
+    def view_remove(self, DatabaseView dbview):
         """Remove a view."""
-        return mx.db_view_remove(self.ptr, dbview)
-
-    cdef mx.t_max_err view_getresult(self, mx.t_db_view *dbview, mx.t_db_result **result):
-        """Get the result of a view."""
-        return mx.db_view_getresult(dbview, result)
-
-    cdef mx.t_max_err view_setquery(self, mx.t_db_view *dbview, char *newquery):
-        """Set the query of a view."""
-        return mx.db_view_setquery(dbview, newquery)
-
-    cdef char** result_nextrecord(self, mx.t_db_result *result):
-        """Get the next record from the result."""
-        return mx.db_result_nextrecord(result)
-
-    cdef void result_reset(self, mx.t_db_result *result):
-        """Reset the result."""
-        mx.db_result_reset(result)
-
-    cdef void result_clear(self, mx.t_db_result *result):
-        """Clear the result."""
-        mx.db_result_clear(result)
-
-    cdef long result_numrecords(self, mx.t_db_result *result):
-        """Get the number of records in the result."""
-        return mx.db_result_numrecords(result)
-
-    cdef long result_numfields(self, mx.t_db_result *result):
-        """Get the number of fields in the result."""
-        return mx.db_result_numfields(result)
-
-    cdef char* result_fieldname(self, mx.t_db_result *result, long fieldindex):
-        """Get the name of a field."""
-        return mx.db_result_fieldname(result, fieldindex)
-
-    cdef char* result_string(self, mx.t_db_result *result, long recordindex, long fieldindex):
-        """Get the string value of a field."""
-        return mx.db_result_string(result, recordindex, fieldindex)
-
-    cdef long result_long(self, mx.t_db_result *result, long recordindex, long fieldindex):
-        """Get the long value of a field."""
-        return mx.db_result_long(result, recordindex, fieldindex)
-
-    cdef float result_float(self, mx.t_db_result *result, long recordindex, long fieldindex):
-        """Get the float value of a field."""
-        return mx.db_result_float(result, recordindex, fieldindex)
-
-    cdef mx.t_ptr_uint result_datetimeinseconds(self, mx.t_db_result *result, long recordindex, long fieldindex):
-        """Get the datetime in seconds of a field."""
-        return mx.db_result_datetimeinseconds(result, recordindex, fieldindex)
+        if not dbview.ptr_owner or dbview.db:
+            mx.db_view_remove(self.ptr, &dbview.ptr)
+        else:
+            del dbview
 
     cdef void util_stringtodate(self, const char *string, mx.t_ptr_uint *date):
         """Convert a string to a date."""

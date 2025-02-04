@@ -2,43 +2,53 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"major" : 9,
+			"minor" : 0,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
 		"rect" : [ 217.0, 154.0, 675.0, 609.0 ],
-		"bglocked" : 0,
-		"openinpresentation" : 0,
-		"default_fontsize" : 12.0,
-		"default_fontface" : 0,
-		"default_fontname" : "Arial",
-		"gridonopen" : 1,
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 1,
-		"objectsnaponopen" : 1,
-		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
-		"lefttoolbarpinned" : 0,
-		"toptoolbarpinned" : 0,
-		"righttoolbarpinned" : 0,
-		"bottomtoolbarpinned" : 0,
-		"toolbars_unpinned_last_save" : 0,
-		"tallnewobj" : 0,
-		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
-		"devicewidth" : 0.0,
-		"description" : "",
-		"digest" : "",
-		"tags" : "",
-		"style" : "",
-		"subpatcher_template" : "",
-		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-6",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 373.0, 440.0, 92.0, 22.0 ],
+					"text" : "test_db_result()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-10",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 375.5, 394.0, 123.0, 22.0 ],
+					"text" : "test_db_view_result()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-5",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 375.5, 353.0, 87.0, 22.0 ],
+					"text" : "test_db_view()"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"bgcolor" : [ 0.043137254901961, 0.419607843137255, 0.890196078431372, 1.0 ],
 					"bgcolor2" : [ 0.2, 0.2, 0.2, 1.0 ],
@@ -67,7 +77,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 395.0, 403.0, 78.0, 22.0 ],
+					"patching_rect" : [ 373.5, 310.0, 78.0, 22.0 ],
 					"text" : "test_db_init()"
 				}
 
@@ -161,7 +171,7 @@
 						"autoload" : 0,
 						"debug" : 1,
 						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_database.py",
-						"pythonpath" : ""
+						"pythonpath" : "/"
 					}
 ,
 					"text" : "py",
@@ -188,6 +198,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-7", 1 ],
 					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-10", 0 ]
 				}
 
 			}
@@ -223,13 +240,28 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-5", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-40", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-59", 0 ]
 				}
 
 			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-6", 0 ]
+				}
+
+			}
  ],
+		"originid" : "pat-10",
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"
