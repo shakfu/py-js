@@ -30,7 +30,7 @@ Helper Functions:
 - Message passing and scripting helpers
 
 The module provides both low-level Cython access to the C API as well as higher-level
-Python interfaces for easier use in Max externals written in Python.
+Python wrappers for use in python scripts run by the `py` external.
 
 see: `py-js/source/projects/py/api.md` for further details
 """
@@ -312,9 +312,11 @@ cdef class MaxObject:
         cdef mx.t_max_err err = mx.object_attr_setparse(<mx.t_object *>self.ptr, 
             str_to_sym(name), value.encode('utf-8'))
 
-    cdef mx.t_object * clone(self):
+    def clone(self) -> MaxObject:
         """return clone of object"""
-        return <mx.t_object *>mx.object_clone(<mx.t_object *>self.ptr)
+        cdef mx.t_object *ptr = <mx.t_object *>mx.object_clone(<mx.t_object *>self.ptr)
+        return MaxObject.from_ptr(ptr, owner=True)
+
 
 # ----------------------------------------------------------------------------
 # api.Atom
@@ -1277,23 +1279,25 @@ cdef class Dictionary:
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not append atomarray to dictionary")
 
-    cdef mx.t_max_err appendatomarray(self, mx.t_symbol* key, mx.t_object* value):
-        """Add an Atom Array object to the dictionary."""
-        return mx.dictionary_appendatomarray(self.ptr, key, value)
-
-    cdef mx.t_max_err appenddictionary(self, mx.t_symbol* key, mx.t_object* value):
+    def append_dictionary(self, str key, Dictionary dict):
         """Add a dictionary object to the dictionary."""
-        return mx.dictionary_appenddictionary(self.ptr, key, value)
+        return mx.dictionary_appenddictionary(self.ptr, str_to_sym(key), <mx.t_object*>dict.ptr)
+
+    def append_object(self, str key, MaxObject obj):
+        """Add an object to the dictionary."""
+        return mx.dictionary_appendobject(self.ptr, str_to_sym(key), <mx.t_object*>obj.ptr)
 
     cdef mx.t_max_err appendobject(self, mx.t_symbol* key, mx.t_object* value):
         """Add an object to the dictionary."""
         return mx.dictionary_appendobject(self.ptr, key, value)
 
-    cdef mx.t_max_err appendobject_flags(self, mx.t_symbol* key, mx.t_object* value, long flags):
-        return mx.dictionary_appendobject_flags(self.ptr, key, value, flags)
+    def append_object_flags(self, str key, MaxObject obj, long flags):
+        """Add an object to the dictionary with flags."""
+        return mx.dictionary_appendobject_flags(self.ptr, str_to_sym(key), <mx.t_object*>obj.ptr, flags)
 
-    cdef mx.t_max_err appendbinbuf(self, mx.t_symbol* key, void* value):
-        return mx.dictionary_appendbinbuf(self.ptr, key, value)
+    def append_binbuf(self, str key, Binbuf binbuf):
+        """Add a binary buffer to the dictionary."""
+        return mx.dictionary_appendbinbuf(self.ptr, str_to_sym(key), <mx.t_object*>binbuf.ptr)
 
     def get_long(self, str key) -> int:
         """Retrieve a long integer from the dictionary."""
@@ -1370,9 +1374,25 @@ cdef class Dictionary:
         """Retrieve copies of a t_atom array in the dictionary."""
         return mx.dictionary_copyatoms(self.ptr, key, argc, argv)
 
+    def get_atomarray(self, str key) -> AtomArray:
+        """Retrieve a t_atomarray pointer from the dictionary."""
+        cdef mx.t_object* ptr
+        cdef mx.t_max_err err = mx.dictionary_getatomarray(self.ptr, str_to_sym(key), &ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get atomarray from dictionary")
+        return AtomArray.from_ptr(<mx.t_atomarray*>ptr)
+
     cdef mx.t_max_err getatomarray(self, mx.t_symbol* key, mx.t_object** value):
         """Retrieve a t_atomarray pointer from the dictionary."""
         return mx.dictionary_getatomarray(self.ptr, key, value)
+
+    def get_dictionary(self, str key) -> Dictionary:
+        """Retrieve a t_dictionary pointer from the dictionary."""
+        cdef mx.t_object* ptr
+        cdef mx.t_max_err err = mx.dictionary_getdictionary(self.ptr, str_to_sym(key), &ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get dictionary from dictionary")
+        return Dictionary.from_ptr(<mx.t_dictionary*>ptr)
 
     cdef mx.t_max_err getdictionary(self, mx.t_symbol* key, mx.t_object** value):
         """Retrieve a t_dictionary pointer from the dictionary."""
@@ -1381,6 +1401,14 @@ cdef class Dictionary:
     cdef mx.t_max_err get_ex(self, mx.t_symbol* key, long* ac, mx.t_atom** av, char* errstr):
         """Retrieve the address of a t_atom array of in the dictionary within nested dictionaries."""
         return mx.dictionary_get_ex(self.ptr, key, ac, av, errstr)
+
+    def get_object(self, str key) -> MaxObject:
+        """Retrieve a t_object pointer from the dictionary."""
+        cdef mx.t_object* ptr
+        cdef mx.t_max_err err = mx.dictionary_getobject(self.ptr, str_to_sym(key), &ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get object from dictionary")
+        return MaxObject.from_ptr(ptr)
 
     cdef mx.t_max_err getobject(self, mx.t_symbol* key, mx.t_object** value):
         """Retrieve a t_object pointer from the dictionary."""
@@ -1780,6 +1808,14 @@ cdef class DatabaseResult:
         cdef mx.t_ptr_uint fieldvalue = mx.db_result_datetimeinseconds(self.ptr, recordindex, fieldindex)
         return <int>fieldvalue
 
+    def datatime_as_string(self, long recordindex, long fieldindex) -> str:
+        """Get the datetime as a string of a field."""
+        cdef mx.t_ptr_uint fieldvalue = mx.db_result_datetimeinseconds(self.ptr, recordindex, fieldindex)
+        cdef char* string = <char*>mx.sysmem_newptr(256 * sizeof(char))
+        mx.db_util_datetostring(fieldvalue, string)
+        cdef str result = string.decode()
+        mx.sysmem_freeptr(string)
+        return result
 
 cdef class DatabaseView:
     """Wraps the t_db_view object."""
@@ -1925,13 +1961,13 @@ cdef class Database:
         else:
             del dbview
 
-    cdef void util_stringtodate(self, const char *string, mx.t_ptr_uint *date):
-        """Convert a string to a date."""
-        mx.db_util_stringtodate(string, date)
+cdef void util_stringtodate(const char *string, mx.t_ptr_uint *date):
+    """Convert a string to a date."""
+    mx.db_util_stringtodate(string, date)
 
-    cdef void util_datetostring(self, const mx.t_ptr_uint date, char *string):
-        """Convert a date to a string."""
-        mx.db_util_datetostring(date, string)
+cdef void util_datetostring(const mx.t_ptr_uint date, char *string):
+    """Convert a date to a string."""
+    mx.db_util_datetostring(date, string)
 
     # cdef t_max_err db_query(t_database *db, t_db_result **dbresult, const char *sql, ...)
     # cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
@@ -2073,7 +2109,7 @@ cdef class Linklist:
         """Get the last object."""
         return mx.linklist_last(self.ptr, item)
 
-    cdef void readonly(self, long readonly):
+    def readonly(self, long readonly=1):
         """Set the readonly flag."""
         mx.linklist_readonly(self.ptr, readonly)
 
