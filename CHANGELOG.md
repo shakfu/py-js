@@ -23,7 +23,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Added support for Python 3.13.x
 
-
 ## [0.2.6]
 
 - Changed default configuration in order to speed up builds. Now optimizations options ["enable_optimizations", "with_lto"] are not enabled by default but can now be enabled by setting OPTIMIZE=1 environment variable.

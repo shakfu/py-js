@@ -2,9 +2,17 @@
 
 ## [0.3.x]
 
+- Added `api.Dictionary.register` and `api.Dictionary.unregister` to api
+
+- Added `api.Dictionary.findregistered_clone` and `api.Dictionary.findregistered_retain` to api
+
+- Added `api.Dictionary.release` to api
+
 - Added `api.Dictionary.get_atomarray` and `api.Dictionary.append_atomarray` to api
 
 - Added `api.Dictionary.get_object` and `api.Dictionary.append_object` to api
+
+- Added `api.Dictionary.namefromptr` to api
 
 - Added `DatabaseView` and `DatabaseResult` objects to `api` module
 

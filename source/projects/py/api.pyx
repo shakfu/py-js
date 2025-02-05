@@ -1191,31 +1191,38 @@ cdef class Dictionary:
     cdef mx.t_dictionary *ptr
     cdef dict type_map
     cdef bint ptr_owner
+    cdef bint to_release
 
     def __cinit__(self):
         self.ptr = NULL
         self.type_map = None
         self.ptr_owner = False
+        self.to_release = False
     
     def __init__(self):
         self.ptr = mx.dictionary_new()
         self.type_map = dict()
         self.ptr_owner = True
-
+        self.to_release = False
+    
     def __dealloc__(self):
         # De-allocate if not null
         if self.ptr is not NULL and self.ptr_owner:
-            mx.object_free(self.ptr)
+            if self.to_release:
+                mx.dictobj_release(self.ptr)
+            else:
+                mx.object_free(self.ptr)
             self.ptr = NULL
 
     @staticmethod
-    cdef Dictionary from_ptr(mx.t_dictionary *ptr, bint owner=False):
+    cdef Dictionary from_ptr(mx.t_dictionary *ptr, bint owner=False, bint to_release=False):
         """Create a Dictionary from an existing pointer."""
         # Call to __new__ bypasses __init__ constructor
         cdef Dictionary _dict = Dictionary.__new__(Dictionary)
         _dict.ptr = ptr
         _dict.ptr_owner = owner
         _dict.type_map = dict()
+        _dict.to_release = to_release
         return _dict
 
     def __setitem__(self, str key, object value):
@@ -1649,43 +1656,57 @@ cdef class Dictionary:
     # ----------------------------------------------------------------------------
     # t_dictionary passing api - ext_dictobj.h
 
-    cdef mx.t_dictionary *dictobj_register(self, mx.t_symbol **name):
-        """Register a t_dictdictobj_registerionary with the dictionary passing system and map it to a unique name.
+    def register(self, str name):
+        """Register a #t_dictionary with the dictionary passing system and map it to a unique name.
 
-        If the t_symbol pointer has a NULL value then a unique name will be generated and filled-in
-        upon return.
+        @param		d		A valid dictionary object.
+        @param		name	The address of a #t_symbol pointer to the name you would like mapped to this dictionary.
+                            If the t_symbol pointer has a NULL value then a unique name will be generated and filled-in
+                            upon return.
+        @return				The dictionary mapped to the specified name.
         """
-        return mx.dictobj_register(self.ptr, name)
+        cdef mx.t_symbol* name_ptr = str_to_sym(name)
+        cdef mx.t_dictionary* registered = mx.dictobj_register(self.ptr, &name_ptr)
+        return Dictionary.from_ptr(registered, True)
 
-    cdef mx.t_max_err dictobj_unregister(self):
-        """unregister dictionary (not required if dict is object-freed)"""
+    def unregister(self):
+        """Unregister a #t_dictionary with the dictionary passing system.
+
+        Generally speaking you should not need to call this method.
+        Calling object_free() on the #t_dictionary automatically unregisters it.
+        """
         return mx.dictobj_unregister(self.ptr)
 
-    cdef mx.t_dictionary *dictobj_findregistered_clone(self, mx.t_symbol *name):
+    def findregistered_clone(self, str name) -> Dictionary:
         """Find the t_dictionary for a given name, and return a copy of that dictionary.
 
         When you are done, do not call dictobj_release() on the dictionary, because you
         are working on a copy rather than on a retained pointer.
         """
-        return mx.dictobj_findregistered_clone(name)
+        cdef mx.t_symbol* name_ptr = str_to_sym(name)
+        cdef mx.t_dictionary* registered_clone = mx.dictobj_findregistered_clone(name_ptr)
+        return Dictionary.from_ptr(registered_clone, True)
 
-    cdef mx.t_dictionary *dictobj_findregistered_retain(self, mx.t_symbol *name):
+    def findregistered_retain(self, str name) -> Dictionary:
         """Find the t_dictionary for a given name, return a pointer to that t_dictionary, and increment
         its reference count.
 
         When you are done you should call dictobj_release() on the dictionary.
         """
-        return mx.dictobj_findregistered_retain(name)
+        cdef mx.t_symbol* name_ptr = str_to_sym(name)
+        cdef mx.t_dictionary* registered_retain = mx.dictobj_findregistered_retain(name_ptr)
+        return Dictionary.from_ptr(registered_retain, owner=True, to_release=True)
+    
+    def release(self):
+        """Release a t_dictionary/name previously retained with dictobj_findregistered_retain()."""
+        cdef mx.t_max_err err = mx.dictobj_release(self.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not release dictionary")
 
-    cdef mx.t_max_err dictobj_release(self):
-        """For a t_dictionary/name previously retained with dictobj_findregistered_retain(),
-        release it (decrement its reference count).
-        """
-        return mx.dictobj_release(self.ptr)
-
-    cdef mx.t_symbol *dictobj_namefromptr(self):
+    def name_from_ptr(self) -> str:
         """Find the name associated with a given t_dictionary."""
-        return mx.dictobj_namefromptr(self.ptr)
+        cdef mx.t_symbol* name = mx.dictobj_namefromptr(self.ptr)
+        return sym_to_str(name)
 
     cdef void dictobj_outlet_atoms(self, void *out, long argc, mx.t_atom *argv):
         """Send atoms to an outlet in your Max object, handling complex datatypes
@@ -1865,7 +1886,6 @@ cdef class DatabaseView:
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not set query")
 
-
 cdef class Database:
     """Wraps the t_database object."""
 
@@ -2033,13 +2053,21 @@ cdef class Linklist:
         """Move an object before a given object."""
         return mx.linklist_movebeforeobjptr(self.ptr, o, objptr)
 
-    cdef mx.t_atom_long deleteindex(self, long index):
+    def delete_object_at_index(self, long index):
         """Delete an object at a given index."""
-        return mx.linklist_deleteindex(self.ptr, index)
+        cdef mx.t_max_err err = mx.linklist_deleteindex(self.ptr, index)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not delete object at index")
 
-    cdef long chuckindex(self, long index):
+    def chuck_object_at_index(self, long index):
         """Chuck an object at a given index."""
-        return mx.linklist_chuckindex(self.ptr, index)
+        cdef mx.t_max_err err = mx.linklist_chuckindex(self.ptr, index)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not chuck object at index")
+
+    cdef mx.t_max_err chuck_object(self, void* o):
+        """Chuck an object."""
+        return mx.linklist_chuckobject(self.ptr, o)
 
     cdef long chuckobject(self, void* o):
         """Chuck an object."""
@@ -2326,7 +2354,6 @@ cdef class Atombuf:
         cdef Atom atom = Atom.from_ptr(self.ptr.a_argv, self.ptr.a_argc)
         return atom.to_list()
 
-
 # ---------------------------------------------------------------------------
 # api.Hashtab
 
@@ -2556,7 +2583,6 @@ cdef class AtomArray:
     cdef void funall(self, mx.method fun, void* arg):
         """Call the specified function for every item in the atom array."""
         mx.atomarray_funall(self.ptr, fun, arg)
-
 
 # ----------------------------------------------------------------------------
 # api.Patcher
@@ -3175,7 +3201,6 @@ cdef class Patcher:
         """Generate a unique name for a box in patcher."""
         return mx.jpatcher_uniqueboxname(self.ptr, classname)
 
-
 # ----------------------------------------------------------------------------
 # api.Box
 
@@ -3413,7 +3438,6 @@ cdef class Box:
         cdef mx.t_symbol* _id = mx.jbox_get_id(self.ptr)
         return sym_to_str(_id)
 
-
 # ----------------------------------------------------------------------------
 # api.MaxApp
 
@@ -3602,7 +3626,6 @@ cdef class MaxApp:
     def quit(self):
         """Call the 'quit' method on the application object."""
         self.call("quit")
-
 
 # ----------------------------------------------------------------------------
 # api.PyExternal
@@ -3814,8 +3837,6 @@ cdef class PyExternal:
         """Call a method with a binary buffer."""
         return mx.object_method_binbuf(<mx.t_object*>self.ptr, s, buf, rv)
 
-
-
 # ----------------------------------------------------------------------------
 # Alternative external extension type (obj pointer retrieved via uintptr_t
 
@@ -3836,7 +3857,6 @@ def test_ref():
     ext = PyMxObject()
     ext.bang()
 
-
 # ----------------------------------------------------------------------------
 # numpy c-api import example
 
@@ -3856,7 +3876,6 @@ if INCLUDE_NUMPY:
             c[i].imag = a[i].imag + b[i].imag
 
         return out
-
 
 # ----------------------------------------------------------------------------
 # c-level helper functions for the `py` external

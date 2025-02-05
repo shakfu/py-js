@@ -69,8 +69,6 @@ py max external
         right outlet             : bang on success 
 ```
 
-
-
 ## Overview
 
 This overview will cover the following two external implementations:
@@ -219,9 +217,41 @@ zedit: [python interpreter / web server] <-> [web-editor / web-console]
 
 - **`zedit`: a python3 external with an embedded web server**. `zedit` is a python3-enabled external by virtue of using the `mamba` single-header library and also embeds the [mongoose embedded webserver](https://mongoose.ws). On the frontend, it uses modern javascript, [jquery-terminal](https://terminal.jcubic.pl) and the widely-used [code-mirror](https://codemirror.net) web text editor widget to create a web-editor / web-console which can be accessed from a browser and which communicates via the mongoose webserver with the underlying python interpreter.
 
-#### Scripting
+#### Scripting Max with Python via the builtin `api` module
 
-- **Exposing Max API to Python** A portion of the max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This code enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the max-api which has been wrapped in cython code to be called directly by python scripts or via messages in a patcher.
+- **Exposing Max API to Python** A portion of the Max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This code enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the Max-api which has been wrapped in cython code to be called directly by python scripts or via messages in a patcher.
+
+The `api` module provides a number of functions and cython extension classes which make it relatively easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
+
+As of this writing the following extension classes which wrap their corresponding Max datastructures are included in the `api` module: `Atom`, `AtomArray`, `Table`, `Buffer`, `Dictionary`, `Database`, `DatabaseView`, `DatabaseResult`, `Linklist`, `Binbuf`, `Hashtab`, `Patcher`, `MaxObject` and `MaxApp`.
+
+In addition, a cython extension class, `PyExternal`, gives python code access to the c-based `py` external's data and methods.
+
+To give a sense of the level of integration which is possible as a result of this module, the following example demonstrates how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api` module's `Buffer` extension class:
+
+```python
+import api
+
+import numpy as np
+from scipy import signal
+
+def get_buffer_samples(name: str, sample_file: str) -> np.array:
+    buf = api.create_buffer(name, sample_file)
+    xs = np.array(buf.get_samples())
+    assert len(xs) == buf.n_samples
+    api.post(f"get {n_samples} samples from buffer {name}")
+    return xs
+
+
+def set_buffer_samples(name: str, duration_ms: int):
+    buf = api.create_empty_buffer(name, duration_ms)
+    t = np.linspace(0, 1, buf.n_samples, endpoint=False, dtype=np.float64)
+    xs = signal.sawtooth(2 * np.pi * 5 * t)
+    buf.set_samples(xs)
+    api.post(f"set {buf.n_samples} samples to buffer {name}")
+```
+
+See the `examples/tests` folder and the `patchers/tests`  folder for more examples.
 
 ### Deployment Scenarios
 
@@ -800,4 +830,4 @@ To fix it, just restart Max and use it normally in your patch. Treat each patch 
 
 - `core` features relying on pure python code are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
 
-- The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
+- The `api` module is the most experimental, powerful and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.
