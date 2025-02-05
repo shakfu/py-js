@@ -2,76 +2,9 @@
 title: "py: a general purpose python3 max external"
 ---
 
-A general purpose Max external which embeds a python3 interpreter and is made up of three integrated parts which make it quite straightforward to extend:
-
-1. The `py` Max external which is written in c using both the Max c-api and the Python3 c-api.
-
-2. A pure python module, `py_prelude.py` which is converted to `py_prelude.h` and compiled with `py` and then pre-loaded into the `globals()` namespace of every `py` instance.
-
-3. A builtin `api` module which is derived from a cython-wrapper of a subset of the Max c-api.
-
-The following provides a brief view of key attributes and methods:
-
-```text
-globals
-    obj_count                    : number of active py objects
-    registry                     : global registry to lookup object names
-
-patchers
-    subpatchers
-        py_repl                  : a basic single line repl for py
-        py_repl_plus             : embeds a py object in a py_repl
-
-py max external
-    attributes
-        name                     : unique object name
-        file                     : file to load into editor
-        autoload                 : load file at start
-        pythonpath               : add path to python sys.path
-        debug                    : switch debug logging on/off
-
-    methods (messages) 
-        core
-            import <module>      : python import to object namespace
-            eval <expression>    : python 'eval' semantics
-            exec <statement>     : python 'exec' semantics
-            execfile <path>      : python 'execfile' semantics
-        
-        extra
-            assign <var> [arg]   : max-friendly msg assignments to py object namespace
-            call <pyfunc> [arg]  : max-friendly python function calling
-            pipe <arg> [pyfunc]  : process py/max value(s) via a pipe of py funcs
-            fold <f> <n> [arg]   : applies a two-arg function cumulatively to a sequence
-            code <expr|stmt>     : alternative way to eval or exec py code
-            anything <expr|stmt> : anything version of the code method 
-
-        time-based
-            sched <t> <fn> [arg] : defer a python function call by t millisecs
-
-        code editor
-            read <path>          : read text file into editor
-            load <path>          : combo of read <path> -> execfile <path>
-            run                  : run the current code in the editor
-     
-        interobject
-            scan                 : scan patcher and store names of child objects
-            send <msg>           : send an arbitrary message to a named object
-
-        meta
-            count                : give a int count of current live py objects
-
-    inlets
-        single inlet             : primary input (anything)
-
-    outlets
-        left outlet              : primary output (anything)
-        middle outlet            : bang on failure
-        right outlet             : bang on success 
-```
-
 ## Overview
 
-This overview will cover the following two external implementations:
+This overview will cover the following the `py` external implementation:
 
 The `py` external provides a more featureful two-way interface between max and python in a way that feels natural to both languages.
 
@@ -79,13 +12,13 @@ The external has access to builtin python modules and the whole universe of 3rd 
 
 A general purpose Max external that embeds a python3 interpreter and is made up of three integrated parts which make it quite straightforward to extend:
 
-1. The `py` Max external which is written in c using both the Max c-api and the Python3 c-api.
+1. The `py` Max external which is written in c using both the `Max c-api` and the `Python3 c-api`.
 
 2. A pure python module, `py_prelude.py` which is converted to `py_prelude.h` and compiled with `py` and then pre-loaded into the `globals()` namespace of every `py` instance.
 
-3. A builtin `api` module which is derived from a cython-based wrapper of a subset of the Max c-api.
+3. A powerful builtin `api` module which is derived from a cython-based wrapper of a subset of the `Max c-api`.
 
-The following provides a brief view of key attributes and methods:
+The following cheatsheat provides a brief view of key attributes and methods:
 
 ```text
 globals
@@ -189,7 +122,7 @@ The *extra* category of methods  makes the `py` object play nice with the max/ms
 
 - **Pipe message**. Like a `call` in reverse, responds to a `pipe <arg> <f1> <f2> ... <fN>` message. In this sense, a value is *piped* through a chain of python functions in the objects namespace and returns the output to the left outlet, a bang from the right outlet upon success, or a bang from the middle outlet upon failure.
 
-- **Code or Anything Messages**. Responds to a `code <expression || statement>` or (anything) `<expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by Max's parsing and excaping rules. (EXPERIMENTAL and evolving).
+- **Code or Anything Messages**. Responds to a `code <expression || statement>` or (anything) `<expression || statement>` message. Arbitrary python code (expression or statement) can be used here, because the whole message body is converted to a string, the complexity of the code is only limited by Max's parsing and excaping rules. (This is classified as EXPERIMENTAL and evolving).
 
 #### Interobject Communication
 
@@ -198,8 +131,6 @@ The *extra* category of methods  makes the `py` object play nice with the max/ms
 - **Send Message**. Responds to a `send <object-name> <msg> <msg-body>` message. Used to send *typed* messages to any named object. Evokes a `scan` for the patcher's objects if a `registry` of names is empty.
 
 #### Editing Support
-
-Implemented for `py` objects only.
 
 - **Line REPL**. The `py` object has two bpatcher line `repls`: one, `py_repl_plux.maxpat` which embeds a `py` object and another, `py_repl.maxpat` which has an outlet to connect to one. The repls include a convenient menu with all of the `py` object's methods and also feature `coll`-based history via arrow-up/arrow-down recall of entries in a session. A `coll` can made to save all commands if required.
 
@@ -221,9 +152,9 @@ zedit: [python interpreter / web server] <-> [web-editor / web-console]
 
 - **Exposing Max API to Python** A portion of the Max api in `c74support/max-includes` has been converted to a cython `.pxd` file called `api_max.pxd`. This makes it available for a cython implementation file, `api.pyx` which is converted to c-code during builds and embedded in the external. This code enables a custom python builtin module called `api` which can be imported by python scripts in `py` objects or via `import` messages to the object. This allows the subset of the Max-api which has been wrapped in cython code to be called directly by python scripts or via messages in a patcher.
 
-The `api` module provides a number of functions and cython extension classes which make it relatively easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
+The `api` module provides a number of functions and cython extension classes which make it relatively easy to call `Max c-api` methods from python. This is without doubt the most powerful feature of the `py` external.
 
-As of this writing the following extension classes which wrap their corresponding Max datastructures are included in the `api` module: `Atom`, `AtomArray`, `Table`, `Buffer`, `Dictionary`, `Database`, `DatabaseView`, `DatabaseResult`, `Linklist`, `Binbuf`, `Hashtab`, `Patcher`, `MaxObject` and `MaxApp`.
+As of this writing the following extension classes which wrap their corresponding Max objects are included in the `api` module: `Atom`, `AtomArray`, `Table`, `Buffer`, `Dictionary`, `Database`, `DatabaseView`, `DatabaseResult`, `Linklist`, `Binbuf`, `Hashtab`, `Patcher`, `MaxObject` and `MaxApp`.
 
 In addition, a cython extension class, `PyExternal`, gives python code access to the c-based `py` external's data and methods.
 
@@ -263,7 +194,7 @@ There are 3 general deployment variations:
 
 3. **Embedded in external**. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external bundle itself, which can make it portable and usable in standalones.
 
-As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case, and a number of build variations exist.
+As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case, and the [related build variations which exist](#building-self-contained-python3-externals-for-packages-and-standalones).
 
 Deployment Scenario    | `py`
 :--------------------- | :--:

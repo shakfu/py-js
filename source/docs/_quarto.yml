@@ -33,23 +33,23 @@ book:
         - src/externals/zpy.qmd
         - src/externals/zthread.qmd
   
-    - part: "Builder"
-      chapters:
-        - src/builder/overview.qmd
-        - src/builder/building-on-apple-silicon.qmd
-        - src/builder/building-pyext-flext.qmd
-        - src/builder/cmake.qmd
-        - src/builder/codesign-notarize.qmd
-        - src/builder/fix_arm64_bug.qmd
-        - src/builder/github-actions.qmd
-        - src/builder/make-dmg.qmd
-        - src/builder/mappings.qmd
-        - src/builder/packaging.qmd
-        - src/builder/relocatable-python.qmd
-        - src/builder/remove-detritus.qmd
-        - src/builder/switching-between-modes.qmd
-        - src/builder/xcconfig.qmd
-        - src/builder/xcode-concepts.qmd
+    # - part: "Builder"
+    #   chapters:
+    #     - src/builder/overview.qmd
+    #     - src/builder/building-on-apple-silicon.qmd
+    #     - src/builder/building-pyext-flext.qmd
+    #     - src/builder/cmake.qmd
+    #     - src/builder/codesign-notarize.qmd
+    #     - src/builder/fix_arm64_bug.qmd
+    #     - src/builder/github-actions.qmd
+    #     - src/builder/make-dmg.qmd
+    #     - src/builder/mappings.qmd
+    #     - src/builder/packaging.qmd
+    #     - src/builder/relocatable-python.qmd
+    #     - src/builder/remove-detritus.qmd
+    #     - src/builder/switching-between-modes.qmd
+    #     - src/builder/xcconfig.qmd
+    #     - src/builder/xcode-concepts.qmd
       
     # - part: "Development Guide"
     #   chapters:

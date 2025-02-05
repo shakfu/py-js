@@ -99,42 +99,6 @@ The *extra* category of methods  makes the `pyjs` object play nice with the max/
 
 For `pyjs` objects, code editing is already provided by the [js](https://docs.cycling74.com/max8/refpages/js) Max object.
 
-#### Scripting
-
-A subset of the Max c-api is wrapped by the cython-based `api` module (`api.pyx`). Prior to compilation it is converted to c and then compiled into the external. This exposes a Python *builtin* module called `api` to all python code running on `py` objects.
-
-The `api` module includes functions and cython extension classes which make it relatively easy to call Max c-api methods from python. This is without doubt the most powerful feature of the `py` external.
-
-As of this writing the following extension classes which wrap their corresponding Max datastructures are included in the `api` module: `Atom`, `AtomArray`, `Table`, `Buffer`, `Dictionary`, `Database`, `Linklist`, `Binbuf`, `Hashtab` and `Patcher`.
-
-In addition, a cython extension class, `PyExternal`, gives python code access to the c-based `py` external's data and methods.
-
-To give a sense of the level of integration which is possible as a result of this module, the following example demonstrates how `numpy` and `scipy.signal` can be used to read and write to and from a live Max `buffer~` object using the `api` module's `Buffer` extension class:
-
-```python
-import api
-
-import numpy as np
-from scipy import signal
-
-def get_buffer_samples(name: str, sample_file: str) -> np.array:
-    buf = api.create_buffer(name, sample_file)
-    xs = np.array(buf.get_samples())
-    assert len(xs) == buf.n_samples
-    api.post(f"get {n_samples} samples from buffer {name}")
-    return xs
-
-
-def set_buffer_samples(name: str, duration_ms: int):
-    buf = api.create_empty_buffer(name, duration_ms)
-    t = np.linspace(0, 1, buf.n_samples, endpoint=False, dtype=np.float64)
-    xs = signal.sawtooth(2 * np.pi * 5 * t)
-    buf.set_samples(xs)
-    api.post(f"set {buf.n_samples} samples to buffer {name}")
-```
-
-See the `examples/tests` folder and the `patchers/tests`  folder for more examples.
-
 ### Deployment Scenarios
 
 There are 3 general deployment variations:
@@ -157,18 +121,4 @@ Embeddded in external  | yes
 
 - Packaging and deployment of python3 externals has improved considerably but is still a work-in-progress: basically needing further documentation, consolidation and cleanup. For example, there are currently two build systems which overlap: a python3 based build system to handle complex packaging cases and cmake for handling the quick and efficient development builds and general cases.
 
-- As of this writing, the `api` module, does not (like apparently all 3rd party python c-extensions) unload properly between patches and requires a restart of Max to work after you close the first patch which uses it. Unfortunately, this is a known [bug](https://bugs.python.org/issue34309) in python which is being worked on and may be [fixed](https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cython-users/SnVpCE7Sq8M/hdT8S2iFBgAJ) in future versions (python 3.12 perhaps?).
-
-- `Numpy`, the popular python numerical analysis package, falls in the above category. In newer versions of Python the situation is improving as above, but in python 3.9.x, it thankfully doesn't crash but gives the following error:
-
-```bash
-[py __main__] import numpy: SystemError('Objects/structseq.c:401: bad argument to internal function')
-```
-
-This just means that the user opened a patch with a `py-js` external that imports `numpy`, then closed the patch and (in the same Max session) re-opened it, or created a new patch importing `numpy` again.
-
-To fix it, just restart Max and use it normally in your patch. Treat each patch as a session and restart Max after each session.
-
 - `core` features relying on pure python code are supposed to be the most stable, and *should* not crash under most circumstances, `extra` features are less stable since they are more experimental, etc..
-
-- The `api` module is the most experimental and evolving part of this project, and is completely optional. If you don't want to use it, don't import it.

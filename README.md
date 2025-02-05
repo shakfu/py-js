@@ -6,6 +6,8 @@ Cross-platform: currently builds 'natively' on macOS (`x86_64` or `arm64`) and W
 
 repo - <https://github.com/shakfu/py-js>
 
+pdf documentation - [Python3-Externals-for-Max-MSP.pdf](https://github.com/shakfu/py-js/tree/main/source/docs/_book/Python3-Externals-for-Max-MSP.pdf)
+
 [![py-js py.maxhelp](./media/py-maxhelp.png)](patchers/py_test_anything.maxpat)
 
 ## Overview
