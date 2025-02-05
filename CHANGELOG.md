@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Added [Python3-Externals-for-Max-MSP.pdf](https://github.com/shakfu/py-js/tree/main/source/docs/_book/Python3-Externals-for-Max-MSP.pdf) pdf book to the repository.
+
 - Changed `README` to make it less complex and pushed more project-specific details to each project's README. Quick start is included for ease of setup.
 
 ## [0.3.0]
