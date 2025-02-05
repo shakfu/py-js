@@ -12,7 +12,7 @@ SRC_DIR = DOCS_ROOT / 'src'
 EXTERNALS_DIR = SRC_DIR / 'externals'
 
 
-def update_readme(src: Path, dst: Path):
+def update_file(src: Path, dst: Path):
     shutil.copy(src, dst)
     with open(dst) as f:
         newlines = []
@@ -29,7 +29,10 @@ def update_readme(src: Path, dst: Path):
         f.writelines(newlines)
     
 print(f"processing PYJS_ROOT: {PYJS_ROOT / 'README.md'} -> {SRC_DIR / 'overview.qmd'}")
-update_readme(PYJS_ROOT / 'README.md', SRC_DIR / 'overview.qmd')
+update_file(PYJS_ROOT / 'README.md', SRC_DIR / 'overview.qmd')
+
+print(f"processing FAQ: {PYJS_ROOT / 'FAQ.md'} -> {SRC_DIR / 'faq.qmd'}")
+update_file(PYJS_ROOT / 'FAQ.md', SRC_DIR / 'faq.qmd')
 
 assert PROJECTS_DIR.exists()
 
@@ -43,6 +46,6 @@ for p in PROJECTS_DIR.iterdir():
         src = PROJECTS_DIR / p.stem / 'README.md'
         print(f"processing {src} -> {dst}")
         try:
-            update_readme(src, dst)
+            update_file(src, dst)
         except FileNotFoundError:
             print(f"failed: {dst}")

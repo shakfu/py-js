@@ -1,9 +1,5 @@
 # TODO
 
-## Important
-
-- Consider moving `py` to its own project and keep this as incubator
-
 ## General Improvements
 
 ## Refactor
@@ -12,9 +8,9 @@
 
 - [ ] `PyLong_Check` can't pick up `numpy` numbers: the type of numpy numbers has to be implmented in the type translator.
 
-- [ ] `api` object won't reload if a patch is closed (i.e. PyFinalize) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
+- [ ] `api` object won't reload if a patch is closed (i.e. `PyFinalize`) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
-- [ ] WARNING: attempting to reload numpy after the patcher is closed causes an error Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashing error. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug above). At least there's progress!
+- [ ] WARNING: attempting to reload `numpy` after the patcher is closed causes an error in Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashing error. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug above). At least there's progress!
 
 ## Features
 
@@ -26,15 +22,13 @@
 
 ### Extensibility
 
-- [ ] create script to shrink numpy from source for inclusion in a build.
+- [x] create script to shrink numpy from source for inclusion in a build.
 
-- [ ] add the containing package `support` folder or `scripts` folder to `PYTHONPATH` for self-contained externals
-
-- [ ] add script which to create throwaway virtualenv environments: `virtualenv venv` to install python packages and then copy targeted to appropriate place in external or package and then delete remove the `venv` after done.
+- [x] add script which to create throwaway virtualenv environments: `virtualenv venv` to install python packages and then copy targeted to appropriate place in external or package and then delete remove the `venv` after done.
 
 ### Documentation
 
-- [ ] complete quarto based documentation subproject
+- [x] complete quarto based documentation subproject
 
 ### Testing
 
@@ -68,8 +62,6 @@
 
 ### Build System
 
-- [ ] As the `Product` class is becoming overloaded with python related data and bevaviour, should have `AbstractProduct` and `PythonProduct`
-
 - [ ] Change python variant product names to include python version and architecture (and platform), for example: `shared-ext-3711-x86`
 
 - [ ] Normalize tiny-variant names: so `shared-tiny-ext` becomes `shared-ext-tiny` and `static-tiny-ext` becomes `static-ext-tiny`.
@@ -94,7 +86,7 @@
 
 ### Collected
 
-- Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
+- [x] Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
 
 - [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
 
