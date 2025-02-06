@@ -11,6 +11,7 @@
 *.sdf
 *.sln
 *.suo
+
 .DS_Store
 .env
 .mypy_cache
