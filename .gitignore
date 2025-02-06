@@ -11,7 +11,6 @@
 *.sdf
 *.sln
 *.suo
-workbook.leo
 .DS_Store
 .env
 .mypy_cache
