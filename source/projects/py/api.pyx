@@ -238,6 +238,55 @@ cdef class MaxObject:
             return
         return error(f"method '{name}' call failed")
 
+    cdef mx.t_max_err object_method_obj(self, str method_name, mx.t_object *v):
+        """Convenience wrapper for object_method_typed() that passes a single #t_object* as an argument."""
+        cdef mx.t_max_err err = mx.object_method_obj(<mx.t_object *>self.ptr, str_to_sym(method_name), v, NULL)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"method '{method_name}' call failed")
+        return mx.MAX_ERR_NONE
+    
+    cdef mx.t_max_err object_method_char_array(self, str method_name, long ac, unsigned char *av, mx.t_atom *rv):
+        """Convenience wrapper for object_method_typed() that passes an array of char values as an argument."""
+        cdef mx.t_max_err err = mx.object_method_char_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"method '{method_name}' call failed")
+        return mx.MAX_ERR_NONE
+
+    cdef mx.t_max_err object_method_long_array(self, str method_name, long ac, mx.t_atom_long *av, mx.t_atom *rv):
+        """Convenience wrapper for object_method_typed() that passes an array of long integers values as an argument."""
+        cdef mx.t_max_err err = mx.object_method_long_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"method '{method_name}' call failed")
+        return mx.MAX_ERR_NONE
+
+    cdef mx.t_max_err object_method_float_array(self, str method_name, long ac, float *av, mx.t_atom *rv):
+        """Convenience wrapper for object_method_typed() that passes an array of 32bit floats values as an argument."""
+        cdef mx.t_max_err err = mx.object_method_float_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"method '{method_name}' call failed")
+        return mx.MAX_ERR_NONE
+
+    cdef mx.t_max_err object_method_double_array(self, str method_name, long ac, double *av, mx.t_atom *rv):
+        """Convenience wrapper for object_method_typed() that passes an array of 64bit float values as an argument."""
+        cdef mx.t_max_err err = mx.object_method_double_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"method '{method_name}' call failed")
+        return mx.MAX_ERR_NONE
+
+    cdef mx.t_max_err object_method_sym_array(self, str method_name, long ac, mx.t_symbol **av, mx.t_atom *rv):
+        """Convenience wrapper for object_method_typed() that passes an array of symbol values as an argument."""
+        cdef mx.t_max_err err = mx.object_method_sym_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"method '{method_name}' call failed")
+        return mx.MAX_ERR_NONE
+
+    cdef mx.t_max_err object_method_obj_array(self, str method_name, long ac, mx.t_object **av, mx.t_atom *rv):
+        """Convenience wrapper for object_method_typed() that passes an array of #t_object* values as an argument."""
+        cdef mx.t_max_err err = mx.object_method_obj_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
+        if err != mx.MAX_ERR_NONE:
+            return error(f"method '{method_name}' call failed")
+        return mx.MAX_ERR_NONE
+
     def call(self, str name, *args, parse=False):
         """general call object method function (strongly typed)"""
         if len(args) == 0:
