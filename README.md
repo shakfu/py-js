@@ -35,7 +35,8 @@ name       | sdk        | lang   | description
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
-[pktpy]    | max-sdk    | c++    | uses the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
+[pktpy]    | max-sdk    | c++    | uses v.1.4.6 of the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
+[pktpy2]   | max-sdk    | c      | uses v.2.0.5 the [pocketpy](https://github.com/blueloveTH/pocketpy) c11 library
 [mpy] [2]  | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
 
 [2] `mpy` is not enabled by default since it is still in early stages and more of a proof-of-concept to embed micropython in an external. To build it use the `-DBUILD_MICROPYTHON_EXTERNAL` option with cmake.
@@ -59,6 +60,7 @@ Note: zeromq externals are not enabled by default since they require zeromq libr
 [mamba]: https://github.com/shakfu/py-js/tree/main/source/projects/mamba
 [krait]: https://github.com/shakfu/py-js/tree/main/source/projects/krait
 [pktpy]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy
+[pktpy2]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy2
 [zedit]: https://github.com/shakfu/py-js/tree/main/source/projects/zedit
 [mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
 [jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx

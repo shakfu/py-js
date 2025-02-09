@@ -100,6 +100,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
 
 # python variants
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy2) # WIP
 if(BUILD_MICROPYTHON_EXTERNAL)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy)
 endif()

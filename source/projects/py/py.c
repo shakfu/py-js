@@ -1412,7 +1412,7 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 
     if (PyDict_Check(pdict)) {
 
-        // depends on definition in py_mod.h
+        // depends on definition in py_prelude.h
         pfun = PyDict_GetItemString(x->p_globals, "out_dict");
         if (pfun == NULL) {
             py_error(x, "retrieving out_dict func from globals failed");
@@ -1980,7 +1980,7 @@ t_max_err py_apply_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc,
 
     sysmem_freeptr(text);
 
-    // depends on definition in py_mod.h
+    // depends on definition in py_prelude.h
     pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
     if (pyfunc == NULL) {
         py_error(x, "retrieving python func '%s' from globals failed",
