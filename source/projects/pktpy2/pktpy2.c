@@ -14,7 +14,7 @@
 #define ITER_FAILURE (-1)
 
 // ----------------------------------------------------------------------------
-// missing macros
+// missing macros from pocketpy.h v2.0.5
 
 #define py_checklist(self) py_checktype(self, tp_list)
 #define py_checktuple(self) py_checktype(self, tp_tuple)
@@ -62,8 +62,11 @@ typedef struct _pktpy2 {
 // ----------------------------------------------------------------------------
 // method prototypes
 
+// init/free methods
 void* pktpy2_new(t_symbol* s, long argc, t_atom* argv);
 void pktpy2_free(t_pktpy2* x);
+
+// informational methods
 void pktpy2_bang(t_pktpy2* x);
 void pktpy2_bang_success(t_pktpy2* x);
 void pktpy2_bang_failure(t_pktpy2* x);
@@ -77,16 +80,23 @@ t_max_err pktpy2_handle_bool_output(t_pktpy2* x, py_GlobalRef pbool);
 t_max_err pktpy2_handle_list_output(t_pktpy2* x, py_GlobalRef plist);
 t_max_err pktpy2_handle_tuple_output(t_pktpy2* x, py_GlobalRef ptuple);
 
-// file reading
+// code editor / execfile methods
 t_max_err pktpy2_locate_path_from_symbol(t_pktpy2* x, t_symbol* s);
 void pktpy2_read(t_pktpy2* x, t_symbol* s);
 void pktpy2_doread(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
+void pktpy2_load(t_pktpy2* x, t_symbol* s); // read(f) -> execfile(f)
+void pktpy2_dblclick(t_pktpy2* x);
+void pktpy2_run(t_pktpy2* x);
+void pktpy2_edclose(t_pktpy2* x, char** text, long size);
+t_max_err pktpy2_edsave(t_pktpy2* x, char** text, long size);
+void pktpy2_okclose(t_pktpy2* x, char *s, short *result);
 
-// exec, eval, execfile
+// core methods
 t_max_err pktpy2_exec(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy2_eval(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy2_execfile(t_pktpy2* x, t_symbol* s);
 
+// utility methods
 void pktpy2_float(t_pktpy2 *x, double f);
 t_max_err pktpy2_name_get(t_pktpy2 *x, t_object *attr, long *argc, t_atom **argv);
 t_max_err pktpy2_name_set(t_pktpy2 *x, t_object *attr, long argc, t_atom *argv);
@@ -190,6 +200,16 @@ void ext_main(void* r)
     class_addmethod(c, (method)pktpy2_exec,       "exec",       A_GIMME,   0);
     class_addmethod(c, (method)pktpy2_execfile,   "execfile",   A_DEFSYM,  0);
 
+    // code editor
+    class_addmethod(c, (method)pktpy2_read,       "read",       A_DEFSYM,  0);
+    class_addmethod(c, (method)pktpy2_dblclick,   "dblclick",   A_CANT,    0);
+    class_addmethod(c, (method)pktpy2_edclose,    "edclose",    A_CANT,    0);
+    class_addmethod(c, (method)pktpy2_edsave,     "edsave",     A_CANT,    0);
+    class_addmethod(c, (method)pktpy2_load,       "load",       A_DEFSYM,  0);
+    class_addmethod(c, (method)pktpy2_run,        "run",        A_NOTHING, 0);
+    class_addmethod(c, (method)pktpy2_okclose,    "okclose",    A_CANT,    0);
+
+    // attrs
     CLASS_ATTR_LABEL(c,     "name", 0,  "patch-wide name");
     CLASS_ATTR_SYM(c,       "name", 0,  t_pktpy2, name);
     CLASS_ATTR_BASIC(c,     "name", 0);
@@ -778,6 +798,45 @@ void pktpy2_doread(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv)
 
 
 /**
+ * @brief Run python code stored in editor buffer
+ *
+ * @param x pointer to object structure
+ */
+void pktpy2_run(t_pktpy2* x)
+{
+    if ((*(x->p_code) != NULL) && (*(x->p_code)[0] == '\0'))
+        // is empty string
+        goto error;
+
+    bool ok = py_exec(*x->p_code, "<string>", EXEC_MODE, NULL);
+    if(!ok) {
+        goto error;
+    }
+
+    // success cleanup
+    pktpy2_bang_success(x);
+    return;
+
+error:
+    object_error((t_object*)x, "run x->p_code failed");
+    pktpy2_bang_failure(x);
+}
+
+
+/**
+ * @brief Combo function of `pktpy2_read <path> -> pktpy2_execfile <path>`
+ *
+ * @param x pointer to object structure
+ * @param s path as symbol
+ */
+void pktpy2_load(t_pktpy2* x, t_symbol* s)
+{
+    pktpy2_read(x, s);
+    pktpy2_execfile(x, s);
+}
+
+
+/**
  * @brief Execute contents of a file (filename obtained from symbol) as python
  * code
  *
@@ -789,10 +848,12 @@ t_max_err pktpy2_execfile(t_pktpy2* x, t_symbol* s)
 {
     t_max_err err;
     t_filehandle fh = NULL;
+    t_handle p_code = sysmem_newhandle(0);
+    int code_size = 0;
 
     if (s != gensym("")) {
         // set x->p_code_filepath
-        t_max_err err = pktpy2_locate_path_from_symbol(x, s);
+        err = pktpy2_locate_path_from_symbol(x, s);
         if (err != MAX_ERR_NONE) {
             object_error((t_object*)x, "could not locate path from symbol");
             goto error;
@@ -805,9 +866,15 @@ t_max_err pktpy2_execfile(t_pktpy2* x, t_symbol* s)
     }
 
     // assume x->p_code_filepath has be been set without errors
-    pktpy2_read(x, s);
 
-    bool ok = py_exec(*x->p_code, "<string>", EXEC_MODE, NULL);
+    err = path_opensysfile(x->p_code_filename, x->p_code_path, &fh, READ_PERM);
+    if (err == MAX_ERR_NONE) {
+        sysfile_readtextfile(fh, p_code, 0, TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
+        sysfile_close(fh);
+        code_size = sysmem_handlesize(p_code);
+    }
+
+    bool ok = py_exec(*p_code, "<string>", EXEC_MODE, NULL);
     if(!ok) goto error;
 
     // success cleanup
@@ -817,6 +884,93 @@ t_max_err pktpy2_execfile(t_pktpy2* x, t_symbol* s)
 error:
     py_printexc();
     pktpy2_bang_failure(x);
+    return MAX_ERR_GENERIC;
+}
+
+
+/**
+ * @brief Event of double-clicking on external object launches code-editor UI
+ *
+ * @param x pointer to object structure
+ *
+ */
+void pktpy2_dblclick(t_pktpy2* x)
+{
+    if (x->p_code_editor)
+        object_attr_setchar(x->p_code_editor, gensym("visible"), 1);
+    else {
+        x->p_code_editor = object_new(CLASS_NOBOX, gensym("jed"), x, 0);
+        object_method(x->p_code_editor, gensym("settext"), *x->p_code, gensym("utf-8"));
+        object_attr_setchar(x->p_code_editor, gensym("scratch"), 1);
+        object_attr_setsym(x->p_code_editor, gensym("title"), gensym("py-editor"));
+    }
+}
+
+
+/**
+ * @brief Event function to preserve text in buffer after editor is closed
+ *
+ * @param x pointer to object structure
+ * @param text text to be saved to buffer
+ * @param size size of text to be saved to buffer
+ */
+void pktpy2_edclose(t_pktpy2* x, char** text, long size)
+{
+    if (x->p_code)
+        sysmem_freehandle(x->p_code);
+
+    x->p_code = sysmem_newhandleclear(size + 1);
+    sysmem_copyptr((char*)*text, *x->p_code, size);
+    x->p_code_size = size + 1;
+    x->p_code_editor = NULL;
+    if (x->p_run_on_close && x->p_code_size > 2) {
+        pktpy2_run(x);
+    }
+}
+
+
+/**
+ * @brief Cnfigures behavior of system responding to editor window close
+ *
+ * @param x       pointer to object structure
+ * @param s       custom save text (optional)
+ * @param result  set values [0-4] to adjust what happens
+ *                     how the system responds when the editor
+ *                     window is closed.
+ */
+void pktpy2_okclose(t_pktpy2* x, char* s, short* result)
+{
+    // see: https://cycling74.com/forums/text-editor-without-dirty-bit
+    object_post((t_object*)x, "okclose: called -- run-on-close: %d", x->p_run_on_close);
+    *result = 3; // don't put up a dialog
+    // const char *string = "custom save text";
+    // memcpy(s, string, strlen(string)+1);
+}
+
+
+/**
+ * @brief Provides run-code-on-save functionality to code-editor
+ *
+ * @param x pointer to object structure
+ * @param text text to be run and saved
+ * @param size size of text to be run and saved
+ * @return t_max_err error code
+ */
+t_max_err pktpy2_edsave(t_pktpy2* x, char** text, long size)
+{
+    if (x->p_run_on_save) {
+
+        object_post((t_object*)x, "run-on-save activated");
+
+        bool ok = py_exec(*text, "<string>", EXEC_MODE, NULL);
+        if(!ok) {
+            goto error;
+        }
+    }
+    return MAX_ERR_NONE;
+
+error:
+    object_error((t_object*)x, "py_edsave with execution failed");
     return MAX_ERR_GENERIC;
 }
 
