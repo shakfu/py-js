@@ -92,6 +92,7 @@ t_max_err pktpy2_edsave(t_pktpy2* x, char** text, long size);
 void pktpy2_okclose(t_pktpy2* x, char *s, short *result);
 
 // core methods
+t_max_err pktpy2_import(t_pktpy2* x, t_symbol* s);
 t_max_err pktpy2_exec(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy2_eval(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err pktpy2_execfile(t_pktpy2* x, t_symbol* s);
@@ -195,7 +196,7 @@ void ext_main(void* r)
     class_addmethod(c, (method)pktpy2_bang,  "bang", 0);
     class_addmethod(c, (method)pktpy2_float, "float", A_FLOAT, 0);
 
-    // class_addmethod(c, (method)pktpy2_import,     "import",     A_SYM,     0);
+    class_addmethod(c, (method)pktpy2_import,     "import",     A_SYM,     0);
     class_addmethod(c, (method)pktpy2_eval,       "eval",       A_GIMME,   0);
     class_addmethod(c, (method)pktpy2_exec,       "exec",       A_GIMME,   0);
     class_addmethod(c, (method)pktpy2_execfile,   "execfile",   A_DEFSYM,  0);
@@ -699,6 +700,41 @@ error:
 //     return MAX_ERR_GENERIC;
 // }
 
+
+/**
+ * @brief Import a python module
+ *
+ * @param x pointer to object structure
+ * @param s symbol of module to be imported
+ * @return t_max_err error code
+ */
+t_max_err pktpy2_import(t_pktpy2* x, t_symbol* s)
+{
+
+    if (s != gensym("")) {
+        int result = py_import(s->s_name);
+        if (result == -1) {
+            object_error((t_object*)x, "error importing '%s'", s->s_name);
+            goto error;
+        }
+
+        if (result == 0) {
+            object_error((t_object*)x, "module '%s' not found", s->s_name);
+            goto error;
+        }
+
+        py_GlobalRef mod = py_retval();
+        py_setglobal(py_name(s->s_name), mod);
+
+        pktpy2_bang_success(x);
+        object_post((t_object*)x, "imported: %s", s->s_name);
+    }
+    return MAX_ERR_NONE;
+
+error:
+    pktpy2_bang_failure(x);
+    return MAX_ERR_GENERIC;
+}
 
 
 /**

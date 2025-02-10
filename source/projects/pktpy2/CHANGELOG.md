@@ -5,7 +5,9 @@
 
 ## [0.0.1]
 
-- Added basic methods (WIP)
+- Added `pktpy2_import`
+
+- Added basic methods
 
 - Added `pktpy2.maxhelp`
 
