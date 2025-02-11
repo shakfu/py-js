@@ -1839,12 +1839,15 @@ cdef class Dictionary:
             raise ValueError("could not create dictionary from atoms")
         return Dictionary.from_ptr(d, owner=True, to_release=False)
 
-    def to_atoms(self) -> Atom:
+    def to_atoms(self, Dictionary dict = None) -> Atom:
         """Serialize the contents of a t_dictionary into array of atoms."""
         cdef long argc = 0
         cdef mx.t_atom *argv = NULL
-        # cdef Dictionary d = Dictionary()
-        cdef mx.t_max_err err = mx.dictobj_dictionarytoatoms(self.ptr, &argc, &argv)
+        cdef mx.t_max_err err = mx.MAX_ERR_NONE
+        if dict:
+            err = mx.dictobj_dictionarytoatoms(dict.ptr, &argc, &argv)
+        else:
+            err = mx.dictobj_dictionarytoatoms(self.ptr, &argc, &argv)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not serialize dictionary to atoms")
         return Atom.from_ptr(argv, argc, owner=True)
