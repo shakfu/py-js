@@ -2,6 +2,14 @@
 
 ## [0.3.x]
 
+
+
+- Added `api.PyExternal.out_atoms` to api
+
+- Added `api.Dictionary.validate` and `api.Dictionary.ensure_atom_safety` to api
+
+- Added `api.Dictionary.json_from_string`, `api.Dictionary.to_atoms` and `api.Dictionary.from_string` to api
+
 - Added `api.Dictionary.register` and `api.Dictionary.unregister` to api
 
 - Added `api.Dictionary.findregistered_clone` and `api.Dictionary.findregistered_retain` to api

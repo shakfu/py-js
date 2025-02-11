@@ -66,19 +66,6 @@ if(PK_ENABLE_OS)
 endif()
 
 
-option(PK_BUILD_SHARED_LIB "Build shared library" OFF)
-option(PK_BUILD_STATIC_LIB "Build static library" ON)
-option(PK_BUILD_STATIC_MAIN "Build static main" OFF)
-
-# if(PK_BUILD_SHARED_LIB)
-#     message(">> Building shared library")
-#     add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
-# elseif(PK_BUILD_STATIC_LIB)
-#     message(">> Building static library")
-#     add_library(${PROJECT_NAME} STATIC ${PROJECT_SRC})
-# endif()
-
-
 add_library( 
 	${PROJECT_NAME} 
 	MODULE
@@ -96,7 +83,6 @@ if(UNIX)
     	${PROJECT_NAME}
     	PUBLIC
     	m
-    	cmx
     	dl
     )
     # if(PK_ENABLE_OS)

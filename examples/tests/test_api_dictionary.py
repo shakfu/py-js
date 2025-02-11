@@ -177,3 +177,26 @@ def test_dict_transaction_lock_unlock():
     d.transaction_unlock()
     return d.get_string('abc')
 
+def test_dict_findregistered_clone():
+    d = api.Dictionary()
+    d2 = d.findregistered_clone("xdict")
+    return d2.get_long('x')
+
+def test_dict_from_atoms():
+    atoms = api.Atom(["abc", ":", "hello", ":", 10.1])
+    d = api.Dictionary()
+    d.from_atoms(atoms)
+    return d.get_string('abc')
+
+def test_dict_from_string():
+    d = api.Dictionary()
+    d2 = d.from_string("a : b c : 1 2 3 4")
+    return d2.get_string("a")
+
+def test_dict_to_atoms():
+    d = api.Dictionary()
+    d["abc"] = "def"
+    atoms = d.to_atoms()
+    assert(isinstance(atoms, api.Atom))
+    return atoms.to_list()
+

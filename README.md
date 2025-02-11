@@ -36,7 +36,7 @@ name       | sdk        | lang   | description
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [pktpy]    | max-sdk    | c++    | uses v.1.4.6 of the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
-[pktpy2]   | max-sdk    | c      | uses v.2.0.5 the [pocketpy](https://github.com/blueloveTH/pocketpy) c11 library
+[pktpy2]   | max-sdk    | c      | uses the newer v2.0.5 [pocketpy](https://github.com/blueloveTH/pocketpy) c11 library
 [mpy] [2]  | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
 
 [2] `mpy` is not enabled by default since it is still in early stages and more of a proof-of-concept to embed micropython in an external. To build it use the `-DBUILD_MICROPYTHON_EXTERNAL` option with cmake.

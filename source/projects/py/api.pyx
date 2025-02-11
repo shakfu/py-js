@@ -3,8 +3,6 @@
 This is a 'builtin' module which provides a Cython wrapper around parts of the Max/MSP C API 
 for use in the `py` external.
 
-Key components:
-
 Extension Classes:
 - MaxObject: Base wrapper for Max t_object
 - Atom: Wrapper for Max atoms/messages 
@@ -22,6 +20,7 @@ Extension Classes:
 - Patcher: Interface to Max patchers
 - Box: Interface to Max boxes/objects
 - PyExternal: Main interface for Python externals
+- PyMxObject: Alternative external extension type (obj pointer retrieved via uintptr_t)
 
 Helper Functions:
 - Global utility functions for common Max operations
@@ -33,6 +32,8 @@ The module provides both low-level Cython access to the C API as well as higher-
 Python wrappers for use in python scripts run by the `py` external.
 
 see: `py-js/source/projects/py/api.md` for further details
+     `py-js/examples/tests` and `py-js/patchers/tests/test_api` for examples of using
+     the api module in both python code and Max patchers respectively.
 """
 
 # ----------------------------------------------------------------------------
@@ -1241,18 +1242,21 @@ cdef class Dictionary:
     cdef dict type_map
     cdef bint ptr_owner
     cdef bint to_release
+    cdef public str name
 
     def __cinit__(self):
         self.ptr = NULL
         self.type_map = None
         self.ptr_owner = False
         self.to_release = False
+        self.name = ""
     
     def __init__(self):
         self.ptr = mx.dictionary_new()
         self.type_map = dict()
         self.ptr_owner = True
         self.to_release = False
+        self.name = ""
     
     def __dealloc__(self):
         # De-allocate if not null
@@ -1264,7 +1268,7 @@ cdef class Dictionary:
             self.ptr = NULL
 
     @staticmethod
-    cdef Dictionary from_ptr(mx.t_dictionary *ptr, bint owner=False, bint to_release=False):
+    cdef Dictionary from_ptr(mx.t_dictionary *ptr, bint owner=False, bint to_release=False, str name=""):
         """Create a Dictionary from an existing pointer."""
         # Call to __new__ bypasses __init__ constructor
         cdef Dictionary _dict = Dictionary.__new__(Dictionary)
@@ -1272,6 +1276,7 @@ cdef class Dictionary:
         _dict.ptr_owner = owner
         _dict.type_map = dict()
         _dict.to_release = to_release
+        _dict.name = name
         return _dict
 
     def __setitem__(self, str key, object value):
@@ -1705,7 +1710,7 @@ cdef class Dictionary:
     # ----------------------------------------------------------------------------
     # t_dictionary passing api - ext_dictobj.h
 
-    def register(self, str name):
+    def register(self, str name) -> Dictionary:
         """Register a #t_dictionary with the dictionary passing system and map it to a unique name.
 
         @param		d		A valid dictionary object.
@@ -1716,7 +1721,7 @@ cdef class Dictionary:
         """
         cdef mx.t_symbol* name_ptr = str_to_sym(name)
         cdef mx.t_dictionary* registered = mx.dictobj_register(self.ptr, &name_ptr)
-        return Dictionary.from_ptr(registered, True)
+        return Dictionary.from_ptr(registered, owner=True, to_release=False, name=name)
 
     def unregister(self):
         """Unregister a #t_dictionary with the dictionary passing system.
@@ -1734,7 +1739,7 @@ cdef class Dictionary:
         """
         cdef mx.t_symbol* name_ptr = str_to_sym(name)
         cdef mx.t_dictionary* registered_clone = mx.dictobj_findregistered_clone(name_ptr)
-        return Dictionary.from_ptr(registered_clone, True)
+        return Dictionary.from_ptr(registered_clone, owner=True, to_release=False, name=name)
 
     def findregistered_retain(self, str name) -> Dictionary:
         """Find the t_dictionary for a given name, return a pointer to that t_dictionary, and increment
@@ -1744,17 +1749,22 @@ cdef class Dictionary:
         """
         cdef mx.t_symbol* name_ptr = str_to_sym(name)
         cdef mx.t_dictionary* registered_retain = mx.dictobj_findregistered_retain(name_ptr)
-        return Dictionary.from_ptr(registered_retain, owner=True, to_release=True)
+        return Dictionary.from_ptr(registered_retain, owner=True, to_release=True, name=name)
     
     def release(self):
         """Release a t_dictionary/name previously retained with dictobj_findregistered_retain()."""
         cdef mx.t_max_err err = mx.dictobj_release(self.ptr)
+        self.name = ""
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not release dictionary")
 
-    def name_from_ptr(self) -> str:
+    def name_from_ptr(self, Dictionary dict = None) -> str:
         """Find the name associated with a given t_dictionary."""
-        cdef mx.t_symbol* name = mx.dictobj_namefromptr(self.ptr)
+        cdef mx.t_symbol* name = mx.gensym("")
+        if dict:
+            name = mx.dictobj_namefromptr(dict.ptr)
+        else:
+            name = mx.dictobj_namefromptr(self.ptr)
         return sym_to_str(name)
 
     cdef void dictobj_outlet_atoms(self, void *out, long argc, mx.t_atom *argv):
@@ -1763,13 +1773,19 @@ cdef class Dictionary:
         """
         mx.dictobj_outlet_atoms(out, argc, argv)
 
-    cdef long dictobj_atom_safety(self, mx.t_atom *a):
+    def ensure_atom_safety(self, Atom atom) -> Atom:
         """Ensure that an atom is safe for passing.
 
         Atoms are allowed to be A_LONG, A_FLOAT, or A_SYM, but not A_OBJ. If the atom is an A_OBJ,
         it will be converted into something that will be safe to pass.
         """
-        return mx.dictobj_atom_safety(a)
+        cdef long result = mx.dictobj_atom_safety(atom.ptr)
+        if result == 1:
+            mx.post("atom was changed to ensure safety")
+            return atom
+        else:
+            mx.post("atom was already safe")
+            return atom
 
     # cdef long dictobj_atom_safety_flags(self, mx.t_atom *a, long flags):
     #     """Ensure that an atom is safe for passing.
@@ -1781,28 +1797,57 @@ cdef class Dictionary:
     #     """
     #     mx.dictobj_atom_safety_flags(a, flags)
 
-    cdef long dictobj_validate(self, const mx.t_dictionary *schema, const mx.t_dictionary *candidate):
+    def validate(self, Dictionary schema, Dictionary candidate) -> bool:
         """Validate the contents of a t_dictionary against a second t_dictionary containing a schema."""
-        return mx.dictobj_validate(schema, candidate)
+        return <bint>(mx.dictobj_validate(schema.ptr, candidate.ptr) == <long>1)
 
-    cdef mx.t_max_err dictobj_jsonfromstring(self, long *jsonsize, char **json, const char *cstr):
+    def json_from_string(self, str dict_string) -> str:
         """Convert a C-string of Dictionary Syntax into a C-string of JSON."""
-        return mx.dictobj_jsonfromstring(jsonsize, json, cstr)
+        cdef char *json = NULL
+        cdef long jsonsize = 0
+        cdef mx.t_max_err err = mx.dictobj_jsonfromstring(&jsonsize, &json, dict_string.encode('utf-8'))
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not convert dictionary to json")
+        return json.decode()
 
-    cdef mx.t_max_err dictobj_dictionaryfromstring(self, mx.t_dictionary **d, const char *cstr, int str_is_already_json, char *errorstring):
+    def from_string(self, str dict_string, bint str_is_already_json=False) -> Dictionary:
         """Create a new t_dictionary from Dictionary Syntax which is passed in as a C-string."""
-        return mx.dictobj_dictionaryfromstring(d, cstr, str_is_already_json, errorstring)
+        cdef mx.t_dictionary* d = NULL
+        cdef char * errorstring = NULL
+        cdef char* dict_string_ptr = <char *>mx.sysmem_newptr((len(dict_string)+1) * sizeof(char))
+        cdef long n = len(dict_string) + 1
+        strcpy(dict_string_ptr, dict_string.encode('utf8'))
+        cdef mx.t_max_err err = mx.dictobj_dictionaryfromstring(&d, dict_string_ptr, <int>str_is_already_json, errorstring)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not create dictionary from string: {errorstring.decode()}")
+        mx.sysmem_freeptr(dict_string_ptr)
+        return Dictionary.from_ptr(d, owner=True, to_release=False)
 
-    cdef mx.t_max_err dictobj_dictionaryfromatoms(self, mx.t_dictionary **d, const long argc, const mx.t_atom *argv):
+    def from_atoms(self, Atom atoms) -> Dictionary:
         """Create a new t_dictionary from Dictionary Syntax which is passed in as an array of atoms."""
-        return mx.dictobj_dictionaryfromatoms(d, argc, argv)
+        cdef mx.t_dictionary* d = NULL
+        cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms(&d, atoms.size, atoms.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not create dictionary from atoms")
+        return Dictionary.from_ptr(d, owner=True, to_release=False)
 
-    # cdef t_max_err dictobj_dictionaryfromatoms_extended(t_dictionary **d, const t_symbol *msg, long argc, const t_atom *argv):
-    #     """Create a new t_dictionary from from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
+    def from_atoms_extended(self, Atom atoms) -> Dictionary:
+        """Create a new t_dictionary from from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
+        cdef mx.t_dictionary* d = NULL
+        cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms_extended(&d, NULL, atoms.size, atoms.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not create dictionary from atoms")
+        return Dictionary.from_ptr(d, owner=True, to_release=False)
 
-    cdef mx.t_max_err dictobj_dictionarytoatoms(self, long *argc, mx.t_atom **argv):
-        """Serialize the contents of a t_dictionary into Dictionary Syntax."""
-        return mx.dictobj_dictionarytoatoms(self.ptr, argc, argv)
+    def to_atoms(self) -> Atom:
+        """Serialize the contents of a t_dictionary into array of atoms."""
+        cdef long argc = 0
+        cdef mx.t_atom *argv = NULL
+        # cdef Dictionary d = Dictionary()
+        cdef mx.t_max_err err = mx.dictobj_dictionarytoatoms(self.ptr, &argc, &argv)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not serialize dictionary to atoms")
+        return Atom.from_ptr(argv, argc, owner=True)
 
     # cdef t_max_err dictobj_key_parse(t_object *x, t_dictionary *d, t_atom *akey, t_bool create, t_dictionary **targetdict, t_symbol **targetkey, t_int32 *index):
     #     """Given a complex key (one that includes potential heirarchy or array-member access), return the actual key and the dictionary in which the key should be referenced."""
@@ -1912,7 +1957,7 @@ cdef class DatabaseView:
             mx.db_view_remove(self.db.ptr, &self.ptr)
 
     @staticmethod
-    cdef DatabaseView from_ptr(Database db, mx.t_db_view* ptr, str sql,bint ptr_owner=False):
+    cdef DatabaseView from_ptr(Database db, mx.t_db_view* ptr, str sql, bint ptr_owner=False):
         cdef DatabaseView view = DatabaseView.__new__(DatabaseView)
         view.ptr = ptr
         view.db = db
@@ -2396,7 +2441,6 @@ cdef class Atombuf:
             result = <bytes>contents[0]
         mx.sysmem_freehandle(contents)
         return result.decode()
-
 
     def to_list(self) -> list:
         """Convert contents of atombuf to a list."""
@@ -3867,6 +3911,12 @@ cdef class PyExternal:
                 res.append(v)
         self.out_list(res)
 
+    def out_atoms(self, Atom atoms):
+        """Send atoms to an outlet in your Max object, handling complex datatypes
+        that may be present in those atoms.
+        """
+        mx.dictobj_outlet_atoms(<void*>px.get_outlet(self.ptr), atoms.size, atoms.ptr)
+
     def out(self, arg: object):
         """Send an object to the outlet."""
         if isinstance(arg, float):
@@ -3879,6 +3929,8 @@ cdef class PyExternal:
             self.out_list(arg)
         elif isinstance(arg, dict):
             self.out_dict(<dict>arg)
+        elif isinstance(arg, Atom):
+            self.out_atoms(arg)
         else:
             return
 

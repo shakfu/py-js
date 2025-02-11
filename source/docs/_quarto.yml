@@ -29,6 +29,7 @@ book:
         - src/externals/mpy.qmd
         - src/externals/mxpy.qmd
         - src/externals/pktpy.qmd
+        - src/externals/pktpy2.qmd
         - src/externals/zedit.qmd
         - src/externals/zpy.qmd
         - src/externals/zthread.qmd

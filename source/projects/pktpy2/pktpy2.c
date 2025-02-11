@@ -1,6 +1,6 @@
 #include "ext.h"
 #include "ext_obex.h"
-#include "cmx.h"
+// #include "cmx.h"
 
 #include "pocketpy.h"
 
@@ -128,22 +128,16 @@ void print_to_console(const char * content)
 }
 
 
-// ----------------------------------------------------------------------------
-// external methods
+static bool hello_add(int argc, py_Ref argv){
+    PY_CHECK_ARGC(2);
+    return py_binaryadd(py_arg(0), py_arg(1));
+}
 
-void pktpy2_init(void)
-{
-    // Initialize pocketpy
-    py_initialize();
-
-    // redirect stdout
-    py_Callbacks* callbacks = py_callbacks();
-    callbacks->print = print_to_console;
-
-    // Bind native `int_add` as a global variable
-    py_Ref r0 = py_getreg(0);
-    py_newnativefunc(r0, int_add);
-    py_setglobal(py_name("add"), r0);
+bool hello_module_initialize(void) {
+    py_GlobalRef mod = py_newmodule("hello");
+    py_bindfunc(mod, "add", hello_add);
+    py_assign(py_retval(), mod);
+    return true;
 }
 
 t_max_err demo(void) {
@@ -184,6 +178,27 @@ t_max_err demo(void) {
 __ERROR:
     py_printexc();
     return MAX_ERR_GENERIC;
+}
+
+// ----------------------------------------------------------------------------
+// external methods
+
+void pktpy2_init(void)
+{
+    // Initialize pocketpy
+    py_initialize();
+
+    // redirect stdout
+    py_Callbacks* callbacks = py_callbacks();
+    callbacks->print = print_to_console;
+
+    // Bind native `int_add` as a global variable
+    py_Ref r0 = py_getreg(0);
+    py_newnativefunc(r0, int_add);
+    py_setglobal(py_name("add"), r0);
+
+    // bind native module 'hello'
+    hello_module_initialize();
 }
 
 
@@ -1045,32 +1060,8 @@ void pktpy2_float(t_pktpy2 *x, double f)
  * @param x pointer to object struct.
  */
 void pktpy2_bang(t_pktpy2* x) {
-    // example of using libcmx.a (common max lib)
-    t_string* path_to_ext = get_path_to_external(pktpy2_class, NULL);
-    const char* ext_path = string_getptr(path_to_ext);
-    post("path to external: %s", ext_path);
-
-    t_string* path_to_pkg = get_path_to_package(pktpy2_class, "");
-    const char* pkg_path = string_getptr(path_to_pkg);
-    post("path to package: %s", pkg_path);
-
-    char filename[MAX_PATH_CHARS];
-    char directory[MAX_PATH_CHARS];
-
-    path_dirname(pkg_path, directory);
-    path_basename(pkg_path, filename);
-
-    post("directory: %s", directory);
-    post("filename: %s", filename);
-
-
     t_max_err result = demo();
 
-    // assert(result == 0);
-
-    // outlet_bang(x->ob_proxy_1); 
-
-    // just a passthrough: bang out the left outlet
     outlet_bang(x->p_outlet_left);
 }
 
