@@ -814,6 +814,7 @@ see: <https://cycling74.com/forums/help!-crashing-when-scripting-patcher-and-sto
 ## Coding GIMMEBACK
 
 see: <https://cycling74.com/forums/multiple-atoms-return-by-a_gimmeback>
+     <https://github.com/Cycling74/min-api/blob/main/include/c74_min_patcher.h>
 
 ```c
 void max_jit_obex_gimmeback_dumpout(void *x, t_symbol *s, long ac, t_atom *av)

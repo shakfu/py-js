@@ -1,29 +1,21 @@
-#include "ext.h"
-#include "ext_obex.h"
-// #include "cmx.h"
-
-#include "pocketpy.h"
-
+// pktpy2.c
 
 // ----------------------------------------------------------------------------
-// constants
+// includes
 
-#define PY_MAX_ELEMS 1024
-#define ITER_SUCCESS 1
-#define ITER_STOP 0
-#define ITER_FAILURE (-1)
+#include "pktpy2.h"
+
+#include "pktpy2_api.h"
 
 // ----------------------------------------------------------------------------
-// missing macros from pocketpy.h v2.0.5
+// globals
 
-#define py_checklist(self) py_checktype(self, tp_list)
-#define py_checktuple(self) py_checktype(self, tp_tuple)
-#define py_checkdict(self) py_checktype(self, tp_dict)
+t_class* pktpy2_class = NULL; // global pointer to object class
 
 // ----------------------------------------------------------------------------
 // datastructure
 
-typedef struct _pktpy2 {
+struct t_pktpy2 {
     t_object ob;
     void *ob_proxy_1;           /// inlet proxy
     void *ob_proxy_2;           /// inlet proxy
@@ -56,134 +48,13 @@ typedef struct _pktpy2 {
     void* p_outlet_right;       /// right outlet to bang success
     void* p_outlet_middle;      /// middle outleet to bang error
     void* p_outlet_left;        /// left outleet for msg output
-} t_pktpy2;
+};
 
-
-// ----------------------------------------------------------------------------
-// method prototypes
-
-// init/free methods
-void* pktpy2_new(t_symbol* s, long argc, t_atom* argv);
-void pktpy2_free(t_pktpy2* x);
-
-// informational methods
-void pktpy2_bang(t_pktpy2* x);
-void pktpy2_bang_success(t_pktpy2* x);
-void pktpy2_bang_failure(t_pktpy2* x);
-
-// output handlers
-t_max_err pktpy2_handle_output(t_pktpy2* x, py_GlobalRef retval);
-t_max_err pktpy2_handle_float_output(t_pktpy2* x, py_GlobalRef pfloat);
-t_max_err pktpy2_handle_long_output(t_pktpy2* x, py_GlobalRef plong);
-t_max_err pktpy2_handle_string_output(t_pktpy2* x, py_GlobalRef pstring);
-t_max_err pktpy2_handle_bool_output(t_pktpy2* x, py_GlobalRef pbool);
-t_max_err pktpy2_handle_list_output(t_pktpy2* x, py_GlobalRef plist);
-t_max_err pktpy2_handle_tuple_output(t_pktpy2* x, py_GlobalRef ptuple);
-
-// code editor / execfile methods
-t_max_err pktpy2_locate_path_from_symbol(t_pktpy2* x, t_symbol* s);
-void pktpy2_read(t_pktpy2* x, t_symbol* s);
-void pktpy2_doread(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
-void pktpy2_load(t_pktpy2* x, t_symbol* s); // read(f) -> execfile(f)
-void pktpy2_dblclick(t_pktpy2* x);
-void pktpy2_run(t_pktpy2* x);
-void pktpy2_edclose(t_pktpy2* x, char** text, long size);
-t_max_err pktpy2_edsave(t_pktpy2* x, char** text, long size);
-void pktpy2_okclose(t_pktpy2* x, char *s, short *result);
-
-// core methods
-t_max_err pktpy2_import(t_pktpy2* x, t_symbol* s);
-t_max_err pktpy2_exec(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err pktpy2_eval(t_pktpy2* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err pktpy2_execfile(t_pktpy2* x, t_symbol* s);
-
-// utility methods
-void pktpy2_float(t_pktpy2 *x, double f);
-t_max_err pktpy2_name_get(t_pktpy2 *x, t_object *attr, long *argc, t_atom **argv);
-t_max_err pktpy2_name_set(t_pktpy2 *x, t_object *attr, long argc, t_atom *argv);
-
-
-// ----------------------------------------------------------------------------
-// global class pointer variable
-
-static t_class* pktpy2_class = NULL;
-
-
-// ----------------------------------------------------------------------------
-// custom pktpy2 functions
-
-bool int_add(int argc, py_Ref argv) {
-    PY_CHECK_ARGC(2);
-    PY_CHECK_ARG_TYPE(0, tp_int);
-    PY_CHECK_ARG_TYPE(1, tp_int);
-    py_i64 a = py_toint(py_arg(0));
-    py_i64 b = py_toint(py_arg(1));
-    py_newint(py_retval(), a + b);
-    return true;
-}
-
-void print_to_console(const char * content)
-{
-    post(content);
-}
-
-
-static bool hello_add(int argc, py_Ref argv){
-    PY_CHECK_ARGC(2);
-    return py_binaryadd(py_arg(0), py_arg(1));
-}
-
-bool hello_module_initialize(void) {
-    py_GlobalRef mod = py_newmodule("hello");
-    py_bindfunc(mod, "add", hello_add);
-    py_assign(py_retval(), mod);
-    return true;
-}
-
-t_max_err demo(void) {
-    // Hello world!
-    bool ok = py_exec("print('Hello world!')", "<string>", EXEC_MODE, NULL);
-    if(!ok) goto __ERROR;
-
-    // Create a list: [1, 2, 3]
-    py_Ref r0 = py_getreg(0);
-    py_newlistn(r0, 3);
-    py_newint(py_list_getitem(r0, 0), 1);
-    py_newint(py_list_getitem(r0, 1), 2);
-    py_newint(py_list_getitem(r0, 2), 3);
-
-    // Eval the sum of the list
-    py_Ref f_sum = py_getbuiltin(py_name("sum"));
-    py_push(f_sum);
-    py_pushnil();
-    py_push(r0);
-    ok = py_vectorcall(1, 0);
-    if(!ok) goto __ERROR;
-
-    post("Sum of the list: %d\n", (int)py_toint(py_retval()));  // 6
-
-    // Bind native `int_add` as a global variable
-    py_newnativefunc(r0, int_add);
-    py_setglobal(py_name("add"), r0);
-
-    // Call `add` in python
-    ok = py_exec("add(3, 7)", "<string>", EVAL_MODE, NULL);
-    if(!ok) goto __ERROR;
-
-    py_i64 res = py_toint(py_retval());
-    post("Sum of 2 variables: %d\n", (int)res);  // 10
-
-    return MAX_ERR_NONE;
-
-__ERROR:
-    py_printexc();
-    return MAX_ERR_GENERIC;
-}
 
 // ----------------------------------------------------------------------------
 // external methods
 
-void pktpy2_init(void)
+void pktpy2_init(t_pktpy2* x)
 {
     // Initialize pocketpy
     py_initialize();
@@ -197,10 +68,9 @@ void pktpy2_init(void)
     py_newnativefunc(r0, int_add);
     py_setglobal(py_name("add"), r0);
 
-    // bind native module 'hello'
-    hello_module_initialize();
+    // bind native module 'api'
+    api_module_initialize();
 }
-
 
 void ext_main(void* r)
 {
@@ -279,7 +149,7 @@ void* pktpy2_new(t_symbol* s, long argc, t_atom* argv)
 
         post("x->name: %s", x->name->s_name);
 
-        pktpy2_init();
+        pktpy2_init(x);
 
     }
     return (x);
@@ -1162,4 +1032,5 @@ t_max_err pktpy2_locate_path_from_symbol(t_pktpy2* x, t_symbol* s)
 finally:
     return ret;
 }
+
 
