@@ -95,75 +95,8 @@ static bool api_error(int argc, py_Ref argv) {
 }
 
 // ----------------------------------------------------------------------------
-// Atom (not-yet-working)
+// Person (demo code)
 
-// typedef struct {
-//     t_atom *ptr;
-//     bool ptr_owner;
-//     long size;
-// } AtomObject;
-
-// static void AtomObject__ctor(AtomObject* self, long size) {
-//     self->ptr = (t_atom *)sysmem_newptr(size * sizeof(t_atom));
-//     self->size = size;
-//     self->ptr_owner = true;
-// }
-
-// static void AtomObject__dtor(AtomObject* self) {
-//     if (self->ptr != NULL && self->ptr_owner) {
-//         sysmem_freeptr(self->ptr);
-//         self->ptr = NULL;
-//     }
-// }
-
-
-// int py_arrayview(py_Ref self, py_TValue** p) {
-//     if(py_typeof(self) == tp_list) {
-//         *p = py_list_data(self);
-//         return py_list_len(self);
-//     }
-//     if(py_typeof(self) == tp_tuple) {
-//         *p = py_tuple_data(self);
-//         return py_tuple_len(self);
-//     }
-//     return -1;
-// }
-
-
-// static bool Atom__new__(int argc, py_Ref argv) {
-//     py_TValue* args = py_tuple_data(argv);
-//     int size = py_tuple_len(argv);
-//     AtomObject* obj = py_newobject(py_retval(), py_totype(argv), 0, sizeof(AtomObject));
-//     AtomObject__ctor(obj, size);
-//     for(int i = 0; i < size; i++) {
-//         if(i > 0) {
-//             if (py_isint(&args + i)) {
-//                 long long_item = py_toint(&args + i);
-//                 atom_setlong(obj->ptr + i, long_item);
-//             }
-//         }
-//     }
-//     if(argc == 1)
-//         return true;
-//     return false;
-// }
-
-// static bool Atom__init__(int argc, py_Ref argv) {
-//     // Atom(self, *args)
-//     if(argc == 0) {
-//         // do nothing
-//     } else if(argc == 2) {
-//         AtomObject* obj = py_touserdata(py_arg(0));
-//         PY_CHECK_ARG_TYPE(1, tp_tuple);
-//     } else {
-//         return TypeError("Atom(): expected 1 or 2 arguments, got %d");
-//     }
-//     py_newnone(py_retval());
-//     return true;
-// }
-
-// ----------------------------------------------------------------------------
-// Person
 
 typedef struct t_person {
     int id;
@@ -175,25 +108,10 @@ static void t_person__ctor(t_person* self, int id, int age) {
     self->age = age;
 }
 
-static void t_person__dtor(t_person* self) {
-    self->id = 0;
-    self->age = 0;
-}
-
 static bool Person__new__(int argc, py_Ref argv) {
     t_person* ptr = py_newobject(py_retval(), py_totype(argv), 0, sizeof(t_person));
-    post("Person__new__ argc = %d", argc);
-    if (argc == 1)
-        return true;
-    if (argc == 3) {
-        PY_CHECK_ARG_TYPE(1, tp_int);
-        py_i64 id = py_toint(py_arg(1));
-        PY_CHECK_ARG_TYPE(2, tp_int);
-        py_i64 age = py_toint(py_arg(2));
-        t_person__ctor(ptr, id, age);
-        return true;
-    }
-    return TypeError("Person__new__(): expected 0 or 2 arguments, got %d", argc - 1);
+    t_person__ctor(ptr, 0, 0); // init both to 0
+    return true;
 }
 
 static bool Person__init__(int argc, py_Ref argv) {
@@ -209,11 +127,135 @@ static bool Person__init__(int argc, py_Ref argv) {
         py_i64 age = py_toint(py_arg(2));
         t_person__ctor(ptr, id, age);
     } else {
-        return TypeError("Person__init__(): xpected 0 or 2 arguments, got %d", argc - 1);
+        return TypeError("Person__init__(): expected 0 or 2 arguments, got %d", argc - 1);
+    }
+    py_newnone(py_retval()); // return None
+    return true;
+}
+
+static bool Person__id(int argc, py_Ref argv) {
+    t_person* ptr = py_touserdata(py_arg(0));
+    py_newint(py_retval(), ptr->id);
+    return true;
+}
+
+static bool Person__age(int argc, py_Ref argv) {
+    t_person* ptr = py_touserdata(py_arg(0));
+    py_newint(py_retval(), ptr->age);
+    return true;
+}
+
+static bool Person__set_id(int argc, py_Ref argv) {
+    t_person* ptr = py_touserdata(py_arg(0));
+    if (argc == 2) {
+        ptr->id = py_toint(py_arg(1));
+        return true;
+    }
+    return TypeError("Person__set_id(): expected 1 arguments, got %d", argc - 1);
+}
+
+static bool Person__set_age(int argc, py_Ref argv) {
+    t_person* ptr = py_touserdata(py_arg(0));
+    if (argc == 2) {
+        ptr->age = py_toint(py_arg(1));
+        return true;
+    }
+    return TypeError("Person__set_age(): expected 1 arguments, got %d", argc - 1);
+}
+
+
+
+// ----------------------------------------------------------------------------
+// Atom (not-yet-working)
+
+// typedef struct AtomObject {
+//     t_atom *ptr;
+//     bool ptr_owner;
+//     long size;
+// } AtomObject;
+
+// static void AtomObject__ctor(AtomObject* self, long size) {
+//     if (size > 0) {
+//         self->size = size;
+//         self->ptr = (t_atom *)sysmem_newptr(size * sizeof(t_atom));
+//         self->ptr_owner = true;
+//     } else {
+//         self->ptr = NULL;
+//         self->size = 0;
+//         self->ptr_owner = false;
+//     }
+// }
+
+// static void AtomObject__dtor(AtomObject* self) {
+//     if (self->ptr != NULL && self->ptr_owner) {
+//         sysmem_freeptr(self->ptr);
+//         self->ptr = NULL;
+//     }
+// }
+
+// static bool Atom__new__(int argc, py_Ref argv) {
+//     AtomObject* obj = py_newobject(py_retval(), py_totype(argv), 0, sizeof(AtomObject));
+//     AtomObject__ctor(obj, 0);
+//     return true;
+// }
+
+// static bool Atom__new__(int argc, py_Ref argv) {
+//     AtomObject* obj = py_newobject(py_retval(), py_totype(argv), 0, sizeof(AtomObject));
+//     post("Atom__new__ argc = %d", argc);
+
+//     if (argc > 0) {
+//         py_TValue* args = py_tuple_data(argv);
+//         int size = py_tuple_len(argv);
+//         AtomObject__ctor(obj, size);
+//         return true;
+//     }
+//     return TypeError("Person__new__(): expected 2 arguments, got %d", argc - 1);
+// }
+
+// static bool Atom__init__(int argc, py_Ref argv) {
+//     // Atom(self, *args)
+//     if(argc == 0) {
+//         // do nothing
+//     } else {
+//         py_ObjectRef tuple_item;
+//         py_i64 long_item;
+//         AtomObject* obj = py_touserdata(py_arg(0));
+//         py_TValue* args = py_tuple_data(argv);
+//         int tuple_len = py_tuple_len(argv);
+//         post("tuple_len: %d", tuple_len);
+//         PY_CHECK_ARGC(2); // 0: self, 1: `*args` tuple
+//         PY_CHECK_ARG_TYPE(1, tp_tuple);
+//         for(int i = 0; i < tuple_len; i++) {
+//             tuple_item = py_tuple_getitem(py_arg(1), i);
+//             long_item = py_toint(tuple_item);
+//             post("%d: %d", i, (int)long_item);
+//         }
+//     }
+//     py_newnone(py_retval());
+//     return true;
+// }
+
+
+// ----------------------------------------------------------------------------
+// utils
+
+static bool print_args(int argc, py_Ref argv) {
+    py_ObjectRef tuple_item;
+    py_i64 long_item;
+    py_TValue* args = py_tuple_data(argv);
+    int tuple_len = py_tuple_len(argv);
+    post("tuple_len: %d", tuple_len);
+    PY_CHECK_ARGC(1); // 1 arg: `*args` tuple
+    PY_CHECK_ARG_TYPE(0, tp_tuple);
+    for(int i = 0; i < tuple_len; i++) {
+        tuple_item = py_tuple_getitem(py_arg(0), i);
+        long_item = py_toint(tuple_item);
+        post("%d: %d", i, (int)long_item);
     }
     py_newnone(py_retval());
     return true;
 }
+
 
 
 // ----------------------------------------------------------------------------
@@ -224,13 +266,21 @@ bool api_module_initialize(void) {
     py_bindfunc(mod, "post", api_post);
     py_bindfunc(mod, "error", api_error);
 
+    py_bind(mod, "print_args(*args)", print_args);
+
     py_Type type = py_newtype("Person", tp_object, mod, NULL);
     py_bindmagic(type, __new__, Person__new__);
     py_bindmagic(type, __init__, Person__init__);
+    py_bindproperty(type, "id", Person__id, Person__set_id);
+    py_bindproperty(type, "age", Person__age, Person__set_age);
 
     // py_Type type = py_newtype("Atom", tp_object, mod, NULL);
     // py_bindmagic(type, __new__, Atom__new__);
-    // py_bindmagic(type, __init__, Atom__init__);
+    // py_bind(type, "__new__(cls, *args, **kw)", Atom__new__);
+    // py_bind(type, "__init__(self, *args)", Atom__init__); // crashes
+    // build ok but doesn't work
+    // py_bindmagic(type, "__init__(*args)", Atom__init__); 
+    // py_bindmagic(type, "__init__", Atom__init__);
 
     return true;
 }
