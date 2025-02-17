@@ -91,7 +91,7 @@ cdef mx.t_symbol* str_to_sym(str string):
 
     gensym(str s) -> t_symbol*
     """
-    return mx.gensym(string.encode('utf-8'))
+    return mx.gensym(string.encode())
 
 
 cdef str sym_to_str(mx.t_symbol* symbol):
@@ -158,7 +158,7 @@ cdef class MaxObject:
         cdef MaxObject obj = MaxObject.__new__(MaxObject)
         obj.ptr_owner = True
         obj.ptr = <mx.t_object*>mx.object_new_parse(
-            str_to_sym(namespace), str_to_sym(classname), parsestr.encode("utf8"))
+            str_to_sym(namespace), str_to_sym(classname), parsestr.encode())
         obj.classname = classname
         return obj
 
@@ -175,6 +175,18 @@ cdef class MaxObject:
         else:
             obj.classname = "newobj"
         return obj
+
+    @property
+    def patcher(self) -> Patcher:
+        """Get parent patcher of max object"""
+        cdef Patcher p = Patcher.from_object(self.ptr)
+        return p
+
+    @property
+    def box (self) -> Box:
+        """Get object's box if any"""
+        cdef Box b = Box.from_ptr(self.ptr)
+        return b
 
     def method_exists(self, str name) -> bool:
         """checks if named method exists"""
@@ -202,7 +214,7 @@ cdef class MaxObject:
     def _method_parsestr(self, str name, str parsestr):
         """combines object_method_typed() + atom_setparse() to define method arguments."""
         cdef mx.t_max_err err = mx.object_method_parse(
-            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
+            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode(), NULL)
         if err == mx.MAX_ERR_NONE:
             return
         return error(f"method '{name}' call failed")
@@ -360,7 +372,7 @@ cdef class MaxObject:
     def set_attr_from_str(self, str name, str value):
         """Set an attribute value with one or more atoms parsed from a C-string."""
         cdef mx.t_max_err err = mx.object_attr_setparse(<mx.t_object *>self.ptr, 
-            str_to_sym(name), value.encode('utf-8'))
+            str_to_sym(name), value.encode())
 
     def clone(self) -> MaxObject:
         """return clone of object"""
@@ -554,7 +566,7 @@ cdef class Atom:
         """Parse a string into an Atom instance."""
         cdef mx.t_atom *ptr = NULL
         cdef long size = 0
-        cdef mx.t_max_err err = mx.atom_setparse(&size, &ptr, parsestr.encode("utf8"))
+        cdef mx.t_max_err err = mx.atom_setparse(&size, &ptr, parsestr.encode())
         if err != mx.MAX_ERR_NONE:
             raise TypeError
         return Atom.from_ptr(ptr, size, owner=True)
@@ -1805,7 +1817,7 @@ cdef class Dictionary:
         """Convert a C-string of Dictionary Syntax into a C-string of JSON."""
         cdef char *json = NULL
         cdef long jsonsize = 0
-        cdef mx.t_max_err err = mx.dictobj_jsonfromstring(&jsonsize, &json, dict_string.encode('utf-8'))
+        cdef mx.t_max_err err = mx.dictobj_jsonfromstring(&jsonsize, &json, dict_string.encode())
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not convert dictionary to json")
         return json.decode()
@@ -1816,7 +1828,7 @@ cdef class Dictionary:
         cdef char * errorstring = NULL
         cdef char* dict_string_ptr = <char *>mx.sysmem_newptr((len(dict_string)+1) * sizeof(char))
         cdef long n = len(dict_string) + 1
-        strcpy(dict_string_ptr, dict_string.encode('utf8'))
+        strcpy(dict_string_ptr, dict_string.encode())
         cdef mx.t_max_err err = mx.dictobj_dictionaryfromstring(&d, dict_string_ptr, <int>str_is_already_json, errorstring)
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not create dictionary from string: {errorstring.decode()}")
@@ -1953,7 +1965,7 @@ cdef class DatabaseView:
         self.ptr = NULL
         self.ptr_owner = True
         self.sql = sql
-        mx.db_view_create(db.ptr, sql.encode('utf-8'), &self.ptr)
+        mx.db_view_create(db.ptr, sql.encode(), &self.ptr)
 
     def __dealloc__(self):
         if self.ptr is not NULL and self.db and self.ptr_owner:
@@ -1979,7 +1991,7 @@ cdef class DatabaseView:
     def setquery(self, str sql):
         """Set the query of a view."""
         self.sql = sql
-        cdef mx.t_max_err err = mx.db_view_setquery(self.ptr, sql.encode('utf-8'))
+        cdef mx.t_max_err err = mx.db_view_setquery(self.ptr, sql.encode())
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not set query")
 
@@ -1997,7 +2009,7 @@ cdef class Database:
 
     def __init__(self, str db_name, str db_path):
         self.db_name = str_to_sym(db_name)
-        self.db_path = db_path.encode('utf-8')
+        self.db_path = db_path.encode()
         # mx.db_open(self.db_name, self.db_path, &self.db)
 
     def __dealloc__(self):
@@ -2016,16 +2028,16 @@ cdef class Database:
 
     def query_table_new(self, str tablename):
         """Create a new table."""
-        mx.db_query_table_new(self.ptr, tablename.encode('utf-8'))
+        mx.db_query_table_new(self.ptr, tablename.encode())
 
     def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags):
         """Add a column to a table."""
         mx.db_query_table_addcolumn(
             self.ptr,
-            tablename.encode('utf-8'),
-            columnname.encode('utf-8'),
-            columntype.encode('utf-8'),
-            flags.encode('utf-8')
+            tablename.encode(),
+            columnname.encode(),
+            columntype.encode(),
+            flags.encode()
         )
 
     def transaction_start(self):
@@ -2043,7 +2055,7 @@ cdef class Database:
     def query_direct(self, str sql) -> DatabaseResult:
         """Execute a direct query."""
         cdef mx.t_db_result* dbresult = NULL
-        cdef mx.t_max_err err = mx.db_query_direct(self.ptr, &dbresult, sql.encode('utf-8'))
+        cdef mx.t_max_err err = mx.db_query_direct(self.ptr, &dbresult, sql.encode())
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not execute direct query")
         return DatabaseResult.from_ptr(dbresult, True)
@@ -2054,16 +2066,16 @@ cdef class Database:
 
     def query_table_new(self, str tablename) -> int:
         """Create a new table."""
-        return mx.db_query_table_new(self.ptr, tablename.encode('utf-8'))
+        return mx.db_query_table_new(self.ptr, tablename.encode())
 
     def query_table_addcolumn(self, str tablename, str columnname, str columntype, str flags) -> int:
         """Add a column to a table."""
         return mx.db_query_table_addcolumn(
             self.ptr,
-            tablename.encode('utf-8'),
-            columnname.encode('utf-8'),
-            columntype.encode('utf-8'),
-            flags.encode('utf-8')
+            tablename.encode(),
+            columnname.encode(),
+            columntype.encode(),
+            flags.encode()
         )
 
     def view_create(self, str sql) -> DatabaseView:
@@ -2314,7 +2326,7 @@ cdef class Binbuf:
         cdef long n = len(text) + 1
         cdef short err = 0
 
-        strcpy(src_text, text.encode('utf8'))
+        strcpy(src_text, text.encode())
         err = mx.binbuf_text(self.ptr, &src_text, n)
         mx.sysmem_freeptr(src_text)
         if err:
@@ -2427,7 +2439,7 @@ cdef class Atombuf:
         """
         cdef char* src_text = <char *>mx.sysmem_newptr((len(text)+1) * sizeof(char))
         cdef long n = len(text) + 1
-        strcpy(src_text, text.encode('utf8'))
+        strcpy(src_text, text.encode())
         mx.atombuf_text(&self.ptr, &src_text, n)
         mx.sysmem_freeptr(src_text)
 
@@ -2697,7 +2709,9 @@ cdef class Patcher:
     cdef Patcher from_object(mx.t_object *x):
         """Create a reference to a pstcher object from object."""
         cdef Patcher patcher = Patcher.__new__(Patcher)
-        mx.object_obex_lookup(x, mx.gensym("#P"), &patcher.ptr)
+        cdef mx.t_max_err err = mx.object_obex_lookup(x, mx.gensym("#P"), &patcher.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise TypeError("unable to obtain owning patcher for object")
         if patcher.ptr is NULL:
             raise MemoryError
         return patcher
@@ -2867,7 +2881,7 @@ cdef class Patcher:
         combination of attribute and sprintf syntax.
         """
         return <mx.t_object *>mx.newobject_sprintf(
-            <mx.t_object *>self.ptr, text.encode('utf-8'))
+            <mx.t_object *>self.ptr, text.encode())
 
     def add_box(self, maxclass: str, x: float, y: float) -> bool:
         """Create a new box in the patcher."""
@@ -2894,7 +2908,7 @@ cdef class Patcher:
         It can be used for UI objects or text objects so this is the simplest way to 
         create objects from C.
         """
-        return mx.newobject_fromboxtext(self.ptr, text.encode('utf-8'))
+        return mx.newobject_fromboxtext(self.ptr, text.encode())
 
     def add_tbox(self, str text) -> bool:
         """Create an object from the passed in text."""
@@ -2926,7 +2940,7 @@ cdef class Patcher:
         Combines object_method_typed() + atom_setparse() to define method arguments.
         """
         cdef mx.t_max_err err = mx.object_method_parse(
-            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
+            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode(), NULL)
         if err == mx.MAX_ERR_NONE:
             return
         return error(f"method '{name}' call failed")
@@ -3303,7 +3317,7 @@ cdef class Patcher:
 cdef class Box:
     """Wraps a Max t_jbox user-interface object."""
 
-    cdef mx.t_object *ptr
+    cdef mx.t_object *ptr              # typedef t_object t_box
     cdef mx.t_object *patcherview
 
     def __cinit__(self):
@@ -3313,8 +3327,11 @@ cdef class Box:
     @staticmethod
     cdef Box from_ptr(mx.t_object *x):
         """Create a box object from a box pointer."""
+        cdef mx.t_max_err err
         cdef Box box = Box.__new__(Box)
-        mx.object_obex_lookup(x, mx.gensym("#P"), &box.ptr)
+        err = mx.object_obex_lookup(x, mx.gensym("#B"), &box.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not create a box object from an object pointer")
         if box.ptr is NULL:
             raise MemoryError
         return box
@@ -3324,7 +3341,7 @@ cdef class Box:
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_rect_for_view(self.ptr, self.patcherview, &pr)
         if err != mx.MAX_ERR_NONE:
-            return error("could not get rect from patcherview's box")
+            raise TypeError("could not get rect from patcherview's box")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
     def set_rect_for_view(self, rect: Rect):
@@ -3332,14 +3349,14 @@ cdef class Box:
         cdef mx.t_rect pr = rect
         cdef mx.t_max_err err = mx.jbox_set_rect_for_view(self.ptr, self.patcherview, &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set rect for box in patcherview")
+           raise TypeError("could not set rect for box in patcherview")
 
     def get_rect_for_sym(self, which: str) -> Rect:
         """Find the rect for a box with a given attribute name."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_rect_for_sym(self.ptr, str_to_sym(which), &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not get rect for box given attribute name")
+           raise TypeError("could not get rect for box given attribute name")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
     def set_rect_for_sym(self, which: str, rect: Rect):
@@ -3347,21 +3364,21 @@ cdef class Box:
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_rect_for_sym(self.ptr, str_to_sym(which), &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set rect for box with given attribute name")
+           raise TypeError("could not set rect for box with given attribute name")
 
     def set_rect(self, rect: Rect):
         """Set both the presentation rect and the patching rect."""
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_rect(self.ptr, &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set rect for box")
+           raise TypeError("could not set rect for box")
 
     def get_patching_rect(self):
         """Retrieve the patching rect of a box."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_patching_rect(self.ptr, &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not get patching rect for box")
+           raise TypeError("could not get patching rect for box")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
     def set_patching_rect(self, rect: Rect):
@@ -3369,14 +3386,14 @@ cdef class Box:
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_patching_rect(self.ptr, &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set patching rect for box")
+           raise TypeError("could not set patching rect for box")
 
     def get_presentation_rect(self):
         """Retrieve the presentation rect of a box."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_presentation_rect(self.ptr, &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not get presentation rect for box")
+           raise TypeError("could not get presentation rect for box")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
     def set_presentation_rect(self, rect: Rect):
@@ -3384,21 +3401,21 @@ cdef class Box:
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_presentation_rect(self.ptr, &pr)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set presentation rect for box")
+           raise TypeError("could not set presentation rect for box")
 
     def set_position(self, x: float, y: float):
         """Set the position of a box for both presentation and patching views."""
         cdef mx.t_pt pos  = (x, y)
         cdef mx.t_max_err err = mx.jbox_set_position(self.ptr, &pos)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set the position of a box for both views")
+           raise TypeError("could not set the position of a box for both views")
 
     def get_patching_position(self) -> tuple:
         """Fetch the position of a box for the patching view."""
         cdef mx.t_pt pos
         cdef mx.t_max_err err = mx.jbox_get_patching_position(self.ptr, &pos)
         if err != mx.MAX_ERR_NONE:
-           return error("could not get patching position for box")
+           raise TypeError("could not get patching position for box")
         return (pos.x, pos.y)
 
     def set_presentation_position(self, x: float, y: float):
@@ -3406,21 +3423,21 @@ cdef class Box:
         cdef mx.t_pt pos  = (x, y)
         cdef mx.t_max_err err = mx.jbox_set_presentation_position(self.ptr, &pos)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set the position of a box for presentation view")
+           raise TypeError("could not set the position of a box for presentation view")
 
     def set_size(self, width: float, height: float):
         """Set the size of a box for both the presentation and patching views."""
         cdef mx.t_size size  = (width, height)
         cdef mx.t_max_err err = mx.jbox_set_size(self.ptr, &size)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set the size of a box for both views")
+           raise TypeError("could not set the size of a box for both views")
 
     def get_patching_size(self) -> tuple:
         """Fetch the size of a box for the patching view."""
         cdef mx.t_size size
         cdef mx.t_max_err err = mx.jbox_get_patching_size(self.ptr, &size)
         if err != mx.MAX_ERR_NONE:
-           return error("could not get patching size for box")
+           raise TypeError("could not get patching size for box")
         return (size.width, size.height)
 
     def set_patching_size(self, width: float, height: float):
@@ -3428,14 +3445,14 @@ cdef class Box:
         cdef mx.t_size size  = (width, height)
         cdef mx.t_max_err err = mx.jbox_set_patching_size(self.ptr, &size)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set the size of a box for the patching view.")
+           raise TypeError("could not set the size of a box for the patching view.")
 
     def get_presentation_size(self) -> tuple:
         """Fetch the size of a box for the presentation view."""
         cdef mx.t_size size
         cdef mx.t_max_err err = mx.jbox_get_presentation_size(self.ptr, &size)
         if err != mx.MAX_ERR_NONE:
-           return error("could not get presentation size for box")
+           raise TypeError("could not get presentation size for box")
         return (size.width, size.height)
 
     def set_presentation_size(self, width: float, height: float):
@@ -3443,7 +3460,7 @@ cdef class Box:
         cdef mx.t_size size  = (width, height)
         cdef mx.t_max_err err = mx.jbox_set_presentation_size(self.ptr, &size)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set the size of a box for the presentation view.")
+           raise TypeError("could not set the size of a box for the presentation view.")
 
     def get_maxclass(self) -> str:
         """Retrieve the name of the class of the box's object."""
@@ -3460,7 +3477,7 @@ cdef class Box:
         cdef mx.t_object* patcher = mx.jbox_get_patcher(self.ptr)
         if patcher is not NULL:
             return Patcher.from_ptr(<mx.t_object*>patcher)
-        error("box does not have an associated patcher""")
+        raise TypeError("box does not have an associated patcher")
 
     def get_nextobject(self) -> Box:
         """The next box in the patcher's (linked) list of boxes."""
@@ -3480,7 +3497,7 @@ cdef class Box:
         """Set a box hidden attribute"""
         cdef mx.t_max_err err = mx.jbox_set_hidden(self.ptr, on)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set box's hidden attribute")
+           raise TypeError("could not set box's hidden attribute")
 
     def get_fontname(self) -> str:
         """Retrieve a box's 'fontname' attribute."""
@@ -3491,7 +3508,7 @@ cdef class Box:
         """Set a box's 'fontname' attribute."""
         cdef mx.t_max_err err = mx.jbox_set_fontname(self.ptr, str_to_sym(name))
         if err != mx.MAX_ERR_NONE:
-           return error("could not set box's fontname attribute")
+           raise TypeError("could not set box's fontname attribute")
 
     def get_fontsize(self) -> float:
         """Retrieve a box's 'fontsize' attribute."""
@@ -3501,7 +3518,7 @@ cdef class Box:
         """Set a box's 'fontsize' attribute."""
         cdef mx.t_max_err err = mx.jbox_set_fontsize(self.ptr, size)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set box's fontsize attribute")
+           raise TypeError("could not set box's fontsize attribute")
 
     def get_color(self) -> Rgba:
         """Retrieve a box's 'color' attribute."""
@@ -3509,14 +3526,14 @@ cdef class Box:
         cdef mx.t_max_err err = mx.jbox_get_color(self.ptr, &c)
         if err == mx.MAX_ERR_NONE:
             return Rgba(c.red, c.green, c.blue, c.alpha)
-        return error("could not get box's color")
+        raise TypeError("could not get box's color")
 
     def set_color(self, color: Rgba):
         """Set a box's 'color' attribute."""
         cdef mx.t_jrgba c = color
         cdef mx.t_max_err err = mx.jbox_set_color(self.ptr, &c)
         if err != mx.MAX_ERR_NONE:
-           return error("could not set box's color")
+           raise TypeError("could not set box's color")
  
     def get_varname(self) -> str:
         """Retrieve a box's scripting name."""
@@ -3527,7 +3544,7 @@ cdef class Box:
         """set a box's scripting name."""
         cdef mx.t_max_err err = mx.jbox_set_varname(self.ptr, str_to_sym(varname))
         if err != mx.MAX_ERR_NONE:
-           return error("could not set box's scripting name")
+           raise TypeError("could not set box's scripting name")
 
     def get_id(self) -> str:
         """Retrieve a box's unique id."""
@@ -3573,7 +3590,7 @@ cdef class MaxApp:
         Combines object_method_typed() and atom_setparse() to define method arguments.
         """
         cdef mx.t_max_err err = mx.object_method_parse(
-            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode('utf8'), NULL)
+            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode(), NULL)
         if err == mx.MAX_ERR_NONE:
             return
         return error(f"method '{name}' call failed")
@@ -3732,7 +3749,7 @@ cdef class PyExternal:
     Should expose as much functionality as possible.
     """
     cdef px.t_py *ptr
-    cdef bytes name
+    cdef public str name
 
     def __cinit__(self):
         """Retrieves the py object name and reference.
@@ -3744,10 +3761,9 @@ cdef class PyExternal:
         allows any module in the namespace to get a reference
         (as below) to its parent object.
         """
-        PY_OBJ_NAME = getattr(__builtins__, 'PY_OBJ_NAME')
-        self.name = PY_OBJ_NAME.encode('utf-8')
+        self.name = getattr(__builtins__, 'PY_OBJ_NAME')
         self.ptr = <px.t_py *>mx.object_findregistered(
-            mx.CLASS_BOX, mx.gensym(self.name))
+            mx.CLASS_BOX, mx.gensym(self.name.encode()))
 
     def bang(self):
         """Send bang out of left (default) outlet"""
@@ -3763,15 +3779,15 @@ cdef class PyExternal:
 
     def log_info(self, str msg):
         """Log info using object_post."""
-        px.py_info(self.ptr, msg.encode('utf8'))
+        px.py_info(self.ptr, msg.encode())
 
     def log_debug(self, str msg):
         """Log debug using object_post."""
-        px.py_debug(self.ptr, msg.encode('utf8'))
+        px.py_debug(self.ptr, msg.encode())
 
     def log_error(self, str s):
         """Log error using object_error."""
-        px.py_error(self.ptr, s.encode('utf8'))
+        px.py_error(self.ptr, s.encode())
 
     def scan(self):
         """Scan patcher for named objects."""
@@ -3800,6 +3816,11 @@ cdef class PyExternal:
         """Get the containing patcher."""
         patcher = Patcher.from_object(<mx.t_object*>self.ptr)
         return patcher
+
+    def get_box(self) -> Box:
+        """Get the external's box."""
+        box = Box.from_ptr(<mx.t_object*>self.ptr)
+        return box
 
     def get_buffer(self, name: str) -> Buffer:
         """Retrieve a buffer by name."""
@@ -3856,7 +3877,7 @@ cdef class PyExternal:
 
     cdef bint table_exists(self, str table_name):
         """Return true if a table exists."""
-        return px.py_table_exists(self.ptr, table_name.encode('utf-8'))
+        return px.py_table_exists(self.ptr, table_name.encode())
 
     cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
         """Convert a Python list to a table."""
@@ -4055,11 +4076,11 @@ def lookup(name):
 
 def post(str s):
     """Post a message to the console."""
-    mx.post(s.encode('utf-8'))
+    mx.post(s.encode())
 
 def error(str s):
     """Post an error message to the console."""
-    mx.error(s.encode('utf-8'))
+    mx.error(s.encode())
 
 
 ## get object helpers

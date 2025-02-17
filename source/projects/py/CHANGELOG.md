@@ -2,7 +2,9 @@
 
 ## [0.3.x]
 
+- Added `test_api_pyxternal.py` and `test_api_pyexternal.maxpat`
 
+- Added `api.MaxObject.patcher` and `api.MaxObject.box` properties to api
 
 - Added `api.PyExternal.out_atoms` to api
 
