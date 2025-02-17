@@ -21,7 +21,7 @@ Along the way, a number of externals have been developed for use in a live Max e
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [py]       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
-[pyjs]     | max-sdk    | c      | js-friendly -- written as a Max javascript-extension
+[pyjs]     | max-sdk    | c      | js/v8-friendly -- written as a Max javascript-extension
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 [cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution

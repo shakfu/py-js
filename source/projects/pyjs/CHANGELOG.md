@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.1.x]
+
+- Successfully tested `pyjs` using Max 9's `v8` object. Added a test in `py-js/patchers/tests/test_pyjs/test_pyjs_v8.maxpat`.
+
+
 ## [0.1.1]
 
 ### Added

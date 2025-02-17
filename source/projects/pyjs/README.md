@@ -1,6 +1,6 @@
 # pyjs: a python3 jsextension for max
 
-General purpose python3 jsextension, which means that it is a c-based Max external which can only be accessed via the javascript `js` interface.
+General purpose python3 jsextension, which means that it is a c-based Max external which can be accessed via the javascript `js` object or the `v8` object introduced in Max 9.
 
 ```text
 pyjs max external (jsextension)
@@ -34,11 +34,11 @@ Ultimately all externals should have their own folders and documentation, but it
 
 ## Overview
 
-The `pyjs` max external/jsextension provides a `PyJS` class and a minimal subset of the `py` external's features which work well with the max `js` object and javascript code (like returning json directly from evaluations of python expressions).
+The `pyjs` max external/jsextension provides a `PyJS` class and a minimal subset of the `py` external's features which work well with the Max `js` object or the `v8` object and javascript code (like returning json directly from evaluations of python expressions).
 
-Th external has access to builtin python modules and the whole universe of 3rd party modules.
+The external has access to builtin python modules and the whole universe of 3rd party modules.
 
-General purpose python3 jsextension, which means that it's a c-based Max external which can only be accessed via the javascript `js` interface.
+General purpose python3 jsextension, which means that it's a c-based Max external which can only be accessed via the javascript `js` or `v8` interface.
 
 ```text
 pyjs max external (jsextension)
@@ -116,6 +116,9 @@ Deployment Scenario    | `pyjs`
 Linked to sys python   | yes
 Embeddded in package   | yes
 Embeddded in external  | yes
+
+
+Please review the [py](https://github.com/shakfu/py-js/tree/main/source/projects/py) documentation for more information about building in the case of (2) and (3). Since the `py` and `pyjs` are built together simultaneously, the information provided there is quite relevent for `pyjs`.
 
 ## Caveats
 

@@ -41,12 +41,12 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-90",
-					"linecount" : 8,
+					"linecount" : 5,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 5.0, 44.0, 315.0, 114.0 ],
-					"text" : "This page introduces the features of the pyjs jsextension.\n\nClick on the messages to the right and below the js object and on the pyjs_repl subbatcher.\n\nNote that the pyjs works equally well with the v8 object. See  py-js/patchers/tests/test_pyjs/test_pyjs_v8.maxpat for an example of pyjs working with v8."
+					"patching_rect" : [ 5.0, 44.0, 283.0, 74.0 ],
+					"text" : "This page introduces the features of the pyjs jsextension.\n\nClick on the messages to the right and below the js object and on the pyjs_repl subbatcher."
 				}
 
 			}
@@ -627,18 +627,25 @@
 			}
 , 			{
 				"box" : 				{
+					"filename" : "test_pyjs.js",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 123.5, 352.0, 141.0, 22.0 ],
+					"patching_rect" : [ 123.5, 352.0, 145.0, 22.0 ],
 					"saved_object_attributes" : 					{
-						"filename" : "test_pyjs.js",
 						"parameter_enable" : 0
 					}
 ,
-					"text" : "js @filename test_pyjs.js",
+					"text" : "v8 @filename test_pyjs.js",
+					"textfile" : 					{
+						"filename" : "test_pyjs.js",
+						"flags" : 0,
+						"embed" : 0,
+						"autowatch" : 1
+					}
+,
 					"varname" : "bob"
 				}
 
@@ -947,14 +954,14 @@
 		"dependency_cache" : [ 			{
 				"name" : "pyjs_repl.maxpat",
 				"bootpath" : "~/projects/py-js/patchers/bpatchers_ui",
-				"patcherrelativepath" : "../patchers/bpatchers_ui",
+				"patcherrelativepath" : "../../bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "test_pyjs.js",
 				"bootpath" : "~/projects/py-js/javascript",
-				"patcherrelativepath" : "../javascript",
+				"patcherrelativepath" : "../../../javascript",
 				"type" : "TEXT",
 				"implicit" : 1
 			}
