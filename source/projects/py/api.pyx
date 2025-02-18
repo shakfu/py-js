@@ -1292,18 +1292,34 @@ cdef class Dictionary:
             self.ptr = NULL
 
     @classmethod
-    def from_atoms(cls, Atom atoms) -> Dictionary:
-        """Create an unregistered dictionary from atoms as dict-syntax"""
+    def from_dict(cls, dict src_dict, str name = "") -> Dictionary:
+        """Create an registered or unregistered Dictionary from a python dict"""
+        cdef Dictionary _dict = cls(name)
+        for key, value in src_dict.items():
+            _dict[key] = value
+        return _dict
+
+    @classmethod
+    def from_kwargs(cls, **kwargs) -> Dictionary:
+        """Create an unregistered Dictionary from kwargs entries"""
         cdef Dictionary _dict = cls()
+        for key, value in kwargs.items():
+            _dict[key] = value
+        return _dict
+
+    @classmethod
+    def from_atoms(cls, Atom atoms, str name = "") -> Dictionary:
+        """Create an unregistered dictionary from atoms as dict-syntax"""
+        cdef Dictionary _dict = cls(name)
         cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms(&_dict.ptr, atoms.size, atoms.ptr)
         if err != mx.MAX_ERR_NONE:
             raise TypeError("Could not create an unregistered dictionary from atoms as dict-syntax")
         return _dict
 
     @classmethod
-    def from_atoms_extended(cls, Atom atoms) -> Dictionary:
+    def from_atoms_extended(cls, Atom atoms, str name = "") -> Dictionary:
         """Create a new t_dictionary from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
-        cdef Dictionary _dict = cls()
+        cdef Dictionary _dict = cls(name)
         cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms_extended(&_dict.ptr, NULL, atoms.size, atoms.ptr)
         if err != mx.MAX_ERR_NONE:
             raise TypeError("could not create dictionary from atoms")
@@ -1455,6 +1471,8 @@ cdef class Dictionary:
             atom = Atom.from_ptr(argv, argc)
             return atom.to_list()
         return error(f"could not get atoms from dict with key {key}")
+
+    get_list = get_atoms
 
     def get_string(self, str key) -> str:
         """Retrieve a C-string pointer from the dictionary."""

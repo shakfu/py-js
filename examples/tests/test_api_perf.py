@@ -10,7 +10,7 @@ def benchmark1():
     data = []
     for i in range(ARRAY_SIZE):
         data.append(74)
-  
+
     api.post("starting benchmark1")
     starttime = time.time()
     val = 0
@@ -19,7 +19,7 @@ def benchmark1():
         for j in range(ARRAY_SIZE):
             val += data[j]
 
-    elapsedtime = round((time.time() - starttime) * 1000) # ms
+    elapsedtime = round((time.time() - starttime) * 1000)  # ms
     api.post(f"benchmark results: {LOOP_ITERATIONS} iterations in {elapsedtime} ms")
     api.post(f"arrray accumulation is: {val}")
     api.post("compare with js in 170ms and v8 in 27ms (pre-jit)")

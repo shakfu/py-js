@@ -6,25 +6,31 @@ import api
 def test_maxapp_init():
     app = api.MaxApp()
 
+
 def test_maxapp_midilist():
     app = api.MaxApp()
     app.midilist()
+
 
 def test_maxapp_clean():
     app = api.MaxApp()
     app.clean()
 
+
 def test_maxapp_maxwindow():
     app = api.MaxApp()
     app.maxwindow()
+
 
 def test_maxapp_clearmaxwindow():
     app = api.MaxApp()
     app.clearmaxwindow()
 
+
 def test_maxapp_paths():
     app = api.MaxApp()
     app.paths()
+
 
 def test_maxapp_externaleditor():
     app = api.MaxApp()

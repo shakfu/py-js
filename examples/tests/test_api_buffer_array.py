@@ -122,7 +122,7 @@ def test_buffer_memoryview_read():
         assert not buf.readonly
         assert buf.obj is mybuf
         api.post(f"first: buf[0] = {buf[0]}")
-        api.post(f"last: buf[{n-1}] = {buf[n-1]}")
+        api.post(f"last: buf[{n - 1}] = {buf[n - 1]}")
 
 
 def test_buffer_memoryview_write():

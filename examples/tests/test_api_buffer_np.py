@@ -5,7 +5,6 @@ import numpy as np
 import api
 
 
-
 def test_create_empty_buffer():
     name = "drum"
     duration_ms = 500

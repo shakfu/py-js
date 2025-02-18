@@ -10,6 +10,7 @@ def test_db_init():
     db.close()
     assert db_path.exists()
 
+
 def test_db_result():
     db_path = Path("/tmp/test_db.sqlite3")
     db = api.Database("mydb", str(db_path))
@@ -19,6 +20,7 @@ def test_db_result():
     assert result.numrecords() == 0
     db.close()
 
+
 def test_db_view():
     db_path = Path("/tmp/test_db.sqlite3")
     db = api.Database("mydb", str(db_path))
@@ -27,6 +29,7 @@ def test_db_view():
     view = db.view_create("SELECT * FROM mytable")
     assert view.sql == "SELECT * FROM mytable"
     db.close()
+
 
 def test_db_view_result():
     db_path = Path("/tmp/test_db.sqlite3")

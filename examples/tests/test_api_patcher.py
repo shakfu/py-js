@@ -38,35 +38,42 @@ def test_patcher_add_box():
     p.add_box("toggle", 240.0, 150.0)
     api.bang_success()
 
+
 def test_patcher_add_textbox():
     p = api.get_patcher()
     p.add_textbox("metro 400", 100.0, 150.0)
     api.bang_success()
+
 
 def test_patcher_add_tbox():
     p = api.get_patcher()
     p.add_tbox("buffer~ buf jongly.aif")
     api.bang_success()
 
+
 def test_patcher_script_newdefault():
     p = api.get_patcher()
     p.newdefault("var3", 200, 150, "number")
     api.bang_success()
+
 
 def test_patcher_script_connect():
     p = api.get_patcher()
     p.connect("var1", 0, "var2", 0)
     api.bang_success()
 
+
 def test_patcher_script_disconnect():
     p = api.get_patcher()
     p.disconnect("var1", 0, "var2", 0)
     api.bang_success()
 
+
 def test_patcher_script_hide():
     p = api.get_patcher()
     p.hide("var1")
     api.bang_success()
+
 
 def test_patcher_script_show():
     p = api.get_patcher()

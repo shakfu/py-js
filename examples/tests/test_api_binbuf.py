@@ -30,7 +30,6 @@ max v2;
 """
 
 
-
 import api
 
 
@@ -43,27 +42,32 @@ def test_binbuf_append():
     buf.append("#N", "buffer~", "buf", "cello-f2.aif")
     buf.eval()
 
+
 def test_binbuf_insert():
     buf = api.Binbuf()
     buf.insert("#N", "buffer~", "buf", "vibes-a1.aif")
     buf.eval()
+
 
 def test_binbuf_add_text():
     buf = api.Binbuf()
     buf.add_text("#N buffer~ buf drumLoop.aif")
     buf.eval()
 
+
 def test_binbuf_to_text():
     buf = api.Binbuf()
     buf.add_text("#N buffer~ buf jongly.aif")
     api.post(buf.to_text())
 
+
 def test_binbuf_add_textblock():
     # does nothing but 'Max > File > New from Clipboard' creates
     # a new patcher window with connected objects!!
     buf = api.Binbuf()
-    buf.add_text(eg) 
+    buf.add_text(eg)
     buf.eval()
+
 
 def test_binbuf_new_from_clipboard():
     buf = api.Binbuf()
