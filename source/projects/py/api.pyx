@@ -1263,13 +1263,25 @@ cdef class Dictionary:
         self.to_release = False
         self.name = ""
     
-    def __init__(self):
-        self.ptr = mx.dictionary_new()
+    def __init__(self, str name = ""):
+        cdef mx.t_symbol* name_ptr = str_to_sym(name)
+        cdef mx.t_dictionary *d = NULL
+        if name:
+            # Create (or reference an existing) dictionary by name
+            self.ptr = mx.dictobj_findregistered_retain(name_ptr)
+            self.to_release = True
+            if self.ptr is NULL:
+                # create a new dictionary with a registered name
+                d = mx.dictionary_new()
+                self.ptr = mx.dictobj_register(d, &name_ptr)
+                self.to_release = False
+        else: # name is empty
+            self.ptr = mx.dictionary_new()
+            self.to_release = False
+        self.name = name
         self.type_map = dict()
         self.ptr_owner = True
-        self.to_release = False
-        self.name = ""
-    
+
     def __dealloc__(self):
         # De-allocate if not null
         if self.ptr is not NULL and self.ptr_owner:
@@ -1278,6 +1290,38 @@ cdef class Dictionary:
             else:
                 mx.object_free(self.ptr)
             self.ptr = NULL
+
+    @classmethod
+    def from_atoms(cls, Atom atoms) -> Dictionary:
+        """Create an unregistered dictionary from atoms as dict-syntax"""
+        cdef Dictionary _dict = cls()
+        cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms(&_dict.ptr, atoms.size, atoms.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise TypeError("Could not create an unregistered dictionary from atoms as dict-syntax")
+        return _dict
+
+    @classmethod
+    def from_atoms_extended(cls, Atom atoms) -> Dictionary:
+        """Create a new t_dictionary from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
+        cdef Dictionary _dict = cls()
+        cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms_extended(&_dict.ptr, NULL, atoms.size, atoms.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise TypeError("could not create dictionary from atoms")
+        return _dict
+
+    @classmethod
+    def from_string(cls, str dict_string, bint str_is_already_json=False) -> Dictionary:
+        """Create a new t_dictionary from Dictionary Syntax which is passed in as a string."""
+        cdef Dictionary _dict = cls()
+        cdef char * errorstring = NULL
+        cdef char* dict_string_ptr = <char *>mx.sysmem_newptr((len(dict_string)+1) * sizeof(char))
+        cdef long n = len(dict_string) + 1
+        strcpy(dict_string_ptr, dict_string.encode())
+        cdef mx.t_max_err err = mx.dictobj_dictionaryfromstring(&_dict.ptr, dict_string_ptr, <int>str_is_already_json, errorstring)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not create dictionary from string: {errorstring.decode()}")
+        mx.sysmem_freeptr(dict_string_ptr)
+        return _dict
 
     @staticmethod
     cdef Dictionary from_ptr(mx.t_dictionary *ptr, bint owner=False, bint to_release=False, str name=""):
@@ -1822,34 +1866,13 @@ cdef class Dictionary:
             raise ValueError("could not convert dictionary to json")
         return json.decode()
 
-    def from_string(self, str dict_string, bint str_is_already_json=False) -> Dictionary:
-        """Create a new t_dictionary from Dictionary Syntax which is passed in as a C-string."""
-        cdef mx.t_dictionary* d = NULL
-        cdef char * errorstring = NULL
-        cdef char* dict_string_ptr = <char *>mx.sysmem_newptr((len(dict_string)+1) * sizeof(char))
-        cdef long n = len(dict_string) + 1
-        strcpy(dict_string_ptr, dict_string.encode())
-        cdef mx.t_max_err err = mx.dictobj_dictionaryfromstring(&d, dict_string_ptr, <int>str_is_already_json, errorstring)
-        if err != mx.MAX_ERR_NONE:
-            raise ValueError(f"could not create dictionary from string: {errorstring.decode()}")
-        mx.sysmem_freeptr(dict_string_ptr)
-        return Dictionary.from_ptr(d, owner=True, to_release=False)
-
-    def from_atoms(self, Atom atoms) -> Dictionary:
-        """Create a new t_dictionary from Dictionary Syntax which is passed in as an array of atoms."""
-        cdef mx.t_dictionary* d = NULL
-        cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms(&d, atoms.size, atoms.ptr)
-        if err != mx.MAX_ERR_NONE:
-            raise ValueError("could not create dictionary from atoms")
-        return Dictionary.from_ptr(d, owner=True, to_release=False)
-
-    def from_atoms_extended(self, Atom atoms) -> Dictionary:
-        """Create a new t_dictionary from from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
-        cdef mx.t_dictionary* d = NULL
-        cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms_extended(&d, NULL, atoms.size, atoms.ptr)
-        if err != mx.MAX_ERR_NONE:
-            raise ValueError("could not create dictionary from atoms")
-        return Dictionary.from_ptr(d, owner=True, to_release=False)
+    # def from_atoms_extended(self, Atom atoms) -> Dictionary:
+    #     """Create a new t_dictionary from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
+    #     cdef mx.t_dictionary* d = NULL
+    #     cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms_extended(&d, NULL, atoms.size, atoms.ptr)
+    #     if err != mx.MAX_ERR_NONE:
+    #         raise ValueError("could not create dictionary from atoms")
+    #     return Dictionary.from_ptr(d, owner=True, to_release=False)
 
     def to_atoms(self, Dictionary dict = None) -> Atom:
         """Serialize the contents of a t_dictionary into array of atoms."""

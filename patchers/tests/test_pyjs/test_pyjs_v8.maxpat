@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 405.0, 98.0, 806.0, 683.0 ],
+		"rect" : [ 311.0, 110.0, 806.0, 683.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
 				"box" : 				{
@@ -620,7 +620,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 31.5, 387.0, 112.0, 76.0 ],
+					"patching_rect" : [ 31.5, 387.0, 113.0, 76.0 ],
 					"text" : "\"3.13.2 (main, Feb  4 2025, 14:51:09) [Clang 16.0.0 (clang-1600.0.26.6)]\""
 				}
 

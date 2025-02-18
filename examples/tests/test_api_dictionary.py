@@ -3,6 +3,19 @@ import api
 
 def test_dict_init():
     d = api.Dictionary()
+    assert d.getentrycount() == 0
+
+def test_dict_from_name():
+    d = api.Dictionary('xdict') # xdict is name of an exiting dict object
+    return d.getentrycount()
+
+def test_dict_registered():
+    d = api.Dictionary('mydict') # mydict is registered name of new dict
+    d["myfloat"] = 10.1
+    d["myint"] = 3
+    d["hello"] = "world"
+    assert d.getentrycount() == 3
+    return d.getentrycount()
 
 def test_dict():
     d = api.Dictionary()
@@ -182,16 +195,19 @@ def test_dict_findregistered_clone():
     d2 = d.findregistered_clone("xdict")
     return d2.get_long('x')
 
+def test_dict_from_string():
+    d = api.Dictionary.from_string("a : b c : 1 2 3 4")
+    return d.get_string("a")
+
 def test_dict_from_atoms():
-    atoms = api.Atom(["abc", ":", "hello", ":", 10.1])
-    d = api.Dictionary()
-    d.from_atoms(atoms)
+    atoms = api.Atom(["abc", ":", "hello", "def", ":", 10.1])
+    d = api.Dictionary.from_atoms(atoms)
     return d.get_string('abc')
 
-def test_dict_from_string():
-    d = api.Dictionary()
-    d2 = d.from_string("a : b c : 1 2 3 4")
-    return d2.get_string("a")
+def test_dict_from_atoms_extended():
+    atoms = api.Atom(["abc", ":", "hello", "def", ":", 10.1])
+    d = api.Dictionary.from_atoms_extended(atoms)
+    return d.get_string('abc')
 
 def test_dict_to_atoms():
     d = api.Dictionary()

@@ -2,54 +2,56 @@
 
 ## [0.3.x]
 
+- Added classmethods `api.Dictionary.from_atom` and `api.Dictionary.from_string`
+
 - Added `test_api_pyxternal.py` and `test_api_pyexternal.maxpat`
 
-- Added `api.MaxObject.patcher` and `api.MaxObject.box` properties to api
+- Added `api.MaxObject.patcher` and `api.MaxObject.box` properties
 
-- Added `api.PyExternal.out_atoms` to api
+- Added `api.PyExternal.out_atoms`
 
-- Added `api.Dictionary.validate` and `api.Dictionary.ensure_atom_safety` to api
+- Added `api.Dictionary.validate` and `api.Dictionary.ensure_atom_safety`
 
-- Added `api.Dictionary.json_from_string`, `api.Dictionary.to_atoms` and `api.Dictionary.from_string` to api
+- Added `api.Dictionary.json_from_string`, `api.Dictionary.to_atoms` and `api.Dictionary.from_string`
 
-- Added `api.Dictionary.register` and `api.Dictionary.unregister` to api
+- Added `api.Dictionary.register` and `api.Dictionary.unregister`
 
-- Added `api.Dictionary.findregistered_clone` and `api.Dictionary.findregistered_retain` to api
+- Added `api.Dictionary.findregistered_clone` and `api.Dictionary.findregistered_retain`
 
-- Added `api.Dictionary.release` to api
+- Added `api.Dictionary.release`
 
-- Added `api.Dictionary.get_atomarray` and `api.Dictionary.append_atomarray` to api
+- Added `api.Dictionary.get_atomarray` and `api.Dictionary.append_atomarray`
 
-- Added `api.Dictionary.get_object` and `api.Dictionary.append_object` to api
+- Added `api.Dictionary.get_object` and `api.Dictionary.append_object`
 
-- Added `api.Dictionary.namefromptr` to api
+- Added `api.Dictionary.namefromptr`
 
-- Added `DatabaseView` and `DatabaseResult` objects to `api` module
+- Added `api.DatabaseView` and `api.DatabaseResult` objects
 
 - Changed `api.Linklist` to use `ptr` instead of `lst`, and other objects similarly.
 
-- Added `Dictionary.transaction_lock` and `Dictionary.transaction_unlock` to api
+- Added `api.Dictionary.transaction_lock` and `api.Dictionary.transaction_unlock`
 
-- Added `Dictionary.dump` to api
+- Added `api.Dictionary.dump`
 
-- Added `Dictionary.get_default_long`, `Dictionary.get_default_float`,
-`Dictionary.get_default_sym`, `Dictionary.get_default_string` to api
+- Added `api.Dictionary.get_default_long`, `api.Dictionary.get_default_float`,
+`api.Dictionary.get_default_sym`, `api.Dictionary.get_default_string`
 
-- Added `Dictionary.clone` and `Dictionary.clear` to api
+- Added `api.Dictionary.clone` and `api.Dictionary.clear`
 
-- Added `Dictionary.clone_to_self` and `Dictionary.clone_to_existing` to api
+- Added `api.Dictionary.clone_to_self` and `api.Dictionary.clone_to_existing`
 
-- Added `Dictionary.merge_to_self` and `Dictionary.merge_to_existing` to api
+- Added `api.Dictionary.merge_to_self` and `api.Dictionary.merge_to_existing`
 
-- Added `Dictionary.delete_entry` and `Dictionary.chuck_entry` to api
+- Added `api.Dictionary.delete_entry` and `api.Dictionary.chuck_entry`
 
-- Added `Atom.setdouble_array` and `Atom.getdouble_array` to api
+- Added `api.Atom.setdouble_array` and `api.Atom.getdouble_array`
 
-- Added `Atom.setfloat_array` and `Atom.getfloat_array` to api
+- Added `api.Atom.setfloat_array` and `api.Atom.getfloat_array`
 
-- Added `Atom.setlong_array` and `Atom.getlong_array` to api
+- Added `api.Atom.setlong_array` and `api.Atom.getlong_array`
 
-- Added `Dictionary.getkeys` and `Dictionary.getkeys_ordered` to api
+- Added `api.Dictionary.getkeys` and `api.Dictionary.getkeys_ordered`
 
 - Added extensive documentation to `api.pyx`
 
