@@ -185,8 +185,25 @@ cdef class MaxObject:
     @property
     def box (self) -> Box:
         """Get object's box if any"""
-        cdef Box b = Box.from_ptr(self.ptr)
+        cdef Box b = Box.from_object_ptr(self.ptr)
         return b
+
+    def set_value(self, *args):
+        """Set value of object"""
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_max_err err = mx.object_setvalueof(<mx.t_object*>self.ptr, atom.size, atom.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not set object value with {args}")
+
+    def get_value(self) -> object:
+        """Get value of object"""
+        cdef mx.t_atom * argv = NULL
+        cdef long argc = 0
+        cdef mx.t_max_err err = mx.object_getvalueof(<mx.t_object*>self.ptr, &argc, &argv)
+        cdef Atom atom = Atom.from_ptr(argv, argc)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get object value")
+        return atom.value
 
     def method_exists(self, str name) -> bool:
         """checks if named method exists"""
@@ -443,6 +460,91 @@ cdef class Atom:
         else:
             raise TypeError
 
+    def __str__(self) -> str:
+        if self.size == 1 and self.is_symbol():
+            return self.get_string(0)
+        raise TypeError("atom is either wrong length or cannot be converted to str")
+
+    def __int__(self) -> int:
+        if self.size == 1 and self.is_long():
+            return self.get_long(0)
+        raise TypeError("atom is either wrong length or cannot be converted to int")
+
+    def __float__(self) -> float:
+        if self.size == 1 and self.is_float():
+            return self.get_float(0)
+        raise TypeError("atom is either wrong length or cannot be converted to float")
+
+    @staticmethod
+    cdef Atom from_ptr(mx.t_atom *ptr, long size, bint owner=False):
+        """Create an Atom instance from an existing pointer."""
+        # Call to __new__ bypasses __init__ constructor
+        cdef Atom atom = Atom.__new__(Atom)
+        atom.ptr = ptr
+        atom.ptr_owner = owner
+        atom.size = size
+        return atom
+
+    @staticmethod
+    cdef Atom new(long size):
+        """Create an empty Atom instance with an aribitrary length"""
+        cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
+        if ptr is NULL:
+            raise MemoryError
+        return Atom.from_ptr(ptr, size, owner=True)
+
+    @staticmethod
+    def from_str(parsestr: str) -> Atom:
+        """Parse a string into an Atom instance."""
+        cdef mx.t_atom *ptr = NULL
+        cdef long size = 0
+        cdef mx.t_max_err err = mx.atom_setparse(&size, &ptr, parsestr.encode())
+        if err != mx.MAX_ERR_NONE:
+            raise TypeError
+        return Atom.from_ptr(ptr, size, owner=True)
+
+    @staticmethod
+    def from_seq(seq: object) -> Atom:
+        """Create an Atom instance from a sequence of objects."""
+        cdef mx.t_atom *ptr
+        cdef long size = len(seq)
+        if not size:
+            raise IndexError("sequence is empty")
+        ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
+        if ptr is NULL:
+            raise MemoryError
+
+        cdef int i
+        for i, obj in enumerate(seq):
+
+            if isinstance(obj, float):
+                mx.atom_setfloat(ptr+i, <float>obj)
+
+            elif isinstance(obj, int):
+                mx.atom_setlong(ptr+i, <long>obj)
+
+            elif isinstance(obj, bytes):
+                mx.atom_setsym(ptr+i, mx.gensym(obj))
+
+            elif isinstance(obj, str):
+                mx.atom_setsym(ptr+i, str_to_sym(obj))
+
+            else:
+                error(f"cannot convert: {obj}")
+                continue
+
+        return Atom.from_ptr(ptr, size, owner=True)
+
+    @property
+    def value(self) -> object:
+        """Get python value(s) of atom"""
+        if self.size == 0:
+            return None
+        elif self.size == 1:
+            return self[0]
+        else:
+            return self.to_list()
+
     def set_float(self, int idx, float f):
         """Inserts a float into a t_atom and change its type to A_FLOAT."""
         mx.atom_setfloat(self.ptr + idx, f)
@@ -483,17 +585,38 @@ cdef class Atom:
         """Retrieves a long integer value from a t_atom."""
         return sym_to_bytes(mx.atom_getsym(self.ptr + idx))
 
-    cdef bint is_symbol(self, int idx=0):
+    def is_symbol(self, int idx=0) -> bool:
         """check if index points to a symbol"""
-        return (self.ptr + idx).a_type == mx.A_SYM
+        if idx > self.size - 1:
+            raise IndexError(f"index should be < {self.size - 1}")
+        return <bint>((self.ptr + idx).a_type == mx.A_SYM)
 
-    cdef bint is_long(self, int idx=0):
+    def is_long(self, int idx=0) -> bool:
         """check if index points to a long"""
-        return (self.ptr + idx).a_type == mx.A_LONG
+        if idx > self.size - 1:
+            raise IndexError(f"index should be < {self.size - 1}")
+        return <bint>((self.ptr + idx).a_type == mx.A_LONG)
 
-    cdef bint is_float(self, int idx=0):
+    # alias is_int -> is_long
+    is_int = is_long
+
+    def is_float(self, int idx=0) -> bool:
         """check if index points to a float"""
-        return (self.ptr + idx).a_type == mx.A_FLOAT
+        if idx > self.size - 1:
+            raise IndexError(f"index should be < {self.size - 1}")
+        return <bint>((self.ptr + idx).a_type == mx.A_FLOAT)
+
+    def is_string(self, int idx = 0) -> bool:
+        """Determines whether or not an atom represents a t_string object."""
+        return bool(mx.atomisstring(self.ptr + idx))
+
+    def is_atomarray(self, int idx = 0) -> bool:
+        """Determines whether or not an atom represents a t_atomarray object."""
+        return bool(mx.atomisatomarray(self.ptr + idx))
+
+    def is_dictionary(self, int idx = 0) -> bool:
+        """Determines whether or not an atom represents a t_dictionary object."""
+        return bool(mx.atomisdictionary(self.ptr + idx))
 
     def to_list(self) -> list:
         """Convert an array of atoms into a list."""
@@ -503,7 +626,7 @@ cdef class Atom:
             if self.is_symbol(i):
                 _res.append(self.get_string(i))
             elif self.is_long(i):
-                _res.append(self.get_int(i))
+                _res.append(self.get_long(i))
             elif self.is_float(i):
                 _res.append(self.get_float(i))
         return _res
@@ -542,77 +665,6 @@ cdef class Atom:
                 print("string:", type(s))
             else:
                 print("other:", i)
-
-    @staticmethod
-    cdef Atom from_ptr(mx.t_atom *ptr, long size, bint owner=False):
-        """Create an Atom instance from an existing pointer."""
-        # Call to __new__ bypasses __init__ constructor
-        cdef Atom atom = Atom.__new__(Atom)
-        atom.ptr = ptr
-        atom.ptr_owner = owner
-        atom.size = size
-        return atom
-
-    @staticmethod
-    cdef Atom new(long size):
-        """Create an empty Atom instance with an aribitrary length"""
-        cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
-        if ptr is NULL:
-            raise MemoryError
-        return Atom.from_ptr(ptr, size, owner=True)
-
-    @staticmethod
-    def from_str(parsestr: str) -> Atom:
-        """Parse a string into an Atom instance."""
-        cdef mx.t_atom *ptr = NULL
-        cdef long size = 0
-        cdef mx.t_max_err err = mx.atom_setparse(&size, &ptr, parsestr.encode())
-        if err != mx.MAX_ERR_NONE:
-            raise TypeError
-        return Atom.from_ptr(ptr, size, owner=True)
-
-    @staticmethod
-    def from_seq(seq: object) -> Atom:
-        """Create an Atom instance from a sequence of objects."""
-        # if not seq:
-        #     return
-        cdef long size = len(seq)
-        cdef mx.t_atom *ptr = <mx.t_atom *>mx.sysmem_newptr(size * sizeof(mx.t_atom))
-        if ptr is NULL:
-            raise MemoryError
-
-        cdef int i
-        for i, obj in enumerate(seq):
-
-            if isinstance(obj, float):
-                mx.atom_setfloat(ptr+i, <float>obj)
-
-            elif isinstance(obj, int):
-                mx.atom_setlong(ptr+i, <long>obj)
-
-            elif isinstance(obj, bytes):
-                mx.atom_setsym(ptr+i, mx.gensym(obj))
-
-            elif isinstance(obj, str):
-                mx.atom_setsym(ptr+i, str_to_sym(obj))
-
-            else:
-                error(f"cannot convert: {obj}")
-                continue
-
-        return Atom.from_ptr(ptr, size, owner=True)
-
-    def is_string(self, int idx = 0) -> bool:
-        """Determines whether or not an atom represents a t_string object."""
-        return bool(mx.atomisstring(self.ptr + idx))
-
-    def is_atomarray(self, int idx = 0) -> bool:
-        """Determines whether or not an atom represents a t_atomarray object."""
-        return bool(mx.atomisatomarray(self.ptr + idx))
-
-    def is_dictionary(self, int idx = 0) -> bool:
-        """Determines whether or not an atom represents a t_dictionary object."""
-        return bool(mx.atomisdictionary(self.ptr + idx))
 
     cdef resize_ptr(self, mx.t_ptr_size new_size):
         """Resize an existing pointer."""
@@ -2912,10 +2964,31 @@ cdef class Patcher:
 
     # object methods
 
+    def get_named_box(self, str name) -> Box:
+        """Get a named box in the patcher."""
+        cdef mx.t_object * box_ptr = <mx.t_object *>mx.object_method(
+            self.ptr, mx.gensym("getnamedbox"), str_to_sym(name))
+        return Box.from_ptr(box_ptr)
+
+    def get_object_in_named_box(self, str name) -> MaxObject:
+        """Get object contained in the named box in the patcher."""
+        cdef mx.t_object * box_ptr = <mx.t_object *>mx.object_method(
+            self.ptr, mx.gensym("getnamedbox"), str_to_sym(name))
+        cdef mx.t_object * obj_ptr = <mx.t_object*>mx.jbox_get_object(box_ptr)
+        return MaxObject.from_ptr(obj_ptr)
+
     cdef mx.t_object* get_namedbox(self, str name):
         """Get a named box in the patcher."""
         return <mx.t_object *>mx.object_method(
             self.ptr, mx.gensym("getnamedbox"), str_to_sym(name))
+
+    cdef mx.t_object* get_namedbox_object(self, str name):
+        """Get object contained in the named box in the patcher. (custom)"""
+        # find obj by script name
+        cdef mx.t_object * box = <mx.t_object *>mx.object_method(
+            self.ptr, mx.gensym("getnamedbox"), str_to_sym(name))
+        # now you have a handle for the box, get the contained object
+        return <mx.t_object*>mx.jbox_get_object(box)
 
     cdef mx.t_object *newobject_sprintf(self, str text):
         """Create a new object in a specified patcher with values using a 
@@ -3360,19 +3433,33 @@ cdef class Box:
 
     cdef mx.t_object *ptr              # typedef t_object t_box
     cdef mx.t_object *patcherview
+    cdef bint ptr_owner
 
     def __cinit__(self):
         self.ptr = NULL
         self.patcherview = NULL
+        self.ptr_owner = False
 
     @staticmethod
-    cdef Box from_ptr(mx.t_object *x):
-        """Create a box object from a box pointer."""
+    cdef Box from_object_ptr(mx.t_object *x):
+        """Create a box object from a t_object pointer."""
         cdef mx.t_max_err err
         cdef Box box = Box.__new__(Box)
+        box.ptr_owner = True
         err = mx.object_obex_lookup(x, mx.gensym("#B"), &box.ptr)
         if err != mx.MAX_ERR_NONE:
             raise ValueError("could not create a box object from an object pointer")
+        if box.ptr is NULL:
+            raise MemoryError
+        return box
+
+    @staticmethod
+    cdef Box from_ptr(mx.t_object *ptr):
+        """Create a box object from a box pointer."""
+        cdef mx.t_max_err err
+        cdef Box box = Box.__new__(Box)
+        box.ptr = ptr
+        box.ptr_owner = False
         if box.ptr is NULL:
             raise MemoryError
         return box
@@ -3414,7 +3501,7 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            raise TypeError("could not set rect for box")
 
-    def get_patching_rect(self):
+    def get_patching_rect(self) -> Rect:
         """Retrieve the patching rect of a box."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_patching_rect(self.ptr, &pr)
@@ -3429,7 +3516,7 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            raise TypeError("could not set patching rect for box")
 
-    def get_presentation_rect(self):
+    def get_presentation_rect(self) -> Rect:
         """Retrieve the presentation rect of a box."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_presentation_rect(self.ptr, &pr)
@@ -3451,7 +3538,7 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            raise TypeError("could not set the position of a box for both views")
 
-    def get_patching_position(self) -> tuple:
+    def get_patching_position(self) -> tuple[float, float]:
         """Fetch the position of a box for the patching view."""
         cdef mx.t_pt pos
         cdef mx.t_max_err err = mx.jbox_get_patching_position(self.ptr, &pos)
@@ -3473,7 +3560,7 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            raise TypeError("could not set the size of a box for both views")
 
-    def get_patching_size(self) -> tuple:
+    def get_patching_size(self) -> tuple[float, float]:
         """Fetch the size of a box for the patching view."""
         cdef mx.t_size size
         cdef mx.t_max_err err = mx.jbox_get_patching_size(self.ptr, &size)
@@ -3488,7 +3575,7 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            raise TypeError("could not set the size of a box for the patching view.")
 
-    def get_presentation_size(self) -> tuple:
+    def get_presentation_size(self) -> tuple[float, float]:
         """Fetch the size of a box for the presentation view."""
         cdef mx.t_size size
         cdef mx.t_max_err err = mx.jbox_get_presentation_size(self.ptr, &size)
@@ -3860,7 +3947,7 @@ cdef class PyExternal:
 
     def get_box(self) -> Box:
         """Get the external's box."""
-        box = Box.from_ptr(<mx.t_object*>self.ptr)
+        box = Box.from_object_ptr(<mx.t_object*>self.ptr)
         return box
 
     def get_buffer(self, name: str) -> Buffer:

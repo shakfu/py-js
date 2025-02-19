@@ -2,6 +2,14 @@
 
 ## [0.3.x]
 
+- Changed `api.Box.from_ptr` to `api.Box.from_object_ptr` and added actual `api.Box.from_ptr`
+
+- Added `api.MaxObject.set_value` and `api.MaxObject.get_value`
+
+- Added `test_api_box.py` and `test_api_box.maxpat`
+
+- Added magic methods `api.Atom.__float__`, `api.Atom.__long__`, and `api.Atom.__str__`
+
 - Added classmethods `api.Dictionary.from_atom` and `api.Dictionary.from_string`
 
 - Added `test_api_pyxternal.py` and `test_api_pyexternal.maxpat`
