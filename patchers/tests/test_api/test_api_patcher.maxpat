@@ -2,51 +2,36 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"major" : 9,
+			"minor" : 0,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
 		"rect" : [ 471.0, 101.0, 624.0, 609.0 ],
-		"bglocked" : 0,
-		"openinpresentation" : 0,
-		"default_fontsize" : 12.0,
-		"default_fontface" : 0,
-		"default_fontname" : "Arial",
-		"gridonopen" : 1,
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 1,
-		"objectsnaponopen" : 1,
-		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
-		"lefttoolbarpinned" : 0,
-		"toptoolbarpinned" : 0,
-		"righttoolbarpinned" : 0,
-		"bottomtoolbarpinned" : 0,
-		"toolbars_unpinned_last_save" : 0,
-		"tallnewobj" : 0,
-		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
-		"devicewidth" : 0.0,
-		"description" : "",
-		"digest" : "",
-		"tags" : "",
-		"style" : "",
-		"subpatcher_template" : "",
-		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-16",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 422.0, 196.0, 185.0, 22.0 ],
+					"text" : "test_patcher_registered_names()"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-15",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 471.0, 153.0, 22.0 ],
-					"presentation_linecount" : 2,
+					"patching_rect" : [ 423.0, 474.0, 153.0, 22.0 ],
 					"text" : "test_patcher_script_show()"
 				}
 
@@ -58,7 +43,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 440.0, 147.0, 22.0 ],
+					"patching_rect" : [ 423.0, 443.0, 147.0, 22.0 ],
 					"text" : "test_patcher_script_hide()"
 				}
 
@@ -70,8 +55,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 341.0, 183.0, 22.0 ],
-					"presentation_linecount" : 2,
+					"patching_rect" : [ 423.0, 344.0, 183.0, 22.0 ],
 					"text" : "test_patcher_script_newdefault()"
 				}
 
@@ -83,7 +67,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 311.0, 135.0, 22.0 ],
+					"patching_rect" : [ 423.0, 314.0, 135.0, 22.0 ],
 					"text" : "test_patcher_add_box()"
 				}
 
@@ -95,7 +79,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 279.0, 139.0, 22.0 ],
+					"patching_rect" : [ 423.0, 282.0, 139.0, 22.0 ],
 					"text" : "test_patcher_add_tbox()"
 				}
 
@@ -107,7 +91,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 409.0, 182.0, 22.0 ],
+					"patching_rect" : [ 423.0, 412.0, 182.0, 22.0 ],
 					"text" : "test_patcher_script_disconnect()"
 				}
 
@@ -182,7 +166,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 376.0, 167.0, 22.0 ],
+					"patching_rect" : [ 423.0, 379.0, 167.0, 22.0 ],
 					"text" : "test_patcher_script_connect()"
 				}
 
@@ -194,7 +178,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 252.0, 155.0, 22.0 ],
+					"patching_rect" : [ 423.0, 255.0, 155.0, 22.0 ],
 					"text" : "test_patcher_add_textbox()"
 				}
 
@@ -206,7 +190,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 221.0, 113.0, 22.0 ],
+					"patching_rect" : [ 423.0, 224.0, 113.0, 22.0 ],
 					"text" : "test_patcher_attrs()"
 				}
 
@@ -240,7 +224,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 423.0, 188.0, 105.0, 22.0 ],
+					"patching_rect" : [ 423.0, 169.0, 105.0, 22.0 ],
 					"text" : "test_patcher_init()"
 				}
 
@@ -334,7 +318,7 @@
 						"autoload" : 0,
 						"debug" : 1,
 						"file" : "/Volumes/Macintosh HD/Users/sa/Downloads/projects/py-js/examples/tests/test_api_patcher.py",
-						"pythonpath" : ""
+						"pythonpath" : "/"
 					}
 ,
 					"text" : "py",
@@ -401,6 +385,14 @@
 					"destination" : [ "obj-1", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-15", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-16", 0 ]
 				}
 
 			}
@@ -476,6 +468,7 @@
 
 			}
  ],
+		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"

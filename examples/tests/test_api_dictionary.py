@@ -2,13 +2,20 @@ import api
 
 
 def test_dict_init():
-    d = api.Dictionary()
-    assert d.getentrycount() == 0
+    d = api.Dictionary(a=1, b=2)
+    assert d.getentrycount() == 2
+    return d.to_atoms()
+
+
+def test_dict_contains():
+    d = api.Dictionary(c=1, f=2)
+    assert 'c' in d
+    return 'c' in d
 
 
 def test_dict_from_name():
     d = api.Dictionary("xdict")  # xdict is name of an exiting dict object
-    return d.getentrycount()
+    return d.to_atoms()
 
 
 def test_dict_registered():
@@ -17,16 +24,16 @@ def test_dict_registered():
     d["myint"] = 3
     d["hello"] = "world"
     assert d.getentrycount() == 3
-    return d.getentrycount()
+    return d.to_atoms()
 
 
 def test_dict():
     d = api.Dictionary()
     d["myfloat"] = 10.1
     d["myint"] = 3
-    d["hello"] = "world"
+    d["mylist"] = ['a', 'b', 'c']
     assert d.getentrycount() == 3
-    return d.getentrycount()
+    return d.to_atoms()
 
 
 def test_dict_symbol():

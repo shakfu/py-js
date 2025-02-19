@@ -2,6 +2,10 @@
 
 ## [0.3.x]
 
+- Added `**kwargs` to `api.Dictionary` constructor, and also `api.Dictionary.__contains__`
+
+- Added `api.Patcher.registered_names`
+
 - Changed `api.Box.from_ptr` to `api.Box.from_object_ptr` and added actual `api.Box.from_ptr`
 
 - Added `api.MaxObject.set_value` and `api.MaxObject.get_value`

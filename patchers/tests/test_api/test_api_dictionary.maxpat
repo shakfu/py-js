@@ -10,9 +10,21 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 458.0, 156.0, 703.0, 583.0 ],
+		"rect" : [ 248.0, 166.0, 820.0, 587.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-45",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 495.0, 59.0, 113.0, 22.0 ],
+					"text" : "test_dict_contains()"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-43",
 					"maxclass" : "message",
@@ -544,8 +556,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 150.0, 535.0, 187.0, 22.0 ],
-					"text" : "def sam abc"
+					"patching_rect" : [ 150.0, 535.0, 187.0, 22.0 ]
 				}
 
 			}
@@ -865,6 +876,14 @@
 					"destination" : [ "obj-1", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-43", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-45", 0 ]
 				}
 
 			}

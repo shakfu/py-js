@@ -7,6 +7,11 @@ def test_patcher_init():
     api.bang_success()
 
 
+def test_patcher_registered_names():
+    p = api.get_patcher()
+    return p.registered_names()
+
+
 def test_patcher_attrs():
     p = api.get_patcher()
     # dump patch attributes

@@ -33,7 +33,7 @@ Python wrappers for use in python scripts run by the `py` external.
 
 see: `py-js/source/projects/py/api.md` for further details
      `py-js/examples/tests` and `py-js/patchers/tests/test_api` for examples of using
-     the api module in both python code and Max patchers respectively.
+      the api module in both python code and Max patchers respectively.
 """
 
 # ----------------------------------------------------------------------------
@@ -111,9 +111,9 @@ cdef bytes sym_to_bytes(mx.t_symbol* symbol):
 # ============================================================================
 # Named Tuples
 
+Rect = namedtuple('Rect', ['x', 'y', 'width', 'height'])
 Rgb = namedtuple('Rgb', ['red', 'green', 'blue'])
 Rgba = namedtuple('Rgba', ['red', 'green', 'blue', 'alpha'])
-Rect = namedtuple('Rect', ['x', 'y', 'width', 'height'])
 
 # ============================================================================
 # EXTENSION TYPES
@@ -183,10 +183,15 @@ cdef class MaxObject:
         return p
 
     @property
-    def box (self) -> Box:
+    def box(self) -> Box:
         """Get object's box if any"""
         cdef Box b = Box.from_object_ptr(self.ptr)
         return b
+
+    @property
+    def namespace(self) -> str:
+        """Get the object's namespace"""
+        cdef mx.t_symbol* ns = mx.object_namespace(self.ptr)
 
     def set_value(self, *args):
         """Set value of object"""
@@ -991,7 +996,7 @@ cdef class Buffer:
 
         return False
 
-    def framecount(self):
+    def framecount(self) -> int:
         """Get how many frames long the buffer content is in samples."""
         return mp.buffer_getframecount(self.obj)
 
@@ -1013,7 +1018,7 @@ cdef class Buffer:
     framecount = property(framecount, set_framecount)
 
 
-    def samplerate(self):
+    def samplerate(self) -> int:
         """Get the buffer's native sample rate in samples per second."""
         return mp.buffer_getsamplerate(self.obj)
 
@@ -1045,7 +1050,7 @@ cdef class Buffer:
     duration = property(duration, set_duration)
 
 
-    def duration_ms(self):
+    def duration_ms(self) -> int:
         """Get the buffer's duration in milliseconds."""
         return self.duration * 1000
 
@@ -1074,17 +1079,17 @@ cdef class Buffer:
         mp.buffer_view(self.obj)
 
     @property
-    def channelcount(self):
+    def channelcount(self) -> int:
         """Get how many channels are present in the buffer content."""
         return mp.buffer_getchannelcount(self.obj)
 
     @property
-    def millisamplerate(self):
+    def millisamplerate(self) -> int:
         """Get the buffer's native sample rate in samples per millisecond."""
         return mp.buffer_getmillisamplerate(self.obj)
 
     @property
-    def n_samples(self):
+    def n_samples(self) -> int:
         """Get the number of samples in the buffer."""
         return self.framecount
 
@@ -1315,7 +1320,7 @@ cdef class Dictionary:
         self.to_release = False
         self.name = ""
     
-    def __init__(self, str name = ""):
+    def __init__(self, str name = "", **kwargs):
         cdef mx.t_symbol* name_ptr = str_to_sym(name)
         cdef mx.t_dictionary *d = NULL
         if name:
@@ -1333,6 +1338,9 @@ cdef class Dictionary:
         self.name = name
         self.type_map = dict()
         self.ptr_owner = True
+        if kwargs:
+            for key, value in kwargs.items():
+                self[key] = value
 
     def __dealloc__(self):
         # De-allocate if not null
@@ -1342,6 +1350,37 @@ cdef class Dictionary:
             else:
                 mx.object_free(self.ptr)
             self.ptr = NULL
+
+    def __contains__(self, str x) -> bool:
+        return <bint>self.has_entry(x)
+
+    def __setitem__(self, str key, object value):
+        if isinstance(value, float):
+            self.type_map[key] = 'float'
+            self.set_float(key, <double>value)
+        elif isinstance(value, int):
+            self.type_map[key] = 'long'
+            self.set_long(key, <int>value)
+        elif isinstance(value, str):
+            self.type_map[key] = 'str'
+            self.set_sym(key, value)
+        elif isinstance(value, list):
+            self.type_map[key] = 'list'
+            self.set_atoms(key, value)
+        elif isinstance(value, bytes):
+            self.type_map[key] = 'bytes'
+            self.set_bytes(key, value)
+        else:
+            raise TypeError
+
+    def __getitem__(self, str key):
+        return {
+            'float': self.get_float,
+            'long': self.get_long,
+            'str': self.get_sym,
+            'bytes': self.get_bytes,
+            'list': self.get_atoms,
+        }[self.type_map[key]](key)
 
     @classmethod
     def from_dict(cls, dict src_dict, str name = "") -> Dictionary:
@@ -1402,34 +1441,6 @@ cdef class Dictionary:
         _dict.to_release = to_release
         _dict.name = name
         return _dict
-
-    def __setitem__(self, str key, object value):
-        if isinstance(value, float):
-            self.type_map[key] = 'float'
-            self.set_float(key, <double>value)
-        elif isinstance(value, int):
-            self.type_map[key] = 'long'
-            self.set_long(key, <int>value)
-        elif isinstance(value, str):
-            self.type_map[key] = 'str'
-            self.set_sym(key, value)
-        elif isinstance(value, list):
-            self.type_map[key] = 'list'
-            self.set_atoms(key, value)
-        elif isinstance(value, bytes):
-            self.type_map[key] = 'bytes'
-            self.set_bytes(key, value)
-        else:
-            raise TypeError
-
-    def __getitem__(self, str key):
-        return {
-            'float': self.get_float,
-            'long': self.get_long,
-            'str': self.get_sym,
-            'bytes': self.get_bytes,
-            'list': self.get_atoms,
-        }[self.type_map[key]](key)
 
     def set_long(self, str key, int value):
         """Add a long integer value to the dictionary."""
@@ -1603,19 +1614,19 @@ cdef class Dictionary:
 
     def has_string_value(self, str key) -> bool:
         """Test a key to set if the data stored with that key contains a t_string object."""
-        return mx.dictionary_entryisstring(self.ptr, str_to_sym(key))
+        return <bint>mx.dictionary_entryisstring(self.ptr, str_to_sym(key))
 
     def has_atomarray_value(self, str key) -> bool:
         """Test a key to set if the data stored with that key contains a t_atomarray object."""
-        return mx.dictionary_entryisatomarray(self.ptr, str_to_sym(key))
+        return <bint>mx.dictionary_entryisatomarray(self.ptr, str_to_sym(key))
 
     def has_dictionary_value(self, str key) -> bool:
         """Test a key to set if the data stored with that key contains a t_dictionary object."""
-        return mx.dictionary_entryisdictionary(self.ptr, str_to_sym(key))
+        return <bint>mx.dictionary_entryisdictionary(self.ptr, str_to_sym(key))
 
     def has_entry(self, str key) -> bool:
         """Test a key to set if it exists in the dictionary."""
-        return mx.dictionary_hasentry(self.ptr, str_to_sym(key))
+        return <bint>mx.dictionary_hasentry(self.ptr, str_to_sym(key))
 
     def getentrycount(self) -> long:
         """Return the number of keys in a dictionary."""
@@ -1646,6 +1657,8 @@ cdef class Dictionary:
             results.append(sym_to_str(keys[i]))        
         self.freekeys(numkeys, keys)
         return results
+
+    keys = getkeys_ordered
 
     cdef void freekeys(self, long numkeys, mx.t_symbol** keys):
         """Free memory allocated by the dictionary_getkeys() method."""
@@ -2834,6 +2847,23 @@ cdef class Patcher:
     def get_char_attr(self, name) -> bool:
         """Get a char attribute."""
         return mx.object_attr_getchar(self.ptr, str_to_sym(name))
+
+    def registered_names(self, str namespace = "box") -> list[str]:
+        """Returns all registered names in a 'box' or 'nobox' namespace."""
+        assert namespace in ['box', 'nobox'], "namespaces can be either 'box' or 'nobox'"
+        cdef long namecount
+        cdef mx.t_symbol ** names = NULL
+        cdef mx.t_symbol * name = NULL
+        cdef mx.t_max_err err = mx.object_register_getnames(
+            str_to_sym(namespace), &namecount, &names)
+        cdef Atom atom = Atom.new(namecount)
+        if (err != mx.MAX_ERR_NONE and names is NULL):
+            raise ValueError("could not retrieve registered names")
+        for i in range(namecount):
+            name = names[i]
+            mx.atom_setsym(atom.ptr + <int>i, name)
+        mx.sysmem_freeptr(names)
+        return atom.to_list()
 
     # array props
 
