@@ -49,6 +49,7 @@ from libc.string cimport strcpy, strlen
 
 cimport api_max as mx  # api is a cython keyword!
 cimport api_msp as mp
+cimport api_jit as jt
 cimport api_py as px
 
 # ----------------------------------------------------------------------------
