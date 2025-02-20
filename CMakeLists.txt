@@ -10,7 +10,7 @@ option(BUILD_PYTHON3_CORE_EXTERNALS "Enable building python3 core externals" OFF
 option(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS "Enable building python3 experimental externals" OFF)
 option(BUILD_POCKETPY_EXTERNALS "Enable building pocketpy-based externals" OFF)
 option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals" OFF)
-option(BUILD_ZMQ_EXTERNALS "Enable building zeromq externals" OFF)
+option(BUILD_NET_EXTERNALS "Enable building networking externals" OFF)
 option(BUILD_DEMO_EXTERNALS "Enable demo (scratch) externals" OFF)
 option(BUILD_MICROPYTHON_EXTERNAL "Enable building of micropython external" OFF)
 option(FETCH_MICROPYTHON "Download latest micropython and use that to build external" OFF)
@@ -105,7 +105,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cobra)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/krait)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mxpy)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
 endif()
 
 # python variants
@@ -118,11 +117,12 @@ if(BUILD_MICROPYTHON_EXTERNAL)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy)
 endif()
 
-# zmq externals
-if(BUILD_ZMQ_EXTERNALS)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
+# networking externals
+if(BUILD_NET_EXTERNALS)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zpy)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zthread)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
 endif()
 
 # demo externals

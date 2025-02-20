@@ -17,23 +17,31 @@ book:
         - src/faq.qmd
         #- src/references.qmd
 
-    - part: "The Externals"
+    - part: "Core Externals"
       chapters:
         - src/externals/py.qmd
         - src/externals/pyjs.qmd
+
+    - part: "Experimental Externals"
+      chapters:
         - src/externals/krait.qmd
         - src/externals/mamba.qmd
         - src/externals/cobra.qmd
-        - src/externals/cmx.qmd
-        - src/externals/jmx.qmd
-        - src/externals/mpy.qmd
         - src/externals/mxpy.qmd
+
+    - part: "Alternative Externals"
+      chapters:
+        - src/externals/mpy.qmd
         - src/externals/pktpy.qmd
         - src/externals/pktpy2.qmd
+
+    - part: "Networking Externals"
+      chapters:
         - src/externals/zedit.qmd
         - src/externals/zpy.qmd
         - src/externals/zthread.qmd
-  
+        - src/externals/jmx.qmd
+
     # - part: "Builder"
     #   chapters:
     #     - src/builder/overview.qmd

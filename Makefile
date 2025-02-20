@@ -106,8 +106,9 @@ all: default
 
 # High-Level
 # -----------------------------------------------------------------------
-.PHONY: default local-sys core projects dev ninja \
-		demos mpy thirdparty \
+.PHONY: default local-sys core projects \
+		demos net thirdparty mpy \
+		dev ninja \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
@@ -171,8 +172,8 @@ mpy: clean-build-dir clean-externals
 			&& \
 		cmake --build . --config Release
 
-zmq: clean-build-dir clean-externals
-	$(call section,"building the zmq externals using cmake with xcode")
+net: clean-build-dir clean-externals
+	$(call section,"building the networking externals using cmake with xcode")
 	@mkdir build && \
 		cd build && \
 		cmake -GXcode .. \

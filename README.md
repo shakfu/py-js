@@ -47,7 +47,7 @@ name       | sdk        | lang   | description
 
 [2] `mpy` is not enabled by default since it is still in early stages and more of a proof-of-concept to embed micropython in an external. To build it use the `-DBUILD_MICROPYTHON_EXTERNAL` option with cmake.
 
-**ZeroMQ-related Externals:**
+**Networking Externals:**
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
@@ -55,7 +55,7 @@ name       | sdk        | lang   | description
 [zpy]      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
 [zthread]  | max-sdk    | c      | exploration of zeromq and Max threads
 
-Note: zeromq externals are not enabled by default since they require zeromq libraries to be installed. To build them use the `-DBUILD_ZEROMQ_EXTERNALS` option with cmake.
+Note: networking (zmq-based) externals are not enabled by default since they require zeromq libraries to be installed. To build them use the `-DBUILD_NETWORKING_EXTERNALS` option with cmake.
 
 [py]: https://github.com/shakfu/py-js/tree/main/source/projects/py
 [pyjs]: https://github.com/shakfu/py-js/tree/main/source/projects/pyjs
@@ -142,7 +142,6 @@ If you'd rather build them or any of the other externals yourself then the proce
     make core
     ```
 
-
 The `make`, or `make core` methods of building core the externals are generally very fast and produce externals which have access to python libraries of the local python system referemced during compilation. The tradeoff is that since the external are dynamically linked with local dependencies, they are therefore not usable in standalones and relocatable Max packages.
     
 No worries, if you need portable relocatable python3 externals for your package or standalone and more granular build options then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section.
@@ -174,7 +173,7 @@ cmake --build . --config Release
 
 Open one of the `.maxhelp` files or any of the files in the `patchers` folders to see how things work.
 
-### Building Experimental Externals using Cmake
+### Building Externals using Cmake
 
 You can also use `cmake` to build **all** externals using similar methods to the `max-sdk`.
 
@@ -190,7 +189,7 @@ Now you can build almost all the externals (including `py` and `pyjs`) in one sh
 make projects
 ```
 
-Look at the `Makefile` and the root `CMakeLists.txt` for further build options.
+Look at the `Makefile` and the root `CMakeLists.txt` for further specialized build options.
 
 After doing the above, the recommended iterative development workflow is to make changes to the source code in the respective project and then `cd py-js/build` and `cmake --build .`. This will cause cmake to only build modified projects efficiently.
 
