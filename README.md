@@ -16,20 +16,26 @@ This project started out as an attempt (during a covid-19 lockdown) to develop a
 
 Along the way, a number of externals have been developed for use in a live Max environment (click on the links to see more detailed documentation):
 
-**Python3 Externals:**
+**Python3 Core Externals:**
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [py]       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
 [pyjs]     | max-sdk    | c      | js/v8-friendly -- written as a Max javascript-extension
+
+
+**Python3 Experimental Externals:**
+
+name       | sdk        | lang   | description
+:--------- | :--------- | :----: | :---------------------------------------------------
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 [cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
 [mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 [zedit]    | max-sdk    | c      | a web-based python editor using [codemirror](https://codemirror.net) and the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
-[pymx] [1] | min-devkit | c++    | concise, modern, using [pybind11](https://github.com/pybind/pybind11)
+[pymx] [1] | min-api    | c++    | concise python3 external, modern, using [pybind11](https://github.com/pybind/pybind11) and [min-api](https://github.com/Cycling74/min-api)
 
-[1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-devkit](https://github.com/Cycling74/min-devkit) sdk.
+[1] pymx has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-api](https://github.com/Cycling74/min-api) sdk.
 
 **Alternative Python Implementation Externals:**
 
@@ -126,11 +132,22 @@ If you'd rather build them or any of the other externals yourself then the proce
     make
     ```
 
-Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are relatively small in size and are linked to your system python3 installation. This has the immediate benefit that you have access to your curated collection of existing python packages. The tradeoff is that these externals are dynamically linked with local dependencies and therefore not usable in standalones and relocatable Max packages.
+    Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are relatively small in size and are linked to your system python3 installation. This has the immediate benefit that you have access to your curated collection of existing python packages.
+    
+    The `make` or `make default` command bypasses an intermediate buildsystem and builds the two core externals via Xcode
+    
+    Another build option for core externals is to use `cmake` as an intermediate build system to drive Xcode builds:
+    
+    ```sh
+    make core
+    ```
 
-No worries, if you need portable relocatable python3 externals for your package or standalone then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section
 
-Open up any of the patch files in the `patchers` directory of the repo or the generated Max package, and also look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
+The `make`, or `make core` methods of building core the externals are generally very fast and produce externals which have access to python libraries of the local python system referemced during compilation. The tradeoff is that since the external are dynamically linked with local dependencies, they are therefore not usable in standalones and relocatable Max packages.
+    
+No worries, if you need portable relocatable python3 externals for your package or standalone and more granular build options then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section.
+
+In any case, open up any of the patch files in the `patchers` directory of the repo or the generated Max package, and look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
 
 ### Windows
 
@@ -144,7 +161,7 @@ Currently, the externals which are enabled by default in this project can be bui
 
 3. (Optional) since Visual Studio has its captive cmake, [you can use that](https://stackoverflow.com/questions/70178963/where-is-cmake-located-when-downloaded-from-visual-studio-2022), but it is preferable to [install cmake](https://cmake.org/download/#latest) independently.
 
-After installation of the above you can build the externals inside your `Documents/Max 8/Packages` folder as follows:
+After installation of the above you can build the externals inside your `Documents/Max 9/Packages` folder as follows:
 
 ```sh
 git clone --recursive https://github.com/shakfu/py-js
@@ -167,11 +184,13 @@ First make sure you have completed the [Quickstart](#quickstart) section above. 
 brew install cmake zmq czmq
 ```
 
-Now you can build all externals (including `py` and `pyjs`) in one shot using cmake:
+Now you can build almost all the externals (including `py` and `pyjs`) in one shot using cmake:
 
 ```sh
 make projects
 ```
+
+Look at the `Makefile` and the root `CMakeLists.txt` for further build options.
 
 After doing the above, the recommended iterative development workflow is to make changes to the source code in the respective project and then `cd py-js/build` and `cmake --build .`. This will cause cmake to only build modified projects efficiently.
 

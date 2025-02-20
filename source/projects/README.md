@@ -31,6 +31,10 @@ A Single-header python3 c library to nest python3 objects in other externals
 
 A Single-header python3 c++ library to nest python3 objects in other externals
 
+### mpy
+
+A proof-of-concept [micropython](https://micropython.org) external.
+
 ### mxpy
 
 A translation of [pdpython](https://github.com/garthz/pdpython) to maxmsp
@@ -39,10 +43,9 @@ A translation of [pdpython](https://github.com/garthz/pdpython) to maxmsp
 
 An external based on the [pocketpy](https://github.com/blueloveTH/pocketpy) C++17 header-only Python interpreter for game engine/apps.
 
-### wbsrv
+### pktpy2
 
-An experiment to build a web-based python code-editor driven by the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
-
+An external based on the new `v2.0.x` version of [pocketpy](https://github.com/blueloveTH/pocketpy) using c11 instead of c++
 
 ## C. ZeroMQ / Jupyter Experiments
 
@@ -60,32 +63,13 @@ For static compilation, the dependencies are `libzmq.a` (itself depending on `li
 
 The `zpy` consists of relatively thin zeromq (using the czmq wrapper) client embedded in a Max external. It talks to a corresponding server (written in python3) which is run (currently manually) in a separate process in a  REQUEST-REPLY pattern.
 
-The `zpy` external is compiled as follows:
-
-```bash
-
-./build.sh
-
-```
-
 This prototype blocks the ui thread when it is run. The next example, `zthread`, solves this issue.
 
 ### zthread
 
 `zthread` is a `zeromq` client + Max threads to make it non-blocking. This works: one thread per zmq socket as per the zmq rules.
 
-### zpy3 (planned)
-
-This planned project will apply the threading logic obtained in `zthread` to the `zpy` project to sidestep ui-thread blocking.
-
 ### jmx
 
 An attempt to build a [jupyter_client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) as an external.
 
-So far implementing parts of the message protocol:
-
-- [x] generate uuid
-- [x] iso861 timestamp is generated
-- [x] build Max dictionary and convert to json
-- [ ] convert max messages to python syntax
-- [ ] ...

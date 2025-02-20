@@ -2,43 +2,29 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 8,
-			"minor" : 2,
-			"revision" : 2,
+			"major" : 9,
+			"minor" : 0,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
 		"rect" : [ 81.0, 109.0, 640.0, 480.0 ],
-		"bglocked" : 0,
-		"openinpresentation" : 0,
-		"default_fontsize" : 12.0,
-		"default_fontface" : 0,
-		"default_fontname" : "Arial",
-		"gridonopen" : 1,
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 1,
-		"objectsnaponopen" : 1,
-		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
-		"lefttoolbarpinned" : 0,
-		"toptoolbarpinned" : 0,
-		"righttoolbarpinned" : 0,
-		"bottomtoolbarpinned" : 0,
-		"toolbars_unpinned_last_save" : 0,
-		"tallnewobj" : 0,
-		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
-		"devicewidth" : 0.0,
-		"description" : "",
-		"digest" : "",
-		"tags" : "",
-		"style" : "",
-		"subpatcher_template" : "",
-		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-17",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 18.5, 382.5, 390.0, 33.0 ],
+					"text" : "challenge: How to make it non-blocking?\nThe problem is that it is currently blocking the ui-thread. "
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-24",
 					"maxclass" : "message",
@@ -58,7 +44,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 238.0, 156.0, 54.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test float"
 				}
 
@@ -125,11 +110,11 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-19",
-					"linecount" : 13,
+					"linecount" : 11,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 436.0, 25.0, 153.0, 181.0 ],
+					"patching_rect" : [ 434.0, 54.0, 187.0, 154.0 ],
 					"text" : "It makes a big difference if overdrive is on or not.\nIf it is, the count continues in the scheduler thread then updates the ui once zmqc stops blocking the ui thread.\nIf overdrive is off, then the count pauses with the blocking of the main ui thread and resumes from where it paused once zmqc stops blocking."
 				}
 
@@ -166,7 +151,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 448.0, 426.5, 50.0, 22.0 ],
-					"text" : "0"
+					"text" : "361"
 				}
 
 			}
@@ -202,7 +187,8 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 479.0, 223.5, 24.0, 24.0 ]
+					"patching_rect" : [ 479.0, 223.5, 24.0, 24.0 ],
+					"svg" : ""
 				}
 
 			}
@@ -221,12 +207,12 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-7",
-					"linecount" : 2,
+					"linecount" : 5,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 23.0, 54.0, 345.0, 33.0 ],
-					"text" : "The problem is that it is currently blocking the ui-thread. How to make it non-blocking?"
+					"patching_rect" : [ 23.0, 54.0, 347.0, 74.0 ],
+					"text" : "1. pip install zmq\n2. python3 zpy_server.py\n3. open this external\n4. click on the toggle to switch the metro clock\n5. tests methods such as eval 1+1, etc.."
 				}
 
 			}
@@ -237,8 +223,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 23.0, 17.0, 345.0, 24.0 ],
-					"text" : "zpy: a zmq client connecting to a python server"
+					"patching_rect" : [ 23.0, 17.0, 529.0, 24.0 ],
+					"text" : "zpy: a zmq client embedded in an external connecting to a python server"
 				}
 
 			}
@@ -259,8 +245,8 @@
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
+					"numoutlets" : 3,
+					"outlettype" : [ "", "bang", "bang" ],
 					"patching_rect" : [ 140.0, 206.0, 27.0, 22.0 ],
 					"text" : "zpy"
 				}
@@ -370,7 +356,12 @@
 
 			}
  ],
-		"dependency_cache" : [  ],
+		"originid" : "pat-4",
+		"dependency_cache" : [ 			{
+				"name" : "zpy.mxo",
+				"type" : "iLaX"
+			}
+ ],
 		"autosave" : 0
 	}
 

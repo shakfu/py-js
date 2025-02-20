@@ -3,13 +3,17 @@ cmake_minimum_required(VERSION 3.19)
 string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
 project(${THIS_FOLDER_NAME})
 
-option(C74_BUILD_FAT "Build Universal Externals") # not supported (you're on your own! :-)
-option(ENABLE_LTO "enable link-time / interprocedural optimization")
+option(C74_BUILD_FAT "Build Universal Externals" OFF) # not supported (you're on your own! :-)
+option(ENABLE_LTO "enable link-time / interprocedural optimization" OFF)
 
-option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals")
-option(BUILD_ZMQ_EXTERNALS "Enable building zeromq externals")
-option(BUILD_MICROPYTHON_EXTERNAL "Enable building of micropython external")
-option(FETCH_MICROPYTHON "Download latest micropython and use that to build external")
+option(BUILD_PYTHON3_CORE_EXTERNALS "Enable building python3 core externals" OFF)
+option(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS "Enable building python3 experimental externals" OFF)
+option(BUILD_POCKETPY_EXTERNALS "Enable building pocketpy-based externals" OFF)
+option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals" OFF)
+option(BUILD_ZMQ_EXTERNALS "Enable building zeromq externals" OFF)
+option(BUILD_DEMO_EXTERNALS "Enable demo (scratch) externals" OFF)
+option(BUILD_MICROPYTHON_EXTERNAL "Enable building of micropython external" OFF)
+option(FETCH_MICROPYTHON "Download latest micropython and use that to build external" OFF)
 
 
 # use ccache if available
@@ -90,17 +94,26 @@ ENDMACRO()
 # endforeach ()
 
 # python3 externals
+
+if(BUILD_PYTHON3_CORE_EXTERNALS)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
+endif()
+
+if(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cobra)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/krait)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mxpy)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
+endif()
 
 # python variants
+if(BUILD_POCKETPY_EXTERNALS)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy2) # WIP
+endif()
+
 if(BUILD_MICROPYTHON_EXTERNAL)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy)
 endif()
@@ -112,11 +125,15 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zpy)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zthread)
 endif()
 
-# other externals
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cmx)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/demo)
+# demo externals
+if(BUILD_DEMO_EXTERNALS)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/cmx)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/demo)
+endif()
 
 # thirdparty externals
 if(BUILD_THIRDPARTY_EXTERNALS)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/shell)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/thirdparty/jit.foo)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/thirdparty/jit.fill2)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/thirdparty/shell)
 endif()

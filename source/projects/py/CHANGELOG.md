@@ -2,7 +2,7 @@
 
 ## [0.3.x]
 
-- Added `api_jit.pxd` cython header to start enabling `api` access to `jit.*` functions/data. 
+- Added `api_jit.pxd` cython header to enabled `api` access to `jit.*` functions/data. 
 
 - Added `**kwargs` to `api.Dictionary` constructor, and also `api.Dictionary.__contains__`
 

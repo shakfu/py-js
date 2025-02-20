@@ -45,7 +45,6 @@ INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
 				   # this requires numpy to be available to the python
 				   # interpreter.	
 
-
 # constants
 COLOR_BOLD_CYAN = "\033[1;36m"
 COLOR_RESET = "\033[m"
@@ -107,7 +106,8 @@ all: default
 
 # High-Level
 # -----------------------------------------------------------------------
-.PHONY: default local-sys \
+.PHONY: default local-sys core projects dev ninja \
+		demos mpy thirdparty \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
@@ -121,6 +121,93 @@ default: local-sys api
 
 local-sys: clean-local-sys api
 	$(call call-builder,"pyjs" "local_sys")
+
+core: api clean-build-dir clean-externals
+	$(call section,"building core externals using cmake with xcode with auto-signing")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+projects: clean-build-dir clean-externals
+	$(call section,"building projects using cmake with xcode with auto-signing")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
+			-DBUILD_POCKETPY_EXTERNALS=ON \
+			-DBUILD_DEMO_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+demos: clean-build-dir clean-externals
+	$(call section,"building demos using cmake with xcode")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_DEMO_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+thirdparty: clean-build-dir clean-externals
+	$(call section,"building thirdparty externals using cmake with xcode")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_THIRDPARTY_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+mpy: clean-build-dir clean-externals
+	$(call section,"building the mpy external using cmake with xcode")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DFETCH_MICROPYTHON=ON \
+			-DBUILD_MICROPYTHON_EXTERNAL=ON \
+			&& \
+		cmake --build . --config Release
+
+zmq: clean-build-dir clean-externals
+	$(call section,"building the zmq externals using cmake with xcode")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_ZMQ_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+dev: clean-build-dir clean-externals
+	$(call section,"building using cmake / make then sign externals subsequently")
+	@mkdir build && \
+		cd build && \
+		cmake .. \
+			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
+			-DBUILD_POCKETPY_EXTERNALS=ON \
+			-DBUILD_DEMO_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release && \
+		cd .. && \
+		make sign
+
+ninja: clean-build-dir clean-externals
+	$(call section,"building using cmake / ninja then sign externals subsequently")
+	@mkdir build && \
+		cd build && \
+		cmake .. -G Ninja \
+			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
+			-DBUILD_POCKETPY_EXTERNALS=ON \
+			-DBUILD_DEMO_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release && \
+		cd .. && \
+		make sign
+
 
 homebrew-pkg: clean-homebrew-pkg
 	$(call call-builder,"pyjs" "homebrew_pkg")
@@ -486,7 +573,7 @@ install-numpy: numpy sign
 
 # Styling
 # -----------------------------------------------------------------------
-.PHONY: docs style clang-format duplo cflow projects dev 
+.PHONY: docs style clang-format duplo cflow
 
 docs:
 	@doxygen
@@ -515,12 +602,6 @@ cflow:
 	@cflow2dot -x $(CFLOW)/ignore.txt -i source/projects/mamba/py.h -f pdf -o $(CFLOW)/mamba_cflow
 	@rm -f $(CFLOW)/*.dot
 
-projects:
-	@bash $(SCRIPTS)/build_projects.sh
-
-dev:
-	@bash $(SCRIPTS)/build_dev.sh
-
 
 # fat:
 # 	@echo "NOT FUNCTIONAL UNLESS DEPS ARE ALSO FAT"
@@ -529,29 +610,32 @@ dev:
 
 # Cleaning
 # -----------------------------------------------------------------------
-.PHONY: reset clean clean-targets clean-support clean-externals \
-		clean-build clean-local-sys \
-		clean-homebrew-pkg clean-homebrew-ext \
-		clean-framework-pkg clean-framework-ext \
-		clean-shared-pkg clean-shared-ext \
-		clean-static-pkg clean-static-ext \
-		clean-relocatable-pkg
+.PHONY: \
+	reset clean clean-targets clean-support clean-externals \
+	clean-build clean-build-dir clean-local-sys \
+	clean-homebrew-pkg clean-homebrew-ext \
+	clean-framework-pkg clean-framework-ext \
+	clean-shared-pkg clean-shared-ext \
+	clean-static-pkg clean-static-ext \
+	clean-relocatable-pkg
 
 clean: clean-externals clean-support clean-targets clean-build clean-docs
 
-clean-targets:  clean-local-sys  \
-			    clean-homebrew-pkg clean-homebrew-ext  \
-			    clean-framework-pkg clean-framework-ext \
-			    clean-shared-pkg clean-shared-ext \
-			    clean-static-pkg clean-static-ext \
-			    clean-relocatable-pkg
+clean-targets:  \
+	clean-local-sys  \
+    clean-homebrew-pkg clean-homebrew-ext  \
+    clean-framework-pkg clean-framework-ext \
+    clean-shared-pkg clean-shared-ext \
+    clean-static-pkg clean-static-ext \
+    clean-relocatable-pkg
  
-clean-build-lib: clean-python-shared \
-				 clean-python-shared-ext \
-				 clean-python-shared-pkg \
-				 clean-python-static \
-				 clean-python-framework \
-				 clean-python-cmake
+clean-build-lib: \
+	clean-python-shared \
+	clean-python-shared-ext \
+	clean-python-shared-pkg \
+	clean-python-static \
+	clean-python-framework \
+	clean-python-cmake
 
 reset: clean clean-build
 	$(call section,"reset build system")
@@ -559,18 +643,20 @@ reset: clean clean-build
 
 clean-products: clean-support clean-externals clean-build
 
-clean-build:
+clean-build-dir:
 	$(call section,"cleaning build directory")
 	@rm -rf '${ROOTDIR}'/build
+
+clean-build: clean-build-dir
+	$(call section,"cleaning build detritus")
 	@rm -rf '${PYDIR}'/targets/build/src/*
 	@rm -rf '${BUILDDIR}'/src/*
 	@rm -rf '${BUILDDIR}'/lib/python-shared
 	@rm -rf '${BUILDDIR}'/lib/python-static
 	@rm -rf '${BUILDDIR}'/lib/Python.framework
 
-reset-build:
-	$(call section,"cleaning build directory")
-	@rm -rf '${ROOTDIR}'/build
+reset-build: clean-build-dir
+	$(call section,"reset build dependencies")
 	@rm -rf '${BUILDDIR}'
 
 clean-externals:
@@ -646,7 +732,7 @@ clean-python-framework-pkg: clean-externals clean-support
 clean-python-cmake:
 	$(call xcleanlib,"python-cmake")
 
-demo: README.md FAQ.md CHANGELOG.md
+wildcards: README.md FAQ.md CHANGELOG.md
 	@echo "target: '$@'"
 	@echo "first-prereq: '$<'"
 	@echo "all-prereqs: '$^'"

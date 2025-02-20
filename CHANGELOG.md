@@ -17,6 +17,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Added additional 'category' folders in `py-js/source` to improve classification of externals
+
+- Added `ninja` make target to use the `Ninja` builder in cmake builds
+
+- Added additional cmake build options with corresponding make targets
+
 - Added the `pktpy2` external, based on v2.0.5 of the [pocketpy](https://pocketpy.dev) python3.x interpreter, which aims to be an alternative to [Lua](https://lua.org) for game scripting. Development is ongoing.
 
 - Added [Python3-Externals-for-Max-MSP.pdf](https://github.com/shakfu/py-js/tree/main/source/docs/_book/Python3-Externals-for-Max-MSP.pdf) pdf book to the repository.

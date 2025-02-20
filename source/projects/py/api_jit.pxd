@@ -3,22 +3,55 @@
 'x' -> the header has been fully exposed to cython
 
 '-' -> the header is not explicitly exposed to cython and presently
-       not required for the external. It is exposed to non-cython c code
-       via the primary includes in "ext.h"
+       not required for the external.
 
-'p' -> partial analyzed but not yet included in api_msp.pxd
+'p' -> partial analyzed but not yet included in api_jit.pxd
 
 ' ' -> an empty box means it is planned
 
 - [ ] max_types.h
 - [ ] ext_mess.h
+
+- [ ] jit.bin.h
+- [ ] jit.byteorder.h
+- [x] jit.common.h
+- [x] jit.cpost.h
+- [x] jit.critical.h
+- [ ] jit.cubicspline.h
 - [ ] jit.error.h
-- [ ] jit.max.h
-- [ ] jit.common.h
-- [ ] jit.cpost.h
-- [ ] jit.critical.h
-- [ ] jit.math.h
-- [ ] max.jit.mop.h
+- [ ] jit.file.h
+- [ ] jit.fixmath.h
+- [ ] jit.functor.h
+- [ ] jit.gl.cache.h
+- [ ] jit.gl.chunk.h
+- [ ] jit.gl.common.h
+- [ ] jit.gl.context.h
+- [ ] jit.gl.context.view.h
+- [ ] jit.gl.draw.h
+- [ ] jit.gl.drawinfo.h
+- [ ] jit.gl.h
+- [ ] jit.gl.ob3d.h
+- [ ] jit.gl.pixelformat.h
+- [ ] jit.gl.procs.h
+- [ ] jit.gl.support.h
+- [ ] jit.glext.h
+- [ ] jit.glext_nv.h
+- [ ] jit.gworld.h
+- [ ] jit.half.h
+- [ ] jit.linklist.h
+- [ ] jit.mac.h
+- [x] jit.math.h
+- [ ] jit.matrix.util.h
+- [x] jit.max.h
+- [ ] jit.namespace.h
+- [ ] jit.op.h
+- [ ] jit.parallel.utils.h
+- [ ] jit.platform.h
+- [x] jit.symbols.h
+- [ ] jit.vecmath.h
+- [ ] jit.wglext.h
+- [ ] jit.window.h
+- [x] max.jit.mop.h
 
 
 """
@@ -96,6 +129,15 @@ cdef extern from "jit.max.h":
     ctypedef t_object    t_max_object
     ctypedef t_messlist  t_max_messlist
 
+    cdef int A_DEFER
+    cdef int A_USURP
+    cdef int A_DEFER_LOW
+    cdef int A_USURP_LOW
+
+    ctypedef enum:
+        MAX_JIT_CLASS_FLAGS_GIMMEBACK_WRAP      = 0x00000001L  # uses standard dumpout A_DEFER_LOW method
+        MAX_JIT_CLASS_FLAGS_OWN_INLETINFO       = 0x00000002L  # override stdinletinfo in class's main
+
     void *max_jit_object_alloc(t_class *mclass, t_symbol *jitter_classname)
     void max_jit_object_free(void *x)
     void max_jit_class_obex_setup(t_class *mclass, long oboffset)
@@ -163,6 +205,56 @@ cdef extern from "jit.max.h":
 
 
 cdef extern from "jit.common.h":
+
+    cdef int SIZE_INT32
+    cdef int SIZE_INT64
+    cdef int SIZE_FLOAT32
+    cdef int SIZE_FLOAT64
+    cdef int SIZE_PTR
+
+    ctypedef enum t_jit_attr_flags:
+        JIT_ATTR_GET_OPAQUE         = 0x00000001    # private getter (all)          @ingroup jitter
+        JIT_ATTR_SET_OPAQUE         = 0x00000002    # private setter (all)          @ingroup jitter
+        JIT_ATTR_GET_OPAQUE_USER    = 0x00000100    # private getter (user)         @ingroup jitter
+        JIT_ATTR_SET_OPAQUE_USER    = 0x00000200    # private setter (user)         @ingroup jitter
+        JIT_ATTR_GET_DEFER          = 0x00010000    # defer getter (deprecated)     @ingroup jitter
+        JIT_ATTR_GET_USURP          = 0x00020000    # usurp getter (deprecated)     @ingroup jitter
+        JIT_ATTR_GET_DEFER_LOW      = 0x00040000    # defer getter                  @ingroup jitter
+        JIT_ATTR_GET_USURP_LOW      = 0x00080000    # usurp getter                  @ingroup jitter
+        JIT_ATTR_SET_DEFER          = 0x01000000    # defer setter (deprecated)     @ingroup jitter
+        JIT_ATTR_SET_USURP          = 0x02000000    # usurp setter (deprecated)     @ingroup jitter
+        JIT_ATTR_SET_DEFER_LOW      = 0x04000000    # defer setter                  @ingroup jitter
+        JIT_ATTR_SET_USURP_LOW      = 0x08000000    # usurp setter                  @ingroup jitter
+
+
+    ctypedef enum t_jit_matrix_info_flags:
+        # t_jit_matrix_info flags
+        JIT_MATRIX_DATA_HANDLE      = 0x00000002    # data is handle
+        JIT_MATRIX_DATA_REFERENCE   = 0x00000004    # data is reference to outside memory
+        JIT_MATRIX_DATA_PACK_TIGHT  = 0x00000008    # data is tightly packed (doesn't use standard 16 byte alignment)
+        JIT_MATRIX_DATA_FLAGS_USE   = 0x00008000    # necessary if using handle/reference data flags when creating
+                                                    # jit_matrix, however, it is never stored in matrix
+
+
+    ctypedef enum:
+        JIT_MATRIX_MAX_DIMCOUNT     = 32            # maximum dimension count
+        JIT_MATRIX_MAX_PLANECOUNT   = 32            # maximum plane count
+
+
+    # t_matrix_conv_info flags
+    ctypedef enum t_matrix_conv_info_flags:
+        JIT_MATRIX_CONVERT_CLAMP    = 0x00000001    # not currently used
+        JIT_MATRIX_CONVERT_INTERP   = 0x00000002    # use interpolation
+        JIT_MATRIX_CONVERT_SRCDIM   = 0x00000004    # use source dimensions
+        JIT_MATRIX_CONVERT_DSTDIM   = 0x00000008    # use destination dimensions
+
+
+    ctypedef unsigned long   ulong
+    ctypedef unsigned int    uint
+    ctypedef unsigned short  ushort
+    ctypedef unsigned char   uchar
+
+
     ctypedef struct t_jit_attr:
         t_jit_object    ob             # common object header
         t_symbol        *name          # attribute name
@@ -524,6 +616,149 @@ cdef extern from "max.jit.mop.h":
 
         # max_jit_mop_classex_mproc 
 
-
     t_jit_err max_jit_mop_setup_probing(t_class *mclass)
+
+cdef extern from "jit.symbols.h":
+
+    cdef t_symbol *_jit_sym_nothing
+    cdef t_symbol *_jit_sym_new
+    cdef t_symbol *_jit_sym_free
+    cdef t_symbol *_jit_sym_classname
+    cdef t_symbol *_jit_sym_getname
+    cdef t_symbol *_jit_sym_getmethod
+    cdef t_symbol *_jit_sym_get
+    cdef t_symbol *_jit_sym_set
+    cdef t_symbol *_jit_sym_register
+    cdef t_symbol *_jit_sym_char
+    cdef t_symbol *_jit_sym_long
+    cdef t_symbol *_jit_sym_float32
+    cdef t_symbol *_jit_sym_float64
+    cdef t_symbol *_jit_sym_symbol
+    cdef t_symbol *_jit_sym_pointer
+    cdef t_symbol *_jit_sym_object
+    cdef t_symbol *_jit_sym_atom
+    cdef t_symbol *_jit_sym_list
+    cdef t_symbol *_jit_sym_type
+    cdef t_symbol *_jit_sym_dim
+    cdef t_symbol *_jit_sym_planecount
+    cdef t_symbol *_jit_sym_val
+    cdef t_symbol *_jit_sym_plane
+    cdef t_symbol *_jit_sym_cell
+    cdef t_symbol *_jit_sym_jit_matrix
+    cdef t_symbol *_jit_sym_class_jit_matrix
+    cdef t_symbol *_jit_sym_togworld
+    cdef t_symbol *_jit_sym_fromgworld
+    cdef t_symbol *_jit_sym_frommatrix
+    cdef t_symbol *_jit_sym_class_jit_attribute
+    cdef t_symbol *_jit_sym_jit_attribute
+    cdef t_symbol *_jit_sym_jit_attr_offset
+    cdef t_symbol *_jit_sym_jit_attr_offset_array
+    cdef t_symbol *_jit_sym_rebuilding
+    cdef t_symbol *_jit_sym_modified
+    cdef t_symbol *_jit_sym_lock
+    cdef t_symbol *_jit_sym_setinfo
+    cdef t_symbol *_jit_sym_setinfo_ex
+    cdef t_symbol *_jit_sym_getinfo
+    cdef t_symbol *_jit_sym_data
+    cdef t_symbol *_jit_sym_getdata
+    cdef t_symbol *_jit_sym_outputmatrix
+    cdef t_symbol *_jit_sym_clear
+    cdef t_symbol *_jit_sym_clear_custom
+    cdef t_symbol *_jit_sym_err_calculate
+    cdef t_symbol *_jit_sym_max_jit_classex
+    cdef t_symbol *_jit_sym_setall
+    cdef t_symbol *_jit_sym_chuck
+    cdef t_symbol *_jit_sym_getsize
+    cdef t_symbol *_jit_sym_getindex
+    cdef t_symbol *_jit_sym_objptr2index
+    cdef t_symbol *_jit_sym_append
+    cdef t_symbol *_jit_sym_insertindex
+    cdef t_symbol *_jit_sym_deleteindex
+    cdef t_symbol *_jit_sym_chuckindex
+    cdef t_symbol *_jit_sym_makearray
+    cdef t_symbol *_jit_sym_reverse
+    cdef t_symbol *_jit_sym_rotate
+    cdef t_symbol *_jit_sym_shuffle
+    cdef t_symbol *_jit_sym_swap
+    cdef t_symbol *_jit_sym_findfirst
+    cdef t_symbol *_jit_sym_findall
+    cdef t_symbol *_jit_sym_methodall
+    cdef t_symbol *_jit_sym_methodindex
+    cdef t_symbol *_jit_sym_sort
+    cdef t_symbol *_jit_sym_matrix_calc
+    cdef t_symbol *_jit_sym_genframe
+    cdef t_symbol *_jit_sym_filter
+    cdef t_symbol *_jit_sym_jit_mop
+    cdef t_symbol *_jit_sym_newcopy
+    cdef t_symbol *_jit_sym_jit_linklist
+    cdef t_symbol *_jit_sym_inputcount
+    cdef t_symbol *_jit_sym_outputcount
+    cdef t_symbol *_jit_sym_getinput
+    cdef t_symbol *_jit_sym_getoutput
+    cdef t_symbol *_jit_sym_getinputlist
+    cdef t_symbol *_jit_sym_getoutputlist
+    cdef t_symbol *_jit_sym_ioname
+    cdef t_symbol *_jit_sym_matrixname
+    cdef t_symbol *_jit_sym_outputmode
+    cdef t_symbol *_jit_sym_matrix
+    cdef t_symbol *_jit_sym_getmatrix
+    cdef t_symbol *_jit_sym_typelink
+    cdef t_symbol *_jit_sym_dimlink
+    cdef t_symbol *_jit_sym_planelink
+    cdef t_symbol *_jit_sym_restrict_type
+    cdef t_symbol *_jit_sym_restrict_planecount
+    cdef t_symbol *_jit_sym_restrict_dim
+    cdef t_symbol *_jit_sym_special
+    cdef t_symbol *_jit_sym_getspecial
+    cdef t_symbol *_jit_sym_adapt
+    cdef t_symbol *_jit_sym_decorator
+    cdef t_symbol *_jit_sym_frommatrix_trunc
+    cdef t_symbol *_jit_sym_ioproc
+    cdef t_symbol *_jit_sym_getioproc
+    cdef t_symbol *_jit_sym_name
+    cdef t_symbol *_jit_sym_types
+    cdef t_symbol *_jit_sym_minplanecount
+    cdef t_symbol *_jit_sym_maxplanecount
+    cdef t_symbol *_jit_sym_mindimcount
+    cdef t_symbol *_jit_sym_maxdimcount
+    cdef t_symbol *_jit_sym_mindim
+    cdef t_symbol *_jit_sym_maxdim
+    cdef t_symbol *_jit_sym_gl_points
+    cdef t_symbol *_jit_sym_gl_point_sprite
+    cdef t_symbol *_jit_sym_gl_lines
+    cdef t_symbol *_jit_sym_gl_line_strip
+    cdef t_symbol *_jit_sym_gl_line_loop
+    cdef t_symbol *_jit_sym_gl_triangles
+    cdef t_symbol *_jit_sym_gl_tri_strip
+    cdef t_symbol *_jit_sym_gl_tri_fan
+    cdef t_symbol *_jit_sym_gl_quads
+    cdef t_symbol *_jit_sym_gl_quad_strip
+    cdef t_symbol *_jit_sym_gl_polygon
+    cdef t_symbol *_jit_sym_gl_tri_grid
+    cdef t_symbol *_jit_sym_gl_quad_grid
+    cdef t_symbol *_jit_sym_err_lockout_stack
+    cdef t_symbol *_jit_sym_class_jit_namespace
+    cdef t_symbol *_jit_sym_jit_namespace
+    cdef t_symbol *_jit_sym_findsize
+    cdef t_symbol *_jit_sym_attach
+    cdef t_symbol *_jit_sym_detach
+    cdef t_symbol *_jit_sym_add
+    cdef t_symbol *_jit_sym_replace
+    cdef t_symbol *_jit_sym_gettype
+    cdef t_symbol *_jit_sym_ob_sym
+    cdef t_symbol *_jit_sym_resolve_name
+    cdef t_symbol *_jit_sym_resolve_raw
+    cdef t_symbol *_jit_sym_notifyall
+    cdef t_symbol *_jit_sym_block
+    cdef t_symbol *_jit_sym_unblock
+    cdef t_symbol *_jit_sym_position
+    cdef t_symbol *_jit_sym_rotatexyz
+    cdef t_symbol *_jit_sym_scale
+    cdef t_symbol *_jit_sym_quat
+    cdef t_symbol *_jit_sym_direction
+    cdef t_symbol *_jit_sym_lookat
+    cdef t_symbol *_jit_sym_anim
+    cdef t_symbol *_jit_sym_bounds
+    cdef t_symbol *_jit_sym_boundcalc
+    cdef t_symbol *_jit_sym_calcboundscdef
 
