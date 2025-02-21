@@ -19,6 +19,7 @@ Extension Classes:
 - AtomArray: Interface to Max atom arrays
 - Patcher: Interface to Max patchers
 - Box: Interface to Max boxes/objects
+- JitMatrix: Interface to Max jit matrices
 - PyExternal: Main interface for Python externals
 - PyMxObject: Alternative external extension type (obj pointer retrieved via uintptr_t)
 
@@ -45,7 +46,7 @@ from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
 from cpython cimport Py_buffer
 from libc.stdint cimport uintptr_t
-from libc.string cimport strcpy, strlen
+from libc.string cimport strcpy, strlen, memset
 
 cimport api_max as mx  # api is a cython keyword!
 cimport api_msp as mp
@@ -3898,6 +3899,83 @@ cdef class MaxApp:
     def quit(self):
         """Call the 'quit' method on the application object."""
         self.call("quit")
+
+# ----------------------------------------------------------------------------
+# api.Matrix
+
+cdef class Matrix:
+    """Interface to an existing Max jitter matrix."""
+    cdef jt.t_object *ptr
+    cdef long plane
+    cdef long offsetcount
+    cdef long offset[jt.JIT_MATRIX_MAX_DIMCOUNT]
+    cdef jt.t_jit_matrix_info info # matrix information struct
+    cdef public str name
+
+    def __cinit__(self):
+        self.ptr = NULL
+        self.plane = 0
+        self.offsetcount = 0
+        # self.offset[0] = 0
+        # memset(self.offset, 0, jt.JIT_MATRIX_MAX_DIMCOUNT * sizeof(long))
+        self.name = ""
+
+    # def __dealloc__(self):
+    #     if self.ptr:
+    #         jt.jit_object_free(self.ptr)
+
+    def __init__(self, str name):
+        self.name = name
+        self.ptr = <jt.t_object*>jt.jit_object_findregistered(str_to_sym(name))
+        if not (self.ptr is not NULL and self.is_matrix()):
+            raise ValueError("could not find a matrix object with name")
+        jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getinfo, &self.info)
+
+    @property
+    def size(self) -> int:
+        """matrix size in bytes"""
+        return self.info.size
+
+    @property
+    def type(self) -> str:
+        """primitifve type (char, long, float32, or float64)"""
+        return sym_to_str(self.info.type)
+
+    @property
+    def flags(self) -> int:
+        """flags to specify data reference, handle, or tightly packed"""
+        return self.info.flags
+
+    @property
+    def dimcount(self) -> int:
+        """number of dimensions"""
+        return self.info.dimcount
+
+    @property
+    def dim(self) -> list[int]:
+        """dimension sizes"""
+        cdef list[int] dim_sizes = []
+        for i in range(self.dimcount): 
+            dim_sizes.append(self.info.dim[i])
+        return dim_sizes
+
+    @property
+    def dimstride(self) -> list[int]:
+        """stride across dimensions in bytes"""
+        cdef list[int] dim_stride = []
+        for i in range(self.dimcount):
+            dim_stride.append(self.info.dimstride[i]) 
+        return dim_stride
+
+    @property
+    def planecount(self) -> int:
+        """number of planes"""
+        return self.info.planecount
+
+    def is_matrix(self) -> bool:
+        """Checks if matrix pointer refers to an actual matrix"""
+        return <bint>jt.jit_object_method(self.ptr, jt._jit_sym_class_jit_matrix)
+
 
 # ----------------------------------------------------------------------------
 # api.PyExternal

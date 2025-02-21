@@ -96,9 +96,9 @@ cdef extern from "ext_mess.h":
         method m_fun            # Method associated with the message
         char m_type[81]         # Argument type information
 
-    ctypedef struct t_class
-    ctypedef struct t_outlet
-    ctypedef struct t_inlet
+    ctypedef struct t_class: pass
+    ctypedef struct t_outlet: pass
+    ctypedef struct t_inlet: pass
 
     ctypedef struct t_object:
         # The structure for the head of any object which wants to have inlets or outlets or support attributes.
@@ -121,6 +121,29 @@ cdef extern from "ext_mess.h":
 
 cdef extern from "jit.error.h":
     ctypedef t_atom_long t_jit_err
+
+    void jit_object_post(t_object *x, char *s, ...)
+    void jit_object_error(t_object *x, char *s, ...)
+
+    ctypedef enum t_jit_error_code:
+        JIT_ERR_NONE 				= 0
+        JIT_ERR_GENERIC				= 1163022162 # FOUR_CHAR('EROR')
+        JIT_ERR_INVALID_OBJECT		= 1229868866 # FOUR_CHAR('INOB')
+        JIT_ERR_OBJECT_BUSY			= 1329746777 # FOUR_CHAR('OBSY')
+        JIT_ERR_OUT_OF_MEM			= 1330464077 # FOUR_CHAR('OMEM')
+        JIT_ERR_INVALID_PTR			= 1229870672 # FOUR_CHAR('INVP')
+        JIT_ERR_DUPLICATE			= 1146441804 # FOUR_CHAR('DUPL')
+        JIT_ERR_OUT_OF_BOUNDS		= 1329745476 # FOUR_CHAR('OBND')
+        JIT_ERR_INVALID_INPUT		= 1229870665 # FOUR_CHAR('INVI')
+        JIT_ERR_INVALID_OUTPUT		= 1229870671 # FOUR_CHAR('INVO')
+        JIT_ERR_MISMATCH_TYPE		= 1297306704 # FOUR_CHAR('MSTP')
+        JIT_ERR_MISMATCH_PLANE		= 1297305676 # FOUR_CHAR('MSPL')
+        JIT_ERR_MISMATCH_DIM		= 1297302605 # FOUR_CHAR('MSDM')
+        JIT_ERR_MATRIX_UNKNOWN		= 1297634638 # FOUR_CHAR('MXUN')
+        JIT_ERR_SUPPRESS_OUTPUT		= 1397772883 # FOUR_CHAR('SPRS')
+        JIT_ERR_DATA_UNAVAILABLE	= 1146443340 # FOUR_CHAR('DUVL')
+        JIT_ERR_HW_UNAVAILABLE		= 1213552204 # FOUR_CHAR('HUVL')
+
 
 
 cdef extern from "jit.max.h":
@@ -266,9 +289,6 @@ cdef extern from "jit.common.h":
         void            *filterset     # filterobject for set method
         void            *reserved      # for future use
 
-    ctypedef enum:
-        JIT_MATRIX_MAX_DIMCOUNT   = 32 # maximum dimension count
-        JIT_MATRIX_MAX_PLANECOUNT = 32 # maximum plane count
 
     ctypedef struct t_jit_matrix_info:
         # Matrix information struct. Used to get/set multiple matrix attributes at once.

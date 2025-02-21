@@ -125,17 +125,33 @@ cdef extern from "max_types.h":
 
 
 cdef extern from "ext_mess.h":
+
     ctypedef void *(*method)(void *)
     ctypedef long (*t_intmethod)(void *)
     ctypedef void t_binbuf
-    # ctypedef struct t_outlet
-    # ctypedef struct t_inlet
-    # ctypedef void t_outlet
-    # ctypedef void t_inlet
-    ctypedef struct t_object
+
+    ctypedef struct t_messlist:
+        # A list of symbols and their corresponding methods complete with typechecking information. 
+        t_symbol *m_sym         # Name of the message
+        method m_fun            # Method associated with the message
+        char m_type[81]         # Argument type information
+
+    ctypedef struct t_class: pass
+    ctypedef struct t_outlet: pass
+    ctypedef struct t_inlet: pass
+
+    ctypedef struct t_object:
+        # The structure for the head of any object which wants to have inlets or outlets or support attributes.
+        t_messlist *o_messlist  # list of messages and methods. The -1 entry of the message list of an object contains a pointer to its #t_class entry.
+                                # (also used as freelist link)
+        t_inlet *o_inlet        # list of inlets
+        t_outlet *o_outlet      # list of outlets
+    
     ctypedef struct t_symbol:
-        char *s_name
-        # struct object *s_thing
+        # The symbol.
+        char *s_name            # name: a c-string
+        t_object *s_thing       # possible binding to a t_object
+
     cdef long MAGIC
     cdef long OB_MAGIC
     cdef int NOGOOD(void *x)
@@ -152,8 +168,6 @@ cdef extern from "ext_mess.h":
         short a_type
         word a_w
 
-    ctypedef struct t_class
-    ctypedef struct t_messlist
     ctypedef enum e_max_atomtypes:
         A_NOTHING = 0  # no type, thus no atom
         A_LONG         # long integer
@@ -183,7 +197,7 @@ cdef extern from "ext_mess.h":
 
 
 cdef extern from "ext_backgroundtask.h":
-    ctypedef struct t_backgroundtask
+    ctypedef struct t_backgroundtask: pass
 
     cdef long backgroundtask_execute(t_object *owner, void *args, method cbtask, method cbcomplete, t_backgroundtask **task, long flags)
     cdef long backgroundtask_execute_method(
@@ -200,8 +214,8 @@ cdef extern from "ext_backgroundtask.h":
 
 cdef extern from "ext_hashtab.h":
     cdef int HASH_DEFSLOTS
-    ctypedef struct t_hashtab_entry
-    ctypedef struct t_hashtab
+    ctypedef struct t_hashtab_entry: pass
+    ctypedef struct t_hashtab: pass
     cdef long cmpfn(void *x, void *y)
 
     cdef t_hashtab *hashtab_new(long slotcount)
@@ -239,8 +253,8 @@ cdef extern from "ext_hashtab.h":
 
 cdef extern from "ext_linklist.h":
 
-    ctypedef struct t_llelem
-    ctypedef struct t_linklist
+    ctypedef struct t_llelem: pass
+    ctypedef struct t_linklist: pass
     #cdef long LINKLIST_PRUNE_CHUCK 0x00000001L
     ctypedef long (*t_cmpfn)(void *, void *)
 
@@ -309,11 +323,11 @@ cdef extern from "ext_maxtypes.h":
         PI_SKIPGEN = 8
         PI_WANTPATCHER = 16
 
-    ctypedef struct Zll
-    ctypedef struct t_zll
+    ctypedef struct Zll: pass
+    ctypedef struct t_zll: pass
 
-    ctypedef struct Funbuff
-    ctypedef struct t_funbuff
+    ctypedef struct Funbuff: pass
+    ctypedef struct t_funbuff: pass
 
 
 cdef extern from "ext_proto.h":
@@ -440,8 +454,8 @@ cdef extern from "ext_proto.h":
 
 
 cdef extern from "ext_dictionary.h":
-    ctypedef struct t_dictionary_entry
-    ctypedef struct t_dictionary
+    ctypedef struct t_dictionary_entry: pass
+    ctypedef struct t_dictionary: pass
 
     cdef t_dictionary* dictionary_new()
     # [private] cdef t_dictionary* dictionary_prototypefromclass(t_class *c)
@@ -554,8 +568,8 @@ cdef extern from "ext_expr.h":
         ET_FI =     0x12
         ET_SI =     0x13
 
-    ctypedef struct t_ex_ex
-    ctypedef struct t_expr
+    ctypedef struct t_ex_ex: pass
+    ctypedef struct t_expr: pass
 
     cdef void *expr_new(long argc, t_atom *argv, t_atom *types)
     cdef short expr_eval(t_expr *x, long argc, t_atom *argv, t_atom *result)
@@ -777,7 +791,7 @@ cdef extern from "ext_obex.h":
     cdef t_max_err class_sticky_clear(t_class *x, t_symbol *stickyname, t_symbol *s)
     cdef t_max_err object_retain(t_object *x)
     cdef t_max_err object_release(t_object *x)
-    ctypedef struct t_method_object
+    ctypedef struct t_method_object: pass
     cdef t_method_object *method_object_new(method m, const char *name, ...)
     cdef t_method_object *method_object_new_messlist(t_messlist *m)
     cdef void method_object_free(t_method_object *x)
@@ -1280,9 +1294,9 @@ cdef extern from "ext_parameter.h":
         PARAM_LEARNING_TYPE_KEY
         PARAM_LEARNING_TYPE_MACRO
 
-    ctypedef struct t_parameter_notify_data
+    ctypedef struct t_parameter_notify_data: pass
 
-    ctypedef struct t_param_class_defcolor_data
+    ctypedef struct t_param_class_defcolor_data: pass
 
     cdef t_max_err class_parameter_init(t_class *c)
     cdef t_max_err object_parameter_init(t_object *x, PARAM_TYPE type)
@@ -1373,9 +1387,9 @@ cdef extern from "ext_sysmidi.h":
         SYSMIDI_DYNAMIC = 2
         SYSMIDI_PERMANENT = 4
 
-    ctypedef struct t_midistate
-    ctypedef struct t_midiportinfo
-    ctypedef struct t_sysmididriver
+    ctypedef struct t_midistate: pass
+    ctypedef struct t_midiportinfo: pass
+    ctypedef struct t_sysmididriver: pass
 
     cdef void sysmidi_enqbigpacket(t_midiportinfo *port, t_uint8 *data, double ts, long len, long contFlags)
     cdef long sysmidi_numinports()
@@ -1394,8 +1408,8 @@ cdef extern from "ext_itm.h":
 
 
     ctypedef t_object t_itm
-    ctypedef struct t_clocksource
-    ctypedef struct t_tschange
+    ctypedef struct t_clocksource: pass
+    ctypedef struct t_tschange: pass
 
     ctypedef enum:
         TIME_FLAGS_LOCATION = 1
@@ -1480,7 +1494,7 @@ cdef extern from "ext_time.h":
 
 cdef extern from "ext_packages.h":
 
-    ctypedef struct t_package_file
+    ctypedef struct t_package_file: pass
     cdef short packages_getpackagepath(const char *packagename)
     cdef t_linklist *packages_createsubpathlist(const char *subfoldername, short includesysfolder)
     cdef t_max_err packages_getsubpathcontents(const char *subfoldername, const char *suffix_selector, short includesysfolder, t_linklist **subpathlist, t_dictionary **names_to_packagefiles)
@@ -1570,11 +1584,9 @@ cdef extern from "ext_path.h":
         TYPELIST_SNIPPETS       = 64
 
 
-    ctypedef struct t_fileinfo
-
-    ctypedef struct t_path
-
-    ctypedef struct t_pathlink
+    ctypedef struct t_fileinfo: pass
+    ctypedef struct t_path: pass
+    ctypedef struct t_pathlink: pass
 
     ctypedef enum e_max_searchpath_flags:
         PATH_FLAGS_RECURSIVE    = 0x001
@@ -1688,7 +1700,7 @@ cdef extern from "ext_strings.h":
 
 cdef extern from "ext_symobject.h":
 
-    ctypedef struct t_symobject
+    ctypedef struct t_symobject: pass
 
     cdef void symobject_initclass()
     cdef void *symobject_new(t_symbol *sym)
@@ -1697,7 +1709,7 @@ cdef extern from "ext_symobject.h":
 
 cdef extern from "ext_sysfile.h":
 
-    ctypedef struct t_filestruct
+    ctypedef struct t_filestruct: pass
     ctypedef t_filestruct *t_filehandle
 
     ctypedef enum t_sysfile_pos_mode:
@@ -1772,7 +1784,7 @@ cdef extern from "ext_atomarray.h":
 
     cdef int ATOMARRAY_FLAG_FREECHILDREN
 
-    ctypedef struct t_atomarray
+    ctypedef struct t_atomarray: pass
 
     cdef t_atomarray *atomarray_new(long ac, t_atom *av)
     cdef void atomarray_flags(t_atomarray *x, long flags)
@@ -1874,8 +1886,8 @@ cdef extern from "ext_sysparallel.h":
     cdef int SYSPARALLEL_STATE_QUIT
     cdef int SYSPARALLEL_TASK_FLAG_WORKERTRIGGERS
 
-    ctypedef struct t_sysparallel_task
-    ctypedef struct t_sysparallel_worker
+    ctypedef struct t_sysparallel_task: pass
+    ctypedef struct t_sysparallel_worker: pass
     cdef void sysparallel_init()
     cdef long sysparallel_processorcount()
     cdef t_sysparallel_task *sysparallel_task_new(void *data, method workerproc, long maxworkercount)
@@ -1928,7 +1940,7 @@ cdef extern from "ext_sysshmem.h":
 
 cdef extern from "ext_systime.h":
 
-    ctypedef struct t_datetime
+    ctypedef struct t_datetime: pass
 
     ctypedef enum e_max_dateflags:
         SYSDATEFORMAT_FLAGS_SHORT = 1
@@ -4926,7 +4938,7 @@ cdef extern from "jpatcher_api.h":
         double green
         double blue
         double alpha
-    ctypedef struct t_jboxdrawparams
+    ctypedef struct t_jboxdrawparams: pass
 
     cdef int JBOX_SPOOL_CONTENTS
     cdef int JBOX_SPOOL_WHOLEBOX
@@ -4934,8 +4946,8 @@ cdef extern from "jpatcher_api.h":
     cdef int JBOX_FLAG_READ
     cdef int JBOX_FLAG_FIRST_PAINT
 
-    ctypedef struct t_jbox
-    ctypedef struct t_pvselinfo
+    ctypedef struct t_jbox: pass
+    ctypedef struct t_pvselinfo: pass
 
     cdef t_max_err object_attr_get_rect(t_object *o, t_symbol *name, t_rect *rect)
     cdef t_max_err object_attr_set_rect(t_object *o, t_symbol *name, t_rect *rect)
@@ -5402,17 +5414,17 @@ cdef extern from "jpatcher_utils.h":
 
 
 cdef extern from "jgraphics.h":
-    ctypedef struct t_jgraphics
-    ctypedef struct t_jpath
-    ctypedef struct t_jpattern
-    ctypedef struct t_jfont
-    ctypedef struct t_jtextlayout
-    ctypedef struct t_jtransform
-    ctypedef struct t_jsurface
-    ctypedef struct t_jdesktopui
-    ctypedef struct t_jpopupmenu
-    ctypedef struct t_jsvg
-    ctypedef struct t_jsvg_remap
+    ctypedef struct t_jgraphics: pass
+    ctypedef struct t_jpath: pass
+    ctypedef struct t_jpattern: pass
+    ctypedef struct t_jfont: pass
+    ctypedef struct t_jtextlayout: pass
+    ctypedef struct t_jtransform: pass
+    ctypedef struct t_jsurface: pass
+    ctypedef struct t_jdesktopui: pass
+    ctypedef struct t_jpopupmenu: pass
+    ctypedef struct t_jsvg: pass
+    ctypedef struct t_jsvg_remap: pass
 
     cdef int JGRAPHICS_RECT_BOTTOM(t_rect *rect)
     cdef int JGRAPHICS_RECT_RIGHT(t_rect *rect)
@@ -5504,7 +5516,7 @@ cdef extern from "jgraphics.h":
     cdef t_jgraphics*    jgraphics_reference(t_jgraphics *g)
     cdef void            jgraphics_destroy(t_jgraphics *g)
 
-    ctypedef struct t_jgraphics_path_elem
+    ctypedef struct t_jgraphics_path_elem: pass
 
     cdef void        jgraphics_new_path(t_jgraphics *g)
     cdef t_jpath*    jgraphics_copy_path(t_jgraphics *g)
@@ -5554,7 +5566,7 @@ cdef extern from "jgraphics.h":
     cdef void jgraphics_show_text(t_jgraphics *g, const char *utf8)
     cdef void jgraphics_text_path(t_jgraphics *g, const char *utf8)
 
-    ctypedef struct t_jgraphics_font_extents
+    ctypedef struct t_jgraphics_font_extents: pass
 
     cdef void jgraphics_font_extents(t_jgraphics *g, t_jgraphics_font_extents *extents)
     cdef void jgraphics_text_measure(t_jgraphics *g, const char *utf8, double *width, double *height)
@@ -5618,7 +5630,7 @@ cdef extern from "jgraphics.h":
     cdef t_max_err jtextlayout_getchar(t_jtextlayout *tl, long index, long *pch)
     cdef t_jpath* jtextlayout_createpath(t_jtextlayout *tl)
 
-    ctypedef struct t_jmatrix
+    ctypedef struct t_jmatrix: pass
 
 
     cdef void jgraphics_matrix_init(t_jmatrix *x, double xx, double yx, double xy, double yy, double x0, double y0)
@@ -5937,12 +5949,12 @@ cdef extern from "jdataview.h":
 
     cdef int JCOLUMN_DISABLED
 
-    ctypedef struct t_celldesc
-    ctypedef struct t_jcolumn
-    ctypedef struct  t_jdataview
-    ctypedef struct t_jdv_notifier
-    ctypedef struct t_privatesortrec
-    ctypedef struct t_jsection
+    ctypedef struct t_celldesc: pass
+    ctypedef struct t_jcolumn: pass
+    ctypedef struct  t_jdataview: pass
+    ctypedef struct t_jdv_notifier: pass
+    ctypedef struct t_privatesortrec: pass
+    ctypedef struct t_jsection: pass
 
     cdef void jdataview_initclass()
     cdef void *jdataview_new()

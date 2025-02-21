@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Added initial `api.Matrix` to represent a Jitter Matrix (currently readonly only).
+
 - Added `api_jit.pxd` cython header to enabled `api` access to `jit.*` functions/data. 
 
 - Added `**kwargs` to `api.Dictionary` constructor, and also `api.Dictionary.__contains__`
