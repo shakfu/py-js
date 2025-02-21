@@ -13,3 +13,11 @@ def test_matrix_info():
 	api.post(f"dimstride: {m.dimstride}")
 	api.post(f"planecount: {m.planecount}")
 
+def test_matrix_get_data():
+	m = api.Matrix("this")
+	return m.get_data()
+
+def test_matrix_set_data():
+	m = api.Matrix("this")
+	a = api.Atom.from_seq([3] * m.size)
+	m.set_data(a)

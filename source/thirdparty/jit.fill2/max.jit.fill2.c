@@ -23,11 +23,9 @@ void max_jit_fill_assist(t_max_jit_fill* x, void* b, long m, long a, char* s);
 void max_jit_fill_int(t_max_jit_fill* x, long val);
 void max_jit_fill_float(t_max_jit_fill* x, double val);
 void max_jit_fill_list(t_max_jit_fill* x, t_symbol* s, long argc, t_atom* argv);
-// void max_jit_fill_offset_bp(t_max_jit_fill *x, char **bp, t_jit_matrix_info *minfo);
 
 t_class* max_jit_fill_class = NULL;
 
-// t_symbol* ps_done;
 
 C74_EXPORT void ext_main(void* r)
 {
@@ -108,8 +106,6 @@ void max_jit_fill_list(t_max_jit_fill* x, t_symbol* s, long argc, t_atom* argv)
                 jit_object_method(matrix, _jit_sym_lock, savelock);
                 goto out;
             }
-
-            // max_jit_fill_offset_bp(x,&bp,&minfo);
 
             // limited to filling at most into 2 dimensions per list
             offset0 = (x->offsetcount > 0) ? x->offset[0] : 0;

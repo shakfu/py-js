@@ -2,7 +2,7 @@
 
 ## [0.3.x]
 
-- Added initial `api.Matrix` to represent a Jitter Matrix (currently readonly only).
+- Added initial `api.Matrix` to represent a Jitter Matrix.
 
 - Added `api_jit.pxd` cython header to enabled `api` access to `jit.*` functions/data. 
 

@@ -19,7 +19,7 @@ Extension Classes:
 - AtomArray: Interface to Max atom arrays
 - Patcher: Interface to Max patchers
 - Box: Interface to Max boxes/objects
-- JitMatrix: Interface to Max jit matrices
+- Matrix: Interface to Max jit matrices
 - PyExternal: Main interface for Python externals
 - PyMxObject: Alternative external extension type (obj pointer retrieved via uintptr_t)
 
@@ -109,6 +109,23 @@ cdef mx.t_symbol* bytes_to_sym(bytes string):
 cdef bytes sym_to_bytes(mx.t_symbol* symbol):
     """converts a max symbol to a python string"""
     return <bytes>symbol.s_name
+
+# ----------------------------------------------------------------------------
+# util cdef functions
+
+cdef long clamp(long x, long minimum, long maximum):
+    """Limit a value to a range between a minimum and a maximum value.
+
+    Can be used Instead of implicit assignment 
+    CLIP_ASSIGN(x,a,b) (x)=(x)<(a)?(a):(x)>(b)?(b):(x)
+
+    x = clamp(x, low, hi)
+    """
+    if x < minimum:
+        return minimum
+    if x > maximum:
+        return maximum
+    return x
 
 # ============================================================================
 # Named Tuples
@@ -3906,18 +3923,14 @@ cdef class MaxApp:
 cdef class Matrix:
     """Interface to an existing Max jitter matrix."""
     cdef jt.t_object *ptr
-    cdef long plane
-    cdef long offsetcount
+    cdef jt.t_jit_matrix_info info
+    cdef char* data
     cdef long offset[jt.JIT_MATRIX_MAX_DIMCOUNT]
-    cdef jt.t_jit_matrix_info info # matrix information struct
     cdef public str name
 
     def __cinit__(self):
         self.ptr = NULL
-        self.plane = 0
-        self.offsetcount = 0
-        # self.offset[0] = 0
-        # memset(self.offset, 0, jt.JIT_MATRIX_MAX_DIMCOUNT * sizeof(long))
+        self.data = NULL
         self.name = ""
 
     # def __dealloc__(self):
@@ -3928,8 +3941,9 @@ cdef class Matrix:
         self.name = name
         self.ptr = <jt.t_object*>jt.jit_object_findregistered(str_to_sym(name))
         if not (self.ptr is not NULL and self.is_matrix()):
-            raise ValueError("could not find a matrix object with name")
-        jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getinfo, &self.info)
+            raise ValueError("could not retrieve a matrix object with name '{name}'")
+        # self.refresh_info()
+        self.refresh()
 
     @property
     def size(self) -> int:
@@ -3971,10 +3985,95 @@ cdef class Matrix:
     def planecount(self) -> int:
         """number of planes"""
         return self.info.planecount
-
+       
     def is_matrix(self) -> bool:
         """Checks if matrix pointer refers to an actual matrix"""
         return <bint>jt.jit_object_method(self.ptr, jt._jit_sym_class_jit_matrix)
+
+    def lock(self) -> int:
+        """lock matrix and return savelock id"""
+        return <long>jt.jit_object_method(self.ptr, jt._jit_sym_lock, 1)
+
+    def unlock(self, int savelock):
+        """unlock matrix using prior savelock"""
+        jt.jit_object_method(self.ptr, jt._jit_sym_lock, savelock)
+
+    def refresh(self):
+        """updates matrix info and data"""
+        jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getinfo, &self.info)
+        jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getdata, &self.data)
+
+    def get_data(self) -> list[int]:
+        """retrieve data from matrix"""
+        cdef list[int] results = []
+        for i in range(self.size):
+            results.append(<int>self.data[i])
+        return results
+
+    def set_data(self, Atom atom, int plane = 0, int offsetcount = 0):
+        """set matrix data"""
+
+        cdef long err, argc, i, j
+        cdef long savelock, offset0, offset1
+        cdef char *p = NULL
+
+        # self.offset[0] = 0
+        # memset(self.offset, 0, jt.JIT_MATRIX_MAX_DIMCOUNT * sizeof(long))
+
+        if atom.size and atom.ptr:
+            savelock = <long>self.lock()
+            self.refresh()
+
+            if ((self.data is NULL) or (plane >= self.info.planecount) or (plane < 0)):
+                # jt.jit_error_sym(x, jt._jit_sym_err_calculate)
+                error("cannot set data to matrix")
+                jt.jit_object_method(self.ptr, jt._jit_sym_lock, savelock)
+                return
+
+            # limited to filling at most into 2 dimensions per list
+            offset0 = self.offset[0] if offsetcount > 0 else 0
+            offset1 = self.offset[1] if offsetcount > 1 else 0
+            offset0 = clamp(offset0, 0, self.info.dim[0] - 1)
+            offset1 = clamp(offset1, 0, self.info.dim[1] - 1)
+            argc = clamp(atom.size, 0, (self.info.dim[0] * (self.info.dim[1] - offset1)) - offset0)
+
+            j = offset0 + offset1 * self.dim[0]
+
+            if (self.info.type == jt._jit_sym_char):
+                self.data += plane
+                for i in range(argc):
+                    p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                    (<jt.uchar*>p)[0] = jt.jit_atom_getcharfix(atom.ptr + i)
+                    i += 1
+                    j += 1
+
+            elif (self.info.type == jt._jit_sym_long):
+                self.data += plane * 4
+                for i in range(argc):
+                    p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                    (<mx.t_int32*>p)[0] = <mx.t_int32>jt.jit_atom_getlong(atom.ptr + i)
+                    i += 1
+                    j += 1
+
+            elif (self.info.type == jt._jit_sym_float32):
+                self.data += plane * 4
+                for i in range(argc):
+                    p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                    (<float*>p)[0] = <float>jt.jit_atom_getfloat(atom.ptr + i)
+                    i += 1
+                    j += 1
+
+            elif (self.info.type == jt._jit_sym_float64):
+                self.data += plane * 8
+                for i in range(argc):
+                    p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                    (<double*>p)[0] = <double>jt.jit_atom_getfloat(atom.ptr + i)
+                    i += 1
+                    j += 1
+
+            jt.jit_object_method(self.ptr, jt._jit_sym_lock, savelock)
+            
+
 
 
 # ----------------------------------------------------------------------------

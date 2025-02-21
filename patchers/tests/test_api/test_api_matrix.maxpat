@@ -14,13 +14,36 @@
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-2",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 412.0, 562.0, 128.0, 22.0 ],
+					"text" : "test_matrix_set_data()"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-4",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 412.0, 534.0, 129.0, 22.0 ],
+					"text" : "test_matrix_get_data()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-32",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 414.0, 499.0, 101.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_matrix_info()"
 				}
 
@@ -556,7 +579,7 @@
 , 			{
 				"box" : 				{
 					"autoload" : 0,
-					"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_api_atom.py",
+					"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_api_matrix.py",
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -566,7 +589,7 @@
 					"saved_object_attributes" : 					{
 						"autoload" : 0,
 						"debug" : 1,
-						"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_api_atom.py",
+						"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_api_matrix.py",
 						"pythonpath" : "/"
 					}
 ,
@@ -608,6 +631,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-5", 0 ],
 					"source" : [ "obj-15", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-2", 0 ]
 				}
 
 			}
@@ -721,6 +751,13 @@
 					"destination" : [ "obj-40", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-37", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-4", 0 ]
 				}
 
 			}
