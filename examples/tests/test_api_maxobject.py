@@ -17,7 +17,12 @@ def test_maxobject_init():
 
 
 def test_maxobject_from_str():
-    memory["buf"] = api.MaxObject.from_str("buffer~", "buf jongly.aif")
+    memory["buf"] = api.MaxObject.from_str("buffer~", "buf amen.wav")
+
+
+def test_maxobject_registration():
+    buf1 = memory["buf"].register("buf1")
+    return buf1.get_namespace_and_name()
 
 
 def test_maxobject_call_replace():
@@ -35,6 +40,18 @@ def test_maxobject_call_wclose():
 def test_maxobject_method_exists():
     if memory["buf"].method_exists("wclose"):
         api.post("wclose method exists")
+
+
+def test_maxobject_help():
+    memory["buf"].help()
+
+
+def test_maxobject_refpage():
+    memory["buf"].open_refpage()
+
+
+def test_maxobject_query():
+    memory["buf"].open_query()
 
 
 def test_maxobject_delete():

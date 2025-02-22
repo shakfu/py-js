@@ -89,5 +89,3 @@ def test_atom_getdouble_array():
     a1 = api.Atom.from_str("foo bar 1 2 3.0")
     a1.setdouble_array([11.0, 22.2, 34.4, 45.8, 59.8])
     return a1.getdouble_array(5)
-
-

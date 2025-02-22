@@ -150,11 +150,12 @@ cdef class MaxObject:
     """
     cdef mx.t_object *ptr
     cdef bint ptr_owner
-    cdef public str classname
+    cdef public str name # registered name
 
     def __cinit__(self):
         self.ptr = NULL
         self.ptr_owner = False
+        self.name = ""
 
     def __dealloc__(self):
         # De-allocate if not null and flag is set
@@ -164,9 +165,26 @@ cdef class MaxObject:
 
     def __init__(self, classname: str, *args, namespace: str = "box"):
         cdef Atom atom = Atom(*args)
-        self.classname = classname
         self.ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+
+    @staticmethod
+    cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
+        """Create a MaxObject from an existing pointer."""
+        # Call to __new__ bypasses __init__ constructor
+        cdef MaxObject obj = MaxObject.__new__(MaxObject)
+        obj.ptr = ptr
+        obj.ptr_owner = owner
+        return obj
+
+    @staticmethod
+    def from_name(name: str, namespace: str = "box") -> MaxObject:
+        """Retrieves a registered object given its varname and namespace."""
+        cdef mx.t_object* obj_ptr = <mx.t_object*>mx.object_findregistered(
+            str_to_sym(namespace), str_to_sym(name))
+        if obj_ptr is NULL:
+            raise ValueError(f"could not find a registered [namespace] object with name {name}.")
+        return MaxObject.from_ptr(obj_ptr)
 
     @staticmethod
     def from_str(classname: str, parsestr: str, namespace: str = "box") -> MaxObject:
@@ -174,26 +192,15 @@ cdef class MaxObject:
 
         The object's new method must have an A_GIMME signature.
         """
-        cdef MaxObject obj = MaxObject.__new__(MaxObject)
-        obj.ptr_owner = True
-        obj.ptr = <mx.t_object*>mx.object_new_parse(
+        cdef mx.t_object* obj_ptr = <mx.t_object*>mx.object_new_parse(
             str_to_sym(namespace), str_to_sym(classname), parsestr.encode())
-        obj.classname = classname
-        return obj
+        return MaxObject.from_ptr(obj_ptr, True)
 
-    @staticmethod
-    cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
-        """Create a MaxObject from an existing pointer."""
-        # Call to __new__ bypasses __init__ constructor
-        cdef MaxObject obj = MaxObject.__new__(MaxObject)
-        cdef mx.t_symbol * name = mx.object_classname(<mx.t_object *>ptr)
-        obj.ptr = ptr
-        obj.ptr_owner = owner
-        if name is not NULL:
-            obj.classname = sym_to_str(name)
-        else:
-            obj.classname = "newobj"
-        return obj
+    @property
+    def classname(self) -> str:
+        """Get object's clsasname"""
+        cdef mx.t_symbol* _classname = mx.object_classname(<mx.t_object*>self.ptr)
+        return sym_to_str(_classname)
 
     @property
     def patcher(self) -> Patcher:
@@ -211,6 +218,7 @@ cdef class MaxObject:
     def namespace(self) -> str:
         """Get the object's namespace"""
         cdef mx.t_symbol* ns = mx.object_namespace(self.ptr)
+        return sym_to_str(ns)
 
     def set_value(self, *args):
         """Set value of object"""
@@ -228,6 +236,35 @@ cdef class MaxObject:
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not get object value")
         return atom.value
+
+    # registration funcs
+
+    def register(self, str name, str namespace = "box") -> MaxObject:
+        """Registers an object in a namespace."""
+        cdef mx.t_object* registered_obj =  <mx.t_object*>mx.object_register(
+            str_to_sym(namespace), str_to_sym(name), self.ptr)
+        if registered_obj is NULL:
+            raise ValueError(f"could not register object {namespace} {name}")
+        return MaxObject.from_ptr(registered_obj)
+
+    def unregister(self):
+        """Removes a registered object from a namespace."""
+        cdef mx.t_max_err err = mx.object_unregister(self.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not unregister object")
+
+    # def get_namespace_and_name(self) -> list[str]:
+    def get_namespace_and_name(self) -> tuple[str, str]:
+        """Determines the namespace and/or name of a registered object, given the object's pointer."""
+        cdef mx.t_symbol* namespace = mx.gensym("")
+        cdef mx.t_symbol* name = mx.gensym("")
+        cdef mx.t_max_err err = mx.object_findregisteredbyptr(&namespace, &name, self.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get object's namespace and name from ptr")
+        # return [sym_to_str(namespace), sym_to_str(name)]
+        return (sym_to_str(namespace), sym_to_str(name))
+
+    # method-related funcs
 
     def method_exists(self, str name) -> bool:
         """checks if named method exists"""
@@ -419,6 +456,63 @@ cdef class MaxObject:
         """return clone of object"""
         cdef mx.t_object *ptr = <mx.t_object *>mx.object_clone(<mx.t_object *>self.ptr)
         return MaxObject.from_ptr(ptr, owner=True)
+
+    # attach detach / subscribe unsubscribe
+
+    def attach(self, str name, str namespace = "box") -> MaxObject:
+        """Attaches a client to a registered object."""
+        cdef mx.t_object* registered_obj = <mx.t_object*>mx.object_attach(
+            str_to_sym(namespace), str_to_sym(name), <mx.t_object*>self.ptr)
+        if (registered_obj is NULL):
+            raise ValueError(f"could not attach to {namespace} {name} object")
+        return MaxObject.from_ptr(registered_obj)
+
+    def detach(self, str name, str namespace = "box"):
+        """Detach a client from a registered object."""
+        cdef mx.t_max_err err = mx.object_detach(
+            str_to_sym(namespace), str_to_sym(name), self.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not detach from {namespace} {name} object")
+
+    def subscribe(self, str name, str classname, str namespace = "box") -> MaxObject:
+        """Subscribes a client to wait for an object to register."""
+        cdef mx.t_object* registered_obj = <mx.t_object*>mx.object_subscribe(
+            str_to_sym(namespace), str_to_sym(name), str_to_sym(classname), self.ptr)
+        if (registered_obj is NULL):
+            raise ValueError(
+                f"could not subscribe to {namespace} {classname} {name} object")
+        return MaxObject.from_ptr(registered_obj)
+
+    def unsubscribe(self, str name, str classname, str namespace = "box"):
+        """Detach a client from a registered object."""
+        cdef mx.t_max_err err = mx.object_unsubscribe(
+            str_to_sym(namespace), str_to_sym(name), str_to_sym(classname), self.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(
+                f"could not unsubscribe from {namespace} {classname} {name} object")
+
+    def notify(self, str msg, object data = None):
+        """Broadcast a message (with an optional argument) from a registered object to any attached client objects."""
+        # data may be implemented in another iteration
+        cdef mx.t_max_err err = mx.object_notify(self.ptr, str_to_sym(msg), NULL)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not notify object(s)")
+
+    # help / open doc functions
+
+    def help(self):
+        """Open the help patcher for a given object class name."""
+        mx.classname_openhelp(self.classname.encode())
+
+    def open_refpage(self):
+        """Open the reference page for a given object class name."""
+        mx.classname_openrefpage(self.classname.encode())
+
+    def open_query(self):
+        """Open a search in the file browser for files with the name of the given class."""
+        mx.classname_openquery(self.classname.encode())
+
+
 
 
 # ----------------------------------------------------------------------------
@@ -1411,7 +1505,11 @@ cdef class Dictionary:
 
     @classmethod
     def from_kwargs(cls, **kwargs) -> Dictionary:
-        """Create an unregistered Dictionary from kwargs entries"""
+        """Create an unregistered Dictionary from kwargs entries
+
+        Can be use for object creation from dictionaries.
+        In this case, no need to prefix each key with `@`.
+        """
         cdef Dictionary _dict = cls()
         for key, value in kwargs.items():
             _dict[key] = value
@@ -3046,23 +3144,23 @@ cdef class Patcher:
         return <mx.t_object *>mx.newobject_sprintf(
             <mx.t_object *>self.ptr, text.encode())
 
-    def add_box(self, maxclass: str, x: float, y: float) -> bool:
+    def add_box(self, maxclass: str, x: float, y: float) -> Box:
         """Create a new box in the patcher."""
         cdef mx.t_object *obj = self.newobject_sprintf(
             f"@maxclass {maxclass} @patching_position {x} {y}"
         )
-        if obj is not NULL:
-            return True
-        return False
+        if obj is NULL:
+            raise ValueError("could not create a new box in the patcher")
+        return Box.from_ptr(obj)
 
-    def add_textbox(self, text: str, x: float, y: float, maxclass='newobj') -> bool:
+    def add_textbox(self, text: str, x: float, y: float, maxclass='newobj') -> Box:
         """Create a new textbox in the patcher."""
         cdef mx.t_object *obj = self.newobject_sprintf(
            f'@maxclass {maxclass} @text "{text}" @patching_position {x} {y}'
         )
-        if obj is not NULL:
-            return True
-        return False
+        if obj is NULL:
+            raise ValueError("could not create a new textbox in the patcher")
+        return Box.from_ptr(obj)
 
     cdef mx.t_object *newobject_fromboxtext(self, str text):
         """Create an object from the passed in text.
@@ -3073,12 +3171,31 @@ cdef class Patcher:
         """
         return mx.newobject_fromboxtext(self.ptr, text.encode())
 
-    def add_tbox(self, str text) -> bool:
+    def add_tbox(self, str text) -> Box:
         """Create an object from the passed in text."""
         cdef mx.t_object *obj = self.newobject_fromboxtext(text)
-        if obj is not NULL:
-            return True
-        return False
+        if obj is NULL:
+            raise ValueError(f"could not create a newobject from '{text}'")
+        return Box.from_ptr(obj)
+
+    def add_box_from_dict(self, Dictionary d) -> Box:
+        """Place a new box from a dictionary into a patcher.
+
+        Max attribute syntax is used to define key-value pairs, but no need to
+        prefix each key with an `@`. For example:
+
+        >>> p = api.get_patcher()
+        >>> d = api.Dictionary(
+            maxclass='toggle',
+            patching_position=[240.0, 200.0]
+        )
+        >>> box = p.add_object_from_dict(d)
+
+        """
+        cdef mx.t_object *obj = mx.newobject_fromdictionary(self.ptr, d.ptr)
+        if obj is NULL:
+            raise ValueError("could not create a newobject from a dictionary in the patcher")
+        return Box.from_ptr(obj)
 
     def _method_noargs(self, str name):
         """Call an object method with no arguments."""
@@ -3550,6 +3667,11 @@ cdef class Box:
         if err != mx.MAX_ERR_NONE:
            raise TypeError("could not set rect for box")
 
+    @property
+    def rect(self) -> Rect:
+        """Retrieve the patching rect of a box."""
+        return self.get_patching_rect()
+
     def get_patching_rect(self) -> Rect:
         """Retrieve the patching rect of a box."""
         cdef mx.t_rect pr
@@ -3727,6 +3849,7 @@ cdef class Box:
         """Retrieve a box's unique id."""
         cdef mx.t_symbol* _id = mx.jbox_get_id(self.ptr)
         return sym_to_str(_id)
+
 
 # ----------------------------------------------------------------------------
 # api.MaxApp

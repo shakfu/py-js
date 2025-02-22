@@ -40,20 +40,27 @@ def test_patcher_attrs():
 
 def test_patcher_add_box():
     p = api.get_patcher()
-    p.add_box("toggle", 240.0, 150.0)
-    api.bang_success()
+    box = p.add_box("toggle", 240.0, 150.0)
+    return str(box.rect)
 
 
 def test_patcher_add_textbox():
     p = api.get_patcher()
-    p.add_textbox("metro 400", 100.0, 150.0)
-    api.bang_success()
+    textbox = p.add_textbox("metro 400", 100.0, 150.0)
+    return str(textbox.rect)
 
 
 def test_patcher_add_tbox():
     p = api.get_patcher()
-    p.add_tbox("buffer~ buf jongly.aif")
-    api.bang_success()
+    tbox = p.add_tbox("buffer~ buf jongly.aif")
+    return str(tbox.rect)
+
+
+def test_patcher_add_box_from_dict():
+    p = api.get_patcher()
+    d = api.Dictionary(maxclass="toggle", patching_position=[10.0, 20.0])
+    box = p.add_box_from_dict(d)
+    return str(box.rect)
 
 
 def test_patcher_script_newdefault():

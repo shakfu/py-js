@@ -2,9 +2,19 @@
 
 ## [0.3.x]
 
+- Added `api.Patcher.add_box_from_dict` method.
+
+- Changed `api.Patcher` methods which previously created `api.Box` instances but which returned `bool` results. These methods now correctly return `api.Box` instances.
+
+- Added `register`, `unregister`, `attach`, `detach`, `subscribe`, and `unsubscribe` methods to `api.MaxObject`.
+
+- Added `help`, `open_refpage` and `open_query` methods to `api.MaxObject`.
+
+- Added `api.MaxObject.set_value` and `api.MaxObject.get_value`
+
 - Added initial `api.Matrix` to represent a Jitter Matrix.
 
-- Added `api_jit.pxd` cython header to enabled `api` access to `jit.*` functions/data. 
+- Added `api_jit.pxd` cython header to enabled `api` access to `jit.*` functions/data.
 
 - Added `**kwargs` to `api.Dictionary` constructor, and also `api.Dictionary.__contains__`
 

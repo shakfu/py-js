@@ -9,8 +9,8 @@ def test_dict_init():
 
 def test_dict_contains():
     d = api.Dictionary(c=1, f=2)
-    assert 'c' in d
-    return 'c' in d
+    assert "c" in d
+    return "c" in d
 
 
 def test_dict_from_name():
@@ -31,7 +31,7 @@ def test_dict():
     d = api.Dictionary()
     d["myfloat"] = 10.1
     d["myint"] = 3
-    d["mylist"] = ['a', 'b', 'c']
+    d["mylist"] = ["a", "b", "c"]
     assert d.getentrycount() == 3
     return d.to_atoms()
 
