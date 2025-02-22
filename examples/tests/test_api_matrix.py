@@ -1,6 +1,7 @@
 import api
 
 
+
 def test_matrix_init():
     m = api.Matrix("this")
 
@@ -14,6 +15,10 @@ def test_matrix_info():
     api.post(f"dim: {m.dim}")
     api.post(f"dimstride: {m.dimstride}")
     api.post(f"planecount: {m.planecount}")
+    # custom properties
+    api.post(f"plane_len: {m.plane_len}")
+    api.post(f"matrix_len: {m.matrix_len}")
+
 
 
 def test_matrix_get_data():
@@ -21,7 +26,8 @@ def test_matrix_get_data():
     return m.get_data()
 
 
-def test_matrix_set_data():
+def test_matrix_fill():
     m = api.Matrix("this")
-    a = api.Atom.from_seq([3] * m.size)
-    m.set_data(a)
+    a = api.Atom.from_seq([5] * m.plane_len)
+    m.fill(a, plane=0)
+    api.bang_success()

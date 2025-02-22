@@ -39,6 +39,7 @@ see: `py-js/source/projects/py/api.md` for further details
 
 # ----------------------------------------------------------------------------
 # imports
+from math import prod as product
 from collections import namedtuple
 
 
@@ -4065,7 +4066,6 @@ cdef class Matrix:
         self.ptr = <jt.t_object*>jt.jit_object_findregistered(str_to_sym(name))
         if not (self.ptr is not NULL and self.is_matrix()):
             raise ValueError("could not retrieve a matrix object with name '{name}'")
-        # self.refresh_info()
         self.refresh()
 
     @property
@@ -4108,6 +4108,16 @@ cdef class Matrix:
     def planecount(self) -> int:
         """number of planes"""
         return self.info.planecount
+
+    @property
+    def plane_len(self) -> int:
+        """number of `cells` in a single plane"""
+        return product(self.dim)
+
+    @property
+    def matrix_len(self) -> int:
+        """total number of `cell` in a single matrix"""
+        return self.plane_len * self.planecount
        
     def is_matrix(self) -> bool:
         """Checks if matrix pointer refers to an actual matrix"""
@@ -4133,8 +4143,11 @@ cdef class Matrix:
             results.append(<int>self.data[i])
         return results
 
-    def set_data(self, Atom atom, int plane = 0, int offsetcount = 0):
-        """set matrix data"""
+    def fill(self, Atom atom, int plane = 0, int offsetcount = 0):
+        """fill a matrix plane with an atom's values
+        
+        basically is an initial cython translation of the fill method in `jit.fill`
+        """
 
         cdef long err, argc, i, j
         cdef long savelock, offset0, offset1
