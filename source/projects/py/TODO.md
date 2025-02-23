@@ -58,7 +58,7 @@
 
 ### Max API Wrapper
 
-- [ ] add more tests and examples
+- [x] add more tests and examples
 
 ### Build System
 

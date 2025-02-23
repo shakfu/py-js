@@ -4137,11 +4137,57 @@ cdef class Matrix:
         jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getdata, &self.data)
 
     def get_data(self) -> list[int]:
-        """retrieve data from matrix"""
+        """retrieve data from matrix as contiguous array."""
         cdef list[int] results = []
-        for i in range(self.size):
+        for i in range(self.matrix_len):
             results.append(<int>self.data[i])
         return results
+
+    cdef void* cell_ptr_1d(self, int x):
+        """Retrieves pointer to directly access matrix cells if it is 1D"""
+        return <void*>(<jt.uchar*>self.data + self.info.dimstride[0] * x)
+
+    cdef void* cell_ptr_2d(self, int x, int y):
+        return <void*>(<jt.uchar*>self.data + self.info.dimstride[0] * x
+                                            + self.info.dimstride[1] * y)
+
+    cdef void* cell_ptr_3d(self, int x, int y, int z):
+        return <void*>(<jt.uchar*>self.data + self.info.dimstride[0] * x
+                                            + self.info.dimstride[1] * y
+                                            + self.info.dimstride[2] * z)
+
+    # cdef test_cell_ptrs(self):
+    #     cdef float* f1 = <float*>self.cell_ptr_1d(10)
+    #     cdef float* f2 = <float*>self.cell_ptr_2d(10, 10)
+    #     cdef float* f3 = <float*>self.cell_ptr_3d(10, 10, 10)
+
+    def set_data(self, data: list[int], int x = 0, int y = 0):
+        """sets the matrix's data using a contiguous array."""
+        assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+        cdef long savelock = <long>self.lock()
+        cdef char* p = <char*>self.cell_ptr_2d(x, y)
+        for i in range(len(data)):
+            p[i] = <char>data[i]
+        self.unlock(savelock)
+
+    # def set_data(self, char[:,:,:] matrix):
+    #     """Set matrix from a memoryview
+        
+    #     >>> np.arange(200).reshape((2,20,5))
+
+    #     """
+    #     cdef long planes = <Py_ssize_t>matrix.shape[0]
+    #     cdef long rows = <Py_ssize_t>matrix.shape[1]
+    #     cdef long cols = <Py_ssize_t>matrix.shape[2]
+
+    #     assert cols == self.dim[0]
+    #     assert rows == self.dim[1]
+    #     assert planes == self.planecount
+    #     assert cols * rows * planes == self.matrix_len
+    #     # cdef int i = 0
+    #     # self.lock()
+    #     # ...
+    #     # self.unlock()
 
     def fill(self, Atom atom, int plane = 0, int offsetcount = 0):
         """fill a matrix plane with an atom's values
@@ -4152,9 +4198,6 @@ cdef class Matrix:
         cdef long err, argc, i, j
         cdef long savelock, offset0, offset1
         cdef char *p = NULL
-
-        # self.offset[0] = 0
-        # memset(self.offset, 0, jt.JIT_MATRIX_MAX_DIMCOUNT * sizeof(long))
 
         if atom.size and atom.ptr:
             savelock = <long>self.lock()
@@ -4207,7 +4250,7 @@ cdef class Matrix:
                     i += 1
                     j += 1
 
-            jt.jit_object_method(self.ptr, jt._jit_sym_lock, savelock)
+            self.unlock(savelock)
             
 
 

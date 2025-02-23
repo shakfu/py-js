@@ -20,10 +20,22 @@ def test_matrix_info():
     api.post(f"matrix_len: {m.matrix_len}")
 
 
-
 def test_matrix_get_data():
     m = api.Matrix("this")
     return m.get_data()
+
+
+def test_matrix_set_data():
+    m = api.Matrix("this")
+    data = [8] * m.matrix_len
+    m.set_data(data)
+    api.bang_success()
+
+def test_matrix_set_data2():
+    m = api.Matrix("this")
+    data = [3] * 5
+    m.set_data(data, x=3, y=2)
+    api.bang_success()
 
 
 def test_matrix_fill():

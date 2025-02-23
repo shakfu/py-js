@@ -1,0 +1,396 @@
+# Python's Buffer Protocol
+
+
+## Comparing Matrix Implementations
+
+
+Numpy            | jit.Matrix    | Python Buffer Protocol 
+:--------------- | :------------ | :---------------------------------------------------
+dtype            | type          | type
+nbytes           | size          | len
+ndim             | dimcount      | ndim
+shape            | dim[32]       | shape
+strides          | dimstride[32] | strides
+n/a              | planecount    | n/a
+itemsize         | sizeof(type)  | itemsize
+
+
+The major difference is that in a `jit.Matrix`, the concept of a place is treated as another dimensioni but included in the `dimcount`, whereas in `Numpy` and the `Buffer Protocol` there is nothing like the concept of a plane, and all dimension are counted in `ndim`.
+
+Note that in `jit.matrix`, the type can only be one off `char`, `long`, `float32`, and `float64`.
+
+The `itemsize` for these types is as follows:
+
+type            | itemsize (bytes) 
+: ------------- | : ---------------:
+char            | 1           
+long            | 4 
+float32         | 4
+float64         | 8
+
+
+So in a `[jit.matrix foo 2 long 8 10]`, which creates a matrix of 2 planes 8 cols and 10 rows, note that the `dimcount` is 2 as per the following dumpt of `t_matrix_info`:
+
+```text
+size: 640
+type: long
+flags: 0
+dimcount: 2
+dim: [8, 10]
+dimstride: [8, 64]
+planecount: 2
+plane_len: 80
+matrix_len: 160
+```
+
+If in the above case where the matrix type is `long` the `itemsize` should 4, given that `size / matrix_len = itemsize` then this matches up. 
+
+
+So the equivalent of the above in `numpy` would be:
+
+```python
+>>> import numpy as np
+
+>>> m = np.arange(160, dtype=np.dtype("i")).reshape((2, 10, 8))
+array([[[  0,   1,   2,   3,   4,   5,   6,   7],
+        [  8,   9,  10,  11,  12,  13,  14,  15],
+        [ 16,  17,  18,  19,  20,  21,  22,  23],
+        [ 24,  25,  26,  27,  28,  29,  30,  31],
+        [ 32,  33,  34,  35,  36,  37,  38,  39],
+        [ 40,  41,  42,  43,  44,  45,  46,  47],
+        [ 48,  49,  50,  51,  52,  53,  54,  55],
+        [ 56,  57,  58,  59,  60,  61,  62,  63],
+        [ 64,  65,  66,  67,  68,  69,  70,  71],
+        [ 72,  73,  74,  75,  76,  77,  78,  79]],
+
+       [[ 80,  81,  82,  83,  84,  85,  86,  87],
+        [ 88,  89,  90,  91,  92,  93,  94,  95],
+        [ 96,  97,  98,  99, 100, 101, 102, 103],
+        [104, 105, 106, 107, 108, 109, 110, 111],
+        [112, 113, 114, 115, 116, 117, 118, 119],
+        [120, 121, 122, 123, 124, 125, 126, 127],
+        [128, 129, 130, 131, 132, 133, 134, 135],
+        [136, 137, 138, 139, 140, 141, 142, 143],
+        [144, 145, 146, 147, 148, 149, 150, 151],
+        [152, 153, 154, 155, 156, 157, 158, 159]]], dtype=int32)
+
+>>> m.shape
+(2, 10, 8)
+
+>>> m.strides
+(320, 32, 4)
+
+>>> m.nbytes
+640
+
+```
+
+In this case, `m.shape == (2, 10, 8)` corresponds to a `jit.matrix` with 2 planes, 10 rows and and 8 columns. Note that with the `jit.matrix` the `dim == (8, 10)` where the columns are given first and then the rows. But there is no difference in how the size of each respective matrix is calculated which in both cases is 640 bytes.
+
+The biggest difference really is in the treatement of strides: in numpy, it is given as `(320, 32, 4)`, the first value is the stride of what `jit.matrix` calls a `plane` and is provided as 320 bytes which is equal to 80 * 4 bytes; the second value is the stride between rows which is given as 32 bytes and is equal to 8 ncols * 4 bytes; and the final stride between columns is given as 4 which is offset in bytes to change columns. In the equivaluent `jit.matrix` the `dimstrides == (8, 64)` which looks like:
+
+```text
+dimstrides = (planecount * column stride (bytes), planecount * row stride (bytes))
+
+dimstrides = (2 * 4, 2 * 32) == (8, 32)
+```
+
+We know this is the case because if the `planecount` is increased to 3 for example then
+
+```text
+dimstrides = (3 * 4, 3 * 32) == (12, 96)
+```
+
+which is indeed consistent with the `dimstrides` value provided by `t_matrix_info`.
+
+As per [this forum post](https://cycling74.com/forums/dimstride-confusion), the above is is the case:
+
+```text
+if type is long, dim = (8, 10), planecount = 3, and distrides = (12, 96)
+
+dimstride[0] = sizeof(type) * planecount
+             = 4 * 3
+             = 12
+
+dimstride[1] = dimstride[0] * dim[0] + padding;
+
+therefore
+
+dimstride[1] = 12 * 8 + padding = 96
+        where padding == 0
+
+```
+
+In another forum post, [convert-jitter-matrix-to-eigen-matrix-c](https://cycling74.com/forums/convert-jitter-matrix-to-eigen-matrix-c) the advice by Rob Ramireza is to use the following:
+
+```c
+int i, j;
+char *in_bp;
+char *ip;
+
+jit_object_method(in_matrix, _jit_sym_getdata, &in_bp);
+
+for (i = 0; i < height; i++) {
+    ip = in_bp + i * in_minfo->dimstride[1];
+    for (j = 0; j < width; j++) {
+        // you are now retrieving values for cell j i
+        char plane0val = (*ip++);
+        char plane1val = (*ip++);
+        // continue planecount times to get all plane values
+
+    }
+}
+```
+
+and further on Rob writes:
+
+> if you want a specific cell i j
+
+
+```c
+ip = in_bp + j*in_minfo->dimstride[1] + i*in_minfo->dimstride[0];
+```
+
+the opening poster, [SAMUEL PARKE-WOLFE](https://github.com/samparkewolfe), finally writes:
+
+> It works!! 
+> Thank you very much Rob!!
+> Here is code which I just wrote and tested in the simplejit project!
+
+> It will take a 3 dimensional matrix with a plane size of 4 and set it's output matrix to it.
+
+
+```c
+char* ip;
+char* op;
+
+for (int i = 0; i < in_minfo.dim[0]; i++)
+{
+    for (int j = 0; j < in_minfo.dim[1]; j++)
+    {
+        for (int k = 0; k < in_minfo.dim[2]; k++)
+        {
+            ip = in_bp + (k * in_minfo.dimstride[2]) + (j * in_minfo.dimstride[1]) + (i * in_minfo.dimstride[0]);
+            op = out_bp + (k * out_minfo.dimstride[2]) + (j * out_minfo.dimstride[1]) + (i * out_minfo.dimstride[0]);
+                
+            *op = *ip;
+            op++; ip++;
+            
+            *op = *ip;
+            op++; ip++;
+            
+            *op = *ip;
+            op++; ip++;
+
+            *op = *ip;
+            op++; ip++;
+        }
+    }
+}
+```
+
+There is also the `jit.scalebias` example which contains a calculation method which has been simplified here:
+
+```c
+// recursive function to handle higher dimension matrices, by processing 2D sections at a time
+void jit_calculate_ndim(long dimcount, long* dim, long planecount,
+                        t_jit_matrix_info* in_minfo, char* bip, 
+                        t_jit_matrix_info* out_minfo, char* bop)
+{
+    long i, j, width, height;
+    uchar *ip, *op;
+    long tmp;
+
+    if (dimcount < 1) {
+        return; // safety
+    }
+
+    switch (dimcount)
+    {
+        case 1:
+            // if only 1D, interperet as 2D, falling through to 2D case
+            dim[1] = 1;
+        case 2:
+            width = dim[0];
+            height = dim[1];
+
+            // for each row
+            for (i = 0; i < height; i++)
+            {
+                // increment our data pointers according to byte stride
+                ip = bip + i * in_minfo->dimstride[1];
+                op = bop + i * out_minfo->dimstride[1];
+
+                // depending on our
+                for (j = 0; j < width; j++) {
+                    tmp = (long)(*ip++)
+                    *op++ = (tmp > 255) ? 255 : ((tmp < 0) ? 0 : tmp);
+                    tmp = (long)(*ip++)
+                    *op++ = (tmp > 255) ? 255 : ((tmp < 0) ? 0 : tmp);
+                    tmp = (long)(*ip++)
+                    *op++ = (tmp > 255) ? 255 : ((tmp < 0) ? 0 : tmp);
+                    tmp = (long)(*ip++)
+                    *op++ = (tmp > 255) ? 255 : ((tmp < 0) ? 0 : tmp);
+                }
+            };
+            break;
+        default:
+            // if we are processing higher dimension than 2D,
+            // for each lower dimensioned slice, set our
+            // base pointer and recursively call this function
+            // with decremented dimcount and new base pointers
+            for (i = 0; i < dim[dimcount - 1]; i++)
+            {
+                ip = bip + i * in_minfo->dimstride[dimcount - 1];
+                op = bop + i * out_minfo->dimstride[dimcount - 1];
+                jit_calculate_ndim(x, dimcount - 1, dim, planecount, in_minfo, ip, out_minfo, op);
+            }
+    }
+}
+```
+
+In another relevant forum reply to [how-to-allocate-data-for-jit_matrix_data](https://cycling74.com/forums/how-to-allocate-data-for-jit_matrix_data), Rob Ramirez writes:
+
+> likely your issues are related to alignment. something you have to look out for when pointing matrices to external data. Jitter matrices use standard 16 byte alignment by default, but you can override with flags.
+
+```c
+info.flags = JIT_MATRIX_DATA_REFERENCE | JIT_MATRIX_DATA_PACK_TIGHT | JIT_MATRIX_DATA_FLAGS_USE;
+matrix_ob = jit_object_new(_jit_sym_jit_matrix, &info);
+
+// you may also want to use the info size and dimstride members, e.g. for a simple 2D 1 plane char matrix:
+
+long width = out_minfo.dim[0];
+long height = out_minfo.dim[1];
+char* array = sysmem_newptr(out_minfo.size);
+int index = 0;
+int i, j;
+for (i = 0; i < height; i++) {
+    for(j = 0; j < width; j++) {
+        array[index++] = ((float)j/width) * 255; // simple gradient
+    }
+    for( ; j < out_minfo.dimstride[1]; j++) {
+        array[index++] = 0; // pad out with zeros based on our row alignment
+    }
+}
+jit_object_method(out_matrix, _jit_sym_setinfo_ex, &out_minfo); // set the matrix as described in out_minfo
+jit_object_method(out_matrix, _jit_sym_data, array);
+```
+
+
+Also see see JKC's reply to the [setcell-jit_object_method](https://cycling74.com/forums/setcell-jit_object_method) forum post:
+
+> On Oct 30, 2006, at 12:35 PM, Thijs Koerselman wrote:
+
+>> After some further investigation I drew the conclusion that you
+>> probably have to access the matrix data directly. Although the
+>> scalebias example is still a bit confusing to me, its in there, so
+>> I guess I will figure it out. I think it would still be very
+>> convenient to have an interface like setcell(). So if its available
+>> please let me know.
+
+> From your code sample, it appears that you're forgetting to use the
+> "val" delimiter required by the "setcell" method to identify where
+> the cell position ends and the value begins. If you're only using a
+> 1/2/3D matrix, you can use the setcell1d, setcell2d, setcell3d
+> utility methods which don't require the val delimiter.
+
+> However, if you're going to set lots of values in your matrix, it's
+> definitely faster to access the matrix data directly. You could to
+> make a macro for matrix cell random access given t_jit_matrix_info
+> and a data pointer. Something like the following email client code
+>  (might be typos) should get you going in the right direction
+
+```c
+#define CELL_PTR_1D (info,data,x) (((uchar *)(data))+(info)->dimstride [0]*(x))
+#define CELL_PTR_2D (info,data,x,y) (CELL_PTR_1D(info,data,x)+(info)->dimstride[1]*(y))
+#define CELL_PTR_3D (info,data,x,y,z) (CELL_PTR_2D(info,data,x,y)+(info)->dimstride[2]*(z))
+
+float *f;
+
+f = (float *) CELL_PTR_2D(info,data,x,y);
+f[0] = 0.f;
+f[1] = 1/2.f;
+f[2] = 666.f;
+```
+
+
+## Max JitterMatrix class
+
+```c
+/**
+ * Matrix information struct. 
+ * Used to get/set multiple matrix attributes at once.
+ *
+ * @ingroup matrixfun
+ */
+typedef struct _jit_matrix_info
+{
+        long       size;          // in bytes (0xFFFFFFFF=UNKNOWN)
+        t_symbol   *type;         // primitifve type (char, long, float32, or float64)
+        long       flags;         // flags to specify data reference, handle, or tightly packed
+        long       dimcount;      // number of dimensions
+        long       dim[32];       // dimension sizes
+        long       dimstride[32]; // stride across dimensions in bytes
+        long       planecount;    // number of planes
+} t_jit_matrix_info;
+```
+
+
+In javascript it looks like
+
+```javascript
+
+
+// new JitterMatrix(planeCount?: number, dataType?: string, columns?: number, rows?: number);
+
+var m = new JitterMatrix(4, "char", 320, 240);
+
+```
+
+
+## Numpy Arrays / Matrices
+
+- shape: Tuple whose elements give the lengths of the corresponding array dimensions.
+
+
+
+```python
+>>> from math import prod as product
+>>> import numpy as np
+
+
+>>> narr = np.arange(24, dtype=np.dtype("i")).reshape((2, 3, 4))
+
+>>> narr
+array([[[ 0,  1,  2,  3],
+        [ 4,  5,  6,  7],
+        [ 8,  9, 10, 11]],
+
+       [[12, 13, 14, 15],
+        [16, 17, 18, 19],
+        [20, 21, 22, 23]]], dtype=int32)
+
+>>> narr.strides
+(48, 16, 4)
+
+>>> narr.shape
+(2, 3, 4)
+
+>>> narr.itemsize
+4
+
+>>> narr.ndim
+3
+
+>>> narr.size
+24
+
+>>> narr.nbytes
+96
+
+>>> assert product(narr.shape) == narr.size
+True
+
+assert narr.size * narr.itemsize == narr.nbytes
+True
+
