@@ -41,6 +41,7 @@ see: `py-js/source/projects/py/api.md` for further details
 # imports
 from math import prod as product
 from collections import namedtuple
+from  typing import Optional
 
 
 from cython.view cimport array as cvarray
@@ -540,7 +541,7 @@ cdef class Atom:
             args = args[0]
         self.size = len(args)
         self.ptr = <mx.t_atom *>mx.sysmem_newptr(self.size * sizeof(mx.t_atom))
-        self.ptr_owner=True
+        self.ptr_owner = True
         if self.ptr is NULL:
             raise MemoryError
 
@@ -4049,7 +4050,6 @@ cdef class Matrix:
     cdef jt.t_object *ptr
     cdef jt.t_jit_matrix_info info
     cdef char* data
-    cdef long offset[jt.JIT_MATRIX_MAX_DIMCOUNT]
     cdef public str name
 
     def __cinit__(self):
@@ -4067,6 +4067,8 @@ cdef class Matrix:
         if not (self.ptr is not NULL and self.is_matrix()):
             raise ValueError("could not retrieve a matrix object with name '{name}'")
         self.refresh()
+
+    # matrix_info properties
 
     @property
     def size(self) -> int:
@@ -4109,6 +4111,18 @@ cdef class Matrix:
         """number of planes"""
         return self.info.planecount
 
+    # custom properties
+
+    @property
+    def itemsize(self) -> int:
+        """size in bytes of single matrix entry"""
+        return {
+            'char': 1,
+            'long':  4,
+            'float': 4,
+            'double': 8,
+        }[self.type]
+
     @property
     def plane_len(self) -> int:
         """number of `cells` in a single plane"""
@@ -4118,10 +4132,167 @@ cdef class Matrix:
     def matrix_len(self) -> int:
         """total number of `cell` in a single matrix"""
         return self.plane_len * self.planecount
+
+    # predicates
        
     def is_matrix(self) -> bool:
         """Checks if matrix pointer refers to an actual matrix"""
         return <bint>jt.jit_object_method(self.ptr, jt._jit_sym_class_jit_matrix)
+
+    # helper methods
+
+    def call_with_args(self, str method, *args) -> Optional[object]:
+        """helper wrapper method around jit_object_method_typed"""
+        cdef Atom atom = Atom(*args)
+        cdef Atom result = Atom.new(1)
+        jt.jit_object_method_typed(<jt.t_object*>self.ptr,
+            str_to_sym(method), atom.size, atom.ptr, result.ptr
+        )
+        if result.ptr is not NULL:
+            return result.value
+        return
+
+
+    def call_with_atoms(self, str method, Atom atom) -> Optional[object]:
+        """helper wrapper method around jit_object_method_typed"""
+        cdef Atom result = Atom.new(1)
+        jt.jit_object_method_typed(<jt.t_object*>self.ptr,
+            str_to_sym(method), atom.size, atom.ptr, result.ptr
+        )
+        if result.ptr is not NULL:
+            return result.value
+        return
+
+    # methods
+
+    def bang(self):
+        """Outputs the currently stored matrix."""
+        jt.jit_object_method(self.ptr, mx.gensym("bang"))
+
+    def set_int(self, *args):
+        """Set all cells to an int value and output the result
+        
+        Sets all cells to the value specified by `value(s)` and output the data.
+        Position is specified of a list whose length is equal to the number of 
+        dimensions (`dimcount`).
+        """
+        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
+        self.call_with_args("int", args)
+
+    def set_float(self, *args):
+        """Set all cells to a float value and output the result
+        
+        Sets all cells to the value specified by `value(s)` and output the data.
+        Position is specified of a list whose length is equal to the number of 
+        dimensions (`dimcount`).
+        """
+        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
+        self.call_with_args("float", args)
+
+    def clear(self):
+        """Sets all matrix values to zero."""
+        jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_clear)
+
+    def export_image(self, str filename, str filetype = "png"):
+        """Export the current frame as an image file
+        
+        Export the current frame as an image file with the name specified by the first argument.
+        The second argument sets the file type (default = png).
+        Available file types are png, tiff, and jpeg.
+        """
+        assert filetype in ['png', 'tiff', 'jpeg'], "incompatible filetype"
+        cdef Atom atom = Atom(filename, filetype)
+        jt.jit_object_method(self.ptr, mx.gensym("exportimage"), atom.size, atom.ptr)
+
+    def export_movie(self, str filename, float fps, str codec, str quality, int timescale):
+        """Export a matrix as a movie."""
+        cdef Atom atom = Atom(filename, fps, codec, quality, timescale)
+        jt.jit_object_method(self.ptr, mx.gensym("exportmovie"), atom.size, atom.ptr)
+
+    def exprfill(self, str expr, int plant = 0):
+        """Evaluate an expression to fill the matrix
+
+        If a `plane` argument is provided, the expression is applied to a single plane.
+        Otherwise, it is applied to all planes in the matrix. See `jit.expr` for more 
+        information on expressions. Unlike the `jit.expr` object, there is no support for 
+        providing multiple expressions to fill multiple planes at once with different
+        expressions. Call this method multiple times once for each plane you wish to fill.
+        """
+        cdef Atom atom = Atom(expr, plant)
+        jt.jit_object_method(self.ptr, mx.gensym("exprfill"), atom.size, atom.ptr)
+
+    def fill_plane(self, int value = 0, int plane = 0):
+        """Fill a plane with a specified value.
+
+        The msg `fillplane`, followed by an integer that specifies a plane number
+        and a value, will fill the specified plane with the single value.
+        """
+        cdef Atom atom = Atom(plane, value)
+        jt.jit_object_method(self.ptr, mx.gensym("fillplane"), atom.size, atom.ptr)
+
+    def get_cell(self, *positions):
+        """Report cell values
+
+        Sends the value(s) in the cell specified by `position` out the right outlet of the 
+        object as a list in the form of
+
+            cell pos1... posN val plane0-value... planeN-value
+
+        where pos1 and pos2 would correspond to x and y in a 2d matrix 
+        """
+        cdef Atom atom = Atom(*positions)
+        jt.jit_object_method(self.ptr, mx.gensym("getcell"), atom.size, atom.ptr)
+
+    def import_movie(self, str filename, int timeoffset = 0):
+        """Import a movie into the matrix
+
+        If no filename is specified, a file dialog will open to let you choose a file. 
+        The `timeoffset` argument may be used to set a time offset for the movie 
+        being imported (the default is 0).
+        """
+        cdef Atom atom = Atom(filename, timeoffset)
+        jt.jit_object_method(self.ptr, mx.gensym("importmovie"), atom.size, atom.ptr)
+
+    def add_gl_texture(self, str texture_name):
+        """Copy a texture to the matrix."""
+        cdef Atom atom = Atom(texture_name)
+        jt.jit_object_method(self.ptr, mx.gensym("jit_gl_texture"), atom.size, atom.ptr)
+
+    def op(self, *args):
+        """Perform `jit.op` operations on the matrix
+
+        The word `op`, followed by the name of a `jit.op` object operator
+        and a set of values, is equivalent to including a `jit.op` object with
+        the specified operator set as an attribute and this `jit.matrix` object
+        specified as the output matrix. The additional `value` arguments may either
+        be a matrix name or a constant. If only one value argument is provided, this
+        matrix is considered both the output and the left operand.
+
+        For example
+            `op + foo bar` is equivalent to the operation `matrix = foo + bar`,
+                and
+            `op * 0.5` is equivalent to the operation `matrix = matrix * 0.5`
+        """
+        self.call_with_args("op", args)
+
+    def read(self, str filename):
+        """Read Jitter binary data files (.jxf)"""
+        cdef Atom atom = Atom(filename)
+        jt.jit_object_method(self.ptr, mx.gensym("read"), atom.size, atom.ptr)
+
+    def set_all(self, *args):
+        """Sets all cells to the value specified by values(s).
+        
+        Position is specified of a list whose length is equal to the number
+        of dimensions (dimcount). But unlike `set_val` does not output the 
+        data.
+
+        >>> matrix.set_all(10, 20)
+        # sets all cells in: plane0 to 10, plane1 to 20
+        """
+        self.call_with_args("setall", args)
+
+    # end methods
 
     def lock(self) -> int:
         """lock matrix and return savelock id"""
@@ -4136,12 +4307,94 @@ cdef class Matrix:
         jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getinfo, &self.info)
         jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getdata, &self.data)
 
-    def get_data(self) -> list[int]:
+    def get_data(self) -> list[object]:
         """retrieve data from matrix as contiguous array."""
-        cdef list[int] results = []
-        for i in range(self.matrix_len):
-            results.append(<int>self.data[i])
-        return results
+        if self.type == "char":
+            return [<int>self.data[i] for i in range(self.matrix_len)]
+        elif self.type == "long":
+            return [<long>self.data[i] for i in range(self.matrix_len)]
+        elif self.type == "float32":
+            return [<float>self.data[i] for i in range(self.matrix_len)]
+        elif self.type == "float64":
+            return [<double>self.data[i] for i in range(self.matrix_len)]
+        else:
+            raise TypeError("could not process this type")
+
+    # def get_data(self) -> list[object]:
+    #     """retrieve data from matrix as contiguous array."""
+    #     if self.type == "char":
+    #         return self.get_char_data()
+    #     elif self.type == "long":
+    #         return self.get_long_data()
+    #     elif self.type == "float32":
+    #         return self.get_float_data()
+    #     elif self.type == "float64":
+    #         return self.get_double_data()
+    #     else:
+    #         raise TypeError("could not process this type")
+
+    # def get_char_data(self) -> list[int]:
+    #     """retrieve char data from matrix as contiguous array."""
+    #     cdef list[int] results = []
+    #     for i in range(self.matrix_len):
+    #         results.append(<int>self.data[i])
+    #     return results
+
+    # def get_long_data(self) -> list[int]:
+    #     """retrieve long data from matrix as contiguous array."""
+    #     cdef list[int] results = []
+    #     for i in range(self.matrix_len):
+    #         results.append(<int>self.data[i])
+    #     return results
+
+    # def get_float_data(self) -> list[float]:
+    #     """retrieve float data from matrix as contiguous array."""
+    #     cdef list[float] results = []
+    #     for i in range(self.matrix_len):
+    #         results.append(<float>self.data[i])
+    #     return results
+
+    # def get_double_data(self) -> list[float]:
+    #     """retrieve double data from matrix as contiguous array."""
+    #     cdef list[float] results = []
+    #     for i in range(self.matrix_len):
+    #         results.append(<double>self.data[i])
+    #     return results
+
+    def set_plane2d(self, object value, int x, int y, int plane=0):
+        """Sets plane of cell at index to the value provided.
+
+        The word `setplane2d`, followed by a pair of numbers specifying `x`
+        and `y` coordinates, a number specifying a `plane`, and a value, 
+        is similar to the `setcell` message but without the need to 
+        use a `val` token to separate the coordinates from the value since
+        the dimension count (2) is fixed, or use the `plane` token to specify
+        which plane to set.
+
+        Note that the order is slightly different in the python version of 
+        of this method, so for the max message `(setplane2d 3 2 1 4)`, the
+        equivalent in python is (with value being first):
+
+        >>> matrix.set_plate2d(4, x=3, y=2, plane=1)
+        """
+        cdef Atom atom = Atom.from_seq((x, y, plane, value))
+        jt.jit_object_method(<jt.t_object*>self.ptr, mx.gensym("setplane2d"), atom.size, atom.ptr)
+
+    def set_val(self, *args):
+        """Set all cells to a value and output the result
+        
+        Sets all cells to the value specified by `value(s)`. Position is
+        specified of a list whose length is equal to the number of dimensions
+        `dimcount` and outputs the data.
+
+        >>> matrix.set_val(10, 20)
+        # sets all cells in: plane0 to 10, plane1 to 20 and outputs the data
+        """
+        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
+        # using `setall` because `val` cannot be found 
+        # (suspect it's need to be an attr to be called as in max-sdk/matrix/jit.op)
+        self.call_with_args("setall", args)
+        self.bang()
 
     cdef void* cell_ptr_1d(self, int x):
         """Retrieves pointer to directly access matrix cells if it is 1D"""
@@ -4156,19 +4409,141 @@ cdef class Matrix:
                                             + self.info.dimstride[1] * y
                                             + self.info.dimstride[2] * z)
 
-    # cdef test_cell_ptrs(self):
-    #     cdef float* f1 = <float*>self.cell_ptr_1d(10)
-    #     cdef float* f2 = <float*>self.cell_ptr_2d(10, 10)
-    #     cdef float* f3 = <float*>self.cell_ptr_3d(10, 10, 10)
+    # def set_char_data(self, data: list[int], int x = 0, int y = 0):
+    #     """sets the matrix's data as unsigned char using a contiguous array."""
+    #     cdef jt.uchar entry = 0
+    #     cdef char* p = NULL
+    #     assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+    #     cdef long savelock = <long>self.lock()
+    #     p = <char*>self.cell_ptr_2d(x, y)
+    #     for i in range(self.planecount):
+    #         p[i] = <jt.uchar>clamp(data[i], 0, 255)
+    #     self.unlock(savelock)
 
-    def set_data(self, data: list[int], int x = 0, int y = 0):
-        """sets the matrix's data using a contiguous array."""
-        assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
-        cdef long savelock = <long>self.lock()
+    # def set_long_data(self, data: list[int], int x = 0, int y = 0):
+    #     """sets the matrix's data as long using a contiguous array."""
+    #     cdef long entry = 0
+    #     assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+    #     cdef long savelock = <long>self.lock()
+    #     cdef long* p = <long*>self.cell_ptr_2d(x, y)
+    #     for i in range(len(data)):
+    #         entry = <long>data[i]
+    #         p[i] = entry
+    #     self.unlock(savelock)
+
+    # def set_float_data(self, data: list[float], int x = 0, int y = 0):
+    #     """sets the matrix's data as float using a contiguous array."""
+    #     cdef float entry = 0
+    #     assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+    #     cdef long savelock = <long>self.lock()
+    #     cdef float* p = <float*>self.cell_ptr_2d(x, y)
+    #     for i in range(len(data)):
+    #         entry = <float>data[i]
+    #         p[i] = entry
+    #     self.unlock(savelock)
+
+    # def set_double_data(self, data: list[float], int x = 0, int y = 0):
+    #     """sets the matrix's data as double using a contiguous array."""
+    #     cdef double entry = 0
+    #     assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+    #     cdef long savelock = <long>self.lock()
+    #     cdef double* p = <double*>self.cell_ptr_2d(x, y)
+    #     for i in range(len(data)):
+    #         entry = <double>data[i]
+    #         p[i] = entry
+    #     self.unlock(savelock)
+
+    # def set_data(self, data: list[object], int x = 0, int y = 0):
+    #     """sets the matrix's data using a contiguous array."""
+    #     if self.type == "char":
+    #         self.set_char_data(data, x, y)
+    #     elif self.type == "long":
+    #         self.set_long_data(data, x, y)
+    #     elif self.type == "float32":
+    #         self.set_float_data(data, x, y)
+    #     elif self.type == "float64":
+    #         self.set_double_data(data, x, y)
+    #     else:
+    #         raise TypeError("could not process this type")
+
+    def set_char_data(self, list[int] data):
+        """set data to whole matrix"""
+        cdef int j = 0
+        cdef int x = 0
+        cdef char* p = NULL
+        for plane in range(self.planecount):
+            self.data += plane
+            for i in range(len(data)):
+                x = (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                post(f"x = {x}")
+                p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                (<jt.uchar*>p)[0] = <jt.uchar>clamp(data[i], 0, 255)
+                j += 1
+                # post(f"(p, j, i) = ({plane}, {j}, {i})")
+            j = 0
+
+    def set_cell2d_char(self, int value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as unsigned char using a contiguous array."""
+        # assert 0 <= plane < self.planecount, "plane out of range"
         cdef char* p = <char*>self.cell_ptr_2d(x, y)
-        for i in range(len(data)):
-            p[i] = <char>data[i]
+        cdef long savelock = <long>self.lock()
+        p[plane] = <jt.uchar>clamp(value, 0, 255)
         self.unlock(savelock)
+
+    def set_cell2d_char2(self, int value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as unsigned char using a contiguous array."""
+        # assert 0 <= plane < self.planecount, "plane out of range"
+        cdef char* p = <char*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <jt.uchar>clamp(value, 0, 255)
+        p[plane+1] = <jt.uchar>clamp(value+1, 0, 255)
+        self.unlock(savelock)
+
+    def set_cell2d_long(self, long value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as long using a contiguous array."""
+        assert 0 <= plane < self.planecount, "plane out of range"
+        cdef long* p = <long*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <long>value
+        self.unlock(savelock)
+
+    def set_cell2d_float(self, float value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as float using a contiguous array."""
+        assert 0 <= plane < self.planecount, "plane out of range"
+        cdef float* p = <float*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <float>value
+        self.unlock(savelock)
+
+    def set_cell2d_double(self, double value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as double using a contiguous array."""
+        assert 0 <= plane < self.planecount, "plane out of range"
+        cdef double* p = <double*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <double>value
+        self.unlock(savelock)
+
+    def set_cell2d(self, object value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data using a contiguous array."""
+        if self.type == "char":
+            self.set_cell2d_char(value, x, y, plane)
+        elif self.type == "long":
+            self.set_cell2d_long(value, x, y, plane)
+        elif self.type == "float32":
+            self.set_cell2d_float(value, x, y, plane)
+        elif self.type == "float64":
+            self.set_cell2d_double(value, x, y, plane)
+        else:
+            raise TypeError("could not process this type")
+
+    # def set_data(self, data: list[int], int x = 0, int y = 0):
+    #     """sets the matrix's data using a contiguous array."""
+    #     assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+    #     cdef long savelock = <long>self.lock()
+    #     cdef char* p = <char*>self.cell_ptr_2d(x, y)
+    #     for i in range(len(data)):
+    #         p[i] = <char>data[i]
+    #     self.unlock(savelock)
 
     # def set_data(self, char[:,:,:] matrix):
     #     """Set matrix from a memoryview
@@ -4194,7 +4569,7 @@ cdef class Matrix:
         
         basically is an initial cython translation of the fill method in `jit.fill`
         """
-
+        cdef long offset[jt.JIT_MATRIX_MAX_DIMCOUNT]
         cdef long err, argc, i, j
         cdef long savelock, offset0, offset1
         cdef char *p = NULL
@@ -4210,8 +4585,8 @@ cdef class Matrix:
                 return
 
             # limited to filling at most into 2 dimensions per list
-            offset0 = self.offset[0] if offsetcount > 0 else 0
-            offset1 = self.offset[1] if offsetcount > 1 else 0
+            offset0 = offset[0] if offsetcount > 0 else 0
+            offset1 = offset[1] if offsetcount > 1 else 0
             offset0 = clamp(offset0, 0, self.info.dim[0] - 1)
             offset1 = clamp(offset1, 0, self.info.dim[1] - 1)
             argc = clamp(atom.size, 0, (self.info.dim[0] * (self.info.dim[1] - offset1)) - offset0)
@@ -4223,7 +4598,6 @@ cdef class Matrix:
                 for i in range(argc):
                     p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
                     (<jt.uchar*>p)[0] = jt.jit_atom_getcharfix(atom.ptr + i)
-                    i += 1
                     j += 1
 
             elif (self.info.type == jt._jit_sym_long):
@@ -4231,7 +4605,6 @@ cdef class Matrix:
                 for i in range(argc):
                     p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
                     (<mx.t_int32*>p)[0] = <mx.t_int32>jt.jit_atom_getlong(atom.ptr + i)
-                    i += 1
                     j += 1
 
             elif (self.info.type == jt._jit_sym_float32):
@@ -4239,7 +4612,6 @@ cdef class Matrix:
                 for i in range(argc):
                     p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
                     (<float*>p)[0] = <float>jt.jit_atom_getfloat(atom.ptr + i)
-                    i += 1
                     j += 1
 
             elif (self.info.type == jt._jit_sym_float64):
@@ -4247,12 +4619,9 @@ cdef class Matrix:
                 for i in range(argc):
                     p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
                     (<double*>p)[0] = <double>jt.jit_atom_getfloat(atom.ptr + i)
-                    i += 1
                     j += 1
 
             self.unlock(savelock)
-            
-
 
 
 # ----------------------------------------------------------------------------

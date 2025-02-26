@@ -9,8 +9,8 @@
 
 ' ' -> an empty box means it is planned
 
-- [ ] max_types.h
-- [ ] ext_mess.h
+- [x] max_types.h
+- [x] ext_mess.h
 
 - [ ] jit.bin.h
 - [ ] jit.byteorder.h
@@ -18,8 +18,8 @@
 - [x] jit.cpost.h
 - [x] jit.critical.h
 - [ ] jit.cubicspline.h
-- [ ] jit.error.h
-- [ ] jit.file.h
+- [x] jit.error.h
+- [x] jit.file.h
 - [ ] jit.fixmath.h
 - [ ] jit.functor.h
 - [ ] jit.gl.cache.h
@@ -41,10 +41,10 @@
 - [ ] jit.linklist.h
 - [ ] jit.mac.h
 - [x] jit.math.h
-- [ ] jit.matrix.util.h
+- [x] jit.matrix.util.h
 - [x] jit.max.h
 - [ ] jit.namespace.h
-- [ ] jit.op.h
+- [x] jit.op.h
 - [ ] jit.parallel.utils.h
 - [ ] jit.platform.h
 - [x] jit.symbols.h
@@ -145,6 +145,162 @@ cdef extern from "jit.error.h":
         JIT_ERR_HW_UNAVAILABLE		= 1213552204 # FOUR_CHAR('HUVL')
 
 
+cdef extern from "jit.file.h":
+    ctypedef long t_jit_fileref
+
+    t_jit_err jit_file_fsclose(t_jit_fileref refnum)
+    t_jit_err jit_file_fsread(t_jit_fileref refnum, long *count, void *bufptr)
+    t_jit_err jit_file_fswrite(t_jit_fileref refnum, long *count, const void *bufptr)
+    t_jit_err jit_file_seteof(t_jit_fileref refnum, long logeof)
+    t_jit_err jit_file_geteof(t_jit_fileref refnum, long *logeof)
+    t_jit_err jit_file_setfpos(t_jit_fileref refnum, long mode, long offset)
+    t_jit_err jit_file_getfpos(t_jit_fileref refnum, long *filepos)
+
+
+
+cdef extern from "jit.symbols.h":
+    cdef t_symbol *_jit_sym_nothing
+    cdef t_symbol *_jit_sym_new
+    cdef t_symbol *_jit_sym_free
+    cdef t_symbol *_jit_sym_classname
+    cdef t_symbol *_jit_sym_getname
+    cdef t_symbol *_jit_sym_getmethod
+    cdef t_symbol *_jit_sym_get
+    cdef t_symbol *_jit_sym_set
+    cdef t_symbol *_jit_sym_register
+    cdef t_symbol *_jit_sym_char
+    cdef t_symbol *_jit_sym_long
+    cdef t_symbol *_jit_sym_float32
+    cdef t_symbol *_jit_sym_float64
+    cdef t_symbol *_jit_sym_symbol
+    cdef t_symbol *_jit_sym_pointer
+    cdef t_symbol *_jit_sym_object
+    cdef t_symbol *_jit_sym_atom
+    cdef t_symbol *_jit_sym_list
+    cdef t_symbol *_jit_sym_type
+    cdef t_symbol *_jit_sym_dim
+    cdef t_symbol *_jit_sym_planecount
+    cdef t_symbol *_jit_sym_val
+    cdef t_symbol *_jit_sym_plane
+    cdef t_symbol *_jit_sym_cell
+    cdef t_symbol *_jit_sym_jit_matrix
+    cdef t_symbol *_jit_sym_class_jit_matrix
+    cdef t_symbol *_jit_sym_togworld
+    cdef t_symbol *_jit_sym_fromgworld
+    cdef t_symbol *_jit_sym_frommatrix
+    cdef t_symbol *_jit_sym_class_jit_attribute
+    cdef t_symbol *_jit_sym_jit_attribute
+    cdef t_symbol *_jit_sym_jit_attr_offset
+    cdef t_symbol *_jit_sym_jit_attr_offset_array
+    cdef t_symbol *_jit_sym_rebuilding
+    cdef t_symbol *_jit_sym_modified
+    cdef t_symbol *_jit_sym_lock
+    cdef t_symbol *_jit_sym_setinfo
+    cdef t_symbol *_jit_sym_setinfo_ex
+    cdef t_symbol *_jit_sym_getinfo
+    cdef t_symbol *_jit_sym_data
+    cdef t_symbol *_jit_sym_getdata
+    cdef t_symbol *_jit_sym_outputmatrix
+    cdef t_symbol *_jit_sym_clear
+    cdef t_symbol *_jit_sym_clear_custom
+    cdef t_symbol *_jit_sym_err_calculate
+    cdef t_symbol *_jit_sym_max_jit_classex
+    cdef t_symbol *_jit_sym_setall
+    cdef t_symbol *_jit_sym_chuck
+    cdef t_symbol *_jit_sym_getsize
+    cdef t_symbol *_jit_sym_getindex
+    cdef t_symbol *_jit_sym_objptr2index
+    cdef t_symbol *_jit_sym_append
+    cdef t_symbol *_jit_sym_insertindex
+    cdef t_symbol *_jit_sym_deleteindex
+    cdef t_symbol *_jit_sym_chuckindex
+    cdef t_symbol *_jit_sym_makearray
+    cdef t_symbol *_jit_sym_reverse
+    cdef t_symbol *_jit_sym_rotate
+    cdef t_symbol *_jit_sym_shuffle
+    cdef t_symbol *_jit_sym_swap
+    cdef t_symbol *_jit_sym_findfirst
+    cdef t_symbol *_jit_sym_findall
+    cdef t_symbol *_jit_sym_methodall
+    cdef t_symbol *_jit_sym_methodindex
+    cdef t_symbol *_jit_sym_sort
+    cdef t_symbol *_jit_sym_matrix_calc
+    cdef t_symbol *_jit_sym_genframe
+    cdef t_symbol *_jit_sym_filter
+    cdef t_symbol *_jit_sym_jit_mop
+    cdef t_symbol *_jit_sym_newcopy
+    cdef t_symbol *_jit_sym_jit_linklist
+    cdef t_symbol *_jit_sym_inputcount
+    cdef t_symbol *_jit_sym_outputcount
+    cdef t_symbol *_jit_sym_getinput
+    cdef t_symbol *_jit_sym_getoutput
+    cdef t_symbol *_jit_sym_getinputlist
+    cdef t_symbol *_jit_sym_getoutputlist
+    cdef t_symbol *_jit_sym_ioname
+    cdef t_symbol *_jit_sym_matrixname
+    cdef t_symbol *_jit_sym_outputmode
+    cdef t_symbol *_jit_sym_matrix
+    cdef t_symbol *_jit_sym_getmatrix
+    cdef t_symbol *_jit_sym_typelink
+    cdef t_symbol *_jit_sym_dimlink
+    cdef t_symbol *_jit_sym_planelink
+    cdef t_symbol *_jit_sym_restrict_type
+    cdef t_symbol *_jit_sym_restrict_planecount
+    cdef t_symbol *_jit_sym_restrict_dim
+    cdef t_symbol *_jit_sym_special
+    cdef t_symbol *_jit_sym_getspecial
+    cdef t_symbol *_jit_sym_adapt
+    cdef t_symbol *_jit_sym_decorator
+    cdef t_symbol *_jit_sym_frommatrix_trunc
+    cdef t_symbol *_jit_sym_ioproc
+    cdef t_symbol *_jit_sym_getioproc
+    cdef t_symbol *_jit_sym_name
+    cdef t_symbol *_jit_sym_types
+    cdef t_symbol *_jit_sym_minplanecount
+    cdef t_symbol *_jit_sym_maxplanecount
+    cdef t_symbol *_jit_sym_mindimcount
+    cdef t_symbol *_jit_sym_maxdimcount
+    cdef t_symbol *_jit_sym_mindim
+    cdef t_symbol *_jit_sym_maxdim
+    cdef t_symbol *_jit_sym_gl_points
+    cdef t_symbol *_jit_sym_gl_point_sprite
+    cdef t_symbol *_jit_sym_gl_lines
+    cdef t_symbol *_jit_sym_gl_line_strip
+    cdef t_symbol *_jit_sym_gl_line_loop
+    cdef t_symbol *_jit_sym_gl_triangles
+    cdef t_symbol *_jit_sym_gl_tri_strip
+    cdef t_symbol *_jit_sym_gl_tri_fan
+    cdef t_symbol *_jit_sym_gl_quads
+    cdef t_symbol *_jit_sym_gl_quad_strip
+    cdef t_symbol *_jit_sym_gl_polygon
+    cdef t_symbol *_jit_sym_gl_tri_grid
+    cdef t_symbol *_jit_sym_gl_quad_grid
+    cdef t_symbol *_jit_sym_err_lockout_stack
+    cdef t_symbol *_jit_sym_class_jit_namespace
+    cdef t_symbol *_jit_sym_jit_namespace
+    cdef t_symbol *_jit_sym_findsize
+    cdef t_symbol *_jit_sym_attach
+    cdef t_symbol *_jit_sym_detach
+    cdef t_symbol *_jit_sym_add
+    cdef t_symbol *_jit_sym_replace
+    cdef t_symbol *_jit_sym_gettype
+    cdef t_symbol *_jit_sym_ob_sym
+    cdef t_symbol *_jit_sym_resolve_name
+    cdef t_symbol *_jit_sym_resolve_raw
+    cdef t_symbol *_jit_sym_notifyall
+    cdef t_symbol *_jit_sym_block
+    cdef t_symbol *_jit_sym_unblock
+    cdef t_symbol *_jit_sym_position
+    cdef t_symbol *_jit_sym_rotatexyz
+    cdef t_symbol *_jit_sym_scale
+    cdef t_symbol *_jit_sym_quat
+    cdef t_symbol *_jit_sym_direction
+    cdef t_symbol *_jit_sym_lookat
+    cdef t_symbol *_jit_sym_anim
+    cdef t_symbol *_jit_sym_bounds
+    cdef t_symbol *_jit_sym_boundcalc
+    cdef t_symbol *_jit_sym_calcboundscdef
+
 
 cdef extern from "jit.max.h":
     ctypedef t_object    t_jit_object       # object header @ingroup jitter
@@ -157,7 +313,7 @@ cdef extern from "jit.max.h":
     cdef int A_DEFER_LOW
     cdef int A_USURP_LOW
 
-    ctypedef enum:
+    cdef enum:
         MAX_JIT_CLASS_FLAGS_GIMMEBACK_WRAP      = 0x00000001L  # uses standard dumpout A_DEFER_LOW method
         MAX_JIT_CLASS_FLAGS_OWN_INLETINFO       = 0x00000002L  # override stdinletinfo in class's main
 
@@ -259,7 +415,7 @@ cdef extern from "jit.common.h":
                                                     # jit_matrix, however, it is never stored in matrix
 
 
-    ctypedef enum:
+    cdef enum:
         JIT_MATRIX_MAX_DIMCOUNT     = 32            # maximum dimension count
         JIT_MATRIX_MAX_PLANECOUNT   = 32            # maximum plane count
 
@@ -571,7 +727,7 @@ cdef extern from "max.jit.mop.h":
         MAX_JIT_MOP_FLAGS_ONLY_MATRIX_PROBE     = 0x10000000    # mop flag @ingroup jitter
 
 
-    ctypedef enum:
+    cdef enum:
         JIT_MOP_INPUT       = 1                                 # mop flag @ingroup jitter
         JIT_MOP_OUTPUT      = 2                                 # mop flag @ingroup jitter
 
@@ -625,12 +781,12 @@ cdef extern from "max.jit.mop.h":
     t_jit_err max_jit_mop_setup_simple(void *x, void *o, long argc, t_atom *argv)
         # max_jit_mop_setup_simple is equivalent to :
 
-        # max_jit_obex_jitob_set(x,o);
-        # max_jit_obex_dumpout_set(x,outlet_new(x,NULL));
-        # max_jit_mop_setup(x);
-        # max_jit_mop_inputs(x);
-        # max_jit_mop_outputs(x);
-        # max_jit_mop_matrix_args(x,argc,argv);
+        # max_jit_obex_jitob_set(x,o)
+        # max_jit_obex_dumpout_set(x,outlet_new(x,NULL))
+        # max_jit_mop_setup(x)
+        # max_jit_mop_inputs(x)
+        # max_jit_mop_outputs(x)
+        # max_jit_mop_matrix_args(x,argc,argv)
 
         # NOTICE: REMOVED max_jit_attr_args from max_jit_mop_setup_simple
 
@@ -638,147 +794,385 @@ cdef extern from "max.jit.mop.h":
 
     t_jit_err max_jit_mop_setup_probing(t_class *mclass)
 
-cdef extern from "jit.symbols.h":
 
-    cdef t_symbol *_jit_sym_nothing
-    cdef t_symbol *_jit_sym_new
-    cdef t_symbol *_jit_sym_free
-    cdef t_symbol *_jit_sym_classname
-    cdef t_symbol *_jit_sym_getname
-    cdef t_symbol *_jit_sym_getmethod
-    cdef t_symbol *_jit_sym_get
-    cdef t_symbol *_jit_sym_set
-    cdef t_symbol *_jit_sym_register
-    cdef t_symbol *_jit_sym_char
-    cdef t_symbol *_jit_sym_long
-    cdef t_symbol *_jit_sym_float32
-    cdef t_symbol *_jit_sym_float64
-    cdef t_symbol *_jit_sym_symbol
-    cdef t_symbol *_jit_sym_pointer
-    cdef t_symbol *_jit_sym_object
-    cdef t_symbol *_jit_sym_atom
-    cdef t_symbol *_jit_sym_list
-    cdef t_symbol *_jit_sym_type
-    cdef t_symbol *_jit_sym_dim
-    cdef t_symbol *_jit_sym_planecount
-    cdef t_symbol *_jit_sym_val
-    cdef t_symbol *_jit_sym_plane
-    cdef t_symbol *_jit_sym_cell
-    cdef t_symbol *_jit_sym_jit_matrix
-    cdef t_symbol *_jit_sym_class_jit_matrix
-    cdef t_symbol *_jit_sym_togworld
-    cdef t_symbol *_jit_sym_fromgworld
-    cdef t_symbol *_jit_sym_frommatrix
-    cdef t_symbol *_jit_sym_class_jit_attribute
-    cdef t_symbol *_jit_sym_jit_attribute
-    cdef t_symbol *_jit_sym_jit_attr_offset
-    cdef t_symbol *_jit_sym_jit_attr_offset_array
-    cdef t_symbol *_jit_sym_rebuilding
-    cdef t_symbol *_jit_sym_modified
-    cdef t_symbol *_jit_sym_lock
-    cdef t_symbol *_jit_sym_setinfo
-    cdef t_symbol *_jit_sym_setinfo_ex
-    cdef t_symbol *_jit_sym_getinfo
-    cdef t_symbol *_jit_sym_data
-    cdef t_symbol *_jit_sym_getdata
-    cdef t_symbol *_jit_sym_outputmatrix
-    cdef t_symbol *_jit_sym_clear
-    cdef t_symbol *_jit_sym_clear_custom
-    cdef t_symbol *_jit_sym_err_calculate
-    cdef t_symbol *_jit_sym_max_jit_classex
-    cdef t_symbol *_jit_sym_setall
-    cdef t_symbol *_jit_sym_chuck
-    cdef t_symbol *_jit_sym_getsize
-    cdef t_symbol *_jit_sym_getindex
-    cdef t_symbol *_jit_sym_objptr2index
-    cdef t_symbol *_jit_sym_append
-    cdef t_symbol *_jit_sym_insertindex
-    cdef t_symbol *_jit_sym_deleteindex
-    cdef t_symbol *_jit_sym_chuckindex
-    cdef t_symbol *_jit_sym_makearray
-    cdef t_symbol *_jit_sym_reverse
-    cdef t_symbol *_jit_sym_rotate
-    cdef t_symbol *_jit_sym_shuffle
-    cdef t_symbol *_jit_sym_swap
-    cdef t_symbol *_jit_sym_findfirst
-    cdef t_symbol *_jit_sym_findall
-    cdef t_symbol *_jit_sym_methodall
-    cdef t_symbol *_jit_sym_methodindex
-    cdef t_symbol *_jit_sym_sort
-    cdef t_symbol *_jit_sym_matrix_calc
-    cdef t_symbol *_jit_sym_genframe
-    cdef t_symbol *_jit_sym_filter
-    cdef t_symbol *_jit_sym_jit_mop
-    cdef t_symbol *_jit_sym_newcopy
-    cdef t_symbol *_jit_sym_jit_linklist
-    cdef t_symbol *_jit_sym_inputcount
-    cdef t_symbol *_jit_sym_outputcount
-    cdef t_symbol *_jit_sym_getinput
-    cdef t_symbol *_jit_sym_getoutput
-    cdef t_symbol *_jit_sym_getinputlist
-    cdef t_symbol *_jit_sym_getoutputlist
-    cdef t_symbol *_jit_sym_ioname
-    cdef t_symbol *_jit_sym_matrixname
-    cdef t_symbol *_jit_sym_outputmode
-    cdef t_symbol *_jit_sym_matrix
-    cdef t_symbol *_jit_sym_getmatrix
-    cdef t_symbol *_jit_sym_typelink
-    cdef t_symbol *_jit_sym_dimlink
-    cdef t_symbol *_jit_sym_planelink
-    cdef t_symbol *_jit_sym_restrict_type
-    cdef t_symbol *_jit_sym_restrict_planecount
-    cdef t_symbol *_jit_sym_restrict_dim
-    cdef t_symbol *_jit_sym_special
-    cdef t_symbol *_jit_sym_getspecial
-    cdef t_symbol *_jit_sym_adapt
-    cdef t_symbol *_jit_sym_decorator
-    cdef t_symbol *_jit_sym_frommatrix_trunc
-    cdef t_symbol *_jit_sym_ioproc
-    cdef t_symbol *_jit_sym_getioproc
-    cdef t_symbol *_jit_sym_name
-    cdef t_symbol *_jit_sym_types
-    cdef t_symbol *_jit_sym_minplanecount
-    cdef t_symbol *_jit_sym_maxplanecount
-    cdef t_symbol *_jit_sym_mindimcount
-    cdef t_symbol *_jit_sym_maxdimcount
-    cdef t_symbol *_jit_sym_mindim
-    cdef t_symbol *_jit_sym_maxdim
-    cdef t_symbol *_jit_sym_gl_points
-    cdef t_symbol *_jit_sym_gl_point_sprite
-    cdef t_symbol *_jit_sym_gl_lines
-    cdef t_symbol *_jit_sym_gl_line_strip
-    cdef t_symbol *_jit_sym_gl_line_loop
-    cdef t_symbol *_jit_sym_gl_triangles
-    cdef t_symbol *_jit_sym_gl_tri_strip
-    cdef t_symbol *_jit_sym_gl_tri_fan
-    cdef t_symbol *_jit_sym_gl_quads
-    cdef t_symbol *_jit_sym_gl_quad_strip
-    cdef t_symbol *_jit_sym_gl_polygon
-    cdef t_symbol *_jit_sym_gl_tri_grid
-    cdef t_symbol *_jit_sym_gl_quad_grid
-    cdef t_symbol *_jit_sym_err_lockout_stack
-    cdef t_symbol *_jit_sym_class_jit_namespace
-    cdef t_symbol *_jit_sym_jit_namespace
-    cdef t_symbol *_jit_sym_findsize
-    cdef t_symbol *_jit_sym_attach
-    cdef t_symbol *_jit_sym_detach
-    cdef t_symbol *_jit_sym_add
-    cdef t_symbol *_jit_sym_replace
-    cdef t_symbol *_jit_sym_gettype
-    cdef t_symbol *_jit_sym_ob_sym
-    cdef t_symbol *_jit_sym_resolve_name
-    cdef t_symbol *_jit_sym_resolve_raw
-    cdef t_symbol *_jit_sym_notifyall
-    cdef t_symbol *_jit_sym_block
-    cdef t_symbol *_jit_sym_unblock
-    cdef t_symbol *_jit_sym_position
-    cdef t_symbol *_jit_sym_rotatexyz
-    cdef t_symbol *_jit_sym_scale
-    cdef t_symbol *_jit_sym_quat
-    cdef t_symbol *_jit_sym_direction
-    cdef t_symbol *_jit_sym_lookat
-    cdef t_symbol *_jit_sym_anim
-    cdef t_symbol *_jit_sym_bounds
-    cdef t_symbol *_jit_sym_boundcalc
-    cdef t_symbol *_jit_sym_calcboundscdef
+cdef extern from "jit.matrix.util.h":
+
+    t_jit_err jit_matrix_list_get_matrices(void *list, long n, void **matrices)
+    t_jit_err jit_matrix_array_lock(void **matrices, long n, long *savelock)
+    t_jit_err jit_matrix_array_unlock(void **matrices, long n, long *savelock)
+    t_jit_err jit_matrix_array_get_matrix_info(void **matrices, long n, t_jit_matrix_info *matrix_info)
+    t_jit_err jit_matrix_array_get_data(void **matrices, long n, char **data)
+    t_jit_err jit_matrix_info_equal_matrix_structure(t_jit_matrix_info *minfo1, t_jit_matrix_info *minfo2)
+    t_jit_err jit_matrix_info_uniform_planecount(t_jit_matrix_info *matrix_info, long n, t_jit_matrix_info *info_list)
+    t_jit_err jit_matrix_info_uniform_type(t_jit_matrix_info *matrix_info, long n, t_jit_matrix_info *info_list)
+    t_jit_err jit_matrix_info_uniform_dim(t_jit_matrix_info *matrix_info, long n, t_jit_matrix_info *info_list)
+
+
+cdef extern from "jit.op.h":
+
+    ctypedef struct t_jit_op_info:
+        # Provides base pointer and stride for vector operator functions
+        void    *p         # base pointer (coerced to appropriate type)
+        long    stride     # stride between elements (in type, not bytes)
+
+    ctypedef void (*t_jit_op_fn)(long) # NO LONGER VAR ARG TO PREVENT ISSUES UNDER APPLE SILICON. MUST TYPES BELOW TO CALL
+    ctypedef void (*t_jit_op_fn_unary)(long, void *vecdata, t_jit_op_info *in0, t_jit_op_info *out)
+    ctypedef void (*t_jit_op_fn_binary)(long, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out)
+    ctypedef void (*t_jit_op_fn_ternary)(long, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *in2, t_jit_op_info *out)
+    ctypedef void *(*t_jit_op_fn_rv)(long) # NO LONGER VAR ARG TO PREVENT ISSUES UNDER APPLE SILICON. MUST TYPES BELOW TO CALL
+    ctypedef void *(*t_jit_op_fn_unary_rv)(long, void *vecdata, t_jit_op_info *in0, t_jit_op_info *out)
+    ctypedef void *(*t_jit_op_fn_binary_rv)(long, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out)
+    ctypedef void *(*t_jit_op_fn_ternary_rv)(long, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *in2, t_jit_op_info *out)
+
+
+    ctypedef struct t_jit_op_fn_object:
+        t_object        ob
+        t_symbol        *name
+        long            argcount
+        t_jit_op_fn     charfn
+        t_jit_op_fn     longfn
+        t_jit_op_fn     float32fn
+        t_jit_op_fn     float64fn  
+
+
+    t_jit_err jit_op_init()
+    t_jit_op_fn jit_op_sym2fn(t_symbol *opsym, t_symbol *type)
+    t_jit_op_fn_object *jit_op_fn_lookup(t_symbol *opsym)
+    t_jit_err jit_op_fn_store(t_symbol *opsym, t_jit_op_fn_object *x)
+
+    # note vecdata is unused by the following functions.
+
+    # arith
+    void jit_op_vector_pass_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mult_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_div_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mod_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_add_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_adds_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sub_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_subs_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_min_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_max_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_avg_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_absdiff_char (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_pass_char_altivec    (long n, void *vecdata, uchar *ip1, uchar *op) 
+    void jit_op_vector_mult_char_altivec    (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_div_char_altivec     (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) # unimplemented
+    void jit_op_vector_mod_char_altivec     (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) # unimplemented
+    void jit_op_vector_add_char_altivec     (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_adds_char_altivec    (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_sub_char_altivec     (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_subs_char_altivec    (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_min_char_altivec     (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_max_char_altivec     (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_avg_char_altivec     (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+
+    void jit_op_vector_pass_long    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mult_long    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_div_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mod_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_add_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sub_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_min_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_max_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_abs_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_avg_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_absdiff_long (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_pass_long_altivec    (long n, void *vecdata, t_int32 *ip1, t_int32 *op) 
+    void jit_op_vector_mult_long_altivec    (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_div_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) # unimplemented
+    void jit_op_vector_mod_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) # unimplemented
+    void jit_op_vector_add_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_sub_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_min_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_max_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_abs_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *op) 
+    void jit_op_vector_avg_long_altivec     (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+
+    void jit_op_vector_pass_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mult_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_div_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_add_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sub_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_min_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_max_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_abs_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_avg_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_absdiff_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mod_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_fold_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_wrap_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_pass_float32_altivec     (long n, void *vecdata, float *ip1, float *op) 
+    void jit_op_vector_mult_float32_altivec     (long n, void *vecdata, float *ip1, float *ip2, float *op) 
+    void jit_op_vector_div_float32_altivec      (long n, void *vecdata, float *ip1, float *ip2, float *op) # unimplemented
+    void jit_op_vector_add_float32_altivec      (long n, void *vecdata, float *ip1, float *ip2, float *op) 
+    void jit_op_vector_sub_float32_altivec      (long n, void *vecdata, float *ip1, float *ip2, float *op) 
+    void jit_op_vector_min_float32_altivec      (long n, void *vecdata, float *ip1, float *ip2, float *op) 
+    void jit_op_vector_max_float32_altivec      (long n, void *vecdata, float *ip1, float *ip2, float *op) 
+    void jit_op_vector_abs_float32_altivec      (long n, void *vecdata, float *ip1, float *op) 
+    void jit_op_vector_avg_float32_altivec      (long n, void *vecdata, float *ip1, float *ip2, float *op) 
+    void jit_op_vector_absdiff_float32_altivec(long n, void *vecdata, float *ip1, float *ip2, float *op)
+
+    void jit_op_vector_pass_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mult_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_div_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_add_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sub_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_min_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_max_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_abs_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_avg_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_absdiff_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_mod_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_fold_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_wrap_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    # fliparith(calls corresponding arith function)
+    void jit_op_vector_flippass_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipdiv_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipmod_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipsub_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_flippass_long    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipdiv_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipmod_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipsub_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_flippass_float32 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipdiv_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipmod_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipsub_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_flippass_float64 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipdiv_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipmod_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_flipsub_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    # bitwise
+    void jit_op_vector_bitand_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_bitor_char   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_bitxor_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_bitnot_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lshift_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_rshift_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_bitand_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_bitor_char_altivec   (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_bitxor_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_bitnot_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *op) 
+    void jit_op_vector_lshift_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_rshift_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+
+    void jit_op_vector_bitand_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_bitor_long   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_bitxor_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_bitnot_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lshift_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_rshift_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_bitand_long_altivec  (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_bitor_long_altivec   (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_bitxor_long_altivec  (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_bitnot_long_altivec  (long n, void *vecdata, t_int32 *ip1, t_int32 *op) 
+    void jit_op_vector_lshift_long_altivec  (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+    void jit_op_vector_rshift_long_altivec  (long n, void *vecdata, t_int32 *ip1, t_int32 *ip2, t_int32 *op) 
+
+    # logical
+    void jit_op_vector_and_char (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_or_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_not_char (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gt_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gte_char (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lt_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lte_char (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eq_char  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neq_char (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_and_char_altivec (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_or_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_not_char_altivec (long n, void *vecdata, uchar *ip1, uchar *op) 
+    void jit_op_vector_gt_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_gte_char_altivec (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op) 
+    void jit_op_vector_lt_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op)  
+    void jit_op_vector_lte_char_altivec (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op)  
+    void jit_op_vector_eq_char_altivec  (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op)  
+    void jit_op_vector_neq_char_altivec (long n, void *vecdata, uchar *ip1, uchar *ip2, uchar *op)  
+
+    void jit_op_vector_and_long (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_or_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_not_long (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gt_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gte_long (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lt_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lte_long (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eq_long  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neq_long (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_and_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_or_float32   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_not_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gt_float32   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gte_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lt_float32   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lte_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eq_float32   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neq_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_and_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_or_float64   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_not_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gt_float64   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gte_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lt_float64   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_lte_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eq_float64   (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neq_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    # logical pass
+    void jit_op_vector_gtp_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gtep_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltp_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltep_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eqp_char     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neqp_char    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_gtp_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gtep_long    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltp_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltep_long    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eqp_long     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neqp_long    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_gtp_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gtep_float32 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltp_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltep_float32 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eqp_float32  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neqp_float32 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_gtp_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_gtep_float64 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltp_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ltep_float64 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_eqp_float64  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_neqp_float64 (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    # transcendental(float32/float64 only)
+    void jit_op_vector_sin_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_cos_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_tan_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_asin_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_acos_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_atan_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_atan2_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sinh_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_cosh_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_tanh_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_asinh_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_acosh_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_atanh_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_exp_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_exp2_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_log_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_log2_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_log10_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_hypot_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_pow_float32      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sqrt_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_ceil_float32     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_floor_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_round_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_trunc_float32    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_sin_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_cos_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_tan_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_asin_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_acos_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_atan_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_atan2_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sinh_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_cosh_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_tanh_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_asinh_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_acosh_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_atanh_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_exp_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_exp2_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_log_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_log2_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_log10_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_hypot_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_pow_float64      (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_sqrt_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_ceil_float64     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_floor_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_round_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_trunc_float64    (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    # linear algebra
+    void jit_op_vector_ax_float32               (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ax_float32_complex       (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ax_float64               (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_ax_float64_complex       (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_axpy_float32             (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_axpy_float32_complex     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_axpy_float64             (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_axpy_float64_complex     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_dotprod_float32          (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_dotprod_float32_complex  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_dotprod_float64          (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_dotprod_float64_complex  (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+    void jit_op_vector_swap_float32             (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_swap_float32_complex     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_swap_float64             (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+    void jit_op_vector_swap_float64_complex     (long n, void *vecdata, t_jit_op_info *in0, t_jit_op_info *in1, t_jit_op_info *out) 
+
+cdef extern from "jit.parallel.utils.h":
+
+    cdef enum:
+        JIT_PARALLEL_NDIM_MAX_IO = 32
+
+    cdef enum:
+        JIT_PARALLEL_NDIM_FLAGS_FULL_MATRIX = 0x00000001
+
+    ctypedef struct t_jit_parallel_ndim_io:
+        long                flags
+        t_jit_matrix_info   *minfo
+        char                *bp
+
+    ctypedef struct t_jit_parallel_ndim:
+        long flags
+        void *data
+        long dimcount
+        long *dim
+        long planecount
+        long iocount
+        t_jit_parallel_ndim_io  io[JIT_PARALLEL_NDIM_MAX_IO]
+        method fn
+
+    ctypedef struct t_jit_parallel_ndim_worker:
+        t_jit_parallel_ndim     *paralleldata
+        long                    workercount
+        long                    workerid
+        long                    offset[2]  
+        long                    extent[2]  
+
+    void jit_parallel_utils_init()
+    void jit_parallel_ndim_calc(t_jit_parallel_ndim *p)
+    void jit_parallel_ndim_simplecalc1(method fn, void *data, long dimcount, long *dim, long planecount, t_jit_matrix_info *minfo1, char *bp1, long flags1)
+    void jit_parallel_ndim_simplecalc2(method fn, void *data, long dimcount, long *dim, long planecount, t_jit_matrix_info *minfo1, char *bp1, t_jit_matrix_info *minfo2, char *bp2, long flags1, long flags2)
+    void jit_parallel_ndim_simplecalc3(method fn, void *data, long dimcount, long *dim, long planecount, t_jit_matrix_info *minfo1, char *bp1, t_jit_matrix_info *minfo2, char *bp2, t_jit_matrix_info *minfo3, char *bp3, long flags1, long flags2, long flags3)
+    void jit_parallel_ndim_simplecalc4(method fn, void *data, long dimcount, long *dim, long planecount, t_jit_matrix_info *minfo1, char *bp1, t_jit_matrix_info *minfo2, char *bp2, t_jit_matrix_info *minfo3, char *bp3, t_jit_matrix_info *minfo4, char *bp4, long flags1, long flags2, long flags3, long flags4)
+
 

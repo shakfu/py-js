@@ -1,23 +1,29 @@
 # Python's Buffer Protocol
 
+Objective: to map python's [buffer protocol](https://docs.python.org/3/c-api/buffer.html) in it's c-api to Max's `jit_matrix`. In the context of wrapping via [cython](https://cython.readthedocs.io/en/latest/), this process is documented more practically in:
+
+- [Typed Memoryviews](https://cython.readthedocs.io/en/latest/src/userguide/memoryviews.html)
+
+- [Implementing the buffer protocol](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html)
+
 
 ## Comparing Matrix Implementations
 
 
-Numpy            | jit.Matrix    | Python Buffer Protocol 
-:--------------- | :------------ | :---------------------------------------------------
-dtype            | type          | type
-nbytes           | size          | len
-ndim             | dimcount      | ndim
-shape            | dim[32]       | shape
-strides          | dimstride[32] | strides
-n/a              | planecount    | n/a
-itemsize         | sizeof(type)  | itemsize
+Numpy            | jit.Matrix           | Python Buffer Protocol 
+:--------------- | :------------------- | :-----------------------
+dtype            | type                 | type
+nbytes           | size                 | len
+ndim             | dimcount             | ndim
+shape            | dim[dimcount]        | shape[ndim]
+strides          | dimstride[dimcount]  | strides[ndim]
+n/a              | planecount           | n/a
+itemsize         | sizeof(type)         | itemsize
 
 
-The major difference is that in a `jit.Matrix`, the concept of a place is treated as another dimensioni but included in the `dimcount`, whereas in `Numpy` and the `Buffer Protocol` there is nothing like the concept of a plane, and all dimension are counted in `ndim`.
+The major difference is that in a `jit.Matrix`, the concept of a `plane` is treated as another dimension but *not included* in the `dimcount`, whereas in `Numpy` and the `Buffer Protocol` there is nothing like the concept of a plane, and all dimension are counted in `ndim`.
 
-Note that in `jit.matrix`, the type can only be one off `char`, `long`, `float32`, and `float64`.
+Note that in `jit.matrix`, the type can only be one of `char`, `long`, `float32`, and `float64`.
 
 The `itemsize` for these types is as follows:
 
@@ -43,7 +49,7 @@ plane_len: 80
 matrix_len: 160
 ```
 
-If in the above case where the matrix type is `long` the `itemsize` should 4, given that `size / matrix_len = itemsize` then this matches up. 
+If in the above case where the matrix type is `long` the `itemsize` should be 4, given that `size / matrix_len = itemsize` then this matches up. 
 
 
 So the equivalent of the above in `numpy` would be:
@@ -121,7 +127,7 @@ dimstride[1] = 12 * 8 + padding = 96
 
 ```
 
-In another forum post, [convert-jitter-matrix-to-eigen-matrix-c](https://cycling74.com/forums/convert-jitter-matrix-to-eigen-matrix-c) the advice by Rob Ramireza is to use the following:
+In another forum post, [convert-jitter-matrix-to-eigen-matrix-c](https://cycling74.com/forums/convert-jitter-matrix-to-eigen-matrix-c) the advice by Rob Ramirez is to use the following:
 
 ```c
 int i, j;
