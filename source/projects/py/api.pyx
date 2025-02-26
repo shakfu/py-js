@@ -4334,20 +4334,20 @@ cdef class Matrix:
         """retrieve char data from matrix as contiguous array."""
         cdef list[int] results = []
         cdef int i, j, p
-        cdef char *m_ptr
+        cdef char *m_ptr = NULL
 
         for i in range(self.height):
             m_ptr = self.data + i * self.info.dimstride[1]
             for j in range(self.width):
                 for p in range(self.planecount):
-                    results.append(m_ptr[p])
+                    results.append(<int>m_ptr[p])
         return results
 
-    def get_long_data(self) -> list[int]:
+    def get_long_data(self) -> list[long]:
         """retrieve long data from matrix as contiguous array."""
-        cdef list[int] results = []
+        cdef list[long] results = []
         cdef int i, j, p
-        cdef char *m_ptr
+        cdef char *m_ptr = NULL
 
         for i in range(self.height):
             m_ptr = self.data + i * self.info.dimstride[1]
@@ -4356,11 +4356,11 @@ cdef class Matrix:
                     results.append(<long>m_ptr[p])
         return results
 
-    def get_float_data(self) -> list[int]:
+    def get_float_data(self) -> list[float]:
         """retrieve float data from matrix as contiguous array."""
-        cdef list[int] results = []
+        cdef list[float] results = []
         cdef int i, j, p
-        cdef char *m_ptr
+        cdef char *m_ptr = NULL
 
         for i in range(self.height):
             m_ptr = self.data + i * self.info.dimstride[1]
@@ -4369,11 +4369,11 @@ cdef class Matrix:
                     results.append(<float>m_ptr[p])
         return results
 
-    def get_double_data(self) -> list[int]:
+    def get_double_data(self) -> list[double]:
         """retrieve double data from matrix as contiguous array."""
-        cdef list[int] results = []
+        cdef list[double] results = []
         cdef int i, j, p
-        cdef char *m_ptr
+        cdef char *m_ptr = NULL
 
         for i in range(self.height):
             m_ptr = self.data + i * self.info.dimstride[1]
@@ -4381,6 +4381,36 @@ cdef class Matrix:
                 for p in range(self.planecount):
                     results.append(<double>m_ptr[p])
         return results
+
+    def set_char_data(self, list[int] data):
+        """set data to whole matrix"""
+        cdef int k = 0
+        cdef int i, j, p
+        cdef char *m_ptr = NULL
+
+        for i in range(self.height):
+            m_ptr = self.data + i * self.info.dimstride[1]
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    post(f"(i, j, p, k) = ({i}, {j}, {p}, {k})")
+                    # (m_ptr+p)[0] = 2 # doesn't work!
+                    m_ptr[0] = <jt.uchar>clamp(data[k], 0, 255)
+                    k += 1
+                    m_ptr += 1
+
+    # def set_char_data(self, list[int] data):
+    #     """set data to whole matrix"""
+    #     cdef int k = 0
+    #     cdef int i, j, p
+    #     cdef char *m_ptr = NULL
+
+    #     for i in range(self.height):
+    #         m_ptr = self.data + i * self.info.dimstride[1]
+    #         for j in range(self.width):
+    #             for p in range(self.planecount):
+    #                 # (m_ptr+p)[0] = 2 # doesn't work!
+    #                 m_ptr[0] = 2
+    #                 m_ptr += 1
 
     def set_plane2d(self, object value, int x, int y, int plane=0):
         """Sets plane of cell at index to the value provided.
@@ -4487,21 +4517,21 @@ cdef class Matrix:
     #     else:
     #         raise TypeError("could not process this type")
 
-    def set_char_data(self, list[int] data):
-        """set data to whole matrix"""
-        cdef int j = 0
-        cdef int x = 0
-        cdef char* p = NULL
-        for plane in range(self.planecount):
-            self.data += plane
-            for i in range(len(data)):
-                x = (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
-                post(f"x = {x}")
-                p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
-                (<jt.uchar*>p)[0] = <jt.uchar>clamp(data[i], 0, 255)
-                j += 1
-                # post(f"(p, j, i) = ({plane}, {j}, {i})")
-            j = 0
+    # def set_char_data(self, list[int] data):
+    #     """set data to whole matrix"""
+    #     cdef int j = 0
+    #     cdef int x = 0
+    #     cdef char* p = NULL
+    #     for plane in range(self.planecount):
+    #         self.data += plane
+    #         for i in range(len(data)):
+    #             x = (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+    #             post(f"x = {x}")
+    #             p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+    #             (<jt.uchar*>p)[0] = <jt.uchar>clamp(data[i], 0, 255)
+    #             j += 1
+    #             # post(f"(p, j, i) = ({plane}, {j}, {i})")
+    #         j = 0
 
     def set_cell2d_char(self, int value, int x = 0, int y = 0, int plane = 0):
         """sets the matrix's data as unsigned char using a contiguous array."""

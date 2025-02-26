@@ -5,6 +5,7 @@ import api
 
 mem = {}
 
+
 # first init per the matrix type (in the respective tab)
 
 def test_matrix_char_init():
@@ -119,6 +120,17 @@ def test_matrix_set_cell2d():
     m = mem["m"]
     m.set_cell2d(5, x=3, y=2, plane=0)
     api.bang_success()
+
+# def test_matrix_set_char_data():
+#     m = mem["m"]
+#     length = m.plane_len
+#     m.set_char_data([2] * length)
+
+def test_matrix_set_char_data():
+    m = mem["m"]
+    length = m.matrix_len
+    # m.set_char_data([2] * length)
+    m.set_char_data([i for i in range(length)])
 
 def test_matrix_set_data():
     m = mem["m"]
