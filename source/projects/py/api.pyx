@@ -4114,6 +4114,16 @@ cdef class Matrix:
     # custom properties
 
     @property
+    def width(self) -> int:
+        """width of matrix"""
+        return self.dim[0]
+
+    @property
+    def height(self) -> int:
+        """height of matrix"""
+        return self.dim[1]
+
+    @property
     def itemsize(self) -> int:
         """size in bytes of single matrix entry"""
         return {
@@ -4310,56 +4320,67 @@ cdef class Matrix:
     def get_data(self) -> list[object]:
         """retrieve data from matrix as contiguous array."""
         if self.type == "char":
-            return [<int>self.data[i] for i in range(self.matrix_len)]
+            return self.get_char_data()
         elif self.type == "long":
-            return [<long>self.data[i] for i in range(self.matrix_len)]
+            return self.get_long_data()
         elif self.type == "float32":
-            return [<float>self.data[i] for i in range(self.matrix_len)]
+            return self.get_float_data()
         elif self.type == "float64":
-            return [<double>self.data[i] for i in range(self.matrix_len)]
+            return self.get_double_data()
         else:
             raise TypeError("could not process this type")
 
-    # def get_data(self) -> list[object]:
-    #     """retrieve data from matrix as contiguous array."""
-    #     if self.type == "char":
-    #         return self.get_char_data()
-    #     elif self.type == "long":
-    #         return self.get_long_data()
-    #     elif self.type == "float32":
-    #         return self.get_float_data()
-    #     elif self.type == "float64":
-    #         return self.get_double_data()
-    #     else:
-    #         raise TypeError("could not process this type")
+    def get_char_data(self) -> list[int]:
+        """retrieve char data from matrix as contiguous array."""
+        cdef list[int] results = []
+        cdef int i, j, p
+        cdef char *m_ptr
 
-    # def get_char_data(self) -> list[int]:
-    #     """retrieve char data from matrix as contiguous array."""
-    #     cdef list[int] results = []
-    #     for i in range(self.matrix_len):
-    #         results.append(<int>self.data[i])
-    #     return results
+        for i in range(self.height):
+            m_ptr = self.data + i * self.info.dimstride[1]
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    results.append(m_ptr[p])
+        return results
 
-    # def get_long_data(self) -> list[int]:
-    #     """retrieve long data from matrix as contiguous array."""
-    #     cdef list[int] results = []
-    #     for i in range(self.matrix_len):
-    #         results.append(<int>self.data[i])
-    #     return results
+    def get_long_data(self) -> list[int]:
+        """retrieve long data from matrix as contiguous array."""
+        cdef list[int] results = []
+        cdef int i, j, p
+        cdef char *m_ptr
 
-    # def get_float_data(self) -> list[float]:
-    #     """retrieve float data from matrix as contiguous array."""
-    #     cdef list[float] results = []
-    #     for i in range(self.matrix_len):
-    #         results.append(<float>self.data[i])
-    #     return results
+        for i in range(self.height):
+            m_ptr = self.data + i * self.info.dimstride[1]
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    results.append(<long>m_ptr[p])
+        return results
 
-    # def get_double_data(self) -> list[float]:
-    #     """retrieve double data from matrix as contiguous array."""
-    #     cdef list[float] results = []
-    #     for i in range(self.matrix_len):
-    #         results.append(<double>self.data[i])
-    #     return results
+    def get_float_data(self) -> list[int]:
+        """retrieve float data from matrix as contiguous array."""
+        cdef list[int] results = []
+        cdef int i, j, p
+        cdef char *m_ptr
+
+        for i in range(self.height):
+            m_ptr = self.data + i * self.info.dimstride[1]
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    results.append(<float>m_ptr[p])
+        return results
+
+    def get_double_data(self) -> list[int]:
+        """retrieve double data from matrix as contiguous array."""
+        cdef list[int] results = []
+        cdef int i, j, p
+        cdef char *m_ptr
+
+        for i in range(self.height):
+            m_ptr = self.data + i * self.info.dimstride[1]
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    results.append(<double>m_ptr[p])
+        return results
 
     def set_plane2d(self, object value, int x, int y, int plane=0):
         """Sets plane of cell at index to the value provided.

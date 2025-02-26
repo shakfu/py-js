@@ -148,7 +148,43 @@ for (i = 0; i < height; i++) {
 }
 ```
 
-and further on Rob writes:
+I found the above very useful and I first created the following:
+
+```python
+def get_char_data(self) -> list[int]:
+    """retrieve char data from matrix as contiguous array."""
+    cdef list[int] results = []
+    cdef int i, j
+    cdef char *m_ptr
+
+    for i in range(self.height):
+        m_ptr = self.data + i * self.info.dimstride[1]
+        for j in range(self.width):
+            for _ in range(self.planecount):
+                results.append(m_ptr[0])
+                m_ptr += 1
+    return results
+```
+and then found that this work even better
+
+```python
+def get_char_data(self) -> list[int]:
+    """retrieve char data from matrix as contiguous array."""
+    cdef list[int] results = []
+    cdef int i, j, p
+    cdef char *m_ptr
+
+    for i in range(self.height):
+        m_ptr = self.data + i * self.info.dimstride[1]
+        for j in range(self.width):
+            for p in range(self.planecount):
+                results.append(m_ptr[p])
+    return results
+```
+
+(back to the post)
+
+Further on Rob writes:
 
 > if you want a specific cell i j
 
