@@ -1,4 +1,6 @@
 from pathlib import Path
+from textwrap import fill
+
 from xml.etree import ElementTree
 
 REFPAGES = Path("/Applications/Studio/Max.app/Contents/Resources/C74/docs/refpages")
@@ -1234,9 +1236,19 @@ class MaxRefParser:
                 arglist = m.findall('arglist')
                 if arglist:
                     d[name]['args'] = []
-                    args = arglist[0].findall('arg')
-                    for arg in args:
-                        d[name]['args'].append(dict(arg.attrib))
+                    for entry in arglist[0]:
+                        if entry.tag == 'arg':
+                            d[name]['args'].append(dict(entry.attrib))
+                        if entry.tag == 'arggroup':
+                            for arg in entry.iter():
+                                if arg.tag == 'arg':
+                                    ad = dict(arg.attrib)
+                                    ad.update(entry.attrib)
+                                    d[name]['args'].append(ad)
+
+                    # args = arglist[0].findall('arg')
+                    # for arg in args:
+                    #     d[name]['args'].append(dict(arg.attrib))
                 digest = m.findall('digest')
                 if digest:
                     d[name]['digest'] = digest[0].text.strip()
@@ -1244,9 +1256,40 @@ class MaxRefParser:
                 if description:
                     d[name]['description'] = description[0].text.strip()
 
+    def dump(self):
+        # pprint(p.d)
+        spacer = ' '*4
+        for name in p.d['methods']:
+            m = p.d['methods'][name]
+
+            sig = None
+            if 'args' in m:
+                args = []
+                for arg in m['args']:
+                    if 'optional' in arg:
+                        args.append('{type} {name}?'.format(**arg))
+                    else:
+                        args.append('{type} {name}'.format(**arg))
+
+                sig = "{name}({args}):".format(name=name, args=", ".join(args))
+            else:
+                sig = "{name}():".format(name=name)
+            print('def', sig)
+
+            print('{spacer}{tq}{digest}'.format(
+                spacer=spacer,
+                tq='\"\"\"',
+                digest=m['digest']))
+            print()
+            print("{spacer}{sig}".format(spacer=spacer, sig=sig[:-1]))
+            print()
+            print('{spacer}{desc}'.format(spacer=spacer, desc=fill(m['description'], subsequent_indent=spacer)))
+            print('{spacer}{tq}'.format(spacer=spacer, tq='\"\"\"'))
+            print()
 
 if __name__ == '__main__':
     from pprint import pprint
     p = MaxRefParser(JIT_REF / "jit.matrix.maxref.xml")
     p.parse()
-    pprint(p.d)
+    p.dump()
+

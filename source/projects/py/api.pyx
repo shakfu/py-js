@@ -4179,25 +4179,41 @@ cdef class Matrix:
         """Outputs the currently stored matrix."""
         jt.jit_object_method(self.ptr, mx.gensym("bang"))
 
-    def set_int(self, *args):
-        """Set all cells to an int value and output the result
-        
-        Sets all cells to the value specified by `value(s)` and output the data.
-        Position is specified of a list whose length is equal to the number of 
-        dimensions (`dimcount`).
-        """
-        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
-        self.call_with_args("int", args)
+    def set_int(self, *values):
+        """Set all cells to a value and output the result
 
-    def set_float(self, *args):
-        """Set all cells to a float value and output the result
-        
-        Sets all cells to the value specified by `value(s)` and output the data.
-        Position is specified of a list whose length is equal to the number of 
-        dimensions (`dimcount`).
+        int(list values)
+
+        Sets all cells to the value specified by `value(s)` and output the
+        data. Position is specified of a list whose length is equal to the
+        number of dimensions (`dimcount`).
         """
-        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
-        self.call_with_args("float", args)
+        assert 0 < len(values) <= self.planecount, "# of values cannot == 0 or >= # planes"
+        self.call_with_args("int", values)
+
+    def set_float(self, *values):
+        """Set all cells to a value and output the result
+
+        float(list values)
+
+        Sets all cells to the value specified by `value(s)` and output the
+        data. Value is specified as a list whose length is equal to the
+        number of dimensions (`dimcount`).
+        """
+        assert 0 < len(values) <= self.planecount, "# of values cannot == 0 or >= # planes"
+        self.call_with_args("float", values)
+
+    def set_list(self, *values):
+        """Set all cells to a value and output the result
+
+        list(list values)
+
+        Sets all cells to the value specified by `value(s)` and output the
+        data. Position is specified of a list whose length is equal to the
+        number of dimensions (`dimcount`).
+        """
+        assert 0 < len(values) <= self.planecount, "# of values cannot == 0 or >= # planes"
+        self.call_with_args("list", values)
 
     def clear(self):
         """Sets all matrix values to zero."""
@@ -4205,37 +4221,54 @@ cdef class Matrix:
 
     def export_image(self, str filename, str filetype = "png"):
         """Export the current frame as an image file
-        
-        Export the current frame as an image file with the name specified by the first argument.
-        The second argument sets the file type (default = png).
-        Available file types are png, tiff, and jpeg.
+
+        exportimage(symbol filename, symbol file-type)
+
+        Export the current frame as an image file with the name specified by
+        the first argument. The second argument sets the file type
+        (default = png). Available file types are `png`, `tiff`, and
+        `jpeg`.
         """
         assert filetype in ['png', 'tiff', 'jpeg'], "incompatible filetype"
         cdef Atom atom = Atom(filename, filetype)
         jt.jit_object_method(self.ptr, mx.gensym("exportimage"), atom.size, atom.ptr)
 
     def export_movie(self, str filename, float fps, str codec, str quality, int timescale):
-        """Export a matrix as a movie."""
+        """Export a matrix as a movie
+
+        exportmovie(symbol filename?, float FPS, symbol codec, symbol quality, int timescale)
+
+        Exports a matrix as a movie. The `exportmovie` message takes an
+        optional argument to specify a file name. If no filename is
+        specified, a file dialog will open to let you choose a file.
+        """
         cdef Atom atom = Atom(filename, fps, codec, quality, timescale)
         jt.jit_object_method(self.ptr, mx.gensym("exportmovie"), atom.size, atom.ptr)
 
-    def exprfill(self, str expr, int plant = 0):
+    def exprfill(self, str expr, int plane = 0):
         """Evaluate an expression to fill the matrix
 
-        If a `plane` argument is provided, the expression is applied to a single plane.
-        Otherwise, it is applied to all planes in the matrix. See `jit.expr` for more 
-        information on expressions. Unlike the `jit.expr` object, there is no support for 
-        providing multiple expressions to fill multiple planes at once with different
-        expressions. Call this method multiple times once for each plane you wish to fill.
+        exprfill(int plane?, symbol expression)
+
+        Evaluates `expression` to fill the matrix. If a `plane` argument is
+        provided, the expression is applied to a single plane. Otherwise,
+        it is applied to all planes in the matrix. See `jit.expr` for more
+        information on expressions. Unlike the `jit.expr` object, there is
+        no support for providing multiple expressions to fill multiple
+        planes at once with different expressions. Call this method
+        multiple times once for each plane you wish to fill.
         """
-        cdef Atom atom = Atom(expr, plant)
+        cdef Atom atom = Atom(plane, expr)
         jt.jit_object_method(self.ptr, mx.gensym("exprfill"), atom.size, atom.ptr)
 
     def fill_plane(self, int value = 0, int plane = 0):
-        """Fill a plane with a specified value.
+        """Fill a plane with a specified value
 
-        The msg `fillplane`, followed by an integer that specifies a plane number
-        and a value, will fill the specified plane with the single value.
+        fillplane(int plane?, int value?)
+
+        The word `fillplane`, followed by an integer that specifies a plane
+        number and a value, will fill the specified plane with the single
+        value.
         """
         cdef Atom atom = Atom(plane, value)
         jt.jit_object_method(self.ptr, mx.gensym("fillplane"), atom.size, atom.ptr)
@@ -4243,8 +4276,10 @@ cdef class Matrix:
     def get_cell(self, *positions):
         """Report cell values
 
-        Sends the value(s) in the cell specified by `position` out the right outlet of the 
-        object as a list in the form of
+        getcell(list position)
+
+        Sends the value(s) in the cell specified by `position` out the right
+        outlet of the object as a list in the form
 
             cell pos1... posN val plane0-value... planeN-value
 
@@ -4256,51 +4291,203 @@ cdef class Matrix:
     def import_movie(self, str filename, int timeoffset = 0):
         """Import a movie into the matrix
 
-        If no filename is specified, a file dialog will open to let you choose a file. 
-        The `timeoffset` argument may be used to set a time offset for the movie 
-        being imported (the default is 0).
+        importmovie(symbol filename?, int time-offset)
+
+        Imports a movie into the matrix. If no filename is specified, a file
+        dialog will open to let you choose a file. The `time-offset`
+        argument may be used to set a time offset for the movie being
+        imported (the default is 0).
         """
         cdef Atom atom = Atom(filename, timeoffset)
         jt.jit_object_method(self.ptr, mx.gensym("importmovie"), atom.size, atom.ptr)
 
     def add_gl_texture(self, str texture_name):
-        """Copy a texture to the matrix."""
+        """Copy a texture to the matrix
+
+        jit_gl_texture(symbol texture-name)
+
+        Copies the texture specified by `texture-name` to the matrix.
+        """
         cdef Atom atom = Atom(texture_name)
         jt.jit_object_method(self.ptr, mx.gensym("jit_gl_texture"), atom.size, atom.ptr)
 
     def op(self, *args):
         """Perform `jit.op` operations on the matrix
 
-        The word `op`, followed by the name of a `jit.op` object operator
-        and a set of values, is equivalent to including a `jit.op` object with
-        the specified operator set as an attribute and this `jit.matrix` object
-        specified as the output matrix. The additional `value` arguments may either
-        be a matrix name or a constant. If only one value argument is provided, this
-        matrix is considered both the output and the left operand.
+        The word `op`, followed by the name of a `jit.op` object operator and
+        a set of values, is equivalent to including a `jit.op` object with
+        the specified operator set as an attribute and this `jit.matrix`
+        object specified as the output matrix. The additional `value`
+        arguments may either be a matrix name or a constant. If only one
+        value argument is provided, this matrix is considered both the
+        output and the left operand.
 
         For example
-            `op + foo bar` is equivalent to the operation `matrix = foo + bar`,
+            `op + foo bar` is equivalent to the operation `thismatrix = foo + bar`,
                 and
-            `op * 0.5` is equivalent to the operation `matrix = matrix * 0.5`
+            `op * 0.5` is equivalent to the operation `thismatrix = thismatrix * 0.5`
         """
         self.call_with_args("op", args)
 
     def read(self, str filename):
-        """Read Jitter binary data files (.jxf)"""
+        """Read Jitter binary data files (.jxf)
+
+        read(symbol filename?)
+
+        Reads Jitter binary data files (.jxf) into a matrix set. If no
+        filename is specified, a file dialog will open to let you choose a
+        file.
+        """
         cdef Atom atom = Atom(filename)
         jt.jit_object_method(self.ptr, mx.gensym("read"), atom.size, atom.ptr)
 
     def set_all(self, *args):
-        """Sets all cells to the value specified by values(s).
-        
-        Position is specified of a list whose length is equal to the number
-        of dimensions (dimcount). But unlike `set_val` does not output the 
-        data.
+        """Set all cells to a value
+
+        setall(list values)
+
+        Sets all cells to the value specified by `value(s)`. Position is
+        specified of a list whose length is equal to the number of
+        dimensions (`dimcount`).
 
         >>> matrix.set_all(10, 20)
         # sets all cells in: plane0 to 10, plane1 to 20
         """
         self.call_with_args("setall", args)
+
+    def set_cell(self, list[int] positions,  list[object] values, int plane=-1):
+        """Set a cell to a specified value
+
+        setcell(list position, literal plane?, int plane-number?, literal val, list values)
+
+        Sets the cell specified by `position` to the value specified by
+        `value`. Position is specified of a list whose length is equal to
+        the number of dimensions (`dimcount`). The optional arguments
+        `plane`  `plane-number` can be used to specify a plane. If a plane
+        is specified, `value` should be a single number, otherwise it
+        should be a list of numbers of size `planecount - 1`. 
+
+        For eg, for a char 3 plane 2d matrix
+
+        >>> self.set_cell(positions=[0,0], values=[10], plane=2)
+        """
+        raise NotImplemented
+
+    def set_cell1d(self):
+        """Set a 1-dimensional cell to a specified value
+
+        setcell1d()
+
+        The word `setcell1d`, followed by a number specifying an `x`
+        coordinate and a list of values, is similar to the `setcell`
+        message but without the need to use a `val` token to separate the
+        coordinates from the value since the dimension count (1) is fixed.
+        """
+        raise NotImplemented
+
+
+    def set_plane2d(self, object value, int x, int y, int plane=0):
+        """Set a 2-dimensional cell to specified values
+
+        The word `setcell2d`, followed by a pair of numbers specifying `x` and
+        `y` coordinates and a list of values, is similar to the `setcell`
+        message but without the need to use a `val` token to separate the
+        coordinates from the value since the dimension count (2) is fixed.
+
+        Note that the order is slightly different in the python version of 
+        of this method, so for the max message `(setplane2d 3 2 1 4)`, the
+        equivalent in python is (with value being first):
+
+        >>> matrix.set_plate2d(4, x=3, y=2, plane=1)
+        """
+        cdef Atom atom = Atom.from_seq((x, y, plane, value))
+        jt.jit_object_method(<jt.t_object*>self.ptr, mx.gensym("setplane2d"), atom.size, atom.ptr)
+
+    def set_cell3d(self):
+        """Set a 3-dimensional cell to specified values
+
+        setcell3d()
+
+        The word `setcell3d`, followed by three numbers specifying `x`, `y`,
+        and `z` coordinates and a list of values, is similar to the
+        `setcell` message but without the need to use a `val` token to
+        separate the coordinates from the value since the dimension count
+        (3) is fixed.
+        """
+        raise NotImplemented
+
+
+    def set_plane1d(self):
+        """Set a cell in a plane to a value (1d, no val token)
+
+        setplane1d()
+
+        The word `setplane1d`, followed by a number specifying an `x`
+        coordinate, a number specifying a plane, and a value, is similar
+        to the `setcell` message but without the need to use a `val` token
+        to separate the coordinates from the value since the dimension
+        count (1) is fixed, or use the `plane` token to specify which
+        plane to set.
+        """
+        raise NotImplemented
+
+
+    def set_plane2d(self):
+        """Set a cell in a plane to a value (2d, no val token)
+
+        setplane2d()
+
+        The word `setplane2d`, followed by a pair of numbers specifying `x`
+        and `y` coordinates, a number specifying a plane, and a value, is
+        similar to the `setcell` message but without the need to use a
+        `val` token to separate the coordinates from the value since the
+        dimension count (2) is fixed, or use the `plane` token to specify
+        which plane to set.
+        """
+        raise NotImplemented
+
+    def set_plane3d(self):
+        """Set a cell in a plane to a value (3d, no val token)
+
+        setplane3d()
+
+        The word `setplane3d`, followed by three numbers specifying `x`, `y`,
+        and `z` coordinates, a number specifying a plane, and a value, is
+        similar to the `setcell` message but without the need to use a
+        `val` token to separate the coordinates from the value since the
+        dimension count (1) is fixed, or use the `plane` token to specify
+        which plane to set.
+        """
+        raise NotImplemented
+
+    def set_val(self, *args):
+        """Set all cells to a value and output the result
+
+        val(list values)
+
+        Sets all cells to the value specified by `value(s)`. Position is
+        specified of a list whose length is equal to the number of
+        dimensions (`dimcount`) and outputs the data.
+
+        >>> matrix.set_val(10, 20)
+        # sets all cells in: plane0 to 10, plane1 to 20 and outputs the data
+        """
+        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
+        # using `setall` because `val` cannot be found 
+        # (suspect it's need to be an attr to be called as in max-sdk/matrix/jit.op)
+        self.call_with_args("setall", args)
+        self.bang()
+
+    def write(self, str filename):
+        """Write matrix set as a Jitter binary data file (.jxf)
+
+        write(symbol filename?)
+
+        Writes matrix set as a Jitter binary data file (.jxf). If no filename
+        is specified, a file dialog will open to let you choose a file.
+        """
+        raise NotImplemented
+
 
     # end methods
 
@@ -4412,40 +4599,7 @@ cdef class Matrix:
     #                 m_ptr[0] = 2
     #                 m_ptr += 1
 
-    def set_plane2d(self, object value, int x, int y, int plane=0):
-        """Sets plane of cell at index to the value provided.
 
-        The word `setplane2d`, followed by a pair of numbers specifying `x`
-        and `y` coordinates, a number specifying a `plane`, and a value, 
-        is similar to the `setcell` message but without the need to 
-        use a `val` token to separate the coordinates from the value since
-        the dimension count (2) is fixed, or use the `plane` token to specify
-        which plane to set.
-
-        Note that the order is slightly different in the python version of 
-        of this method, so for the max message `(setplane2d 3 2 1 4)`, the
-        equivalent in python is (with value being first):
-
-        >>> matrix.set_plate2d(4, x=3, y=2, plane=1)
-        """
-        cdef Atom atom = Atom.from_seq((x, y, plane, value))
-        jt.jit_object_method(<jt.t_object*>self.ptr, mx.gensym("setplane2d"), atom.size, atom.ptr)
-
-    def set_val(self, *args):
-        """Set all cells to a value and output the result
-        
-        Sets all cells to the value specified by `value(s)`. Position is
-        specified of a list whose length is equal to the number of dimensions
-        `dimcount` and outputs the data.
-
-        >>> matrix.set_val(10, 20)
-        # sets all cells in: plane0 to 10, plane1 to 20 and outputs the data
-        """
-        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
-        # using `setall` because `val` cannot be found 
-        # (suspect it's need to be an attr to be called as in max-sdk/matrix/jit.op)
-        self.call_with_args("setall", args)
-        self.bang()
 
     cdef void* cell_ptr_1d(self, int x):
         """Retrieves pointer to directly access matrix cells if it is 1D"""
@@ -4673,6 +4827,8 @@ cdef class Matrix:
                     j += 1
 
             self.unlock(savelock)
+
+
 
 
 # ----------------------------------------------------------------------------
