@@ -146,7 +146,6 @@ Rgba = namedtuple('Rgba', ['red', 'green', 'blue', 'alpha'])
 # ----------------------------------------------------------------------------
 # api.MaxObject
 
-
 cdef class MaxObject:
     """A wrapper for a Max t_object
     """
@@ -513,8 +512,6 @@ cdef class MaxObject:
     def open_query(self):
         """Open a search in the file browser for files with the name of the given class."""
         mx.classname_openquery(self.classname.encode())
-
-
 
 
 # ----------------------------------------------------------------------------
@@ -4151,7 +4148,7 @@ cdef class Matrix:
 
     # helper methods
 
-    def call_with_args(self, str method, *args) -> Optional[object]:
+    def call(self, str method, *args) -> Optional[object]:
         """helper wrapper method around jit_object_method_typed"""
         cdef Atom atom = Atom(*args)
         cdef Atom result = Atom.new(1)
@@ -4161,7 +4158,6 @@ cdef class Matrix:
         if result.ptr is not NULL:
             return result.value
         return
-
 
     def call_with_atoms(self, str method, Atom atom) -> Optional[object]:
         """helper wrapper method around jit_object_method_typed"""
@@ -4189,7 +4185,7 @@ cdef class Matrix:
         number of dimensions (`dimcount`).
         """
         assert 0 < len(values) <= self.planecount, "# of values cannot == 0 or >= # planes"
-        self.call_with_args("int", values)
+        self.call("int", values)
 
     def set_float(self, *values):
         """Set all cells to a value and output the result
@@ -4201,7 +4197,7 @@ cdef class Matrix:
         number of dimensions (`dimcount`).
         """
         assert 0 < len(values) <= self.planecount, "# of values cannot == 0 or >= # planes"
-        self.call_with_args("float", values)
+        self.call("float", values)
 
     def set_list(self, *values):
         """Set all cells to a value and output the result
@@ -4213,7 +4209,7 @@ cdef class Matrix:
         number of dimensions (`dimcount`).
         """
         assert 0 < len(values) <= self.planecount, "# of values cannot == 0 or >= # planes"
-        self.call_with_args("list", values)
+        self.call("list", values)
 
     def clear(self):
         """Sets all matrix values to zero."""
@@ -4245,7 +4241,7 @@ cdef class Matrix:
         cdef Atom atom = Atom(filename, fps, codec, quality, timescale)
         jt.jit_object_method(self.ptr, mx.gensym("exportmovie"), atom.size, atom.ptr)
 
-    def exprfill(self, str expr, int plane = 0):
+    def expr_fill(self, str expr, int plane = 0):
         """Evaluate an expression to fill the matrix
 
         exprfill(int plane?, symbol expression)
@@ -4327,7 +4323,7 @@ cdef class Matrix:
                 and
             `op * 0.5` is equivalent to the operation `thismatrix = thismatrix * 0.5`
         """
-        self.call_with_args("op", args)
+        self.call("op", args)
 
     def read(self, str filename):
         """Read Jitter binary data files (.jxf)
@@ -4353,7 +4349,7 @@ cdef class Matrix:
         >>> matrix.set_all(10, 20)
         # sets all cells in: plane0 to 10, plane1 to 20
         """
-        self.call_with_args("setall", args)
+        self.call("setall", args)
 
     def set_cell(self, list[int] positions,  list[object] values, int plane=-1):
         """Set a cell to a specified value
@@ -4369,44 +4365,44 @@ cdef class Matrix:
 
         For eg, for a char 3 plane 2d matrix
 
-        >>> self.set_cell(positions=[0,0], values=[10], plane=2)
+        >>> self.set_cell(positions=[0,0], values=[10, 8, 5]/)
         """
-        raise NotImplemented
+        assert len(positions) == self.dimcount, "len(positions) must equal # of dimensions"
+        assert len(values) < self.planecount, "len(values) must be less than planecount"
+        args = positions[:]
+        if plane >= 0:
+            args.extend(['plane', plane])
+        args.append('val')
+        args.extend(values)
+        self.call("setcell", args)
 
-    def set_cell1d(self):
+    def set_cell1d(self, int x, list[object] values):
         """Set a 1-dimensional cell to a specified value
-
-        setcell1d()
 
         The word `setcell1d`, followed by a number specifying an `x`
         coordinate and a list of values, is similar to the `setcell`
         message but without the need to use a `val` token to separate the
         coordinates from the value since the dimension count (1) is fixed.
         """
-        raise NotImplemented
+        args = [x]
+        args.extend(values)
+        self.call("setcell1d", args)
 
-
-    def set_plane2d(self, object value, int x, int y, int plane=0):
+    def set_cell2d(self, int x, int y, list[object] values):
         """Set a 2-dimensional cell to specified values
 
         The word `setcell2d`, followed by a pair of numbers specifying `x` and
         `y` coordinates and a list of values, is similar to the `setcell`
         message but without the need to use a `val` token to separate the
         coordinates from the value since the dimension count (2) is fixed.
-
-        Note that the order is slightly different in the python version of 
-        of this method, so for the max message `(setplane2d 3 2 1 4)`, the
-        equivalent in python is (with value being first):
-
-        >>> matrix.set_plate2d(4, x=3, y=2, plane=1)
         """
-        cdef Atom atom = Atom.from_seq((x, y, plane, value))
-        jt.jit_object_method(<jt.t_object*>self.ptr, mx.gensym("setplane2d"), atom.size, atom.ptr)
+        assert len(values) < self.planecount, "len(values) must be less than planecount"
+        args = [x, y]
+        args.extend(values)
+        self.call("set_cell2d", args)
 
-    def set_cell3d(self):
+    def set_cell3d(self, int x, int y, int z, list[object] values):
         """Set a 3-dimensional cell to specified values
-
-        setcell3d()
 
         The word `setcell3d`, followed by three numbers specifying `x`, `y`,
         and `z` coordinates and a list of values, is similar to the
@@ -4414,13 +4410,13 @@ cdef class Matrix:
         separate the coordinates from the value since the dimension count
         (3) is fixed.
         """
-        raise NotImplemented
+        assert len(values) < self.planecount, "len(values) must be less than planecount"
+        args = [x, y, z]
+        args.extend(values)
+        self.call("set_cell2d", args)
 
-
-    def set_plane1d(self):
+    def set_plane1d(self, int x, int plane, object value):
         """Set a cell in a plane to a value (1d, no val token)
-
-        setplane1d()
 
         The word `setplane1d`, followed by a number specifying an `x`
         coordinate, a number specifying a plane, and a value, is similar
@@ -4429,13 +4425,10 @@ cdef class Matrix:
         count (1) is fixed, or use the `plane` token to specify which
         plane to set.
         """
-        raise NotImplemented
+        self.call("setplane1d", x, plane, value)
 
-
-    def set_plane2d(self):
+    def set_plane2d(self, int x, int y, int plane, object value):
         """Set a cell in a plane to a value (2d, no val token)
-
-        setplane2d()
 
         The word `setplane2d`, followed by a pair of numbers specifying `x`
         and `y` coordinates, a number specifying a plane, and a value, is
@@ -4444,12 +4437,28 @@ cdef class Matrix:
         dimension count (2) is fixed, or use the `plane` token to specify
         which plane to set.
         """
-        raise NotImplemented
+        self.call("setplane2d", x, y, plane, value)
 
-    def set_plane3d(self):
+    # def set_plane2d(self, object value, int x, int y, int plane=0):
+    #     """Set a 2-dimensional cell to specified values
+
+    #     The word `setcell2d`, followed by a pair of numbers specifying `x` and
+    #     `y` coordinates and a list of values, is similar to the `setcell`
+    #     message but without the need to use a `val` token to separate the
+    #     coordinates from the value since the dimension count (2) is fixed.
+
+    #     Note that the order is slightly different in the python version of 
+    #     of this method, so for the max message `(setplane2d 3 2 1 4)`, the
+    #     equivalent in python is (with value being first):
+
+    #     >>> matrix.set_plate2d(4, x=3, y=2, plane=1)
+    #     """
+    #     cdef Atom atom = Atom.from_seq((x, y, plane, value))
+    #     jt.jit_object_method(<jt.t_object*>self.ptr, mx.gensym("setplane2d"),
+    #         atom.size, atom.ptr)
+
+    def set_plane3d(self, int x, int y, int z, int plane, object value):
         """Set a cell in a plane to a value (3d, no val token)
-
-        setplane3d()
 
         The word `setplane3d`, followed by three numbers specifying `x`, `y`,
         and `z` coordinates, a number specifying a plane, and a value, is
@@ -4458,9 +4467,9 @@ cdef class Matrix:
         dimension count (1) is fixed, or use the `plane` token to specify
         which plane to set.
         """
-        raise NotImplemented
+        self.call("setplane2d", x, y, z, plane, value)
 
-    def set_val(self, *args):
+    def set_val(self, *values):
         """Set all cells to a value and output the result
 
         val(list values)
@@ -4472,10 +4481,10 @@ cdef class Matrix:
         >>> matrix.set_val(10, 20)
         # sets all cells in: plane0 to 10, plane1 to 20 and outputs the data
         """
-        assert 0 < len(args) <= self.planecount, "# of args cannot == 0 or >= # planes"
+        assert 0 < len(values) <= self.planecount, "# of values cannot == 0 or >= # planes"
         # using `setall` because `val` cannot be found 
         # (suspect it's need to be an attr to be called as in max-sdk/matrix/jit.op)
-        self.call_with_args("setall", args)
+        self.call("setall", values)
         self.bang()
 
     def write(self, str filename):
@@ -4486,7 +4495,7 @@ cdef class Matrix:
         Writes matrix set as a Jitter binary data file (.jxf). If no filename
         is specified, a file dialog will open to let you choose a file.
         """
-        raise NotImplemented
+        self.call("write", filename)
 
 
     # end methods
@@ -4614,6 +4623,62 @@ cdef class Matrix:
                                             + self.info.dimstride[1] * y
                                             + self.info.dimstride[2] * z)
 
+
+    # def set_cell2d_char(self, int value, int x = 0, int y = 0, int plane = 0):
+    #     """sets the matrix's data as unsigned char using a contiguous array."""
+    #     # assert 0 <= plane < self.planecount, "plane out of range"
+    #     cdef char* p = <char*>self.cell_ptr_2d(x, y)
+    #     cdef long savelock = <long>self.lock()
+    #     p[plane] = <jt.uchar>clamp(value, 0, 255)
+    #     self.unlock(savelock)
+
+    # def set_cell2d_char2(self, int value, int x = 0, int y = 0, int plane = 0):
+    #     """sets the matrix's data as unsigned char using a contiguous array."""
+    #     # assert 0 <= plane < self.planecount, "plane out of range"
+    #     cdef char* p = <char*>self.cell_ptr_2d(x, y)
+    #     cdef long savelock = <long>self.lock()
+    #     p[plane] = <jt.uchar>clamp(value, 0, 255)
+    #     p[plane+1] = <jt.uchar>clamp(value+1, 0, 255)
+    #     self.unlock(savelock)
+
+    # def set_cell2d_long(self, long value, int x = 0, int y = 0, int plane = 0):
+    #     """sets the matrix's data as long using a contiguous array."""
+    #     assert 0 <= plane < self.planecount, "plane out of range"
+    #     cdef long* p = <long*>self.cell_ptr_2d(x, y)
+    #     cdef long savelock = <long>self.lock()
+    #     p[plane] = <long>value
+    #     self.unlock(savelock)
+
+    # def set_cell2d_float(self, float value, int x = 0, int y = 0, int plane = 0):
+    #     """sets the matrix's data as float using a contiguous array."""
+    #     assert 0 <= plane < self.planecount, "plane out of range"
+    #     cdef float* p = <float*>self.cell_ptr_2d(x, y)
+    #     cdef long savelock = <long>self.lock()
+    #     p[plane] = <float>value
+    #     self.unlock(savelock)
+
+    # def set_cell2d_double(self, double value, int x = 0, int y = 0, int plane = 0):
+    #     """sets the matrix's data as double using a contiguous array."""
+    #     assert 0 <= plane < self.planecount, "plane out of range"
+    #     cdef double* p = <double*>self.cell_ptr_2d(x, y)
+    #     cdef long savelock = <long>self.lock()
+    #     p[plane] = <double>value
+    #     self.unlock(savelock)
+
+    # def set_cell2d(self, object value, int x = 0, int y = 0, int plane = 0):
+    #     """sets the matrix's data using a contiguous array."""
+    #     if self.type == "char":
+    #         self.set_cell2d_char(value, x, y, plane)
+    #     elif self.type == "long":
+    #         self.set_cell2d_long(value, x, y, plane)
+    #     elif self.type == "float32":
+    #         self.set_cell2d_float(value, x, y, plane)
+    #     elif self.type == "float64":
+    #         self.set_cell2d_double(value, x, y, plane)
+    #     else:
+    #         raise TypeError("could not process this type")
+
+
     # def set_char_data(self, data: list[int], int x = 0, int y = 0):
     #     """sets the matrix's data as unsigned char using a contiguous array."""
     #     cdef jt.uchar entry = 0
@@ -4687,59 +4752,7 @@ cdef class Matrix:
     #             # post(f"(p, j, i) = ({plane}, {j}, {i})")
     #         j = 0
 
-    def set_cell2d_char(self, int value, int x = 0, int y = 0, int plane = 0):
-        """sets the matrix's data as unsigned char using a contiguous array."""
-        # assert 0 <= plane < self.planecount, "plane out of range"
-        cdef char* p = <char*>self.cell_ptr_2d(x, y)
-        cdef long savelock = <long>self.lock()
-        p[plane] = <jt.uchar>clamp(value, 0, 255)
-        self.unlock(savelock)
 
-    def set_cell2d_char2(self, int value, int x = 0, int y = 0, int plane = 0):
-        """sets the matrix's data as unsigned char using a contiguous array."""
-        # assert 0 <= plane < self.planecount, "plane out of range"
-        cdef char* p = <char*>self.cell_ptr_2d(x, y)
-        cdef long savelock = <long>self.lock()
-        p[plane] = <jt.uchar>clamp(value, 0, 255)
-        p[plane+1] = <jt.uchar>clamp(value+1, 0, 255)
-        self.unlock(savelock)
-
-    def set_cell2d_long(self, long value, int x = 0, int y = 0, int plane = 0):
-        """sets the matrix's data as long using a contiguous array."""
-        assert 0 <= plane < self.planecount, "plane out of range"
-        cdef long* p = <long*>self.cell_ptr_2d(x, y)
-        cdef long savelock = <long>self.lock()
-        p[plane] = <long>value
-        self.unlock(savelock)
-
-    def set_cell2d_float(self, float value, int x = 0, int y = 0, int plane = 0):
-        """sets the matrix's data as float using a contiguous array."""
-        assert 0 <= plane < self.planecount, "plane out of range"
-        cdef float* p = <float*>self.cell_ptr_2d(x, y)
-        cdef long savelock = <long>self.lock()
-        p[plane] = <float>value
-        self.unlock(savelock)
-
-    def set_cell2d_double(self, double value, int x = 0, int y = 0, int plane = 0):
-        """sets the matrix's data as double using a contiguous array."""
-        assert 0 <= plane < self.planecount, "plane out of range"
-        cdef double* p = <double*>self.cell_ptr_2d(x, y)
-        cdef long savelock = <long>self.lock()
-        p[plane] = <double>value
-        self.unlock(savelock)
-
-    def set_cell2d(self, object value, int x = 0, int y = 0, int plane = 0):
-        """sets the matrix's data using a contiguous array."""
-        if self.type == "char":
-            self.set_cell2d_char(value, x, y, plane)
-        elif self.type == "long":
-            self.set_cell2d_long(value, x, y, plane)
-        elif self.type == "float32":
-            self.set_cell2d_float(value, x, y, plane)
-        elif self.type == "float64":
-            self.set_cell2d_double(value, x, y, plane)
-        else:
-            raise TypeError("could not process this type")
 
     # def set_data(self, data: list[int], int x = 0, int y = 0):
     #     """sets the matrix's data using a contiguous array."""
