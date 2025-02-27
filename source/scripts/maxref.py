@@ -1,5 +1,12 @@
+#!/usr/bin/env python3
+
+"""maxref.py -- handle maxref files."""
+
+
+
 from pathlib import Path
 from textwrap import fill
+from pprint import pprint
 
 from xml.etree import ElementTree
 
@@ -9,7 +16,7 @@ MAX_REF = REFPAGES / 'max-ref'
 MSP_REF = REFPAGES / 'msp-ref'
 M4L_REF = REFPAGES / 'm4l-ref'
 
-MAX_REF_FILE = [
+MAX_REF_FILES = [
     'abs',
     'absolutepath',
     'accum',
@@ -1190,6 +1197,21 @@ class MaxRefParser:
             'methods': {},
             'attributes': {},
         }
+
+    @classmethod
+    def from_name(cls, name: str) -> 'MaxRefParser':
+        if name in MAX_REF_FILES:
+            filename = MAX_REF / (name + '.maxref.xml')
+        elif name in MSP_REF_FILES:
+            filename = MSP_REF / (name + '.maxref.xml')
+        elif name in JIT_REF_FILES:
+            filename = JIT_REF / (name + '.maxref.xml')
+        elif name in M4L_REF_FILES:
+            filename = M4L_REF / (name + '.maxref.xml')
+        else:
+            return
+        return cls(filename)
+
     def parse(self):
         self.extract_methods()
         self.extract_attributes()
@@ -1201,15 +1223,15 @@ class MaxRefParser:
     def clean_text(self, txt: str) -> str:
         backtick = '`'
         return (txt
-            .replace('<m>', backtick)
-            .replace('</m>', backtick)
-            .replace('<i>', backtick)
-            .replace('</i>', backtick)
-            .replace('<o>',  backtick)
+            .replace('<m>',   backtick)
+            .replace('</m>',  backtick)
+            .replace('<i>',   backtick)
+            .replace('</i>',  backtick)
+            .replace('<o>',   backtick)
             .replace('</o>',  backtick)
-            .replace('<at>', backtick)
+            .replace('<at>',  backtick)
             .replace('</at>', backtick)
-            .replace('&quot;', backtick)
+            .replace('&quot;',backtick)
         )
 
     def extract_attributes(self):
@@ -1219,24 +1241,22 @@ class MaxRefParser:
             if a.tag == 'attribute':
                 name = a.attrib['name']
                 d[name] = dict(a.attrib)
-                digest = a.findall('digest')
-                if digest:
-                    d[name]['digest'] = digest[0].text.strip()
-                description = a.findall('description')
-                if description:
-                    d[name]['description'] = description[0].text.strip()
+                for digest in a.findall('digest'):
+                    if digest.text:
+                        d[name]['digest'] = digest.text.strip()
+                for desc in a.findall('description'):
+                    if desc.text:
+                        d[name]['description'] = desc.text.strip()
 
     def extract_methods(self):
         d = self.d['methods']
-
         for m in self.root.iter():
             if m.tag == 'method':
                 name = m.attrib['name']
                 d[name] = {}
-                arglist = m.findall('arglist')
-                if arglist:
+                for arglist in m.findall('arglist'):
                     d[name]['args'] = []
-                    for entry in arglist[0]:
+                    for entry in arglist:
                         if entry.tag == 'arg':
                             d[name]['args'].append(dict(entry.attrib))
                         if entry.tag == 'arggroup':
@@ -1246,21 +1266,20 @@ class MaxRefParser:
                                     ad.update(entry.attrib)
                                     d[name]['args'].append(ad)
 
-                    # args = arglist[0].findall('arg')
-                    # for arg in args:
-                    #     d[name]['args'].append(dict(arg.attrib))
-                digest = m.findall('digest')
-                if digest:
-                    d[name]['digest'] = digest[0].text.strip()
-                description = m.findall('description')
-                if description:
-                    d[name]['description'] = description[0].text.strip()
+                for digest in m.findall('digest'):
+                    if digest.text:
+                        d[name]['digest'] = digest.text.strip()
+                for desc in m.findall('description'):
+                    if desc.text:
+                        d[name]['description'] = desc.text.strip()
 
-    def dump(self):
-        # pprint(p.d)
+    def dump_dict(self):
+        pprint(self.d)
+
+    def dump_code(self):
         spacer = ' '*4
-        for name in p.d['methods']:
-            m = p.d['methods'][name]
+        for name in self.d['methods']:
+            m = self.d['methods'][name]
 
             sig = None
             if 'args' in m:
@@ -1288,8 +1307,21 @@ class MaxRefParser:
             print()
 
 if __name__ == '__main__':
-    from pprint import pprint
-    p = MaxRefParser(JIT_REF / "jit.matrix.maxref.xml")
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog='maxref-parser',
+        description='Handle <name>.maxref.xml files'
+    )
+    parser.add_argument('name', help='enter <name>.maxref.xml name')
+    parser.add_argument('-d', '--dict', action='store_true', help="dump parsed maxref a dict")
+    parser.add_argument('-c', '--code', action='store_true', help="dump parsed maxref as code")
+    args = parser.parse_args()
+    p = MaxRefParser.from_name(args.name)
     p.parse()
-    p.dump()
+    if args.dict:
+         p.dump_dict()
+
+    if args.code:
+        p.dump_code()
+
 

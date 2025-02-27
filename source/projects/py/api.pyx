@@ -4497,7 +4497,6 @@ cdef class Matrix:
         """
         self.call("write", filename)
 
-
     # end methods
 
     def lock(self) -> int:
