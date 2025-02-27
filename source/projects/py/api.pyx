@@ -34,7 +34,7 @@ Python wrappers for use in python scripts run by the `py` external.
 
 see: `py-js/source/projects/py/api.md` for further details
      `py-js/examples/tests` and `py-js/patchers/tests/test_api` for examples of using
-      the api module in both python code and Max patchers respectively.
+      the `api` module in python code and Max patchers respectively.
 """
 
 # ----------------------------------------------------------------------------
@@ -525,7 +525,9 @@ cdef class Atom:
     cdef public long size
 
     def __cinit__(self):
+        self.ptr = NULL
         self.ptr_owner = False
+        self.size = 0
 
     def __dealloc__(self):
         # De-allocate if not null and flag is set
@@ -534,17 +536,18 @@ cdef class Atom:
             self.ptr = NULL
 
     def __init__(self, *args):
-        if len(args)==1 and isinstance(args[0], list):
-            args = args[0]
-        self.size = len(args)
-        self.ptr = <mx.t_atom *>mx.sysmem_newptr(self.size * sizeof(mx.t_atom))
-        self.ptr_owner = True
-        if self.ptr is NULL:
-            raise MemoryError
+        cdef int i = 0
 
-        cdef int i
-        for i, obj in enumerate(args):
-            self[i] = obj
+        if len(args) > 0: # otherwise default to __cinit__ values
+            if len(args)==1 and isinstance(args[0], list):
+                args = args[0]
+            self.size = len(args)
+            self.ptr = <mx.t_atom *>mx.sysmem_newptr(self.size * sizeof(mx.t_atom))
+            self.ptr_owner = True
+            if self.ptr is NULL:
+                raise MemoryError("Atom.__init__ allocation error")        
+            for i, obj in enumerate(args):
+                self[i] = obj
 
     def __iter__(self):
         return iter(self.to_list())
@@ -617,7 +620,7 @@ cdef class Atom:
         cdef long size = 0
         cdef mx.t_max_err err = mx.atom_setparse(&size, &ptr, parsestr.encode())
         if err != mx.MAX_ERR_NONE:
-            raise TypeError
+            raise TypeError("unable to parse a string into an Atom instance")
         return Atom.from_ptr(ptr, size, owner=True)
 
     @staticmethod
@@ -926,26 +929,80 @@ cdef class Atom:
 # ----------------------------------------------------------------------------
 # api.Table
 
-# TODO: ??? create new table using         
-# self.obj = <mx.t_object*>mx.object_new_typed(
-#       mx.CLASS_BOX, mx.gensym("table"), argc, argv)
-
 cdef class Table:
     """A wrapper class to acess a pre-existing Max table"""
 
+    cdef mx.t_object* ptr
     cdef public str name
     cdef long **storage
     cdef readonly long size
 
     def __cinit__(self):
+        self.ptr = NULL
         self.name = None
         self.storage = NULL
         self.size = 0
 
     def __init__(self, str name):
+        self.ptr = self._table_ptr_from_name(name)
+        if self.ptr is NULL:
+            raise TypeError("couild not create a table t_object* ptr")
         self.name = name
         check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
         assert check == 0, f"table with name '{name}' doesn't exist"
+
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, int idx):
+        return self.get_int(idx)
+
+    def __setitem__(self, int idx, int value):
+        self.set_int(idx, value)
+
+    def __iter__(self):
+        return iter(self.as_list())
+
+    cdef mx.t_object* _table_ptr_from_name(self, str table_name):
+        cdef mx.t_object *patcher = NULL
+        cdef mx.t_object *box = NULL
+        cdef mx.t_object *obj = NULL
+        cdef px.t_py *x = <px.t_py*>px.py_get_object_ref()
+
+        mx.object_obex_lookup(x, mx.gensym("#P"), &patcher)
+        box = mx.jpatcher_get_firstobject(patcher)
+        while box is not NULL:
+            obj = mx.jbox_get_object(box)
+            if obj:
+                if mx.object_classname(obj) == mx.gensym("table"):
+                    if mx.object_attr_getsym(obj, mx.gensym("name")) == str_to_sym(table_name):
+                        post(f"found table named {table_name}")
+                        return obj
+            box = mx.jbox_get_nextobject(box)
+        return NULL
+
+    # helper methods
+
+    def call(self, str method, *args):
+        """Helper wrapper method around object_method* variants"""
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_max_err err = mx.MAX_ERR_NONE
+        cdef mx.t_symbol* meth = str_to_sym(method)
+
+        if len(args) == 0:
+            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
+        elif len(args) == 1:
+            if isinstance(args[0], str):
+                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
+            elif isinstance(args[0], int):
+                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
+            elif isinstance(args[0], float):
+                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
+        else:
+            err = mx.object_method_typed(<mx.t_object*>self.ptr,
+                str_to_sym(method), atom.size, atom.ptr, NULL)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not apply single arg to method {method}")
 
     def populate(self, list[int] xs):
         """Populate a table from a python list of ints"""
@@ -955,8 +1012,9 @@ cdef class Table:
         else:
             for i in range(self.size):
                 self.storage[0][i] = <long>xs[i]
+        self.set_dirty() # makes ui updates faster!
 
-    def as_list(self):
+    def to_list(self):
         """Convert a table to a python list of ints"""
         cdef long value
         cdef list[int] xs = []
@@ -964,6 +1022,306 @@ cdef class Table:
             value = self.storage[0][i]
             xs.append(<int>value)
         return xs
+
+    def set_dirty(self):
+        """Mark a table object as having changed data."""
+        cdef short res = mx.table_dirty(str_to_sym(self.name))
+        if res != 0:
+            raise TypeError(f"no table is associated with tableName {self.name}")
+
+    # msg methods
+
+    def bang(self):
+        """Output a random quantile
+
+        Same as a `quantile` message with a random number between 0 and 32,768
+        as an argument. See the `quantile` message for more details.
+        """
+        self.call("bang")
+
+    def get_int(self, int index):
+        """Retrieve a number by index
+
+        int(int index?)
+
+        Retrieves the number by address from the `table`, and sends it out the
+        left outlet.
+        """
+        self.call("int", index)
+
+    def set_int(self, int index, int value):
+        """Store a value at an index
+
+        list(int index?, int value?)
+
+        The second number is stored in at the address (index) specified by the
+        first number.
+        """
+        self.call("list", index, value)
+
+    def cancel(self):
+        """Ignore value received
+
+        Causes table to ignore a number received in the right inlet, so that
+        the next number received in the left inlet will output a number,
+        rather than storing a number at that address.
+        """
+        self.call("cancel")
+
+    def clear(self):
+        """Set all values to 0"""
+        self.call("clear")
+        # mx.object_method(self.ptr, mx.gensym("clear"))
+
+    def const(self, int value):
+        """Fill the table with a number"""
+        self.call("const", value)
+
+    def dump(self):
+        """Output all numbers
+
+        Sends all the numbers stored in the table out the left outlet in
+        immediate succession, beginning with address 0.
+        """
+        self.call("dump")
+
+
+    # def set_embed(self, int save_with_patcher = 0):
+    #     """Change the file save option
+
+    #     embed int (0 or 1)
+
+    #     Changes the `table` object’s saving option as found in the Inspector.
+    #     If the argument is zero the option is unchecked, otherwise it is checked.
+    #     """
+    #     post(f"save_with_patcher: {save_with_patcher}")
+    #     # self.call("embed", save_with_patcher)
+    #     mx.object_method(self.ptr, mx.gensym("embed"), <long>save_with_patcher)
+
+    def embed(self, bint value = True):
+        """Embed table with patcher or not.
+        
+
+        This is a an attribute so need special methods
+        """
+        cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object*>self.ptr,
+            mx.gensym("embed"), <long>value)
+        if err != mx.MAX_ERR_NONE:
+            raise TypeError("could not set embed attribute")
+
+    def fquantile(self, float multiplier = 0.5):
+        """Return quantile address from float
+
+        fquantile(float multiplier?)
+
+        Given a number between zero and one, multiplies the number by the sum
+        of all the numbers in the table. Then, table sends out the address
+        at which the sum of the all values up to that address is greater
+        than or equal to the result.
+        """
+        self.call("fquantile", multiplier)
+
+    def getbits(self, int address, int start, int bits):
+        """Get bit values from an index
+
+        getbits(int address?, int start?, int bits?)
+
+        Gets the value of one or more specific bits of a number stored in the
+        table, and sends that value out the left outlet. The first
+        argument is the address to query; the second argument is the
+        starting bit location in the number stored at that address (the
+        bit locations are numbered 0 to 31, from the least significant bit
+        to the most significant bit); and the third argument specifies how
+        many bits to the right of the starting bit location should be sent
+        out. The specified bits are sent out the outlet as a single
+        decimal integer.
+        """
+        self.call("getbits", address, start, bits)
+
+    def goto(self, int index):
+        """Set the pointer location
+
+        goto(int index?)
+
+        Sets a pointer to the address specified by the number. The pointer is
+        set at the beginning of the table initially.
+        """
+        self.call("goto", index)
+
+    def in1(self, int value):
+        """Store a value
+
+        in1(int value?)
+
+        Stores the value at the next index number received at the left inlet.
+        """
+        self.call("in1", value)
+
+    def inv(self, int value):
+        """Find the index of a value
+
+        inv(int value?)
+
+        Finds the first value which is greater than or equal to that number,
+        and sends the address of that value out the left outlet.
+        """
+        self.call("inv", value)        
+
+    def length(self):
+        """Output the table size"""
+        self.call("length")
+
+    def load(self):
+        """Fill a table with a stream of data
+
+        Places the table in load mode. In load mode, every number received in
+        the left inlet gets stored in the table, beginning at address 0
+        and continuing until the table is filled (or until the table is
+        taken out of load mode by a `normal` message). If more numbers are
+        received than will fit in the size of the table, additional
+        numbers are ignored.
+        """
+        self.call("load")
+
+    def max(self):
+        """Retrieve the maximum stored value"""
+        self.call("max")
+
+    def min(self):
+        """Retrieve the minimum stored value"""
+        self.call("min")
+
+    def next(self):
+        """Output value, then move the pointer
+
+        Sends the value stored in the address pointed at by the pointer out
+        the left outlet, then sets the pointer to the next address. If the
+        pointer is currently at the last address in the table, it wraps
+        around to the first address.
+        """
+        self.call("next")
+
+    def normal(self):
+        """Exit load mode
+
+        Takes the table out of load mode and reverts it to normal operation.
+        See the `load` message for more details.
+        """
+        self.call("normal")
+
+    def open(self):
+        """Open the graphic editor
+
+        Opens the object’s graphic editor window and brings it to the
+        foreground. Double-clicking on the `table` object in a locked
+        patcher has the same effect.
+        """
+        self.call("open")
+
+    def prev(self):
+        """Output value, then move the pointer
+
+        Causes the same output as the `next` message, but the pointer is then
+        decremented rather than incremented. If the pointer is currently
+        at the first address in the table, it wraps around to the last
+        address.
+        """
+        self.call("prev")
+
+    def quantile(self, int number):
+        """Return quantile address
+
+        quantile(int number?)
+
+        Multiplies the incoming number by the sum of all the numbers in the
+        table. This result is then divided by 2^15 (32,768). Then, table
+        sends out the address at which the sum of all values up to that
+        address is greater than or equal to the result.
+        """
+        self.call("quantile", number)   
+
+    def read(self, str filename):
+        """Read a data file from disk
+
+        read(symbol filename?)
+
+        Opens and reads data values from a file in Text or Max binary format.
+        Without an argument, `read` opens a standard Open Document dialog
+        to choose a file. If the file contains valid data, the entire
+        contents of the existing table are replaced with the file
+        contents.
+        """
+        self.call("read", filename)
+
+    def refer(self, str name):
+        """Change table data context
+
+        refer(symbol name?)
+
+        Sets the receiving `table` object to read its data values from the
+        named table.
+        """
+        self.call("refer", name)
+
+    def send(self, str receiver_name, int address):
+        """Send a value to a receive object
+
+        send(symbol receive-name?, int address?)
+
+        Sends the value stored at the incoming address to all `receive`
+        objects with that name.
+        """
+        self.call("send", receiver_name, address)
+
+    def set(self, int start, list[int] values):
+        """Store a list of values
+
+        set(int start?, list values?)
+
+        Stores values in certain addresses. The first argument specifies an
+        address. The next number is the value to be stored in that
+        address, and each number after that is stored in a successive
+        address.
+        """
+        args = [start]
+        args.extend(values)
+        self.call("set", args)
+
+    def setbits(self, int address, int start, int count, int value):
+        """Change the bit values of an address
+
+        setbits(int address?, int start?, int count?, int value?)
+
+        Changes the value of one or more specific bits of a number stored in
+        the table. The first argument is the address being referred to;
+        the second argument is the starting bit location in the number
+        stored at that address (the bit locations are numbered 0 to 31,
+        from the least significant bit to the most significant bit); the
+        third argument specifies how many bits to the right of the
+        starting bit location should be modified, and the fourth argument
+        is the value (stated in decimal or hexadecimal form) to which
+        those bits should be set.
+        """
+        self.call("setbits", address, start, count, value)
+
+    def sum(self):
+        """Output the sum of all values"""
+        self.call("sum")
+
+    def wclose(self):
+        """Close the graphic editing window"""
+        self.call("wclose")
+
+    # FIXME: crashes
+    # def write(self):
+    #     """Write data to disk
+
+    #     Opens a standard save file dialog for choosing a name to write data
+    #     values from the table. The file can be saved in Text or Max binary
+    #     format.
+    #     """
+    #     self.call("write")
+
 
 # ----------------------------------------------------------------------------
 # api.Buffer
@@ -1483,7 +1841,7 @@ cdef class Dictionary:
             self.type_map[key] = 'bytes'
             self.set_bytes(key, value)
         else:
-            raise TypeError
+            raise TypeError("unable to recognize type for dict")
 
     def __getitem__(self, str key):
         return {
@@ -4169,7 +4527,7 @@ cdef class Matrix:
             return result.value
         return
 
-    # methods
+    # msg methods
 
     def bang(self):
         """Outputs the currently stored matrix."""
@@ -4497,7 +4855,7 @@ cdef class Matrix:
         """
         self.call("write", filename)
 
-    # end methods
+    # other methods
 
     def lock(self) -> int:
         """lock matrix and return savelock id"""
@@ -5222,3 +5580,22 @@ def create_empty_buffer(name: str, duration_ms: int) -> Buffer:
     buf = ext.create_empty_buffer(name, duration_ms)
     return buf
 
+
+## patcher utils
+
+def print_peers():
+    """prints classnames of objects in the the patcher"""
+    cdef mx.t_object *patcher = NULL
+    cdef mx.t_object *box = NULL
+    cdef mx.t_object *obj = NULL
+    cdef px.t_py *x = <px.t_py*>px.py_get_object_ref()
+
+    mx.object_obex_lookup(x, mx.gensym("#P"), &patcher)
+    box = mx.jpatcher_get_firstobject(patcher)
+    while box is not NULL:
+        obj = mx.jbox_get_object(box)
+        if obj:
+            mx.post("%s", mx.object_classname(obj).s_name)
+        else:
+            mx.post("box with NULL object")
+        box = mx.jbox_get_nextobject(box)

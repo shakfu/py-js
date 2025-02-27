@@ -1458,6 +1458,11 @@ t_max_err py_handle_output(t_py* x, PyObject* pval)
         return MAX_ERR_GENERIC;
     }
 
+    if (pval == Py_None) {
+        /* not an error */
+        return MAX_ERR_NONE;
+    }
+
     if (PyFloat_Check(pval)) {
         return py_handle_float_output(x, pval);
     }

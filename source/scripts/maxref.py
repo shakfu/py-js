@@ -1,6 +1,20 @@
 #!/usr/bin/env python3
 
-"""maxref.py -- handle maxref files."""
+"""maxref.py -- handle maxref files.
+
+usage: maxref-parser [-h] [-d] [-c] name
+
+Handle <name>.maxref.xml files
+
+positional arguments:
+  name        enter <name>.maxref.xml name
+
+options:
+  -h, --help  show this help message and exit
+  -d, --dict  dump parsed maxref a dict
+  -c, --code  dump parsed maxref as code
+
+"""
 
 
 
@@ -1295,14 +1309,16 @@ class MaxRefParser:
                 sig = "{name}():".format(name=name)
             print('def', sig)
 
-            print('{spacer}{tq}{digest}'.format(
-                spacer=spacer,
-                tq='\"\"\"',
-                digest=m['digest']))
-            print()
+            if 'digest' in m:
+                print('{spacer}{tq}{digest}'.format(
+                    spacer=spacer,
+                    tq='\"\"\"',
+                    digest=m['digest']))
+                print()
             print("{spacer}{sig}".format(spacer=spacer, sig=sig[:-1]))
-            print()
-            print('{spacer}{desc}'.format(spacer=spacer, desc=fill(m['description'], subsequent_indent=spacer)))
+            if 'description' in m:
+                print()
+                print('{spacer}{desc}'.format(spacer=spacer, desc=fill(m['description'], subsequent_indent=spacer)))
             print('{spacer}{tq}'.format(spacer=spacer, tq='\"\"\"'))
             print()
 

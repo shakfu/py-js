@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Added many unimplemented methods to `api.Table`
+
 - Added `api.Patcher.add_box_from_dict` method.
 
 - Changed `api.Patcher` methods which previously created `api.Box` instances but which returned `bool` results. These methods now correctly return `api.Box` instances.
