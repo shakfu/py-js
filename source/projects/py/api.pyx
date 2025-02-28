@@ -152,15 +152,21 @@ cdef class MaxObject:
     cdef mx.t_object *ptr
     cdef bint ptr_owner
     cdef public str name # registered name
+    cdef public dict type_map
+    cdef Dictionary _dict
+
 
     def __cinit__(self):
         self.ptr = NULL
         self.ptr_owner = False
         self.name = ""
+        self.type_map = {}
+        self._dict = Dictionary()
 
     def __dealloc__(self):
         # De-allocate if not null and flag is set
         if self.ptr is not NULL and self.ptr_owner is True:
+            self._dict.clear() # clear attribute dict
             mx.object_free(self.ptr)
             self.ptr = NULL
 
@@ -168,6 +174,9 @@ cdef class MaxObject:
         cdef Atom atom = Atom(*args)
         self.ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+
+    def __repr__(self) -> str:
+        return f"<MaxObject '{self.name}'>"
 
     @staticmethod
     cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
@@ -221,6 +230,11 @@ cdef class MaxObject:
         cdef mx.t_symbol* ns = mx.object_namespace(self.ptr)
         return sym_to_str(ns)
 
+    def is_instance(self, str classname) -> bool:
+        """Checks if object is an instance of a classname"""
+        cdef long res = mx.object_classname_compare(<mx.t_object*>self.ptr, str_to_sym(classname))
+        return <bint>res
+
     def set_value(self, *args):
         """Set value of object"""
         cdef Atom atom = Atom(*args)
@@ -237,6 +251,119 @@ cdef class MaxObject:
         if err != mx.MAX_ERR_NONE:
             raise ValueError(f"could not get object value")
         return atom.value
+
+    # attribute-related funcs
+
+    def add_attribute(self, str type, str name):
+        """Add an attribute with default flags and get/set methods to the object
+        
+        supported types:
+            char, long, float32, float64, symbol, pointer, object, atom
+        """
+        assert type in [
+            "char", "long", "float32", "float64", "symbol", "pointer", "object", "atom"
+        ], "type {type} not supported"
+        cdef MaxObject obj
+        cdef mx.t_object* attr = mx.attribute_new(name.encode(), str_to_sym(type),
+            mx.ATTR_FLAGS_NONE, NULL, NULL)
+        if attr is NULL:
+            raise ValueError(f"could not create an attribute: {type} {name}")
+        obj = MaxObject.from_ptr(attr)
+        self.type_map[name] = type
+        self._dict[name] = obj
+
+    def remove_attribute(self, str name):
+        """Delete attribute by name"""
+        del self._dict[name]
+        del self.type_map[name]
+
+    def set_attr_value(self, str name, object value):
+        """Set value of named object attribute"""
+        cdef MaxObject attr
+        if (name not in self._dict.type_map) and (name not in self.type_map):
+            raise KeyError(f"attribute '{name}' is not found")
+        if self._dict.type_map[name] != 'object':
+            raise TypeError(f"associate dict value is not a compatiable attribute type (t_object*)")
+        attr = self._dict[name]
+        attr_type = self.type_map[name]
+        if attr_type == "symbol":
+            self._set_attr_sym_value(attr, name, value)
+        elif attr_type == "long":
+            self._set_attr_long_value(attr, name, <long>value)
+        elif attr_type == "float32":
+             self._set_attr_float_value(attr, name, <float>value)
+        elif attr_type == "float64":
+            self._set_attr_double_value(attr, name, <double>value)
+        elif attr_type == "object":
+            self._set_attr_object_value(attr, name, value)
+        else:
+            raise NotImplementedError(f"attr {attr_type} setting not currently implemented")            
+
+    cdef _set_attr_sym_value(self, MaxObject attr, str name, str value):
+        """Set sym attr value from python str"""
+        mx.object_attr_setsym(<mx.t_object*>attr.ptr, str_to_sym(name), str_to_sym(value))
+
+    cdef _set_attr_long_value(self, MaxObject attr, str name, long value):
+        """Set long attr value from python int"""
+        mx.object_attr_setlong(<mx.t_object*>attr.ptr, str_to_sym(name), value)
+
+    cdef _set_attr_float_value(self, MaxObject attr, str name, float value):
+        """Set float32 attr value from python float"""
+        mx.object_attr_setfloat(<mx.t_object*>attr.ptr, str_to_sym(name), value)
+
+    cdef _set_attr_double_value(self, MaxObject attr, str name, double value):
+        """Set float64 attr value from python as float"""
+        mx.object_attr_setfloat(<mx.t_object*>attr.ptr, str_to_sym(name), value)
+
+    cdef _set_attr_object_value(self, MaxObject attr, str name, MaxObject value):
+        """Set t_object attr value from MaxObject"""
+        mx.object_attr_setobj(<mx.t_object*>attr.ptr, str_to_sym(name), value.ptr)
+
+    def get_attr_value(self, str name) -> object:
+        """Get value from object's attribute"""
+        cdef MaxObject attr
+        if (name not in self._dict.type_map) and (name not in self.type_map):
+            raise KeyError(f"attribute '{name}' is not found")
+        if self._dict.type_map[name] != 'object':
+            raise TypeError(f"associate dict value is not a compatiable attribute type (t_object*)")
+        attr = self._dict[name]
+        attr_type = self.type_map[name]
+        if attr_type == "symbol":
+            return self._get_attr_sym_value(attr, name)
+        elif attr_type == "long":
+            return self._get_attr_long_value(attr, name)
+        elif attr_type == "float32":
+             return self._get_attr_float_value(attr, name)
+        elif attr_type == "float64":
+            return self._get_attr_double_value(attr, name)
+        elif attr_type == "object":
+            return self._get_attr_object_value(attr, name)
+        raise NotImplementedError(f"attr {attr_type} retrieval not currently implemented")
+
+    cdef str _get_attr_sym_value(self, MaxObject attr, str name):
+        """Get sym attr value as str"""
+        cdef mx.t_symbol * val = mx.object_attr_getsym(<mx.t_object*>attr.ptr, str_to_sym(name))
+        return sym_to_str(val)
+
+    cdef long _get_attr_long_value(self, MaxObject attr, str name):
+        """Get long attr value as python int"""
+        cdef long val = <long>mx.object_attr_getlong(<mx.t_object*>attr.ptr, str_to_sym(name))
+        return val
+
+    cdef float _get_attr_float_value(self, MaxObject attr, str name):
+        """Get float32 attr value as python float"""
+        cdef float val = <float>mx.object_attr_getfloat(<mx.t_object*>attr.ptr, str_to_sym(name))
+        return val
+
+    cdef float _get_attr_double_value(self, MaxObject attr, str name):
+        """Get float64 attr value as python as float"""
+        cdef double val = <double>mx.object_attr_getfloat(<mx.t_object*>attr.ptr, str_to_sym(name))
+        return val
+
+    cdef MaxObject _get_attr_object_value(self, MaxObject attr, str name):
+        """Get t_object attr value as MaxObject"""
+        cdef mx.t_object* obj = mx.object_attr_getobj(<mx.t_object*>attr.ptr, str_to_sym(name))
+        return MaxObject.from_ptr(obj)
 
     # registration funcs
 
@@ -548,6 +675,9 @@ cdef class Atom:
                 raise MemoryError("Atom.__init__ allocation error")        
             for i, obj in enumerate(args):
                 self[i] = obj
+
+    def __repr__(self) -> str:
+        return f"<Atom argc:{self.size}>"
 
     def __iter__(self):
         return iter(self.to_list())
@@ -951,6 +1081,9 @@ cdef class Table:
         check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
         assert check == 0, f"table with name '{name}' doesn't exist"
 
+    def __repr__(self) -> str:
+        return f"<Table '{self.name}' size:{self.size}>"
+
     def __len__(self):
         return self.size
 
@@ -998,6 +1131,8 @@ cdef class Table:
                 err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
             elif isinstance(args[0], float):
                 err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
+            elif isinstance(args[0], MaxObject):
+                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
         else:
             err = mx.object_method_typed(<mx.t_object*>self.ptr,
                 str_to_sym(method), atom.size, atom.ptr, NULL)
@@ -1084,30 +1219,6 @@ cdef class Table:
         immediate succession, beginning with address 0.
         """
         self.call("dump")
-
-
-    # def set_embed(self, int save_with_patcher = 0):
-    #     """Change the file save option
-
-    #     embed int (0 or 1)
-
-    #     Changes the `table` object’s saving option as found in the Inspector.
-    #     If the argument is zero the option is unchecked, otherwise it is checked.
-    #     """
-    #     post(f"save_with_patcher: {save_with_patcher}")
-    #     # self.call("embed", save_with_patcher)
-    #     mx.object_method(self.ptr, mx.gensym("embed"), <long>save_with_patcher)
-
-    def embed(self, bint value = True):
-        """Embed table with patcher or not.
-        
-
-        This is a an attribute so need special methods
-        """
-        cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object*>self.ptr,
-            mx.gensym("embed"), <long>value)
-        if err != mx.MAX_ERR_NONE:
-            raise TypeError("could not set embed attribute")
 
     def fquantile(self, float multiplier = 0.5):
         """Return quantile address from float
@@ -1323,6 +1434,19 @@ cdef class Table:
     #     self.call("write")
 
 
+    # table attributes
+
+    def embed(self, bint value = True):
+        """Embed table with patcher or not.
+        
+
+        This is a an attribute so need special methods
+        """
+        cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object*>self.ptr,
+            mx.gensym("embed"), <long>value)
+        if err != mx.MAX_ERR_NONE:
+            raise TypeError("could not set embed attribute")
+
 # ----------------------------------------------------------------------------
 # api.Buffer
 
@@ -1363,6 +1487,9 @@ cdef class Buffer:
             mx.CLASS_BOX, mx.gensym("buffer~"), argc, argv)
         self.ref = mp.buffer_ref_new(self.obj, str_to_sym(name))
 
+    def __repr__(self) -> str:
+        return f"<Buffer '{self.name}' nframes:{self.framecount()}>"
+
     def __getbuffer__(self, Py_buffer *buffer, int flags):
         cdef Py_ssize_t itemsize = sizeof(float)
         cdef Py_ssize_t buffersize = <Py_ssize_t>mp.buffer_getframecount(self.obj)
@@ -1397,7 +1524,6 @@ cdef class Buffer:
         buffer.name = name
         buffer.obj = mp.buffer_ref_getobject(buffer.ref)
         return buffer
-
 
     @staticmethod
     cdef Buffer new(mx.t_object *x, str name, str filename, int duration = -1, int channels = 1):
@@ -1778,17 +1904,17 @@ cdef class Dictionary:
     """A wrapper class for a Max t_dictionary"""
 
     cdef mx.t_dictionary *ptr
-    cdef dict type_map
     cdef bint ptr_owner
     cdef bint to_release
     cdef public str name
+    cdef public dict type_map
 
     def __cinit__(self):
         self.ptr = NULL
-        self.type_map = None
         self.ptr_owner = False
         self.to_release = False
         self.name = ""
+        self.type_map = {}
     
     def __init__(self, str name = "", **kwargs):
         cdef mx.t_symbol* name_ptr = str_to_sym(name)
@@ -1806,7 +1932,6 @@ cdef class Dictionary:
             self.ptr = mx.dictionary_new()
             self.to_release = False
         self.name = name
-        self.type_map = dict()
         self.ptr_owner = True
         if kwargs:
             for key, value in kwargs.items():
@@ -1820,6 +1945,9 @@ cdef class Dictionary:
             else:
                 mx.object_free(self.ptr)
             self.ptr = NULL
+
+    def __repr__(self) -> str:
+        return f"<Dictionary '{self.name}'>"
 
     def __contains__(self, str x) -> bool:
         return <bint>self.has_entry(x)
@@ -1840,6 +1968,12 @@ cdef class Dictionary:
         elif isinstance(value, bytes):
             self.type_map[key] = 'bytes'
             self.set_bytes(key, value)
+        elif isinstance(value, MaxObject):
+            self.type_map[key] = 'object'
+            self.set_object(key, value)
+        elif isinstance(value, Atom):
+            self.type_map[key] = 'atom'
+            self.set_atoms(key, value)
         else:
             raise TypeError("unable to recognize type for dict")
 
@@ -1850,7 +1984,13 @@ cdef class Dictionary:
             'str': self.get_sym,
             'bytes': self.get_bytes,
             'list': self.get_atoms,
+            'object': self.get_object,
+            'atom': self.get_atoms,
         }[self.type_map[key]](key)
+
+    def __delitem__(self, str key):
+        self.delete_entry(key)
+        # self.chuck_entry(key) # also test chuck_entry
 
     @classmethod
     def from_dict(cls, dict src_dict, str name = "") -> Dictionary:
@@ -1942,6 +2082,10 @@ cdef class Dictionary:
         """Add a c-string to the dictionary."""
         return mx.dictionary_appendstring(self.ptr, str_to_sym(key), value)
 
+    def set_object(self, str key, MaxObject obj):
+        """Add a *t_object to the dictionary."""
+        return mx.dictionary_appendobject(self.ptr, str_to_sym(key), <mx.t_object*>obj.ptr)
+
     def append_atomarray(self, str key, AtomArray atomarray):
         """Add an Atom Array object to the dictionary."""
         cdef mx.t_max_err err = mx.dictionary_appendatomarray(self.ptr, 
@@ -1973,43 +2117,46 @@ cdef class Dictionary:
         """Retrieve a long integer from the dictionary."""
         cdef mx.t_atom_long value
         cdef mx.t_max_err err = mx.dictionary_getlong(self.ptr, str_to_sym(key), &value)
-        if err == mx.MAX_ERR_NONE:
-            return <int>value
-        return error(f"could not get long value from dict with key {key}")
+        if err != mx.MAX_ERR_NONE:        
+            raise ValueError(f"could not get long value from dict with key {key}")
+        return <int>value
 
     def get_float(self, str key) -> float:
         """Retrieve a double-precision float from the dictionary."""
         cdef double value
         cdef mx.t_max_err err = mx.dictionary_getfloat(self.ptr, str_to_sym(key), &value)
-        if err == mx.MAX_ERR_NONE:
-            return <float>value
-        return error(f"could not get float value from dict with key {key}")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get float value from dict with key {key}")
+        return <float>value        
 
     def get_sym(self, str key) -> str:
         """Retrieve a t_symbol* as a python string from the dictionary."""
         cdef mx.t_symbol* value
         cdef mx.t_max_err err = mx.dictionary_getsym(self.ptr, str_to_sym(key), &value)
-        if err == mx.MAX_ERR_NONE:
-            return sym_to_str(value)
-        return error(f"could not get symbol as str from dict with key {key}")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get symbol as str from dict with key {key}")
+        return sym_to_str(value)
 
     def get_bytes(self, str key) -> bytes:
         """Retrieve a bytes object from the dictionary."""
         string = self.get_string(key)
         return string.encode()
 
-    def get_atoms(self, str key) -> list:
+    def get_atoms(self, str key) -> Atom:
         """Retrieve the address of a t_atom array of in the dictionary."""
         cdef long argc
         cdef mx.t_atom* argv
         cdef Atom atom
         cdef mx.t_max_err err = mx.dictionary_getatoms(self.ptr, str_to_sym(key), &argc, &argv)
-        if err == mx.MAX_ERR_NONE:
-            atom = Atom.from_ptr(argv, argc)
-            return atom.to_list()
-        return error(f"could not get atoms from dict with key {key}")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"could not get atoms from dict with key {key}")
+        atom =  Atom.from_ptr(argv, argc)
+        return atom
 
-    get_list = get_atoms
+    def get_list(self, str key) -> list:
+        """Retrieve the address of a t_atom array of in the dictionary."""
+        cdef Atom atom = self.get_atoms(key)
+        return atom.to_list()
 
     def get_string(self, str key) -> str:
         """Retrieve a C-string pointer from the dictionary."""
@@ -2079,7 +2226,7 @@ cdef class Dictionary:
         cdef mx.t_object* ptr
         cdef mx.t_max_err err = mx.dictionary_getobject(self.ptr, str_to_sym(key), &ptr)
         if err != mx.MAX_ERR_NONE:
-            raise ValueError("could not get object from dictionary")
+            raise ValueError(f"could not get object '{key}' from dictionary")
         return MaxObject.from_ptr(ptr)
 
     cdef mx.t_max_err getobject(self, mx.t_symbol* key, mx.t_object** value):
@@ -2464,6 +2611,9 @@ cdef class DatabaseResult:
         if self.ptr and self.ptr_owner:
             mx.object_free(self.ptr)
 
+    def __repr__(self) -> str:
+        return f"<DatabaseResult recs:'{self.numrecords}'>"
+
     @staticmethod
     cdef from_ptr(mx.t_db_result* ptr, bint ptr_owner=False):
         cdef DatabaseResult result = DatabaseResult.__new__(DatabaseResult)
@@ -2551,6 +2701,9 @@ cdef class DatabaseView:
         if self.ptr is not NULL and self.db and self.ptr_owner:
             mx.db_view_remove(self.db.ptr, &self.ptr)
 
+    def __repr__(self) -> str:
+        return f"<DatabaseView '{self.db.name}'>"
+
     @staticmethod
     cdef DatabaseView from_ptr(Database db, mx.t_db_view* ptr, str sql, bint ptr_owner=False):
         cdef DatabaseView view = DatabaseView.__new__(DatabaseView)
@@ -2579,28 +2732,28 @@ cdef class Database:
     """Wraps the t_database object."""
 
     cdef mx.t_database *ptr
-    cdef mx.t_symbol* db_name
-    cdef bytes db_path
+    cdef public str name
+    cdef public str path
 
     def __cinit__(self):
         self.ptr = NULL
-        self.db_name = NULL
-        self.db_path = None
+        self.name = ""
+        self.path = ""
 
     def __init__(self, str db_name, str db_path):
-        self.db_name = str_to_sym(db_name)
-        self.db_path = db_path.encode()
-        # mx.db_open(self.db_name, self.db_path, &self.db)
+        self.name = db_name
+        self.path = db_path
 
     def __dealloc__(self):
         mx.db_close(&self.ptr)
         self.ptr = NULL
-        self.db_name = NULL
-        self.db_path = None
+
+    def __repr__(self) -> str:
+        return f"<Database '{self.db.name}'>"
 
     def open(self):
         """Open the database."""
-        mx.db_open(self.db_name, self.db_path, &self.ptr)
+        mx.db_open(str_to_sym(self.name), self.path.encode(), &self.ptr)
 
     def close(self):
         """Close the database."""
@@ -2696,6 +2849,9 @@ cdef class Linklist:
         mx.linklist_chuck(self.ptr)  # will free list but contained objects
         #  or
         #  object_free(self.ptr)  # will free all in list
+
+    def __repr__(self) -> str:
+        return f"<Linklist size:{self.getsize()}'>"
 
     @property
     def size(self) -> int:
@@ -2862,6 +3018,9 @@ cdef class Binbuf:
     def __dealloc__(self):
         mx.object_free(self.ptr)
 
+    def __repr__(self) -> str:
+        return "<Binbuf>"
+
     def append(self, str receiver, *args):
         """Append t_atoms to a Binbuf without modifying them."""
         _args = [receiver] + list(args)
@@ -2995,6 +3154,9 @@ cdef class Atombuf:
         if not self.ptr:
             raise MemoryError
 
+    def __repr__(self) -> str:
+        return f"<Atombuf>"
+
     @staticmethod
     cdef Atombuf from_ptr(mx.t_atombuf *ptr, bint owner=False):
         """Create an Atombuf from a pointer."""
@@ -3055,6 +3217,14 @@ cdef class Hashtab:
 
     def __dealloc__(self):
         mx.object_free(self.ptr)
+
+    def __repr__(self) -> str:
+        return f"<Hashtab size:{self.size}>"
+
+    @property
+    def size(self) -> int:
+        """number of entries in hashtab"""
+        return <long>self.getsize()
 
     cdef mx.t_max_err store(self, mx.t_symbol* key, mx.t_object* val):
         """Store an object in the hashtab."""
@@ -3184,6 +3354,9 @@ cdef class AtomArray:
         self.ptr = mx.atomarray_new(atom.size, atom.ptr)
         self.owner = True
 
+    def __repr__(self) -> str:
+        return f"<AtomArray size:{self.size}>"
+
     @staticmethod
     cdef AtomArray from_atom(mx.t_atom *av, int ac):
         """Create an AtomArray from an atom array."""
@@ -3207,6 +3380,11 @@ cdef class AtomArray:
         if ptr is NULL:
             raise MemoryError
         return AtomArray.from_atom(ptr, size)
+
+    @property
+    def size(self) -> int:
+        """get number of atoms in atom array"""
+        return self.getsize()
 
     cdef void set_flags(self, long flags):
         """Set the atomarray flags."""
@@ -3284,6 +3462,9 @@ cdef class Patcher:
     def __cinit__(self):
         self.ptr = NULL
         self.owner = False
+
+    def __repr__(self) -> str:
+        return f"<Patcher '{self.name}'>"
 
     @staticmethod
     cdef Patcher from_object(mx.t_object *x):
@@ -3963,6 +4144,9 @@ cdef class Box:
         self.patcherview = NULL
         self.ptr_owner = False
 
+    def __repr__(self) -> str:
+        return f"<Box '{self.classname}'>"
+
     @staticmethod
     cdef Box from_object_ptr(mx.t_object *x):
         """Create a box object from a t_object pointer."""
@@ -3986,6 +4170,26 @@ cdef class Box:
         if box.ptr is NULL:
             raise MemoryError
         return box
+
+    @property
+    def classname(self) -> str:
+        """Retrieve the name of the class of the box's object."""
+        return self.get_maxclass()
+
+    @property
+    def object(self) -> MaxObject:
+        """Retrieve the box's object."""
+        return self.get_object()
+
+    @property
+    def patcher(self) -> Patcher:
+        """Retrieve a box's patcher."""
+        return self.get_patcher()
+
+    @property
+    def rect(self) -> Rect:
+        """Retrieve the patching rect of a box."""
+        return self.get_patching_rect()
 
     def get_rect_for_view(self) -> Rect:
         """Find the rect for a box in a given patcherview."""
@@ -4023,11 +4227,6 @@ cdef class Box:
         cdef mx.t_max_err err = mx.jbox_set_rect(self.ptr, &pr)
         if err != mx.MAX_ERR_NONE:
            raise TypeError("could not set rect for box")
-
-    @property
-    def rect(self) -> Rect:
-        """Retrieve the patching rect of a box."""
-        return self.get_patching_rect()
 
     def get_patching_rect(self) -> Rect:
         """Retrieve the patching rect of a box."""
@@ -4223,6 +4422,9 @@ cdef class MaxApp:
     def __dealloc__(self):
         if self.ptr:
             mx.object_free(self.ptr)
+
+    def __repr__(self) -> str:
+        return "<MaxApp>"
 
     def _method_noargs(self, str name):
         """Call an object method with no arguments."""

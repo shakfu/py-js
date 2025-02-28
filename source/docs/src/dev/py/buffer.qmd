@@ -27,7 +27,7 @@ typedmess(b, gensym("replace"), 1, &a);
 
 Including here from an 2009 article by Tim Place: [Accessing buffer~ Objects in Max5](https://74objects.wordpress.com/2009/03/22/accessing-buffers/):
 
-One thing that has always been a bit tricky, and perhaps a bit under-documented, has been writing good code for accessing the contents of a `buffer~`` object in Max.  What has made the situation a bit more confusing is that the API has changed slowly over a number of versions of Max to make the system more robust and easier to use.  This is certainly true of Max 5, and the most recent version of the Max 5 Software Developer Kit makes these new facilities available.
+One thing that has always been a bit tricky, and perhaps a bit under-documented, has been writing good code for accessing the contents of a `buffer~` object in Max.  What has made the situation a bit more confusing is that the API has changed slowly over a number of versions of Max to make the system more robust and easier to use.  This is certainly true of Max 5, and the most recent version of the Max 5 Software Developer Kit makes these new facilities available.
 
 I’ll be showing the favored way to access `buffer~` objects for Max 5 in the context of a real object: `tap.buffer.peak~` from Tap.Tools.  I’ll show how it should be done now, and in some places I’ll show how it was done in the past for reference.
 

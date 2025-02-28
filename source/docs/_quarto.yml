@@ -68,12 +68,13 @@ book:
     #     - src/dev/py/design.qmd
     #     - src/dev/py/dont.qmd
     #     - src/dev/py/editor.qmd
+    #     - src/dev/py/buffer.qmd
+    #     - src/dev/py/buffer-protocol.qmd
     #     - src/dev/py/escape_text.qmd
     #     - src/dev/py/experiments.qmd
     #     - src/dev/py/max-c-api.qmd
     #     - src/dev/py/max-fileformats.qmd
     #     - src/dev/py/numpy-error.qmd
-    #     - src/dev/py/numpy-shared-python.qmd
     #     - src/dev/py/python-c-api.qmd
     #     - src/dev/py/python-shell-via-nodejs.qmd
     #     - src/dev/py/repl.qmd

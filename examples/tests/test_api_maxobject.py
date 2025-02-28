@@ -9,50 +9,55 @@ of the test, and can be used to manage the lifescycle of instances on a granular
 
 import api
 
-memory = {}
+mem = {}
 
 
 def test_maxobject_init():
-    memory["buf"] = api.MaxObject("buffer~", "buf", "jongly.aif")
-
+    mem["buf"] = api.MaxObject("buffer~", "buf", "jongly.aif")
 
 def test_maxobject_from_str():
-    memory["buf"] = api.MaxObject.from_str("buffer~", "buf amen.wav")
-
+    mem["buf"] = api.MaxObject.from_str("buffer~", "buf amen.wav")
 
 def test_maxobject_registration():
-    buf1 = memory["buf"].register("buf1")
+    buf1 = mem["buf"].register("buf1")
     return buf1.get_namespace_and_name()
 
-
 def test_maxobject_call_replace():
-    memory["buf"].call("replace", "vibes-a1.aif")
-
+    mem["buf"].call("replace", "vibes-a1.aif")
 
 def test_maxobject_call_open():
-    memory["buf"].call("open")
-
+    mem["buf"].call("open")
 
 def test_maxobject_call_wclose():
-    memory["buf"].call("wclose")
-
+    mem["buf"].call("wclose")
 
 def test_maxobject_method_exists():
-    if memory["buf"].method_exists("wclose"):
+    if mem["buf"].method_exists("wclose"):
         api.post("wclose method exists")
 
-
 def test_maxobject_help():
-    memory["buf"].help()
-
+    mem["buf"].help()
 
 def test_maxobject_refpage():
-    memory["buf"].open_refpage()
-
+    mem["buf"].open_refpage()
 
 def test_maxobject_query():
-    memory["buf"].open_query()
-
+    mem["buf"].open_query()
 
 def test_maxobject_delete():
-    del memory["buf"]
+    del mem["buf"]
+
+def test_maxobject_add_attribute():
+    mem["buf"].add_attribute("long", "part1")
+    api.bang_success()
+
+def test_maxobject_remove_attribute():
+    mem["buf"].remove_attribute("part1")
+    api.bang_success()
+
+def test_maxobject_set_attr_value():
+    mem['buf'].set_attr_value("part1", 500)
+    api.bang_success()
+
+def test_maxobject_get_attr_value():
+    return mem['buf'].get_attr_value("part1")

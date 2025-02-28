@@ -41,28 +41,28 @@ PyObject *res = call_method(lst, "sort", "{s:O}", "key", keyfun));
 PyObject * 
 call_method(PyObject *obj, const char *methname, char *format, ...) 
 { 
-va_list va; 
-PyObject *meth = NULL, *args = NULL, *kwds = NULL, *ret = NULL; 
+    va_list va; 
+    PyObject *meth = NULL, *args = NULL, *kwds = NULL, *ret = NULL; 
 
-args = PyTuple_New(0); 
-if (!args) 
-goto out; 
-meth = PyObject_GetAttrString(obj, methname); 
-if (!meth) 
-goto out; 
+    args = PyTuple_New(0); 
+    if (!args) 
+        goto out; 
+    meth = PyObject_GetAttrString(obj, methname); 
+    if (!meth) 
+        goto out; 
 
-va_start(va, format); 
-kwds = Py_VaBuildValue(format, va); 
-va_end(va); 
-if (!kwds) 
-goto out; 
+    va_start(va, format); 
+    kwds = Py_VaBuildValue(format, va); 
+    va_end(va); 
+    if (!kwds) 
+        goto out; 
 
-ret = PyObject_Call(meth, args, kwds); 
-out: 
-Py_XDECREF(meth); 
-Py_XDECREF(args); 
-Py_XDECREF(kwds); 
-return ret; 
+    ret = PyObject_Call(meth, args, kwds); 
+    out: 
+        Py_XDECREF(meth); 
+        Py_XDECREF(args); 
+        Py_XDECREF(kwds); 
+        return ret; 
 } 
 ```
 

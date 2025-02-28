@@ -1,5 +1,81 @@
 # Max C API Notes
 
+## The A_GIMMEBACK method type
+
+This is the basic signature of a gimmeback method provided by JCK in [obex-how-to-get-return-values-from-object_method](https://cycling74.com/forums/obex-how-to-get-return-values-from-object_method#reply-58ed1f37c2991221d9cbadd1) forum question:
+
+
+```c
+t_max_err obex_tester_gimmeback(t_obex_tester *x, t_symbol *s, long ac, t_atom *av, t_atom *rv)
+{    
+    post("obex tester gimmeback av = %d", atom_getlong(av));
+    if (ac && av) {
+        // if correctly called, multiplies first long values sent and returns via rv
+        atom_setlong(rv, atom_getlong(av) * atom_getlong(av));
+    } else {
+        // return -1 value in rv
+        atom_setlong(rv,-1);
+    }
+    return MAX_ERR_NONE;
+}
+```
+
+Best example is in `max-sdk/source/basic/simpeljs/simplejs.c`:
+
+
+```c
+// gimmeback method
+t_max_err simplejs_doabs(t_simplejs* x, t_symbol* s, long ac, t_atom* av, t_atom* rv);
+
+
+// declared in `ext_main` as such:
+class_addmethod(c, (method)simplejs_doabs, "doAbs", A_GIMMEBACK, 0);
+
+// the method itself
+t_max_err simplejs_doabs(t_simplejs* x, t_symbol* s, long ac, t_atom* av, t_atom* rv)
+{
+    t_atom a[1];
+    double f = 0;
+
+    if (ac) {
+        if (atom_gettype(av) == A_LONG) {
+            f = (double)abs(atom_getlong(av));
+        }
+        else if (atom_gettype(av) == A_FLOAT) {
+            f = fabs(atom_getfloat(av));
+        }
+    }
+    else {
+        error("missing argument for method doAbs()");
+    }
+
+    // store the result in the a array.
+    atom_setfloat(a, f);
+
+    // return the result to js
+    atom_setobj(rv, object_new(gensym("nobox"), gensym("atomarray"), 1, a));
+
+    return MAX_ERR_NONE;
+}
+
+```
+
+As this is a native class exposed to `js` or `v8`, it can be called as follows in javascript:
+
+```js
+var a = new SimpleJS(); // instantiate a simplejs object
+
+// ...
+
+// sends a value to simplejs and gets the result back
+function abs(val) {
+    outlet(0, a.doAbs(val));
+}
+````
+
+
+
+
 ## Memory management
 
 see: <https://cycling74.com/forums/class_attr_float_array-question>
