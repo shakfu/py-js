@@ -4165,10 +4165,22 @@ cdef class Box:
             raise MemoryError
         return box
 
+
+
+    @property
+    def id(self) -> str:
+        """Retrieve a box's unique id."""
+        return self.get_id()
+
     @property
     def classname(self) -> str:
         """Retrieve the name of the class of the box's object."""
         return self.get_maxclass()
+
+    @property
+    def varname(self) -> str:
+        """Retrieve a box's scripting name."""
+        return self.get_varname()
 
     @property
     def object(self) -> MaxObject:
@@ -5500,43 +5512,12 @@ cdef class PyExternal:
         buf = Buffer.empty(<mx.t_object*>self.ptr, name, duration_ms)
         return buf
 
-    # def send(self, str name, list args):
-    #     """general message send to receiver"""
-    #     cdef long argc = <long>len(args) + 1
-    #     cdef mx.t_atom argv[PY_MAX_ATOMS]
-    #     _args = [name] + args
-    #     cdef Atom atom = Atom(*_args)
-    #     assert isinstance(args[0], str), "send first arg must be str name of receiver"
-    #     px.py_send(self.ptr, mx.gensym(""), atom.size, atom.ptr)
-
-    cdef send(self, str name, list args):
-        """Send a message to a receiver.
-
-        A general send function for object methods that are strongly typed.
-        """
-        cdef long argc = <long>len(args) + 1
-        cdef mx.t_atom argv[PY_MAX_ATOMS]
-        _args = [name] + args
-
-        if argc < 1:
-            self.error("no arguments given")
-            return
-
-        if argc >= PY_MAX_ATOMS - 1:
-            self.error("number of args exceeded app limit")
-            return
-
-        for i, elem in enumerate(_args):
-            if type(elem) == float:
-                mx.atom_setfloat(&argv[i], <double>elem)
-            elif type(elem) == int:
-                mx.atom_setlong((&argv[i]), <long>elem)
-            elif type(elem) == str:
-                mx.atom_setsym((&argv[i]), str_to_sym(elem))
-            else:
-                continue
-        # mx.postatom(argv)
-        px.py_send(self.ptr, mx.gensym(""), argc, argv)
+    def send(self, str name, *args):
+        """general message send to receiver"""
+        _args = [name] + list(args)
+        cdef Atom atom = Atom(*_args)
+        assert isinstance(_args[0], str), "send first arg must be str name of receiver"
+        px.py_send(self.ptr, mx.gensym(""), atom.size, atom.ptr)
 
     cdef bint table_exists(self, str table_name):
         """Return true if a table exists."""
@@ -5788,19 +5769,30 @@ def create_empty_buffer(name: str, duration_ms: int) -> Buffer:
 
 ## patcher utils
 
-def print_peers():
-    """prints classnames of objects in the the patcher"""
+def scan_objects() -> dict[str, MaxObject]:
+    """populates a dict of all max objects in a patcher"""
     cdef mx.t_object *patcher = NULL
     cdef mx.t_object *box = NULL
     cdef mx.t_object *obj = NULL
     cdef px.t_py *x = <px.t_py*>px.py_get_object_ref()
+    cdef int i = 0 
+    cdef dict objdict = {}
+    cdef MaxObject mxo
 
     mx.object_obex_lookup(x, mx.gensym("#P"), &patcher)
     box = mx.jpatcher_get_firstobject(patcher)
     while box is not NULL:
         obj = mx.jbox_get_object(box)
         if obj:
-            mx.post("%s", mx.object_classname(obj).s_name)
-        else:
-            mx.post("box with NULL object")
+            mxo = MaxObject.from_ptr(obj)
+            if mxo.box.varname:
+                oid = "{}-{}".format(mxo.box.varname, sym_to_str(mx.object_classname(obj)))
+            else:
+                oid = "{}-{}".format(i, sym_to_str(mx.object_classname(obj)))                
+            objdict[oid] = mxo
+            post(oid)
+            i += 1
         box = mx.jbox_get_nextobject(box)
+    return objdict
+
+

@@ -16,13 +16,24 @@
 		"gridsize" : [ 5.0, 5.0 ],
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-34",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 217.25, 76.0, 101.0, 21.0 ],
+					"text" : "api.scan_objects()"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-33",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 489.0, 451.0, 175.0, 21.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_maxobject_get_attr_value()"
 				}
 
@@ -35,7 +46,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 489.0, 417.0, 174.0, 21.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_maxobject_set_attr_value()"
 				}
 
@@ -48,7 +58,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 489.0, 377.0, 189.0, 21.0 ],
-					"presentation_linecount" : 2,
 					"text" : "test_maxobject_remove_attribute()"
 				}
 
@@ -710,6 +719,13 @@
 					"destination" : [ "obj-20", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-33", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-20", 0 ],
+					"source" : [ "obj-34", 0 ]
 				}
 
 			}
