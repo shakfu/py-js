@@ -4625,6 +4625,9 @@ cdef class Matrix:
             raise ValueError("could not retrieve a matrix object with name '{name}'")
         self.refresh()
 
+    def __repr__(self) -> str:
+        return f"<Matrix '{self.name}'>"
+
     # matrix_info properties
 
     @property
@@ -5428,6 +5431,9 @@ cdef class PyExternal:
         self.ptr = <px.t_py *>mx.object_findregistered(
             mx.CLASS_BOX, mx.gensym(self.name.encode()))
 
+    def __repr__(self) -> str:
+        return f"<PyExternal '{self.name}'>"
+
     def bang(self):
         """Send bang out of left (default) outlet"""
         px.py_bang(self.ptr)
@@ -5635,6 +5641,9 @@ cdef class PyMxObject:
 
     def __cinit__(self):
         self.x = <px.t_py*>px.py_get_object_ref()
+
+    def __repr__(self) -> str:
+        return f"<PyMxObject '{self.name}'>"
 
     cpdef bang(self):
         """send a bang"""
