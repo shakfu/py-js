@@ -49,3 +49,25 @@ OTHER_LDFLAGS = $(inherited) $(PY_LDFLAGS)
 // DSTROOT = $(PYJS_BUILD_ROOT)/externals
 // OR
 // DSTROOT = $(PYJS_BUILD_ROOT)/externals/$(PY_VERSION)/$(NATIVE_ARCH)/$(PROJECT_FOLDER_NAME)
+
+// uncomment the below include for optimization / stripping enabled
+// #include "optimize.xcconfig"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

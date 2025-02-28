@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Added optional optimization/stripping configuration which can reduce external sizes by 14%
+
 - Added many unimplemented methods to `api.Table`
 
 - Added `api.Patcher.add_box_from_dict` method.

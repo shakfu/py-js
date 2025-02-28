@@ -8,6 +8,7 @@ The `api` module consists of:
     - a number of cython declaration files (`.pxd`) which expose c headers
         - `api_max.pxd`: exposes Max api headers
         - `api_msp.pxd`: exposes MSP api headers
+        - `api_jit.pxd`: exposes Jitter api headers
         - `api_py.pxd`: exposes the `py` external's headers
 
 Cython classes, functions, and constants defined here are optionally
