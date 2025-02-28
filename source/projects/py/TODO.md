@@ -16,9 +16,9 @@
 
 ## api
 
-### Core
+### Wrapper Class Features
 
-### Usability
+- [ ] add [buffer control](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html) support to `api.Matrix` to facilitate reading and writing to matrices along the lines of what was done with the `api.Buffer` wrapper.
 
 ### Extensibility
 
@@ -31,8 +31,6 @@
 - [x] complete quarto based documentation subproject
 
 ### Testing
-
-- [ ] convert `py_coll_tester` into bpatcher that can be fed by `py_repl`
 
 - [ ] list remaining tests to implement
 
@@ -59,24 +57,19 @@
 ### Max API Wrapper
 
 - [x] add more tests and examples
+  - [ ] complete tests for remaining extension classes
 
 ### Build System
 
 - [ ] Change python variant product names to include python version and architecture (and platform), for example: `shared-ext-3711-x86`
 
-- [ ] Normalize tiny-variant names: so `shared-tiny-ext` becomes `shared-ext-tiny` and `static-tiny-ext` becomes `static-ext-tiny`.
-
 - [ ] Each python or pyjs build variant such as `shared-pkg` or `shared-ext`, should produce a unique output, and there should be a dependency mgmt solution which includes a clear dep graph and hashing and caching to minimize unecessary builds and rebuilds
 
-- [ ] Develop a configuration based api for `builder` which can consume yaml, json or a python api.
+- [ ] Develop a configuration based api for `builder` which can consume yaml, json or similar simple configuration.
 
-- [ ] add NUMPY_INCLUDE var to all xcode projects
-
-- [ ] add `-framework MaxAudioAPI -framework JitterAPI` to OTHER_LDFLAGS in all xcode projects.
+- [x] add NUMPY_INCLUDE var to all xcode projects
 
 - [ ] `min-setup.local` patch system needs to be organized and automated and linked to modules so that options lead to proper removal of extensions and modules with clear dependencies.
-
-- [ ] If a patch is not found, default to a standard working path or no patch at all
 
 - [ ] Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
 

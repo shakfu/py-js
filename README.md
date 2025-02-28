@@ -72,7 +72,7 @@ Note: networking (zmq-based) externals are not enabled by default since they req
 [jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
 [zthread]: https://github.com/shakfu/py-js/tree/main/source/projects/zthread
 
-The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`). Please see below for an overview and feature comparison.
+The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`), with `py` receiving most of recent attention, especially with respect to its builtin `api` module which uses cython to wrap an incrementally growing subset of the Max c-api. Please see below for an overview and feature comparison.
 
 At the time of this writing, and since the switch to [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project has the following compatibility profile:
 
@@ -193,7 +193,7 @@ Look at the `Makefile` and the root `CMakeLists.txt` for further specialized bui
 
 After doing the above, the recommended iterative development workflow is to make changes to the source code in the respective project and then `cd py-js/build` and `cmake --build .`. This will cause cmake to only build modified projects efficiently.
 
-Note that for some of the less developed externals and more experimental features please don't be surprised if Max seg-faults (especially if you start experimenting with the cython wrapped `api` module which operates on the c-level of the Max SDK).
+Note that for some of the less developed externals and more experimental features please don't be surprised if Max occassionaly segfaults (especially if you start experimenting with the the more experimental parts of the cython wrapped `api` module which operates on the c-level of the Max SDK).
 
 Also note that for `py` and `pyjs` externals the `cmake` build method described does not yet create self-contained python externals which can be used in Max Packages and Standalones. The [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones) section addresses this requirement.
 

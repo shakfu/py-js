@@ -2,6 +2,10 @@
 
 ## [0.3.x]
 
+- Added `__repr__` methods to all extension classes.
+
+- Added `api.MaxObject` attr-related methods: `add_attribute`, `remove_attribute`, `set_attr_value`, `get_attr_value`
+
 - Added optional optimization/stripping configuration which can reduce external sizes by 14%
 
 - Added many unimplemented methods to `api.Table`

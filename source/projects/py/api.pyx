@@ -153,20 +153,16 @@ cdef class MaxObject:
     cdef bint ptr_owner
     cdef public str name # registered name
     cdef public dict type_map
-    cdef Dictionary _dict
-
 
     def __cinit__(self):
         self.ptr = NULL
         self.ptr_owner = False
         self.name = ""
         self.type_map = {}
-        self._dict = Dictionary()
 
     def __dealloc__(self):
         # De-allocate if not null and flag is set
         if self.ptr is not NULL and self.ptr_owner is True:
-            self._dict.clear() # clear attribute dict
             mx.object_free(self.ptr)
             self.ptr = NULL
 
@@ -260,6 +256,7 @@ cdef class MaxObject:
         supported types:
             char, long, float32, float64, symbol, pointer, object, atom
         """
+        cdef mx.t_max_err err = mx.MAX_ERR_NONE
         assert type in [
             "char", "long", "float32", "float64", "symbol", "pointer", "object", "atom"
         ], "type {type} not supported"
@@ -268,101 +265,98 @@ cdef class MaxObject:
             mx.ATTR_FLAGS_NONE, NULL, NULL)
         if attr is NULL:
             raise ValueError(f"could not create an attribute: {type} {name}")
-        obj = MaxObject.from_ptr(attr)
+
+        err = mx.object_addattr(<mx.t_object*>self.ptr, attr)
+        if err != mx.MAX_ERR_NONE:
+            raise AttributeError(f"could not add attribute {type} {name}")
         self.type_map[name] = type
-        self._dict[name] = obj
 
     def remove_attribute(self, str name):
         """Delete attribute by name"""
-        del self._dict[name]
+        cdef mx.t_max_err err = mx.object_deleteattr(<mx.t_object*>self.ptr, str_to_sym(name))
+        if err != mx.MAX_ERR_NONE:
+            raise AttributeError(f"could not delete attr {name}")
         del self.type_map[name]
 
     def set_attr_value(self, str name, object value):
         """Set value of named object attribute"""
         cdef MaxObject attr
-        if (name not in self._dict.type_map) and (name not in self.type_map):
+        if name not in self.type_map:
             raise KeyError(f"attribute '{name}' is not found")
-        if self._dict.type_map[name] != 'object':
-            raise TypeError(f"associate dict value is not a compatiable attribute type (t_object*)")
-        attr = self._dict[name]
         attr_type = self.type_map[name]
         if attr_type == "symbol":
-            self._set_attr_sym_value(attr, name, value)
+            self._set_attr_sym_value(name, value)
         elif attr_type == "long":
-            self._set_attr_long_value(attr, name, <long>value)
+            self._set_attr_long_value(name, <long>value)
         elif attr_type == "float32":
-             self._set_attr_float_value(attr, name, <float>value)
+             self._set_attr_float_value(name, <float>value)
         elif attr_type == "float64":
-            self._set_attr_double_value(attr, name, <double>value)
+            self._set_attr_double_value(name, <double>value)
         elif attr_type == "object":
-            self._set_attr_object_value(attr, name, value)
+            self._set_attr_object_value(name, value)
         else:
-            raise NotImplementedError(f"attr {attr_type} setting not currently implemented")            
+            raise NotImplementedError(f"attr {attr_type} setting not currently implemented")
 
-    cdef _set_attr_sym_value(self, MaxObject attr, str name, str value):
+    cdef _set_attr_sym_value(self, str name, str value):
         """Set sym attr value from python str"""
-        mx.object_attr_setsym(<mx.t_object*>attr.ptr, str_to_sym(name), str_to_sym(value))
+        mx.object_attr_setsym(<mx.t_object*>self.ptr, str_to_sym(name), str_to_sym(value))
 
-    cdef _set_attr_long_value(self, MaxObject attr, str name, long value):
+    cdef _set_attr_long_value(self, str name, long value):
         """Set long attr value from python int"""
-        mx.object_attr_setlong(<mx.t_object*>attr.ptr, str_to_sym(name), value)
+        mx.object_attr_setlong(<mx.t_object*>self.ptr, str_to_sym(name), value)
 
-    cdef _set_attr_float_value(self, MaxObject attr, str name, float value):
+    cdef _set_attr_float_value(self, str name, float value):
         """Set float32 attr value from python float"""
-        mx.object_attr_setfloat(<mx.t_object*>attr.ptr, str_to_sym(name), value)
+        mx.object_attr_setfloat(<mx.t_object*>self.ptr, str_to_sym(name), value)
 
-    cdef _set_attr_double_value(self, MaxObject attr, str name, double value):
+    cdef _set_attr_double_value(self, str name, double value):
         """Set float64 attr value from python as float"""
-        mx.object_attr_setfloat(<mx.t_object*>attr.ptr, str_to_sym(name), value)
+        mx.object_attr_setfloat(<mx.t_object*>self.ptr, str_to_sym(name), value)
 
-    cdef _set_attr_object_value(self, MaxObject attr, str name, MaxObject value):
+    cdef _set_attr_object_value(self, str name, MaxObject value):
         """Set t_object attr value from MaxObject"""
-        mx.object_attr_setobj(<mx.t_object*>attr.ptr, str_to_sym(name), value.ptr)
+        mx.object_attr_setobj(<mx.t_object*>self.ptr, str_to_sym(name), value.ptr)
 
     def get_attr_value(self, str name) -> object:
         """Get value from object's attribute"""
-        cdef MaxObject attr
-        if (name not in self._dict.type_map) and (name not in self.type_map):
+        if name not in self.type_map:
             raise KeyError(f"attribute '{name}' is not found")
-        if self._dict.type_map[name] != 'object':
-            raise TypeError(f"associate dict value is not a compatiable attribute type (t_object*)")
-        attr = self._dict[name]
         attr_type = self.type_map[name]
         if attr_type == "symbol":
-            return self._get_attr_sym_value(attr, name)
+            return self._get_attr_sym_value(name)
         elif attr_type == "long":
-            return self._get_attr_long_value(attr, name)
+            return self._get_attr_long_value(name)
         elif attr_type == "float32":
-             return self._get_attr_float_value(attr, name)
+             return self._get_attr_float_value(name)
         elif attr_type == "float64":
-            return self._get_attr_double_value(attr, name)
+            return self._get_attr_double_value(name)
         elif attr_type == "object":
-            return self._get_attr_object_value(attr, name)
+            return self._get_attr_object_value(name)
         raise NotImplementedError(f"attr {attr_type} retrieval not currently implemented")
 
-    cdef str _get_attr_sym_value(self, MaxObject attr, str name):
+    cdef str _get_attr_sym_value(self, str name):
         """Get sym attr value as str"""
-        cdef mx.t_symbol * val = mx.object_attr_getsym(<mx.t_object*>attr.ptr, str_to_sym(name))
+        cdef mx.t_symbol * val = mx.object_attr_getsym(<mx.t_object*>self.ptr, str_to_sym(name))
         return sym_to_str(val)
 
-    cdef long _get_attr_long_value(self, MaxObject attr, str name):
+    cdef long _get_attr_long_value(self, str name):
         """Get long attr value as python int"""
-        cdef long val = <long>mx.object_attr_getlong(<mx.t_object*>attr.ptr, str_to_sym(name))
+        cdef long val = <long>mx.object_attr_getlong(<mx.t_object*>self.ptr, str_to_sym(name))
         return val
 
-    cdef float _get_attr_float_value(self, MaxObject attr, str name):
+    cdef float _get_attr_float_value(self, str name):
         """Get float32 attr value as python float"""
-        cdef float val = <float>mx.object_attr_getfloat(<mx.t_object*>attr.ptr, str_to_sym(name))
+        cdef float val = <float>mx.object_attr_getfloat(<mx.t_object*>self.ptr, str_to_sym(name))
         return val
 
-    cdef float _get_attr_double_value(self, MaxObject attr, str name):
+    cdef float _get_attr_double_value(self, str name):
         """Get float64 attr value as python as float"""
-        cdef double val = <double>mx.object_attr_getfloat(<mx.t_object*>attr.ptr, str_to_sym(name))
+        cdef double val = <double>mx.object_attr_getfloat(<mx.t_object*>self.ptr, str_to_sym(name))
         return val
 
-    cdef MaxObject _get_attr_object_value(self, MaxObject attr, str name):
+    cdef MaxObject _get_attr_object_value(self, str name):
         """Get t_object attr value as MaxObject"""
-        cdef mx.t_object* obj = mx.object_attr_getobj(<mx.t_object*>attr.ptr, str_to_sym(name))
+        cdef mx.t_object* obj = mx.object_attr_getobj(<mx.t_object*>self.ptr, str_to_sym(name))
         return MaxObject.from_ptr(obj)
 
     # registration funcs
