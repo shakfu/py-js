@@ -2,7 +2,13 @@
 
 ## [0.3.x]
 
-- Added `__repr__` methods to all extension classes.
+- Added the remaining `api.AtomArray` methods (pending further testing)
+
+- Fixed a few memory leaks and replaced calls of `PyDECREF` and `PyXDECREF` with `PyCLEAR`.
+
+- Removed redundant `py_table_exists`, `py_list_to_table` and `py_table_to_list` methods from `py.h/py.c`. The `api.Table` object provides all of these functions and more.
+
+- Added `__repr__` methods to all extension classes, and any object not convertible to max atoms not defaults to its `repr` string representation.
 
 - Added `api.MaxObject` attr-related methods: `add_attribute`, `remove_attribute`, `set_attr_value`, `get_attr_value`
 

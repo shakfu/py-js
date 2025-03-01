@@ -46,6 +46,7 @@
 #define PY_MAX_ERROR 4096
 #define PY_MAX_ELEMS 1024
 #define PY_ATTRS_WITH_DEFAULTS 0
+#define PY_CHECK_REFS 0
 
 /*--------------------------------------------------------------------------*/
 /* Macros */
@@ -57,6 +58,26 @@
 #define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(., PY_MINOR_VERSION))
 #define PY_VER STR(_PY_VER)
 // PY_VERSION is already defined as Major.Minor.Patch by patchlevel.h
+
+// utility macros to check refcounts of python objects
+#if PY_CHECK_REFS == 1
+#define PY_REF(p,v) \
+    do { \
+        int n = (int)Py_REFCNT((v)); \
+        if ((n) > 1) \
+            error("%s %s.%s: %d", (p), __func__, (#v), (n)); \
+        else \
+            post("%s %s.%s: %d", (p), __func__, (#v), (n)); \
+    } while (0)
+#define PY_REF_PRE(v) PY_REF("PRE",(v))
+#define PY_REF_ERR(v) PY_REF("ERR",(v))
+#define PY_REF_PST(v) PY_REF("PST",(v))
+#else
+#undef PY_REF
+#undef PY_REF_PRE
+#undef PY_REF_ERR
+#undef PY_REF_PST
+#endif
 
 /*--------------------------------------------------------------------------*/
 /* Globals */
@@ -187,11 +208,6 @@ void py_okclose(t_py* x, char *s, short *result);
 
 // dict
 void py_appendtodict(t_py* x, t_dictionary* dict);
-
-// table
-bool py_table_exists(t_py* x, char* table_name);
-t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist);
-PyObject* py_table_to_list(t_py* x, char* table_name);
 
 /*--------------------------------------------------------------------------*/
 /* Python Compatibility Section */

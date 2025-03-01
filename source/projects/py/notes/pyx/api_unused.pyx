@@ -26,9 +26,25 @@ cdef class String:
         mx.string_chop(self._str, numchars)
 
 
-
 # ----------------------------------------------------------------------------
 # TABLE type
+
+# removed redundant methods in py.c and `api.PyExternal`, see `api.Table`
+# for equivalent functionality.
+
+cdef class PyExternal:
+    # ...
+    cdef bint table_exists(self, str table_name):
+        """Return true if a table exists."""
+        return px.py_table_exists(self.ptr, table_name.encode())
+
+    cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
+        """Convert a Python list to a table."""
+        return px.py_list_to_table(self.ptr, table_name, plist)
+
+    cdef PyObject* table_to_list(self, char* table_name):
+        """Convert a table to python list"""
+        return px.py_table_to_list(self.ptr, table_name)
 
 
 def table_exists(str name):
@@ -82,6 +98,124 @@ def get_table_as_list(str name):
             xs.append(<int>value)
 
     return xs
+
+
+"""
+// table
+bool py_table_exists(t_py* x, char* table_name);
+t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist);
+PyObject* py_table_to_list(t_py* x, char* table_name);
+
+// used to be in py.c
+
+/*--------------------------------------------------------------------------*/
+/* Max Datastructures Support */
+
+/**
+ * @brief      Determines if py table exists.
+ *
+ * @param      x           pointer to object structure
+ * @param      table_name  The table name
+ *
+ * @return     True if py table exists, False otherwise.
+ */
+bool py_table_exists(t_py* x, char* table_name)
+{
+    long **storage, size;
+
+    return (table_get(gensym(table_name), &storage, &size) == 0);
+}
+
+/**
+ * @brief      Convert python list to Max table
+ *
+ * @param      x           pointer to object structure
+ * @param      table_name  The table name
+ * @param      plist       The python list
+ *
+ * @return     The t maximum error.
+ */
+t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
+{
+    long **storage, size, value;
+
+    Py_ssize_t len = 0;
+    PyObject* elem = NULL;
+
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (!PyList_Check(plist)) {
+        goto error;
+    }
+
+    len = PyList_Size(plist);
+
+
+    if (table_get(gensym(table_name), &storage, &size)) {
+        if (len > size)
+            goto error;
+
+        for (int i = 0; i < len; i++) {
+            elem = PyList_GetItem(plist, i); // borrowed
+            value = PyLong_AsLong(elem);
+            *((*storage) + i) = value;
+            py_debug(x, "storage[%d] = %d", i, value);
+        }
+    }
+    Py_CLEAR(plist);
+    // Py_XDECREF(plist);
+    // Py_XDECREF(elem);
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, "plist to table failed");
+    Py_CLEAR(plist);
+    // Py_XDECREF(plist);
+    // Py_XDECREF(elem);
+    return MAX_ERR_GENERIC;
+}
+
+/**
+ * @brief      Convert Max table to python list
+ *
+ * @param      x           pointer to object structure
+ * @param      table_name  The table name
+ *
+ * @return     python list
+ */
+PyObject* py_table_to_list(t_py* x, char* table_name)
+{
+
+    PyObject* plist = NULL;
+    long **storage, size, value;
+
+    if ((plist = PyList_New(0)) == NULL) {
+        py_debug(x, "could not create an empty python list");
+        goto error;
+    }
+
+    if (table_get(gensym(table_name), &storage, &size) == 0) {
+        for (int i = 0; i < size; i++) {
+            value = *((*storage) + i);
+            py_debug(x, "storage[%d] = %d", i, value);
+            PyObject* p_long = PyLong_FromLong(value);
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_CLEAR(p_long);
+            // Py_DECREF(p_long);
+        }
+        return plist;
+    }
+
+error:
+    py_error(x, "table to list conversion failed");
+    Py_RETURN_NONE;
+}
+"""
 
 
 # ----------------------------------------------------------------------------

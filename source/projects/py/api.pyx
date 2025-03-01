@@ -3380,64 +3380,84 @@ cdef class AtomArray:
         """get number of atoms in atom array"""
         return self.getsize()
 
-    cdef void set_flags(self, long flags):
+    def set_flags(self, long flags):
         """Set the atomarray flags."""
-        mx.atomarray_flags(self.ptr, flags)
+        mx.atomarray_flags(self.ptr, <long>flags)
 
-    cdef long getflags(self):
+    def get_flags(self) -> long:
         """Get the atomarray flags."""
-        return mx.atomarray_getflags(self.ptr)
+        return <long>mx.atomarray_getflags(self.ptr)
 
-    cdef mx.t_max_err setatoms(self, long ac, mx.t_atom* av):
+    flags = property(get_flags, set_flags)
+
+    def set_atoms(self, Atom atom):
         """Replace the existing array with a new (copied) set of atoms."""
-        return mx.atomarray_setatoms(self.ptr, ac, av)
+        cdef mx.t_max_err err = mx.atomarray_setatoms(self.ptr, atom.size, atom.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not replace existing atoms with provided atoms")
 
-    cdef mx.t_max_err getatoms(self, long* ac, mx.t_atom** av):
+    def get_atoms(self) -> Atom:
         """Retrieve a pointer to the first atom in the internal array of atoms."""
-        return mx.atomarray_getatoms(self.ptr, ac, av)
+        cdef mx.t_atom* av = NULL
+        cdef long ac = 0
+        cdef mx.t_max_err err = mx.atomarray_getatoms(self.ptr, &ac, &av)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get atoms from atomarray")
+        return Atom.from_ptr(av, ac)
 
-    cdef mx.t_max_err copyatoms(self, long* ac, mx.t_atom** av):
+    def copy_atoms(self) -> Atom:
         """Retrieve a copy of the atoms in the array."""
-        return mx.atomarray_copyatoms(self.ptr, ac, av)
+        cdef mx.t_atom* av = NULL
+        cdef long ac = 0
+        cdef mx.t_max_err err = mx.atomarray_copyatoms(self.ptr, &ac, &av)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not copy atoms from atomarray")
+        return Atom.from_ptr(av, ac)
 
-    def getsize(self) -> int:
-        """Return the number of atoms in the array."""
-        return mx.atomarray_getsize(self.ptr)
-
-    cdef mx.t_max_err getindex(self, long index, mx.t_atom* av):
+    def get_atom_from_index(self, long index) -> Atom:
         """Copy an a specific atom from the array."""
-        return mx.atomarray_getindex(self.ptr, index, av)
+        cdef Atom atom = Atom.new(1)
+        cdef mx.t_max_err err = mx.atomarray_getindex(self.ptr, index, atom.ptr)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError("could not get atom from index from atomarray")
+        return atom
 
-    # cdef mx.t_max_err setindex(self, long index, mx.t_atom* av):
-    #     return mx.atomarray_setindex(self.ptr, index, av)
-
-    cdef void* duplicate(self):
+    def duplicate(self) -> AtomArray:
         """Create a new atomarray object which is a copy of another atomarray object."""
-        return mx.atomarray_duplicate(self.ptr)
+        cdef mx.t_atomarray* dup = NULL
+        if self.ptr is not NULL:
+            dup = <mx.t_atomarray*>mx.atomarray_duplicate(self.ptr)
+            return AtomArray.from_ptr(dup)
+        raise ValueError("could not duplicate an uninitialized atomarray")
 
-    cdef void* clone(self):
+    def clone(self) -> AtomArray:
         """Create a new atomarray object which is a full clone of another atomarray object."""
-        return mx.atomarray_clone(self.ptr)
+        cdef mx.t_atomarray* _clone = NULL
+        if self.ptr is not NULL:
+            _clone = <mx.t_atomarray*>mx.atomarray_clone(self.ptr)
+            return AtomArray.from_ptr(_clone)
+        raise ValueError("could not clone an uninitialized atomarray")
 
-    cdef void appendatom(self, mx.t_atom* a):
+    def append_atom(self, Atom atom):
         """Copy a new atom onto the end of the array."""
-        mx.atomarray_appendatom(self.ptr, a)
+        mx.atomarray_appendatom(self.ptr, atom.ptr)
 
-    cdef void appendatoms(self, long ac, mx.t_atom* av):
+    def append_atoms(self, Atom atom):
         """Copy multiple new atoms onto the end of the array."""
-        mx.atomarray_appendatoms(self.ptr, ac, av)
+        mx.atomarray_appendatoms(self.ptr, atom.size, atom.ptr)
 
-    cdef void chuckindex(self, long index):
+    def chuck_index(self, long index):
         """Remove an atom from any location within the array.
         
         The array will be resized and collapsed to fill in the gap.
         """
         mx.atomarray_chuckindex(self.ptr, index)
 
-    cdef void clear(self):
+    def clear(self):
         """Clear the array.
 
-        Frees all of the atoms and sets the size to zero."""
+        Frees all of the atoms and sets the size to zero.
+        """
         mx.atomarray_clear(self.ptr)
 
     cdef void funall(self, mx.method fun, void* arg):
@@ -5518,18 +5538,6 @@ cdef class PyExternal:
         cdef Atom atom = Atom(*_args)
         assert isinstance(_args[0], str), "send first arg must be str name of receiver"
         px.py_send(self.ptr, mx.gensym(""), atom.size, atom.ptr)
-
-    cdef bint table_exists(self, str table_name):
-        """Return true if a table exists."""
-        return px.py_table_exists(self.ptr, table_name.encode())
-
-    cdef mx.t_max_err list_to_table(self, char* table_name, PyObject* plist):
-        """Convert a Python list to a table."""
-        return px.py_list_to_table(self.ptr, table_name, plist)
-
-    cdef PyObject* table_to_list(self, char* table_name):
-        """Convert a table to python list"""
-        return px.py_table_to_list(self.ptr, table_name)
 
     cdef out_sym(self, str arg):
         """Send a symbol to the outlet."""

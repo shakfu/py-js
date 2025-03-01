@@ -405,7 +405,7 @@ void py_free(t_py* x)
     if (x->p_code)
         sysmem_freehandle(x->p_code);
 
-    Py_XDECREF(x->p_globals);
+    Py_CLEAR(x->p_globals);
     // python objects cleanup
     py_debug(x, "will be deleted");
     py_global_obj_count--;
@@ -667,15 +667,16 @@ void py_init_builtins(t_py* x)
     if (p_code_obj == NULL) {
         py_error(x, "cannot import PY_PRELUDE_MODULE");
         goto error;
+    } else {
+        Py_CLEAR(p_code_obj);        
     }
+    Py_CLEAR(p_name);
 
-    Py_XDECREF(p_name);
-    Py_XDECREF(p_code_obj);
     return;
 
 error:
     py_handle_error(x, "failed to initialize python builtins");
-    Py_XDECREF(p_name);
+    Py_CLEAR(p_name);
 }
 
 
@@ -1184,16 +1185,16 @@ void py_handle_error(t_py* x, char* fmt, ...)
     PyObject *ptype, *pvalue, *ptraceback;
     PyErr_Fetch(&ptype, &pvalue, &ptraceback);
     PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-    Py_XDECREF(ptype);
+    Py_CLEAR(ptype);
 
     PyObject* pvalue_pstr = PyObject_Repr(pvalue);
     const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
-    Py_XDECREF(pvalue);
-    Py_XDECREF(pvalue_pstr);
+    Py_CLEAR(pvalue);
+    Py_CLEAR(pvalue_pstr);
 
     object_error((t_object*)x, "[ERROR] (%s) %s: %s", x->p_name->s_name, msg,
                  pvalue_str);
-    Py_XDECREF(ptraceback);
+    Py_CLEAR(ptraceback);
 }
 
 
@@ -1213,19 +1214,19 @@ t_max_err py_handle_float_output(t_py* x, PyObject* pfloat)
 
     if (PyFloat_Check(pfloat)) {
         float float_result = (float)PyFloat_AsDouble(pfloat);
-        if (float_result == -1.0 && PyErr_Occurred()) {
+        if (PyErr_Occurred()) {
             goto error;
         }
 
         outlet_float(x->p_outlet_left, float_result);
         py_bang_success(x);
     }
-    Py_XDECREF(pfloat);
+    Py_CLEAR(pfloat);
     return MAX_ERR_NONE;
 
 error:
-    py_handle_error(x, "py_handle_float_output failed");
-    Py_XDECREF(pfloat);
+    py_handle_error(x, "py_handle_float_output failed");    // py_refcount_err("py_handle_float_output", "pfloat", pfloat);
+    Py_CLEAR(pfloat);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
@@ -1245,7 +1246,7 @@ t_max_err py_handle_long_output(t_py* x, PyObject* plong)
 
     if (PyLong_Check(plong)) {
         long long_result = PyLong_AsLong(plong);
-        if (long_result == -1 && PyErr_Occurred()) {
+        if (PyErr_Occurred()) {
             goto error;
         }
 
@@ -1253,12 +1254,12 @@ t_max_err py_handle_long_output(t_py* x, PyObject* plong)
         py_bang_success(x);
     }
 
-    Py_XDECREF(plong);
+    Py_CLEAR(plong);
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_handle_long_output failed");
-    Py_XDECREF(plong);
+    Py_CLEAR(plong);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
@@ -1285,12 +1286,12 @@ t_max_err py_handle_string_output(t_py* x, PyObject* pstring)
         py_bang_success(x);
     }
 
-    Py_XDECREF(pstring);
+    Py_CLEAR(pstring);
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_handle_string_output failed");
-    Py_XDECREF(pstring);
+    Py_CLEAR(pstring);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
@@ -1342,9 +1343,10 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
         py_debug(x, "seq_size2: %d", seq_size);
 
         while ((item = PyIter_Next(iter)) != NULL) {
+
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
-                if (long_item == -1 && PyErr_Occurred()) {
+                if (PyErr_Occurred()) {
                     goto error;
                 }
                 atom_setlong(atoms + i, long_item);
@@ -1354,7 +1356,7 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
 
             if (PyFloat_Check(item)) {
                 float float_item = PyFloat_AsDouble(item);
-                if (float_item == -1.0 && PyErr_Occurred()) {
+                if (PyErr_Occurred()) {
                     goto error;
                 }
                 atom_setfloat(atoms + i, float_item);
@@ -1371,8 +1373,9 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
                 py_debug(x, "%d unicode: %s\n", i, unicode_item);
                 i++;
             }
-            Py_DECREF(item);
+            Py_CLEAR(item);
         }
+        Py_CLEAR(iter);
 
         outlet_list(x->p_outlet_left, NULL, i, atoms);
         py_bang_success(x);
@@ -1383,13 +1386,12 @@ t_max_err py_handle_list_output(t_py* x, PyObject* plist)
             atom_dynamic_end(atoms_static, atoms);
         }
     }
-
-    Py_XDECREF(plist);
+    Py_CLEAR(plist);
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "py_handle_list_output failed");
-    Py_XDECREF(plist);
+    Py_CLEAR(plist);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
 }
@@ -1413,13 +1415,13 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
     if (PyDict_Check(pdict)) {
 
         // depends on definition in py_prelude.h
-        pfun = PyDict_GetItemString(x->p_globals, "out_dict");
+        pfun = PyDict_GetItemString(x->p_globals, "out_dict"); // borrowed
         if (pfun == NULL) {
             py_error(x, "retrieving out_dict func from globals failed");
             goto error;
         }
 
-        pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL);
+        pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL); // new ref
         if (pval == NULL) {
             py_error(x, "out_dict call failed to retrieve result");
             goto error;
@@ -1428,6 +1430,7 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
         if (PyList_Check(pval)) {           // expecting a python list
             py_handle_list_output(x, pval); // this decrefs pval
             py_bang_success(x);
+            Py_CLEAR(pdict);
             return MAX_ERR_NONE;
         } else {
             py_error(x, "expected list output got something else");
@@ -1437,7 +1440,8 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
 
 error:
     py_handle_error(x, "py_handle_dict_output failed");
-    Py_XDECREF(pval);
+    Py_CLEAR(pdict);
+    Py_CLEAR(pval);
     // fail bang
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
@@ -1489,6 +1493,17 @@ t_max_err py_handle_output(t_py* x, PyObject* pval)
     }
 
     else {
+
+        // try to convert it repr(pval) string
+        // post("pre pval refcount: %d", Py_REFCNT(pval));
+        PyObject * rep = PyObject_Repr(pval);
+        Py_CLEAR(pval);
+
+        // post("post pval refcount: %d", Py_REFCNT(pval));
+        // post("post rep refcount: %d", Py_REFCNT(rep));
+        if (rep != NULL ) {
+            return py_handle_string_output(x, rep);
+        }
         py_error(x, "cannot handle his type of value");
         return MAX_ERR_GENERIC;
     }
@@ -1525,7 +1540,7 @@ PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
                 goto error;
             }
             PyList_Append(plist, p_float);
-            Py_DECREF(p_float);
+            Py_CLEAR(p_float);
             break;
         }
         case A_LONG: {
@@ -1534,7 +1549,7 @@ PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
                 goto error;
             }
             PyList_Append(plist, p_long);
-            Py_DECREF(p_long);
+            Py_CLEAR(p_long);
             break;
         }
         case A_SYM: {
@@ -1544,7 +1559,7 @@ PyObject* py_atoms_to_list(t_py* x, long argc, t_atom* argv, int start_from)
                 goto error;
             }
             PyList_Append(plist, p_str);
-            Py_DECREF(p_str);
+            Py_CLEAR(p_str);
             break;
         }
         default:
@@ -1578,12 +1593,13 @@ t_max_err py_import(t_py* x, t_symbol* s)
 
     if (s != gensym("")) {
         x_module = PyImport_ImportModule(s->s_name);
-        // x_module borrrowed ref
+        // x_module new ref
         if (x_module == NULL) {
             goto error;
         }
         PyDict_SetItemString(x->p_globals, s->s_name, x_module);
         PyGILState_Release(gstate);
+        Py_CLEAR(x_module);
         py_bang_success(x);
         py_debug(x, "imported: %s", s->s_name);
     }
@@ -1614,11 +1630,12 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     py_debug(x, "%s %s", s->s_name, py_argv);
 
     PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
-                                  x->p_globals);
+                                  x->p_globals); // returns New reference
 
     if (pval != NULL) {
         py_handle_output(x, pval);
         PyGILState_Release(gstate);
+        Py_CLEAR(pval);
         return MAX_ERR_NONE;
     } else {
         py_handle_error(x, "eval %s", py_argv);
@@ -1654,16 +1671,14 @@ t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
     if (pval == NULL) {
         goto error;
     }
-    Py_DECREF(pval);
     PyGILState_Release(gstate);
-
+    Py_CLEAR(pval);
     py_bang_success(x);
     py_debug(x, "exec %s", py_argv);
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "exec %s", py_argv);
-    Py_XDECREF(pval);
     PyGILState_Release(gstate);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
@@ -1718,14 +1733,13 @@ t_max_err py_execfile(t_py* x, t_symbol* s)
 
     // success cleanup
     fclose(fhandle);
-    Py_DECREF(pval);
     PyGILState_Release(gstate);
+    Py_CLEAR(pval);
     py_bang_success(x);
     return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "execfile");
-    Py_XDECREF(pval);
     PyGILState_Release(gstate);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
@@ -1798,7 +1812,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
 error:
     py_handle_error(x, "assign %s", s->s_name);
-    Py_XDECREF(list);
+    Py_CLEAR(list);
     PyGILState_Release(gstate);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
@@ -1833,11 +1847,10 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv)
 
     char* new_text = str_replace(text, "\\", "");
 
-    co = Py_CompileString(new_text, x->p_name->s_name, Py_eval_input);
+    co = Py_CompileString(new_text, x->p_name->s_name, Py_eval_input); // new-ref
 
-    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+    if ((co == NULL) && PyErr_ExceptionMatches(PyExc_SyntaxError)) {
         PyErr_Clear();
-        // co = Py_CompileString(new_text, x->p_name->s_name, Py_single_input);
         co = Py_CompileString(new_text, x->p_name->s_name, Py_file_input);
         is_eval = 0;
     }
@@ -1855,7 +1868,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv)
     if (pval == NULL) {
         goto error;
     }
-    Py_DECREF(co);
+    Py_CLEAR(co);
 
     if (!is_eval) {
         // bang for exec-type op
@@ -1863,6 +1876,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv)
         py_bang_success(x);
     } else {
         py_handle_output(x, pval);
+        // must not Py_CLEAR(pval) or crash
         PyGILState_Release(gstate);
     }
     return MAX_ERR_NONE;
@@ -1995,34 +2009,33 @@ t_max_err py_apply_pyfunc(t_py* x, char* pyfunc_name, t_symbol* s, long argc,
 
     pval = PyObject_CallFunctionObjArgs(pyfunc, pstr, NULL);
 
-    if (pval != NULL) {
-
-        if (!PyUnicode_Check(pval)) {
-            py_handle_output(x, pval); // this decrefs pval
-        } else {
-            // special case strings, which will cause crash if handled
-            // out of this methods's scope. (huge PITA to debug!)
-            const char* unicode_result = PyUnicode_AsUTF8(pval);
-            if (unicode_result == NULL) {
-                goto error;
-            }
-            outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
-            py_bang_success(x);
-            Py_XDECREF(pval);
-        }
-
-        Py_XDECREF(pstr);
-        PyGILState_Release(gstate);
-        py_bang_success(x);
-        return MAX_ERR_NONE;
-    } else {
+    if (pval == NULL)
         goto error;
+
+    if (!PyUnicode_Check(pval)) {
+        py_handle_output(x, pval); // this decrefs pval
+    } else {
+        // special case strings, which will cause crash if handled
+        // out of this methods's scope. (huge PITA to debug!)
+        const char* unicode_result = PyUnicode_AsUTF8(pval);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
+        py_bang_success(x);
+        Py_CLEAR(pval);
     }
+
+    Py_CLEAR(pstr);
+    PyGILState_Release(gstate);
+    py_bang_success(x);
+    return MAX_ERR_NONE;
+
 
 error:
     py_handle_error(x, "%s call failed", pyfunc_name);
-    Py_XDECREF(pstr);
-    Py_XDECREF(pval);
+    Py_CLEAR(pstr);
+    Py_CLEAR(pval);
     // fail bang
     PyGILState_Release(gstate);
     py_bang_failure(x);
@@ -2361,14 +2374,15 @@ void py_run(t_py* x)
     }
 
     // success cleanup
-    Py_DECREF(pval);
+    Py_CLEAR(pval);
+    // Py_DECREF(pval);
     PyGILState_Release(gstate);
     py_bang_success(x);
     return;
 
 error:
     py_handle_error(x, "run x->p_code failed");
-    Py_XDECREF(pval);
+    Py_CLEAR(pval);;
     PyGILState_Release(gstate);
     py_bang_failure(x);
 }
@@ -2440,7 +2454,7 @@ t_max_err py_edsave(t_py* x, char** text, long size)
         }
 
         // success cleanup
-        Py_DECREF(pval);
+        Py_CLEAR(pval);
     }
     PyGILState_Release(gstate);
     py_debug(x, "py_edsave: returning 0");
@@ -2448,7 +2462,7 @@ t_max_err py_edsave(t_py* x, char** text, long size)
 
 error:
     py_handle_error(x, "py_edsave with (possible) execution failed");
-    Py_XDECREF(pval);
+    Py_CLEAR(pval);
     PyGILState_Release(gstate);
     py_debug(x, "py_edsave: returning 1");
     return MAX_ERR_GENERIC;
@@ -2466,108 +2480,3 @@ void py_load(t_py* x, t_symbol* s)
     py_execfile(x, s);
 }
 
-
-/*--------------------------------------------------------------------------*/
-/* Max Datastructures Support */
-
-/**
- * @brief      Determines if py table exists.
- *
- * @param      x           pointer to object structure
- * @param      table_name  The table name
- *
- * @return     True if py table exists, False otherwise.
- */
-bool py_table_exists(t_py* x, char* table_name)
-{
-    long **storage, size;
-
-    return (table_get(gensym(table_name), &storage, &size) == 0);
-}
-
-/**
- * @brief      Convert python list to Max table
- *
- * @param      x           pointer to object structure
- * @param      table_name  The table name
- * @param      plist       The python list
- *
- * @return     The t maximum error.
- */
-t_max_err py_list_to_table(t_py* x, char* table_name, PyObject* plist)
-{
-    long **storage, size, value;
-
-    Py_ssize_t len = 0;
-    PyObject* elem = NULL;
-
-    if (plist == NULL) {
-        goto error;
-    }
-
-    if (!PyList_Check(plist)) {
-        goto error;
-    }
-
-    len = PyList_Size(plist);
-
-
-    if (table_get(gensym(table_name), &storage, &size)) {
-        if (len > size)
-            goto error;
-
-        for (int i = 0; i < len; i++) {
-            elem = PyList_GetItem(plist, i);
-            value = PyLong_AsLong(elem);
-            *((*storage) + i) = value;
-            py_debug(x, "storage[%d] = %d", i, value);
-        }
-    }
-    Py_XDECREF(plist);
-    Py_XDECREF(elem);
-    return MAX_ERR_NONE;
-
-error:
-    py_handle_error(x, "plist to table failed");
-    Py_XDECREF(plist);
-    Py_XDECREF(elem);
-    return MAX_ERR_GENERIC;
-}
-
-/**
- * @brief      Convert Max table to python list
- *
- * @param      x           pointer to object structure
- * @param      table_name  The table name
- *
- * @return     python list
- */
-PyObject* py_table_to_list(t_py* x, char* table_name)
-{
-
-    PyObject* plist = NULL;
-    long **storage, size, value;
-
-    if ((plist = PyList_New(0)) == NULL) {
-        py_debug(x, "could not create an empty python list");
-        goto error;
-    }
-
-    if (table_get(gensym(table_name), &storage, &size) == 0) {
-        for (int i = 0; i < size; i++) {
-            value = *((*storage) + i);
-            py_debug(x, "storage[%d] = %d", i, value);
-            PyObject* p_long = PyLong_FromLong(value);
-            if (p_long == NULL) {
-                goto error;
-            }
-            PyList_Append(plist, p_long);
-            Py_DECREF(p_long);
-        }
-        return plist;
-    }
-
-error:
-    py_error(x, "table to list conversion failed");
-    Py_RETURN_NONE;
-}
