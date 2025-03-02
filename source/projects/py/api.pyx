@@ -39,6 +39,7 @@ see: `py-js/source/projects/py/api.md` for further details
 
 # ----------------------------------------------------------------------------
 # imports
+
 from math import prod as product
 from collections import namedtuple
 from  typing import Optional
@@ -76,7 +77,6 @@ if INCLUDE_NUMPY:
 cpdef enum:
     MAX_CHARS = 32767
     PY_MAX_ATOMS = 1024
-
 
 # ----------------------------------------------------------------------------
 # python c-api imports
@@ -117,10 +117,7 @@ cdef bytes sym_to_bytes(mx.t_symbol* symbol):
 
 cdef long clamp(long x, long minimum, long maximum):
     """Limit a value to a range between a minimum and a maximum value.
-
-    Can be used Instead of implicit assignment 
-    CLIP_ASSIGN(x,a,b) (x)=(x)<(a)?(a):(x)>(b)?(b):(x)
-
+    
     x = clamp(x, low, hi)
     """
     if x < minimum:
@@ -285,79 +282,37 @@ cdef class MaxObject:
             raise KeyError(f"attribute '{name}' is not found")
         attr_type = self.type_map[name]
         if attr_type == "symbol":
-            self._set_attr_sym_value(name, value)
+            mx.object_attr_setsym(<mx.t_object*>self.ptr, str_to_sym(name), str_to_sym(value))
         elif attr_type == "long":
-            self._set_attr_long_value(name, <long>value)
+            mx.object_attr_setlong(<mx.t_object*>self.ptr, str_to_sym(name), <long>value)
         elif attr_type == "float32":
-             self._set_attr_float_value(name, <float>value)
+             mx.object_attr_setfloat(<mx.t_object*>self.ptr, str_to_sym(name), <float>value)
         elif attr_type == "float64":
-            self._set_attr_double_value(name, <double>value)
+            mx.object_attr_setfloat(<mx.t_object*>self.ptr, str_to_sym(name), <double>value)
         elif attr_type == "object":
-            self._set_attr_object_value(name, value)
+            assert isinstance(value, MaxObject)
+            mx.object_attr_setobj(<mx.t_object*>self.ptr, str_to_sym(name), <mx.t_object*>value.ptr)
         else:
             raise NotImplementedError(f"attr {attr_type} setting not currently implemented")
 
-    cdef _set_attr_sym_value(self, str name, str value):
-        """Set sym attr value from python str"""
-        mx.object_attr_setsym(<mx.t_object*>self.ptr, str_to_sym(name), str_to_sym(value))
-
-    cdef _set_attr_long_value(self, str name, long value):
-        """Set long attr value from python int"""
-        mx.object_attr_setlong(<mx.t_object*>self.ptr, str_to_sym(name), value)
-
-    cdef _set_attr_float_value(self, str name, float value):
-        """Set float32 attr value from python float"""
-        mx.object_attr_setfloat(<mx.t_object*>self.ptr, str_to_sym(name), value)
-
-    cdef _set_attr_double_value(self, str name, double value):
-        """Set float64 attr value from python as float"""
-        mx.object_attr_setfloat(<mx.t_object*>self.ptr, str_to_sym(name), value)
-
-    cdef _set_attr_object_value(self, str name, MaxObject value):
-        """Set t_object attr value from MaxObject"""
-        mx.object_attr_setobj(<mx.t_object*>self.ptr, str_to_sym(name), value.ptr)
-
     def get_attr_value(self, str name) -> object:
         """Get value from object's attribute"""
+        cdef mx.t_object* obj = NULL
         if name not in self.type_map:
             raise KeyError(f"attribute '{name}' is not found")
         attr_type = self.type_map[name]
         if attr_type == "symbol":
-            return self._get_attr_sym_value(name)
+            return sym_to_str(mx.object_attr_getsym(<mx.t_object*>self.ptr, str_to_sym(name)))
         elif attr_type == "long":
-            return self._get_attr_long_value(name)
+            return <long>mx.object_attr_getlong(<mx.t_object*>self.ptr, str_to_sym(name))
         elif attr_type == "float32":
-             return self._get_attr_float_value(name)
+             return <float>mx.object_attr_getfloat(<mx.t_object*>self.ptr, str_to_sym(name))
         elif attr_type == "float64":
-            return self._get_attr_double_value(name)
+            return <double>mx.object_attr_getfloat(<mx.t_object*>self.ptr, str_to_sym(name))
         elif attr_type == "object":
-            return self._get_attr_object_value(name)
+            obj = mx.object_attr_getobj(<mx.t_object*>self.ptr, str_to_sym(name))
+            return MaxObject.from_ptr(obj)
         raise NotImplementedError(f"attr {attr_type} retrieval not currently implemented")
-
-    cdef str _get_attr_sym_value(self, str name):
-        """Get sym attr value as str"""
-        cdef mx.t_symbol * val = mx.object_attr_getsym(<mx.t_object*>self.ptr, str_to_sym(name))
-        return sym_to_str(val)
-
-    cdef long _get_attr_long_value(self, str name):
-        """Get long attr value as python int"""
-        cdef long val = <long>mx.object_attr_getlong(<mx.t_object*>self.ptr, str_to_sym(name))
-        return val
-
-    cdef float _get_attr_float_value(self, str name):
-        """Get float32 attr value as python float"""
-        cdef float val = <float>mx.object_attr_getfloat(<mx.t_object*>self.ptr, str_to_sym(name))
-        return val
-
-    cdef float _get_attr_double_value(self, str name):
-        """Get float64 attr value as python as float"""
-        cdef double val = <double>mx.object_attr_getfloat(<mx.t_object*>self.ptr, str_to_sym(name))
-        return val
-
-    cdef MaxObject _get_attr_object_value(self, str name):
-        """Get t_object attr value as MaxObject"""
-        cdef mx.t_object* obj = mx.object_attr_getobj(<mx.t_object*>self.ptr, str_to_sym(name))
-        return MaxObject.from_ptr(obj)
 
     # registration funcs
 
@@ -398,66 +353,59 @@ cdef class MaxObject:
         """object method call with no arguments"""
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), 0, NULL, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"no arg method '{name}' call failed")
 
     def _method_args(self, str name, *args):
         """strongly typed object method call with arguments"""
         cdef Atom atom = Atom(*args)
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), atom.size, atom.ptr, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"args method '{name}' call failed")
 
     def _method_parsestr(self, str name, str parsestr):
         """combines object_method_typed() + atom_setparse() to define method arguments."""
         cdef mx.t_max_err err = mx.object_method_parse(
             <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode(), NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"parsestr method '{name}' call failed")
 
     def _method_float(self, str name, float number):
         """wrapper for object_method_typed() that passes a single float as an argument"""
         cdef mx.t_max_err err = mx.object_method_float(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"float method '{name}' call failed")
 
     def _method_double(self, str name, double number):
         """wrapper for object_method_typed() that passes a single double as an argument"""
         cdef mx.t_max_err err = mx.object_method_double(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"double method '{name}' call failed")
 
     def _method_long(self, str name, long number):
         """wrapper for object_method_typed() that passes a single long as an argument"""
         cdef mx.t_max_err err = mx.object_method_long(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"long method '{name}' call failed")
 
     def _method_sym(self, str name, str symbol):
         """wrapper for object_method_typed() that passes a single t_symbol as an argument"""
         cdef mx.t_max_err err = mx.object_method_sym(
             <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    cdef mx.t_max_err object_method_obj(self, str method_name, mx.t_object *v):
-        """Convenience wrapper for object_method_typed() that passes a single #t_object* as an argument."""
-        cdef mx.t_max_err err = mx.object_method_obj(<mx.t_object *>self.ptr, str_to_sym(method_name), v, NULL)
         if err != mx.MAX_ERR_NONE:
-            return error(f"method '{method_name}' call failed")
-        return mx.MAX_ERR_NONE
-    
+            raise ValueError(f"sym method '{name}' call failed")
+
+    def _method_obj(self, str method_name, MaxObject obj):
+        """wrapper for object_method_typed() that passes a single #t_object* as an argument."""
+        cdef mx.t_max_err err = mx.object_method_obj(
+            <mx.t_object *>self.ptr, str_to_sym(method_name), obj.ptr, NULL)
+        if err != mx.MAX_ERR_NONE:
+            raise ValueError(f"method '{method_name}' call failed")
+
     cdef mx.t_max_err object_method_char_array(self, str method_name, long ac, unsigned char *av, mx.t_atom *rv):
         """Convenience wrapper for object_method_typed() that passes an array of char values as an argument."""
         cdef mx.t_max_err err = mx.object_method_char_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
@@ -514,6 +462,8 @@ cdef class MaxObject:
                 return self._method_double(name, args[0])
             elif isinstance(args[0], int):
                 return self._method_long(name, args[0])
+            elif isinstance(args[0], MaxObject):
+                return self._method_obj(name, args[0])
             elif isinstance(args[0], list):
                 return self.call(name, *args[0])
             elif isinstance(args[0], tuple):
