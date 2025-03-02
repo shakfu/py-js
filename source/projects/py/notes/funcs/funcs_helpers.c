@@ -6,7 +6,6 @@ t_max_err atom_alloc_array(long minsize, long *ac, t_atom **av, char *alloc);
 t_max_err class_subclass(t_class *superclass, t_class *subclass);
 t_max_err symbolarray_sort(long ac, t_symbol **av);
 t_object *class_super_construct(t_class *c, ...);
-t_symbol *symbol_stripquotes(t_symbol *s);
 t_symbol *symbol_unique(void);
 void error_code(void *x, t_max_err v); //interrupt safe
 void error_sym(void *x,t_symbol *s); //interrupt safe
@@ -23,14 +22,6 @@ void post_sym(void *x,t_symbol *s);  //interrupt safe
 */
 t_symbol *symbol_unique(void);
 
-
-/**
-	Strip quotes from the beginning and end of a symbol if they are present.
-	@ingroup	misc
-	@param	s	The symbol to be stipped.
-	@return		Symbol with any leading/trailing quote pairs removed.
- */
-t_symbol *symbol_stripquotes(t_symbol *s);
 
 
 void error_code(void *x, t_max_err v); //interrupt safe

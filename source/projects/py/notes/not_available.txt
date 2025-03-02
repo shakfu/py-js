@@ -1,5 +1,8 @@
 # in header but not public
 
+t_symbol *symbol_stripquotes(t_symbol *s);
+
+
 cdef class AtomArray:
 
     cdef mx.t_max_err setindex(self, long index, mx.t_atom* av):

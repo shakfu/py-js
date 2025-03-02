@@ -20,6 +20,7 @@ Extension Classes:
 - Patcher: Interface to Max patchers
 - Box: Interface to Max boxes/objects
 - Matrix: Interface to Max jit matrices
+- Path: Interface to Max path handling
 - PyExternal: Main interface for Python externals
 - PyMxObject: Alternative external extension type (obj pointer retrieved via uintptr_t)
 
@@ -89,7 +90,6 @@ cdef extern from "Python.h":
 # ----------------------------------------------------------------------------
 # helper cdef functions
 
-
 cdef mx.t_symbol* str_to_sym(str string):
     """converts a python string to a t_symbol*
 
@@ -112,8 +112,6 @@ cdef bytes sym_to_bytes(mx.t_symbol* symbol):
     """converts a max symbol to a python string"""
     return <bytes>symbol.s_name
 
-# ----------------------------------------------------------------------------
-# util cdef functions
 
 cdef long clamp(long x, long minimum, long maximum):
     """Limit a value to a range between a minimum and a maximum value.
@@ -126,6 +124,21 @@ cdef long clamp(long x, long minimum, long maximum):
         return maximum
     return x
 
+
+# ----------------------------------------------------------------------------
+# helper python functions
+
+def fourchar(code: str) -> int:
+   """Convert fourc chars to an int
+
+   >>> fourchar('HUVL')
+   1213552204
+   """
+   assert len(code) == 4, "should be four characters only"
+   return ((ord(code[0]) << 24) | (ord(code[1]) << 16) |
+           (ord(code[2]) << 8)  | ord(code[3]))
+
+
 # ============================================================================
 # Named Tuples
 
@@ -135,7 +148,6 @@ Rgba = namedtuple('Rgba', ['red', 'green', 'blue', 'alpha'])
 
 # ============================================================================
 # EXTENSION TYPES
-
 
 
 
@@ -5381,6 +5393,63 @@ cdef class Matrix:
 
 
 
+# ----------------------------------------------------------------------------
+# api.Path
+
+
+cdef class Path:
+    """A wrapper for Max friendly paths"""
+
+    cdef public str filename    # name used to search for file
+    cdef public str pathname    # absolute path after file is found
+    cdef short path_id          # short code for max file system
+    cdef mx.t_fileinfo info     # instance of file metadata struct
+
+    def __cinit__(self):
+        self.path_id = 0
+
+    def __init__(self, str filename):
+        self.filename = filename
+        self.pathname = self.locate(filename)
+        self.get_info() # populate info attribute
+
+    def locate(self, str filename, str code = 'TEXT') -> str:
+        """Searches the Max filesystem context for a file"""
+        cdef char pathname[2048]    # absolute path result of search
+        cdef mx.t_fourcc filetype = fourchar(code)
+        cdef mx.t_fourcc outtype  = 0
+        cdef mx.t_max_err err = mx.MAX_ERR_NONE
+
+        cdef short res = mx.locatefile_extended(filename.encode(),
+            &self.path_id, &outtype, &filetype, 1)
+        if res != 0:
+            raise IOError(f"can't find file '{filename}'")
+
+        err = mx.path_toabsolutesystempath(self.path_id,
+            filename.encode(), pathname)
+
+        if err != mx.MAX_ERR_NONE:
+            raise IOError(f"can't convert {filename} to absolute path")
+
+        return pathname.decode()
+
+    def get_info(self):
+        """populate t_fileinfo struct file metatadata  instance"""
+        cdef short res = mx.path_fileinfo(self.filename.encode(), self.path_id, &self.info)
+        if res != 0:
+            raise IOError(f"couldn't retrieve file info for {self.filename}")
+
+    def rename(self, str new_name):
+        """Rename the file"""
+        cdef short res = mx.path_renamefile(self.filename.encode, self.path_id, new_name.encode())
+        if res != 0:
+            raise IOError(f"couldn't rename {self.filename}")
+
+    def delete(self):
+        """Delete located file."""
+        cdef short res = mx.path_deletefile(self.filename.encode(), self.path_id)
+        if res != 0:
+            raise IOError(f"couldn't delete {self.filename}")
 
 # ----------------------------------------------------------------------------
 # api.PyExternal

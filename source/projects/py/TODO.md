@@ -1,65 +1,66 @@
 # TODO
 
-## General Improvements
+There are three major subsystems in this subproject
 
-## Refactor
+- The `py` external in c
 
-## Bugs
+- The `api` module in c/cython
 
-- [ ] `PyLong_Check` can't pick up `numpy` numbers: the type of numpy numbers has to be implmented in the type translator.
+- The `builder` module in python
+
+-------------------------------------------------------------------------------
+
+## PY External
+
+### Bugs
+
+- [ ] Fix `p_name` attribute not being set properly.
+
+### Enhancements
+
+- [x] Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
+
+- [ ] Add set/get for attributes as appropriate to trigger actions or methods calls
+      after changes (NO REASON for using this found so far)
+
+## Editor
+
+- [x] Redo editor logic, set current default to run-on-close
+
+- [ ] Fix defaults of `run_on_save`, `close_onsave` options, if they are mutually exclusive, then enum is better otherwise make them binary options
+
+## Testing
+
+- [x] complete c test suite
+
+
+-------------------------------------------------------------------------------
+
+## Max API Module
+
+### Bugs
 
 - [ ] `api` object won't reload if a patch is closed (i.e. `PyFinalize`) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
 
-- [ ] WARNING: attempting to reload `numpy` after the patcher is closed causes an error in Max (except when you load it through `api` module!). This used to crash Max, but recent version of Python (3.9.x) just cause an non-crashing error. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug above). At least there's progress!
+- [ ] `PyLong_Check` can't pick up `numpy` numbers: the type of numpy numbers has to be implmented in the type translator. This assume tight integration with numpy headers, which creates a dependency on numpy. Should be an option if it is implemented.
 
-## Features
+- [ ] Attempting to reload `numpy` after the patcher is closed causes an error in Max (except when you load it through `api` module!). This used to crash Max, but recent versions of Python > (3.9.x) just cause an non-crashing error. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug 'reload bug' above). At least there's progress!
 
-## api
+## Enhancements
 
-### Wrapper Class Features
+- [ ] Add `MaxPath` extension class which wraps the `ext_path.h` api
 
-- [ ] add [buffer control](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html) support to `api.Matrix` to facilitate reading and writing to matrices along the lines of what was done with the `api.Buffer` wrapper.
+- [ ] Simplify `api` module's 'api' so to speak. It currently is includes quite a bit of redundancy and some low-level classes which may not be worthwhile exposing to users (such as the `LinkList` class).
 
-### Extensibility
-
-- [x] create script to shrink numpy from source for inclusion in a build.
-
-- [x] add script which to create throwaway virtualenv environments: `virtualenv venv` to install python packages and then copy targeted to appropriate place in external or package and then delete remove the `venv` after done.
-
-### Documentation
-
-- [x] complete quarto based documentation subproject
+- [ ] Add [buffer protocol](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html) support to `api.Matrix` to facilitate reading and writing to matrices along the lines of what was done with the `api.Buffer` wrapper.
 
 ### Testing
 
-- [ ] list remaining tests to implement
+- [ ] Complete api test suite
 
-- [ ] complete comprehensive test suite
-  - [ ] complete c test suite
-  - [ ] complete max test suite
+-------------------------------------------------------------------------------
 
-### Attributes
-
-- [ ] BUG: Fix p_name attribute not being set properly.
-
-- [ ] add set/get for attributes as appropriate to trigger actions or methods calls
-      after changes (NO REASON for using this found so far)
-
-- [ ] differentiate between class and object attributes!! (now everything is a class attribute)
-
-### Editor
-
-- [x] redo editor logic, set current default to run-on-close
-
-- [ ] Fix defaults of `run_on_save`, `close_onsave` options:
-  - if they are mutually exclusive, then enum is better otherwise make them binary options
-
-### Max API Wrapper
-
-- [x] add more tests and examples
-  - [ ] complete tests for remaining extension classes
-
-### Build System
+## Builder Module
 
 - [ ] Change python variant product names to include python version and architecture (and platform), for example: `shared-ext-3711-x86`
 
@@ -67,20 +68,24 @@
 
 - [ ] Develop a configuration based api for `builder` which can consume yaml, json or similar simple configuration.
 
-- [x] add NUMPY_INCLUDE var to all xcode projects
+- [x] Add NUMPY_INCLUDE var to all xcode projects
 
 - [ ] `min-setup.local` patch system needs to be organized and automated and linked to modules so that options lead to proper removal of extensions and modules with clear dependencies.
 
 - [ ] Add warning for `shared-ext` being opened up one after the other, Max will crash because it caches the former.
 
+- [x] Investigate static linking of numpy and python (see notes): not viable due to project size constraints.
+
+- [ ] Add step in bundle-creation to prepopulate site-packages with list of packages (this is alread done with `relocatable python` variations)
+
+
+### Automation
+
+- [x] Create script to shrink numpy from source for inclusion in a build.
+
+- [x] Add script which to create throwaway virtualenv environments: `virtualenv venv` to install python packages and then copy targeted to appropriate place in external or package and then delete remove the `venv` after done.
+
 ### Future Experiments
 
-- [ ] move `builder` from `py-js/source/projects/py/builder`to `py-js/source/scripts/builder` and make it more general such that it can build other python3 externals. This requires `xcodegen` to become more mature.
+- [ ] Move `builder` from `py-js/source/projects/py/builder`to `py-js/source/scripts/builder` and make it more general such that it can build other python3 externals. This requires `xcodegen` to become more mature.
 
-### Collected
-
-- [x] Implement section on two-way globals setting and reading (from python and c) in <https://pythonextensionpatterns.readthedocs.io/en/latest/module_globals.html> (deferred for now)
-
-- [x] investigate static linking of numpy and python (see notes): not viable due to project size constraints.
-
-- [ ] add step in bundle-creation to prepopulate site-packages with list of packages (this is alread done with `relocatable python` variations)
