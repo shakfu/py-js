@@ -10,8 +10,14 @@ API_PYX = 'source/projects/py/api.pyx'
 # re patterns
 
 class_header = re.compile(f'^cdef class (.+):')
-class_c_method = re.compile(r'    cdef (.+) (.+)\(self, (.+)\).*:')
-class_p_method = re.compile(r'    def (.+)\(self, (.+)\).*:')
+class_c_method = re.compile(r'^    cdef (.+)\((.+)\).*:')
+class_p_method = re.compile(r'^    def (.+)\((.+)\).*:')
+
+# class_c_method = re.compile(r'^    cdef (.+) (.+)\((.+)\).*:')
+# class_p_method = re.compile(r'^    def (.+) (.+)\((.+)\).*:')
+
+# class_c_method = re.compile(r'    cdef (.+) (.+)\(self, (.+)\).*:')
+# class_p_method = re.compile(r'    def (.+)\(self, (.+)\).*:')
 
 
 with open(API_PYX) as f:

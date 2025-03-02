@@ -38,6 +38,7 @@
 - [x] ext_obstring.h
 - [x] ext_packages.h
 - [x] ext_parameter.h
+- [x] ext_sysfile.h
 - [x] ext_path.h
 - [x] ext_preferences.h
 - [-] ext_prefix.h
@@ -50,7 +51,6 @@
 - [ ] ext_sndfile.h
 - [x] ext_strings.h
 - [x] ext_symobject.h
-- [x] ext_sysfile.h
 - [x] ext_sysmem.h
 - [x] ext_sysmidi.h
 - [x] ext_sysparallel.h
@@ -1500,6 +1500,59 @@ cdef extern from "ext_packages.h":
     cdef t_max_err packages_getsubpathcontents(const char *subfoldername, const char *suffix_selector, short includesysfolder, t_linklist **subpathlist, t_dictionary **names_to_packagefiles)
 
 
+cdef extern from "ext_sysfile.h":
+
+    ctypedef struct t_filestruct: pass
+    ctypedef t_filestruct *t_filehandle
+
+    ctypedef enum t_sysfile_pos_mode:
+        SYSFILE_ATMARK = 0
+        SYSFILE_FROMSTART = 1
+        SYSFILE_FROMLEOF = 2
+        SYSFILE_FROMMARK = 3
+
+
+    ctypedef enum t_sysfile_flags:
+        SYSFILE_SUBFILE = 1
+        SYSFILE_HANDLE = 2
+        SYSFILE_RESOURCE = 4
+        SYSFILE_MEMORY = 6
+        SYSFILE_RESFILE = 8
+        SYSFILE_OPENRESFILE = 16
+        SYSFILE_EXTERNALDATA = 32
+        SYSFILE_JUSTAPOINTER = 64
+        SYSFILE_EXTERNALDATA_CANWRITE = 128
+        SYSFILE_EXTERNALDATA_CANGROW = 256
+        SYSFILE_EXTERNALDATA_FREE = 512
+        SYSFILE_EXTERNALDATA_LATEFREE = 1024
+
+
+    ctypedef enum t_sysfile_text_flags:
+        TEXT_LB_NATIVE =            0x00000001L
+        TEXT_LB_MAC =               0x00000002L
+        TEXT_LB_PC =                0x00000004L
+        TEXT_LB_UNIX =              0x00000008L
+        TEXT_LB_MASK = 0x0000000FL
+        TEXT_ENCODING_USE_FILE =    0x00000100L
+        TEXT_NULL_TERMINATE =       0x00000200L
+
+    cdef t_max_err sysfile_close(t_filehandle f)
+    cdef t_max_err sysfile_read( t_filehandle f, t_ptr_size *count, void *bufptr)
+    cdef t_max_err sysfile_readtohandle(t_filehandle f, char ***h)
+    cdef t_max_err sysfile_readtoptr(t_filehandle f, char **p)
+    cdef t_max_err sysfile_write(t_filehandle f, t_ptr_size *count, const void *bufptr)
+    cdef t_max_err sysfile_seteof(t_filehandle f, t_ptr_size logeof)
+    cdef t_max_err sysfile_geteof(t_filehandle f, t_ptr_size *logeof)
+    cdef t_max_err sysfile_setpos(t_filehandle f, t_sysfile_pos_mode mode, t_ptr_int offset)
+    cdef t_max_err sysfile_getpos(t_filehandle f, t_ptr_size *filepos)
+    cdef t_max_err sysfile_spoolcopy(t_filehandle src, t_filehandle dst, t_ptr_size size)
+    cdef void sysfile_setobject(t_filehandle f, t_object *o)
+    cdef t_max_err sysfile_readtextfile(t_filehandle f, t_handle htext, t_ptr_size maxlen, t_sysfile_text_flags flags)
+    cdef t_max_err sysfile_writetextfile(t_filehandle f, t_handle htext, t_sysfile_text_flags flags)
+    cdef t_max_err sysfile_openhandle(char **h, t_sysfile_flags flags, t_filehandle *fh)
+    cdef t_max_err sysfile_openptrsize(char *p, t_ptr_size length, t_sysfile_flags flags, t_filehandle *fh)
+
+
 cdef extern from "ext_path.h":
 
     cdef int MAX_PATH_CHARS
@@ -1584,7 +1637,12 @@ cdef extern from "ext_path.h":
         TYPELIST_SNIPPETS       = 64
 
 
-    ctypedef struct t_fileinfo: pass
+    ctypedef struct t_fileinfo:
+        t_fourcc type          # type (four-char-code)
+        t_fourcc creator       # Mac-only creator (four-char-code)
+        t_uint32 unused        # this was date but it wasn't populated and it wasn't used
+        t_int32 flags          # One of the values defined in #e_max_fileinfo_flags
+
     ctypedef struct t_path: pass
     ctypedef struct t_pathlink: pass
 
@@ -1641,9 +1699,9 @@ cdef extern from "ext_path.h":
     cdef long path_getprefstring(long preftype, long index, t_symbol **s)
     cdef void path_setprefstring(long preftype, long index, t_symbol *s, long flags, t_symbol *label, short update)
     cdef void path_makefromsymbol(long pathtype, t_symbol *sp, short recursive)
-    # cdef short path_opensysfile(const char *name, const short path, t_filehandle *ref, short perm)
-    # cdef short path_createsysfile(const char *name, short path, t_fourcc type, t_filehandle *ref)
-    # cdef short path_createressysfile(const char *name, const short path, t_fourcc type, t_filehandle *ref)
+    cdef short path_opensysfile(const char *name, const short path, t_filehandle *ref, short perm)
+    cdef short path_createsysfile(const char *name, short path, t_fourcc type, t_filehandle *ref)
+    cdef short path_createressysfile(const char *name, const short path, t_fourcc type, t_filehandle *ref)
     cdef short path_nameconform(const char *src, char *dst, long style, long type)
     cdef short path_deletefile(const char *name, const short path)
     cdef short path_extendedfileinfo(const char *name, short path, t_fileinfo *info, const t_fourcc *typelist, short numtypes, short sniff)
@@ -1705,60 +1763,6 @@ cdef extern from "ext_symobject.h":
     cdef void symobject_initclass()
     cdef void *symobject_new(t_symbol *sym)
     cdef long symobject_linklist_match(void *a, void *b)
-
-
-cdef extern from "ext_sysfile.h":
-
-    ctypedef struct t_filestruct: pass
-    ctypedef t_filestruct *t_filehandle
-
-    ctypedef enum t_sysfile_pos_mode:
-        SYSFILE_ATMARK = 0
-        SYSFILE_FROMSTART = 1
-        SYSFILE_FROMLEOF = 2
-        SYSFILE_FROMMARK = 3
-
-
-    ctypedef enum t_sysfile_flags:
-        SYSFILE_SUBFILE = 1
-        SYSFILE_HANDLE = 2
-        SYSFILE_RESOURCE = 4
-        SYSFILE_MEMORY = 6
-        SYSFILE_RESFILE = 8
-        SYSFILE_OPENRESFILE = 16
-        SYSFILE_EXTERNALDATA = 32
-        SYSFILE_JUSTAPOINTER = 64
-        SYSFILE_EXTERNALDATA_CANWRITE = 128
-        SYSFILE_EXTERNALDATA_CANGROW = 256
-        SYSFILE_EXTERNALDATA_FREE = 512
-        SYSFILE_EXTERNALDATA_LATEFREE = 1024
-
-
-    ctypedef enum t_sysfile_text_flags:
-        TEXT_LB_NATIVE =            0x00000001L
-        TEXT_LB_MAC =               0x00000002L
-        TEXT_LB_PC =                0x00000004L
-        TEXT_LB_UNIX =              0x00000008L
-        TEXT_LB_MASK = 0x0000000FL
-        TEXT_ENCODING_USE_FILE =    0x00000100L
-        TEXT_NULL_TERMINATE =       0x00000200L
-
-    cdef t_max_err sysfile_close(t_filehandle f)
-    cdef t_max_err sysfile_read( t_filehandle f, t_ptr_size *count, void *bufptr)
-    cdef t_max_err sysfile_readtohandle(t_filehandle f, char ***h)
-    cdef t_max_err sysfile_readtoptr(t_filehandle f, char **p)
-    cdef t_max_err sysfile_write(t_filehandle f, t_ptr_size *count, const void *bufptr)
-    cdef t_max_err sysfile_seteof(t_filehandle f, t_ptr_size logeof)
-    cdef t_max_err sysfile_geteof(t_filehandle f, t_ptr_size *logeof)
-    cdef t_max_err sysfile_setpos(t_filehandle f, t_sysfile_pos_mode mode, t_ptr_int offset)
-    cdef t_max_err sysfile_getpos(t_filehandle f, t_ptr_size *filepos)
-    cdef t_max_err sysfile_spoolcopy(t_filehandle src, t_filehandle dst, t_ptr_size size)
-    cdef void sysfile_setobject(t_filehandle f, t_object *o)
-    cdef t_max_err sysfile_readtextfile(t_filehandle f, t_handle htext, t_ptr_size maxlen, t_sysfile_text_flags flags)
-    cdef t_max_err sysfile_writetextfile(t_filehandle f, t_handle htext, t_sysfile_text_flags flags)
-    cdef t_max_err sysfile_openhandle(char **h, t_sysfile_flags flags, t_filehandle *fh)
-    cdef t_max_err sysfile_openptrsize(char *p, t_ptr_size length, t_sysfile_flags flags, t_filehandle *fh)
-
 
 cdef extern from "ext_sysmem.h":
 
