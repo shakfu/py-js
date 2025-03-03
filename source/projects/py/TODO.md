@@ -40,7 +40,7 @@ There are three major subsystems in this subproject
 
 ### Bugs
 
-- [ ] `api` object won't reload if a patch is closed (i.e. `PyFinalize`) and new one opened. Requires a restart of Max. (Python bug which is being worked on).
+- [ ] `api` object won't reload if a patch is closed (i.e. `PyFinalize`) and new one opened. Requires a restart of Max. (Python bug which is being worked on see [here](https://discuss.python.org/t/safely-using-the-c-api-when-python-might-shut-down)
 
 - [ ] `PyLong_Check` can't pick up `numpy` numbers: the type of numpy numbers has to be implmented in the type translator. This assume tight integration with numpy headers, which creates a dependency on numpy. Should be an option if it is implemented.
 

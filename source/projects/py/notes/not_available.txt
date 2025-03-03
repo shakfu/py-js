@@ -3,6 +3,13 @@
 t_symbol *symbol_stripquotes(t_symbol *s);
 
 
+def name_from_pathname(str pathname) -> str:
+    """get name from pathname"""
+    cdef char name[2048]
+    mx.path_namefrompathname(pathname.encode(), name)
+    return name.encode()
+
+
 cdef class AtomArray:
 
     cdef mx.t_max_err setindex(self, long index, mx.t_atom* av):

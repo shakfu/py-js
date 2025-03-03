@@ -1673,6 +1673,7 @@ cdef extern from "ext_path.h":
     cdef short path_copyfile(short srcpath, char *srcname, short dstpath, char *dstname)
     cdef short path_copytotempfile(short srcpath, char *srcname, short *outpath, char *outname)
     cdef short path_copyfolder(short srcpath, short dstpath, char *dstname, long recurse, short *newpath)
+    cdef short path_getpath(short path, const char *name, short *outpath)
     #cdef short C74_MUST_CHECK path_getpath(short path, const char *name, short *outpath)
     cdef short path_getname(short path, char *name, short *outpath)
     cdef short path_topathname(const short path, const char *file, char *name)

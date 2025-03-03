@@ -76,8 +76,10 @@ if INCLUDE_NUMPY:
 # compile-time constants
 
 cpdef enum:
-    MAX_CHARS = 32767
-    PY_MAX_ATOMS = 1024
+    MAX_FILENAME_CHARS = 512
+    MAX_PATH_CHARS = 2048
+    # MAX_CHARS = 32767
+    # PY_MAX_ATOMS = 1024
 
 # ----------------------------------------------------------------------------
 # python c-api imports
@@ -258,7 +260,7 @@ cdef class MaxObject:
         """Set value of object"""
         cdef Atom atom = Atom(*args)
         cdef mx.t_max_err err = mx.object_setvalueof(<mx.t_object*>self.ptr, atom.size, atom.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not set object value with {args}")
 
     def get_value(self) -> object:
@@ -267,7 +269,7 @@ cdef class MaxObject:
         cdef long argc = 0
         cdef mx.t_max_err err = mx.object_getvalueof(<mx.t_object*>self.ptr, &argc, &argv)
         cdef Atom atom = Atom.from_ptr(argv, argc)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get object value")
         return atom.value
 
@@ -290,14 +292,14 @@ cdef class MaxObject:
             raise ValueError(f"could not create an attribute: {type} {name}")
 
         err = mx.object_addattr(<mx.t_object*>self.ptr, attr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise AttributeError(f"could not add attribute {type} {name}")
         self.type_map[name] = type
 
     def remove_attribute(self, str name):
         """Delete attribute by name"""
         cdef mx.t_max_err err = mx.object_deleteattr(<mx.t_object*>self.ptr, str_to_sym(name))
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise AttributeError(f"could not delete attr {name}")
         del self.type_map[name]
 
@@ -353,7 +355,7 @@ cdef class MaxObject:
     def unregister(self):
         """Removes a registered object from a namespace."""
         cdef mx.t_max_err err = mx.object_unregister(self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not unregister object")
 
     # def get_namespace_and_name(self) -> list[str]:
@@ -362,7 +364,7 @@ cdef class MaxObject:
         cdef mx.t_symbol* namespace = mx.gensym("")
         cdef mx.t_symbol* name = mx.gensym("")
         cdef mx.t_max_err err = mx.object_findregisteredbyptr(&namespace, &name, self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get object's namespace and name from ptr")
         # return [sym_to_str(namespace), sym_to_str(name)]
         return (sym_to_str(namespace), sym_to_str(name))
@@ -379,7 +381,7 @@ cdef class MaxObject:
         """object method call with no arguments"""
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), 0, NULL, NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"no arg method '{name}' call failed")
 
     def _method_args(self, str name, *args):
@@ -387,90 +389,90 @@ cdef class MaxObject:
         cdef Atom atom = Atom(*args)
         cdef mx.t_max_err err = mx.object_method_typed(
             <mx.t_object *>self.ptr, str_to_sym(name), atom.size, atom.ptr, NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"args method '{name}' call failed")
 
     def _method_parsestr(self, str name, str parsestr):
         """combines object_method_typed() + atom_setparse() to define method arguments."""
         cdef mx.t_max_err err = mx.object_method_parse(
             <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode(), NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"parsestr method '{name}' call failed")
 
     def _method_float(self, str name, float number):
         """wrapper for object_method_typed() that passes a single float as an argument"""
         cdef mx.t_max_err err = mx.object_method_float(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"float method '{name}' call failed")
 
     def _method_double(self, str name, double number):
         """wrapper for object_method_typed() that passes a single double as an argument"""
         cdef mx.t_max_err err = mx.object_method_double(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"double method '{name}' call failed")
 
     def _method_long(self, str name, long number):
         """wrapper for object_method_typed() that passes a single long as an argument"""
         cdef mx.t_max_err err = mx.object_method_long(
             <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"long method '{name}' call failed")
 
     def _method_sym(self, str name, str symbol):
         """wrapper for object_method_typed() that passes a single t_symbol as an argument"""
         cdef mx.t_max_err err = mx.object_method_sym(
             <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"sym method '{name}' call failed")
 
     def _method_obj(self, str method_name, MaxObject obj):
         """wrapper for object_method_typed() that passes a single #t_object* as an argument."""
         cdef mx.t_max_err err = mx.object_method_obj(
             <mx.t_object *>self.ptr, str_to_sym(method_name), obj.ptr, NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"method '{method_name}' call failed")
 
     cdef mx.t_max_err object_method_char_array(self, str method_name, long ac, unsigned char *av, mx.t_atom *rv):
         """Convenience wrapper for object_method_typed() that passes an array of char values as an argument."""
         cdef mx.t_max_err err = mx.object_method_char_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"method '{method_name}' call failed")
         return mx.MAX_ERR_NONE
 
     cdef mx.t_max_err object_method_long_array(self, str method_name, long ac, mx.t_atom_long *av, mx.t_atom *rv):
         """Convenience wrapper for object_method_typed() that passes an array of long integers values as an argument."""
         cdef mx.t_max_err err = mx.object_method_long_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"method '{method_name}' call failed")
         return mx.MAX_ERR_NONE
 
     cdef mx.t_max_err object_method_float_array(self, str method_name, long ac, float *av, mx.t_atom *rv):
         """Convenience wrapper for object_method_typed() that passes an array of 32bit floats values as an argument."""
         cdef mx.t_max_err err = mx.object_method_float_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"method '{method_name}' call failed")
         return mx.MAX_ERR_NONE
 
     cdef mx.t_max_err object_method_double_array(self, str method_name, long ac, double *av, mx.t_atom *rv):
         """Convenience wrapper for object_method_typed() that passes an array of 64bit float values as an argument."""
         cdef mx.t_max_err err = mx.object_method_double_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"method '{method_name}' call failed")
         return mx.MAX_ERR_NONE
 
     cdef mx.t_max_err object_method_sym_array(self, str method_name, long ac, mx.t_symbol **av, mx.t_atom *rv):
         """Convenience wrapper for object_method_typed() that passes an array of symbol values as an argument."""
         cdef mx.t_max_err err = mx.object_method_sym_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"method '{method_name}' call failed")
         return mx.MAX_ERR_NONE
 
     cdef mx.t_max_err object_method_obj_array(self, str method_name, long ac, mx.t_object **av, mx.t_atom *rv):
         """Convenience wrapper for object_method_typed() that passes an array of #t_object* values as an argument."""
         cdef mx.t_max_err err = mx.object_method_obj_array(<mx.t_object *>self.ptr, str_to_sym(method_name), ac, av, rv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"method '{method_name}' call failed")
         return mx.MAX_ERR_NONE
 
@@ -509,7 +511,7 @@ cdef class MaxObject:
         """Sets the value of an attribute, given its parent object and name."""
         cdef mx.t_max_err err = mx.object_attr_setsym(<mx.t_object *>self.ptr, 
             str_to_sym(name), str_to_sym(value))
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"could not set attr '{name}' value '{value}'")
 
     def get_attr_long(self, str name) -> int:
@@ -520,7 +522,7 @@ cdef class MaxObject:
         """Sets the value of an attribute, given its parent object and name."""
         cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object *>self.ptr, 
             str_to_sym(name), value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"could not set attr '{name}' value '{value}'")
 
     def get_attr_float(self, str name) -> float:
@@ -531,7 +533,7 @@ cdef class MaxObject:
         """Sets the value of an attribute, given its parent object and name."""
         cdef mx.t_max_err err = mx.object_attr_setfloat(<mx.t_object *>self.ptr,
             str_to_sym(name), value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"could not set attr '{name}' value '{value}'")
 
     def get_attr_char(self, str name) -> bool:
@@ -542,7 +544,7 @@ cdef class MaxObject:
         """Sets the value of an attribute, given its parent object and name."""
         cdef mx.t_max_err err = mx.object_attr_setchar(<mx.t_object *>self.ptr,
             str_to_sym(name), value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error(f"could not set attr '{name}' value '{value}'")
 
     def set_attr_from_str(self, str name, str value):
@@ -569,7 +571,7 @@ cdef class MaxObject:
         """Detach a client from a registered object."""
         cdef mx.t_max_err err = mx.object_detach(
             str_to_sym(namespace), str_to_sym(name), self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not detach from {namespace} {name} object")
 
     def subscribe(self, str name, str classname, str namespace = "box") -> MaxObject:
@@ -585,7 +587,7 @@ cdef class MaxObject:
         """Detach a client from a registered object."""
         cdef mx.t_max_err err = mx.object_unsubscribe(
             str_to_sym(namespace), str_to_sym(name), str_to_sym(classname), self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(
                 f"could not unsubscribe from {namespace} {classname} {name} object")
 
@@ -593,7 +595,7 @@ cdef class MaxObject:
         """Broadcast a message (with an optional argument) from a registered object to any attached client objects."""
         # data may be implemented in another iteration
         cdef mx.t_max_err err = mx.object_notify(self.ptr, str_to_sym(msg), NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not notify object(s)")
 
     # help / open doc functions
@@ -719,7 +721,7 @@ cdef class Atom:
         cdef mx.t_atom *ptr = NULL
         cdef long size = 0
         cdef mx.t_max_err err = mx.atom_setparse(&size, &ptr, parsestr.encode())
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise TypeError("unable to parse a string into an Atom instance")
         return Atom.from_ptr(ptr, size, owner=True)
 
@@ -911,7 +913,7 @@ cdef class Atom:
         for i in range(count):
             vals[i] = <long>values[i]
         cdef mx.t_max_err err = mx.atom_setlong_array(ac, self.ptr, count, vals)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not set long array")
         mx.sysmem_freeptr(vals)
 
@@ -919,7 +921,7 @@ cdef class Atom:
         """Fetch an array of long values from an array of atoms."""
         cdef mx.t_atom_long *vals = <mx.t_atom_long *>mx.sysmem_newptr(count * sizeof(mx.t_atom_long))
         cdef mx.t_max_err err = mx.atom_getlong_array(self.size, self.ptr, count, vals)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get long array")
         cdef list[int] values = []
         for i in range(count):
@@ -937,7 +939,7 @@ cdef class Atom:
         for i in range(count):
             vals[i] = <float>values[i]
         cdef mx.t_max_err err = mx.atom_setfloat_array(ac, self.ptr, count, vals)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not set float array")
         mx.sysmem_freeptr(vals)
 
@@ -945,7 +947,7 @@ cdef class Atom:
         """Fetch an array of float values from an array of atoms."""
         cdef float *vals = <float *>mx.sysmem_newptr(count * sizeof(float))
         cdef mx.t_max_err err = mx.atom_getfloat_array(self.size, self.ptr, count, vals)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get float array")
         cdef list[float] values = []
         for i in range(count):
@@ -963,7 +965,7 @@ cdef class Atom:
         for i in range(count):
             vals[i] = <double>values[i]
         cdef mx.t_max_err err = mx.atom_setdouble_array(ac, self.ptr, count, vals)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not set double array")
         mx.sysmem_freeptr(vals)
 
@@ -971,7 +973,7 @@ cdef class Atom:
         """Fetch an array of double values from an array of atoms."""
         cdef double *vals = <double *>mx.sysmem_newptr(count * sizeof(double))
         cdef mx.t_max_err err = mx.atom_getdouble_array(self.size, self.ptr, count, vals)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get double array")
         cdef list[float] values = []
         for i in range(count):
@@ -1106,7 +1108,7 @@ cdef class Table:
         else:
             err = mx.object_method_typed(<mx.t_object*>self.ptr,
                 str_to_sym(method), atom.size, atom.ptr, NULL)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not apply single arg to method {method}")
 
     def populate(self, list[int] xs):
@@ -1414,7 +1416,7 @@ cdef class Table:
         """
         cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object*>self.ptr,
             mx.gensym("embed"), <long>value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise TypeError("could not set embed attribute")
 
 # ----------------------------------------------------------------------------
@@ -1987,7 +1989,7 @@ cdef class Dictionary:
         """Create an unregistered dictionary from atoms as dict-syntax"""
         cdef Dictionary _dict = cls(name)
         cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms(&_dict.ptr, atoms.size, atoms.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise TypeError("Could not create an unregistered dictionary from atoms as dict-syntax")
         return _dict
 
@@ -1996,7 +1998,7 @@ cdef class Dictionary:
         """Create a new t_dictionary from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
         cdef Dictionary _dict = cls(name)
         cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms_extended(&_dict.ptr, NULL, atoms.size, atoms.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise TypeError("could not create dictionary from atoms")
         return _dict
 
@@ -2009,7 +2011,7 @@ cdef class Dictionary:
         cdef long n = len(dict_string) + 1
         strcpy(dict_string_ptr, dict_string.encode())
         cdef mx.t_max_err err = mx.dictobj_dictionaryfromstring(&_dict.ptr, dict_string_ptr, <int>str_is_already_json, errorstring)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not create dictionary from string: {errorstring.decode()}")
         mx.sysmem_freeptr(dict_string_ptr)
         return _dict
@@ -2060,7 +2062,7 @@ cdef class Dictionary:
         """Add an Atom Array object to the dictionary."""
         cdef mx.t_max_err err = mx.dictionary_appendatomarray(self.ptr, 
             str_to_sym(key), <mx.t_object*>atomarray.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not append atomarray to dictionary")
 
     def append_dictionary(self, str key, Dictionary dict):
@@ -2087,7 +2089,7 @@ cdef class Dictionary:
         """Retrieve a long integer from the dictionary."""
         cdef mx.t_atom_long value
         cdef mx.t_max_err err = mx.dictionary_getlong(self.ptr, str_to_sym(key), &value)
-        if err != mx.MAX_ERR_NONE:        
+        if err:        
             raise ValueError(f"could not get long value from dict with key {key}")
         return <int>value
 
@@ -2095,7 +2097,7 @@ cdef class Dictionary:
         """Retrieve a double-precision float from the dictionary."""
         cdef double value
         cdef mx.t_max_err err = mx.dictionary_getfloat(self.ptr, str_to_sym(key), &value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get float value from dict with key {key}")
         return <float>value        
 
@@ -2103,7 +2105,7 @@ cdef class Dictionary:
         """Retrieve a t_symbol* as a python string from the dictionary."""
         cdef mx.t_symbol* value
         cdef mx.t_max_err err = mx.dictionary_getsym(self.ptr, str_to_sym(key), &value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get symbol as str from dict with key {key}")
         return sym_to_str(value)
 
@@ -2118,7 +2120,7 @@ cdef class Dictionary:
         cdef mx.t_atom* argv
         cdef Atom atom
         cdef mx.t_max_err err = mx.dictionary_getatoms(self.ptr, str_to_sym(key), &argc, &argv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get atoms from dict with key {key}")
         atom =  Atom.from_ptr(argv, argc)
         return atom
@@ -2132,7 +2134,7 @@ cdef class Dictionary:
         """Retrieve a C-string pointer from the dictionary."""
         cdef const char* value
         cdef mx.t_max_err err = mx.dictionary_getstring(self.ptr, str_to_sym(key), &value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not retrieve string from dictionary")
         return value.decode()
 
@@ -2142,7 +2144,7 @@ cdef class Dictionary:
     #     cdef mx.t_atom* atom
     #     cdef Atom _atom
     #     cdef mx.t_max_err err = mx.dictionary_getatom(self.d, str_to_sym(key), atom)
-    #     if err != mx.MAX_ERR_NONE:
+    #     if err:
     #         raise ValueError("could not retrieve atom from dictionary")
     #     _atom = Atom.from_ptr(atom, 1)
     #     return _atom
@@ -2167,7 +2169,7 @@ cdef class Dictionary:
         """Retrieve a t_atomarray pointer from the dictionary."""
         cdef mx.t_object* ptr
         cdef mx.t_max_err err = mx.dictionary_getatomarray(self.ptr, str_to_sym(key), &ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get atomarray from dictionary")
         return AtomArray.from_ptr(<mx.t_atomarray*>ptr)
 
@@ -2179,7 +2181,7 @@ cdef class Dictionary:
         """Retrieve a t_dictionary pointer from the dictionary."""
         cdef mx.t_object* ptr
         cdef mx.t_max_err err = mx.dictionary_getdictionary(self.ptr, str_to_sym(key), &ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get dictionary from dictionary")
         return Dictionary.from_ptr(<mx.t_dictionary*>ptr)
 
@@ -2195,7 +2197,7 @@ cdef class Dictionary:
         """Retrieve a t_object pointer from the dictionary."""
         cdef mx.t_object* ptr
         cdef mx.t_max_err err = mx.dictionary_getobject(self.ptr, str_to_sym(key), &ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get object '{key}' from dictionary")
         return MaxObject.from_ptr(ptr)
 
@@ -2228,7 +2230,7 @@ cdef class Dictionary:
         cdef long numkeys = 0
         cdef mx.t_symbol** keys
         cdef mx.t_max_err err = mx.dictionary_getkeys(self.ptr, &numkeys, &keys)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not retrieve keys")
         results = []
         for i in range(numkeys):
@@ -2241,7 +2243,7 @@ cdef class Dictionary:
         cdef long numkeys = 0
         cdef mx.t_symbol** keys
         cdef mx.t_max_err err = mx.dictionary_getkeys_ordered(self.ptr, &numkeys, &keys)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not retrieve keys")
         results = []
         for i in range(numkeys):
@@ -2258,19 +2260,19 @@ cdef class Dictionary:
     def delete_entry(self, str key):
         """Remove a value from the dictionary."""
         cdef mx.t_max_err err = mx.dictionary_deleteentry(self.ptr, str_to_sym(key))
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not delete entry {key} from dictionary")
 
     def chuck_entry(self, str key):
         """Remove a value from the dictionary without freeing it."""
         cdef mx.t_max_err err = mx.dictionary_chuckentry(self.ptr, str_to_sym(key))
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not chuck entry {key} from dictionary")
 
     def clear(self):
         """Delete all values from a dictionary."""
         cdef mx.t_max_err err = mx.dictionary_clear(self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not clear dictionary")
 
     def clone(self) -> Dictionary:
@@ -2281,13 +2283,13 @@ cdef class Dictionary:
     def clone_to_self(self, Dictionary dict_to_clone):
         """Create a copy of the dictionary and add it to the current dictionary."""
         cdef mx.t_max_err err = mx.dictionary_clone_to_existing(dict_to_clone.ptr, self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not clone dictionary to self")
 
     def clone_to_existing(self, Dictionary existing_dict):
         """Create a copy of the dictionary and add it to an existing dictionary."""
         cdef mx.t_max_err err = mx.dictionary_clone_to_existing(self.ptr, existing_dict.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not clone dictionary to existing dictionary")    
 
     # MAX_SDK BUG
@@ -2297,13 +2299,13 @@ cdef class Dictionary:
     def merge_to_existing(self, Dictionary existing_dict):
         """Merge the contents of the dictionary into an existing dictionary."""
         cdef mx.t_max_err err = mx.dictionary_merge_to_existing(self.ptr, existing_dict.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not merge dictionary to existing dictionary")
 
     def merge_to_self(self, Dictionary dict_to_merge):
         """Merge the contents of the dictionary into the current dictionary."""
         cdef mx.t_max_err err = mx.dictionary_merge_to_existing(dict_to_merge.ptr, self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not merge dictionary to self")
 
     cdef void funall(self, mx.method fun, void* arg):
@@ -2325,14 +2327,14 @@ cdef class Dictionary:
     def copy_unique(self, Dictionary copyfrom):
         """Given 2 dictionaries, copy the keys unique to one of the dictionaries to the other dictionary."""
         cdef mx.t_max_err err = mx.dictionary_copyunique(self.ptr, copyfrom.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not copy unique keys fromdictionary")
 
     def get_default_long(self, str key, long default_value) -> int:
         """Retrieve a long integer from the dictionary or a default value if the key is not found."""
         cdef mx.t_atom_long value
         cdef mx.t_max_err err = mx.dictionary_getdeflong(self.ptr, str_to_sym(key), &value, default_value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get long value from dict with key {key}")
         return <int>value
 
@@ -2340,7 +2342,7 @@ cdef class Dictionary:
         """Retrieve a double-precision float from the dictionary or a default value if the key is not found."""
         cdef double value
         cdef mx.t_max_err err = mx.dictionary_getdeffloat(self.ptr, str_to_sym(key), &value, default_value)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get float value from dict with key {key}")
         return <float>value
 
@@ -2348,7 +2350,7 @@ cdef class Dictionary:
         """Retrieve a t_symbol* from the dictionary or a default value if the key is not found."""
         cdef mx.t_symbol* value
         cdef mx.t_max_err err = mx.dictionary_getdefsym(self.ptr, str_to_sym(key), &value, str_to_sym(default_value))
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get symbol as str from dict with key {key}")
         return sym_to_str(value)
 
@@ -2357,7 +2359,7 @@ cdef class Dictionary:
     #     cdef mx.t_atom* value = <mx.t_atom*>mx.sysmem_newptr(1 * sizeof(mx.t_atom))
     #     # cdef mx.t_atom* value = NULL
     #     cdef mx.t_max_err err = mx.dictionary_getdefatom(self.ptr, str_to_sym(key), value, default_value.ptr)
-    #     if err != mx.MAX_ERR_NONE:
+    #     if err:
     #         raise ValueError(f"could not get atom from dict with key {key}")
     #     return Atom.from_ptr(value, 1)
 
@@ -2365,7 +2367,7 @@ cdef class Dictionary:
         """Retrieve a c-string from the dictionary or a default value if the key is not found."""
         cdef const char* value
         cdef mx.t_max_err err = mx.dictionary_getdefstring(self.ptr, str_to_sym(key), &value, default_value.encode())
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError(f"could not get string from dict with key {key}")
         return value.decode()
 
@@ -2387,7 +2389,7 @@ cdef class Dictionary:
                         On Windows you can use the free DbgView program which can be downloaded from Microsoft.
         """
         cdef mx.t_max_err err = mx.dictionary_dump(self.ptr, recurse, console)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not dump dictionary")
 
     def copy_entries(self, Dictionary dst, list[str] keys):
@@ -2396,7 +2398,7 @@ cdef class Dictionary:
             keys_ptr[i] = str_to_sym(key)
         cdef mx.t_max_err err = mx.dictionary_copyentries(self.ptr, dst.ptr, keys_ptr)
         mx.sysmem_freeptr(keys_ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not copy entries")
 
     # cdef mx.t_dictionary* sprintf(self, char* fmt, ...):
@@ -2410,7 +2412,7 @@ cdef class Dictionary:
         on to internal dictionary element pointers for complex operations.
         """
         cdef mx.t_max_err err = mx.dictionary_transaction_lock(self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not lock dictionary")
 
     def transaction_unlock(self):
@@ -2420,7 +2422,7 @@ cdef class Dictionary:
         on to internal dictionary element pointers for complex operations.
         """
         cdef mx.t_max_err err = mx.dictionary_transaction_unlock(self.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not unlock dictionary")
 
 
@@ -2485,7 +2487,7 @@ cdef class Dictionary:
         """Release a t_dictionary/name previously retained with dictobj_findregistered_retain()."""
         cdef mx.t_max_err err = mx.dictobj_release(self.ptr)
         self.name = ""
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not release dictionary")
 
     def name_from_ptr(self, Dictionary dict = None) -> str:
@@ -2536,7 +2538,7 @@ cdef class Dictionary:
         cdef char *json = NULL
         cdef long jsonsize = 0
         cdef mx.t_max_err err = mx.dictobj_jsonfromstring(&jsonsize, &json, dict_string.encode())
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not convert dictionary to json")
         return json.decode()
 
@@ -2544,7 +2546,7 @@ cdef class Dictionary:
     #     """Create a new t_dictionary from an array of atoms that use Max dictionary syntax, JSON, or compressed JSON."""
     #     cdef mx.t_dictionary* d = NULL
     #     cdef mx.t_max_err err = mx.dictobj_dictionaryfromatoms_extended(&d, NULL, atoms.size, atoms.ptr)
-    #     if err != mx.MAX_ERR_NONE:
+    #     if err:
     #         raise ValueError("could not create dictionary from atoms")
     #     return Dictionary.from_ptr(d, owner=True, to_release=False)
 
@@ -2557,7 +2559,7 @@ cdef class Dictionary:
             err = mx.dictobj_dictionarytoatoms(dict.ptr, &argc, &argv)
         else:
             err = mx.dictobj_dictionarytoatoms(self.ptr, &argc, &argv)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not serialize dictionary to atoms")
         return Atom.from_ptr(argv, argc, owner=True)
 
@@ -2687,7 +2689,7 @@ cdef class DatabaseView:
         """Get the result of a view."""
         cdef mx.t_db_result* result = NULL
         cdef mx.t_max_err err = mx.db_view_getresult(self.ptr, &result)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get result")
         return DatabaseResult.from_ptr(result, True)
 
@@ -2695,7 +2697,7 @@ cdef class DatabaseView:
         """Set the query of a view."""
         self.sql = sql
         cdef mx.t_max_err err = mx.db_view_setquery(self.ptr, sql.encode())
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not set query")
 
 cdef class Database:
@@ -2759,7 +2761,7 @@ cdef class Database:
         """Execute a direct query."""
         cdef mx.t_db_result* dbresult = NULL
         cdef mx.t_max_err err = mx.db_query_direct(self.ptr, &dbresult, sql.encode())
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not execute direct query")
         return DatabaseResult.from_ptr(dbresult, True)
 
@@ -2871,13 +2873,13 @@ cdef class Linklist:
     def delete_object_at_index(self, long index):
         """Delete an object at a given index."""
         cdef mx.t_max_err err = mx.linklist_deleteindex(self.ptr, index)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not delete object at index")
 
     def chuck_object_at_index(self, long index):
         """Chuck an object at a given index."""
         cdef mx.t_max_err err = mx.linklist_chuckindex(self.ptr, index)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not chuck object at index")
 
     cdef mx.t_max_err chuck_object(self, void* o):
@@ -3369,7 +3371,7 @@ cdef class AtomArray:
     def set_atoms(self, Atom atom):
         """Replace the existing array with a new (copied) set of atoms."""
         cdef mx.t_max_err err = mx.atomarray_setatoms(self.ptr, atom.size, atom.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not replace existing atoms with provided atoms")
 
     def get_atoms(self) -> Atom:
@@ -3377,7 +3379,7 @@ cdef class AtomArray:
         cdef mx.t_atom* av = NULL
         cdef long ac = 0
         cdef mx.t_max_err err = mx.atomarray_getatoms(self.ptr, &ac, &av)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get atoms from atomarray")
         return Atom.from_ptr(av, ac)
 
@@ -3386,7 +3388,7 @@ cdef class AtomArray:
         cdef mx.t_atom* av = NULL
         cdef long ac = 0
         cdef mx.t_max_err err = mx.atomarray_copyatoms(self.ptr, &ac, &av)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not copy atoms from atomarray")
         return Atom.from_ptr(av, ac)
 
@@ -3394,7 +3396,7 @@ cdef class AtomArray:
         """Copy an a specific atom from the array."""
         cdef Atom atom = Atom.new(1)
         cdef mx.t_max_err err = mx.atomarray_getindex(self.ptr, index, atom.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get atom from index from atomarray")
         return atom
 
@@ -3461,7 +3463,7 @@ cdef class Patcher:
         """Create a reference to a pstcher object from object."""
         cdef Patcher patcher = Patcher.__new__(Patcher)
         cdef mx.t_max_err err = mx.object_obex_lookup(x, mx.gensym("#P"), &patcher.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise TypeError("unable to obtain owning patcher for object")
         if patcher.ptr is NULL:
             raise MemoryError
@@ -4056,7 +4058,7 @@ cdef class Patcher:
         """Set a patcher's unlocked background color."""
         cdef mx.t_jrgba rgba = c
         cdef mx.t_max_err err = mx.jpatcher_set_bgcolor(self.ptr, &rgba)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error("could not set patcher bgcolor")
 
     def get_gridsize(self) -> tuple:
@@ -4073,7 +4075,7 @@ cdef class Patcher:
         """Set a patcher's grid size."""
         cdef mx.t_max_err err = mx.jpatcher_set_gridsize(
             self.ptr, grid_size_x, grid_size_y)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error("could not set patcher gridsize")
 
     def get_rect(self) -> Rect:
@@ -4088,7 +4090,7 @@ cdef class Patcher:
         """Set a patcher's location and size."""
         cdef mx.t_rect rect = r
         cdef mx.t_max_err err = mx.jpatcher_set_rect(self.ptr, &rect)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             return error("could not set patcher rect")
 
     cdef void deleteobj(self, mx.t_jbox *b):
@@ -4144,7 +4146,7 @@ cdef class Box:
         cdef Box box = Box.__new__(Box)
         box.ptr_owner = True
         err = mx.object_obex_lookup(x, mx.gensym("#B"), &box.ptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not create a box object from an object pointer")
         if box.ptr is NULL:
             raise MemoryError
@@ -4197,7 +4199,7 @@ cdef class Box:
         """Find the rect for a box in a given patcherview."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_rect_for_view(self.ptr, self.patcherview, &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise TypeError("could not get rect from patcherview's box")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
@@ -4205,14 +4207,14 @@ cdef class Box:
         """Change the rect for a box in a given patcherview."""
         cdef mx.t_rect pr = rect
         cdef mx.t_max_err err = mx.jbox_set_rect_for_view(self.ptr, self.patcherview, &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set rect for box in patcherview")
 
     def get_rect_for_sym(self, which: str) -> Rect:
         """Find the rect for a box with a given attribute name."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_rect_for_sym(self.ptr, str_to_sym(which), &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not get rect for box given attribute name")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
@@ -4220,21 +4222,21 @@ cdef class Box:
         """Change the rect for a box with a given attribute name."""
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_rect_for_sym(self.ptr, str_to_sym(which), &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set rect for box with given attribute name")
 
     def set_rect(self, rect: Rect):
         """Set both the presentation rect and the patching rect."""
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_rect(self.ptr, &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set rect for box")
 
     def get_patching_rect(self) -> Rect:
         """Retrieve the patching rect of a box."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_patching_rect(self.ptr, &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not get patching rect for box")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
@@ -4242,14 +4244,14 @@ cdef class Box:
         """Change the patching rect of a box."""
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_patching_rect(self.ptr, &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set patching rect for box")
 
     def get_presentation_rect(self) -> Rect:
         """Retrieve the presentation rect of a box."""
         cdef mx.t_rect pr
         cdef mx.t_max_err err = mx.jbox_get_presentation_rect(self.ptr, &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not get presentation rect for box")
         return Rect(pr.x, pr.y, pr.width, pr.height)
 
@@ -4257,21 +4259,21 @@ cdef class Box:
         """Change the presentation rect of a box."""
         cdef mx.t_rect pr  = rect
         cdef mx.t_max_err err = mx.jbox_set_presentation_rect(self.ptr, &pr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set presentation rect for box")
 
     def set_position(self, x: float, y: float):
         """Set the position of a box for both presentation and patching views."""
         cdef mx.t_pt pos  = (x, y)
         cdef mx.t_max_err err = mx.jbox_set_position(self.ptr, &pos)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set the position of a box for both views")
 
     def get_patching_position(self) -> tuple[float, float]:
         """Fetch the position of a box for the patching view."""
         cdef mx.t_pt pos
         cdef mx.t_max_err err = mx.jbox_get_patching_position(self.ptr, &pos)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not get patching position for box")
         return (pos.x, pos.y)
 
@@ -4279,21 +4281,21 @@ cdef class Box:
         """Set the position of a box for the presentation view."""
         cdef mx.t_pt pos  = (x, y)
         cdef mx.t_max_err err = mx.jbox_set_presentation_position(self.ptr, &pos)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set the position of a box for presentation view")
 
     def set_size(self, width: float, height: float):
         """Set the size of a box for both the presentation and patching views."""
         cdef mx.t_size size  = (width, height)
         cdef mx.t_max_err err = mx.jbox_set_size(self.ptr, &size)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set the size of a box for both views")
 
     def get_patching_size(self) -> tuple[float, float]:
         """Fetch the size of a box for the patching view."""
         cdef mx.t_size size
         cdef mx.t_max_err err = mx.jbox_get_patching_size(self.ptr, &size)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not get patching size for box")
         return (size.width, size.height)
 
@@ -4301,14 +4303,14 @@ cdef class Box:
         """Set the size of a box for the patching view."""
         cdef mx.t_size size  = (width, height)
         cdef mx.t_max_err err = mx.jbox_set_patching_size(self.ptr, &size)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set the size of a box for the patching view.")
 
     def get_presentation_size(self) -> tuple[float, float]:
         """Fetch the size of a box for the presentation view."""
         cdef mx.t_size size
         cdef mx.t_max_err err = mx.jbox_get_presentation_size(self.ptr, &size)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not get presentation size for box")
         return (size.width, size.height)
 
@@ -4316,7 +4318,7 @@ cdef class Box:
         """Set the size of a box for the presentation view."""
         cdef mx.t_size size  = (width, height)
         cdef mx.t_max_err err = mx.jbox_set_presentation_size(self.ptr, &size)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set the size of a box for the presentation view.")
 
     def get_maxclass(self) -> str:
@@ -4353,7 +4355,7 @@ cdef class Box:
     def set_hidden(self, on: bool):
         """Set a box hidden attribute"""
         cdef mx.t_max_err err = mx.jbox_set_hidden(self.ptr, on)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set box's hidden attribute")
 
     def get_fontname(self) -> str:
@@ -4364,7 +4366,7 @@ cdef class Box:
     def set_fontname(self, name: str):
         """Set a box's 'fontname' attribute."""
         cdef mx.t_max_err err = mx.jbox_set_fontname(self.ptr, str_to_sym(name))
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set box's fontname attribute")
 
     def get_fontsize(self) -> float:
@@ -4374,7 +4376,7 @@ cdef class Box:
     def set_fontsize(self, size: float):
         """Set a box's 'fontsize' attribute."""
         cdef mx.t_max_err err = mx.jbox_set_fontsize(self.ptr, size)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set box's fontsize attribute")
 
     def get_color(self) -> Rgba:
@@ -4389,7 +4391,7 @@ cdef class Box:
         """Set a box's 'color' attribute."""
         cdef mx.t_jrgba c = color
         cdef mx.t_max_err err = mx.jbox_set_color(self.ptr, &c)
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set box's color")
  
     def get_varname(self) -> str:
@@ -4400,7 +4402,7 @@ cdef class Box:
     def set_varname(self, varname: str):
         """set a box's scripting name."""
         cdef mx.t_max_err err = mx.jbox_set_varname(self.ptr, str_to_sym(varname))
-        if err != mx.MAX_ERR_NONE:
+        if err:
            raise TypeError("could not set box's scripting name")
 
     def get_id(self) -> str:
@@ -5410,27 +5412,37 @@ cdef class Matrix:
 # ----------------------------------------------------------------------------
 # api.Path
 
+# NOTE: this class is an untested unholy collection of ext_path.h and 
+# ext_sysfile.h functions that have been added to this placeholder class only
+# because they compile  without errors. As these are tested, it is likely that
+# the api will change considerably to remove redundancy, with functions moved
+# into separate classes and also add python-friendly featurs such as convertsion
+# to `pathlib.Path` instances + add __enter__, __exit__ methods as necessary.
 
 cdef class Path:
     """A wrapper for Max friendly paths"""
 
     cdef public str filename    # name used to search for file
-    cdef public str pathname    # absolute path after file is found
-    cdef short path_id          #  max short code for parent folder
+    cdef short path_id          # max short code for parent folder
+    cdef mx.t_fourcc ftype      # fourchar code of file
+    cdef bint is_directory      # true if path is a directory
     cdef mx.t_fileinfo info     # instance of file metadata struct
     cdef mx.t_filehandle fh     # file handle
     cdef int size               # size of file handle file
-    cdef mx.t_ptr_uint filedate # modificiation date
+    cdef mx.t_ptr_uint moddate  # modificiation date
 
     def __cinit__(self):
         self.path_id = 0
-        self.filedate = 0
+        self.moddate = 0
         self.fh = NULL
 
-
-    def __init__(self, str filename):
+    def __init__(self, str filename, int path_id = 0, str ftype = 'TEXT'):
         self.filename = filename
-        self.pathname = self.locate(filename)
+        self.ftype = fourchar_to_int(ftype)
+        if not path_id:
+            self.locatefile_extended(filename, ftype)
+        else:
+            self.path_id = <short>path_id
         self._get_info() # populate info attribute
 
     @property
@@ -5448,6 +5460,39 @@ cdef class Path:
         """One of the values defined in e_max_fileinfo_flags"""
         return self.info.flags
 
+    @property
+    def absolute(self) -> Path:
+        """Returns absolute path of filename/path_id combo"""
+        return self.to_absolute_path(self.filename, self.path_id)
+
+    def get_app_path(self) -> int:
+        """Retrieve the Path ID of the Max application."""
+        return mx.path_getapppath()
+
+    def get_tempfolder_path(self) -> int:
+        """Retrieve the Path ID of a temp folder."""
+        return mx.path_tempfolder()
+
+    def get_desktopfolder_path(self) -> int:
+        """Retrieve the Path ID of the desktop."""
+        return mx.path_desktopfolder()
+
+    def get_userdocfolder_path(self) -> int:
+        """Retrieve the Path ID of the user documents folder."""
+        return mx.path_userdocfolder()
+
+    def get_usermaxfolder_path(self) -> int:
+        """Retrieve the Path ID of the user max folder."""
+        return mx.path_usermaxfolder()
+
+    def get_support_path(self) -> int:
+        """Retrieve the Path ID of the support folder"""
+        return mx.path_getsupportpath()
+
+    def get_default_path(self) -> int:
+        """Retrieve the Path ID of the default search path."""
+        return mx.path_getdefault()
+
     def set_default_path(self, short path_id, bint recursive = False):
         """Install a path as the default search path.
         
@@ -5458,16 +5503,31 @@ cdef class Path:
         """
         mx.path_setdefault(path_id, <short>recursive)
 
+    def get_moddate(self):
+        """Determine the modification date of the selected path."""
+        cdef short err = mx.path_getmoddate(self.path_id, &self.moddate)
+        if err:
+            raise ValueError("could not get modification date of active path")
+
+    def get_file_moddate(self):
+        """Determine the modification date of the selected path."""
+        cdef short err = mx.path_getfilemoddate(self.filename.encode(),
+            self.path_id, &self.moddate)
+        if err:
+            raise ValueError("could not get modification date of active file")
+
+
+
     def to_absolute_path(self, str filename, short path_id) -> str:
         """Translates a Max path+filename combo into a correct POSIX absolute path
 
         The resulting absolute path can be used to pass to libraries
         and also handles multiple volumes correctly.
         """
-        cdef char pathname[2048]    # absolute path result of search
-        cdef mx.t_max_err err = mx.path_toabsolutesystempath(self.path_id,
+        cdef char pathname[MAX_PATH_CHARS] # absolute path result of search
+        cdef mx.t_max_err err = mx.path_toabsolutesystempath(path_id,
             filename.encode(), pathname)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise IOError(f"can't convert {filename} to absolute path")
         return pathname.decode()
 
@@ -5478,8 +5538,8 @@ cdef class Path:
         string if the path exists.
         """
         cdef char* pathname = NULL
-        cdef short res = mx.path_topathname(path_id, filename.encode(), pathname)
-        if res != 0:
+        cdef short err = mx.path_topathname(path_id, filename.encode(), pathname)
+        if err:
             raise IOError("could not set filename and path_id")
         return pathname.decode()
 
@@ -5494,52 +5554,119 @@ cdef class Path:
         """
         cdef short path_id = 0
         cdef char* filename = NULL
-        cdef short res = mx.path_frompathname(pathname.encode(), &path_id, filename)
-        if res != 0:
+        cdef short err = mx.path_frompathname(pathname.encode(), &path_id, filename)
+        if err:
             raise IOError("could not get filename and path_id from pathname")
         return (filename.encode(), path_id)
 
-    def create_file(self, str filename, short path_id) -> int:
-        """create file from a filename and path_id"""
-        cdef short new_path_id = 0
-        cdef short res = mx.path_createfolder(path_id, filename.encode(), &new_path_id)
-        return new_path_id
+    def locatefile(self, str name) -> int:
+        """Find a Max document by name in the search path.
+        
+        Searches through the directories specified by the user for 
+        Patcher files and tables  current default path and the directory
+        containing the Max application.
 
-    def locate(self, str filename, str code = 'TEXT') -> str:
+        Returns the path code if found else 0
+        """
+        cdef short outvol = 0
+        cdef short binflag = 0
+        cdef short err = mx.locatefile(name.encode(), &outvol, &binflag)
+        if err:
+            return 0
+        else:
+            return outvol
+
+    def locatefile_extended(self, str filename, str code = 'TEXT'):
         """Find a file by name.
 
         If a complete path is not specified, search for the name in the search path.
         """
-        cdef char pathname[2048]    # absolute path result of search
-        cdef mx.t_fourcc filetype = fourchar_to_int(code)
+        cdef char pathname[MAX_PATH_CHARS] # absolute path result of search
+        cdef mx.t_fourcc ftype  = <mx.t_fourcc>fourchar_to_int(code)
         cdef mx.t_fourcc outtype  = 0
-        cdef mx.t_max_err err = mx.MAX_ERR_NONE
+        cdef short err = 0
+        # self.ftype = fourchar_to_int(code)
 
-        cdef short res = mx.locatefile_extended(filename.encode(),
-            &self.path_id, &outtype, &filetype, 1)
-        if res != 0:
+        err = mx.locatefile_extended(filename.encode(), &self.path_id,
+            &outtype, &ftype, 1)
+        if err:
             raise IOError(f"can't find file '{filename}'")
+        if ftype == outtype: # request and response match
+            self.ftype = ftype
+        else:
+            error("reqested {}, got {}".format(
+                int_to_fourchar(ftype),
+                int_to_fourchar(outtype)))
 
-        return self.to_absolute_path(filename, self.path_id)
+    def resolve_file(self, str name, short path_id) -> tuple[str, int]:
+        """Resolve a Path ID plus a (possibly extended) file name
+        into a path that identifies the file's directory and a filename.
+
+        This routine converts a name and Path ID to a standard form in which 
+        the name has no path information and does not refer to an aliased file.
+        """
+        cdef char _name[MAX_PATH_CHARS]
+        cdef short outpath
+        cdef short err = 0
+
+        _name = <bytes>name
+        err = mx.path_resolvefile(_name, path_id, &outpath)
+        norm = _name.decode()
+        return (norm, outpath)
+
+    def create_folder(self, str folder_name, short path_id) -> int:
+        """Create folder given a folder name and path_id"""
+        cdef short new_path_id = 0
+        cdef short err = mx.path_createfolder(path_id, folder_name.encode(), &new_path_id)
+        if err:
+            raise IOError("could not create folder from folder name and path_id")
+        return new_path_id
 
     def _get_info(self):
-        """populate t_fileinfo struct file metatadata  instance"""
-        cdef short res = mx.path_fileinfo(self.filename.encode(), self.path_id, &self.info)
-        if res != 0:
+        """Populate t_fileinfo struct file metatadata  instance"""
+        cdef short err = mx.path_fileinfo(self.filename.encode(), self.path_id, &self.info)
+        if err:
             raise IOError(f"couldn't retrieve file info for {self.filename}")
+
+    def copy_file(self, str dstfilename, short dstpath):
+        """Copy file given destination filename and path id"""
+        cdef short err = mx.path_copyfile(self.path_id, self.filename.encode(),
+            dstpath, dstfilename.encode())
+        if err:
+            raise IOError(f"could not copy filename to destination filename {dstfilename} "
+                          f"with path id {dstpath}")
+
+    def copy_folder(self, str dstfilename, short dstpath, bint recurse = False) -> int:
+        """Copy folder given destination filename and path id"""
+        cdef short newpath = 0
+        cdef short err = mx.path_copyfolder(self.path_id, dstpath, dstfilename.encode(),
+            <long>recurse, &newpath)
+        if err:
+            raise IOError(f"could not copy src folder {self.path_id} to destination  "
+                          f"with path id {dstpath}")
+        return <int>newpath
+
+    def copy_to_tempfile(self, str dst_filename, short dst_path_id) -> Path:
+        """Copy file given destination filename and path id to a tempile"""
+        cdef short outpath = 0
+        cdef char * outtempfile = NULL
+        cdef short err = mx.path_copytotempfile(self.path_id, self.filename.encode(),
+            &outpath, outtempfile)
+        if err:
+            raise IOError(f"could not copy filename to destination tempfile")
+        return Path(outtempfile, outpath)
 
     def rename(self, str new_name):
         """Rename the file"""
-        cdef short res = mx.path_renamefile(self.filename.encode, self.path_id, new_name.encode())
-        if res != 0:
+        cdef short err = mx.path_renamefile(self.filename.encode, self.path_id, new_name.encode())
+        if err:
             raise IOError(f"couldn't rename {self.filename}")
 
     def delete(self):
         """Delete located file."""
-        cdef short res = mx.path_deletefile(self.filename.encode(), self.path_id)
-        if res != 0:
+        cdef short err = mx.path_deletefile(self.filename.encode(), self.path_id)
+        if err:
             raise IOError(f"couldn't delete {self.filename}")
-
 
     def open_sysfile(self, str filename, short path_id, str perm = 'w'):
         """Open a file given a filename and Path ID.
@@ -5552,11 +5679,11 @@ cdef class Path:
            'rw': 3 read/write 
         """
         cdef short _perm = <short>dict(r=1,w=2,rw=3)[perm]
-        cdef short res = mx.path_opensysfile(filename.encode(), path_id, &self.fh, _perm)
-        if res != 0:
+        cdef short err = mx.path_opensysfile(filename.encode(), path_id, &self.fh, _perm)
+        if err:
             raise IOError(f"could not open sysfile {filename} with path_id={path_id}")   
 
-    def create_sysfile(self, str filename, short path_id, str fourchar_type):
+    def create_sysfile(self, str filename, short path_id, str ftype = 'TEXT'):
         """Create a file given a type code, a filename, and a Path ID.
         
         Will update the t_filehandle reference in the object to point to the created file
@@ -5566,11 +5693,11 @@ cdef class Path:
             'w': 2 write
            'rw': 3 read/write 
         """
-        cdef mx.t_fourcc fctype = <mx.t_fourcc>fourchar_to_int(fourchar_type)
-        cdef short res = mx.path_createsysfile(filename.encode(), path_id, fctype, &self.fh)
-        if res != 0:
+        cdef mx.t_fourcc _ftype = <mx.t_fourcc>fourchar_to_int(ftype)
+        cdef short err = mx.path_createsysfile(filename.encode(), path_id, _ftype, &self.fh)
+        if err:
             raise IOError(f"could not create sysfile {filename} "
-                          f"with path_id={path_id}, type={fourchar_type}")
+                          f"with path_id={path_id}, ftype={ftype}")
 
     def close_sysfile(self):
         """Close a file opened with sysfile_open().
@@ -5580,7 +5707,7 @@ cdef class Path:
         code that will compile cross-platform.
         """
         cdef mx.t_max_err err = mx.sysfile_close(self.fh)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise IOError(f"can't close open filehandle")
 
     def sysfile_read(self, mx.t_ptr_size count) -> str:
@@ -5595,7 +5722,7 @@ cdef class Path:
         """
         cdef char * bufptr = <char *>mx.sysmem_newptr(count * sizeof(char))
         cdef mx.t_max_err err = mx.sysfile_read(self.fh, &count, <char *>bufptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise IOError("could not read contents of from from disk")
         cdef str result = bufptr.decode()
         mx.sysmem_freeptr(bufptr)
@@ -5606,7 +5733,7 @@ cdef class Path:
         cdef int i = 0
         cdef char** fh = <mx.t_handle>mx.sysmem_newhandleclear(<mx.t_ptr_size>size)
         cdef mx.t_max_err err = mx.sysfile_readtohandle(self.fh, &fh)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise IOError("could not read contents of filehandle into a handle")
         lines = []
         for i in range(size):
@@ -5620,7 +5747,7 @@ cdef class Path:
         """Read the contents of a file into a pointer."""
         cdef char* bufptr = <char *>mx.sysmem_newptr(bufsize * sizeof(char))
         cdef mx.t_max_err err = mx.sysfile_readtoptr(self.fh, &bufptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise IOError("could not read contents of a file into a pointer")
         cdef str result = bufptr.decode()
         mx.sysmem_freeptr(bufptr)
@@ -5645,7 +5772,7 @@ cdef class Path:
         else:
             raise TypeError("could not write this type file handler")            
         err = mx.sysfile_write(self.fh, &count, <char*>bufptr)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise IOError("could not write contents file handler")
         mx.sysmem_freeptr(bufptr)
         mx.post("wrote %d bytes to file handler", count)
@@ -5653,14 +5780,14 @@ cdef class Path:
     def sysfile_seteof(self, int nbytes):
         """Set the size of the file handle in bytes."""
         cdef mx.t_max_err err = mx.sysfile_seteof(self.fh, <mx.t_ptr_size>nbytes)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not set the size of the file handle")
 
     def sysfile_geteof(self) -> int:
         """Get the size of a file handle."""
         cdef mx.t_ptr_size nbytes = 0
         cdef mx.t_max_err err = mx.sysfile_geteof(self.fh, &nbytes)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get the size of the file handle")
         return <int>nbytes
 
@@ -5668,7 +5795,7 @@ cdef class Path:
         """Get the current file position of a file handle."""
         cdef mx.t_ptr_size filepos = 0
         cdef mx.t_max_err err = mx.sysfile_getpos(self.fh, &filepos)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not get the position of the file handle")
         return <int>filepos
 
@@ -5694,7 +5821,7 @@ cdef class Path:
         cdef mx.t_max_err err = mx.MAX_ERR_NONE
         err = mx.sysfile_readtextfile(self.fh, 
             htext, <mx.t_ptr_size>maxlen, mx.TEXT_LB_NATIVE)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise ValueError("could not read text from the file handle")
         lines = []
         for i in range(size):
@@ -5717,7 +5844,7 @@ cdef class Path:
 
         mx.sysmem_ptrandhand(buf, htext, strlen(buf))
         err = mx.sysfile_writetextfile(self.fh, htext, mx.TEXT_LB_NATIVE)
-        if err != mx.MAX_ERR_NONE:
+        if err:
             raise IOError("could not write text to handler")
         mx.sysfile_close(self.fh)
         mx.sysmem_freehandle(htext)
