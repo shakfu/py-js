@@ -23,7 +23,6 @@ name       | sdk        | lang   | description
 [py]       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
 [pyjs]     | max-sdk    | c      | js/v8-friendly -- written as a Max javascript-extension
 
-
 **Python3 Experimental Externals:**
 
 name       | sdk        | lang   | description
@@ -133,17 +132,17 @@ If you'd rather build them or any of the other externals yourself then the proce
     ```
 
     Note that typing `make` here is the same as typing `make default` or `make all`. This will create two externals `py.mxo` and `pyjs.mxo` in your `externals` folder. These are relatively small in size and are linked to your system python3 installation. This has the immediate benefit that you have access to your curated collection of existing python packages.
-    
+
     The `make` or `make default` command bypasses an intermediate buildsystem and builds the two core externals via Xcode
-    
+
     Another build option for core externals is to use `cmake` as an intermediate build system to drive Xcode builds:
-    
+
     ```sh
     make core
     ```
 
 The `make`, or `make core` methods of building core the externals are generally very fast and produce externals which have access to python libraries of the local python system referemced during compilation. The tradeoff is that since the external are dynamically linked with local dependencies, they are therefore not usable in standalones and relocatable Max packages.
-    
+
 No worries, if you need portable relocatable python3 externals for your package or standalone and more granular build options then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section.
 
 In any case, open up any of the patch files in the `patchers` directory of the repo or the generated Max package, and look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.

@@ -33,7 +33,6 @@ There are three major subsystems in this subproject
 
 - [x] complete c test suite
 
-
 -------------------------------------------------------------------------------
 
 ## Max API Module
@@ -78,7 +77,6 @@ There are three major subsystems in this subproject
 
 - [ ] Add step in bundle-creation to prepopulate site-packages with list of packages (this is alread done with `relocatable python` variations)
 
-
 ### Automation
 
 - [x] Create script to shrink numpy from source for inclusion in a build.
@@ -88,4 +86,3 @@ There are three major subsystems in this subproject
 ### Future Experiments
 
 - [ ] Move `builder` from `py-js/source/projects/py/builder`to `py-js/source/scripts/builder` and make it more general such that it can build other python3 externals. This requires `xcodegen` to become more mature.
-

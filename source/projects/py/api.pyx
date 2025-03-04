@@ -41,9 +41,10 @@ see: `py-js/source/projects/py/api.md` for further details
 # ----------------------------------------------------------------------------
 # imports
 
+import pathlib
 from math import prod as product
 from collections import namedtuple
-from  typing import Optional
+from typing import Optional
 
 
 from cython.view cimport array as cvarray
@@ -5436,14 +5437,26 @@ cdef class Path:
         self.moddate = 0
         self.fh = NULL
 
-    def __init__(self, str filename, int path_id = 0, str ftype = 'TEXT'):
+    def __init__(self, str filename = "", int path_id = 0, str ftype = 'TEXT'):
         self.filename = filename
+        self.path_id = <short>path_id
         self.ftype = fourchar_to_int(ftype)
-        if not path_id:
+        if filename and not path_id:
             self.locatefile_extended(filename, ftype)
-        else:
-            self.path_id = <short>path_id
         self._get_info() # populate info attribute
+
+    def __repr__(self):
+        f"<Path id={self.path_id}>"
+
+    def __enter__(self):
+        return 
+
+    @property
+    def is_directory(self) -> bool:
+        """return true is path is a directory"""
+        if self.path_id and not self.filename:
+            return True
+        return False
 
     @property
     def type(self):
@@ -5461,37 +5474,51 @@ cdef class Path:
         return self.info.flags
 
     @property
-    def absolute(self) -> Path:
+    def pathname(self) -> str:
         """Returns absolute path of filename/path_id combo"""
         return self.to_absolute_path(self.filename, self.path_id)
 
-    def get_app_path(self) -> int:
+    @property
+    def absolute(self) -> pathlib.Path:
+        """Returns pathlib.Path wrapped absolute path of filename/path_id combo"""
+        return pathlib.Path(
+            self.to_absolute_path(self.filename, self.path_id))
+
+
+    @classmethod
+    def from_maxapp(cls) -> Path:
         """Retrieve the Path ID of the Max application."""
-        return mx.path_getapppath()
+        return cls(path_id=mx.path_getapppath())
 
-    def get_tempfolder_path(self) -> int:
+    @classmethod
+    def from_tempfolder(cls) -> Path:
         """Retrieve the Path ID of a temp folder."""
-        return mx.path_tempfolder()
+        return cls(path_id=mx.path_tempfolder())
 
-    def get_desktopfolder_path(self) -> int:
+    @classmethod
+    def from_desktopfolder(cls) -> Path:
         """Retrieve the Path ID of the desktop."""
-        return mx.path_desktopfolder()
+        return cls(path_id=mx.path_desktopfolder())
 
-    def get_userdocfolder_path(self) -> int:
+    @classmethod
+    def from_userdocfolder(cls) -> Path:
         """Retrieve the Path ID of the user documents folder."""
-        return mx.path_userdocfolder()
+        return cls(path_id=mx.path_userdocfolder())
 
-    def get_usermaxfolder_path(self) -> int:
+    @classmethod
+    def from_usermaxfolder(cls) -> Path:
         """Retrieve the Path ID of the user max folder."""
-        return mx.path_usermaxfolder()
+        return cls(path_id=mx.path_usermaxfolder())
 
-    def get_support_path(self) -> int:
+    @classmethod
+    def from_support_folder(cls) -> Path:
         """Retrieve the Path ID of the support folder"""
-        return mx.path_getsupportpath()
+        return cls(path_id=mx.path_getsupportpath())
 
-    def get_default_path(self) -> int:
+    @classmethod
+    def from_default(cls) -> Path:
         """Retrieve the Path ID of the default search path."""
-        return mx.path_getdefault()
+        return cls(path_id=mx.path_getdefault())
 
     def set_default_path(self, short path_id, bint recursive = False):
         """Install a path as the default search path.
@@ -5515,8 +5542,6 @@ cdef class Path:
             self.path_id, &self.moddate)
         if err:
             raise ValueError("could not get modification date of active file")
-
-
 
     def to_absolute_path(self, str filename, short path_id) -> str:
         """Translates a Max path+filename combo into a correct POSIX absolute path
@@ -5667,6 +5692,24 @@ cdef class Path:
         cdef short err = mx.path_deletefile(self.filename.encode(), self.path_id)
         if err:
             raise IOError(f"couldn't delete {self.filename}")
+
+    def open(self, str perm = 'w') -> Path:
+        """Open a file given a filename and Path ID.
+        
+        Will update the t_filehandle reference in the object to point to the open file
+
+        permission modes are:
+            'r': 1 read
+            'w': 2 write
+           'rw': 3 read/write 
+        """
+        assert not self.is_directory, "cannot open a directory"
+        cdef short _perm = <short>dict(r=1,w=2,rw=3)[perm]
+        cdef short err = mx.path_opensysfile(
+            self.filename.encode(), self.path_id, &self.fh, _perm)
+        if err:
+            raise IOError(f"could not open sysfile {self.filename} with path_id={self.path_id}")
+        return self
 
     def open_sysfile(self, str filename, short path_id, str perm = 'w'):
         """Open a file given a filename and Path ID.

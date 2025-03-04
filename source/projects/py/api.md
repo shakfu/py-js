@@ -67,7 +67,7 @@ declarations as follows:
     cimport api_max as mx
 ```
 
-Then you can start using Max api symbols or functions in the cython code 
+Then you can start using Max api symbols or functions in the cython code
 by prefixing with `mx.` For example
 
 ```text
