@@ -6,6 +6,8 @@
 
 - Added `api.resources_dir()`, to obtain external bundle's `Resources` directory.
 
+- Added initial `api.Path` class and methods, which requires further iteration.
+
 - Added the remaining `api.AtomArray` methods (pending further testing)
 
 - Fixed a few memory leaks and replaced calls of `PyDECREF` and `PyXDECREF` with `PyCLEAR`.
