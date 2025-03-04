@@ -33,33 +33,29 @@ def test_path_open():
 	with Path('/tmp/test.txt').open('w') as f:
 		f.write("hello world")
 
-def test_path_app_path():
-	return api.Path.from_maxapp().pathname
+def test_path_maxapp_dir():
+	return api.Path.maxapp_dir().pathname
 
-def test_path_tempfolder():
-	return api.Path.from_tempfolder().pathname
+def test_path_temp_dir():
+	return api.Path.temp_dir().pathname
 
-def test_path_desktopfolder():
-	return api.Path.from_desktopfolder().pathname
+def test_path_desktop_dir():
+	return api.Path.desktop_dir().pathname
 
-def test_path_userdocfolder():
-	return api.Path.from_userdocfolder().pathname
+def test_path_userdoc_dir():
+	return api.Path.userdoc_dir().pathname
 
-def test_path_usermaxfolder():
-	return api.Path.from_usermaxfolder().pathname
+def test_path_usermax_dir():
+	return api.Path.usermax_dir().pathname
 
-def test_path_support():
-	return api.Path.from_support_folder().pathname
+def test_path_support_dir():
+	return api.Path.support_dir().pathname
 
-def test_path_default():
-	return api.Path.from_default().pathname
+def test_path_default_dir():
+	return api.Path.default_dir().pathname
 
-def test_path_moddate():
+def test_path_mod_date():
 	p = mem['p']
-	return p.get_moddate()
-
-def test_path_file_moddate():
-	p = mem['p']
-	return p.get_file_moddate()
+	return p.mod_date
 
 

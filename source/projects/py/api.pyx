@@ -127,6 +127,17 @@ cdef long clamp(long x, long minimum, long maximum):
         return maximum
     return x
 
+cdef mx.t_ptr_uint string_to_date(str string):
+    """Convert a string to a date."""
+    cdef mx.t_ptr_uint date = 0
+    mx.db_util_stringtodate(string, &date)
+    return date
+
+cdef str date_to_string(mx.t_ptr_uint date):
+    """Convert a date to a string."""
+    cdef char date_cstr[MAX_PATH_CHARS]
+    mx.db_util_datetostring(date, date_cstr)
+    return date_cstr.decode()
 
 # ----------------------------------------------------------------------------
 # helper python functions
@@ -2796,14 +2807,6 @@ cdef class Database:
         else:
             del dbview
 
-cdef void util_stringtodate(const char *string, mx.t_ptr_uint *date):
-    """Convert a string to a date."""
-    mx.db_util_stringtodate(string, date)
-
-cdef void util_datetostring(const mx.t_ptr_uint date, char *string):
-    """Convert a date to a string."""
-    mx.db_util_datetostring(date, string)
-
     # cdef t_max_err db_query(t_database *db, t_db_result **dbresult, const char *sql, ...)
     # cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
 
@@ -5442,14 +5445,23 @@ cdef class Path:
         self.path_id = <short>path_id
         self.ftype = fourchar_to_int(ftype)
         if filename and not path_id:
-            self.locatefile_extended(filename, ftype)
+            try: # assume pathname exists
+                self.locatefile_extended(filename, ftype)
+            except IOError:
+                try: # assume pathname does not exist (for .create/.write/etc.)
+                    self.update_from_pathname(filename)
+                except IOError:
+                    raise
         self._get_info() # populate info attribute
 
     def __repr__(self):
         f"<Path id={self.path_id}>"
 
     def __enter__(self):
-        return 
+        return self
+
+    def __exit__(self):
+        self.close_sysfile()
 
     @property
     def is_directory(self) -> bool:
@@ -5484,39 +5496,44 @@ cdef class Path:
         return pathlib.Path(
             self.to_absolute_path(self.filename, self.path_id))
 
-
     @classmethod
-    def from_maxapp(cls) -> Path:
-        """Retrieve the Path ID of the Max application."""
+    def maxapp_dir(cls) -> Path:
+        """Retrieve the Path ID of the Max application.
+        
+        >>> p = Path.maxapp_dir()
+        """
         return cls(path_id=mx.path_getapppath())
 
     @classmethod
-    def from_tempfolder(cls) -> Path:
-        """Retrieve the Path ID of a temp folder."""
+    def temp_dir(cls) -> Path:
+        """Retrieve the Path ID of a temp folder.
+        
+        >>> p = Path.temp_dir()
+        """
         return cls(path_id=mx.path_tempfolder())
 
     @classmethod
-    def from_desktopfolder(cls) -> Path:
+    def desktop_dir(cls) -> Path:
         """Retrieve the Path ID of the desktop."""
         return cls(path_id=mx.path_desktopfolder())
 
     @classmethod
-    def from_userdocfolder(cls) -> Path:
+    def userdoc_dir(cls) -> Path:
         """Retrieve the Path ID of the user documents folder."""
         return cls(path_id=mx.path_userdocfolder())
 
     @classmethod
-    def from_usermaxfolder(cls) -> Path:
+    def usermax_dir(cls) -> Path:
         """Retrieve the Path ID of the user max folder."""
         return cls(path_id=mx.path_usermaxfolder())
 
     @classmethod
-    def from_support_folder(cls) -> Path:
+    def support_dir(cls) -> Path:
         """Retrieve the Path ID of the support folder"""
         return cls(path_id=mx.path_getsupportpath())
 
     @classmethod
-    def from_default(cls) -> Path:
+    def default_dir(cls) -> Path:
         """Retrieve the Path ID of the default search path."""
         return cls(path_id=mx.path_getdefault())
 
@@ -5529,6 +5546,15 @@ cdef class Path:
         path_setdefault() allows you to set a path as the default.
         """
         mx.path_setdefault(path_id, <short>recursive)
+
+    @property
+    def mod_date(self) -> str:
+        """get formatted modification datatime for files and dirs"""
+        if self.is_directory:
+            self.get_moddate()
+        else:
+            self.get_file_moddate()
+        return date_to_string(<mx.t_ptr_uint>self.moddate)
 
     def get_moddate(self):
         """Determine the modification date of the selected path."""
@@ -5582,13 +5608,25 @@ cdef class Path:
         cdef short err = mx.path_frompathname(pathname.encode(), &path_id, filename)
         if err:
             raise IOError("could not get filename and path_id from pathname")
-        return (filename.encode(), path_id)
+        return (filename.decode(), path_id)
+
+    def update_from_pathname(self, str pathname):
+        """Create a filename and update path's path_id and filename from a fully
+        qualified pathname.
+        
+        Note that in this case, pathname does not have to exist.
+        """
+        cdef char* filename = NULL
+        cdef short err = mx.path_frompathname(pathname.encode(), &self.path_id, filename)
+        if err:
+            raise IOError("could not get filename and path_id from pathname")
+        self.filename = filename.decode()
 
     def locatefile(self, str name) -> int:
         """Find a Max document by name in the search path.
         
         Searches through the directories specified by the user for 
-        Patcher files and tables  current default path and the directory
+        Patcher files and tables current default path and the directory
         containing the Max application.
 
         Returns the path code if found else 0
@@ -5610,7 +5648,6 @@ cdef class Path:
         cdef mx.t_fourcc ftype  = <mx.t_fourcc>fourchar_to_int(code)
         cdef mx.t_fourcc outtype  = 0
         cdef short err = 0
-        # self.ftype = fourchar_to_int(code)
 
         err = mx.locatefile_extended(filename.encode(), &self.path_id,
             &outtype, &ftype, 1)
@@ -5618,7 +5655,7 @@ cdef class Path:
             raise IOError(f"can't find file '{filename}'")
         if ftype == outtype: # request and response match
             self.ftype = ftype
-        else:
+        else: # should not get here
             error("reqested {}, got {}".format(
                 int_to_fourchar(ftype),
                 int_to_fourchar(outtype)))
@@ -5693,22 +5730,13 @@ cdef class Path:
         if err:
             raise IOError(f"couldn't delete {self.filename}")
 
-    def open(self, str perm = 'w') -> Path:
-        """Open a file given a filename and Path ID.
+    def open(self, str perm = 'r') -> Path:
+        """Open the active file given permission ('w', 'r', 'rw'), and returns self
         
-        Will update the t_filehandle reference in the object to point to the open file
-
-        permission modes are:
-            'r': 1 read
-            'w': 2 write
-           'rw': 3 read/write 
+        >>> with Path('/tmp/demo.txt').open('w') as f:
+            f.write('hello')
         """
-        assert not self.is_directory, "cannot open a directory"
-        cdef short _perm = <short>dict(r=1,w=2,rw=3)[perm]
-        cdef short err = mx.path_opensysfile(
-            self.filename.encode(), self.path_id, &self.fh, _perm)
-        if err:
-            raise IOError(f"could not open sysfile {self.filename} with path_id={self.path_id}")
+        self.open_sysfile(self.filename.encode(), self.path_id, perm)
         return self
 
     def open_sysfile(self, str filename, short path_id, str perm = 'w'):
@@ -5721,10 +5749,20 @@ cdef class Path:
             'w': 2 write
            'rw': 3 read/write 
         """
-        cdef short _perm = <short>dict(r=1,w=2,rw=3)[perm]
+        assert not self.is_directory, "can only open a file"
+        cdef short _perm = <short>dict(r=1, w=2, rw=3)[perm]
         cdef short err = mx.path_opensysfile(filename.encode(), path_id, &self.fh, _perm)
         if err:
             raise IOError(f"could not open sysfile {filename} with path_id={path_id}")   
+
+    def new(self, ftype = 'TEXT'):
+        """Create a new file given fourchar file ftype, and returns self
+        
+        >>> with Path('/tmp/demo.txt').new() as f:
+            f.write('hello')
+        """
+        self.create_sysfile(self.filename.encode(), self.path_id, ftype)
+        return self
 
     def create_sysfile(self, str filename, short path_id, str ftype = 'TEXT'):
         """Create a file given a type code, a filename, and a Path ID.
@@ -5736,6 +5774,7 @@ cdef class Path:
             'w': 2 write
            'rw': 3 read/write 
         """
+        assert not self.is_directory, "can only create a file"
         cdef mx.t_fourcc _ftype = <mx.t_fourcc>fourchar_to_int(ftype)
         cdef short err = mx.path_createsysfile(filename.encode(), path_id, _ftype, &self.fh)
         if err:
@@ -5818,7 +5857,9 @@ cdef class Path:
         if err:
             raise IOError("could not write contents file handler")
         mx.sysmem_freeptr(bufptr)
-        mx.post("wrote %d bytes to file handler", count)
+        # mx.post("wrote %d bytes to file handler", count)
+
+    write = sysfile_write
 
     def sysfile_seteof(self, int nbytes):
         """Set the size of the file handle in bytes."""
