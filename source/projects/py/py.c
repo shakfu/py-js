@@ -699,6 +699,8 @@ t_hashtab* py_get_global_registry(void) { return py_global_registry; }
 uintptr_t py_get_object_ref(void) { return py_global_obj_ref; }
 
 
+
+
 /**
  * @brief      Return path to external with optional subpath
  *

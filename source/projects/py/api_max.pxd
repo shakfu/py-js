@@ -1117,7 +1117,7 @@ cdef extern from "ext_obex_util.h":
 cdef extern from "ext_obstring.h":
 
     ctypedef struct t_string:
-        # t_object s_obj
+        t_object s_obj
         char     *s_text
         long     s_size
 
@@ -1686,9 +1686,9 @@ cdef extern from "ext_path.h":
     # cdef void path_setdefaultlist(struct _pathlink *list)
     cdef short path_getmoddate(short path, t_ptr_uint *date)
     cdef short path_getfilemoddate(const char *filename, const short path, t_ptr_uint *date)
-    cdef short path_getfiledatesandsize(const char *filename, short path, t_uint64 *create, t_uint64 *mod, t_uint64 *access, t_uint64 *size)
-    cdef short path_getfilecreationdate(const char *filename, const short path, t_ptr_uint *date)
-    cdef short path_getfilesize(char *filename, short path, t_ptr_size *size)
+    # cdef short path_getfiledatesandsize(const char *filename, short path, t_uint64 *create, t_uint64 *mod, t_uint64 *access, t_uint64 *size)
+    # cdef short path_getfilecreationdate(const char *filename, const short path, t_ptr_uint *date)
+    # cdef short path_getfilesize(char *filename, short path, t_ptr_size *size)
     cdef long path_listcount(t_pathlink *list)
     cdef short nameinpath(char *name, short *ref)
     cdef short path_nameinpath(const char *name, const short path, short *ref)

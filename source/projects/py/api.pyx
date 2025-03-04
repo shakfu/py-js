@@ -5428,7 +5428,7 @@ cdef class Path:
 
     cdef public str filename    # name used to search for file
     cdef short path_id          # max short code for parent folder
-    cdef mx.t_fourcc ftype      # fourchar code of file
+    cdef mx.t_fourcc ftype      # fourchar ftype of file default to 'TEXT'
     cdef bint is_directory      # true if path is a directory
     cdef mx.t_fileinfo info     # instance of file metadata struct
     cdef mx.t_filehandle fh     # file handle
@@ -5448,10 +5448,11 @@ cdef class Path:
             try: # assume pathname exists
                 self.locatefile_extended(filename, ftype)
             except IOError:
-                try: # assume pathname does not exist (for .create/.write/etc.)
-                    self.update_from_pathname(filename)
-                except IOError:
-                    raise
+                # assume pathname does not exist (for .create/.write/etc.)
+                self.update_from_pathname(filename)
+            except IOError:
+                # raise
+                pass
         self._get_info() # populate info attribute
 
     def __repr__(self):
@@ -5588,24 +5589,41 @@ cdef class Path:
         This routine will only convert a pathname pair to a valid path
         string if the path exists.
         """
-        cdef char* pathname = NULL
+        cdef char pathname[MAX_PATH_CHARS]
         cdef short err = mx.path_topathname(path_id, filename.encode(), pathname)
         if err:
-            raise IOError("could not set filename and path_id")
+            raise IOError("could not get pathname from filename and path_id")
         return pathname.decode()
 
     def from_pathname(self, str pathname) -> tuple[str, int]:
-        """Create and return a filename and Path ID combination from a fully
+        """Create and return a filename and path_id combination from a fully
         qualified file name.
 
-        Note that path_frompathname() does not require that the file actually exist. 
+        Note that this function does not require that the file actually exist. 
         In this way you can use it to convert a full path you may have received as an 
         argument to a file writing message to a form appropriate to provide to 
         a routine such as path_createfile().
         """
+        cdef char filename[MAX_PATH_CHARS]
         cdef short path_id = 0
-        cdef char* filename = NULL
         cdef short err = mx.path_frompathname(pathname.encode(), &path_id, filename)
+        # cdef short err = mx.path_frompotentialpathname(pathname.encode(), &path_id, filename)
+        if err:
+            raise IOError("could not get filename and path_id from pathname")
+        return (filename.decode(), path_id)
+
+    def from_potential_pathname(self, str pathname) -> tuple[str, int]:
+        """Create and return a filename and path_id combination from a fully
+        qualified file name.
+
+        Note that this function does not require that the file actually exist. 
+        In this way you can use it to convert a full path you may have received as an 
+        argument to a file writing message to a form appropriate to provide to 
+        a routine such as path_createfile().
+        """
+        cdef char filename[MAX_PATH_CHARS]
+        cdef short path_id = 0
+        cdef short err = mx.path_frompotentialpathname(pathname.encode(), &path_id, filename)
         if err:
             raise IOError("could not get filename and path_id from pathname")
         return (filename.decode(), path_id)
@@ -5616,11 +5634,47 @@ cdef class Path:
         
         Note that in this case, pathname does not have to exist.
         """
-        cdef char* filename = NULL
-        cdef short err = mx.path_frompathname(pathname.encode(), &self.path_id, filename)
+        norm_pathname = self.nameconform(pathname)
+        filename, path_id = self.from_pathname(norm_pathname)
+        self.path_id = <short>path_id
+        self.filename = filename
+
+    def nameconform(self, str src_pathname) -> str: 
+        """Convert a source path string to destination path string using the 
+        specified style and type.
+
+        @param  src     A pointer to source character string to be converted.
+        @param  dst     A pointer to destination character string.
+        @param  style   The destination filepath style, as defined in #e_max_path_styles
+        @param  type    The destination filepath type, as defined in #e_max_path_types 
+        @return         An error code.
+        """
+        cdef char dst_pathname[MAX_PATH_CHARS]
+        cdef short err = mx.path_nameconform(src_pathname.encode(), dst_pathname,
+            mx.PATH_STYLE_MAX, mx.PATH_TYPE_BOOT)
+        return dst_pathname.decode()
+
+    def to_potential_name(self) -> str:
+        """Create a fully qualified file name from a Path ID/file name combination, 
+        regardless of whether or not the file exists on disk.
+        """    
+        cdef char pathname[MAX_PATH_CHARS]
+        cdef short check = 0
+        cdef short err = mx.path_topotentialname(self.path_id, self.filename.encode(), pathname, check)
         if err:
-            raise IOError("could not get filename and path_id from pathname")
-        self.filename = filename.decode()
+            raise IOError("could not get pathname from filename and path_id")
+        return pathname.decode()
+
+    # def to_potential_name(self, str filename, int path_id) -> str:
+    #     """Create a fully qualified file name from a Path ID/file name combination, 
+    #     regardless of whether or not the file exists on disk.
+    #     """    
+    #     cdef char pathname[MAX_PATH_CHARS]
+    #     cdef short check = 0
+    #     cdef short err = mx.path_topotentialname(path_id, filename.encode(), pathname, check)
+    #     if err:
+    #         raise IOError("could not get pathname from filename and path_id")
+    #     return pathname.decode()
 
     def locatefile(self, str name) -> int:
         """Find a Max document by name in the search path.
@@ -5689,6 +5743,8 @@ cdef class Path:
         cdef short err = mx.path_fileinfo(self.filename.encode(), self.path_id, &self.info)
         if err:
             raise IOError(f"couldn't retrieve file info for {self.filename}")
+
+
 
     def copy_file(self, str dstfilename, short dstpath):
         """Copy file given destination filename and path id"""
@@ -6260,6 +6316,21 @@ def post(str s):
 def error(str s):
     """Post an error message to the console."""
     mx.error(s.encode())
+
+
+## key directories
+
+def resources_dir() -> str:
+    """Return the path to the `Resources` dir in the external bundle"""
+    cdef mx.t_string* path_str = px.py_get_path_to_external(px.py_class, "/Contents/Resources")
+    cdef const char* path_cstr = mx.string_getptr(path_str)
+    return path_cstr.decode()
+
+def support_dir() -> str:
+    """Return the path of the `support` dir in the package"""
+    cdef mx.t_string* sdir_str = px.py_get_path_to_package(px.py_class, "/support")
+    cdef const char* sdir_cstr = mx.string_getptr(sdir_str)
+    return sdir_cstr.decode()
 
 
 ## get object helpers

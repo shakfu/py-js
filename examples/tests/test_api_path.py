@@ -4,8 +4,14 @@ import api
 mem = {}
 
 
-def test_path_init():
+def test_path_init_filename():
 	mem['p'] = api.Path('test_api_path.py')
+	p = mem['p']
+	api.bang_success()
+
+def test_path_init_pathname():
+	mem['p'] = api.Path('~/Downloads/max-dev')
+	# mem['p'] = api.Path('~/Downloads/hello.py')
 	p = mem['p']
 	api.bang_success()
 
@@ -30,7 +36,7 @@ def test_path_creator():
 	return p.creator
 
 def test_path_open():
-	with Path('/tmp/test.txt').open('w') as f:
+	with api.Path('/tmp/test.txt').open('w') as f:
 		f.write("hello world")
 
 def test_path_maxapp_dir():
@@ -57,5 +63,9 @@ def test_path_default_dir():
 def test_path_mod_date():
 	p = mem['p']
 	return p.mod_date
+
+def test_path_to_potential_name():
+	p = mem['p']
+	return p.to_potential_name()
 
 
