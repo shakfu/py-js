@@ -2,6 +2,10 @@
 
 ## [0.3.x]
 
+- Added `api.support_dir()`, to obtain package's `support` directory.
+
+- Added `api.resources_dir()`, to obtain external bundle's `Resources` directory.
+
 - Added the remaining `api.AtomArray` methods (pending further testing)
 
 - Fixed a few memory leaks and replaced calls of `PyDECREF` and `PyXDECREF` with `PyCLEAR`.
