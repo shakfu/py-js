@@ -226,7 +226,7 @@ cdef class MaxObject:
         cdef mx.t_object* obj_ptr = <mx.t_object*>mx.object_findregistered(
             str_to_sym(namespace), str_to_sym(name))
         if obj_ptr is NULL:
-            raise ValueError(f"could not find a registered [namespace] object with name {name}.")
+            raise ValueError(f"could not find a registered {namespace} object with name {name}.")
         return MaxObject.from_ptr(obj_ptr)
 
     @staticmethod
@@ -1975,6 +1975,7 @@ cdef class Dictionary:
     def __delitem__(self, str key):
         self.delete_entry(key)
         # self.chuck_entry(key) # also test chuck_entry
+        del self.type_map[key]
 
     @classmethod
     def from_dict(cls, dict src_dict, str name = "") -> Dictionary:
@@ -3187,9 +3188,13 @@ cdef class Hashtab:
     """Wrapper around the t_hashtab object."""
 
     cdef mx.t_hashtab* ptr
+    cdef public int slotcount
+    cdef public dict type_map
 
-    def __cinit__(self, long slotcount):
+    def __cinit__(self, long slotcount = 59):
         self.ptr = mx.hashtab_new(slotcount)
+        self.slotcount = slotcount
+        self.type_map = {}
 
     def __dealloc__(self):
         mx.object_free(self.ptr)
@@ -3197,110 +3202,260 @@ cdef class Hashtab:
     def __repr__(self) -> str:
         return f"<Hashtab size:{self.size}>"
 
+    def __len__(self) -> int:
+        return self.size
+
+    def __contains__(self, str key) -> bool:
+        return key in self.type_map
+
+    def __setitem__(self, str key, object value):
+        if isinstance(value, int):
+            self.type_map[key] = 'long'
+            self.store_long(key, <long>value)
+        elif isinstance(value, str):
+            self.type_map[key] = 'str'
+            self.store_sym(key, value)
+        elif isinstance(value, MaxObject):
+            self.type_map[key] = 'object'
+            self.store(key, value)
+        else:
+            raise TypeError("unable to recognize value type for hashtab")
+
+    def __getitem__(self, str key):
+        return {
+            'long': self.lookup_long,
+            'str': self.lookup_sym,
+            'object': self.lookup,
+        }[self.type_map[key]](key)
+
+    def __delitem__(self, str key):
+        self.delete(key)
+        del self.type_map[key]
+
+    def __iter__(self):
+        return iter(self.get_keys())
+
     @property
     def size(self) -> int:
-        """number of entries in hashtab"""
-        return <long>self.getsize()
+        """Return the number of items stored in a hashtab."""
+        return <long>mx.hashtab_getsize(self.ptr)
 
-    cdef mx.t_max_err store(self, mx.t_symbol* key, mx.t_object* val):
+    def store(self, str key, MaxObject val):
         """Store an object in the hashtab."""
-        return mx.hashtab_store(self.ptr, key, val)
+        cdef mx.t_max_err err = mx.hashtab_store(self.ptr, str_to_sym(key), val.ptr)
+        if err:
+            raise ValueError("could not store object in hashtab")
 
-    cdef mx.t_max_err storelong(self, mx.t_symbol* key, mx.t_atom_long val):
+    def store_long(self, str key, long val):
         """Store a long in the hashtab."""
-        return mx.hashtab_storelong(self.ptr, key, val)
+        cdef mx.t_max_err err = mx.hashtab_storelong(self.ptr, str_to_sym(key), val)
+        if err:
+            raise ValueError("could not store long in hashtab")
 
-    cdef mx.t_max_err storesym(self, mx.t_symbol* key, mx.t_symbol* val):
+    def store_sym(self, str key, str val):
         """Store a symbol in the hashtab."""
-        return mx.hashtab_storesym(self.ptr, key, val)
+        cdef mx.t_max_err err = mx.hashtab_storesym(self.ptr, str_to_sym(key), str_to_sym(val))
+        if err:
+            raise ValueError("could not store symbol in hashtab")
 
-    cdef mx.t_max_err store_safe(self, mx.t_symbol* key, mx.t_object* val):
-        """Store an object in the hashtab safely."""
-        return mx.hashtab_store_safe(self.ptr, key, val)
+    def store_safe(self, str key, MaxObject val):
+        """Store an object in the hashtab safely.        
 
-    cdef mx.t_max_err storeflags(self, mx.t_symbol* key, mx.t_object* val, long flags):
-        """Store an object in the hashtab with flags."""
-        return mx.hashtab_storeflags(self.ptr, key, val, flags)
+        The difference between hashtab_store_safe() and hashtab_store() is what happens
+        in the event of a collision in the hash table.
 
-    cdef mx.t_max_err lookup(self, mx.t_symbol* key, mx.t_object** val):
+        The normal hashtab_store() function will free the existing value at the collision
+        location with sysmem_freeptr() and then replaces it. This version doesn't try to free
+        the existing value at the collision location, but instead just over-writes it.
+        """
+        cdef mx.t_max_err err = mx.hashtab_store_safe(self.ptr, str_to_sym(key), val.ptr)
+        if err:
+            raise ValueError("could not store_safe object in hashtab")
+
+    def store_with_flags(self, str key, MaxObject val, long flags):
+        """Store an item in a hashtab with an associated key and also flags that define
+        the behavior of the item.
+    
+        The hashtab_store() method is the same as calling this method with the default (0) flags.
+        """
+        cdef mx.t_max_err err = mx.hashtab_storeflags(self.ptr, str_to_sym(key), val.ptr, flags)
+        if err:
+            raise ValueError("could not store object in hashtab with flags")
+
+    def lookup(self, str key) -> MaxObject:
         """Lookup an object in the hashtab."""
-        return mx.hashtab_lookup(self.ptr, key, val)
+        cdef mx.t_object* val = NULL
+        cdef mx.t_max_err err = mx.hashtab_lookup(self.ptr, str_to_sym(key), &val)
+        if err:
+            raise ValueError("could not lookup object in hashtab")
+        return MaxObject.from_ptr(val)
 
-    cdef mx.t_max_err lookuplong(self, mx.t_symbol* key, mx.t_atom_long* val):
+    def lookup_long(self, str key) -> long:
         """Lookup a long in the hashtab."""
-        return mx.hashtab_lookuplong(self.ptr, key, val)
+        cdef mx.t_atom_long val = 0
+        cdef mx.t_max_err err = mx.hashtab_lookuplong(self.ptr, str_to_sym(key), &val)
+        if err:
+            raise ValueError("could not lookup long in hashtab")
+        return val
 
-    cdef mx.t_max_err lookupsym(self, mx.t_symbol* key, mx.t_symbol** val):
+    def lookup_sym(self, str key) -> str:
         """Lookup a symbol in the hashtab."""
-        return mx.hashtab_lookupsym(self.ptr, key, val)
+        cdef mx.t_symbol* val = NULL
+        cdef mx.t_max_err err = mx.hashtab_lookupsym(self.ptr, str_to_sym(key), &val)
+        if err:
+            raise ValueError("could not lookup symbol in hashtab")
+        return sym_to_str(val)
 
-    cdef mx.t_max_err lookupentry(self, mx.t_symbol* key, mx.t_hashtab_entry** entry):
-        """Lookup an entry in the hashtab."""
-        return mx.hashtab_lookupentry(self.ptr, key, entry)
+    def lookup_with_flags(self, str key) -> tuple[MaxObject, int]:
+        """Return an item stored in a hashtab with the specified key,
+        also returning the items flags.
+        """
+        cdef mx.t_object* val = NULL
+        cdef long flags = 0
+        cdef mx.t_max_err err = mx.hashtab_lookupflags(self.ptr, str_to_sym(key), &val, &flags)
+        if err:
+            raise ValueError("could not lookup object with flags in hashtab")
+        return (MaxObject.from_ptr(val), flags)
 
-    cdef mx.t_max_err lookupflags(self, mx.t_symbol* key, mx.t_object** val, long* flags):
-        """Lookup an object in the hashtab with flags."""
-        return mx.hashtab_lookupflags(self.ptr, key, val, flags)
+    cdef delete(self, str key):
+        """Remove an item from a hashtab associated with the specified key and free it.
+        
+        The hashtab can contain a variety of different types of data.
+        By default, the hashtab assumes that all items are max objects with a valid
+        #t_object header.  Thus by default, it frees items by calling object_free() on them.
 
-    cdef mx.t_max_err delete(self, mx.t_symbol* key):
-        """Delete an object from the hashtab."""
-        return mx.hashtab_delete(self.ptr, key)
+        You can alter the hashtab's notion of what it contains by using the 
+        hashtab_flags() method.
 
-    cdef mx.t_max_err clear(self):
-        """Clear the hashtab."""
-        return mx.hashtab_clear(self.ptr)
+        If you wish to remove an item from the hashtab and free it yourself, then you
+        should use hashtab_chuckkey().        
+        """
+        cdef mx.t_max_err err = mx.hashtab_delete(self.ptr,  str_to_sym(key))
+        if err:
+            raise ValueError(f"could not delete object in hashtab with key {key}")
 
-    cdef mx.t_max_err chuckkey(self, mx.t_symbol* key):
-        """Chuck a key from the hashtab."""
-        return mx.hashtab_chuckkey(self.ptr, key)
+    def clear(self):
+        """Delete all items stored in a hashtab."""
+        mx.hashtab_clear(self.ptr)
+        self.type_map.clear()
+        # if err:
+        #     raise ValueError(f"could not clear the hashtab")
 
-    cdef mx.t_max_err chuck(self):
-        """Chuck the hashtab."""
-        return mx.hashtab_chuck(self.ptr)
+    cdef chuck_key(self, str key):
+        """Remove an item from a hashtab associated with a given key.
+    
+        You are responsible for freeing any memory associated with the item
+        that is removed from the hashtab.      
+        """
+        cdef mx.t_max_err err = mx.hashtab_chuckkey(self.ptr,  str_to_sym(key))
+        if err:
+            raise ValueError(f"could not chuck key {key} in hashtab")
+        del self.type_map[key]
 
-    cdef mx.t_max_err methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
-        """Call a method on all objects in the hashtab."""
-        return mx.hashtab_methodall_imp(self.ptr, sym, p1, p2, p3, p4, p5, p6, p7, p8)
+    def chuck(self):
+        """Free a hashtab, but don't free the items it contains.
+    
+        The hashtab can contain a variety of different types of data.
+        By default, the hashtab assumes that all items are max objects with
+        a valid #t_object header.
+        
+        You can alter the hashtab's notion of what it contains by using the 
+        hashtab_flags() method.
+        
+        When you free the hashtab by calling object_free() it then tries to free
+        all of the items it contains.   If the hashtab is storing a custom type
+        of data, or should otherwise not free the data it contains, then call
+        hashtab_chuck() to free the object instead of object_free().
+        """
+        cdef mx.t_max_err err = mx.hashtab_chuck(self.ptr)
+        if err:
+            raise ValueError(f"could not chuck the hashtab")
+        self.type_map.clear()
 
     cdef mx.t_max_err funall(self, mx.method fun, void* arg):
-        """Call a function on all objects in the hashtab."""
+        """Call the specified function for every item in the hashtab.  
+
+
+        fun     The function to call, specified as function pointer cast to a Max #method.
+        arg     An argument that you would like to pass to the function being called.
+        return  A max error code.
+        
+        @remark The hashtab_funall() method will call your function for every item in the list.
+                It will pass both a pointer to the item in the list, and any argument that you
+                provide.
+                The following example shows a function that could be called by hashtab_funall().
+        @code
+        void myFun(t_hashtab_entry *e, void *myArg)
+        {
+            if (e->key && e->value) {
+                // do something with e->key, e->value, and myArg here as appropriate
+            }
+        }
+        """
         return mx.hashtab_funall(self.ptr, fun, arg)
 
-    cdef mx.t_max_err objfunall(self, mx.method fun, void* arg):
-        """Call a function on all objects in the hashtab."""
-        return mx.hashtab_objfunall(self.ptr, fun, arg)
-
-    cdef mx.t_atom_long getsize(self):
-        """Get the size of the hashtab."""
-        return mx.hashtab_getsize(self.ptr)
-
-    cdef void print(self):
-        """Print the hashtab."""
+    def print(self):
+        """Post a hashtab's statistics to the Max window."""
         mx.hashtab_print(self.ptr)
 
-    cdef void readonly(self, long readonly):
-        """Set the readonly flag."""
+    def set_readonly(self, bint readonly = False):
+        """Set the hashtab's readonly bit.
+        
+        By default the readonly bit is 0, indicating that it is threadsafe
+        for both reading and writing. setting the readonly bit to 1 will disable
+        the hashtab's theadsafety mechanism, increasing  performance but at the
+        expense of threadsafe operation.  
+        
+        Unless you can guarantee the threading context for a hashtab's use, you
+        should leave this set to 0.        
+        """
         mx.hashtab_readonly(self.ptr, readonly)
 
-    cdef void flags(self, long flags):
-        """Set the flags."""
+    def set_flags(self, long flags):
+        """Set the hashtab's datastore flags.
+
+        The available flags are enumerated in #e_max_datastore_flags.
+        These flags control the behavior of the hashtab, particularly
+        when removing items from the list using functions such as 
+        hashtab_clear(), hashtab_delete(), or when freeing the hashtab itself.
+        """
         mx.hashtab_flags(self.ptr, flags)
 
-    cdef mx.t_atom_long getflags(self):
-        """Get the flags."""
-        return mx.hashtab_getflags(self.ptr)
+    def get_flags(self) -> int:
+        """Get the hashtab's datastore flags."""
+        return <mx.t_atom_long>mx.hashtab_getflags(self.ptr)
 
-    cdef mx.t_max_err keyflags(self, mx.t_symbol* key, long flags):
-        """Set the flags for a key."""
-        return mx.hashtab_keyflags(self.ptr, key, flags)
+    def set_key_flags(self, str key, long flags):
+        """Change the flags for an item stored in the hashtab with a given key."""
+        cdef mx.t_max_err err = mx.hashtab_keyflags(self.ptr,
+            str_to_sym(key), flags)
+        if err:
+            raise KeyError(f"could not set flags for key: {key}")
 
-    cdef mx.t_atom_long getkeyflags(self, mx.t_symbol* key):
-        """Get the flags for a key."""
-        return mx.hashtab_getkeyflags(self.ptr, key)
+    def get_key_flags(self, str key) -> int:
+        """Retrieve the flags for an item stored in the hashtab with a given key."""
+        return <mx.t_atom_long>mx.hashtab_getkeyflags(self.ptr, 
+            str_to_sym(key))
 
-    cdef mx.t_max_err getkeys(self, long* kc, mx.t_symbol*** kv):
-        """Get the keys from the hashtab."""
-        return mx.hashtab_getkeys(self.ptr, kc, kv)
+    def get_keys(self):
+        """Retrieve all of the keys stored in a hashtab.
+
+        If the kc and kv parameters are properly initialized to zero,
+        then hashtab_getkeys() will allocate memory for the keys it returns.
+        You are then responsible for freeing this memory using sysmem_freeptr().
+        """
+        cdef long kc = 0
+        cdef mx.t_symbol** kv = NULL
+        cdef mx.t_max_err err = mx.hashtab_getkeys(self.ptr, &kc, &kv)
+        if err:
+            raise KeyError(f"could not get keys from hashtab")
+        results = []
+        for i in range(kc):
+            results.append(sym_to_str(kv[i]))
+        if kv:
+            mx.sysmem_freeptr(kv)
+        return results
+
 
 # ---------------------------------------------------------------------------
 # api.AtomArray

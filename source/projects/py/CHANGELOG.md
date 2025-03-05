@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Added `api.Hashtab` methods and tests
+
 - Added `api.support_dir()`, to obtain package's `support` directory.
 
 - Added `api.resources_dir()`, to obtain external bundle's `Resources` directory.
