@@ -12,13 +12,14 @@ Extension Classes:
 - DatabaseView: Interface to Max database views
 - DatabaseResult: Interface to Max database results
 - Database: Interface to Max databases
-- Linklist: Interface to Max linked lists
+- List: Interface to Max linked lists
 - Binbuf: Interface to Max binbufs
 - Atombuf: Interface to Max atom buffers
 - Hashtab: Interface to Max hash tables
 - AtomArray: Interface to Max atom arrays
 - Patcher: Interface to Max patchers
 - Box: Interface to Max boxes/objects
+- MaxApp: Interface to the Max application
 - Matrix: Interface to Max jit matrices
 - Path: Interface to Max path handling
 - PyExternal: Main interface for Python externals
@@ -2812,119 +2813,228 @@ cdef class Database:
     # cdef t_max_err db_query_silent(t_database *db, t_db_result **dbresult, const char *sql, ...)
 
 # ----------------------------------------------------------------------------
-# api.Linklist
+# api.List
 
-cdef class Linklist:
+cdef object __linklist_compare_func = None
+
+
+cdef long compare_linklist_objects(object o1, object o2):
+    """Methods that require a comparison function pointer to be passed in use this type.
+
+        long (*t_cmpfn)(void *, void *)
+
+    It should return true or false depending on the outcome of the comparison of the two
+    linklist items passed in as arguments.
+    """
+    return <bint>__linklist_compare_func(o1, o2)
+
+
+cdef class ListElement:
+    """Wraps the t_llelem linklist element."""
+
+    cdef mx.t_llelem* ptr
+    cdef bint ptr_owner
+
+    def __cinit__(self):
+        self.ptr = NULL
+        self.ptr_owner = False
+
+
+    @staticmethod
+    cdef from_ptr(mx.t_llelem* ptr, bint ptr_owner=False):
+        cdef ListElement elem = ListElement.__new__(ListElement)
+        elem.ptr = ptr
+        elem.ptr_owner = ptr_owner
+        return elem
+
+
+cdef class List:
     """Wraps the t_linklist object."""
 
     cdef mx.t_linklist* ptr
+
 
     def __cinit__(self):
         self.ptr = <mx.t_linklist*>mx.linklist_new()
 
     def __dealloc__(self):
-        mx.linklist_chuck(self.ptr)  # will free list but contained objects
+        mx.linklist_chuck(self.ptr)  # will free list only and not contained objects
         #  or
         #  object_free(self.ptr)  # will free all in list
 
     def __repr__(self) -> str:
-        return f"<Linklist size:{self.getsize()}'>"
+        return f"<List size:{self.get_åsize()}'>"
+
+    def __getitem__(self, long index) -> MaxObject:
+        cdef mx.t_object* obj = <mx.t_object*>mx.linklist_getindex(self.ptr, index)
+        return MaxObject.from_ptr(obj)
+
+    def __setitem__(self, long index, MaxObject obj):
+        self.insert(index, obj)
+
+    def __delitem__(self, long index):
+        self.delete_index(index)
 
     @property
     def size(self) -> int:
         """Get the size of the linklist."""
         return mx.linklist_getsize(self.ptr)
 
-    cdef void* getindex(self, long index):
-        """Get the object at a given index."""
-        return mx.linklist_getindex(self.ptr, index)
+    def get(self, long idx = 0) -> MaxObject:
+        """Return a t_object stored in a linklist at a specified index."""
+        cdef mx.t_object* obj = NULL
+        if not (0 <= idx <= self.size -1):
+            raise IndexError("index out of range")
+        obj = <mx.t_object*>mx.linklist_getindex(self.ptr, idx)
+        if obj is NULL:
+            raise ValueError("value could not be retrieved from index {idx}")
+        return MaxObject.from_ptr(obj)
 
     def chuck(self):
-        """Free the linklist."""
+        """Free a linklist, but don't free the items it contains.
+
+        The linklist can contain a variety of different types of data.
+        By default, the linklist assumes that all items are max objects with a valid
+        #t_object header.
+        
+        You can alter the linklist's notion of what it contains by using the 
+        linklist_flags() method.
+        
+        When you free the linklist by calling object_free() it then tries to free all of the items it contains.  
+        If the linklist is storing a custom type of data, or should otherwise not free the data it contains,
+        then call linklist_chuck() to free the object instead of object_free().
+        """
         mx.linklist_chuck(self.ptr)
 
-    def getsize(self) -> int:
+    def get_size(self) -> int:
         """Get the size of the linklist."""
         return mx.linklist_getsize(self.ptr)
 
-    cdef mx.t_atom_long objptr2index(self, void* p):
-        """Get the index of an object."""
-        return mx.linklist_objptr2index(self.ptr, p)
+    def get_index_of_object(self, MaxObject obj) -> long:
+        """Return an item's index, given the item itself."""
+        cdef long idx = mx.linklist_objptr2index(self.ptr, <mx.t_object*>obj.ptr)
+        if idx == mx.MAX_ERR_GENERIC:
+            raise IndexError("could not get index from object")
+        return idx
 
-    cdef mx.t_atom_long append(self, void* o):
-        """Append an object to the linklist."""
-        return mx.linklist_append(self.ptr, o)
+    def append(self, MaxObject obj):
+        """Add an item to the end of the list."""
+        cdef mx.t_atom_long err = mx.linklist_append(self.ptr, obj.ptr)
+        if err == -1:
+            raise ValueError("append object failed")
 
-    cdef mx.t_atom_long insertindex(self, void* o, long index):
+    def insert(self, long index, MaxObject obj):
         """Insert an object at a given index."""
-        return mx.linklist_insertindex(self.ptr, o, index)
+        cdef mx.t_atom_long err = mx.linklist_insertindex(self.ptr, obj.ptr, index)
+        if err == -1:
+            raise ValueError("append object failed")
 
-    cdef mx.t_llelem* insertafterobjptr(self, void* o, void* objptr):
-        """Insert an object after a given object."""
-        return mx.linklist_insertafterobjptr(self.ptr, o, objptr)
+    def insert_sorted(self, MaxObject obj, sort_func=None) -> long:
+        """Insert an item into the list, keeping the list sorted according to a specified comparison function."""
+        cdef long idx = -1
+        if sort_func:
+            __linklist_compare_func = sort_func
+        idx = mx.linklist_insert_sorted(self.ptr, obj.ptr, compare_linklist_objects)
+        if idx == -1:
+            raise ValueError("could not insert sorted object into linklist")
+        return idx
 
-    cdef mx.t_llelem* insertbeforeobjptr(self, void* o, void* objptr):
-        """Insert an object before a given object."""
-        return mx.linklist_insertbeforeobjptr(self.ptr, o, objptr)
+    def insert_after_object(self, MaxObject obj, MaxObject after) -> ListElement:
+        """Insert an item into the list after another specified item."""
+        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_insertafterobjptr(self.ptr,
+            <mx.t_object*>obj.ptr, <mx.t_object*>after.ptr)
+        return ListElement.from_ptr(elem_ptr)
 
-    cdef mx.t_llelem* moveafterobjptr(self, void* o, void* objptr):
-        """Move an object after a given object."""
-        return mx.linklist_moveafterobjptr(self.ptr, o, objptr)
+    def insert_before_object(self, MaxObject obj, MaxObject before) -> ListElement:
+        """Insert an item into the list before another specified item."""
+        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_insertbeforeobjptr(self.ptr,
+            <mx.t_object*>obj.ptr, <mx.t_object*>before.ptr)
+        return ListElement.from_ptr(elem_ptr)
 
-    cdef mx.t_llelem* movebeforeobjptr(self, void* o, void* objptr):
-        """Move an object before a given object."""
-        return mx.linklist_movebeforeobjptr(self.ptr, o, objptr)
+    def move_after_object(self, MaxObject obj, MaxObject after) -> ListElement:
+        """Move an existing item in the list to a position after another specified item in the list."""
+        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_moveafterobjptr(self.ptr,
+            <mx.t_object*>obj.ptr, <mx.t_object*>after.ptr)
+        return ListElement.from_ptr(elem_ptr)
 
-    def delete_object_at_index(self, long index):
-        """Delete an object at a given index."""
+    def move_before_object(self, MaxObject obj, MaxObject before) -> ListElement:
+        """Move an existing item in the list to a position before another specified item in the list."""
+        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_movebeforeobjptr(self.ptr,
+            <mx.t_object*>obj.ptr, <mx.t_object*>before.ptr)
+        return ListElement.from_ptr(elem_ptr)
+
+    def delete_index(self, long index):
+        """Remove the item from the list at the specified index and free it.
+    
+        The linklist can contain a variety of different types of data.
+        By default, the linklist assumes that all items are max objects with a valid
+        #t_object header.  Thus by default, it frees items by calling object_free() on them.
+
+        You can alter the linklist's notion of what it contains by using the 
+        linklist_flags() method.
+
+        If you wish to remove an item from the linklist and free it yourself, then you
+        should use linklist_chuckptr().
+        """
         cdef mx.t_max_err err = mx.linklist_deleteindex(self.ptr, index)
         if err:
             raise ValueError("could not delete object at index")
 
-    def chuck_object_at_index(self, long index):
-        """Chuck an object at a given index."""
+    def chuck_index(self, long index):
+        """Remove the item from the list at the specified index.
+    
+        You are responsible for freeing any memory associated with the item that is
+        removed from the linklist.
+        """
         cdef mx.t_max_err err = mx.linklist_chuckindex(self.ptr, index)
         if err:
             raise ValueError("could not chuck object at index")
 
-    cdef mx.t_max_err chuck_object(self, void* o):
-        """Chuck an object."""
-        return mx.linklist_chuckobject(self.ptr, o)
+    def chuck_object(self, MaxObject obj) -> int:
+        """Remove the specified item from the list.
+    
+        You are responsible for freeing any memory associated with the item that is
+        removed from the linklist.
+        """
+        cdef long err = mx.linklist_chuckobject(self.ptr, obj.ptr)
+        return err
 
-    cdef long chuckobject(self, void* o):
-        """Chuck an object."""
-        return mx.linklist_chuckobject(self.ptr, o)
+    def delete_object(self, MaxObject obj) -> int:
+        """Delete the specified item from the list.
 
-    cdef long deleteobject(self, void* o):
-        """Delete an object."""
-        return mx.linklist_deleteobject(self.ptr, o)
-
-    cdef long chuckptr(self, mx.t_llelem* p):
-        """Chuck a pointer."""
-        return mx.linklist_chuckptr(self.ptr, p)
+        The object is removed from the list and deleted.
+        The deletion is done with respect to any flags passed to linklist_flags.
+        """
+        cdef long err = mx.linklist_chuckobject(self.ptr, obj.ptr)
+        return err
 
     def clear(self):
-        """Clear the linklist."""
+        """Remove and free all items in the list.
+    
+        Freeing items in the list is subject to the same rules as linklist_deleteindex().
+        You can alter the linklist's notion of what it contains, and thus how items are freed,
+        by using the linklist_flags() method.
+        """
         mx.linklist_clear(self.ptr)
 
     cdef mx.t_atom_long makearray(self, void** a, long max):
-        """Make an array from the linklist."""
+        """Retrieve linklist items as an array of pointers."""
         return mx.linklist_makearray(self.ptr, a, max)
 
     def reverse(self):
-        """Reverse the linklist."""
+        """Reverse the order of items in the linked-list."""
         mx.linklist_reverse(self.ptr)
 
     def rotate(self, long i):
-        """Rotate the linklist."""
+        """Rotate items in the linked list in circular fashion."""
         mx.linklist_rotate(self.ptr, i)
 
     def shuffle(self):
-        """Shuffle the linklist."""
+        """Randomize the order of items in the linked-list."""
         mx.linklist_shuffle(self.ptr)
 
     def swap(self, long a, long b):
-        """Swap two objects."""
+        """Swap the position of two items in the linked-list, specified by index."""
         mx.linklist_swap(self.ptr, a, b)
 
     cdef void methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
@@ -4321,8 +4431,6 @@ cdef class Box:
         if box.ptr is NULL:
             raise MemoryError
         return box
-
-
 
     @property
     def id(self) -> str:
@@ -5798,11 +5906,13 @@ cdef class Path:
         """Convert a source path string to destination path string using the 
         specified style and type.
 
-        @param  src     A pointer to source character string to be converted.
-        @param  dst     A pointer to destination character string.
-        @param  style   The destination filepath style, as defined in #e_max_path_styles
-        @param  type    The destination filepath type, as defined in #e_max_path_types 
-        @return         An error code.
+        params:
+            src     A pointer to source character string to be converted.
+            dst     A pointer to destination character string.
+            style   The destination filepath style, as defined in #e_max_path_styles
+            type    The destination filepath type, as defined in #e_max_path_types 
+
+        returns An error code.
         """
         cdef char dst_pathname[MAX_PATH_CHARS]
         cdef short err = mx.path_nameconform(src_pathname.encode(), dst_pathname,

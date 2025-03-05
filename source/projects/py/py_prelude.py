@@ -13,9 +13,10 @@ import functools
 # ---------------------------------------------------------
 # global constants
 
-EDITOR = "Sublime Text"  # can be changed of course
-
-
+# Ideally this should be obtained via shell environments,
+# but somehow this is not obtainable via os.getenv('EDITOR')
+# but the `shell` external manages to overcome this.
+EDITOR = "Sublime Text"
 
 # ---------------------------------------------------------
 # private utilities
@@ -102,6 +103,11 @@ def shell(cmd: str, err_func=None):
 
 
 def out_dict(py_dict: dict):
+    """Output python dict in Max dict-syntax
+    
+    >>> out_dict({'a':1, 'b': [1,2,3,4]})
+    ['a', ':', 1, 'b', ':', 1, 2, 3, 4]
+    """
     res = []
     for k, v in py_dict.items():
         res.append(k)
@@ -112,7 +118,6 @@ def out_dict(py_dict: dict):
         else:
             res.append(v)
     return res
-
 
 
 def pipe(s: str):

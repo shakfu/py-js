@@ -15,6 +15,9 @@ mem = {}
 def test_maxobject_init():
     mem["buf"] = api.MaxObject("buffer~", "buf", "jongly.aif")
 
+def test_maxobject_isinstance_object():
+    return isinstance(mem["buf"], object)
+
 def test_maxobject_from_str():
     mem["buf"] = api.MaxObject.from_str("buffer~", "buf amen.wav")
 
