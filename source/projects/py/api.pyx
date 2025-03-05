@@ -2815,6 +2815,11 @@ cdef class Database:
 # ----------------------------------------------------------------------------
 # api.List
 
+# REMOVE or REPLACE
+# This class is way too low-level and is a poor replacement for Python's list.
+# Investigate how to subclass python list type and include Max friendly features
+
+
 cdef object __linklist_compare_func = None
 
 
@@ -2863,7 +2868,7 @@ cdef class List:
         #  object_free(self.ptr)  # will free all in list
 
     def __repr__(self) -> str:
-        return f"<List size:{self.get_åsize()}'>"
+        return f"<List size:{self.get_size()}'>"
 
     def __getitem__(self, long index) -> MaxObject:
         cdef mx.t_object* obj = <mx.t_object*>mx.linklist_getindex(self.ptr, index)
