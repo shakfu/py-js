@@ -32,8 +32,10 @@ DEPENDENCIES = "cmake zmq czmq"
 # system python override: eg. `make shared-ext PYTHON_VERSION=3.12.9`
 # PYTHON_VERSION = 3.13.2
 
+# change MAX_VERSION from 9 to 8 or vice-versa
+
 MAX_APP := "/Applications/Studio/Max.app"
-MAX_VERSION := 9 # change to 8 for Max 8
+MAX_VERSION := 9
 MAX_DIR := "Max\ $(MAX_VERSION)"
 PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
 PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/$(PKG_NAME)
