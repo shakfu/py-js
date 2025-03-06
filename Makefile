@@ -438,6 +438,10 @@ max-check:
 	@echo "$(PYJS_PACKAGE)"
 	@ls "$(PYJS_PACKAGE)"
 
+py2c:
+	$(call section,"converting py_prelude.py to py_prelude.h")
+	@cd source/projects/py && ./scripts/py2c.py
+
 # DEPLOYING
 # -----------------------------------------------------------------------
 

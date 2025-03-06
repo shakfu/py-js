@@ -2,7 +2,7 @@
 
 ## [0.3.x]
 
-- Fixed critical `zlib-not-available` bug that started to occurr for dynamically linked build variants. See `py-js/patchers/tests/_breaking/zlib-no-available/README.md` for full write-up.
+- Fixed critical `zlib-not-available` bug that appeared for dynamically linked build variants. See `py-js/patchers/tests/_breaking/zlib-no-available/README.md` for full write-up.
 
 - Added `api.Hashtab` methods and tests
 

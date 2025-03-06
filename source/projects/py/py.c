@@ -356,6 +356,7 @@ void py_init(t_py* x)
 
     PyConfig config;
     PyConfig_InitPythonConfig(&config);
+    // config.isolated = 0;
     config.parse_argv = 0; // Disable parsing command line arguments
     config.home = python_home;
 
@@ -507,6 +508,7 @@ t_max_err py_pythonpath_add(t_py* x, t_symbol* path)
     PyObject* py_path = PyUnicode_FromString(path->s_name);
     if (!py_path) {
         py_error(x, "could not set pythonpath");
+        Py_DECREF(sys_path);
         return MAX_ERR_GENERIC;
     }
     PyList_Append(sys_path, py_path);
@@ -670,17 +672,14 @@ void py_init_builtins(t_py* x)
     builtins = PyEval_GetBuiltins(); // borrowed, deprecated since 3.13 to use PyEval_GetFrameBuiltins (new ref)
     if (builtins == NULL)
         goto error;
-    Py_INCREF(builtins);
 
     err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
     if (err == -1) 
-        goto cleanup_before_error;
+        goto error;
 
     err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
     if (err == -1) 
-        goto cleanup_before_error;
-
-    Py_XDECREF(builtins);
+        goto error;
 
     p_code_obj = PyRun_String(PY_PRELUDE_MODULE, Py_file_input, x->p_globals,
                               x->p_globals);
@@ -694,10 +693,6 @@ void py_init_builtins(t_py* x)
     Py_CLEAR(p_name);
 
     return;
-
-cleanup_before_error:
-    Py_XDECREF(builtins);
-    // failthrough to
 
 error:
     py_handle_error(x, "failed to initialize python builtins");

@@ -46,7 +46,7 @@
 #define PY_MAX_ERROR 4096
 #define PY_MAX_ELEMS 1024
 #define PY_ATTRS_WITH_DEFAULTS 0
-#define PY_CHECK_REFS 0
+#define PY_CHECK_REFS 1
 
 /*--------------------------------------------------------------------------*/
 /* Macros */
@@ -70,13 +70,15 @@
             post("%s %s.%s: %d", (p), __func__, (#v), (n)); \
     } while (0)
 #define PY_REF_PRE(v) PY_REF("PRE",(v))
-#define PY_REF_ERR(v) PY_REF("ERR",(v))
 #define PY_REF_PST(v) PY_REF("PST",(v))
+#define PY_REF_FIN(v) PY_REF("FIN",(v))
+#define PY_REF_ERR(v) PY_REF("ERR",(v))
 #else
 #undef PY_REF
 #undef PY_REF_PRE
-#undef PY_REF_ERR
 #undef PY_REF_PST
+#undef PY_REF_FIN
+#undef PY_REF_ERR
 #endif
 
 /*--------------------------------------------------------------------------*/

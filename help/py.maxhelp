@@ -536,7 +536,7 @@
 
 							}
  ],
-						"originid" : "pat-8"
+						"originid" : "pat-6"
 					}
 ,
 					"patching_rect" : [ 16.0, 157.0, 67.0, 22.0 ],
@@ -906,7 +906,7 @@
 
 							}
  ],
-						"originid" : "pat-12"
+						"originid" : "pat-10"
 					}
 ,
 					"patching_rect" : [ 16.0, 124.0, 73.0, 22.0 ],
@@ -1536,7 +1536,7 @@
 
 							}
  ],
-						"originid" : "pat-20"
+						"originid" : "pat-18"
 					}
 ,
 					"patching_rect" : [ 16.0, 91.0, 70.0, 22.0 ],
@@ -2809,7 +2809,7 @@
 									"presentation" : 1,
 									"presentation_linecount" : 11,
 									"presentation_rect" : [ 76.0, 353.0, 52.0, 156.0 ],
-									"text" : "\"3.13.2 (main, Mar  6 2025, 08:24:39) [Clang 16.0.0 (clang-1600.0.26.6)]\""
+									"text" : "\"3.13.2 (main, Mar  6 2025, 09:02:35) [Clang 16.0.0 (clang-1600.0.26.6)]\""
 								}
 
 							}
@@ -3008,7 +3008,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 647.25, 554.5, 29.5, 22.0 ],
+									"patching_rect" : [ 645.75, 554.5, 29.5, 22.0 ],
 									"presentation" : 1,
 									"presentation_rect" : [ 579.5, 437.0, 29.5, 22.0 ],
 									"text" : "bye"
@@ -4064,7 +4064,7 @@
 
 							}
  ],
-						"originid" : "pat-24"
+						"originid" : "pat-22"
 					}
 ,
 					"patching_rect" : [ 16.0, 59.0, 66.0, 22.0 ],

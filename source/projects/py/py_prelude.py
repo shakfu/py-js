@@ -28,6 +28,7 @@ def is_sequence(obj):
 
 
 def __compose(f, g):
+    """f . g"""
     return lambda x: f(g(x))
 
 
@@ -81,6 +82,13 @@ mul6 = lambda x: x*7
 sumargs = lambda *args, **kwargs: sum(args)
 
 sumvals = lambda *args, **kwargs: sum(v for (k,v) in kwargs.items())
+
+
+def product(*args):
+    result = 1
+    for arg in args:
+        result *= arg
+    return result
 
 
 # ---------------------------------------------------------
@@ -225,13 +233,83 @@ def fold(s: str):
         return res
 
 
+def to_string(func, *args, **kwds):
+    """creates max-friendly function calling syntax arguments
+    
+    >>> to_string('f2', 1, 2, 3, a=10, b=[1,2])
+    'f2 1 2 3 a : 10 b : 1 2'
+    """
+    res = [func]
+    res.extend(args)
+    res.extend(out_dict(kwds))
+    return " ".join(str(i) for i in res)
+
+
+def list_to_dict(xs, d={}):
+    """converts a max dict syntax represented as a list to a python dict
+    
+    >>> xs = [4, ':', 5, 'a', 'b', ':', 10, 'abv', 1, ':', 23]
+    >>> list_to_dict(xs)
+    {4: [5, 'a'], 'b': [10, 'abv'], 1: 23}
+    """
+    if not xs:
+        return d
+    seps =  []
+    n = len(xs)
+    for i, o in enumerate(xs):
+        if o == ':':
+            seps.append(i)
+
+    it = iter(seps)
+    start = next(it)
+    try:
+        end = next(it)
+        key = xs[0]
+        values = xs[start+1:end-1]
+        if len(values) == 1:
+            values = values[0]
+        d[key] = values
+    except StopIteration:
+        key = xs[0]
+        values = xs[start+1:]
+        if len(values) == 1:
+            values = values[0]
+        d[key] = values
+        return d
+    return f(xs[end-1:], d)
+
+
+def from_string(s: str):
+    """converts a max-friendly function calling 
+    syntax from a string to py objects
+
+    >>> s = 'f 1 2 3 a : 5 6 b : 10'
+    >>> from_string(s)
+    f(1, 2, 3, a=[5, 6], b=10)
+
+    """
+    args = []
+    kwds = []
+    xs = s.split()
+    f = xs[0]
+    xs = xs[1:]
+    if ':' in xs:
+        z = xs.index(':')
+        kwds = xs[z-1:]
+        args = xs[:z-1]
+    else:
+        kwds = []
+        args = xs
+    return f, tuple(args), list_to_dict(kwds, d={})
+
+
 # ---------------------------------------------------------
 # misc funcs
 
-def edit(path: str, editor=None):
+
+def edit(path: str):
     """open the file in the editor"""
-    if not editor:
-        editor = os.getenv("EDITOR", EDITOR)
+    editor = os.getenv("EDITOR", EDITOR)
     path = os.path.expanduser(path)
     shell(f"open -a '{editor}' '{path}'")
 

@@ -44,16 +44,17 @@ After some testing, it was discovered that the issue only occurred with the `py.
 
 ## Why did it happen?
 
-Possible cause which need to be validated:
+Possible causes which need to be validated. 
 
-- The addition of the `[js]` and `[v8]` objects in that tab caused some threading problem during loading along with 
+- The problem is duplicated on Max8 in x86 so it's not recently introduced by Max 9
+
+- Insufficient guards in the initialization code.
+
+- The complexity of the file and addition of the `[js]` and `[v8]` objects, with the latter having a higher thread priority may have resulted in sequencing issues.
 
 - Too many sends and receives?
 
 - Nonetheless, a simple patcher page with the `py`, `js` and `v8` objects did not trigger the problem, so it is likely due to patch complexity and the some sequencing issues due to threading / prioritization.
-
-- Max 9 vs Max 8? Needs further checking...
-
 
 
 
