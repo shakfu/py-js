@@ -2815,10 +2815,6 @@ cdef class Database:
 # ----------------------------------------------------------------------------
 # api.List
 
-# REMOVE or REPLACE
-# This class is way too low-level and is a poor replacement for Python's list.
-# Investigate how to subclass python list type and include Max friendly features
-
 
 cdef object __linklist_compare_func = None
 
@@ -2832,25 +2828,6 @@ cdef long compare_linklist_objects(object o1, object o2):
     linklist items passed in as arguments.
     """
     return <bint>__linklist_compare_func(o1, o2)
-
-
-cdef class ListElement:
-    """Wraps the t_llelem linklist element."""
-
-    cdef mx.t_llelem* ptr
-    cdef bint ptr_owner
-
-    def __cinit__(self):
-        self.ptr = NULL
-        self.ptr_owner = False
-
-
-    @staticmethod
-    cdef from_ptr(mx.t_llelem* ptr, bint ptr_owner=False):
-        cdef ListElement elem = ListElement.__new__(ListElement)
-        elem.ptr = ptr
-        elem.ptr_owner = ptr_owner
-        return elem
 
 
 cdef class List:
@@ -2944,30 +2921,6 @@ cdef class List:
             raise ValueError("could not insert sorted object into linklist")
         return idx
 
-    def insert_after_object(self, MaxObject obj, MaxObject after) -> ListElement:
-        """Insert an item into the list after another specified item."""
-        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_insertafterobjptr(self.ptr,
-            <mx.t_object*>obj.ptr, <mx.t_object*>after.ptr)
-        return ListElement.from_ptr(elem_ptr)
-
-    def insert_before_object(self, MaxObject obj, MaxObject before) -> ListElement:
-        """Insert an item into the list before another specified item."""
-        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_insertbeforeobjptr(self.ptr,
-            <mx.t_object*>obj.ptr, <mx.t_object*>before.ptr)
-        return ListElement.from_ptr(elem_ptr)
-
-    def move_after_object(self, MaxObject obj, MaxObject after) -> ListElement:
-        """Move an existing item in the list to a position after another specified item in the list."""
-        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_moveafterobjptr(self.ptr,
-            <mx.t_object*>obj.ptr, <mx.t_object*>after.ptr)
-        return ListElement.from_ptr(elem_ptr)
-
-    def move_before_object(self, MaxObject obj, MaxObject before) -> ListElement:
-        """Move an existing item in the list to a position before another specified item in the list."""
-        cdef mx.t_llelem* elem_ptr = <mx.t_llelem*>mx.linklist_movebeforeobjptr(self.ptr,
-            <mx.t_object*>obj.ptr, <mx.t_object*>before.ptr)
-        return ListElement.from_ptr(elem_ptr)
-
     def delete_index(self, long index):
         """Remove the item from the list at the specified index and free it.
     
@@ -3042,35 +2995,19 @@ cdef class List:
         """Swap the position of two items in the linked-list, specified by index."""
         mx.linklist_swap(self.ptr, a, b)
 
-    cdef void methodall_imp(self, void* x, void* sym, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7, void* p8):
-        """Call a method on all objects in the linklist."""
-        mx.linklist_methodall_imp(x, sym, p1, p2, p3, p4, p5, p6, p7, p8)
-
-    cdef void* methodindex_imp(self, void* x, void* i, void* s, void* p1, void* p2, void* p3, void* p4, void* p5, void* p6, void* p7):
-        """Call a method on an object at a given index."""
-        mx.linklist_methodindex_imp(x, i, s, p1, p2, p3, p4, p5, p6, p7)
-
-    cdef mx.t_atom_long funall_break(self, mx.method fun, void* arg):
-        """Call a function on all objects in the linklist."""
-        return mx.linklist_funall_break(self.ptr, fun, arg)
-
-    cdef void* funindex(self, long i, mx.method fun, void* arg):
-        """Call a function on an object at a given index."""
-        return mx.linklist_funindex(self.ptr, i, fun, arg)
-
     cdef void* substitute(self, void* p, void* newp):
         """Substitute an object with a new object."""
         return mx.linklist_substitute(self.ptr, p, newp)
 
-    cdef void* next(self, void* p, void** next):
+    cdef void* next_obj(self, void* p, void** next):
         """Get the next object."""
         return mx.linklist_next(self.ptr, p, next)
 
-    cdef void* prev(self, void* p, void** prev):
+    cdef void* prev_obj(self, void* p, void** prev):
         """Get the previous object."""
         return mx.linklist_prev(self.ptr, p, prev)
 
-    cdef void* last(self, void** item):
+    cdef void* last_obj(self, void** item):
         """Get the last object."""
         return mx.linklist_last(self.ptr, item)
 
@@ -6572,7 +6509,7 @@ def out2(object obj):
 def send(name, *args):
     """Send a message to a receiver."""
     ext = PyExternal()
-    ext.send(name, list(args))
+    ext.send(name, *args)
 
 def lookup(name):
     """Lookup a variable name in the object registry."""

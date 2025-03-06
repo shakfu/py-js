@@ -51,12 +51,21 @@ functions:
 ```c
 b PyDict_GetItemString()
 b PyErr_Occurred()
-b PyEval_GetBuiltins() // deprecated since 3.13
+b PyEval_GetBuiltins() // deprecated since 3.13 should use PyEval_GetFrameBuiltins (new ref)
 b PyImport_AddModule()
-b PyList_GetItem()
 b PyModule_GetDict()
 b PySys_GetObject()
 ```
+
+Addeed Py_INCREF / Py_DECREF to
+
+- [x] PyDict_GetItemString()
+- [ ] PyErr_Occurred()
+- [x] PyEval_GetBuiltins()
+- [x] PyImport_AddModule()
+- [ ] PyModule_GetDict()
+- [x] PySys_GetObject()
+
 
 
 ## c-api functions returning new references

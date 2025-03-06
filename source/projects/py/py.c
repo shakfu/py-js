@@ -345,7 +345,7 @@ void py_init(t_py* x)
     python_home = Py_DecodeLocale(package_path, NULL);
 #endif
 
-#if defined(PY_37)
+#if PY_VERSION_HEX < 0x0308000 // i.e. less than python 3.8
     if (python_home != NULL) {
         Py_SetPythonHome(python_home);
         PyMem_RawFree(python_home);
@@ -370,7 +370,16 @@ void py_init(t_py* x)
 
     // python init
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
+    if (!main_mod) {
+        py_error(x, "could not create base module");
+        return;
+    }
+    Py_INCREF(main_mod);
+
     x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
+
+    Py_DECREF(main_mod);
+
     py_init_builtins(x); // does this have to be a separate function?
 
     // register the object
@@ -488,14 +497,22 @@ t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc,t_atom* argv
  */
 t_max_err py_pythonpath_add(t_py* x, t_symbol* path)
 {
-    PyObject* sys_path = PySys_GetObject((char*)"path");
+    PyObject* sys_path = PySys_GetObject((char*)"path"); // borrowed
+    if (!sys_path) {
+        py_error(x, "could not obtain sys.path");
+        return MAX_ERR_GENERIC;
+    }
+    Py_INCREF(sys_path);
+
     PyObject* py_path = PyUnicode_FromString(path->s_name);
-    if (!sys_path || !py_path) {
+    if (!py_path) {
         py_error(x, "could not set pythonpath");
         return MAX_ERR_GENERIC;
     }
     PyList_Append(sys_path, py_path);
     py_info(x, "added to pythonpath: %s", path->s_name);
+
+    Py_DECREF(sys_path);
     return MAX_ERR_NONE;
 }
 
@@ -649,17 +666,21 @@ void py_init_builtins(t_py* x)
     if (p_name == NULL)
         goto error;
 
-    builtins = PyEval_GetBuiltins();
+
+    builtins = PyEval_GetBuiltins(); // borrowed, deprecated since 3.13 to use PyEval_GetFrameBuiltins (new ref)
     if (builtins == NULL)
         goto error;
+    Py_INCREF(builtins);
 
     err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
-    if (err == -1)
-        goto error;
+    if (err == -1) 
+        goto cleanup_before_error;
 
     err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
-    if (err == -1)
-        goto error;
+    if (err == -1) 
+        goto cleanup_before_error;
+
+    Py_XDECREF(builtins);
 
     p_code_obj = PyRun_String(PY_PRELUDE_MODULE, Py_file_input, x->p_globals,
                               x->p_globals);
@@ -673,6 +694,10 @@ void py_init_builtins(t_py* x)
     Py_CLEAR(p_name);
 
     return;
+
+cleanup_before_error:
+    Py_XDECREF(builtins);
+    // failthrough to
 
 error:
     py_handle_error(x, "failed to initialize python builtins");
@@ -1172,7 +1197,7 @@ t_max_err py_task(t_py* x)
  */
 void py_handle_error(t_py* x, char* fmt, ...)
 {
-    if (!PyErr_Occurred())
+    if (!PyErr_Occurred()) // borrowed
         return;
 
     // char msg[PY_MAX_ELEMS];
@@ -1422,12 +1447,15 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
             py_error(x, "retrieving out_dict func from globals failed");
             goto error;
         }
+        Py_INCREF(pfun);
 
         pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL); // new ref
         if (pval == NULL) {
             py_error(x, "out_dict call failed to retrieve result");
+            Py_DECREF(pfun);
             goto error;
         }
+        Py_DECREF(pfun);
 
         if (PyList_Check(pval)) {           // expecting a python list
             py_handle_list_output(x, pval); // this decrefs pval

@@ -58,6 +58,7 @@ from typing import Dict, List, Optional
 from .config import (
     CURRENT_PYTHON_VERSION,
     DEFAULT_CONFIGURE_OPTIONS,
+    DEFAULT_XZ_VERSION,
     LOG_FORMAT,
     LOG_LEVEL,
     URL_GETPIP,
@@ -449,9 +450,9 @@ class Builder:
     ):
         """python wrapper around command-line xcodebuild"""
 
-        if self.product.ver == "3.7" and "PY_37" not in preprocessor_flags:
-            preprocessor_flags = list(preprocessor_flags)
-            preprocessor_flags.append("PY_37")
+        # if self.product.ver == "3.7" and "PY_37" not in preprocessor_flags:
+        #     preprocessor_flags = list(preprocessor_flags)
+        #     preprocessor_flags.append("PY_37")
 
         if self.settings.python_version:
             if "PY_VERSION" not in xcconfig_flags:
@@ -700,10 +701,10 @@ class XzBuilder(ConfiguredBuilder):
                 f"tar -xvf '{self.download_path}'"
                 f" --directory '{self.project.build_src}'"
             )
-            # downloaded = (
-            #     self.project.build_src / f"cpython-source-deps-xz-{DEFAULT_XZ_VERSION}"
-            # )
-            # self.cmd.move(downloaded, self.src_path)
+            downloaded = (
+                self.project.build_src / f"cpython-source-deps-xz-{DEFAULT_XZ_VERSION}"
+            )
+            self.cmd.move(downloaded, self.src_path)
             assert self.src_path.exists(), f"{self.src_path} not created"
 
     def pre_process(self):

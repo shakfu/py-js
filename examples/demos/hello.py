@@ -1,10 +1,5 @@
 # hello.py
-"""
-
-This is a demo of a python script in the `py` package.
-
-
-"""
+"""This is a demo of a python script in the `py` package."""
 
 # import api # cythonized max c api
 
