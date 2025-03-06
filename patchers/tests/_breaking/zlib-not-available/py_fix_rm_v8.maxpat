@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 9,
 			"minor" : 0,
-			"revision" : 4,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -25,13 +25,13 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 887.0, 743.0 ],
+						"rect" : [ 211.0, 113.0, 887.0, 743.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 2,
 						"boxes" : [ 							{
@@ -43,42 +43,6 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 33.0, 283.0, 29.5, 22.0 ],
 									"text" : "api"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-9",
-									"maxclass" : "button",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "bang" ],
-									"parameter_enable" : 0,
-									"patching_rect" : [ 383.0, 283.0, 24.0, 24.0 ]
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"filename" : "array-math-bench.js",
-									"id" : "obj-4",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 383.0, 327.0, 141.0, 22.0 ],
-									"saved_object_attributes" : 									{
-										"parameter_enable" : 0
-									}
-,
-									"text" : "v8 array-math-bench.js",
-									"textfile" : 									{
-										"filename" : "array-math-bench.js",
-										"flags" : 0,
-										"embed" : 0,
-										"autowatch" : 1
-									}
-
 								}
 
 							}
@@ -297,8 +261,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 17.0, 649.0, 158.0, 22.0 ],
-									"text" : "2"
+									"patching_rect" : [ 17.0, 649.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -386,22 +349,11 @@
 								}
 
 							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-4", 0 ],
-									"source" : [ "obj-9", 0 ]
-								}
-
-							}
  ],
 						"originid" : "pat-6"
 					}
 ,
 					"patching_rect" : [ 16.0, 192.0, 86.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p performance"
 				}
 
@@ -417,7 +369,7 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -809,8 +761,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 31.0, 689.0, 158.0, 22.0 ],
-									"text" : "2"
+									"patching_rect" : [ 31.0, 689.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -933,10 +884,6 @@
 					}
 ,
 					"patching_rect" : [ 16.0, 157.0, 67.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p escaping"
 				}
 
@@ -952,7 +899,7 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1207,8 +1154,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 23.0, 678.0, 158.0, 22.0 ],
-									"text" : "2"
+									"patching_rect" : [ 23.0, 678.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -1308,10 +1254,6 @@
 					}
 ,
 					"patching_rect" : [ 16.0, 124.0, 73.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p ui_objects"
 				}
 
@@ -1327,7 +1269,7 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1612,8 +1554,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ],
-									"text" : "2"
+									"patching_rect" : [ 376.0, 359.0, 158.0, 22.0 ]
 								}
 
 							}
@@ -1943,10 +1884,6 @@
 					}
 ,
 					"patching_rect" : [ 16.0, 91.0, 70.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p functional"
 				}
 
@@ -1974,13 +1911,13 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 211.0, 113.0, 887.0, 743.0 ],
+						"rect" : [ 0.0, 26.0, 887.0, 743.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
@@ -3207,14 +3144,16 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 76.0, 353.0, 52.0, 22.0 ],
-									"text" : "2"
+									"presentation_linecount" : 11,
+									"presentation_rect" : [ 76.0, 353.0, 52.0, 156.0 ],
+									"text" : "\"3.13.2 (main, Mar  6 2025, 09:02:35) [Clang 16.0.0 (clang-1600.0.26.6)]\""
 								}
 
 							}
@@ -4473,10 +4412,6 @@
 					}
 ,
 					"patching_rect" : [ 16.0, 59.0, 66.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p overview"
 				}
 
@@ -4497,28 +4432,28 @@
 , 			{
 				"name" : "py_extedit.maxpat",
 				"bootpath" : "~/projects/py-js/patchers/bpatchers_ui",
-				"patcherrelativepath" : "../patchers/bpatchers_ui",
+				"patcherrelativepath" : "../../bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "py_multiedit.maxpat",
 				"bootpath" : "~/projects/py-js/patchers/bpatchers_ui",
-				"patcherrelativepath" : "../patchers/bpatchers_ui",
+				"patcherrelativepath" : "../../bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "py_repl.maxpat",
 				"bootpath" : "~/projects/py-js/patchers/bpatchers_ui",
-				"patcherrelativepath" : "../patchers/bpatchers_ui",
+				"patcherrelativepath" : "../../bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "py_textedit.maxpat",
 				"bootpath" : "~/projects/py-js/patchers/bpatchers_ui",
-				"patcherrelativepath" : "../patchers/bpatchers_ui",
+				"patcherrelativepath" : "../../bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1
 			}
