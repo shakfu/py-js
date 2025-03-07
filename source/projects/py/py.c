@@ -110,6 +110,7 @@ void ext_main(void* module_ref)
     class_addmethod(c, (method)py_call,       "call",       A_GIMME,   0);
     class_addmethod(c, (method)py_code,       "code",       A_GIMME,   0);
     class_addmethod(c, (method)py_pipe,       "pipe",       A_GIMME,   0);
+    class_addmethod(c, (method)py_product,    "product",    A_GIMME,   0);
     class_addmethod(c, (method)py_fold,       "fold",       A_GIMME,   0);
     class_addmethod(c, (method)py_shell,      "shell",      A_GIMME,   0);
     class_addmethod(c, (method)py_anything,   "anything",   A_GIMME,   0);
@@ -1975,8 +1976,87 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 /*--------------------------------------------------------------------------*/
-/* Wrapped Python Methods */
+/* Generic Wrappers for Python Methods */
 
+/**
+ * @brief      Apply a pure python function to strongly typed atoms
+ *
+ * @param      x            pointer to object structure
+ * @param      pyfunc_name  python function name
+ * @param      s            symbol
+ * @param[in]  argc         atom argument count
+ * @param      argv         atom argument vector
+ *
+ * @return     t_max_err error code
+ */
+t_max_err py_apply_pyfunc_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pyfunc = NULL;
+    PyObject* plist = NULL;
+    PyObject* ptuple = NULL;
+    PyObject* pval = NULL;
+
+    // convert atoms to python list
+    plist = py_atoms_to_list(x, argc, argv, 0);
+    if (plist == NULL) {
+         py_error(x, "could not convert atoms to list");
+         goto error;
+    }
+
+    // convert list to tuple
+    ptuple = PySequence_Tuple(plist);
+    if (plist == NULL) {
+         py_error(x, "could not convert python list to python tuple");
+         goto error;
+    }
+    Py_XDECREF(plist);
+
+    // depends on definition in py_prelude.h
+    pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
+    if (pyfunc == NULL) {
+        py_error(x, "retrieving python func '%s' from globals failed",
+                 pyfunc_name);
+        goto error;
+    }
+
+    pval = PyObject_Call(pyfunc, ptuple, NULL);
+
+    if (pval == NULL) {
+        goto error;
+    }
+
+    if (!PyUnicode_Check(pval)) {
+        py_handle_output(x, pval); // this decrefs pval
+    } else {
+        // special case strings, which will cause crash if handled
+        // out of this methods's scope. (huge PITA to debug!)
+        const char* unicode_result = PyUnicode_AsUTF8(pval);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
+        py_bang_success(x);
+        Py_XDECREF(pval);
+    }
+
+    Py_XDECREF(ptuple);
+    PyGILState_Release(gstate);
+    py_bang_success(x);
+    return MAX_ERR_NONE;
+
+error:
+    py_handle_error(x, "%s call failed", pyfunc_name);
+    Py_XDECREF(plist);
+    Py_XDECREF(ptuple);
+    Py_XDECREF(pval);
+    // fail bang
+    PyGILState_Release(gstate);
+    py_bang_failure(x);
+    return MAX_ERR_GENERIC;
+}
 
 /**
  * @brief      Apply a pure python function to a pyobject
@@ -1992,9 +2072,6 @@ t_max_err py_apply_pyfunc_to_pyobj(t_py* x, char* pyfunc_name, PyObject* obj)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    long textsize = 0;
-    char* text = NULL;
-    t_max_err err;
     PyObject* pyfunc = NULL;
     PyObject* pval = NULL;
 
@@ -2050,7 +2127,7 @@ error:
  *
  * @return     t_max_err error code
  */
-t_max_err py_apply_pyfunc_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc,
+t_max_err py_apply_pyfunc_to_text(t_py* x, char* pyfunc_name, t_symbol* s, long argc,
                           t_atom* argv)
 {
     PyGILState_STATE gstate;
@@ -2088,29 +2165,28 @@ t_max_err py_apply_pyfunc_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long
 
     pval = PyObject_CallFunctionObjArgs(pyfunc, pstr, NULL);
 
-    if (pval != NULL) {
-
-        if (!PyUnicode_Check(pval)) {
-            py_handle_output(x, pval); // this decrefs pval
-        } else {
-            // special case strings, which will cause crash if handled
-            // out of this methods's scope. (huge PITA to debug!)
-            const char* unicode_result = PyUnicode_AsUTF8(pval);
-            if (unicode_result == NULL) {
-                goto error;
-            }
-            outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
-            py_bang_success(x);
-            Py_XDECREF(pval);
-        }
-
-        Py_XDECREF(pstr);
-        PyGILState_Release(gstate);
-        py_bang_success(x);
-        return MAX_ERR_NONE;
-    } else {
+    if (pval == NULL) {
         goto error;
     }
+
+    if (!PyUnicode_Check(pval)) {
+        py_handle_output(x, pval); // this decrefs pval
+    } else {
+        // special case strings, which will cause crash if handled
+        // out of this methods's scope. (huge PITA to debug!)
+        const char* unicode_result = PyUnicode_AsUTF8(pval);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        outlet_anything(x->p_outlet_left, gensym(unicode_result), 0, NIL);
+        py_bang_success(x);
+        Py_XDECREF(pval);
+    }
+
+    Py_XDECREF(pstr);
+    PyGILState_Release(gstate);
+    py_bang_success(x);
+    return MAX_ERR_NONE;
 
 error:
     py_handle_error(x, "%s call failed", pyfunc_name);
@@ -2120,6 +2196,15 @@ error:
     PyGILState_Release(gstate);
     py_bang_failure(x);
     return MAX_ERR_GENERIC;
+}
+
+
+/*--------------------------------------------------------------------------*/
+/*  Python Wrapper Methods Implementations */
+
+t_max_err py_product(t_py* x, t_symbol* s, long argc, t_atom* argv)
+{
+    return py_apply_pyfunc_to_atoms(x, "product", s, argc, argv);
 }
 
 
@@ -2134,7 +2219,7 @@ error:
  */
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_apply_pyfunc_to_atoms(x, "pipe", s, argc, argv);
+    return py_apply_pyfunc_to_text(x, "pipe", s, argc, argv);
 }
 
 
@@ -2151,7 +2236,7 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv)
  */
 t_max_err py_fold(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_apply_pyfunc_to_atoms(x, "fold", s, argc, argv);
+    return py_apply_pyfunc_to_text(x, "fold", s, argc, argv);
 }
 
 
@@ -2166,7 +2251,7 @@ t_max_err py_fold(t_py* x, t_symbol* s, long argc, t_atom* argv)
  */
 t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_apply_pyfunc_to_atoms(x, "shell", s, argc, argv);
+    return py_apply_pyfunc_to_text(x, "shell", s, argc, argv);
 }
 
 
@@ -2181,7 +2266,7 @@ t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv)
  */
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_apply_pyfunc_to_atoms(x, "call", s, argc, argv);
+    return py_apply_pyfunc_to_text(x, "call", s, argc, argv);
 }
 
 

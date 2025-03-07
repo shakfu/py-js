@@ -169,6 +169,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_product(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_fold(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
@@ -177,6 +178,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /* Generic Python function wrappers */
 
 t_max_err py_apply_pyfunc_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_apply_pyfunc_to_text(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_apply_pyfunc_to_pyobj(t_py* x, char* pyfunc_name, PyObject* obj);
 
 /*--------------------------------------------------------------------------*/

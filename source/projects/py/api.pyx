@@ -4,8 +4,8 @@ This is a 'builtin' module which provides a Cython wrapper around parts of the M
 for use in the `py` external.
 
 Extension Classes:
-- MaxObject: Base wrapper for Max t_object
-- Atom: Wrapper for Max atoms/messages 
+- MaxObject: Base wrapper for Max t_object* objects
+- Atom: Wrapper for Max mx.t_atom* atoms/messages 
 - Table: Interface to Max tables
 - Buffer: Interface to MSP buffers
 - Dictionary: Interface to Max dictionaries
@@ -2816,20 +2816,6 @@ cdef class Database:
 # api.List
 
 
-cdef object __linklist_compare_func = None
-
-
-cdef long compare_linklist_objects(object o1, object o2):
-    """Methods that require a comparison function pointer to be passed in use this type.
-
-        long (*t_cmpfn)(void *, void *)
-
-    It should return true or false depending on the outcome of the comparison of the two
-    linklist items passed in as arguments.
-    """
-    return <bint>__linklist_compare_func(o1, o2)
-
-
 cdef class List:
     """Wraps the t_linklist object."""
 
@@ -2910,16 +2896,6 @@ cdef class List:
         cdef mx.t_atom_long err = mx.linklist_insertindex(self.ptr, obj.ptr, index)
         if err == -1:
             raise ValueError("append object failed")
-
-    def insert_sorted(self, MaxObject obj, sort_func=None) -> long:
-        """Insert an item into the list, keeping the list sorted according to a specified comparison function."""
-        cdef long idx = -1
-        if sort_func:
-            __linklist_compare_func = sort_func
-        idx = mx.linklist_insert_sorted(self.ptr, obj.ptr, compare_linklist_objects)
-        if idx == -1:
-            raise ValueError("could not insert sorted object into linklist")
-        return idx
 
     def delete_index(self, long index):
         """Remove the item from the list at the specified index and free it.
@@ -3015,13 +2991,13 @@ cdef class List:
         """Set the readonly flag."""
         mx.linklist_readonly(self.ptr, readonly)
 
-    cdef void flags(self, long flags):
+    def flags(self, int flags):
         """Set the flags."""
-        mx.linklist_flags(self.ptr, flags)
+        mx.linklist_flags(self.ptr, <long>flags)
 
-    cdef mx.t_atom_long getflags(self):
+    def getflags(self) -> int:
         """Get the flags."""
-        return mx.linklist_getflags(self.ptr)
+        return <mx.t_atom_long>mx.linklist_getflags(self.ptr)
 
     cdef long match(self, void* a, void* b):
         """Match two objects."""
@@ -3240,7 +3216,7 @@ cdef class Hashtab:
     """Wrapper around the t_hashtab object."""
 
     cdef mx.t_hashtab* ptr
-    cdef public int slotcount
+    cdef public long slotcount
     cdef public dict type_map
 
     def __cinit__(self, long slotcount = 59):
@@ -5656,27 +5632,20 @@ cdef class Path:
             mx.PATH_STYLE_MAX, mx.PATH_TYPE_BOOT)
         return dst_pathname.decode()
 
-    def to_potential_name(self) -> str:
+    def to_potential_name(self, str filename = "", int path_id = 0) -> str:
         """Create a fully qualified file name from a Path ID/file name combination, 
         regardless of whether or not the file exists on disk.
         """    
         cdef char pathname[MAX_PATH_CHARS]
         cdef short check = 0
-        cdef short err = mx.path_topotentialname(self.path_id, self.filename.encode(), pathname, check)
+        cdef short err = 0
+        if not filename and not path_id:
+            err = mx.path_topotentialname(self.path_id, self.filename.encode(), pathname, check)
+        else:
+            err = mx.path_topotentialname(path_id, filename.encode(), pathname, check)
         if err:
             raise IOError("could not get pathname from filename and path_id")
         return pathname.decode()
-
-    # def to_potential_name(self, str filename, int path_id) -> str:
-    #     """Create a fully qualified file name from a Path ID/file name combination, 
-    #     regardless of whether or not the file exists on disk.
-    #     """    
-    #     cdef char pathname[MAX_PATH_CHARS]
-    #     cdef short check = 0
-    #     cdef short err = mx.path_topotentialname(path_id, filename.encode(), pathname, check)
-    #     if err:
-    #         raise IOError("could not get pathname from filename and path_id")
-    #     return pathname.decode()
 
     def locatefile(self, str name) -> int:
         """Find a Max document by name in the search path.

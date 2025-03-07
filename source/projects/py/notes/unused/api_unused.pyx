@@ -2,6 +2,18 @@
 
 
 # ----------------------------------------------------------------------------
+# Subclass of MaxObject type
+
+# this works
+cdef class SubClass(MaxObject):
+    cdef int n
+
+    def __init__(self, int n, classname: str, *args, namespace: str = "box"):
+        self.n = n
+        super().__init__(classname, namespace)
+
+
+# ----------------------------------------------------------------------------
 # String type
 
 # This string type is totally useless in this context
@@ -25,6 +37,33 @@ cdef class String:
     def chop(self, long numchars):
         mx.string_chop(self._str, numchars)
 
+
+# ----------------------------------------------------------------------------
+# List type
+
+
+cdef mx.t_cmpfn __linklist_compare_func = None
+
+
+cdef long compare_linklist_objects(void* o1, void* o2):
+    """Methods that require a comparison function pointer to be passed in use this type.
+
+        long (*t_cmpfn)(void *, void *)
+
+    It should return true or false depending on the outcome of the comparison of the two
+    linklist items passed in as arguments.
+    """
+    return <bint>__linklist_compare_func(o1, o2)
+
+def insert_sorted(self, MaxObject obj, sort_func=None) -> long:
+    """Insert an item into the list, keeping the list sorted according to a specified comparison function."""
+    cdef long idx = -1
+    if sort_func:
+        __linklist_compare_func = sort_func
+    idx = mx.linklist_insert_sorted(self.ptr, obj.ptr, compare_linklist_objects)
+    if idx == -1:
+        raise ValueError("could not insert sorted object into linklist")
+    return idx
 
 # ----------------------------------------------------------------------------
 # TABLE type
@@ -381,4 +420,5 @@ cdef class List:
     cdef void funall(self, mx.method fun, void* arg):
         """Call a function on all objects in the linklist."""
         mx.linklist_funall(self.ptr, fun, arg)
+
 
