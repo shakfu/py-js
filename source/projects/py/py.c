@@ -899,9 +899,23 @@ char* str_replace(const char* s, const char* old, const char* new)
 void py_assist(t_py* x, void* b, long m, long a, char* s)
 {
     if (m == ASSIST_INLET) { // inlet
-        snprintf_zero(s, PY_MAX_ELEMS, "I am inlet %ld", a);
+        snprintf_zero(s, PY_MAX_ELEMS, "%ld: input", a);
+        // snprintf_zero(s, PY_MAX_ELEMS, "I am inlet %ld", a);
     } else { // outlet
-        snprintf_zero(s, PY_MAX_ELEMS, "I am outlet %ld", a);
+        switch (a) {
+          case 0:
+            snprintf_zero(s, PY_MAX_ELEMS, "%ld: output", a);
+            break;
+          case 1:
+            snprintf_zero(s, PY_MAX_ELEMS, "%ld: (bang) failure", a);
+            break;
+          case 2:
+            snprintf_zero(s, PY_MAX_ELEMS, "%ld: (bang) success", a);
+            break;
+          default:
+            snprintf_zero(s, PY_MAX_ELEMS, "I am outlet %ld", a);
+        }
+        // snprintf_zero(s, PY_MAX_ELEMS, "I am outlet %ld", a);
     }
 }
 

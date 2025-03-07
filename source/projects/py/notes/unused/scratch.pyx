@@ -214,3 +214,218 @@ class SysFile:
     cdef mx.t_max_err sysfile_openptrsize(self, char *p, mx.t_ptr_size length, mx.t_sysfile_flags flags, mx.t_filehandle *fh)
 
 
+# Matrix 
+
+# Matrix.unused -----
+
+
+    def set_plane2d(self, object value, int x, int y, int plane=0):
+        """Set a 2-dimensional cell to specified values
+
+        The word `setcell2d`, followed by a pair of numbers specifying `x` and
+        `y` coordinates and a list of values, is similar to the `setcell`
+        message but without the need to use a `val` token to separate the
+        coordinates from the value since the dimension count (2) is fixed.
+
+        Note that the order is slightly different in the python version of 
+        of this method, so for the max message `(setplane2d 3 2 1 4)`, the
+        equivalent in python is (with value being first):
+
+        >>> matrix.set_plate2d(4, x=3, y=2, plane=1)
+        """
+        cdef Atom atom = Atom.from_seq((x, y, plane, value))
+        jt.jit_object_method(<jt.t_object*>self.ptr, mx.gensym("setplane2d"),
+            atom.size, atom.ptr)
+
+    def set_char_data(self, list[int] data):
+        """set data to whole matrix"""
+        cdef int k = 0
+        cdef int i, j, p
+        cdef char *m_ptr = NULL
+
+        for i in range(self.height):
+            m_ptr = self.data + i * self.info.dimstride[1]
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    # (m_ptr+p)[0] = 2 # doesn't work!
+                    m_ptr[0] = 2
+                    m_ptr += 1
+
+
+# Matrix.WIP
+
+    cdef void* cell_ptr_1d(self, int x):
+        """Retrieves pointer to directly access matrix cells if it is 1D"""
+        return <void*>(<jt.uchar*>self.data + self.info.dimstride[0] * x)
+
+    cdef void* cell_ptr_2d(self, int x, int y):
+        return <void*>(<jt.uchar*>self.data + self.info.dimstride[0] * x
+                                            + self.info.dimstride[1] * y)
+
+    cdef void* cell_ptr_3d(self, int x, int y, int z):
+        return <void*>(<jt.uchar*>self.data + self.info.dimstride[0] * x
+                                            + self.info.dimstride[1] * y
+                                            + self.info.dimstride[2] * z)
+
+
+    def set_cell2d_char(self, int value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as unsigned char using a contiguous array."""
+        # assert 0 <= plane < self.planecount, "plane out of range"
+        cdef char* p = <char*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <jt.uchar>clamp(value, 0, 255)
+        self.unlock(savelock)
+
+    def set_cell2d_char2(self, int value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as unsigned char using a contiguous array."""
+        # assert 0 <= plane < self.planecount, "plane out of range"
+        cdef char* p = <char*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <jt.uchar>clamp(value, 0, 255)
+        p[plane+1] = <jt.uchar>clamp(value+1, 0, 255)
+        self.unlock(savelock)
+
+    def set_cell2d_long(self, long value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as long using a contiguous array."""
+        assert 0 <= plane < self.planecount, "plane out of range"
+        cdef long* p = <long*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <long>value
+        self.unlock(savelock)
+
+    def set_cell2d_float(self, float value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as float using a contiguous array."""
+        assert 0 <= plane < self.planecount, "plane out of range"
+        cdef float* p = <float*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <float>value
+        self.unlock(savelock)
+
+    def set_cell2d_double(self, double value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data as double using a contiguous array."""
+        assert 0 <= plane < self.planecount, "plane out of range"
+        cdef double* p = <double*>self.cell_ptr_2d(x, y)
+        cdef long savelock = <long>self.lock()
+        p[plane] = <double>value
+        self.unlock(savelock)
+
+    def set_cell2d(self, object value, int x = 0, int y = 0, int plane = 0):
+        """sets the matrix's data using a contiguous array."""
+        if self.type == "char":
+            self.set_cell2d_char(value, x, y, plane)
+        elif self.type == "long":
+            self.set_cell2d_long(value, x, y, plane)
+        elif self.type == "float32":
+            self.set_cell2d_float(value, x, y, plane)
+        elif self.type == "float64":
+            self.set_cell2d_double(value, x, y, plane)
+        else:
+            raise TypeError("could not process this type")
+
+
+    def set_char_data(self, data: list[int], int x = 0, int y = 0):
+        """sets the matrix's data as unsigned char using a contiguous array."""
+        cdef jt.uchar entry = 0
+        cdef char* p = NULL
+        assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+        cdef long savelock = <long>self.lock()
+        p = <char*>self.cell_ptr_2d(x, y)
+        for i in range(self.planecount):
+            p[i] = <jt.uchar>clamp(data[i], 0, 255)
+        self.unlock(savelock)
+
+    def set_long_data(self, data: list[int], int x = 0, int y = 0):
+        """sets the matrix's data as long using a contiguous array."""
+        cdef long entry = 0
+        assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+        cdef long savelock = <long>self.lock()
+        cdef long* p = <long*>self.cell_ptr_2d(x, y)
+        for i in range(len(data)):
+            entry = <long>data[i]
+            p[i] = entry
+        self.unlock(savelock)
+
+    def set_float_data(self, data: list[float], int x = 0, int y = 0):
+        """sets the matrix's data as float using a contiguous array."""
+        cdef float entry = 0
+        assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+        cdef long savelock = <long>self.lock()
+        cdef float* p = <float*>self.cell_ptr_2d(x, y)
+        for i in range(len(data)):
+            entry = <float>data[i]
+            p[i] = entry
+        self.unlock(savelock)
+
+    def set_double_data(self, data: list[float], int x = 0, int y = 0):
+        """sets the matrix's data as double using a contiguous array."""
+        cdef double entry = 0
+        assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+        cdef long savelock = <long>self.lock()
+        cdef double* p = <double*>self.cell_ptr_2d(x, y)
+        for i in range(len(data)):
+            entry = <double>data[i]
+            p[i] = entry
+        self.unlock(savelock)
+
+    def set_data(self, data: list[object], int x = 0, int y = 0):
+        """sets the matrix's data using a contiguous array."""
+        if self.type == "char":
+            self.set_char_data(data, x, y)
+        elif self.type == "long":
+            self.set_long_data(data, x, y)
+        elif self.type == "float32":
+            self.set_float_data(data, x, y)
+        elif self.type == "float64":
+            self.set_double_data(data, x, y)
+        else:
+            raise TypeError("could not process this type")
+
+    def set_char_data(self, list[int] data):
+        """set data to whole matrix"""
+        cdef int j = 0
+        cdef int x = 0
+        cdef char* p = NULL
+        for plane in range(self.planecount):
+            self.data += plane
+            for i in range(len(data)):
+                x = (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                post(f"x = {x}")
+                p = self.data + (j // self.info.dim[0]) * self.info.dimstride[1] + (j % self.info.dim[0]) * self.info.dimstride[0]
+                (<jt.uchar*>p)[0] = <jt.uchar>clamp(data[i], 0, 255)
+                j += 1
+                # post(f"(p, j, i) = ({plane}, {j}, {i})")
+            j = 0
+
+
+
+    def set_data(self, data: list[int], int x = 0, int y = 0):
+        """sets the matrix's data using a contiguous array."""
+        assert len(data) <= self.matrix_len, "incoming data not <= equal matrix_len"
+        cdef long savelock = <long>self.lock()
+        cdef char* p = <char*>self.cell_ptr_2d(x, y)
+        for i in range(len(data)):
+            p[i] = <char>data[i]
+        self.unlock(savelock)
+
+    def set_data(self, char[:,:,:] matrix):
+        """Set matrix from a memoryview
+        
+        >>> np.arange(200).reshape((2,20,5))
+
+        """
+        cdef long planes = <Py_ssize_t>matrix.shape[0]
+        cdef long rows = <Py_ssize_t>matrix.shape[1]
+        cdef long cols = <Py_ssize_t>matrix.shape[2]
+
+        assert cols == self.dim[0]
+        assert rows == self.dim[1]
+        assert planes == self.planecount
+        assert cols * rows * planes == self.matrix_len
+        # cdef int i = 0
+        # self.lock()
+        # ...
+        # self.unlock()
+    
+
+
+

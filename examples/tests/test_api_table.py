@@ -135,8 +135,8 @@ def test_table_wclose():
     t = mem['t']
     t.wclose()
 
-# def test_table_write():
-#     t = mem['t']
-#     t.write()
+def test_table_write():
+    t = mem['t']
+    t.write("/tmp/mytable")
 
 
