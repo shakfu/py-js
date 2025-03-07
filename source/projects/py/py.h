@@ -174,6 +174,12 @@ t_max_err py_shell(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 /*--------------------------------------------------------------------------*/
+/* Generic Python function wrappers */
+
+t_max_err py_apply_pyfunc_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_apply_pyfunc_to_pyobj(t_py* x, char* pyfunc_name, PyObject* obj);
+
+/*--------------------------------------------------------------------------*/
 /* Information Methods */
 
 void py_count(t_py* x);

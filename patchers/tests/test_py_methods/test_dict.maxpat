@@ -2,43 +2,47 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"major" : 9,
+			"minor" : 0,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
 		"rect" : [ 115.0, 222.0, 640.0, 480.0 ],
-		"bglocked" : 0,
-		"openinpresentation" : 0,
-		"default_fontsize" : 12.0,
-		"default_fontface" : 0,
-		"default_fontname" : "Arial",
-		"gridonopen" : 1,
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 1,
-		"objectsnaponopen" : 1,
-		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
-		"lefttoolbarpinned" : 0,
-		"toptoolbarpinned" : 0,
-		"righttoolbarpinned" : 0,
-		"bottomtoolbarpinned" : 0,
-		"toolbars_unpinned_last_save" : 0,
-		"tallnewobj" : 0,
-		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
-		"devicewidth" : 0.0,
-		"description" : "",
-		"digest" : "",
-		"tags" : "",
-		"style" : "",
-		"subpatcher_template" : "",
-		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-12",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 142.5, 393.5, 103.0, 20.0 ],
+					"text" : "dict get populated"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-2",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 5,
+					"outlettype" : [ "dictionary", "", "", "", "" ],
+					"patching_rect" : [ 252.0, 392.5, 61.0, 22.0 ],
+					"saved_object_attributes" : 					{
+						"embed" : 0,
+						"legacy" : 0,
+						"parameter_enable" : 0,
+						"parameter_mappable" : 0
+					}
+,
+					"text" : "dict here"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-7",
 					"maxclass" : "newobj",
@@ -112,7 +116,7 @@
 						"autoload" : 0,
 						"debug" : 1,
 						"file" : "",
-						"pythonpath" : ""
+						"pythonpath" : "/"
 					}
 ,
 					"text" : "py",
@@ -164,7 +168,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 351.0, 385.0, 55.0, 23.0 ],
+					"patching_rect" : [ 351.0, 392.0, 55.0, 23.0 ],
 					"text" : "dict.iter"
 				}
 
@@ -222,7 +226,16 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-2", 0 ],
+					"order" : 1,
+					"source" : [ "obj-20", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-27", 0 ],
+					"order" : 0,
 					"source" : [ "obj-20", 0 ]
 				}
 
@@ -284,6 +297,7 @@
 
 			}
  ],
+		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"

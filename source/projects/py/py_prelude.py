@@ -8,6 +8,7 @@ import subprocess
 import shlex
 import collections.abc
 import functools
+from inspect import signature as __signature
 
 
 # ---------------------------------------------------------
@@ -56,39 +57,38 @@ def __analyze(s: str):
     return fs, args, kwargs
 
 
-# ---------------------------------------------------------
-# test funcs
+def __list_to_dict(xs, d={}):
+    """converts a max dict syntax represented as a list to a python dict
+    
+    >>> xs = [4, ':', 5, 'a', 'b', ':', 10, 'abv', 1, ':', 23]
+    >>> list_to_dict(xs)
+    {4: [5, 'a'], 'b': [10, 'abv'], 1: 23}
+    """
+    if not xs:
+        return d
+    seps =  []
+    n = len(xs)
+    for i, o in enumerate(xs):
+        if o == ':':
+            seps.append(i)
 
-identity = lambda x: x
-
-add = lambda x,y: x+y
-
-product = lambda x,y: x*y
-
-add100 = lambda x: x+100
-
-sub20 = lambda x: x-20
-
-div2 = lambda x: x/2
-
-mul2 = lambda x: x*2
-
-mul10 = lambda x: x*10
-
-mul5 = lambda x: x*5
-
-mul6 = lambda x: x*7
-
-sumargs = lambda *args, **kwargs: sum(args)
-
-sumvals = lambda *args, **kwargs: sum(v for (k,v) in kwargs.items())
-
-
-def product(*args):
-    result = 1
-    for arg in args:
-        result *= arg
-    return result
+    it = iter(seps)
+    start = next(it)
+    try:
+        end = next(it)
+        key = xs[0]
+        values = xs[start+1:end-1]
+        if len(values) == 1:
+            values = values[0]
+        d[key] = values
+    except StopIteration:
+        key = xs[0]
+        values = xs[start+1:]
+        if len(values) == 1:
+            values = values[0]
+        d[key] = values
+        return d
+    return f(xs[end-1:], d)
 
 
 # ---------------------------------------------------------
@@ -245,40 +245,6 @@ def to_string(func, *args, **kwds):
     return " ".join(str(i) for i in res)
 
 
-def list_to_dict(xs, d={}):
-    """converts a max dict syntax represented as a list to a python dict
-    
-    >>> xs = [4, ':', 5, 'a', 'b', ':', 10, 'abv', 1, ':', 23]
-    >>> list_to_dict(xs)
-    {4: [5, 'a'], 'b': [10, 'abv'], 1: 23}
-    """
-    if not xs:
-        return d
-    seps =  []
-    n = len(xs)
-    for i, o in enumerate(xs):
-        if o == ':':
-            seps.append(i)
-
-    it = iter(seps)
-    start = next(it)
-    try:
-        end = next(it)
-        key = xs[0]
-        values = xs[start+1:end-1]
-        if len(values) == 1:
-            values = values[0]
-        d[key] = values
-    except StopIteration:
-        key = xs[0]
-        values = xs[start+1:]
-        if len(values) == 1:
-            values = values[0]
-        d[key] = values
-        return d
-    return f(xs[end-1:], d)
-
-
 def from_string(s: str):
     """converts a max-friendly function calling 
     syntax from a string to py objects
@@ -300,7 +266,7 @@ def from_string(s: str):
     else:
         kwds = []
         args = xs
-    return f, tuple(args), list_to_dict(kwds, d={})
+    return f, tuple(args), __list_to_dict(kwds, d={})
 
 
 # ---------------------------------------------------------
@@ -314,5 +280,25 @@ def edit(path: str):
     shell(f"open -a '{editor}' '{path}'")
 
 
+def product(*args):
+    """return result of multiplying arguments with each other
+    
+    >>> product(1, 2, 4, 6, 20)
+    960
+    """
+    result = 1
+    for arg in args:
+        result *= arg
+    return result
 
 
+def sig(func):
+    """returns func name and signature
+
+    >>> def f(x: int = 10) -> int: return x+1
+    >>> sig(f)
+    '<function f(x: int = 10) -> int>'
+    """
+    name = func.__qualname__
+    signature = str(__signature(func))
+    return f"<function {name}{signature}>"
