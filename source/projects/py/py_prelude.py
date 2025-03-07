@@ -8,7 +8,9 @@ import subprocess
 import shlex
 import collections.abc
 import functools
+from keyword import iskeyword as is_keyword
 from inspect import signature as __signature
+from typing import Any
 
 
 # ---------------------------------------------------------
@@ -57,42 +59,51 @@ def __analyze(s: str):
     return fs, args, kwargs
 
 
-def __list_to_dict(xs, d={}):
-    """converts a max dict syntax represented as a list to a python dict
-    
-    >>> xs = [4, ':', 5, 'a', 'b', ':', 10, 'abv', 1, ':', 23]
-    >>> list_to_dict(xs)
-    {4: [5, 'a'], 'b': [10, 'abv'], 1: 23}
-    """
-    if not xs:
-        return d
-    seps =  []
-    n = len(xs)
-    for i, o in enumerate(xs):
-        if o == ':':
-            seps.append(i)
 
-    it = iter(seps)
-    start = next(it)
-    try:
-        end = next(it)
-        key = xs[0]
-        values = xs[start+1:end-1]
+def __list_to_dict(xs: list) -> dict:
+    """claude.ai's simplification of my version!"""
+    result = {}
+    if not xs:
+        return result
+    
+    # Find all separator positions
+    seps = [i for i, x in enumerate(xs) if x == ':']
+    
+    if not seps:
+        return result
+    
+    # Process each key-value pair
+    prev_idx = 0
+    for i in range(len(seps)):
+        sep_idx = seps[i]
+        key = xs[prev_idx]
+
+        if not isinstance(key, str) or is_keyword(key) or not key.isidentifier():
+            raise ValueError(f'key {key} is not a valid python identifier')
+
+        # Determine end of current value section
+        if i < len(seps) - 1:
+            end_idx = seps[i + 1] - 1
+        else:
+            end_idx = len(xs)
+        
+        # Extract values
+        values = xs[sep_idx + 1:end_idx]
+        
+        # If single value, don't keep it as a list
         if len(values) == 1:
             values = values[0]
-        d[key] = values
-    except StopIteration:
-        key = xs[0]
-        values = xs[start+1:]
-        if len(values) == 1:
-            values = values[0]
-        d[key] = values
-        return d
-    return f(xs[end-1:], d)
+            
+        result[key] = values
+        prev_idx = end_idx
+    
+    return result
 
 
 # ---------------------------------------------------------
 # funcs are used by methods
+
+
 
 def shell(cmd: str, err_func=None):
     result = None
@@ -252,7 +263,6 @@ def from_string(s: str):
     >>> s = 'f 1 2 3 a : 5 6 b : 10'
     >>> from_string(s)
     f(1, 2, 3, a=[5, 6], b=10)
-
     """
     args = []
     kwds = []
@@ -268,6 +278,30 @@ def from_string(s: str):
         args = xs
     return f, tuple(args), __list_to_dict(kwds, d={})
 
+
+def apply(xs) -> Any:
+    """converts a max-friendly function calling 
+    syntax from a string to py objects
+
+    >>> xs = 'f 1 2 3 a : 5 6 b : 10'.split()
+    >>> apply(s)
+    f(1, 2, 3, a=[5, 6], b=10)
+    """
+    args = []
+    kwds = []
+    f = xs[0]
+    f = eval(f, locals(), globals())
+    xs = xs[1:]
+    if ':' in xs:
+        z = xs.index(':')
+        kwds = xs[z-1:]
+        args = xs[:z-1]
+    else:
+        kwds = []
+        args = xs
+    args = tuple(args)
+    kwds = __list_to_dict(kwds)
+    return f(*args, **kwds)
 
 # ---------------------------------------------------------
 # misc funcs
@@ -302,3 +336,14 @@ def sig(func):
     name = func.__qualname__
     signature = str(__signature(func))
     return f"<function {name}{signature}>"
+
+
+if __name__ == '__main__':
+    if 1:
+        xs = ['a', ':', 5, 'a', 'b', ':', 10, 'abv', 'c', ':', 23]
+        print(__list_to_dict(xs))
+    else:
+        # SHOULD FAIL
+        xs = [1, ':', 5, 'a', 'b', ':', 10, 'abv', 'c', ':', 23]
+        print(__list_to_dict(xs))
+

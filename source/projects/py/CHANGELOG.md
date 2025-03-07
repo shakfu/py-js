@@ -2,6 +2,23 @@
 
 ## [0.3.x]
 
+- Added `apply` method to `py`, so you can call python functions with the classic python function calling syntax: `func(*args, **kwds)` by sending a max-friendly msg syntax to a `py` instance as follows:
+  
+  ```python
+  
+  # now this msg:
+  
+  apply func 100 200 300 low_range : 0 100 high_range : 100 200
+  
+  # would be translated to python:
+  
+  func(100, 200, 300, low_range=[0,100], high_range=[100, 200])  
+  ```
+
+- Added `sig` and `product` function to `py_prelude.py` which demonstrate the use of the aforementioned wrapper methods. The first displays the signature of a pure python function object (pure functions were not captured earlier by the `py_handle_output_*` methods), and the second can get obtain the product of a numeric list of atoms.
+
+- Added two wrapper methods in `py.c`, `py_apply_pyfunc_to_pyobj`, for wrapping python functions which take a single python argument, and `py_apply_pyfunc_to_atoms`, for wrapping python functions which take typed atoms.
+
 - Fixed critical `zlib-not-available` bug that appeared for dynamically linked build variants. See `py-js/patchers/tests/_breaking/zlib-no-available/README.md` for full write-up.
 
 - Added `api.Hashtab` methods and tests

@@ -165,6 +165,7 @@ t_max_err py_execfile(t_py* x, t_symbol* s);
 /*--------------------------------------------------------------------------*/
 /* Extra Python Methods */
 
+t_max_err py_apply(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_call(t_py* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err py_code(t_py* x, t_symbol* s, long argc, t_atom* argv);
@@ -177,9 +178,10 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /*--------------------------------------------------------------------------*/
 /* Generic Python function wrappers */
 
-t_max_err py_apply_pyfunc_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
-t_max_err py_apply_pyfunc_to_text(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
-t_max_err py_apply_pyfunc_to_pyobj(t_py* x, char* pyfunc_name, PyObject* obj);
+t_max_err py_func_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_func_to_list(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_func_to_text(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_func_to_pyobj(t_py* x, char* pyfunc_name, PyObject* obj);
 
 /*--------------------------------------------------------------------------*/
 /* Information Methods */

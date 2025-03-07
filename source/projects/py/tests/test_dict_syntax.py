@@ -76,6 +76,45 @@ def list_to_dict(xs, d={}):
     return f(xs[end-1:], d)
 
 
+def __list_to_dict(xs, d={}):
+    """converts a max dict syntax represented as a list to a python dict
+    
+    >>> xs = ['a', ':', 5, 'a', 'b', ':', 10, 'abv', 'c', ':', 23]
+    >>> __list_to_dict(xs)
+   {'a': [5, 'a'], 'b': [10, 'abv'], 'c': 23}
+    """
+    if not xs:
+        return d
+    seps =  []
+    n = len(xs)
+    for i, o in enumerate(xs):
+        if o == ':':
+            seps.append(i)
+
+    it = iter(seps)
+    start = next(it)
+    try:
+        end = next(it)
+        key = xs[0]
+        # print("key1:", key)
+        if not isinstance(key, str) or is_keyword(key) or not key.isidentifier():
+            raise ValueError(f'key {key} is not a valid python identifier')
+        values = xs[start+1:end-1]
+        if len(values) == 1:
+            values = values[0]
+        d[key] = values
+    except StopIteration:
+        key = xs[0]
+        # print("key2:", key)
+        if not isinstance(key, str) or is_keyword(key) or not key.isidentifier():
+            raise ValueError(f'key {key} is not a valid python identifier')
+        values = xs[start+1:]
+        if len(values) == 1:
+            values = values[0]
+        d[key] = values
+        return d
+    return __list_to_dict(xs[end-1:], d)
+
 def list_to_dict(xs: list) -> dict:
     """claude.ai's simplification of my version!"""
     result = {}

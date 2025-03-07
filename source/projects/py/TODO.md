@@ -45,13 +45,16 @@ There are three major subsystems in this subproject
 
 - [ ] Attempting to reload `numpy` after the patcher is closed causes an error in Max (except when you load it through `api` module!). This used to crash Max, but recent versions of Python > (3.9.x) just cause an non-crashing error. In version 3.10+,  import `api` of does not raise an error but is still doesn't work (see bug 'reload bug' above). At least there's progress!
 
+- [ ] The `zlib-not-available` bug (see `py-js/patchers/tests/_breaking/zlib-not-available` folder for a detailed write up), which causes the failure of `zlib` to be loaded in complex max patches which include the `js` and `v8` objects and which only afflicts the `shared-ext`, `framework-ext` and `homebre-ext` build variants. Removing the `js` and `v8` objects is so far the only solution for such build variants.
+
 ## Enhancements
 
-- [ ] Add `MaxPath` extension class which wraps the `ext_path.h` api
+- [ ] Add [buffer protocol](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html) support to `api.Matrix` to facilitate reading and writing to matrices along the lines of what was done with the `api.Buffer` wrapper.
+
+- [x] Add `api.Path` extension class which wraps the `ext_path.h` api (also `ext_sysfile.h`)
 
 - [ ] Simplify `api` module's 'api' so to speak. It currently is includes quite a bit of redundancy and some low-level classes which may not be worthwhile exposing to users (such as the `LinkList` class).
 
-- [ ] Add [buffer protocol](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html) support to `api.Matrix` to facilitate reading and writing to matrices along the lines of what was done with the `api.Buffer` wrapper.
 
 ### Testing
 
