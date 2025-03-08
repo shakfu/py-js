@@ -324,6 +324,7 @@ void py_init(t_py* x)
 {
     wchar_t* python_home = NULL;
 
+#if PY_WITH_API
     if (!Py_IsInitialized()) {
         // NOTE: without the above test, addding more than one instance of `py` will
         // cause a crash.
@@ -334,6 +335,7 @@ void py_init(t_py* x)
             py_error(x, "could not add api module to builtin modules table");
         }
     }
+#endif
 
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
@@ -359,7 +361,7 @@ void py_init(t_py* x)
     PyConfig config;
     PyConfig_InitPythonConfig(&config);
     config.parse_argv = 0; // Disable parsing command line arguments
-    config.isolated = 1;
+    config.isolated = PY_CFG_ISOLATED; // default is disabled
     config.home = python_home;
 
     status = Py_InitializeFromConfig(&config);

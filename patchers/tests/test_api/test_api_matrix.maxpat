@@ -4,13 +4,13 @@
 		"appversion" : 		{
 			"major" : 9,
 			"minor" : 0,
-			"revision" : 4,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 218.0, 130.0, 766.0, 638.0 ],
+		"rect" : [ 63.0, 93.0, 763.0, 739.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"showrootpatcherontab" : 0,
 		"showontab" : 0,
@@ -47,13 +47,13 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 766.0, 612.0 ],
+						"rect" : [ 0.0, 26.0, 763.0, 713.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
@@ -503,10 +503,6 @@
 					}
 ,
 					"patching_rect" : [ 200.0, 23.0, 55.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p double"
 				}
 
@@ -522,13 +518,13 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 766.0, 612.0 ],
+						"rect" : [ 0.0, 26.0, 763.0, 713.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
@@ -978,10 +974,6 @@
 					}
 ,
 					"patching_rect" : [ 141.0, 23.0, 41.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p float"
 				}
 
@@ -997,13 +989,13 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 766.0, 612.0 ],
+						"rect" : [ 0.0, 26.0, 763.0, 713.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
@@ -1453,10 +1445,6 @@
 					}
 ,
 					"patching_rect" : [ 81.0, 23.0, 41.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p long"
 				}
 
@@ -1472,16 +1460,28 @@
 						"appversion" : 						{
 							"major" : 9,
 							"minor" : 0,
-							"revision" : 4,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 218.0, 156.0, 766.0, 612.0 ],
+						"rect" : [ 63.0, 119.0, 763.0, 713.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-31",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 306.0, 264.0, 162.0, 22.0 ],
+									"text" : "test_matrix_buffer_protocol()"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-40",
 									"maxclass" : "message",
@@ -1576,7 +1576,7 @@
 										"appversion" : 										{
 											"major" : 9,
 											"minor" : 0,
-											"revision" : 4,
+											"revision" : 5,
 											"architecture" : "x64",
 											"modernui" : 1
 										}
@@ -1683,10 +1683,6 @@
 									}
 ,
 									"patching_rect" : [ 411.0, 380.0, 73.0, 22.0 ],
-									"saved_object_attributes" : 									{
-										"globalpatchername" : ""
-									}
-,
 									"text" : "p py_outlets"
 								}
 
@@ -2016,6 +2012,7 @@
 							}
 , 							{
 								"box" : 								{
+									"cols" : 8,
 									"colwidth" : 22,
 									"fontface" : 0,
 									"fontname" : "Arial",
@@ -2088,8 +2085,8 @@
 									"numinlets" : 1,
 									"numoutlets" : 2,
 									"outlettype" : [ "jit_matrix", "" ],
-									"patching_rect" : [ 14.0, 280.0, 180.0, 23.0 ],
-									"text" : "jit.matrix m_char 2 char 10 10"
+									"patching_rect" : [ 14.0, 280.0, 173.0, 23.0 ],
+									"text" : "jit.matrix m_char 2 char 8 10"
 								}
 
 							}
@@ -2288,6 +2285,14 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"hidden" : 1,
+									"source" : [ "obj-31", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"hidden" : 1,
 									"source" : [ "obj-32", 0 ]
 								}
 
@@ -2415,10 +2420,6 @@
 					}
 ,
 					"patching_rect" : [ 22.0, 23.0, 42.0, 22.0 ],
-					"saved_object_attributes" : 					{
-						"globalpatchername" : ""
-					}
-,
 					"text" : "p char"
 				}
 

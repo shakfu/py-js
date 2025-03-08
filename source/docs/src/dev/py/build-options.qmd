@@ -1,0 +1,54 @@
+# Build or Config Options
+
+## Use Flags?
+
+```c
+/*--------------------------------------------------------------------------*/
+/* Options */
+
+typedef enum
+{
+    FLAG1 = 1 << 0,     // 1
+    FLAG2 = 1 << 1,     // 2
+    FLAG3 = 1 << 2,     // 4
+    FLAG4 = 1 << 3,     // 8
+    FLAG5 = 1 << 4,     // 16
+    FLAG6 = 1 << 5,     // 32
+    FLAG7 = 1 << 6,     // 64
+    FLAG8 = 1 << 7      // 128
+} PY_CFG_FLAGS;
+```
+
+No flags set:
+
+```c
+unsigned int flag_opts = 0;
+
+```
+
+setting flags
+
+```c
+flag_opts |= FLAG2;
+```
+
+or
+
+```c
+flag_opts = FLAG1 | FLAG2 | FLAG8;
+```
+
+checking if flags are set
+
+```c
+if(flag_opts & FLAGN)
+
+```
+
+refs: 
+
+- <https://stackoverflow.com/questions/40963882/most-efficient-way-to-check-if-flags-are-set-in-an-integer>
+
+- <https://stackoverflow.com/questions/12695943/are-bit-flags-using-ints-in-c-c-actually-safe>
+
+

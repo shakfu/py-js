@@ -1,7 +1,7 @@
 """api.pyx
 
-This is a 'builtin' module which provides a Cython wrapper around parts of the Max/MSP C API 
-for use in the `py` external.
+This is a 'builtin' module, written in cython, which wraps and exposes parts of
+the Max/MSP c-api python code while using `py` external.
 
 Extension Classes:
 - MaxObject: Base wrapper for Max t_object* objects
@@ -4814,6 +4814,43 @@ cdef class Matrix:
             raise ValueError("could not retrieve a matrix object with name '{name}'")
         self.refresh()
 
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        # cdef Py_ssize_t itemsize = self.itemsize
+
+        # ncols = 8
+
+        # swapped here as self.info.dim == [8, 10]
+        # 10          = 80            // 8
+        # self.shape[0] = self.v.size() // self.ncols
+        # 8           = 8
+        # self.shape[1] = self.ncols
+
+        # also swapped here: self.info.dimstride == [2, 16]
+        # Stride 1 is the distance, in bytes, between two items in a row;
+        # this is the distance between two adjacent items in the vector.
+        # Stride 0 is the distance between the first elements of adjacent rows.
+        # self.strides[1] = <Py_ssize_t>(  <char *>&(self.v[1])
+        #                                - <char *>&(self.v[0]))
+
+        # self.strides[0] = self.ncols * self.strides[1]
+
+        # buffer.buf = <char *>&(self.v[0])
+        buffer.buf = <char *>self.data
+        buffer.format = 'c'                     # char
+        buffer.internal = NULL                  # see References
+        buffer.itemsize = self.itemsize
+        # buffer.len = self.v.size() * itemsize   # product(shape) * itemsize
+        buffer.len = product(self.dim) * self.itemsize # product(shape) * itemsize
+        buffer.ndim = self.ndim
+        buffer.obj = self
+        buffer.readonly = 0
+        buffer.shape = <Py_ssize_t *>self.info.dim
+        buffer.strides = <Py_ssize_t *>self.info.dimstride
+        buffer.suboffsets = NULL                # for pointer arrays onl
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        pass
+
     def __repr__(self) -> str:
         return f"<Matrix '{self.name}'>"
 
@@ -4833,6 +4870,21 @@ cdef class Matrix:
     def flags(self) -> int:
         """flags to specify data reference, handle, or tightly packed"""
         return self.info.flags
+
+    @property
+    def ncols(self) -> int:
+        """number of columns in the matrix"""
+        return self.dim[0]
+
+    @property
+    def shape(self):
+        """shape of dimensions"""
+        return self.info.dim
+
+    @property
+    def strides(self):
+        """shape of dimensions"""
+        return self.info.dimstride
 
     @property
     def dimcount(self) -> int:
@@ -4878,8 +4930,8 @@ cdef class Matrix:
         return {
             'char': 1,
             'long':  4,
-            'float': 4,
-            'double': 8,
+            'float32': 4,
+            'float64': 8,
         }[self.type]
 
     @property

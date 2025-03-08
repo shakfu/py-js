@@ -45,41 +45,14 @@
 
 #define PY_MAX_ERROR 4096
 #define PY_MAX_ELEMS 1024
-#define PY_ATTRS_WITH_DEFAULTS 0
-#define PY_CHECK_REFS 1
 
 /*--------------------------------------------------------------------------*/
-/* Macros */
+/* Compile-time Options */
 
-#define _STR(x) #x
-#define STR(x) _STR(x)
-#define _CONCAT(a, b) a##b
-#define CONCAT(a, b) _CONCAT(a, b)
-#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(., PY_MINOR_VERSION))
-#define PY_VER STR(_PY_VER)
-// PY_VERSION is already defined as Major.Minor.Patch by patchlevel.h
-
-// utility macros to check refcounts of python objects
-#if PY_CHECK_REFS == 1
-#define PY_REF(p,v) \
-    do { \
-        int n = (int)Py_REFCNT((v)); \
-        if ((n) > 1) \
-            error("%s %s.%s: %d", (p), __func__, (#v), (n)); \
-        else \
-            post("%s %s.%s: %d", (p), __func__, (#v), (n)); \
-    } while (0)
-#define PY_REF_PRE(v) PY_REF("PRE",(v))
-#define PY_REF_PST(v) PY_REF("PST",(v))
-#define PY_REF_FIN(v) PY_REF("FIN",(v))
-#define PY_REF_ERR(v) PY_REF("ERR",(v))
-#else
-#undef PY_REF
-#undef PY_REF_PRE
-#undef PY_REF_PST
-#undef PY_REF_FIN
-#undef PY_REF_ERR
-#endif
+#define PY_WITH_API 1
+#define PY_CFG_ISOLATED 0
+#define PY_ATTRS_WITH_DEFAULTS 0
+#define PY_CHECK_REFS 0
 
 /*--------------------------------------------------------------------------*/
 /* Globals */
@@ -221,6 +194,7 @@ void py_okclose(t_py* x, char *s, short *result);
 // dict
 void py_appendtodict(t_py* x, t_dictionary* dict);
 
+
 /*--------------------------------------------------------------------------*/
 /* Python Compatibility Section */
 
@@ -246,6 +220,40 @@ static inline PyCodeObject* PyFrame_GetCode(PyFrameObject* frame)
 
 #if PY_VERSION_HEX < 0x030A00B1 && !defined(Py_IsNone)
 #  define Py_IsNone(x) Py_Is(x, Py_None)
+#endif
+
+
+/*--------------------------------------------------------------------------*/
+/* Util Macros */
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+#define _CONCAT(a, b) a##b
+#define CONCAT(a, b) _CONCAT(a, b)
+#define _PY_VER CONCAT(PY_MAJOR_VERSION, CONCAT(., PY_MINOR_VERSION))
+#define PY_VER STR(_PY_VER)
+// PY_VERSION is already defined as Major.Minor.Patch by patchlevel.h
+
+// utility macros to check refcounts of python objects
+#if PY_CHECK_REFS == 1
+#define PY_REF(p,v) \
+    do { \
+        int n = (int)Py_REFCNT((v)); \
+        if ((n) > 1) \
+            error("%s %s.%s: %d", (p), __func__, (#v), (n)); \
+        else \
+            post("%s %s.%s: %d", (p), __func__, (#v), (n)); \
+    } while (0)
+#define PY_REF_PRE(v) PY_REF("PRE",(v))
+#define PY_REF_PST(v) PY_REF("PST",(v))
+#define PY_REF_FIN(v) PY_REF("FIN",(v))
+#define PY_REF_ERR(v) PY_REF("ERR",(v))
+#else
+#undef PY_REF
+#undef PY_REF_PRE
+#undef PY_REF_PST
+#undef PY_REF_FIN
+#undef PY_REF_ERR
 #endif
 
 

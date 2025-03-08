@@ -3,6 +3,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
 option(INCLUDE_NUMPY "include numpy headers if available")
 option(INCLUDE_COMMONSYMS "include commmonsym.c")
+option(INCLUDE_API_MODULE "include cython api c module" ON)
 
 
 set(SCRIPTS ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
@@ -13,7 +14,7 @@ find_package(Python3 COMPONENTS Interpreter Development)
 
 set(PROJECT_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/py.c
-	${CMAKE_CURRENT_SOURCE_DIR}/api.c
+	$<$<BOOL:${INCLUDE_API_MODULE}>:${CMAKE_CURRENT_SOURCE_DIR}/api.c> 
 )
 
 include_directories( 
@@ -77,6 +78,8 @@ target_compile_options(
 	$<$<PLATFORM_ID:Windows>:/MD> # api module works with this
 )
 
+if(INCLUDE_API_MODULE)
+
 add_custom_command(
 	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/api.c
 	COMMAND cython -3 -E INCLUDE_NUMPY=${CYTHON_INCL_NUMPY} api.pyx
@@ -91,6 +94,7 @@ add_custom_target(api_c
 
 add_dependencies(${PROJECT_NAME} api_c)
 
+endif()
 
 target_link_directories(
 	${PROJECT_NAME} 
