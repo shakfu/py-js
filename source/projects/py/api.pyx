@@ -4797,6 +4797,8 @@ cdef class Matrix:
     cdef jt.t_jit_matrix_info info
     cdef char* data
     cdef public str name
+    cdef Py_ssize_t shape[2]
+    cdef Py_ssize_t strides[2]
 
     def __cinit__(self):
         self.ptr = NULL
@@ -4816,7 +4818,10 @@ cdef class Matrix:
 
     def __getbuffer__(self, Py_buffer *buffer, int flags):
         # cdef Py_ssize_t itemsize = self.itemsize
-
+        self.shape[0]  = self.info.dim[1]
+        self.shape[1]  = self.info.dim[0]
+        self.strides[0] = self.info.dimstride[1]
+        self.strides[1] = self.info.dimstride[0]
         # ncols = 8
 
         # swapped here as self.info.dim == [8, 10]
@@ -4844,8 +4849,10 @@ cdef class Matrix:
         buffer.ndim = self.ndim
         buffer.obj = self
         buffer.readonly = 0
-        buffer.shape = <Py_ssize_t *>self.info.dim
-        buffer.strides = <Py_ssize_t *>self.info.dimstride
+        # buffer.shape = <Py_ssize_t *>self.info.dim
+        # buffer.strides = <Py_ssize_t *>self.info.dimstride
+        buffer.shape = self.shape
+        buffer.strides = self.strides
         buffer.suboffsets = NULL                # for pointer arrays onl
 
     def __releasebuffer__(self, Py_buffer *buffer):
@@ -5296,6 +5303,11 @@ cdef class Matrix:
     def refresh(self):
         """updates matrix info and data"""
         jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getinfo, &self.info)
+
+        # self.info.flags = jt.JIT_MATRIX_DATA_REFERENCE | jt.JIT_MATRIX_DATA_PACK_TIGHT
+        # self.info.flags = jt.JIT_MATRIX_DATA_HANDLE | jt.JIT_MATRIX_DATA_PACK_TIGHT
+        self.info.flags = jt.JIT_MATRIX_DATA_HANDLE | jt.JIT_MATRIX_DATA_PACK_TIGHT | jt.JIT_MATRIX_DATA_FLAGS_USE
+
         jt.jit_object_method(<jt.t_object*>self.ptr, jt._jit_sym_getdata, &self.data)
 
     def get_data(self) -> list[object]:
@@ -5321,7 +5333,7 @@ cdef class Matrix:
             m_ptr = self.data + i * self.info.dimstride[1]
             for j in range(self.width):
                 for p in range(self.planecount):
-                    results.append(<int>m_ptr[p])
+                    results.append(<jt.uchar>m_ptr[p])
         return results
 
     def get_long_data(self) -> list[long]:
@@ -5363,21 +5375,33 @@ cdef class Matrix:
                     results.append(<double>m_ptr[p])
         return results
 
+    # def set_char_data(self, list[int] data):
+    #     """set data to whole matrix"""
+    #     cdef int k = 0
+    #     cdef int i, j, p
+    #     cdef char *m_ptr = NULL
+
+    #     for i in range(self.height):
+    #         m_ptr = self.data + i * self.info.dimstride[1]
+    #         for j in range(self.width):
+    #             for p in range(self.planecount):
+    #                 post(f"(i, j, p, k) = ({i}, {j}, {p}, {k})")
+    #                 # (m_ptr+p)[0] = 2 # doesn't work!
+    #                 m_ptr[0] = <jt.uchar>clamp(data[k], 0, 255)
+    #                 k += 1
+    #                 m_ptr += 1
+
     def set_char_data(self, list[int] data):
         """set data to whole matrix"""
-        cdef int k = 0
-        cdef int i, j, p
-        cdef char *m_ptr = NULL
+        cdef int i, j, p, k = 0
+        cdef char *m_ptr = self.data
 
         for i in range(self.height):
-            m_ptr = self.data + i * self.info.dimstride[1]
             for j in range(self.width):
                 for p in range(self.planecount):
-                    post(f"(i, j, p, k) = ({i}, {j}, {p}, {k})")
-                    # (m_ptr+p)[0] = 2 # doesn't work!
-                    m_ptr[0] = <jt.uchar>clamp(data[k], 0, 255)
+                    post(f"(i, j, p, k) = ({i}, {j}, {p}, {k}) = {data[k]}")
+                    m_ptr[k] = <jt.uchar>clamp(data[k], 0, 255)
                     k += 1
-                    m_ptr += 1
 
 
     def fill(self, Atom atom, int plane = 0, int offsetcount = 0):

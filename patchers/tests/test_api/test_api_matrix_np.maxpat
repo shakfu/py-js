@@ -499,7 +499,7 @@
 
 							}
  ],
-						"originid" : "pat-20"
+						"originid" : "pat-6"
 					}
 ,
 					"patching_rect" : [ 200.0, 23.0, 55.0, 22.0 ],
@@ -970,7 +970,7 @@
 
 							}
  ],
-						"originid" : "pat-22"
+						"originid" : "pat-8"
 					}
 ,
 					"patching_rect" : [ 141.0, 23.0, 41.0, 22.0 ],
@@ -1441,7 +1441,7 @@
 
 							}
  ],
-						"originid" : "pat-24"
+						"originid" : "pat-10"
 					}
 ,
 					"patching_rect" : [ 81.0, 23.0, 41.0, 22.0 ],
@@ -1470,6 +1470,18 @@
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-37",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 304.0, 264.0, 162.0, 22.0 ],
+									"text" : "test_matrix_buffer_protocol()"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-40",
 									"maxclass" : "message",
@@ -1667,7 +1679,7 @@
 
 											}
  ],
-										"originid" : "pat-28"
+										"originid" : "pat-14"
 									}
 ,
 									"patching_rect" : [ 411.0, 380.0, 73.0, 22.0 ],
@@ -1945,8 +1957,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 308.0, 17.0, 132.0, 22.0 ],
-									"text" : "load test_api_matrix.py"
+									"patching_rect" : [ 308.0, 17.0, 152.0, 22.0 ],
+									"text" : "load test_api_matrix_np.py"
 								}
 
 							}
@@ -2312,6 +2324,14 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"hidden" : 1,
+									"source" : [ "obj-37", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"hidden" : 1,
 									"source" : [ "obj-38", 0 ]
 								}
 
@@ -2396,7 +2416,7 @@
 
 							}
  ],
-						"originid" : "pat-26"
+						"originid" : "pat-12"
 					}
 ,
 					"patching_rect" : [ 22.0, 23.0, 42.0, 22.0 ],
@@ -2457,7 +2477,7 @@
 					}
 ,
 					"text" : "py",
-					"varname" : "u429000602"
+					"varname" : "__main__"
 				}
 
 			}
@@ -2493,7 +2513,7 @@
 
 			}
  ],
-		"originid" : "pat-18",
+		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
 				"name" : "py.mxo",
 				"type" : "iLaX"

@@ -436,3 +436,88 @@ True
 assert narr.size * narr.itemsize == narr.nbytes
 True
 
+```
+
+## Proper way to create a matrix programmaticaly
+
+ref: [Rob Ramireza answer to forum post](https://cycling74.com/forums/assistance-with-jitter-matrix-creation-in-maxmsp)
+
+To create a new jitter matrix in C code:
+
+```c
+t_jit_matrix_info info;
+jit_matrix_info_default(&info);
+info.type = _jit_sym_char;
+info.dimcount = 1;
+info.dim[0] = 1;
+t_jit_object *mat = jit_object_new(_jit_sym_jit_matrix, &info);
+```
+
+## How to set an array of long to jitter matrix properly?
+
+ref: [gist](https://gist.github.com/esnho/c6a86d82e8f18a812c9edef4448a529c#gistcomment-3464921)
+ref: [forum post](https://cycling74.com/forums/how-to-set-an-array-of-long-to-jitter-matrix-properly#reply-5f68ffd91ae2675932cd7e84)
+
+
+```c
+// init some variables
+t_jit_matrix_info    out2_minfo;
+int*                out2_bp;
+jit_object_method(out2_matrix, _jit_sym_getinfo, &out2_minfo);
+jit_object_method(out2_matrix, _jit_sym_getdata, &out2_bp);
+
+// the array
+int total = 30;
+int* array = new int[total * 3];
+
+// set mock data
+int longCounter = 0;
+for (longCounter = 0; longCounter < total * 3; longCounter++) {
+    array[longCounter] = longCounter;
+}
+
+// change matrix info
+out2_minfo.dim[1] = 1;
+out2_minfo.dim[0] = total;
+out2_minfo.type = _jit_sym_long;
+out2_minfo.planecount = 3;
+out2_minfo.flags = JIT_MATRIX_DATA_REFERENCE | JIT_MATRIX_DATA_PACK_TIGHT;
+out2_minfo.size = out2_minfo.dim[0] * out2_minfo.planecount * sizeof(int);
+
+// set matrix info, set array to matrix, retreive data from matrix
+jit_object_method(out2_matrix, _jit_sym_setinfo_ex, &out2_minfo);
+jit_object_method(out2_matrix, _jit_sym_data, array);
+jit_object_method(out2_matrix, _jit_sym_getdata, &out2_bp);
+
+// print matrix data to console
+int *ip;
+int i, j;
+for (i=0; i < out2_minfo.dim[1]; i++) {
+    ip = out2_bp + i * out2_minfo.dimstride[1];
+
+    for (j=0; j < out2_minfo.dim[0]; j++) {
+        // you are now retrieving values for cell j i
+        int plane0val = (*ip++);
+        int plane1val = (*ip++);
+        int plane2val = (*ip++);
+        c74::max::object_post(in_matrix, "matrix val [%d, %d]: %d %d %d", j, i, plane0val, plane1val, plane2val);
+
+    }
+}
+```
+
+
+## Other links
+
+- [How to allocate data for jit_matrix_data?](https://cycling74.com/forums/how-to-allocate-data-for-jit_matrix_data#)
+
+- [How to set an array of long to jitter matrix properly?](https://cycling74.com/forums/how-to-set-an-array-of-long-to-jitter-matrix-properly) (see above for code)
+
+- [jit_matrix_newcopy()](https://cycling74.com/forums/jit_matrix_newcopy)
+
+- [Using the Max SDK without Max.exe?](https://cycling74.com/forums/using-the-max-sdk-without-max-exe)
+
+- [Convert 3D matrix to 2D matrix (for mesh, multiple, etc)](https://cycling74.com/forums/convert-3d-matrix-to-2d-matrix-for-mesh-multiple-etc#reply-58ed1f816908cf22c8389a41)
+
+
+

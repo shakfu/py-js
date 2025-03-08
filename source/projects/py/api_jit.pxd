@@ -407,7 +407,6 @@ cdef extern from "jit.common.h":
 
 
     ctypedef enum t_jit_matrix_info_flags:
-        # t_jit_matrix_info flags
         JIT_MATRIX_DATA_HANDLE      = 0x00000002    # data is handle
         JIT_MATRIX_DATA_REFERENCE   = 0x00000004    # data is reference to outside memory
         JIT_MATRIX_DATA_PACK_TIGHT  = 0x00000008    # data is tightly packed (doesn't use standard 16 byte alignment)
