@@ -121,22 +121,23 @@ def test_matrix_set_cell2d():
     m.set_cell2d(5, x=3, y=2, plane=0)
     api.bang_success()
 
-def test_matrix_set_char_data():
-    m = mem["m"]
-    length = m.matrix_len
-    m.set_char_data(list(range(length)))
+# def test_matrix_set_char_data():
+#     m = mem["m"]
+#     length = m.matrix_len
+#     m.set_char_data(list(range(length)))
+
+# def test_matrix_set_char_data():
+#     m = mem["m"]
+#     length = m.matrix_len
+#     m.set_char_data(list(range(length)))
 
 def test_matrix_set_data():
     m = mem["m"]
-    length = m.plane_len
-    if m.type == "char":
-        m.set_data([2] * length)
-    elif m.type == "long":
-        m.set_data([300] * length)
-    elif m.type == "float32":
-        m.set_data([2.5] * length)
-    else: # float64
-        m.set_data([4.51] * length)
+    length = m.matrix_len
+    if m.type in ["char", "long"]:
+        m.set_data(list(range(length)))
+    elif m.type in ["float32", "float64"]:
+        m.set_data(list(float(i) for i in range(length)))
     api.bang_success()
 
 def test_matrix_get_data():

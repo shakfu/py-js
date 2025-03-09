@@ -5391,10 +5391,24 @@ cdef class Matrix:
     #                 k += 1
     #                 m_ptr += 1
 
+
+    def set_data(self, list[object] data):
+        """retrieve data from matrix as contiguous array."""
+        if self.type == "char":
+            self.set_char_data(data)
+        elif self.type == "long":
+            self.set_long_data(data)
+        elif self.type == "float32":
+            self.set_float_data(data)
+        elif self.type == "float64":
+            self.set_double_data(data)
+        else:
+            raise TypeError("could not process this type")
+
     def set_char_data(self, list[int] data):
-        """set data to whole matrix"""
+        """set char data to whole matrix"""
         cdef int i, j, p, k = 0
-        cdef char *m_ptr = self.data
+        cdef char *m_ptr = <char *>self.data
 
         for i in range(self.height):
             for j in range(self.width):
@@ -5403,6 +5417,41 @@ cdef class Matrix:
                     m_ptr[k] = <jt.uchar>clamp(data[k], 0, 255)
                     k += 1
 
+    def set_long_data(self, list[int] data):
+        """set long data to whole matrix"""
+        cdef int i, j, p, k = 0
+        cdef int *m_ptr = <int*>self.data
+
+        for i in range(self.height):
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    post(f"(i, j, p, k) = ({i}, {j}, {p}, {k}) = {data[k]}")
+                    m_ptr[k] = <int>data[k]
+                    k += 1
+
+    def set_long_data(self, list[float] data):
+        """set long data to whole matrix"""
+        cdef int i, j, p, k = 0
+        cdef float *m_ptr =  <float*>self.data
+
+        for i in range(self.height):
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    post(f"(i, j, p, k) = ({i}, {j}, {p}, {k}) = {data[k]}")
+                    m_ptr[k] = <float>data[k]
+                    k += 1
+
+    def set_double_data(self, list[double] data):
+        """set long data to whole matrix"""
+        cdef int i, j, p, k = 0
+        cdef double *m_ptr =<double*> self.data
+
+        for i in range(self.height):
+            for j in range(self.width):
+                for p in range(self.planecount):
+                    post(f"(i, j, p, k) = ({i}, {j}, {p}, {k}) = {data[k]}")
+                    m_ptr[k] = <double>data[k]
+                    k += 1
 
     def fill(self, Atom atom, int plane = 0, int offsetcount = 0):
         """fill a matrix plane with an atom's values
