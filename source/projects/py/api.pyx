@@ -46,6 +46,7 @@ see: `py-js/source/projects/py/api.md` for further details
 import pathlib
 from math import prod as product
 from collections import namedtuple
+from collections.abc import Iterable
 from typing import Optional
 
 
@@ -172,6 +173,16 @@ def int_to_fourchar(n: int) -> str:
         + chr((n >> 8) & 255)
         + chr((n & 255))
     )
+
+def xargs(*args):
+    """normalize args for Atoms"""
+    xs = []
+    for i in args:
+        if isinstance(i, Iterable):
+            xs.extend(i)
+        else:
+            xs.append(i)
+    return tuple(xs)
 
 
 # ============================================================================
@@ -1175,7 +1186,9 @@ cdef class Coll:
         `coll`) at which to store the remaining items in the list. The
         address will always be stored as an int.
         """
-        self.call("list", index, args)
+        _args = [index]
+        _args.extend(args)
+        self.call("list", *_args)
 
     def append(self, *args):
         """Add item associated with an index
@@ -1214,6 +1227,7 @@ cdef class Coll:
         Removes the association between a symbol and the number address. The
         symbol will no longer have any meaning to `coll`.
         """
+        self.call(address_name, data_index)
 
     def delete(self, object index):
         """Remove data and renumber
@@ -1223,6 +1237,7 @@ cdef class Coll:
         Removes the data at the address provided. If the specified address is
         numeric, all higher numbered addresses are decremented by 1.
         """
+        self.call("delete", index)
 
     def dump(self):
         """Output all data
@@ -1242,7 +1257,7 @@ cdef class Coll:
         """
         self.call("end")
 
-    def filetype(self, str filetype):
+    def set_filetype(self, str filetype = ""):
         """Set the recognized file types
 
         filetype(symbol filetype?)
@@ -1251,6 +1266,10 @@ cdef class Coll:
         object. The message `filetype` with no arguments restores the
         default file behavior.
         """
+        if not filetype:
+            self.call("filetype")
+        else:
+            self.call("filetype", filetype)
 
     def flags(self, int save_setting, int unused):
         """Set the file-save flag
@@ -1263,7 +1282,7 @@ cdef class Coll:
         `flags 0 0` causes the contents not to be saved.
         """
 
-    def goto(self, list index):
+    def goto(self, object index):
         """Move to an index
 
         goto(list index?)
@@ -1274,8 +1293,9 @@ cdef class Coll:
         beginning of the collection. Data will be output in response
         to a subsequent `bang`, `next`, or `prev` message.
         """
+        self.call("goto", index)
 
-    def insert(self, int index, list data):
+    def insert(self, int index, *args):
         """Insert data at a specific address
 
         insert(int index?, list data?)
@@ -1283,14 +1303,16 @@ cdef class Coll:
         Inserts the message at the address specified by the number,
         incrementing all equal or greater addresses by 1 if necessary.
         """
+        self.call("insert", args)
 
-    def insert2(self, int index, list data):
+    def insert2(self, int index, *args):
         """Insert data at a specific address
 
         insert2(int index?, list data?)
 
         See the `insert` listing.
         """
+        self.call("insert2", args)
 
     def length(self):
         """Retrieve the number of entries
@@ -1300,7 +1322,7 @@ cdef class Coll:
         """
         self.call("length")
 
-    def max(self, int element):
+    def max(self, int element = 1):
         """Return the highest numeric value
 
         max(int element?)
@@ -1308,8 +1330,9 @@ cdef class Coll:
         Gets the highest value in any entry. An optional integer argument
         (defaults to '1') specifies an element position to use.
         """
+        self.call("max", element)
 
-    def merge(self, int index, list data):
+    def merge(self, int index, *args):
         """Merge data at an existing address
 
         merge(int index?, list data?)
@@ -1317,8 +1340,9 @@ cdef class Coll:
         Appends data at the end of the data found at the specified index. If
         the address does not yet exist, it is created.
         """
+        self.call("merge", index, args)
 
-    def min(self, int element):
+    def min(self, int element = 1):
         """Return the lowest numeric value
 
         min(int element?)
@@ -1326,6 +1350,7 @@ cdef class Coll:
         Gets the lowest value in any entry. An optional integer argument
         (defaults to '1') specifies an element position to use.
         """
+        self.call("min", element)
 
     def next(self):
         """Move to the next address
@@ -1338,7 +1363,7 @@ cdef class Coll:
         """
         self.call("next")
 
-    def nstore(self, int index, str association, list data):
+    def nstore(self, int index, str association, *args):
         """Store data with both number and symbol index
 
         nstore(int index?, symbol association?, list data?)
@@ -1348,6 +1373,7 @@ cdef class Coll:
         message at an int address, then using the `assoc` message to
         associate a symbol with that number.
         """
+        self.call("nstore", index, association, *args)
 
     def nsub(self, int index, int position, object data):
         """Replace a single data element
@@ -1359,6 +1385,7 @@ cdef class Coll:
         Number values and symbols can both be substituted in this
         manner.
         """
+        self.call("nsub", index, position, data)
 
     def nth(self, int index, int position):
         """Return a single data element
@@ -1370,6 +1397,7 @@ cdef class Coll:
         2` will output the second item in the list stored at address
         75.
         """
+        self.call("nth", index, position)
 
     def open(self):
         """Open a data editing window
@@ -1419,6 +1447,7 @@ cdef class Coll:
         Changes to the data stored in any referenced `coll` will be
         shared by all other objects with the same name.
         """
+        self.call("refer", object_name)
 
     def remove(self, object index):
         """Remove an entry
@@ -1438,12 +1467,14 @@ cdef class Coll:
         optional argument specifies the starting number address for
         the data.
         """
+        self.call("renumber", data_index)
 
     def renumber2(self, int data_index):
         """Increment indices by one
 
         renumber2(int data index?)
         """
+        self.call("renumber2", data_index)
 
     def separate(self, int data_index):
         """Creates an open entry index
@@ -1454,8 +1485,9 @@ cdef class Coll:
         than the provided. This creates an open 'slot' for a
         subsequent add.
         """
+        self.call("separate", data_index)
 
-    def sort(self, int sort_order, int entry):
+    def sort(self, int sort_order = -1, int entry = -1):
         """Sort the data
 
         sort(int sort order (-1 or 1)?, int entry (-1, 0, or 1)?)
@@ -1464,6 +1496,7 @@ cdef class Coll:
         the items are sorted in ascending order. If the first argument
         is `1`, the items are sorted in descending order.
         """
+        self.call("separate", sort_order, entry)
 
     def start(self):
         """Move to the first entry
@@ -1473,7 +1506,7 @@ cdef class Coll:
         """
         self.call("start")
 
-    def store(self, str index, list data):
+    def store(self, str index, *args):
         """Store data at a symbolic index
 
         store(symbol index?, list data?)
@@ -1482,8 +1515,9 @@ cdef class Coll:
         example, `store triad 0 4 7` will store `0 4 7` at an address
         named `triad`.
         """
+        self.call("store", index, args)
 
-    def sub(self, int index, int position, list data):
+    def sub(self, int index, int position, *args):
         """Replace a data element, output data
 
         sub(int index?, int position?, list data?)
@@ -1491,6 +1525,7 @@ cdef class Coll:
         Same as `nsub`, except that the message stored at the specified
         address is sent out after the item has been substituted.
         """
+        self.call("sub", index, position, args)
 
     def subsym(self, str new_name, str old_name):
         """Changes an index symbol
@@ -1501,6 +1536,7 @@ cdef class Coll:
         symbol to use, the second argument is the symbol associator to
         replace.
         """
+        self.call("subsym", new_name, old_name)
 
     def swap(self, int index1, int index2):
         """Swap two indices
@@ -1510,6 +1546,7 @@ cdef class Coll:
         Exchanges the indices associated with two addresses. The data is
         unchanged, but the indexes that they use are swapped.
         """
+        self.call("swap", index1, index2)
 
     def wclose(self):
         """Close the data editing window
@@ -1525,6 +1562,7 @@ cdef class Coll:
         to choose a filename to write. If an argument is provided, the
         name is used as a filename for storage.
         """
+        self.call("write", filename)
 
     def writeagain(self):
         """Rewrite a file

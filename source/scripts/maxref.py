@@ -207,6 +207,17 @@ class MaxRefParser:
             print('{spacer}{TQ}'.format(spacer=spacer*2, TQ=TQ))
             print()
 
+    def dump_tests(self):
+        spacer = ' '*4
+        classname = self.d['name']
+
+        for name in self.d['methods']:
+            m = self.d['methods'][name]
+            print(f"def test_{classname}_{name}():")
+            print(f"{spacer}{TQ}{m['digest']}{TQ}")
+            print()
+
+
     if HAVE_YAML:
         def dump_yaml(self):
             print(yaml.dump(self.d, Dumper=yaml.Dumper))
@@ -221,7 +232,8 @@ if __name__ == '__main__':
     parser.add_argument('name', help='enter <name>.maxref.xml name')
     parser.add_argument('-d', '--dict', action='store_true', help="dump parsed maxref as dict")
     parser.add_argument('-j', '--json', action='store_true', help="dump parsed maxref as json")
-    parser.add_argument('-c', '--code', action='store_true', help="dump parsed maxref as code")
+    parser.add_argument('-c', '--code', action='store_true', help="generate class outline")
+    parser.add_argument('-t', '--test', action='store_true', help="generate tests")
     if HAVE_YAML:
         parser.add_argument('-y', '--yaml', action='store_true', help="dump parsed maxref as yaml")
     parser.add_argument('-l', '--list', action='store_true', help="list all objects")
@@ -237,6 +249,9 @@ if __name__ == '__main__':
 
     if args.code:
         p.dump_code()
+
+    if args.test:
+        p.dump_tests()
 
     if HAVE_YAML and args.yaml:
         p.dump_yaml()
