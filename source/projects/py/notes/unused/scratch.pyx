@@ -18,6 +18,32 @@ ext_sysmem.h:12
 c74_linker_flags.txt:1
 """
 
+# alternative constructor (WIP)
+cdef class MaxObject:
+    def __init__(self, str classname, str name = "", *args, str namespace = "box"):
+        cdef Atom atom = Atom(*args) if args else None
+        self.name = name
+        self.classname = classname
+        self.namespace = namespace
+        if name and not classname and namespace:
+            # assume there's a registered object with the name, get it
+            self.ptr = <mx.t_object*>mx.object_findregistered(
+                str_to_sym(namespace) , str_to_sym(name))
+            if self.ptr is NULL:
+                raise ValueError("could not retrieve the coll object with name '{name}'")
+            # now try to get its classname
+            self.classname = sym_to_str(mx.object_classname(<mx.t_object*>self.ptr))
+            # mx.object_classname_compare(self.ptr, gensym(classname))
+        elif name and classname and namespace:
+            self.ptr = <mx.t_object*>mx.object_new_typed(
+                str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+        elif classname and name:
+            pass
+        else:
+            raise TypeError("must use name or classname")
+
+
+
 
 in min-api:
 

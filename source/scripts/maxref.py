@@ -31,6 +31,14 @@ except ImportError:
     HAVE_YAML = False
 
 PLATFORM = platform.system()
+TQ = '\"\"\"'
+
+
+def replace_tags(text, sub, *tags):
+    for tag in tags:
+        text = text.replace(f'<{tag}>', sub).replace(f'</{tag}>', sub)
+    return text
+
 
 
 class MaxRefParser:
@@ -65,18 +73,11 @@ class MaxRefParser:
                 refdict[name] = f
         return refdict
 
-    def _clean_text(self, txt: str) -> str:
+    def _clean_text(self, text: str) -> str:
         backtick = '`'
-        return (txt
-            .replace('<m>',   backtick)
-            .replace('</m>',  backtick)
-            .replace('<i>',   backtick)
-            .replace('</i>',  backtick)
-            .replace('<o>',   backtick)
-            .replace('</o>',  backtick)
-            .replace('<at>',  backtick)
-            .replace('</at>', backtick)
-            .replace('&quot;',backtick)
+        return (
+            replace_tags(text, backtick, 'm', 'i', 'g', 'o', 'at')
+            .replace('&quot;', backtick)
         )
 
     def load(self) -> ElementTree.Element:
@@ -156,6 +157,16 @@ class MaxRefParser:
 
     def dump_code(self):
         spacer = ' '*4
+        classname = self.name.title()
+        print(f'cdef class {classname}:')
+        print("{spacer}{TQ}{digest}".format(
+            spacer=spacer, TQ=TQ, digest=self.d['digest']))
+        print()
+        print("{spacer}{desc}".format(
+            spacer=spacer, 
+            desc=fill(self.d['description'], subsequent_indent=spacer)))
+        print(f"{spacer}{TQ}")
+        print()
         for name in self.d['methods']:
             m = self.d['methods'][name]
 
@@ -168,22 +179,32 @@ class MaxRefParser:
                     else:
                         args.append('{type} {name}'.format(**arg))
 
-                sig = "{name}({args}):".format(name=name, args=", ".join(args))
+                sig = "{name}({self}{args}):".format(
+                    name=name,
+                    self='self, ' if args else 'self',
+                    args=", ".join(args))
+                sig_selfless = "{name}({args})".format(
+                    name=name,
+                    args=", ".join(args))
             else:
-                sig = "{name}():".format(name=name)
-            print('def', sig)
+                sig = "{name}(self):".format(name=name)
+            print(f'{spacer}def {sig}')
 
             if 'digest' in m:
-                print('{spacer}{tq}{digest}'.format(
-                    spacer=spacer,
-                    tq='\"\"\"',
+                print('{spacer}{TQ}{digest}'.format(
+                    spacer=spacer*2,
+                    TQ=TQ,
                     digest=m['digest']))
+            if args:
                 print()
-            print("{spacer}{sig}".format(spacer=spacer, sig=sig[:-1]))
+                print("{spacer}{sig}".format(spacer=spacer*2, sig=sig_selfless))
             if 'description' in m:
-                print()
-                print('{spacer}{desc}'.format(spacer=spacer, desc=fill(m['description'], subsequent_indent=spacer)))
-            print('{spacer}{tq}'.format(spacer=spacer, tq='\"\"\"'))
+                if m['description']:
+                    print()
+                    print('{spacer}{desc}'.format(
+                        spacer=spacer*2,
+                        desc=fill(m['description'], subsequent_indent=spacer*2)))
+            print('{spacer}{TQ}'.format(spacer=spacer*2, TQ=TQ))
             print()
 
     if HAVE_YAML:
@@ -195,7 +216,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
         prog='maxref-parser',
-        description='Handle <name>.maxref.xml files'
+        description='Parse and generate code from *.maxref.xml files.'
     )
     parser.add_argument('name', help='enter <name>.maxref.xml name')
     parser.add_argument('-d', '--dict', action='store_true', help="dump parsed maxref as dict")

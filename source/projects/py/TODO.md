@@ -49,6 +49,10 @@ There are three major subsystems in this subproject
 
 ## Enhancements
 
+- [ ] Make `MaxObject` more general so it can be used as a superclass for objects such as coll.
+
+- [ ] Add python dict to api.Dict conversion
+
 - [ ] Add [buffer protocol](https://cython.readthedocs.io/en/latest/src/userguide/buffer.html) support to `api.Matrix` to facilitate reading and writing to matrices along the lines of what was done with the `api.Buffer` wrapper.
 
 - [x] Add `api.Path` extension class which wraps the `ext_path.h` api (also `ext_sysfile.h`)

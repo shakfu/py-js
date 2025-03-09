@@ -5,7 +5,8 @@ the Max/MSP c-api python code while using `py` external.
 
 Extension Classes:
 - MaxObject: Base wrapper for Max t_object* objects
-- Atom: Wrapper for Max mx.t_atom* atoms/messages 
+- Atom: Wrapper for Max mx.t_atom* atoms/messages
+- Coll: Wrapper for max coll objects
 - Table: Interface to Max tables
 - Buffer: Interface to MSP buffers
 - Dictionary: Interface to Max dictionaries
@@ -93,6 +94,11 @@ cdef extern from "Python.h":
 
 # ----------------------------------------------------------------------------
 # helper cdef functions
+
+cdef mx.t_symbol* gensym(str name):
+    """converts python string to a t_symbol*"""
+    return mx.gensym(name.encode())
+
 
 cdef mx.t_symbol* str_to_sym(str string):
     """converts a python string to a t_symbol*
@@ -204,13 +210,17 @@ cdef class MaxObject:
             mx.object_free(self.ptr)
             self.ptr = NULL
 
-    def __init__(self, classname: str, *args, namespace: str = "box"):
+    def __init__(self, classname: str, *args, name: str = "", namespace: str = "box"):
         cdef Atom atom = Atom(*args)
         self.ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+        if name:
+            self.name = name
+            self.ptr = <mx.t_object*>mx.object_register(
+                str_to_sym(namespace), str_to_sym(name), <mx.t_object*>self.ptr)
 
     def __repr__(self) -> str:
-        return f"<MaxObject '{self.name}'>"
+        return f"<MaxObject {self.classname} '{self.name}'>"
 
     @staticmethod
     cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
@@ -514,6 +524,30 @@ cdef class MaxObject:
         else:
             return self._method_args(name, *args)
 
+    # def call(self, str method, *args):
+    #     """Helper wrapper method around object_method* variants"""
+    #     cdef Atom atom = Atom(*args)
+    #     cdef mx.t_max_err err = mx.MAX_ERR_NONE
+    #     cdef mx.t_symbol* meth = str_to_sym(method)
+
+    #     if len(args) == 0:
+    #         mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
+    #     elif len(args) == 1:
+    #         if isinstance(args[0], str):
+    #             err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
+    #         elif isinstance(args[0], int):
+    #             err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
+    #         elif isinstance(args[0], float):
+    #             err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
+    #         elif isinstance(args[0], MaxObject):
+    #             err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
+    #     else:
+    #         err = mx.object_method_typed(<mx.t_object*>self.ptr,
+    #             str_to_sym(method), atom.size, atom.ptr, NULL)
+    #     if err:
+    #         raise ValueError(f"could not apply single arg to method {method}")
+
+
     def get_attr_sym(self, str name) -> str:
         """Retrieves the value of an attribute, given its parent object and name."""
         cdef mx.t_symbol *attr_sym = <mx.t_symbol *>mx.object_attr_getsym(
@@ -624,7 +658,6 @@ cdef class MaxObject:
     def open_query(self):
         """Open a search in the file browser for files with the name of the given class."""
         mx.classname_openquery(self.classname.encode())
-
 
 # ----------------------------------------------------------------------------
 # api.Atom
@@ -1040,6 +1073,467 @@ cdef class Atom:
         """set object value into an array of atoms."""
         return mx.atom_setobjval(&self.size, <mx.t_atom **>&self.ptr, obj)
 
+# ----------------------------------------------------------------------------
+# api.Coll
+
+
+cdef class Coll:
+    """Store and edit a collection of data
+
+    Allows for the storage, organization, editing, and retrieval of
+    different messages.
+    """
+
+    cdef mx.t_object* ptr
+    cdef public str name
+
+    def __cinit__(self):
+        self.ptr = NULL
+        self.name = None
+
+    def __init__(self, str name):
+        self.name = name
+        self.ptr = self._object_ptr_from_classname_and_name("coll", name)
+        if self.ptr is NULL:
+            raise ValueError(f"could not retrieve the coll object with name '{name}'")
+
+    cdef mx.t_object* _object_ptr_from_classname_and_name(self, str classname, str name):
+        cdef mx.t_object *patcher = NULL
+        cdef mx.t_object *box = NULL
+        cdef mx.t_object *obj = NULL
+        cdef px.t_py *x = <px.t_py*>px.py_get_object_ref()
+
+        mx.object_obex_lookup(x, mx.gensym("#P"), &patcher)
+        box = mx.jpatcher_get_firstobject(patcher)
+        while box is not NULL:
+            obj = mx.jbox_get_object(box)
+            if obj:
+                if mx.object_classname(obj) == str_to_sym(classname):
+                    if mx.object_attr_getsym(obj, mx.gensym("name")) == str_to_sym(name):
+                        post(f"found {classname} object named {name}")
+                        return obj
+            box = mx.jbox_get_nextobject(box)
+        return NULL
+
+    # helper methods
+
+    def call(self, str method, *args):
+        """Helper wrapper method around object_method* variants"""
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_max_err err = mx.MAX_ERR_NONE
+        cdef mx.t_symbol* meth = str_to_sym(method)
+
+        if len(args) == 0:
+            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
+        elif len(args) == 1:
+            if isinstance(args[0], str):
+                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
+            elif isinstance(args[0], int):
+                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
+            elif isinstance(args[0], float):
+                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
+            elif isinstance(args[0], MaxObject):
+                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
+        else:
+            err = mx.object_method_typed(<mx.t_object*>self.ptr,
+                str_to_sym(method), atom.size, atom.ptr, NULL)
+        if err:
+            raise ValueError(f"could not apply single arg to method {method}")
+
+    # msg methods
+
+    def bang(self):
+        """Retrieve the next data set
+
+        See the `next` listing.
+        """
+        self.call("bang")
+
+    def get(self, object index):
+        """Retrieve data by index
+        
+        The number refers to the address of a message stored in `coll`. If a
+        message is stored at that address, the stored message is
+        output. If the stored message is a single symbol, it is always
+        prepended with the word `symbol` when output.
+        """
+        if isinstance(index, int):
+            self.call("int", index)
+        elif isinstance(index, float):
+            self.call("float", index)
+        elif isinstance(index, str):
+            self.call("anything", index)
+        else:
+            raise TypeError(f"type {type(object)} not supported as index")
+
+    def set(self, int index, *args):
+        """Store index and data
+
+        list(int index?, list data?)
+
+        The first value is used as the address (the storage location within
+        `coll`) at which to store the remaining items in the list. The
+        address will always be stored as an int.
+        """
+        self.call("list", index, args)
+
+    def append(self, *args):
+        """Add item associated with an index
+
+        append(list data?)
+
+        The `append` message creates a new item associated with an index that
+        is one larger than the highest current index. For example, if
+        the `coll` is empty, `append xyz` will add an item `xyz`
+        associated with the index 0. `append xyz` a second time will
+        add another item `xyz` associated with the index 1.
+        """
+        self.call("append", args)
+
+    def assoc(self, str address_name, int data_index):
+        """Associate a name with an index
+
+        assoc(symbol address name?, int data index?)
+
+        Associates a symbol with the numeric address, provided that the number
+        address already exists. After association, any reference to
+        that symbol will be interpreted as a reference to the number
+        address. Each number address can have only one symbol
+        associated with it.
+        """
+
+    def clear(self):
+        """Clear all data"""
+        self.call("clear")
+
+    def deassoc(self, str address_name, int data_index):
+        """De-associate a name with an index
+
+        deassoc(symbol address name?, int data index?)
+
+        Removes the association between a symbol and the number address. The
+        symbol will no longer have any meaning to `coll`.
+        """
+
+    def delete(self, object index):
+        """Remove data and renumber
+
+        delete(any index?)
+
+        Removes the data at the address provided. If the specified address is
+        numeric, all higher numbered addresses are decremented by 1.
+        """
+
+    def dump(self):
+        """Output all data
+
+        Sends all of the stored addresses out the 2nd outlet and all of the
+        stored messages out the 1st outlet, in the order in which they
+        are stored. A `bang` is sent out the 4th outlet when the dump
+        is completed.
+        """
+        self.call("dump")
+
+    def end(self):
+        """Move to last address
+
+        Sets the pointer (as used by the `goto`, `next`, and `prev` messages)
+        to the last address.
+        """
+        self.call("end")
+
+    def filetype(self, str filetype):
+        """Set the recognized file types
+
+        filetype(symbol filetype?)
+
+        Sets the file types which can be read and written into the `coll`
+        object. The message `filetype` with no arguments restores the
+        default file behavior.
+        """
+
+    def flags(self, int save_setting, int unused):
+        """Set the file-save flag
+
+        flags(int save-setting?, int unused?)
+
+        Sets the flags used to save its contents within the patch that
+        contains it. The message `flags 1 0` notifies the object to
+        save its contents as part of the patcher file. The message
+        `flags 0 0` causes the contents not to be saved.
+        """
+
+    def goto(self, list index):
+        """Move to an index
+
+        goto(list index?)
+
+        Sets the pointer (as used by the `goto`, `next`, and `prev` messages)
+        at a specific address, but does not trigger output. If the
+        specified address does not exist, the pointer is set at the
+        beginning of the collection. Data will be output in response
+        to a subsequent `bang`, `next`, or `prev` message.
+        """
+
+    def insert(self, int index, list data):
+        """Insert data at a specific address
+
+        insert(int index?, list data?)
+
+        Inserts the message at the address specified by the number,
+        incrementing all equal or greater addresses by 1 if necessary.
+        """
+
+    def insert2(self, int index, list data):
+        """Insert data at a specific address
+
+        insert2(int index?, list data?)
+
+        See the `insert` listing.
+        """
+
+    def length(self):
+        """Retrieve the number of entries
+
+        Counts the number of entries contained in the `coll` and sends the
+        number out the 1st outlet.
+        """
+        self.call("length")
+
+    def max(self, int element):
+        """Return the highest numeric value
+
+        max(int element?)
+
+        Gets the highest value in any entry. An optional integer argument
+        (defaults to '1') specifies an element position to use.
+        """
+
+    def merge(self, int index, list data):
+        """Merge data at an existing address
+
+        merge(int index?, list data?)
+
+        Appends data at the end of the data found at the specified index. If
+        the address does not yet exist, it is created.
+        """
+
+    def min(self, int element):
+        """Return the lowest numeric value
+
+        min(int element?)
+
+        Gets the lowest value in any entry. An optional integer argument
+        (defaults to '1') specifies an element position to use.
+        """
+
+    def next(self):
+        """Move to the next address
+
+        Sends the address and data stored at the current address, then sets
+        the pointer to the next address. If the pointer is currently
+        at the last address in the collection, it wraps around to the
+        first address. If the address is a symbol rather than a
+        number, `0` is sent out the second outlet.
+        """
+        self.call("next")
+
+    def nstore(self, int index, str association, list data):
+        """Store data with both number and symbol index
+
+        nstore(int index?, symbol association?, list data?)
+
+        Stores the message at the specified number address, with the specified
+        symbol associated. This has the same effect as storing the
+        message at an int address, then using the `assoc` message to
+        associate a symbol with that number.
+        """
+
+    def nsub(self, int index, int position, object data):
+        """Replace a single data element
+
+        nsub(int index?, int position?, any data?)
+
+        Replaces a data element with a new value. As an example, `nsub 2 4 7`
+        replaces the fourth element of address 2 with the value 7.
+        Number values and symbols can both be substituted in this
+        manner.
+        """
+
+    def nth(self, int index, int position):
+        """Return a single data element
+
+        nth(int index?, int position?)
+
+        Returns the data element found at a specific position in the stored
+        list and send it out the first outlet. As an example, `nth 75
+        2` will output the second item in the list stored at address
+        75.
+        """
+
+    def open(self):
+        """Open a data editing window
+
+        Opens a data editing window for the current data and bring it into
+        focus.
+        """
+        self.call("end")
+
+    def prev(self):
+        """Move to the previous address
+
+        Sends the address and data stored at the current address, then sets
+        the pointer to the previous address. If the pointer is
+        currently at the first address in the collection, it wraps
+        around to the last address. If the address is a symbol rather
+        than a number, `0` is sent out the second outlet.
+        """
+        self.call("prev")
+
+    def read(self, str filename):
+        """Choose a file to load
+
+        read(symbol filename?)
+
+        With no arguments, `read` puts up a standard Open Document dialog box
+        to choose a file to load. If an argument is provided, the
+        named file is loaded.
+        """
+        self.call("read", filename)
+
+    def readagain(self):
+        """Reload a file
+
+        Loads the contents of the most recently read file. If no prior file
+        load has occurred, the request is treated like a `read`
+        message.
+        """
+        self.call("readagain")
+
+    def refer(self, str object_name):
+        """Change data reference
+
+        refer(symbol object name?)
+
+        Changes the reference to the data in another named `coll` object.
+        Changes to the data stored in any referenced `coll` will be
+        shared by all other objects with the same name.
+        """
+
+    def remove(self, object index):
+        """Remove an entry
+
+        remove(any index?)
+
+        Removes that address and its contents from the collection.
+        """
+        self.call("remove", index)
+
+    def renumber(self, int data_index):
+        """Renumber entries
+
+        renumber(int data index?)
+
+        Renumbers data entries as consecutive and in increasing order. The
+        optional argument specifies the starting number address for
+        the data.
+        """
+
+    def renumber2(self, int data_index):
+        """Increment indices by one
+
+        renumber2(int data index?)
+        """
+
+    def separate(self, int data_index):
+        """Creates an open entry index
+
+        separate(int data index?)
+
+        Increments the numerical indices for all data whose index is greater
+        than the provided. This creates an open 'slot' for a
+        subsequent add.
+        """
+
+    def sort(self, int sort_order, int entry):
+        """Sort the data
+
+        sort(int sort order (-1 or 1)?, int entry (-1, 0, or 1)?)
+
+        Sorts the data into a specified order. If the first argument is `-1`,
+        the items are sorted in ascending order. If the first argument
+        is `1`, the items are sorted in descending order.
+        """
+
+    def start(self):
+        """Move to the first entry
+
+        Sets the pointer (used by the `goto`, `next`, and `prev` messages) to
+        the first address in the `coll`.
+        """
+        self.call("start")
+
+    def store(self, str index, list data):
+        """Store data at a symbolic index
+
+        store(symbol index?, list data?)
+
+        Stores the message at an address named by the provided symbol. As an
+        example, `store triad 0 4 7` will store `0 4 7` at an address
+        named `triad`.
+        """
+
+    def sub(self, int index, int position, list data):
+        """Replace a data element, output data
+
+        sub(int index?, int position?, list data?)
+
+        Same as `nsub`, except that the message stored at the specified
+        address is sent out after the item has been substituted.
+        """
+
+    def subsym(self, str new_name, str old_name):
+        """Changes an index symbol
+
+        subsym(symbol new name?, symbol old name?)
+
+        Changes the symbol associated with data. The first argument is the new
+        symbol to use, the second argument is the symbol associator to
+        replace.
+        """
+
+    def swap(self, int index1, int index2):
+        """Swap two indices
+
+        swap(int index?, int index?)
+
+        Exchanges the indices associated with two addresses. The data is
+        unchanged, but the indexes that they use are swapped.
+        """
+
+    def wclose(self):
+        """Close the data editing window
+        """
+        self.call("wclose")
+
+    def write(self, str filename):
+        """Write the data to a disk file
+
+        write(symbol filename?)
+
+        With no arguments, `write` puts up a standard Open Document dialog box
+        to choose a filename to write. If an argument is provided, the
+        name is used as a filename for storage.
+        """
+
+    def writeagain(self):
+        """Rewrite a file
+
+        Saves the contents to the most recently written file. If no prior file
+        write has occurred, the request is treated like a `write`
+        message.
+        """
+        self.call("writeagain")
 
 # ----------------------------------------------------------------------------
 # api.Table
@@ -1878,11 +2372,8 @@ cdef class Buffer:
         elif path.endswith(".flac"):
             self.send("writeflac", path)
 
-
 # ----------------------------------------------------------------------------
 # api.Dictionary - ext_dictionary.h
-
-# TODO: dict to api.Dict conversion
 
 cdef class Dictionary:
     """A wrapper class for a Max t_dictionary"""
@@ -2662,7 +3153,6 @@ cdef class DatabaseResult:
         mx.sysmem_freeptr(string)
         return result
 
-
 cdef class DatabaseView:
     """Wraps the t_db_view object."""
     cdef mx.t_db_view* ptr
@@ -2814,7 +3304,6 @@ cdef class Database:
 
 # ----------------------------------------------------------------------------
 # api.List
-
 
 cdef class List:
     """Wraps the t_linklist object."""
@@ -3647,7 +4136,7 @@ cdef class Patcher:
 
     @staticmethod
     cdef Patcher from_object(mx.t_object *x):
-        """Create a reference to a pstcher object from object."""
+        """Create a reference to a patcher object from object."""
         cdef Patcher patcher = Patcher.__new__(Patcher)
         cdef mx.t_max_err err = mx.object_obex_lookup(x, mx.gensym("#P"), &patcher.ptr)
         if err:
@@ -4595,7 +5084,6 @@ cdef class Box:
         cdef mx.t_symbol* _id = mx.jbox_get_id(self.ptr)
         return sym_to_str(_id)
 
-
 # ----------------------------------------------------------------------------
 # api.MaxApp
 
@@ -5513,7 +6001,6 @@ cdef class Matrix:
             self.unlock(savelock)
 
 
-
 # ----------------------------------------------------------------------------
 # api.Path
 
@@ -6103,7 +6590,6 @@ cdef class Path:
         @return       An error code.
         """
         return mx.sysfile_openptrsize(p, length, flags, fh)
-
 
 
 # ----------------------------------------------------------------------------
