@@ -19,7 +19,7 @@ def test_table_populate():
 
 def test_table_to_list():
     t = mem['t']
-    xs = t.as_list()
+    xs = t.to_list()
     assert len(xs) == t.size
     return xs
     api.bang_success()
@@ -124,8 +124,14 @@ def test_table_send():
 
 def test_table_set():
     t = mem['t']
-    args = [0] + list(range(128))
-    t.call("set", args)
+    t.call("set", 0, list(range(128)))
+
+# def test_table_set():
+#     t = mem['t']
+#     args = [0] + list(range(128))
+#     t.call("set", args)
+
+
 
 def test_table_sum():
     t = mem['t']

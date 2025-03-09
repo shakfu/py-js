@@ -46,9 +46,7 @@ see: `py-js/source/projects/py/api.md` for further details
 import pathlib
 from math import prod as product
 from collections import namedtuple
-from collections.abc import Iterable
 from typing import Optional
-
 
 from cython.view cimport array as cvarray
 from cpython.ref cimport PyObject
@@ -75,7 +73,6 @@ if INCLUDE_NUMPY:
     cimport numpy as np
     np.import_array()
 
-
 # ----------------------------------------------------------------------------
 # compile-time constants
 
@@ -84,6 +81,11 @@ cpdef enum:
     MAX_PATH_CHARS = 2048
     # MAX_CHARS = 32767
     # PY_MAX_ATOMS = 1024
+
+# ----------------------------------------------------------------------------
+# run-time constants
+
+DEBUG = 1
 
 # ----------------------------------------------------------------------------
 # python c-api imports
@@ -150,7 +152,6 @@ cdef str date_to_string(mx.t_ptr_uint date):
 # ----------------------------------------------------------------------------
 # helper python functions
 
-
 def fourchar_to_int(code: str) -> int:
    """Convert fourcc chars to an int
 
@@ -173,17 +174,6 @@ def int_to_fourchar(n: int) -> str:
         + chr((n >> 8) & 255)
         + chr((n & 255))
     )
-
-def xargs(*args):
-    """normalize args for Atoms"""
-    xs = []
-    for i in args:
-        if isinstance(i, Iterable):
-            xs.extend(i)
-        else:
-            xs.append(i)
-    return tuple(xs)
-
 
 # ============================================================================
 # Named Tuples
@@ -695,13 +685,18 @@ cdef class Atom:
         cdef int i = 0
 
         if len(args) > 0: # otherwise default to __cinit__ values
-            if len(args)==1 and isinstance(args[0], list):
-                args = args[0]
+            if len(args)==1 and isinstance(args[0], (list, tuple)):
+                # flatten in case of nesting
+                args = self.__flatten(args[0])
+            else: # convert to flattened list
+                args = self.__flatten(args)            
             self.size = len(args)
             self.ptr = <mx.t_atom *>mx.sysmem_newptr(self.size * sizeof(mx.t_atom))
             self.ptr_owner = True
             if self.ptr is NULL:
-                raise MemoryError("Atom.__init__ allocation error")        
+                raise MemoryError("Atom.__init__ allocation error")
+            if DEBUG:
+                post(f"args: {args}")       
             for i, obj in enumerate(args):
                 self[i] = obj
 
@@ -753,6 +748,17 @@ cdef class Atom:
         if self.size == 1 and self.is_float():
             return self.get_float(0)
         raise TypeError("atom is either wrong length or cannot be converted to float")
+
+    def __flatten(self, args) -> list[str | float | int | bytes]:
+        if not args:
+            return []
+        _args = []
+        for arg in args:
+            if isinstance(arg, (list, tuple)):
+                _args.extend(arg)
+            else:
+                _args.append(arg)
+        return _args
 
     @staticmethod
     cdef Atom from_ptr(mx.t_atom *ptr, long size, bint owner=False):
@@ -1173,7 +1179,7 @@ cdef class Coll:
         elif isinstance(index, float):
             self.call("float", index)
         elif isinstance(index, str):
-            self.call("anything", index)
+            self.call("symbol", index)
         else:
             raise TypeError(f"type {type(object)} not supported as index")
 
@@ -1186,9 +1192,7 @@ cdef class Coll:
         `coll`) at which to store the remaining items in the list. The
         address will always be stored as an int.
         """
-        _args = [index]
-        _args.extend(args)
-        self.call("list", *_args)
+        self.call("list", index, args)
 
     def append(self, *args):
         """Add item associated with an index
@@ -1201,7 +1205,7 @@ cdef class Coll:
         associated with the index 0. `append xyz` a second time will
         add another item `xyz` associated with the index 1.
         """
-        self.call("append", args)
+        self.call("append", *args)
 
     def assoc(self, str address_name, int data_index):
         """Associate a name with an index
@@ -1214,6 +1218,7 @@ cdef class Coll:
         address. Each number address can have only one symbol
         associated with it.
         """
+        self.call("assoc", address_name, data_index)
 
     def clear(self):
         """Clear all data"""
@@ -1227,7 +1232,7 @@ cdef class Coll:
         Removes the association between a symbol and the number address. The
         symbol will no longer have any meaning to `coll`.
         """
-        self.call(address_name, data_index)
+        self.call("deassoc", address_name, data_index)
 
     def delete(self, object index):
         """Remove data and renumber
@@ -1257,7 +1262,7 @@ cdef class Coll:
         """
         self.call("end")
 
-    def set_filetype(self, str filetype = ""):
+    def filetype(self, str filetype = ""):
         """Set the recognized file types
 
         filetype(symbol filetype?)
@@ -1271,8 +1276,8 @@ cdef class Coll:
         else:
             self.call("filetype", filetype)
 
-    def flags(self, int save_setting, int unused):
-        """Set the file-save flag
+    def embed(self, int save_setting, int unused = 0):
+        """Set the file-save flag (renamed for consistency)
 
         flags(int save-setting?, int unused?)
 
@@ -1281,6 +1286,7 @@ cdef class Coll:
         save its contents as part of the patcher file. The message
         `flags 0 0` causes the contents not to be saved.
         """
+        self.call("flags", save_setting, unused)
 
     def goto(self, object index):
         """Move to an index
@@ -1458,7 +1464,7 @@ cdef class Coll:
         """
         self.call("remove", index)
 
-    def renumber(self, int data_index):
+    def renumber(self, int data_index=0):
         """Renumber entries
 
         renumber(int data index?)
@@ -1496,7 +1502,7 @@ cdef class Coll:
         the items are sorted in ascending order. If the first argument
         is `1`, the items are sorted in descending order.
         """
-        self.call("separate", sort_order, entry)
+        self.call("sort", sort_order, entry)
 
     def start(self):
         """Move to the first entry
@@ -1723,7 +1729,6 @@ cdef class Table:
     def clear(self):
         """Set all values to 0"""
         self.call("clear")
-        # mx.object_method(self.ptr, mx.gensym("clear"))
 
     def const(self, int value):
         """Fill the table with a number"""
@@ -1911,9 +1916,9 @@ cdef class Table:
         address, and each number after that is stored in a successive
         address.
         """
-        args = [start]
-        args.extend(values)
-        self.call("set", args)
+        # args = [start]
+        # args.extend(values)
+        self.call("set", start, values)
 
     def setbits(self, int address, int start, int count, int value):
         """Change the bit values of an address
@@ -5721,9 +5726,7 @@ cdef class Matrix:
         message but without the need to use a `val` token to separate the
         coordinates from the value since the dimension count (1) is fixed.
         """
-        args = [x]
-        args.extend(values)
-        self.call("setcell1d", args)
+        self.call("setcell1d", x, values)
 
     def set_cell2d(self, int x, int y, list[object] values):
         """Set a 2-dimensional cell to specified values
@@ -5734,9 +5737,7 @@ cdef class Matrix:
         coordinates from the value since the dimension count (2) is fixed.
         """
         assert len(values) < self.planecount, "len(values) must be less than planecount"
-        args = [x, y]
-        args.extend(values)
-        self.call("set_cell2d", args)
+        self.call("set_cell2d", x, y, values)
 
     def set_cell3d(self, int x, int y, int z, list[object] values):
         """Set a 3-dimensional cell to specified values
@@ -5748,9 +5749,7 @@ cdef class Matrix:
         (3) is fixed.
         """
         assert len(values) < self.planecount, "len(values) must be less than planecount"
-        args = [x, y, z]
-        args.extend(values)
-        self.call("set_cell2d", args)
+        self.call("set_cell2d", x, y, z, values)
 
     def set_plane1d(self, int x, int plane, object value):
         """Set a cell in a plane to a value (1d, no val token)
