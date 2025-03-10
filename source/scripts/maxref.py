@@ -22,6 +22,7 @@ from pathlib import Path
 from textwrap import fill
 from pprint import pprint
 from xml.etree import ElementTree
+from keyword import iskeyword
 import json
 
 try:
@@ -155,6 +156,47 @@ class MaxRefParser:
     def dump_json(self):
         json.dump(self.d, fp=sys.stdout)
 
+    def __get_method_args(self, args: list[str]) -> list[str]:
+        _args = []
+        for i, arg in enumerate(args):
+            if '?' in arg:
+                arg = arg.replace('?', '')
+            if 'symbol' in arg:
+                arg = arg.replace('symbol', 'str')
+            if 'any' in arg:
+                arg = arg.replace('any', 'object')
+            if '-' in arg:
+                arg = arg.replace('-', '_')
+            parts = arg.split()
+            if len(parts) > 2:
+                _type, *name_parts = parts
+                name = '_'.join(name_parts)
+                arg = f"{_type} {name}"
+            if 'list' in arg:
+                arg = arg.replace('list ', '*')
+            _args.append(arg)
+        return _args
+
+    def __check_iskeyword(self, name: str) -> str:
+        if iskeyword(name):
+            name = name+'_'
+        return name
+
+    def __get_call(self, method_name: str, method_args: list[str]) -> str:
+        _args = []
+        for arg in method_args:
+            if '*' in arg:
+                arg = arg.replace('*', '')
+            else:
+                _type, name = arg.split()
+                arg = name
+            _args.append(arg)
+        if len(_args) == 0:
+            return f'self.call("{method_name}")'
+        else:
+            params = ", ".join(_args)
+            return f'self.call("{method_name}", {params})'
+
     def dump_code(self):
         spacer = ' '*4
         classname = self.name.title()
@@ -167,8 +209,12 @@ class MaxRefParser:
             desc=fill(self.d['description'], subsequent_indent=spacer)))
         print(f"{spacer}{TQ}")
         print()
+        method_args = []
         for name in self.d['methods']:
             m = self.d['methods'][name]
+            # method_name = str(name)
+            if '(' in name and ')' in name:
+                continue
 
             sig = None
             if 'args' in m:
@@ -179,15 +225,16 @@ class MaxRefParser:
                     else:
                         args.append('{type} {name}'.format(**arg))
 
+                method_args = self.__get_method_args(args)
                 sig = "{name}({self}{args}):".format(
-                    name=name,
+                    name=self.__check_iskeyword(name),
                     self='self, ' if args else 'self',
-                    args=", ".join(args))
+                    args=", ".join(method_args))
                 sig_selfless = "{name}({args})".format(
                     name=name,
                     args=", ".join(args))
             else:
-                sig = "{name}(self):".format(name=name)
+                sig = "{name}(self):".format(name=self.__check_iskeyword(name))
             print(f'{spacer}def {sig}')
 
             if 'digest' in m:
@@ -199,12 +246,14 @@ class MaxRefParser:
                 print()
                 print("{spacer}{sig}".format(spacer=spacer*2, sig=sig_selfless))
             if 'description' in m:
-                if m['description']:
+                if m['description'] and 'TEXT_HERE' not in m['description']:
                     print()
                     print('{spacer}{desc}'.format(
                         spacer=spacer*2,
                         desc=fill(m['description'], subsequent_indent=spacer*2)))
             print('{spacer}{TQ}'.format(spacer=spacer*2, TQ=TQ))
+            print('{spacer}{call}'.format(
+                spacer=spacer*2, call=self.__get_call(name, method_args)))
             print()
 
     def dump_tests(self):
