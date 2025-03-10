@@ -86,7 +86,7 @@ cpdef enum:
 # ----------------------------------------------------------------------------
 # run-time constants
 
-DEBUG = 1
+DEBUG = 0
 
 # ----------------------------------------------------------------------------
 # python c-api imports
@@ -231,12 +231,18 @@ cdef class AbstractMaxObject:
         if self.ptr is NULL:
             raise ValueError(f"could not retrieve the {self.classname} object with name '{name}'")
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} '{self.name}'>"
+
     cdef mx.t_object* _object_ptr_from_new(self, str classname, str name, str namespace, object args):
         cdef Atom atom = Atom(*args)
         cdef mx.t_object* ptr = <mx.t_object*>mx.object_new_typed(
             str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
-        return <mx.t_object*>mx.object_register(
-            str_to_sym(namespace), str_to_sym(name), <mx.t_object*>ptr)
+        if name:
+            return <mx.t_object*>mx.object_register(
+                str_to_sym(namespace), str_to_sym(name), <mx.t_object*>ptr)
+        else:
+            return ptr
 
     cdef mx.t_object* _object_ptr_from_existing(self, str classname, str name):
         cdef mx.t_object *patcher = NULL
@@ -294,7 +300,7 @@ cdef class AbstractMaxObject:
 # api.MaxObject
 
 cdef class MaxObject:
-    """A wrapper for a Max t_object
+    """A concrete wrapper for a Max t_object
     """
     cdef mx.t_object *ptr
     cdef bint ptr_owner
@@ -798,7 +804,7 @@ cdef class Atom:
             if self.ptr is NULL:
                 raise MemoryError("Atom.__init__ allocation error")
             if DEBUG:
-                post(f"args: {args}")       
+                post(f"atom args: {args}")
             for i, obj in enumerate(args):
                 self[i] = obj
 
