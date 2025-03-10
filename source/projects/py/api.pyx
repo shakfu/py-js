@@ -198,6 +198,7 @@ cdef class AbstractMaxObject:
     cdef mx.t_object* ptr
     cdef bint ptr_owner
     cdef public str name             # registered name
+    # cdef readonly str classname      # object classname
     cdef readonly str namespace      # 'box' or 'nobox'
     cdef readonly dict type_map      # used by attributes if any
 
@@ -205,6 +206,7 @@ cdef class AbstractMaxObject:
         self.ptr = NULL
         self.ptr_owner = False
         self.name = ""
+        # self.classname = ""
         self.namespace = 'box'
         self.type_map = {}
 
@@ -217,6 +219,7 @@ cdef class AbstractMaxObject:
     def __init__(self, name: str, *args, **kwds):
         self.name = name
         self.namespace = kwds.get('namespace', 'box')
+        # self.classname = kwds.get('classname', self.__class__.__name__)
         if args:
             self.ptr = self._object_ptr_from_new(
                 self.classname, self.name, self.namespace, args)
