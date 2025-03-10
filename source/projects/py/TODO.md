@@ -49,7 +49,7 @@ There are three major subsystems in this subproject
 
 ## Enhancements
 
-- [ ] Make `MaxObject` more general so it can be used as a superclass for objects such as coll.
+- [ ] Make `MaxObject` more general so it can be used as a superclass for objects such as `coll`.
 
 - [ ] Add python dict to api.Dict conversion
 

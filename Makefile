@@ -9,6 +9,13 @@ ARCH = $(shell uname -m)
 # PYTHON = /usr/bin/python3
 PYTHON = python3
 
+# PYTHON_VERSION is picked-up by default from the $(PYTHON) variable
+# which provides the path to the python executable.
+# To override this, and use a specific version in builds, you can
+# set it as environment var: `make shared-ext PYTHON_VERSION=3.12.9`
+# or just uncomment the line below, to use on more than one build.
+# PYTHON_VERSION = 3.13.2
+
 # paths
 ROOTDIR := $(shell pwd)
 SRCDIR := $(ROOTDIR)/source
@@ -24,13 +31,16 @@ CFLOW := $(PYDIR)/resources/cflow
 NAME = py
 PROJECT = $(NAME).xcodeproj
 TARGETS = py pyjs
-EXTENSION = $(PYDIR)/api.pyx
 PKG_NAME = py-js
 
-DEPENDENCIES = "cmake zmq czmq"
+# cython options
+EXTENSION = $(PYDIR)/api.pyx
+INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
+				   # this requires numpy to be available to the python
+				   # interpreter.
+CYTHON_OPTIONS = -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
+				 -X emit_code_comments=False
 
-# system python override: eg. `make shared-ext PYTHON_VERSION=3.12.9`
-# PYTHON_VERSION = 3.13.2
 
 # change MAX_VERSION from 9 to 8 or vice-versa
 
@@ -42,14 +52,14 @@ PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/$(PKG_NAME)
 PKG_DIRS = docs examples extensions externals help init \
            javascript jsextensions media misc patchers
 
-#NUMPY_EXISTS := $(shell sh -c '$(PYTHON) $(SCRIPTS)/check_numpy.py --exists')
-INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
-				   # this requires numpy to be available to the python
-				   # interpreter.	
-
 # constants
 COLOR_BOLD_CYAN = "\033[1;36m"
 COLOR_RESET = "\033[m"
+
+# if using macos and the homebrew package manager, 
+# you can check if build dependencies are installed by
+# `make check-deps`
+HOMEBREW_DEPENDENCIES = "python cmake zmq czmq"
 
 # ifdef MYFLAG
 # CFLAGS += -DMYFLAG
@@ -339,9 +349,9 @@ python-cmake: clean-python-cmake
 
 .PHONY: check_deps deps bz2 ssl xz
 
-check_deps:
+check-deps:
 	@brew --prefix > /dev/null || (echo "Homebrew not found"; exit 1)
-	@for dep in $(DEPENDENCIES); do \
+	@for dep in $(HOMEBREW_DEPENDENCIES); do \
 		brew --prefix $$dep > /dev/null || \
 			(echo "$$dep not available, install via homebrew: 'brew install $$dep'"; \
 				exit 1); \
@@ -404,7 +414,7 @@ build-beeware-ext: clean-static-ext
 
 compile-extension:
 	$(call section,"generate c code from cython extension")
-	@cython -3 -E INCLUDE_NUMPY=$(ENABLE_NUMPY) ${EXTENSION}
+	@cython -3 $(CYTHON_OPTIONS) $(EXTENSION)
 
 api: compile-extension
 
