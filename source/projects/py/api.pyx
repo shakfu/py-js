@@ -198,7 +198,7 @@ cdef class AbstractMaxObject:
     cdef mx.t_object* ptr
     cdef bint ptr_owner
     cdef public str name             # registered name
-    cdef public str classname        # object classname
+    cdef str _classname              # object classname
     cdef readonly str namespace      # 'box' or 'nobox'
     cdef readonly dict type_map      # used by attributes if any
 
@@ -206,7 +206,7 @@ cdef class AbstractMaxObject:
         self.ptr = NULL
         self.ptr_owner = False
         self.name = ""
-        self.classname = ""
+        self._classname = ""
         self.namespace = 'box'
         self.type_map = {}
 
@@ -218,8 +218,9 @@ cdef class AbstractMaxObject:
 
     def __init__(self, name: str, *args, **kwds):
         self.name = name
-        self.classname = kwds.get('classname', (lambda: self.__class__.__name__.lower())())
         self.namespace = kwds.get('namespace', 'box')
+        self._classname = kwds.get('classname', '')
+
         if args:
             self.ptr = self._object_ptr_from_new(
                 self.classname, self.name, self.namespace, args)
@@ -253,7 +254,16 @@ cdef class AbstractMaxObject:
                         post(f"found {classname} object named {name}")
                         return obj
             box = mx.jbox_get_nextobject(box)
-        return NULL)
+        return NULL
+
+    # properties
+
+    @property
+    def classname(self):
+        """computed classname"""
+        if self._classname:
+            return self._classname
+        return self.__class__.__name__.lower()
 
     # helper methods
 
