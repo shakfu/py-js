@@ -31,18 +31,31 @@ try:
 except ImportError:
     HAVE_YAML = False
 
-PLATFORM = platform.system()
-TQ = '\"\"\"'
+# -----------------------------------------------------------------------------
+# constants
 
+PLATFORM = platform.system()
+
+
+# -----------------------------------------------------------------------------
+# helper functions
 
 def replace_tags(text, sub, *tags):
     for tag in tags:
         text = text.replace(f'<{tag}>', sub).replace(f'</{tag}>', sub)
     return text
 
+def to_pascal_case(s):
+    return ''.join(x for x in s.title() if not x in ['_','-',' ', '.'])
+
+# -----------------------------------------------------------------------------
+# main class
 
 
 class MaxRefParser:
+    OBJECT_SUPER_CLASS = 'AbstractMaxObject'
+    TRIPLE_QUOTE = '\"\"\"'
+
     def __init__(self, name: str):
         self.name = name
         self.suffix = '.maxref.xml'
@@ -198,16 +211,18 @@ class MaxRefParser:
             return f'self.call("{method_name}", {params})'
 
     def dump_code(self):
+        tq = self.TRIPLE_QUOTE
+        superclass = self.OBJECT_SUPER_CLASS
         spacer = ' '*4
-        classname = self.name.title()
-        print(f'cdef class {classname}:')
-        print("{spacer}{TQ}{digest}".format(
-            spacer=spacer, TQ=TQ, digest=self.d['digest']))
+        classname = to_pascal_case(self.name)
+        print(f'cdef class {classname}({superclass}):')
+        print("{spacer}{tq}{digest}".format(
+            spacer=spacer, tq=tq, digest=self.d['digest']))
         print()
         print("{spacer}{desc}".format(
             spacer=spacer, 
             desc=fill(self.d['description'], subsequent_indent=spacer)))
-        print(f"{spacer}{TQ}")
+        print(f"{spacer}{tq}")
         print()
         method_args = []
         for name in self.d['methods']:
@@ -238,9 +253,9 @@ class MaxRefParser:
             print(f'{spacer}def {sig}')
 
             if 'digest' in m:
-                print('{spacer}{TQ}{digest}'.format(
+                print('{spacer}{tq}{digest}'.format(
                     spacer=spacer*2,
-                    TQ=TQ,
+                    tq=tq,
                     digest=m['digest']))
             if args:
                 print()
@@ -251,7 +266,7 @@ class MaxRefParser:
                     print('{spacer}{desc}'.format(
                         spacer=spacer*2,
                         desc=fill(m['description'], subsequent_indent=spacer*2)))
-            print('{spacer}{TQ}'.format(spacer=spacer*2, TQ=TQ))
+            print('{spacer}{tq}'.format(spacer=spacer*2, tq=tq))
             print('{spacer}{call}'.format(
                 spacer=spacer*2, call=self.__get_call(name, method_args)))
             print()
@@ -259,11 +274,12 @@ class MaxRefParser:
     def dump_tests(self):
         spacer = ' '*4
         classname = self.d['name']
+        tq = self.TRIPLE_QUOTE
 
         for name in self.d['methods']:
             m = self.d['methods'][name]
             print(f"def test_{classname}_{name}():")
-            print(f"{spacer}{TQ}{m['digest']}{TQ}")
+            print(f"{spacer}{tq}{m['digest']}{tq}")
             print()
 
 

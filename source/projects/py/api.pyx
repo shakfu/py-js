@@ -4,6 +4,7 @@ This is a 'builtin' module, written in cython, which wraps and exposes parts of
 the Max/MSP c-api python code while using `py` external.
 
 Extension Classes:
+- AbstractMaxObject: abstract class for basic t_object* based object
 - MaxObject: Base wrapper for Max t_object* objects
 - Atom: Wrapper for Max mx.t_atom* atoms/messages
 - Coll: Wrapper for max coll objects
@@ -187,6 +188,101 @@ Rgba = namedtuple('Rgba', ['red', 'green', 'blue', 'alpha'])
 
 
 
+
+# ----------------------------------------------------------------------------
+# api.AbstractMaxObject
+
+cdef class AbstractMaxObject:
+    """An abstract wrapper for a Max t_object
+    """
+    cdef mx.t_object* ptr
+    cdef bint ptr_owner
+    cdef public str name             # registered name
+    cdef readonly str namespace      # 'box' or 'nobox'
+    cdef readonly dict type_map      # used by attributes if any
+
+    def __cinit__(self):
+        self.ptr = NULL
+        self.ptr_owner = False
+        self.name = ""
+        self.namespace = 'box'
+        self.type_map = {}
+
+    def __dealloc__(self):
+        # De-allocate if not null and flag is set
+        if self.ptr is not NULL and self.ptr_owner is True:
+            mx.object_free(self.ptr)
+            self.ptr = NULL
+
+    def __init__(self, name: str, *args, **kwds):
+        self.name = name
+        self.namespace = kwds.get('namespace', 'box')
+        if args:
+            self.ptr = self._object_ptr_from_new(
+                self.classname, self.name, self.namespace, args)
+            self.ptr_owner = True
+        else:
+            self.ptr = self._object_ptr_from_existing(self.classname, self.name)
+            self.ptr_owner = False
+        if self.ptr is NULL:
+            raise ValueError(f"could not retrieve the coll object with name '{name}'")
+
+    cdef mx.t_object* _object_ptr_from_new(self, str classname, str name, str namespace, object args):
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_object* ptr = <mx.t_object*>mx.object_new_typed(
+            str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+        return <mx.t_object*>mx.object_register(
+            str_to_sym(namespace), str_to_sym(name), <mx.t_object*>ptr)
+
+    cdef mx.t_object* _object_ptr_from_existing(self, str classname, str name):
+        cdef mx.t_object *patcher = NULL
+        cdef mx.t_object *box = NULL
+        cdef mx.t_object *obj = NULL
+        cdef px.t_py *x = <px.t_py*>px.py_get_object_ref()
+
+        mx.object_obex_lookup(x, mx.gensym("#P"), &patcher)
+        box = mx.jpatcher_get_firstobject(patcher)
+        while box is not NULL:
+            obj = mx.jbox_get_object(box)
+            if obj:
+                if mx.object_classname(obj) == str_to_sym(self.classname):
+                    if mx.object_attr_getsym(obj, mx.gensym("name")) == str_to_sym(name):
+                        post(f"found {classname} object named {name}")
+                        return obj
+            box = mx.jbox_get_nextobject(box)
+        return NULL
+
+    # properties
+
+    @property
+    def classname(self) -> str:
+        """may be overrided"""
+        return self.__class__.__name__.lower()
+
+    # helper methods
+
+    def call(self, str method, *args):
+        """Helper wrapper method around object_method* variants"""
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_max_err err = mx.MAX_ERR_NONE
+        cdef mx.t_symbol* meth = str_to_sym(method)
+
+        if len(args) == 0:
+            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
+        elif len(args) == 1:
+            if isinstance(args[0], str):
+                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
+            elif isinstance(args[0], int):
+                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
+            elif isinstance(args[0], float):
+                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
+            elif isinstance(args[0], MaxObject):
+                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
+        else:
+            err = mx.object_method_typed(<mx.t_object*>self.ptr,
+                str_to_sym(method), atom.size, atom.ptr, NULL)
+        if err:
+            raise ValueError(f"could not apply single arg to method {method}")
 
 # ----------------------------------------------------------------------------
 # api.MaxObject
@@ -1093,69 +1189,12 @@ cdef class Atom:
 # ----------------------------------------------------------------------------
 # api.Coll
 
-
-cdef class Coll:
+cdef class Coll(AbstractMaxObject):
     """Store and edit a collection of data
 
     Allows for the storage, organization, editing, and retrieval of
     different messages.
     """
-
-    cdef mx.t_object* ptr
-    cdef public str name
-
-    def __cinit__(self):
-        self.ptr = NULL
-        self.name = None
-
-    def __init__(self, str name):
-        self.name = name
-        self.ptr = self._object_ptr_from_classname_and_name("coll", name)
-        if self.ptr is NULL:
-            raise ValueError(f"could not retrieve the coll object with name '{name}'")
-
-    cdef mx.t_object* _object_ptr_from_classname_and_name(self, str classname, str name):
-        cdef mx.t_object *patcher = NULL
-        cdef mx.t_object *box = NULL
-        cdef mx.t_object *obj = NULL
-        cdef px.t_py *x = <px.t_py*>px.py_get_object_ref()
-
-        mx.object_obex_lookup(x, mx.gensym("#P"), &patcher)
-        box = mx.jpatcher_get_firstobject(patcher)
-        while box is not NULL:
-            obj = mx.jbox_get_object(box)
-            if obj:
-                if mx.object_classname(obj) == str_to_sym(classname):
-                    if mx.object_attr_getsym(obj, mx.gensym("name")) == str_to_sym(name):
-                        post(f"found {classname} object named {name}")
-                        return obj
-            box = mx.jbox_get_nextobject(box)
-        return NULL
-
-    # helper methods
-
-    def call(self, str method, *args):
-        """Helper wrapper method around object_method* variants"""
-        cdef Atom atom = Atom(*args)
-        cdef mx.t_max_err err = mx.MAX_ERR_NONE
-        cdef mx.t_symbol* meth = str_to_sym(method)
-
-        if len(args) == 0:
-            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
-        elif len(args) == 1:
-            if isinstance(args[0], str):
-                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
-            elif isinstance(args[0], int):
-                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
-            elif isinstance(args[0], float):
-                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
-            elif isinstance(args[0], MaxObject):
-                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
-        else:
-            err = mx.object_method_typed(<mx.t_object*>self.ptr,
-                str_to_sym(method), atom.size, atom.ptr, NULL)
-        if err:
-            raise ValueError(f"could not apply single arg to method {method}")
 
     # msg methods
 
