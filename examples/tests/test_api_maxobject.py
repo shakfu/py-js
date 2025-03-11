@@ -15,11 +15,14 @@ mem = {}
 def test_maxobject_init():
     mem["buf"] = api.MaxObject("buffer~", "buf", "jongly.aif")
 
+def test_maxobject_classname():
+    return mem["buf"].classname
+
 def test_maxobject_isinstance_object():
     return isinstance(mem["buf"], object)
 
 def test_maxobject_from_str():
-    mem["buf"] = api.MaxObject.from_str("buffer~", "buf amen.wav")
+    mem["buf"] = api.MaxObject.from_str("buffer~", "buf cello-f2.aif")
 
 def test_maxobject_registration():
     buf1 = mem["buf"].register("buf1")

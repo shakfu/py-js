@@ -71,7 +71,7 @@ Note: networking (zmq-based) externals are not enabled by default since they req
 [jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
 [zthread]: https://github.com/shakfu/py-js/tree/main/source/projects/zthread
 
-The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`), with `py` receiving most of recent attention, especially with respect to its builtin `api` module which uses cython to wrap an incrementally growing subset of the Max c-api. Please see below for an overview and feature comparison.
+The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`), with `py` receiving most of recent attention, especially with respect to its builtin `api` module which uses cython to wrap a [growing subset of the Max c-api](https://github.com/shakfu/py-js/blob/main/source/projects/py/api.md).
 
 At the time of this writing, and since the switch to [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project has the following compatibility profile:
 

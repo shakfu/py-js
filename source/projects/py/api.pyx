@@ -86,7 +86,7 @@ cpdef enum:
 # ----------------------------------------------------------------------------
 # run-time constants
 
-DEBUG = 0
+DEBUG = 1
 
 # ----------------------------------------------------------------------------
 # python c-api imports
@@ -199,7 +199,7 @@ cdef class AbstractMaxObject:
     cdef bint ptr_owner
     cdef public str name             # registered name
     cdef str _classname              # object classname
-    cdef readonly str namespace      # 'box' or 'nobox'
+    cdef str _namespace              # 'box' or 'nobox'
     cdef readonly dict type_map      # used by attributes if any
 
     def __cinit__(self):
@@ -207,7 +207,7 @@ cdef class AbstractMaxObject:
         self.ptr_owner = False
         self.name = ""
         self._classname = ""
-        self.namespace = 'box'
+        self._namespace = 'box'
         self.type_map = {}
 
     def __dealloc__(self):
@@ -218,31 +218,23 @@ cdef class AbstractMaxObject:
 
     def __init__(self, name: str, *args, **kwds):
         self.name = name
-        self.namespace = kwds.get('namespace', 'box')
-        self._classname = kwds.get('classname', '')
+        self._namespace = kwds.get('namespace', 'box')
+        self._classname = kwds.get('classname', 
+            (lambda: (self.__class__.__name__.lower()))()
+        ) # deferred execution to capture subclass class name
 
         if args:
             self.ptr = self._object_ptr_from_new(
-                self.classname, self.name, self.namespace, args)
+                self._classname, self.name, self._namespace, args)
             self.ptr_owner = True
         else:
-            self.ptr = self._object_ptr_from_existing(self.classname, self.name)
+            self.ptr = self._object_ptr_from_existing(self._classname, self.name)
             self.ptr_owner = False
         if self.ptr is NULL:
-            raise ValueError(f"could not retrieve the {self.classname} object with name '{name}'")
+            raise ValueError(f"could not retrieve the {self._classname} object with name '{name}'")
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} '{self.name}'>"
-
-    cdef mx.t_object* _object_ptr_from_new(self, str classname, str name, str namespace, object args):
-        cdef Atom atom = Atom(*args)
-        cdef mx.t_object* ptr = <mx.t_object*>mx.object_new_typed(
-            str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
-        if name:
-            return <mx.t_object*>mx.object_register(
-                str_to_sym(namespace), str_to_sym(name), <mx.t_object*>ptr)
-        else:
-            return ptr
 
     cdef mx.t_object* _object_ptr_from_existing(self, str classname, str name):
         cdef mx.t_object *patcher = NULL
@@ -255,21 +247,27 @@ cdef class AbstractMaxObject:
         while box is not NULL:
             obj = mx.jbox_get_object(box)
             if obj:
-                if mx.object_classname(obj) == str_to_sym(self.classname):
+                if mx.object_classname(obj) == str_to_sym(classname):
                     if mx.object_attr_getsym(obj, mx.gensym("name")) == str_to_sym(name):
                         post(f"found {classname} object named {name}")
                         return obj
             box = mx.jbox_get_nextobject(box)
         return NULL
 
-    # properties
-
-    @property
-    def classname(self):
-        """computed classname"""
-        if self._classname:
-            return self._classname
-        return self.__class__.__name__.lower()
+    cdef mx.t_object* _object_ptr_from_new(self, str classname, str name, str namespace, object args):
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_object* newobj = <mx.t_object*>mx.object_new_typed(
+            str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
+        if newobj is NULL:
+            raise TypeError(f"could not create a class {classname} named {name} with args {args}")
+        if name:
+            registered = <mx.t_object*>mx.object_register(
+                str_to_sym(namespace), str_to_sym(name), <mx.t_object*>newobj)
+            if registered is NULL:
+                raise ValueError(f"could not register {classname} {name}")
+            return registered
+        else:
+            return newobj
 
     # helper methods
 
@@ -299,37 +297,30 @@ cdef class AbstractMaxObject:
 # ----------------------------------------------------------------------------
 # api.MaxObject
 
-cdef class MaxObject:
-    """A concrete wrapper for a Max t_object
-    """
-    cdef mx.t_object *ptr
-    cdef bint ptr_owner
-    cdef public str name # registered name
-    cdef public dict type_map
+cdef class MaxObject(AbstractMaxObject):
 
-    def __cinit__(self):
-        self.ptr = NULL
-        self.ptr_owner = False
-        self.name = ""
-        self.type_map = {}
+    def __init__(self, str classname, *args, **kwds):
+        self._classname = classname
+        self.name = kwds.get('name', '')
+        self._namespace = kwds.get('namespace', 'box')
 
-    def __dealloc__(self):
-        # De-allocate if not null and flag is set
-        if self.ptr is not NULL and self.ptr_owner is True:
-            mx.object_free(self.ptr)
-            self.ptr = NULL
+        # first try to get existing registered object
+        if self.name: # name is required
+            self.ptr = self._object_ptr_from_existing(self._classname, self.name)
+            self.ptr_owner = False
+            if self.ptr is not NULL:
+                return
+            # else fallthrough and try to create new object
 
-    def __init__(self, classname: str, *args, name: str = "", namespace: str = "box"):
-        cdef Atom atom = Atom(*args)
-        self.ptr = <mx.t_object*>mx.object_new_typed(
-            str_to_sym(namespace), str_to_sym(classname), atom.size, atom.ptr)
-        if name:
-            self.name = name
-            self.ptr = <mx.t_object*>mx.object_register(
-                str_to_sym(namespace), str_to_sym(name), <mx.t_object*>self.ptr)
+        self.ptr = self._object_ptr_from_new( 
+            self._classname, self.name, self._namespace, args)
+        self.ptr_owner = True
+        if self.ptr is NULL:
+            raise ValueError(
+                f"could not create {self._classname} {self.name} object")
 
     def __repr__(self) -> str:
-        return f"<MaxObject {self.classname} '{self.name}'>"
+        return f"<MaxObject {self._classname} '{self.name}'>"
 
     @staticmethod
     cdef MaxObject from_ptr(mx.t_object *ptr, bint owner=False):
@@ -2980,9 +2971,9 @@ cdef class Dictionary:
     def dump(self, long recurse=1, long console=0):
         """Print the contents of a dictionary to the Max window.
         
-        @param	recurse	If non-zero, the dictionary will be recursively unravelled to the Max window.  
+        @param  recurse If non-zero, the dictionary will be recursively unravelled to the Max window.  
                         Otherwise it will only print the top level.  
-        @param	console	If non-zero, the dictionary will be posted to the console rather than the Max window.
+        @param  console If non-zero, the dictionary will be posted to the console rather than the Max window.
                         On the Mac you can view this using Console.app.
                         On Windows you can use the free DbgView program which can be downloaded from Microsoft.
         """
@@ -3043,11 +3034,11 @@ cdef class Dictionary:
     def register(self, str name) -> Dictionary:
         """Register a #t_dictionary with the dictionary passing system and map it to a unique name.
 
-        @param		d		A valid dictionary object.
-        @param		name	The address of a #t_symbol pointer to the name you would like mapped to this dictionary.
+        @param      d       A valid dictionary object.
+        @param      name    The address of a #t_symbol pointer to the name you would like mapped to this dictionary.
                             If the t_symbol pointer has a NULL value then a unique name will be generated and filled-in
                             upon return.
-        @return				The dictionary mapped to the specified name.
+        @return             The dictionary mapped to the specified name.
         """
         cdef mx.t_symbol* name_ptr = str_to_sym(name)
         cdef mx.t_dictionary* registered = mx.dictobj_register(self.ptr, &name_ptr)
