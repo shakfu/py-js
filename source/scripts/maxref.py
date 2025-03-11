@@ -18,6 +18,7 @@ options:
 
 
 import platform
+import sys
 from pathlib import Path
 from textwrap import fill
 from pprint import pprint
@@ -53,7 +54,7 @@ def to_pascal_case(s):
 
 
 class MaxRefParser:
-    OBJECT_SUPER_CLASS = 'AbstractMaxObject'
+    OBJECT_SUPER_CLASS = 'Object'
     TRIPLE_QUOTE = '\"\"\"'
 
     def __init__(self, name: str):
@@ -64,8 +65,6 @@ class MaxRefParser:
             'methods': {},
             'attributes': {},
         }
-        self.check_exists()
-        self.root = self.load()
 
     def check_exists(self):
         if self.name not in self.refdict:
@@ -97,9 +96,11 @@ class MaxRefParser:
     def load(self) -> ElementTree.Element:
         filename = self.refdict[self.name]
         cleaned = self._clean_text(filename.read_text())
-        return ElementTree.fromstring(cleaned)
+        self.root = ElementTree.fromstring(cleaned)
 
     def parse(self):
+        self.check_exists()
+        self.load()
         self.extract_rest()
         self.extract_methods()
         self.extract_attributes()
@@ -107,7 +108,6 @@ class MaxRefParser:
     def extract_rest(self):
         root = self.root
         self.d.update(self.root.attrib)
-        # from IPython import embed; embed()
         self.d['digest'] =  root.find('digest').text.strip()
         self.d['description'] =  root.find('description').text.strip()
         self.d['inlets'] = []
@@ -294,7 +294,7 @@ if __name__ == '__main__':
         prog='maxref-parser',
         description='Parse and generate code from *.maxref.xml files.'
     )
-    parser.add_argument('name', help='enter <name>.maxref.xml name')
+    parser.add_argument('name', nargs='?', help='enter <name>.maxref.xml name')
     parser.add_argument('-d', '--dict', action='store_true', help="dump parsed maxref as dict")
     parser.add_argument('-j', '--json', action='store_true', help="dump parsed maxref as json")
     parser.add_argument('-c', '--code', action='store_true', help="generate class outline")
@@ -305,20 +305,26 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     p = MaxRefParser(args.name)
-    p.parse()
+
+    # pre-parsing actions ------- 
     if args.list:
         for name in sorted(p.refdict.keys()):
             print(name)
+        sys.exit(0)
+
+    # post-parsing actions ------- 
+    p.parse()
+    assert args.name, "name in `maxref [options] <name>` must be provided"
     if args.dict:
          p.dump_dict()
 
-    if args.code:
+    elif args.code:
         p.dump_code()
 
-    if args.test:
+    elif args.test:
         p.dump_tests()
 
-    if HAVE_YAML and args.yaml:
+    elif HAVE_YAML and args.yaml:
         p.dump_yaml()
 
 

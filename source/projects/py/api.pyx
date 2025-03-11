@@ -5,9 +5,7 @@ the Max/MSP c-api python code while using `py` external.
 
 Extension Classes:
 - MaxObject: generic wrapper for Max t_object* objects
-- Object(MaxObject): to be used as superclass for simple max objects
 - Atom: wrapper for Max mx.t_atom* atoms/messages
-- Coll(Object): wrapper for max coll objects
 - Table: wrapper for Max tables
 - Buffer: wrapper for MSP buffers
 - Dictionary: wrapper for Max dictionaries
@@ -26,6 +24,13 @@ Extension Classes:
 - Path: wrapper for Max path handling
 - PyExternal: wrapper for the `py` external
 - PyMxObject: Alternative `py` external extension type (obj pointer retrieved via uintptr_t)
+
+Simple Wrappers:
+    These are generated wrappers (using the scripts/maxref.py -c <name>) which inherit
+    from the `Object` extension class, which itself inherits from `MaxObject`.
+- Object(MaxObject): the superclass for simple max objects
+- Coll(Object): wrapper for max coll objects
+- Array(Object): wrapper around `array` object
 
 Helper Functions:
 - Global utility functions for common Max operations
@@ -86,7 +91,7 @@ cpdef enum:
 # ----------------------------------------------------------------------------
 # run-time constants
 
-DEBUG = 1
+DEBUG = 0
 
 # ----------------------------------------------------------------------------
 # python c-api imports
@@ -709,59 +714,6 @@ cdef class MaxObject:
         """Open a search in the file browser for files with the name of the given class."""
         mx.classname_openquery(self.classname.encode())
 
-    
-# ----------------------------------------------------------------------------
-# api.Object
-
-cdef class Object(MaxObject):
-    """An abstract wrapper for a Max t_object
-    """
-
-    def __init__(self, name: str, *args, **kwds):
-        self.name = name
-        self._namespace = kwds.get('namespace', 'box')
-        self._classname = kwds.get('classname', 
-            (lambda: (self.__class__.__name__.lower()))()
-        ) # deferred execution to capture subclass class name
-
-        if args:
-            self.ptr = self._object_ptr_from_new(
-                self._classname, self.name, self._namespace, args)
-            self.ptr_owner = True
-        else:
-            self.ptr = self._object_ptr_from_existing(self._classname, self.name)
-            self.ptr_owner = False
-        if self.ptr is NULL:
-            raise ValueError(f"could not retrieve the {self._classname} object with name '{name}'")
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} '{self.name}'>"
-
-    # helper methods
-
-    def call(self, str method, *args):
-        """Helper wrapper method around object_method* variants"""
-        cdef Atom atom = Atom(*args)
-        cdef mx.t_max_err err = mx.MAX_ERR_NONE
-        cdef mx.t_symbol* meth = str_to_sym(method)
-
-        if len(args) == 0:
-            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
-        elif len(args) == 1:
-            if isinstance(args[0], str):
-                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
-            elif isinstance(args[0], int):
-                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
-            elif isinstance(args[0], float):
-                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
-            elif isinstance(args[0], MaxObject):
-                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
-        else:
-            err = mx.object_method_typed(<mx.t_object*>self.ptr,
-                str_to_sym(method), atom.size, atom.ptr, NULL)
-        if err:
-            raise ValueError(f"could not apply single arg to method {method}")
-
 
 # ----------------------------------------------------------------------------
 # api.Atom
@@ -798,8 +750,6 @@ cdef class Atom:
             self.ptr_owner = True
             if self.ptr is NULL:
                 raise MemoryError("Atom.__init__ allocation error")
-            if DEBUG:
-                post(f"atom args: {args}")
             for i, obj in enumerate(args):
                 self[i] = obj
 
@@ -1193,437 +1143,7 @@ cdef class Atom:
         """set object value into an array of atoms."""
         return mx.atom_setobjval(&self.size, <mx.t_atom **>&self.ptr, obj)
 
-# ----------------------------------------------------------------------------
-# api.Coll
 
-cdef class Coll(Object):
-    """Store and edit a collection of data
-
-    Allows for the storage, organization, editing, and retrieval of
-    different messages.
-    """
-
-    # msg methods
-
-    def bang(self):
-        """Retrieve the next data set
-
-        See the `next` listing.
-        """
-        self.call("bang")
-
-    def get(self, object index):
-        """Retrieve data by index
-        
-        The number refers to the address of a message stored in `coll`. If a
-        message is stored at that address, the stored message is
-        output. If the stored message is a single symbol, it is always
-        prepended with the word `symbol` when output.
-        """
-        if isinstance(index, int):
-            self.call("int", index)
-        elif isinstance(index, float):
-            self.call("float", index)
-        elif isinstance(index, str):
-            self.call("symbol", index)
-        else:
-            raise TypeError(f"type {type(object)} not supported as index")
-
-    def set(self, int index, *args):
-        """Store index and data
-
-        list(int index?, list data?)
-
-        The first value is used as the address (the storage location within
-        `coll`) at which to store the remaining items in the list. The
-        address will always be stored as an int.
-        """
-        self.call("list", index, args)
-
-    def append(self, *args):
-        """Add item associated with an index
-
-        append(list data?)
-
-        The `append` message creates a new item associated with an index that
-        is one larger than the highest current index. For example, if
-        the `coll` is empty, `append xyz` will add an item `xyz`
-        associated with the index 0. `append xyz` a second time will
-        add another item `xyz` associated with the index 1.
-        """
-        self.call("append", *args)
-
-    def assoc(self, str address_name, int data_index):
-        """Associate a name with an index
-
-        assoc(symbol address name?, int data index?)
-
-        Associates a symbol with the numeric address, provided that the number
-        address already exists. After association, any reference to
-        that symbol will be interpreted as a reference to the number
-        address. Each number address can have only one symbol
-        associated with it.
-        """
-        self.call("assoc", address_name, data_index)
-
-    def clear(self):
-        """Clear all data"""
-        self.call("clear")
-
-    def deassoc(self, str address_name, int data_index):
-        """De-associate a name with an index
-
-        deassoc(symbol address name?, int data index?)
-
-        Removes the association between a symbol and the number address. The
-        symbol will no longer have any meaning to `coll`.
-        """
-        self.call("deassoc", address_name, data_index)
-
-    def delete(self, object index):
-        """Remove data and renumber
-
-        delete(any index?)
-
-        Removes the data at the address provided. If the specified address is
-        numeric, all higher numbered addresses are decremented by 1.
-        """
-        self.call("delete", index)
-
-    def dump(self):
-        """Output all data
-
-        Sends all of the stored addresses out the 2nd outlet and all of the
-        stored messages out the 1st outlet, in the order in which they
-        are stored. A `bang` is sent out the 4th outlet when the dump
-        is completed.
-        """
-        self.call("dump")
-
-    def end(self):
-        """Move to last address
-
-        Sets the pointer (as used by the `goto`, `next`, and `prev` messages)
-        to the last address.
-        """
-        self.call("end")
-
-    def filetype(self, str filetype = ""):
-        """Set the recognized file types
-
-        filetype(symbol filetype?)
-
-        Sets the file types which can be read and written into the `coll`
-        object. The message `filetype` with no arguments restores the
-        default file behavior.
-        """
-        if not filetype:
-            self.call("filetype")
-        else:
-            self.call("filetype", filetype)
-
-    def embed(self, int save_setting, int unused = 0):
-        """Set the file-save flag (renamed for consistency)
-
-        flags(int save-setting?, int unused?)
-
-        Sets the flags used to save its contents within the patch that
-        contains it. The message `flags 1 0` notifies the object to
-        save its contents as part of the patcher file. The message
-        `flags 0 0` causes the contents not to be saved.
-        """
-        self.call("flags", save_setting, unused)
-
-    def goto(self, object index):
-        """Move to an index
-
-        goto(list index?)
-
-        Sets the pointer (as used by the `goto`, `next`, and `prev` messages)
-        at a specific address, but does not trigger output. If the
-        specified address does not exist, the pointer is set at the
-        beginning of the collection. Data will be output in response
-        to a subsequent `bang`, `next`, or `prev` message.
-        """
-        self.call("goto", index)
-
-    def insert(self, int index, *args):
-        """Insert data at a specific address
-
-        insert(int index?, list data?)
-
-        Inserts the message at the address specified by the number,
-        incrementing all equal or greater addresses by 1 if necessary.
-        """
-        self.call("insert", args)
-
-    def insert2(self, int index, *args):
-        """Insert data at a specific address
-
-        insert2(int index?, list data?)
-
-        See the `insert` listing.
-        """
-        self.call("insert2", args)
-
-    def length(self):
-        """Retrieve the number of entries
-
-        Counts the number of entries contained in the `coll` and sends the
-        number out the 1st outlet.
-        """
-        self.call("length")
-
-    def max(self, int element = 1):
-        """Return the highest numeric value
-
-        max(int element?)
-
-        Gets the highest value in any entry. An optional integer argument
-        (defaults to '1') specifies an element position to use.
-        """
-        self.call("max", element)
-
-    def merge(self, int index, *args):
-        """Merge data at an existing address
-
-        merge(int index?, list data?)
-
-        Appends data at the end of the data found at the specified index. If
-        the address does not yet exist, it is created.
-        """
-        self.call("merge", index, args)
-
-    def min(self, int element = 1):
-        """Return the lowest numeric value
-
-        min(int element?)
-
-        Gets the lowest value in any entry. An optional integer argument
-        (defaults to '1') specifies an element position to use.
-        """
-        self.call("min", element)
-
-    def next(self):
-        """Move to the next address
-
-        Sends the address and data stored at the current address, then sets
-        the pointer to the next address. If the pointer is currently
-        at the last address in the collection, it wraps around to the
-        first address. If the address is a symbol rather than a
-        number, `0` is sent out the second outlet.
-        """
-        self.call("next")
-
-    def nstore(self, int index, str association, *args):
-        """Store data with both number and symbol index
-
-        nstore(int index?, symbol association?, list data?)
-
-        Stores the message at the specified number address, with the specified
-        symbol associated. This has the same effect as storing the
-        message at an int address, then using the `assoc` message to
-        associate a symbol with that number.
-        """
-        self.call("nstore", index, association, *args)
-
-    def nsub(self, int index, int position, object data):
-        """Replace a single data element
-
-        nsub(int index?, int position?, any data?)
-
-        Replaces a data element with a new value. As an example, `nsub 2 4 7`
-        replaces the fourth element of address 2 with the value 7.
-        Number values and symbols can both be substituted in this
-        manner.
-        """
-        self.call("nsub", index, position, data)
-
-    def nth(self, int index, int position):
-        """Return a single data element
-
-        nth(int index?, int position?)
-
-        Returns the data element found at a specific position in the stored
-        list and send it out the first outlet. As an example, `nth 75
-        2` will output the second item in the list stored at address
-        75.
-        """
-        self.call("nth", index, position)
-
-    def open(self):
-        """Open a data editing window
-
-        Opens a data editing window for the current data and bring it into
-        focus.
-        """
-        self.call("end")
-
-    def prev(self):
-        """Move to the previous address
-
-        Sends the address and data stored at the current address, then sets
-        the pointer to the previous address. If the pointer is
-        currently at the first address in the collection, it wraps
-        around to the last address. If the address is a symbol rather
-        than a number, `0` is sent out the second outlet.
-        """
-        self.call("prev")
-
-    def read(self, str filename):
-        """Choose a file to load
-
-        read(symbol filename?)
-
-        With no arguments, `read` puts up a standard Open Document dialog box
-        to choose a file to load. If an argument is provided, the
-        named file is loaded.
-        """
-        self.call("read", filename)
-
-    def readagain(self):
-        """Reload a file
-
-        Loads the contents of the most recently read file. If no prior file
-        load has occurred, the request is treated like a `read`
-        message.
-        """
-        self.call("readagain")
-
-    def refer(self, str object_name):
-        """Change data reference
-
-        refer(symbol object name?)
-
-        Changes the reference to the data in another named `coll` object.
-        Changes to the data stored in any referenced `coll` will be
-        shared by all other objects with the same name.
-        """
-        self.call("refer", object_name)
-
-    def remove(self, object index):
-        """Remove an entry
-
-        remove(any index?)
-
-        Removes that address and its contents from the collection.
-        """
-        self.call("remove", index)
-
-    def renumber(self, int data_index=0):
-        """Renumber entries
-
-        renumber(int data index?)
-
-        Renumbers data entries as consecutive and in increasing order. The
-        optional argument specifies the starting number address for
-        the data.
-        """
-        self.call("renumber", data_index)
-
-    def renumber2(self, int data_index):
-        """Increment indices by one
-
-        renumber2(int data index?)
-        """
-        self.call("renumber2", data_index)
-
-    def separate(self, int data_index):
-        """Creates an open entry index
-
-        separate(int data index?)
-
-        Increments the numerical indices for all data whose index is greater
-        than the provided. This creates an open 'slot' for a
-        subsequent add.
-        """
-        self.call("separate", data_index)
-
-    def sort(self, int sort_order = -1, int entry = -1):
-        """Sort the data
-
-        sort(int sort order (-1 or 1)?, int entry (-1, 0, or 1)?)
-
-        Sorts the data into a specified order. If the first argument is `-1`,
-        the items are sorted in ascending order. If the first argument
-        is `1`, the items are sorted in descending order.
-        """
-        self.call("sort", sort_order, entry)
-
-    def start(self):
-        """Move to the first entry
-
-        Sets the pointer (used by the `goto`, `next`, and `prev` messages) to
-        the first address in the `coll`.
-        """
-        self.call("start")
-
-    def store(self, str index, *args):
-        """Store data at a symbolic index
-
-        store(symbol index?, list data?)
-
-        Stores the message at an address named by the provided symbol. As an
-        example, `store triad 0 4 7` will store `0 4 7` at an address
-        named `triad`.
-        """
-        self.call("store", index, args)
-
-    def sub(self, int index, int position, *args):
-        """Replace a data element, output data
-
-        sub(int index?, int position?, list data?)
-
-        Same as `nsub`, except that the message stored at the specified
-        address is sent out after the item has been substituted.
-        """
-        self.call("sub", index, position, args)
-
-    def subsym(self, str new_name, str old_name):
-        """Changes an index symbol
-
-        subsym(symbol new name?, symbol old name?)
-
-        Changes the symbol associated with data. The first argument is the new
-        symbol to use, the second argument is the symbol associator to
-        replace.
-        """
-        self.call("subsym", new_name, old_name)
-
-    def swap(self, int index1, int index2):
-        """Swap two indices
-
-        swap(int index?, int index?)
-
-        Exchanges the indices associated with two addresses. The data is
-        unchanged, but the indexes that they use are swapped.
-        """
-        self.call("swap", index1, index2)
-
-    def wclose(self):
-        """Close the data editing window
-        """
-        self.call("wclose")
-
-    def write(self, str filename):
-        """Write the data to a disk file
-
-        write(symbol filename?)
-
-        With no arguments, `write` puts up a standard Open Document dialog box
-        to choose a filename to write. If an argument is provided, the
-        name is used as a filename for storage.
-        """
-        self.call("write", filename)
-
-    def writeagain(self):
-        """Rewrite a file
-
-        Saves the contents to the most recently written file. If no prior file
-        write has occurred, the request is treated like a `write`
-        message.
-        """
-        self.call("writeagain")
 
 # ----------------------------------------------------------------------------
 # api.Table
@@ -6674,7 +6194,6 @@ cdef class Path:
         """
         return mx.sysfile_openptrsize(p, length, flags, fh)
 
-
 # ----------------------------------------------------------------------------
 # api.PyExternal
 
@@ -6879,6 +6398,688 @@ def test_ref():
     """Test the reference to the py object."""
     ext = PyMxObject()
     ext.bang()
+
+# ----------------------------------------------------------------------------
+# api.Object
+# 
+# subclassed by max object wrapper not directly exposed via Max c-api SDK
+
+cdef class Object(MaxObject):
+    """An abstract wrapper for a Max t_object
+    """
+
+    def __init__(self, name: str, *args, **kwds):
+        self.name = name
+        self._namespace = kwds.get('namespace', 'box')
+        self._classname = kwds.get('classname', 
+            (lambda: (self.__class__.__name__.lower()))()
+        ) # deferred execution to capture subclass class name
+
+        self.ptr = self._object_ptr_from_existing(self._classname, self.name)
+        self.ptr_owner = False
+        if self.ptr is NULL:
+            self.ptr = self._object_ptr_from_new(
+                self._classname, self.name, self._namespace, args)
+            self.ptr_owner = True
+        if self.ptr is NULL:
+            raise ValueError("could not retrieve nor create the "
+                            f"{self._classname} object with name '{name}'")
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} '{self.name}'>"
+
+    # helper methods
+
+    # def call(self, str method, *args):
+    #     """Helper wrapper method around object_method* variants"""
+    #     cdef Atom atom = Atom(*args)
+    #     cdef mx.t_max_err err = mx.MAX_ERR_NONE
+    #     cdef mx.t_symbol* meth = str_to_sym(method)
+
+    #     if len(args) == 0:
+    #         mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
+    #     elif len(args) == 1:
+    #         if isinstance(args[0], str):
+    #             err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
+    #         elif isinstance(args[0], int):
+    #             err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
+    #         elif isinstance(args[0], float):
+    #             err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
+    #         elif isinstance(args[0], MaxObject):
+    #             err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
+    #     else:
+    #         err = mx.object_method_typed(<mx.t_object*>self.ptr,
+    #             str_to_sym(method), atom.size, atom.ptr, NULL)
+    #     if err:
+    #         raise ValueError(f"could not apply single arg to method {method}")
+
+# ----------------------------------------------------------------------------
+# api.Coll
+
+cdef class Coll(Object):
+    """Store and edit a collection of data
+
+    Allows for the storage, organization, editing, and retrieval of
+    different messages.
+    """
+
+    # msg methods
+
+    def bang(self):
+        """Retrieve the next data set
+
+        See the `next` listing.
+        """
+        self.call("bang")
+
+    def get(self, object index):
+        """Retrieve data by index
+        
+        The number refers to the address of a message stored in `coll`. If a
+        message is stored at that address, the stored message is
+        output. If the stored message is a single symbol, it is always
+        prepended with the word `symbol` when output.
+        """
+        if isinstance(index, int):
+            self.call("int", index)
+        elif isinstance(index, float):
+            self.call("float", index)
+        elif isinstance(index, str):
+            self.call("symbol", index)
+        else:
+            raise TypeError(f"type {type(object)} not supported as index")
+
+    def set(self, int index, *args):
+        """Store index and data
+
+        list(int index?, list data?)
+
+        The first value is used as the address (the storage location within
+        `coll`) at which to store the remaining items in the list. The
+        address will always be stored as an int.
+        """
+        self.call("list", index, args)
+
+    def append(self, *args):
+        """Add item associated with an index
+
+        append(list data?)
+
+        The `append` message creates a new item associated with an index that
+        is one larger than the highest current index. For example, if
+        the `coll` is empty, `append xyz` will add an item `xyz`
+        associated with the index 0. `append xyz` a second time will
+        add another item `xyz` associated with the index 1.
+        """
+        self.call("append", *args)
+
+    def assoc(self, str address_name, int data_index):
+        """Associate a name with an index
+
+        assoc(symbol address name?, int data index?)
+
+        Associates a symbol with the numeric address, provided that the number
+        address already exists. After association, any reference to
+        that symbol will be interpreted as a reference to the number
+        address. Each number address can have only one symbol
+        associated with it.
+        """
+        self.call("assoc", address_name, data_index)
+
+    def clear(self):
+        """Clear all data"""
+        self.call("clear")
+
+    def deassoc(self, str address_name, int data_index):
+        """De-associate a name with an index
+
+        deassoc(symbol address name?, int data index?)
+
+        Removes the association between a symbol and the number address. The
+        symbol will no longer have any meaning to `coll`.
+        """
+        self.call("deassoc", address_name, data_index)
+
+    def delete(self, object index):
+        """Remove data and renumber
+
+        delete(any index?)
+
+        Removes the data at the address provided. If the specified address is
+        numeric, all higher numbered addresses are decremented by 1.
+        """
+        self.call("delete", index)
+
+    def dump(self):
+        """Output all data
+
+        Sends all of the stored addresses out the 2nd outlet and all of the
+        stored messages out the 1st outlet, in the order in which they
+        are stored. A `bang` is sent out the 4th outlet when the dump
+        is completed.
+        """
+        self.call("dump")
+
+    def end(self):
+        """Move to last address
+
+        Sets the pointer (as used by the `goto`, `next`, and `prev` messages)
+        to the last address.
+        """
+        self.call("end")
+
+    def filetype(self, str filetype = ""):
+        """Set the recognized file types
+
+        filetype(symbol filetype?)
+
+        Sets the file types which can be read and written into the `coll`
+        object. The message `filetype` with no arguments restores the
+        default file behavior.
+        """
+        if not filetype:
+            self.call("filetype")
+        else:
+            self.call("filetype", filetype)
+
+    def embed(self, int save_setting, int unused = 0):
+        """Set the file-save flag (renamed for consistency)
+
+        flags(int save-setting?, int unused?)
+
+        Sets the flags used to save its contents within the patch that
+        contains it. The message `flags 1 0` notifies the object to
+        save its contents as part of the patcher file. The message
+        `flags 0 0` causes the contents not to be saved.
+        """
+        self.call("flags", save_setting, unused)
+
+    def goto(self, object index):
+        """Move to an index
+
+        goto(list index?)
+
+        Sets the pointer (as used by the `goto`, `next`, and `prev` messages)
+        at a specific address, but does not trigger output. If the
+        specified address does not exist, the pointer is set at the
+        beginning of the collection. Data will be output in response
+        to a subsequent `bang`, `next`, or `prev` message.
+        """
+        self.call("goto", index)
+
+    def insert(self, int index, *args):
+        """Insert data at a specific address
+
+        insert(int index?, list data?)
+
+        Inserts the message at the address specified by the number,
+        incrementing all equal or greater addresses by 1 if necessary.
+        """
+        self.call("insert", args)
+
+    def insert2(self, int index, *args):
+        """Insert data at a specific address
+
+        insert2(int index?, list data?)
+
+        See the `insert` listing.
+        """
+        self.call("insert2", args)
+
+    def length(self):
+        """Retrieve the number of entries
+
+        Counts the number of entries contained in the `coll` and sends the
+        number out the 1st outlet.
+        """
+        self.call("length")
+
+    def max(self, int element = 1):
+        """Return the highest numeric value
+
+        max(int element?)
+
+        Gets the highest value in any entry. An optional integer argument
+        (defaults to '1') specifies an element position to use.
+        """
+        self.call("max", element)
+
+    def merge(self, int index, *args):
+        """Merge data at an existing address
+
+        merge(int index?, list data?)
+
+        Appends data at the end of the data found at the specified index. If
+        the address does not yet exist, it is created.
+        """
+        self.call("merge", index, args)
+
+    def min(self, int element = 1):
+        """Return the lowest numeric value
+
+        min(int element?)
+
+        Gets the lowest value in any entry. An optional integer argument
+        (defaults to '1') specifies an element position to use.
+        """
+        self.call("min", element)
+
+    def next(self):
+        """Move to the next address
+
+        Sends the address and data stored at the current address, then sets
+        the pointer to the next address. If the pointer is currently
+        at the last address in the collection, it wraps around to the
+        first address. If the address is a symbol rather than a
+        number, `0` is sent out the second outlet.
+        """
+        self.call("next")
+
+    def nstore(self, int index, str association, *args):
+        """Store data with both number and symbol index
+
+        nstore(int index?, symbol association?, list data?)
+
+        Stores the message at the specified number address, with the specified
+        symbol associated. This has the same effect as storing the
+        message at an int address, then using the `assoc` message to
+        associate a symbol with that number.
+        """
+        self.call("nstore", index, association, *args)
+
+    def nsub(self, int index, int position, object data):
+        """Replace a single data element
+
+        nsub(int index?, int position?, any data?)
+
+        Replaces a data element with a new value. As an example, `nsub 2 4 7`
+        replaces the fourth element of address 2 with the value 7.
+        Number values and symbols can both be substituted in this
+        manner.
+        """
+        self.call("nsub", index, position, data)
+
+    def nth(self, int index, int position):
+        """Return a single data element
+
+        nth(int index?, int position?)
+
+        Returns the data element found at a specific position in the stored
+        list and send it out the first outlet. As an example, `nth 75
+        2` will output the second item in the list stored at address
+        75.
+        """
+        self.call("nth", index, position)
+
+    def open(self):
+        """Open a data editing window
+
+        Opens a data editing window for the current data and bring it into
+        focus.
+        """
+        self.call("end")
+
+    def prev(self):
+        """Move to the previous address
+
+        Sends the address and data stored at the current address, then sets
+        the pointer to the previous address. If the pointer is
+        currently at the first address in the collection, it wraps
+        around to the last address. If the address is a symbol rather
+        than a number, `0` is sent out the second outlet.
+        """
+        self.call("prev")
+
+    def read(self, str filename):
+        """Choose a file to load
+
+        read(symbol filename?)
+
+        With no arguments, `read` puts up a standard Open Document dialog box
+        to choose a file to load. If an argument is provided, the
+        named file is loaded.
+        """
+        self.call("read", filename)
+
+    def readagain(self):
+        """Reload a file
+
+        Loads the contents of the most recently read file. If no prior file
+        load has occurred, the request is treated like a `read`
+        message.
+        """
+        self.call("readagain")
+
+    def refer(self, str object_name):
+        """Change data reference
+
+        refer(symbol object name?)
+
+        Changes the reference to the data in another named `coll` object.
+        Changes to the data stored in any referenced `coll` will be
+        shared by all other objects with the same name.
+        """
+        self.call("refer", object_name)
+
+    def remove(self, object index):
+        """Remove an entry
+
+        remove(any index?)
+
+        Removes that address and its contents from the collection.
+        """
+        self.call("remove", index)
+
+    def renumber(self, int data_index=0):
+        """Renumber entries
+
+        renumber(int data index?)
+
+        Renumbers data entries as consecutive and in increasing order. The
+        optional argument specifies the starting number address for
+        the data.
+        """
+        self.call("renumber", data_index)
+
+    def renumber2(self, int data_index):
+        """Increment indices by one
+
+        renumber2(int data index?)
+        """
+        self.call("renumber2", data_index)
+
+    def separate(self, int data_index):
+        """Creates an open entry index
+
+        separate(int data index?)
+
+        Increments the numerical indices for all data whose index is greater
+        than the provided. This creates an open 'slot' for a
+        subsequent add.
+        """
+        self.call("separate", data_index)
+
+    def sort(self, int sort_order = -1, int entry = -1):
+        """Sort the data
+
+        sort(int sort order (-1 or 1)?, int entry (-1, 0, or 1)?)
+
+        Sorts the data into a specified order. If the first argument is `-1`,
+        the items are sorted in ascending order. If the first argument
+        is `1`, the items are sorted in descending order.
+        """
+        self.call("sort", sort_order, entry)
+
+    def start(self):
+        """Move to the first entry
+
+        Sets the pointer (used by the `goto`, `next`, and `prev` messages) to
+        the first address in the `coll`.
+        """
+        self.call("start")
+
+    def store(self, str index, *args):
+        """Store data at a symbolic index
+
+        store(symbol index?, list data?)
+
+        Stores the message at an address named by the provided symbol. As an
+        example, `store triad 0 4 7` will store `0 4 7` at an address
+        named `triad`.
+        """
+        self.call("store", index, args)
+
+    def sub(self, int index, int position, *args):
+        """Replace a data element, output data
+
+        sub(int index?, int position?, list data?)
+
+        Same as `nsub`, except that the message stored at the specified
+        address is sent out after the item has been substituted.
+        """
+        self.call("sub", index, position, args)
+
+    def subsym(self, str new_name, str old_name):
+        """Changes an index symbol
+
+        subsym(symbol new name?, symbol old name?)
+
+        Changes the symbol associated with data. The first argument is the new
+        symbol to use, the second argument is the symbol associator to
+        replace.
+        """
+        self.call("subsym", new_name, old_name)
+
+    def swap(self, int index1, int index2):
+        """Swap two indices
+
+        swap(int index?, int index?)
+
+        Exchanges the indices associated with two addresses. The data is
+        unchanged, but the indexes that they use are swapped.
+        """
+        self.call("swap", index1, index2)
+
+    def wclose(self):
+        """Close the data editing window
+        """
+        self.call("wclose")
+
+    def write(self, str filename):
+        """Write the data to a disk file
+
+        write(symbol filename?)
+
+        With no arguments, `write` puts up a standard Open Document dialog box
+        to choose a filename to write. If an argument is provided, the
+        name is used as a filename for storage.
+        """
+        self.call("write", filename)
+
+    def writeagain(self):
+        """Rewrite a file
+
+        Saves the contents to the most recently written file. If no prior file
+        write has occurred, the request is treated like a `write`
+        message.
+        """
+        self.call("writeagain")
+
+# ----------------------------------------------------------------------------
+# api.Array
+
+cdef class Array(Object):
+    """Create or duplicate an array object
+
+    Create or duplicate a named array object.
+    """
+
+    def bang(self):
+        """Trigger output
+
+        Output the current array.
+        """
+        self.call("bang")
+
+    def int(self, int value):
+        """Convert an integer to an array
+
+        int(int value?)
+
+        Convert an integer to an array. The integer will be placed inside of
+        an array, which will be sent to the outlet.
+        """
+        self.call("int", value)
+
+    def float(self, float value):
+        """Convert a floating-point number to an array
+
+        float(float value?)
+
+        Convert a floating-point number to an array. The floating-point number
+        will be placed inside of an array, which will be sent to the
+        outlet.
+        """
+        self.call("float", value)
+
+    def list(self, *list_value):
+        """Convert a list to an array
+
+        list(list list-value?)
+
+        Convert a list to an array. The contents of the list will be placed
+        inside the array, which will be sent to the outlet.
+        """
+        self.call("list", *list_value)
+
+    def anything(self, *list_value):
+        """Convert a list to an array
+
+        anything(list list-value?)
+
+        Convert a list to an array. The contents of the list will be placed
+        inside the array, which will be sent to the outlet.
+        """
+        self.call("anything", list_value)
+
+    def append(self, *value):
+        """Append a value to the end of the current array
+
+        append(list value?)
+
+        Append a value to the end of the current array. The array will not be
+        output in response to this message. Use `bang` to force
+        output.
+        """
+        self.call("append", value)
+
+    def array(self, *args):
+        """Make a copy of an array
+
+        array(list ARG_NAME_0?)
+
+        Make a copy of an array. The incoming array will be cloned and passed
+        to the outlet.
+        """
+        self.call("array", args)
+
+    def atoms(self):
+        """Output the current array as a list
+
+        Output the current array as a list out of the `array` objects middle
+        outlet. The elements of the array will be output as a Max
+        list.
+        """
+        self.call("atoms")
+
+    def clear(self):
+        """Clear the current array
+
+        Clear the current array. The (now empty) array will not be output in
+        response to this message. Use `bang` to force output.
+        """
+        self.call("clear")
+
+    def delete(self, int index):
+        """Delete an entry in the array
+
+        delete(int index?)
+
+        Delete an entry in the array. The indexed element will be removed from
+        the array (indices are 0-based). The array will not be output
+        in response to this message. Use `bang` to force output.
+        """
+        self.call("delete", index)
+
+    def dictionary(self, *dictionary_value):
+        """Wrap a dictionary in an array
+
+        dictionary(list dictionary-value?)
+
+        Wrap a dictionary in an array. The dictionary will be placed inside of
+        an array, which will be sent to the outlet.
+        """
+        self.call("dictionary", dictionary_value)
+
+    def get(self, int index):
+        """Get an array element
+
+        get(int index?)
+
+        Get an array element. The element will be passed to the rightmost
+        outlet in the form `get [index] [value]`.
+        """
+        self.call("get", index)
+
+    def insert(self, int index, *value):
+        """Insert a value into the current array
+
+        insert(int index?, list value?)
+
+        Insert a value into the current array. A new array element will be
+        created at the index provided, with the supplied value. Any
+        existing array elements will be shifted to make room for the
+        new element. The array will not be output in response to this
+        message. Use `bang` to force output.
+        """
+        self.call("insert", index, value)
+
+    def prepend(self, *value):
+        """Place a new entry at the start of the current array
+
+        prepend(list value?)
+
+        Place a new entry at the start of the current array. The array will
+        not be output in response to this message. Use `bang` to force
+        output.
+        """
+        self.call("prepend", value)
+
+    def replace(self, int index, *value):
+        """Replace a value in the current array
+
+        replace(int index?, list value?)
+
+        Replace a value in the current array at an existing index. The array
+        will not be output in response to this message. Use `bang` to
+        force output.
+        """
+        self.call("replace", index, value)
+
+    def reserve(self, int number_of_entries):
+        """Reserve memory for a provided number of entries (doesn't resize array)
+
+        reserve(int number-of-entries?)
+
+        Reserve memory for a provided number of entries (doesn't resize
+        array). This is rarely needed, as the object manages its own
+        memory and grows as necessary. If the desired array size is
+        known, and re-allocation of the array needs to be avoided,
+        this message can be used to ensure that the `array` object is
+        pre-allocated to the desired size.
+        """
+        self.call("reserve", number_of_entries)
+
+    def shrink(self):
+        """Reduce memory usage to the current array object length
+
+        Reduce memory usage to the current array object length. This is rarely
+        needed. The `array` object does not automatically shrink if
+        its contents are removed or cleared, this message can be used
+        to ensure that the object doesn't use more resources than
+        necessary.
+        """
+        self.call("shrink")
+
+    def string(self, *string_value):
+        """Wrap a string in an array
+
+        string(list string-value?)
+
+        Wrap a string in an array. The string will be placed inside of an
+        array, which will be sent to the outlet.
+        """
+        self.call("string", string_value)
 
 # ----------------------------------------------------------------------------
 # numpy c-api import example

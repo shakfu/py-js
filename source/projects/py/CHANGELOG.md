@@ -2,7 +2,7 @@
 
 ## [0.3.x]
 
-- Added `api.Object`, a subclass of `api.MaxObject`, to act as a superclass to class wrappers which don't have special treatment on the Max c-api and can be called by the usual obex methods.  
+- Added `api.Object`, a subclass of `api.MaxObject`, to act as a superclass to class wrappers which don't have special treatment in the Max c-api and can be called by the usual obex-style methods. Converted the `api.Coll` to be a subclass of `api.Object` with docs generated from the `coll.maxref.xml` using the `source/scripts/maxref.py` script.
 
 - Added `api.Coll` with tests and examples, for python control of `coll` objects.
 
