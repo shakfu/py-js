@@ -4,28 +4,28 @@ This is a 'builtin' module, written in cython, which wraps and exposes parts of
 the Max/MSP c-api python code while using `py` external.
 
 Extension Classes:
-- AbstractMaxObject: abstract class for basic t_object* based object
-- MaxObject: Base wrapper for Max t_object* objects
-- Atom: Wrapper for Max mx.t_atom* atoms/messages
-- Coll: Wrapper for max coll objects
-- Table: Interface to Max tables
-- Buffer: Interface to MSP buffers
-- Dictionary: Interface to Max dictionaries
-- DatabaseView: Interface to Max database views
-- DatabaseResult: Interface to Max database results
-- Database: Interface to Max databases
-- List: Interface to Max linked lists
-- Binbuf: Interface to Max binbufs
-- Atombuf: Interface to Max atom buffers
-- Hashtab: Interface to Max hash tables
-- AtomArray: Interface to Max atom arrays
-- Patcher: Interface to Max patchers
-- Box: Interface to Max boxes/objects
-- MaxApp: Interface to the Max application
-- Matrix: Interface to Max jit matrices
-- Path: Interface to Max path handling
-- PyExternal: Main interface for Python externals
-- PyMxObject: Alternative external extension type (obj pointer retrieved via uintptr_t)
+- MaxObject: generic wrapper for Max t_object* objects
+- Object(MaxObject): to be used as superclass for simple max objects
+- Atom: wrapper for Max mx.t_atom* atoms/messages
+- Coll(Object): wrapper for max coll objects
+- Table: wrapper for Max tables
+- Buffer: wrapper for MSP buffers
+- Dictionary: wrapper for Max dictionaries
+- DatabaseView: wrapper for Max database views
+- DatabaseResult: wrapper for Max database results
+- Database: wrapper for Max databases
+- List: wrapper for Max linked lists
+- Binbuf: wrapper for Max binbufs
+- Atombuf: wrapper for Max atom buffers
+- Hashtab: wrapper for Max hash tables
+- AtomArray: wrapper for Max atom arrays
+- Patcher: wrapper for Max patchers
+- Box: wrapper for Max boxes/objects
+- MaxApp: wrapper for the Max application
+- Matrix: wrapper for Max jit matrices
+- Path: wrapper for Max path handling
+- PyExternal: wrapper for the `py` external
+- PyMxObject: Alternative `py` external extension type (obj pointer retrieved via uintptr_t)
 
 Helper Functions:
 - Global utility functions for common Max operations
@@ -187,14 +187,13 @@ Rgba = namedtuple('Rgba', ['red', 'green', 'blue', 'alpha'])
 # EXTENSION TYPES
 
 
-
-
 # ----------------------------------------------------------------------------
-# api.AbstractMaxObject
+# api.MaxObject
 
-cdef class AbstractMaxObject:
-    """An abstract wrapper for a Max t_object
+cdef class MaxObject:
+    """An generic wrapper for a Max t_object
     """
+
     cdef mx.t_object* ptr
     cdef bint ptr_owner
     cdef public str name             # registered name
@@ -216,25 +215,26 @@ cdef class AbstractMaxObject:
             mx.object_free(self.ptr)
             self.ptr = NULL
 
-    def __init__(self, name: str, *args, **kwds):
-        self.name = name
+    def __init__(self, str classname, *args, **kwds):
+        self._classname = classname
+        self.name = kwds.get('name', '')
         self._namespace = kwds.get('namespace', 'box')
-        self._classname = kwds.get('classname', 
-            (lambda: (self.__class__.__name__.lower()))()
-        ) # deferred execution to capture subclass class name
 
-        if args:
-            self.ptr = self._object_ptr_from_new(
-                self._classname, self.name, self._namespace, args)
-            self.ptr_owner = True
-        else:
+        # first try to get existing registered object
+        if self.name: # name is required
             self.ptr = self._object_ptr_from_existing(self._classname, self.name)
             self.ptr_owner = False
-        if self.ptr is NULL:
-            raise ValueError(f"could not retrieve the {self._classname} object with name '{name}'")
+            if self.ptr is not NULL:
+                return
+            # else fallthrough and try to create new object
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} '{self.name}'>"
+        self.ptr = self._object_ptr_from_new( 
+            self._classname, self.name, self._namespace, args)
+        self.ptr_owner = True
+        if self.ptr is NULL:
+            raise ValueError(
+                f"could not create {self._classname} {self.name} object")
+
 
     cdef mx.t_object* _object_ptr_from_existing(self, str classname, str name):
         cdef mx.t_object *patcher = NULL
@@ -268,56 +268,6 @@ cdef class AbstractMaxObject:
             return registered
         else:
             return newobj
-
-    # helper methods
-
-    def call(self, str method, *args):
-        """Helper wrapper method around object_method* variants"""
-        cdef Atom atom = Atom(*args)
-        cdef mx.t_max_err err = mx.MAX_ERR_NONE
-        cdef mx.t_symbol* meth = str_to_sym(method)
-
-        if len(args) == 0:
-            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
-        elif len(args) == 1:
-            if isinstance(args[0], str):
-                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
-            elif isinstance(args[0], int):
-                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
-            elif isinstance(args[0], float):
-                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
-            elif isinstance(args[0], MaxObject):
-                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
-        else:
-            err = mx.object_method_typed(<mx.t_object*>self.ptr,
-                str_to_sym(method), atom.size, atom.ptr, NULL)
-        if err:
-            raise ValueError(f"could not apply single arg to method {method}")
-
-# ----------------------------------------------------------------------------
-# api.MaxObject
-
-cdef class MaxObject(AbstractMaxObject):
-
-    def __init__(self, str classname, *args, **kwds):
-        self._classname = classname
-        self.name = kwds.get('name', '')
-        self._namespace = kwds.get('namespace', 'box')
-
-        # first try to get existing registered object
-        if self.name: # name is required
-            self.ptr = self._object_ptr_from_existing(self._classname, self.name)
-            self.ptr_owner = False
-            if self.ptr is not NULL:
-                return
-            # else fallthrough and try to create new object
-
-        self.ptr = self._object_ptr_from_new( 
-            self._classname, self.name, self._namespace, args)
-        self.ptr_owner = True
-        if self.ptr is NULL:
-            raise ValueError(
-                f"could not create {self._classname} {self.name} object")
 
     def __repr__(self) -> str:
         return f"<MaxObject {self._classname} '{self.name}'>"
@@ -759,6 +709,60 @@ cdef class MaxObject(AbstractMaxObject):
         """Open a search in the file browser for files with the name of the given class."""
         mx.classname_openquery(self.classname.encode())
 
+    
+# ----------------------------------------------------------------------------
+# api.Object
+
+cdef class Object(MaxObject):
+    """An abstract wrapper for a Max t_object
+    """
+
+    def __init__(self, name: str, *args, **kwds):
+        self.name = name
+        self._namespace = kwds.get('namespace', 'box')
+        self._classname = kwds.get('classname', 
+            (lambda: (self.__class__.__name__.lower()))()
+        ) # deferred execution to capture subclass class name
+
+        if args:
+            self.ptr = self._object_ptr_from_new(
+                self._classname, self.name, self._namespace, args)
+            self.ptr_owner = True
+        else:
+            self.ptr = self._object_ptr_from_existing(self._classname, self.name)
+            self.ptr_owner = False
+        if self.ptr is NULL:
+            raise ValueError(f"could not retrieve the {self._classname} object with name '{name}'")
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} '{self.name}'>"
+
+    # helper methods
+
+    def call(self, str method, *args):
+        """Helper wrapper method around object_method* variants"""
+        cdef Atom atom = Atom(*args)
+        cdef mx.t_max_err err = mx.MAX_ERR_NONE
+        cdef mx.t_symbol* meth = str_to_sym(method)
+
+        if len(args) == 0:
+            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
+        elif len(args) == 1:
+            if isinstance(args[0], str):
+                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
+            elif isinstance(args[0], int):
+                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
+            elif isinstance(args[0], float):
+                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
+            elif isinstance(args[0], MaxObject):
+                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
+        else:
+            err = mx.object_method_typed(<mx.t_object*>self.ptr,
+                str_to_sym(method), atom.size, atom.ptr, NULL)
+        if err:
+            raise ValueError(f"could not apply single arg to method {method}")
+
+
 # ----------------------------------------------------------------------------
 # api.Atom
 
@@ -1192,7 +1196,7 @@ cdef class Atom:
 # ----------------------------------------------------------------------------
 # api.Coll
 
-cdef class Coll(AbstractMaxObject):
+cdef class Coll(Object):
     """Store and edit a collection of data
 
     Allows for the storage, organization, editing, and retrieval of

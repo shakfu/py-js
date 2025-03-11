@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Added `api.Object`, a subclass of `api.MaxObject`, to act as a superclass to class wrappers which don't have special treatment on the Max c-api and can be called by the usual obex methods.  
+
 - Added `api.Coll` with tests and examples, for python control of `coll` objects.
 
 - Added `apply` method to `py`, so you can call python functions with the classic python function calling syntax: `func(*args, **kwds)` by sending a max-friendly msg syntax to a `py` instance as follows:
