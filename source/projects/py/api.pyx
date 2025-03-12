@@ -19,7 +19,7 @@ Extension Classes:
 - AtomArray: wrapper for Max atom arrays
 - Patcher: wrapper for Max patchers
 - Box: wrapper for Max boxes/objects
-- MaxApp: wrapper for the Max application
+- Max: wrapper for the Max application
 - Matrix: wrapper for Max jit matrices
 - Path: wrapper for Max path handling
 - PyExternal: wrapper for the `py` external
@@ -3180,7 +3180,7 @@ cdef class Binbuf:
         Thanks to 11OLSEN for the nifty solution
         https://cycling74.com/forums/on-the-current-utility-of-binbufs-and-atombufs
         """ 
-        cdef MaxApp app = MaxApp()
+        cdef Max app = Max()
         cdef mx.t_object* clipboard = <mx.t_object*>mx.object_new(
             mx.gensym("nobox"), mx.gensym("clipboard"))
         self.add_text(text)
@@ -4694,120 +4694,18 @@ cdef class Box:
         return sym_to_str(_id)
 
 # ----------------------------------------------------------------------------
-# api.MaxApp
+# api.Max
 
-cdef class MaxApp:
+cdef class Max(Object):
     """A class to enable messages to the 'max' application."""
 
-    cdef mx.t_object *ptr
-
-    def __cinit__(self):
+    def __init__(self):
         self.ptr = <mx.t_object*>mx.object_new(
             mx.gensym("nobox"), mx.gensym("max"))
-
-    def __dealloc__(self):
-        if self.ptr:
-            mx.object_free(self.ptr)
+        self.ptr_owner = False
 
     def __repr__(self) -> str:
-        return "<MaxApp>"
-
-    def _method_noargs(self, str name):
-        """Call an object method with no arguments."""
-        cdef mx.t_max_err err = mx.object_method_typed(
-            <mx.t_object *>self.ptr, str_to_sym(name), 0, NULL, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    def _method_args(self, str name, *args):
-        """Call a strongly typed object method with arguments."""
-        cdef Atom atom = Atom(*args)
-        cdef mx.t_max_err err = mx.object_method_typed(
-            <mx.t_object *>self.ptr, str_to_sym(name), atom.size, atom.ptr, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    def _method_parsestr(self, str name, str parsestr):
-        """Call a method and define its arguments using object_method_parse().
-        
-        Combines object_method_typed() and atom_setparse() to define method arguments.
-        """
-        cdef mx.t_max_err err = mx.object_method_parse(
-            <mx.t_object *>self.ptr, str_to_sym(name), parsestr.encode(), NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    def _method_float(self, str name, float number):
-        """Call an object's method using a single float as an argument.
-
-        A wrapper for object_method_typed() that passes a single float as an argument.
-        """
-        cdef mx.t_max_err err = mx.object_method_float(
-            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    def _method_double(self, str name, double number):
-        """Call an object's method using a single double as an argument.
-
-        A wrapper for object_method_typed() that passes a single double as an argument.
-        """
-        cdef mx.t_max_err err = mx.object_method_double(
-            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    def _method_long(self, str name, long number):
-        """Call an object's method using a single long as an argument.
-
-        A wrapper for object_method_typed() that passes a single long as an argument.
-        """
-        cdef mx.t_max_err err = mx.object_method_long(
-            <mx.t_object *>self.ptr, str_to_sym(name), number, NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    def _method_sym(self, str name, str symbol):
-        """Call an object's method using a single t_symbol as an argument.
-
-        A wrapper for object_method_typed() that passes a single t_symbol as an argument.
-        """
-        cdef mx.t_max_err err = mx.object_method_sym(
-            <mx.t_object *>self.ptr, str_to_sym(name), str_to_sym(symbol), NULL)
-        if err == mx.MAX_ERR_NONE:
-            return
-        return error(f"method '{name}' call failed")
-
-    def call(self, str name, *args, parse=False):
-        """Call an object's method (strongly typed).
-
-        A general call function for object methods that are strongly typed.
-        """
-        if len(args) == 0:
-            return self._method_noargs(name)
-        elif len(args) == 1:
-            if isinstance(args[0], str):
-                if parse:
-                    return self._method_parsestr(name, args[0])
-                else:
-                    return self._method_sym(name, args[0])
-            elif isinstance(args[0], float):
-                return self._method_double(name, args[0])
-            elif isinstance(args[0], int):
-                return self._method_long(name, args[0])
-            elif isinstance(args[0], list):
-                return self.call(name, *args[0])
-            elif isinstance(args[0], tuple):
-                return self.call(name, *args[0])
-        else:
-            return self._method_args(name, *args)
-
+        return "<Max>"
 
     def clean(self):
         """Call the 'clean' method on the application object."""
