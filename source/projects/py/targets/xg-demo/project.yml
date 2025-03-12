@@ -2,6 +2,7 @@ name: demo
 options:
   bundleIdPrefix: org.me
 settings:
+  ARCHS: $(NATIVE_ARCH)
   MACOSX_DEPLOYMENT_TARGET: "10.13"
   CODE_SIGN_IDENTITY: "-"
   DEVELOPMENT_TEAM: ""
