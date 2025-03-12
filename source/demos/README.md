@@ -5,7 +5,7 @@ This folder serves as a place for testing ideas and prototyping external impleme
 ## Building
 
 ```sh
-make demo
+make demos
 ```
 
 

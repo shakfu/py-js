@@ -119,7 +119,7 @@ all: default
 # High-Level
 # -----------------------------------------------------------------------
 .PHONY: default local-sys core projects \
-		demos net thirdparty mpy \
+		demos net thirdparty mpy mambo \
 		dev ninja \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
@@ -153,6 +153,15 @@ projects: clean-build-dir clean-externals
 			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
 			-DBUILD_POCKETPY_EXTERNALS=ON \
 			-DBUILD_DEMO_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+mambo: clean-externals
+	$(call section,"building mambo using cmake with xcode")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
 			&& \
 		cmake --build . --config Release
 
