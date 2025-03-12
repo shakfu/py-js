@@ -398,7 +398,7 @@ BASE_CONFIG = {
         "math",
         "mmap",
         "pyexpat",
-        "readline",
+        # "readline", # disable by default for externals
         "select",
         "unicodedata",
         "zlib",
@@ -421,6 +421,7 @@ BASE_CONFIG = {
         "audioop",
         "nis",
         "ossaudiodev",
+        "readline",
         "resource",
         "spwd",
         "syslog",
@@ -559,7 +560,7 @@ class PythonConfig311(Config):
             "_sqlite3",
             "_ssl",
             "pyexpat",
-            "readline",
+            # "readline", # already disabled by default
         )
 
     def static_bootstrap(self):
@@ -582,8 +583,13 @@ class PythonConfig311(Config):
         """framework build variant max-size"""
         self.shared_max()
         self.move_static_to_shared(
-            "_bz2", "_lzma", "readline", "_sqlite3",
-            "_scproxy", "zlib", "binascii",
+            "_bz2",
+            "_lzma",
+            # "readline",
+            "_sqlite3",
+            "_scproxy",
+            "zlib",
+            "binascii",
         )
 
     def framework_mid(self):
@@ -1077,7 +1083,7 @@ class AbstractBuilder(ShellCmd):
     @property
     def dylib(self) -> Path:
         """dylib path"""
-        return self.project.lib / self.dylib_name
+        return self.prefix / 'lib' / self.dylib_name
 
     @property
     def dylib_link(self) -> Path:
@@ -1087,7 +1093,7 @@ class AbstractBuilder(ShellCmd):
     @property
     def staticlib(self) -> Path:
         """staticlib path"""
-        return self.project.lib_static / self.staticlib_name
+        return self.prefix / 'lib' / self.staticlib_name
 
     @property
     def prefix(self) -> Path:
@@ -1095,7 +1101,7 @@ class AbstractBuilder(ShellCmd):
         return self.project.install / self.name.lower()
 
     def libs_static_exist(self) -> bool:
-        """check if all built stati libs already exist"""
+        """check if all built static libs already exist"""
         return all((self.prefix / "lib" / lib).exists()
                     for lib in self.libs_static)
 
@@ -1259,7 +1265,7 @@ class PythonBuilder(Builder):
         # "--with-system-libmpdec",
         # "--without-builtin-hashlib-hashes",
         # "--without-doc-strings",
-        # "--without-ensurepip",
+        "--without-ensurepip",
         # "--without-readline",
         # "--without-static-libpython",
     ]
@@ -1480,9 +1486,36 @@ class PythonBuilder(Builder):
             self.make_relocatable()
         self.log.info("%s DONE", self.config)
 
+    def can_run(self) -> bool:
+        """check if a run is merited"""
+        if not all(dep().libs_static_exist() for dep in self.depends_on):
+            return True # dependencies not built
+
+        if self.build_type == "static":
+            self.log.debug('staticlib path: %s', self.staticlib)
+            self.log.debug("staticlib exists: %s", self.staticlib.exists())
+            if not self.staticlib.exists():
+                # staticlib not built
+                return True
+        else:
+            self.log.debug("dylib path: %s", self.dylib)
+            self.log.debug("dylib exists: %s", self.dylib.exists())
+            if not self.dylib.exists():
+                # staticlib not built
+                return True
+
+        # if all tests pass then can run
+        return False
+
 
     def process(self):
         """main builder process"""
+        if not self.can_run():
+            self.log.info("everything built: skipping run")
+            return
+
+        self.log.info("found unbuilt dependencies, proceeding with run")
+        # run build process
         for dependency_class in self.depends_on:
             dependency_class().process()
         self.pre_process()
@@ -1541,9 +1574,15 @@ if __name__ == "__main__":
     python_builder_class: type[PythonBuilder] = PythonBuilder
     if args.debug:
         python_builder_class = PythonDebugBuilder
+
+    if '-' in args.config:
+        _config = args.config.replace('-', '_')
+    else:
+        _config = args.config
+
     builder = python_builder_class(
         version=args.version,
-        config=args.config,
+        config=_config,
         optimize=args.optimize,
         pkgs=args.pkgs,
         cfg_opts=args.cfg_opts,

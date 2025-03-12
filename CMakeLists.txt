@@ -35,11 +35,11 @@ option(BUILD_MICROPYTHON_EXTERNAL "Build the micropython external" OFF)
 
 
 # use ccache if available
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-    message(STATUS "Found ccache in ${CCACHE_PROGRAM}")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
-endif()
+# find_program(CCACHE_PROGRAM ccache)
+# if(CCACHE_PROGRAM)
+#     message(STATUS "Found ccache in ${CCACHE_PROGRAM}")
+#     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+# endif()
 
 if (ENABLE_LTO_IPO)
     include(CheckIPOSupported)

@@ -119,12 +119,13 @@ all: default
 # High-Level
 # -----------------------------------------------------------------------
 .PHONY: default local-sys core projects \
-		demos net thirdparty mpy mambo \
+		demos net thirdparty mpy \
 		dev ninja \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
-		static-pkg static-ext static-tiny-ext
+		static-pkg static-ext static-tiny-ext \
+		mambo mambo-static mambo-shared mambo-framework
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -156,12 +157,36 @@ projects: clean-build-dir clean-externals
 			&& \
 		cmake --build . --config Release
 
-mambo: clean-externals
-	$(call section,"building mambo using cmake with xcode")
+mambo-shared: clean-externals
+	$(call section,"building mambo-shared")
+	@./source/scripts/buildpy.py -c shared-mid
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_DYNAMIC=ON \
+			&& \
+		cmake --build . --config Release
+
+mambo-framework: clean-externals
+	$(call section,"building mambo-framework")
+	@./source/scripts/buildpy.py -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_FRAMEWORK=ON \
+			&& \
+		cmake --build . --config Release
+
+mambo-static: clean-externals
+	$(call section,"building mambo-static")
+	@./source/scripts/buildpy.py -c static-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_STATIC=ON \
 			&& \
 		cmake --build . --config Release
 
