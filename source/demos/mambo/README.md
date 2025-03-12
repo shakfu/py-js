@@ -6,7 +6,7 @@
 
 1. Build Relocatable Python
 
-Python is downloaded from python.org, built from source, and prepared for embedding.
+Python source code (current version) is downloaded from python.org, configured, built, shrunk and prepared for embedding.
 
 ```sh
 ./source/scripts/buildpy.py
@@ -15,9 +15,17 @@ Python is downloaded from python.org, built from source, and prepared for embedd
 2. Build the external
 
 ```sh
-make mambo
+make mambo-shared
 ```
 
+for a dynamically-linked build, and 
+
+
+```
+make mambo-static
+```
+
+for a statically-linked build.
 
 3. Test it
 
