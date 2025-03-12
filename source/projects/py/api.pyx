@@ -1143,32 +1143,43 @@ cdef class Atom:
         """set object value into an array of atoms."""
         return mx.atom_setobjval(&self.size, <mx.t_atom **>&self.ptr, obj)
 
-
-
 # ----------------------------------------------------------------------------
 # api.Table
 
-cdef class Table:
+cdef class Table(Object):
     """A wrapper class to acess a pre-existing Max table"""
 
-    cdef mx.t_object* ptr
-    cdef public str name
     cdef long **storage
     cdef readonly long size
 
     def __cinit__(self):
         self.ptr = NULL
-        self.name = None
+        self.ptr_owner = False
+        self.name = ""
+        self._classname = ""
+        self._namespace = 'box'
+        self.type_map = {}
         self.storage = NULL
         self.size = 0
 
-    def __init__(self, str name):
-        self.ptr = self._table_ptr_from_name(name)
-        if self.ptr is NULL:
-            raise TypeError("couild not create a table t_object* ptr")
+    def __init__(self, name: str, *args, **kwds):
         self.name = name
-        check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
-        assert check == 0, f"table with name '{name}' doesn't exist"
+        self._namespace = kwds.get('namespace', 'box')
+        self._classname = "table"
+
+        self.ptr = self._object_ptr_from_existing(self._classname, name)
+        self.ptr_owner = False
+        if self.ptr is not NULL:
+            check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
+            if check == 0: # i.e is found
+                return
+
+        self.ptr = self._object_ptr_from_new(
+            self._classname, self.name, self._namespace, args)
+        self.ptr_owner = True
+        if self.ptr is NULL:
+            raise ValueError("could not retrieve nor create the "
+                            f"{self._classname} object with name '{name}'")
 
     def __repr__(self) -> str:
         return f"<Table '{self.name}' size:{self.size}>"
@@ -1185,48 +1196,7 @@ cdef class Table:
     def __iter__(self):
         return iter(self.as_list())
 
-    cdef mx.t_object* _table_ptr_from_name(self, str table_name):
-        cdef mx.t_object *patcher = NULL
-        cdef mx.t_object *box = NULL
-        cdef mx.t_object *obj = NULL
-        cdef px.t_py *x = <px.t_py*>px.py_get_object_ref()
-
-        mx.object_obex_lookup(x, mx.gensym("#P"), &patcher)
-        box = mx.jpatcher_get_firstobject(patcher)
-        while box is not NULL:
-            obj = mx.jbox_get_object(box)
-            if obj:
-                if mx.object_classname(obj) == mx.gensym("table"):
-                    if mx.object_attr_getsym(obj, mx.gensym("name")) == str_to_sym(table_name):
-                        post(f"found table named {table_name}")
-                        return obj
-            box = mx.jbox_get_nextobject(box)
-        return NULL
-
     # helper methods
-
-    def call(self, str method, *args):
-        """Helper wrapper method around object_method* variants"""
-        cdef Atom atom = Atom(*args)
-        cdef mx.t_max_err err = mx.MAX_ERR_NONE
-        cdef mx.t_symbol* meth = str_to_sym(method)
-
-        if len(args) == 0:
-            mx.object_method(<mx.t_object*>self.ptr, str_to_sym(method))
-        elif len(args) == 1:
-            if isinstance(args[0], str):
-                err = mx.object_method_sym(self.ptr, meth, str_to_sym(args[0]), NULL)
-            elif isinstance(args[0], int):
-                err = mx.object_method_long(self.ptr, meth, <long>args[0], NULL)
-            elif isinstance(args[0], float):
-                err = mx.object_method_float(self.ptr, meth, <float>args[0], NULL)
-            elif isinstance(args[0], MaxObject):
-                err = mx.object_method_obj(self.ptr, meth, <mx.t_object*>args[0].ptr, NULL)
-        else:
-            err = mx.object_method_typed(<mx.t_object*>self.ptr,
-                str_to_sym(method), atom.size, atom.ptr, NULL)
-        if err:
-            raise ValueError(f"could not apply single arg to method {method}")
 
     def populate(self, list[int] xs):
         """Populate a table from a python list of ints"""
@@ -3582,7 +3552,6 @@ cdef class Hashtab:
             mx.sysmem_freeptr(kv)
         return results
 
-
 # ---------------------------------------------------------------------------
 # api.AtomArray
 
@@ -5501,7 +5470,6 @@ cdef class Matrix:
 
             self.unlock(savelock)
 
-
 # ----------------------------------------------------------------------------
 # api.Path
 
@@ -6300,7 +6268,7 @@ def test_ref():
 # ----------------------------------------------------------------------------
 # api.Object
 # 
-# subclassed by max object wrapper not directly exposed via Max c-api SDK
+# to be subclassed by max object wrapper with special methods in the Max SDK
 
 cdef class Object(MaxObject):
     """An abstract wrapper for a Max t_object
