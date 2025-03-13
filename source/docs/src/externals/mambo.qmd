@@ -2,7 +2,7 @@
 title: "mambo: a single-header c-based python3 library for max externals"
 ---
 
-`mambo` uses the `mamba` single-header in an successful experiment to use the new `source/scripts/buildpy.py` script to build a reloctable python version in the the build directory and then use `cmake` to build this external and embed the python interpreter in the external bundle's `Resource` directory along the lines of what `builder` does with the `py` and `pyjs`
+`mambo` is a variant of the `mamba` single-header library used in concert with the light-weight `buildpy.py` script and `cmake` to build a relocatable python3 external along the lines of what the `builder` module does with the `py` and `pyjs`.
 
 ## Usage
 
