@@ -35,11 +35,11 @@ option(BUILD_MICROPYTHON_EXTERNAL "Build the micropython external" OFF)
 
 
 # use ccache if available
-# find_program(CCACHE_PROGRAM ccache)
-# if(CCACHE_PROGRAM)
-#     message(STATUS "Found ccache in ${CCACHE_PROGRAM}")
-#     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
-# endif()
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "Found ccache in ${CCACHE_PROGRAM}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+endif()
 
 if (ENABLE_LTO_IPO)
     include(CheckIPOSupported)
@@ -98,6 +98,7 @@ if(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS)
 set(BUILD_COBRA_EXTERNAL ON)
 set(BUILD_KRAIT_EXTERNAL ON)
 set(BUILD_MAMBA_EXTERNAL ON)
+set(BUILD_MAMBO_EXTERNAL ON)
 set(BUILD_MXPY_EXTERNAL ON)
 endif()
 
@@ -121,7 +122,6 @@ endif()
 if(BUILD_DEMO_EXTERNALS)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/cmx)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/demo)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/mambo)
 endif()
 
 # thirdparty externals
@@ -151,6 +151,10 @@ endif()
 
 if(BUILD_MAMBA_EXTERNAL)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
+endif()
+
+if(BUILD_MAMBO_EXTERNAL)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mambo)
 endif()
 
 if(BUILD_MXPY_EXTERNAL)
@@ -183,10 +187,6 @@ endif()
 
 if(BUILD_JMX_EXTERNAL)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
-endif()
-
-if(BUILD_MAMBO_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/mambo)
 endif()
 
 

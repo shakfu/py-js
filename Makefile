@@ -668,7 +668,7 @@ cflow:
 	clean-framework-pkg clean-framework-ext \
 	clean-shared-pkg clean-shared-ext \
 	clean-static-pkg clean-static-ext \
-	clean-relocatable-pkg
+	clean-relocatable-pkg clean-mambo
 
 clean: clean-externals clean-support clean-targets clean-build clean-docs
 
@@ -721,6 +721,12 @@ clean-docs:
 clean-support:
 	$(call section,"cleaning support directory")
 	@rm -rf $(ROOTDIR)/support/*
+
+clean-mambo:
+	$(call section,"cleaning mambo")
+	@rm -rf $(ROOTDIR)/build/install/python-shared
+	@rm -rf $(ROOTDIR)/build/install/python-static
+	@rm -rf $(ROOTDIR)/build/install/Python.framework
 
 clean-xcode: clean-build
 	$(call section,"cleaning xcode detritus")

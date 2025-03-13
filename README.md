@@ -28,6 +28,7 @@ name       | sdk        | lang   | description
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
+[mambo]    | max-sdk    | c      | a `mamba` variant with a relocatable python3 interpreter (shared, static, framework)
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 [cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
 [mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
@@ -56,21 +57,6 @@ name       | sdk        | lang   | description
 
 Note: networking (zmq-based) externals are not enabled by default since they require zeromq libraries to be installed. To build them use the `-DBUILD_NETWORKING_EXTERNALS` option with cmake.
 
-[py]: https://github.com/shakfu/py-js/tree/main/source/projects/py
-[pyjs]: https://github.com/shakfu/py-js/tree/main/source/projects/pyjs
-[mxpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mxpy
-[pymx]: https://github.com/shakfu/min.pymx
-[zpy]: https://github.com/shakfu/py-js/tree/main/source/projects/zpy
-[cobra]: https://github.com/shakfu/py-js/tree/main/source/projects/cobra
-[mamba]: https://github.com/shakfu/py-js/tree/main/source/projects/mamba
-[krait]: https://github.com/shakfu/py-js/tree/main/source/projects/krait
-[pktpy]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy
-[pktpy2]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy2
-[zedit]: https://github.com/shakfu/py-js/tree/main/source/projects/zedit
-[mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
-[jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
-[zthread]: https://github.com/shakfu/py-js/tree/main/source/projects/zthread
-
 The common objective in these externals is to help use and distribute python code and libraries in Max applications. Many can be considered experimental, with 80% of development time going to the first two externals (`py` and `pyjs`), and `py` receiving the most recent attention, due to ongoing development of its builtin `api` module which uses cython to wrap a [growing subset of the Max c-api](https://github.com/shakfu/py-js/blob/main/source/projects/py/api.md).
 
 At the time of this writing, and since the switch to [max-sdk-base](https://github.com/cycling74/max-sdk-base), the project has the following compatibility profile:
@@ -79,7 +65,7 @@ At the time of this writing, and since the switch to [max-sdk-base](https://gith
 
 - **Windows**: windows support was provided relatively recently, with currently all Python3 externals and also the `pktpy` projects building without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. One idea to overcome this constraint is to include the external's dependencies in the 'support' folder. This will hopefully be addressed in future iterations. The `pktpy` external, however, is fully portable and self-contained.
 
-The [Quickstart](#quickstart) section below covers general setup for all of the externals, and will get you up and running with the `py` and `pyjs` externals. The [Building Experimental Externals using Cmake](#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios for the `py` and `pyjs` externals with details about their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
+The [Quickstart](#quickstart) section below covers general setup for all of the externals, and will get you up and running with the `py` and `pyjs` externals. More details are provided in the [py] documentation section: the [Building Experimental Externals using Cmake](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios for the `py` and `pyjs` externals with details about their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
 
 If you are interested in more detailed project-specific documentation, please refer to the links in the [Overview](#overview) section which link to respective project folders in the `py-js/source/projects` section.
 
@@ -243,3 +229,18 @@ It's been an education and I have come to understand precisely a quote I remembe
 Thanks to Luigi Castelli for his help with Max/MSP questions, to Stefan Behnel for his help with Cython questions, and to Iain Duncan for providing the initial inspiration and for saving me time with some great implementation ideas.
 
 Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing his elegant solution for Python frameworks via his [relocatable-python](https://github.com/gregneagle/relocatable-python) project on Github.
+
+[py]: https://github.com/shakfu/py-js/tree/main/source/projects/py
+[pyjs]: https://github.com/shakfu/py-js/tree/main/source/projects/pyjs
+[mxpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mxpy
+[pymx]: https://github.com/shakfu/min.pymx
+[zpy]: https://github.com/shakfu/py-js/tree/main/source/projects/zpy
+[cobra]: https://github.com/shakfu/py-js/tree/main/source/projects/cobra
+[mamba]: https://github.com/shakfu/py-js/tree/main/source/projects/mamba
+[krait]: https://github.com/shakfu/py-js/tree/main/source/projects/krait
+[pktpy]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy
+[pktpy2]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy2
+[zedit]: https://github.com/shakfu/py-js/tree/main/source/projects/zedit
+[mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
+[jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
+[zthread]: https://github.com/shakfu/py-js/tree/main/source/projects/zthread

@@ -1,15 +1,17 @@
 
 
-.PHONY: all pdf clean
+.PHONY: all update build pdf clean
 
+all: build
 
+update:
+	@./scripts/update.py
 
-all: pdf
-
+build: update pdf
+	@echo "Update and PDF build complete."
 
 pdf:
 	@quarto render --to pdf
-
 
 clean:
 	@rm -rf .quarto _book

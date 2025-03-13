@@ -1462,7 +1462,6 @@ class PythonBuilder(Builder):
             if self.build_type == "shared":
                 dylib = self.prefix / "lib" / self.dylib_name
                 self.chmod(dylib)
-                # self.cmd(f"install_name_tool -id @rpath/{self.dylib_name} {dylib}")
                 self.cmd(f"install_name_tool -id @loader_path/../Resources/lib/{self.dylib_name} {dylib}")
                 to = f"@executable_path/../lib/{self.dylib_name}"
                 exe = self.prefix / "bin" / self.name_ver
@@ -1470,11 +1469,16 @@ class PythonBuilder(Builder):
             elif self.build_type == "framework":
                 dylib = self.prefix / self.name
                 self.chmod(dylib)
-                self.cmd(f"install_name_tool -id @loader_path/../Resources/Python.framework/Versions/{self.name_ver}/{self.name} {dylib}")
-                # self.cmd(f"install_name_tool -id @rpath/{self.name} {dylib}")
-                to = f"@executable_path/../{self.name}"
+                _id = f"@loader_path/../Resources/Python.framework/Versions/{self.ver}/Python" 
+                self.cmd(f"install_name_tool -id {_id} {dylib}")
+                # changing executable
+                to = f"@executable_path/../Python"
                 exe = self.prefix / "bin" / self.name_ver
                 self.cmd(f"install_name_tool -change {dylib} {to} {exe}")
+                # changing app 
+                to = f"@executable_path/../../../../Python"
+                app = self.prefix / "Resources" / "Python.app" / "Contents" / "MacOS" / "Python"
+                self.cmd(f"install_name_tool -change {dylib} {to} {app}")
         elif PLATFORM == "Linux":
             if self.build_type == "shared":
                 exe = self.prefix / "bin" / self.name_ver

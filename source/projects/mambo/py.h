@@ -184,9 +184,13 @@ void py_error(t_py* x, char* fmt, ...)
  */
 t_py* py_init(t_class* c)
 {
+    wchar_t* python_home = NULL;
+
+#if defined(__APPLE__) && defined(BUILD_STATIC)
     const char* resources_path = string_getptr(
         py_get_path_to_external(c, "/Contents/Resources"));
-    wchar_t* python_home = Py_DecodeLocale(resources_path, NULL);
+    python_home = Py_DecodeLocale(resources_path, NULL);
+#endif
 
     t_py* x = (t_py*)malloc(sizeof(struct t_py));
 

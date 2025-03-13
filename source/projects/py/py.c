@@ -417,10 +417,13 @@ void py_free(t_py* x)
     if (py_global_obj_count == 0) {
         /* WARNING: don't call x here or max will crash */
         hashtab_chuck(py_global_registry);
-
-        post("last py obj freed -> finalizing py mem / interpreter.");
-        // Py_FinalizeEx();
-        Py_Finalize();
+        // post("last py obj freed -> finalizing py mem / interpreter.");
+        if(Py_FinalizeEx()) { // returns 0 if successful, -1 if there were errors
+            error("error finalizing `py`");
+        } else {
+            post("done.");
+        }
+        // Py_Finalize(); // Py_FinalizeEx() without returned value
     }
 }
 

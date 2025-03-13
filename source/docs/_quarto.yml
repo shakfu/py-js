@@ -26,6 +26,7 @@ book:
       chapters:
         - src/externals/krait.qmd
         - src/externals/mamba.qmd
+        - src/externals/mambo.qmd
         - src/externals/cobra.qmd
         - src/externals/mxpy.qmd
 

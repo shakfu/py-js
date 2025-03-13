@@ -13,19 +13,21 @@ MESSAGE(STATUS "BUILD_STATIC: ${BUILD_STATIC}")
 MESSAGE(STATUS "BUILD_FRAMEWORK: ${BUILD_FRAMEWORK}")
 MESSAGE(STATUS "BUILD_DYNAMIC: ${BUILD_DYNAMIC}")
 
-if(BUILD_STATIC)
-    set(Python3_ROOT_DIR "${DEPS_DIR}/python-static")
-endif()
-
-# if(BUILD_FRAMEWORK)
-#     set(Python3_ROOT_DIR "${DEPS_DIR}/Python.framework")
-# endif()
-
 if(BUILD_DYNAMIC)
     set(Python3_ROOT_DIR "${DEPS_DIR}/python-shared")
+    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
 endif()
 
-set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
+if(BUILD_FRAMEWORK)
+    set(Python3_ROOT_DIR "${DEPS_DIR}/Python.framework")
+    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
+endif()
+
+if(BUILD_STATIC)
+    set(Python3_ROOT_DIR "${DEPS_DIR}/python-static")
+    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
+endif()
+
 find_package (Python3 COMPONENTS Interpreter Development REQUIRED)
 
 MESSAGE(STATUS "Python3_ROOT_DIR: ${Python3_ROOT_DIR}")
@@ -62,6 +64,7 @@ target_compile_definitions(
     ${PROJECT_NAME}
     PRIVATE
     -DNDEBUG
+    $<$<BOOL:${BUILD_STATIC}>:-DBUILD_STATIC> # help static find pyhome
 )
 
 target_compile_options(
@@ -111,6 +114,13 @@ file(
 )
 endif()
 
+if(BUILD_FRAMEWORK)
+file(
+    COPY "${Python3_ROOT_DIR}" 
+    DESTINATION "${EXTERNAL_RESOURCES_DIR}"
+)
+endif()
+
 if(BUILD_DYNAMIC)
 ADD_CUSTOM_COMMAND(
     TARGET ${PROJECT_NAME} POST_BUILD
@@ -126,13 +136,12 @@ ADD_CUSTOM_COMMAND(
 )
 endif()
 
-# if(BUILD_FRAMEWORK)
-# ADD_CUSTOM_COMMAND(
-#     TARGET ${PROJECT_NAME} POST_BUILD
-#     COMMAND cp -a "${DEPS_DIR}/Python.framework" "${EXTERNAL_RESOURCES_DIR}/Python.framework"
-#     # COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/Python.framework/Versions/Current/Python"
-# )
-# endif()
+if(BUILD_FRAMEWORK)
+ADD_CUSTOM_COMMAND(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/Python.framework/Versions/Current/Python"
+)
+endif()
 
 # cleanup to prevent cache distorting conditiols in subsequent runs
 unset(BUILD_DYNAMIC CACHE)

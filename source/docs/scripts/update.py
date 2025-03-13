@@ -44,7 +44,8 @@ for p in PROJECTS_DIR.iterdir():
         if dst.exists():
             dst.unlink()
         src = PROJECTS_DIR / p.stem / 'README.md'
-        print(f"processing {src} -> {dst}")
+        # print(f"processing {src} -> {dst}")
+        print("upodating", dst.name)       
         try:
             update_file(src, dst)
         except FileNotFoundError:
