@@ -237,6 +237,7 @@ Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing h
 [zpy]: https://github.com/shakfu/py-js/tree/main/source/projects/zpy
 [cobra]: https://github.com/shakfu/py-js/tree/main/source/projects/cobra
 [mamba]: https://github.com/shakfu/py-js/tree/main/source/projects/mamba
+[mambo]: https://github.com/shakfu/py-js/tree/main/source/projects/mambo
 [krait]: https://github.com/shakfu/py-js/tree/main/source/projects/krait
 [pktpy]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy
 [pktpy2]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy2
