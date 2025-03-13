@@ -16,7 +16,6 @@ typedef struct mamba {
     t_object c_obj;
     t_py* py; // <-- this is the key opaque type and instance
     void* c_outlet;
-
 } t_mamba;
 
 

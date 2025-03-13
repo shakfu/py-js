@@ -125,7 +125,8 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
 		static-pkg static-ext static-tiny-ext \
-		mambo mambo-static mambo-shared mambo-framework
+		mambo mambo-static mambo-shared mambo-framework \
+		jmx
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -192,7 +193,7 @@ mambo-static: clean-externals
 
 demos: clean-build-dir clean-externals
 	$(call section,"building demos using cmake with xcode")
-	@mkdir build && \
+	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_DEMO_EXTERNALS=ON \
@@ -201,7 +202,7 @@ demos: clean-build-dir clean-externals
 
 thirdparty: clean-build-dir clean-externals
 	$(call section,"building thirdparty externals using cmake with xcode")
-	@mkdir build && \
+	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_THIRDPARTY_EXTERNALS=ON \
@@ -210,7 +211,7 @@ thirdparty: clean-build-dir clean-externals
 
 mpy: clean-build-dir clean-externals
 	$(call section,"building the mpy external using cmake with xcode")
-	@mkdir build && \
+	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
 			-DFETCH_MICROPYTHON=ON \
@@ -218,9 +219,18 @@ mpy: clean-build-dir clean-externals
 			&& \
 		cmake --build . --config Release
 
+jmx: clean-build-dir clean-externals
+	$(call section,"building jmx")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_JMX_EXTERNAL=ON \
+			&& \
+		cmake --build . --config Release
+
 net: clean-build-dir clean-externals
 	$(call section,"building the networking externals using cmake with xcode")
-	@mkdir build && \
+	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_ZMQ_EXTERNALS=ON \

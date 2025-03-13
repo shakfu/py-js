@@ -3,9 +3,9 @@
  * @author shakfu (https://github.com/shakfu)
  * @brief libcmx: common max library
  * @version 0.1
- * @date 2022-03-28
+ * @date 2025-03-13
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2025
  * 
  */
 
@@ -211,129 +211,5 @@ void path_join(char* destination, const char* path1, const char* path2)
     }
 }
 
-
-/**
- * see the following:
- * 
- * - https://cycling74.com/forums/error-handling-with-object_method_typed
- * - https://cycling74.com/forums/obex-how-to-get-return-values-from-object_method
- * - https://cycling74.com/forums/startingstopping-the-dac-by-program-in-max-7-xx
- * - https://cycling74.com/forums/sending-arbitrary-messages-to-other-objects-from-c
- * 
- * It can be confusing. For messages which are internally defined as A_GIMME the correct 
- * call to use is object_method_typed(). But for other messages, say one with A_FLOAT as 
- * the argument, you will likely want to use object_method(). 
- * 
- */
-
-/**
-	Retrieves an object's #method for a particular message selector.
-
-	@ingroup obj
-	@param 	x		The object whose method is being queried
-	@param 	s		The message selector
-	@return 		This function returns the #method if successful, or method_false() if unsuccessful.
-*/
-// method object_getmethod(void *x, t_symbol *s);
-// also
-// t_method_object *class_getmethod_object(t_class *x, t_symbol *methodname);
-
-
-
-/**
-	Sends a type-checked message to an object.
-
-	@ingroup obj
-
-	@param 	x		The object that will receive the message 
-	@param 	s		The message selector
-	@param 	ac		Count of message arguments in <tt>av</tt>
-	@param 	av		Array of t_atoms; the message arguments
-	@param 	rv		Return value of function, if available
-
-	@return 		This function returns the error code #MAX_ERR_NONE if successful, 
-	 				or one of the other error codes defined in #e_max_errorcodes if unsuccessful.
-
-	@remark 		If the receiver object can respond to the message, object_method_typed() returns the result in <tt>rv</tt>. Otherwise, <tt>rv</tt> will contain an #A_NOTHING atom.
-*/
-// t_max_err object_method_typed(void *x, t_symbol *s, long ac, t_atom *av, t_atom *rv);
-
-
-
-/**
-	Sends an untyped message to an object. 
-	There are some caveats to its use, however, particularly for 64-bit architectures.
-	object_method_direct() should be used in cases where floating-point or other non-integer types are being passed on the stack or in return values.
-
-	@ingroup obj
-
-	@param 	x		The object that will receive the message 
-	@param 	s		The message selector
-	@param 	...		Any arguments to the message
-
-	@return 		If the receiver object can respond to the message, object_method() returns the result. Otherwise, the function will return 0. 
-
-	@remark 		Example: To send the message <tt>bang</tt> to the object <tt>bang_me</tt>:
-	@code
-	void *bang_result;
-	bang_result = object_method(bang_me, gensym("bang"));
-	@endcode
-*/
-
-// void *object_method(void *x, t_symbol *s, ...);
-
-
-        
-/**
-	do a strongly typed direct call to a method of an object
-
-	@ingroup obj
-
-	
-	@param  rt		The type of the return value (double, void*, void...)
-	@param	sig		the actual signature of the function in brackets ! 
-					something like (t_object *, double, long)		
-	@param 	x		The object where the method we want to call will be looked for,
-					it will also always be the first argument to the function call
-	@param 	s		The message selector
-	@param 	...		Any arguments to the call, the first one will always be the object (x)
-
-	@return 		will return anything that the called function returns, typed by (rt)
- 
-	@remark 		Example: To call the function identified by <tt>getcolorat</tt> on the object <tt>pwindow</tt>
-					which is declared like:
-					t_jrgba pwindow_getcolorat(t_object *window, double x, double y)
-	@code
-	double x = 44.73;
-	double y = 79.21;
-	t_object *pwindow;
-	t_jrgba result = object_method_direct(t_jrgba, (t_object *, double, double), pwindow, gensym("getcolorat"), x, y);
-	@endcode
-*/
-
-
-/**
-	Parse a C-string into an array of atoms.
-	This function allocates memory for the atoms if the ac and av parameters are NULL.
-	Otherwise it will attempt to use any memory already allocated to av.
-	Any allocated memory should be freed with sysmem_freeptr().
-	
-	@ingroup	atom
-	@param		ac			The address of a variable to hold the number of returned atoms.
-	@param		av			The address of a #t_atom pointer to which memory may be allocated and atoms copied.
-	@param		parsestr	The C-string to parse.
-	@return					A Max error code.
-	
-	@remark		The following example will parse the string "foo bar 1 2 3.0" into an array of 5 atoms.
-				The atom types will be determined automatically as 2 #A_SYM atoms, 2 #A_LONG atoms, and 1 #A_FLOAT atom.
-	@code
-	t_atom *av =  NULL;
-	long ac = 0;
-	t_max_err err = MAX_ERR_NONE;
-	
-	err = atom_setparse(&ac, &av, "foo bar 1 2 3.0");
-	@endcode
-*/
-// t_max_err atom_setparse(long *ac, t_atom **av, C74_CONST char *parsestr);
 
 #endif // CMX_IMPLEMENTATION

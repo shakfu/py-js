@@ -44,7 +44,7 @@ frontend_2 (Jupyter console) <--+
 
 The idea is basically that the 'frontend' to a python (or otherwise) kernel is a Max/MSP external object which sends code and data (translated from MAX atoms) in JSON (according to the message spec) to the kernel and then receives in reply the result in JSON which is then translated to Max atoms.
 
-**Benefits**
+#### Benefits
 
 - The primary benefit is that the kernel itself with all its c-extensions remains in a separate process. There can be multiple frontends accessing the kernel (let's say one from the python console or a jupyter notebook) and then the Max/MSP frontend, since they are already engaging witht the same namespace.
 
@@ -64,10 +64,9 @@ frontend_2 (Jupyter console)
 
 In this case, the external embeds a python interpreter and a kernel and can communicate to a console via jupyter console.
 
-**Benefits**
+#### Benefits
 
 - Simplest and Closest to the current implementation model, just requires the addition of a kernel. One option is the [xeus python kernel](https://github.com/jupyter-xeus/xeus-python) which is implemented in c++
-
 
 ### Other Implementation Possibilities
 
