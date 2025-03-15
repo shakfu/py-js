@@ -94,6 +94,8 @@ void zt_stop(t_zt *x)
 
 void zt_cancel(t_zt *x)
 {
+    zt_py(x, gensym("ZTHREAD_EXIT"));
+
     zt_stop(x);                                    // kill thread if, any
     outlet_anything(x->x_outlet, gensym("cancelled"), 0, NULL);
 }

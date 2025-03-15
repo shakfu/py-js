@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Hello World server in Python
+"""python interpreter server
 
 - Binds REP socket to tcp://*:5555
 
-- Expects b"Hello" from client, replies with b"World"
-
 """
 
-
+import sys
 import logging
 import time
 from typing import Optional, Any
 import datetime
 
 import zmq
+
+
+# ----------------------------------------------------------------------------
+# globals
+
 
 MEM = {} # dict of eval / exec
 
@@ -75,6 +78,8 @@ logging.basicConfig(
     # handlers=[strm_handler, file_handler],
 )
 
+# ----------------------------------------------------------------------------
+# main functions
 
 def py_eval(code: str) -> Optional[Any]:
     res = None
@@ -89,34 +94,40 @@ def py_eval(code: str) -> Optional[Any]:
     return res
 
 
+
 def serve():
     log = logging.getLogger("zthread")
     log.info("server starting...")
-    context = zmq.Context()
-    socket = context.socket(zmq.REP)
-    socket.bind("tcp://*:5555")
 
-    while True:
-        #  Wait for next request from client
-        message = socket.recv()
+    with zmq.Context() as ctx:
+        socket = ctx.socket(zmq.REP)
+        socket.bind("tcp://*:5555")
 
-        #  Do some 'work'
-        # time.sleep(1)
-        time.sleep(0.1)
+        while True:
+            #  Wait for next request from client
+            message = socket.recv()
 
-        msg = message.decode()
+            time.sleep(0.1)
 
+            msg = message.decode()
 
-        # print(f"request: {msg}")
-        log.info("request: %s", msg)
-        
-        res = py_eval(msg)
+            if msg == 'ZTHREAD_EXIT':
+                time.sleep(0.2)
+                socket.send_string("closing connection")
+                time.sleep(0.2)
+                break
 
-        # print(f"response: {res}")
-        log.info(f"response: %s", res)
+            log.info("request: %s", msg)
+            
+            res = py_eval(msg)
 
-        #  Send reply back to client
-        socket.send_string(str(res))
+            log.info(f"response: %s", res)
+
+            # Send reply back to client
+            socket.send_string(str(res))
+
+        log.info("shutting down...")
+
 
 if __name__ == '__main__':
     serve()
