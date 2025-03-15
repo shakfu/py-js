@@ -126,7 +126,7 @@ all: default
 		shared-pkg shared-ext shared-tiny-ext \
 		static-pkg static-ext static-tiny-ext \
 		mambo mambo-static mambo-shared mambo-framework \
-		jmx
+		jmx jw
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -197,6 +197,15 @@ demos: clean-build-dir clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_DEMO_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+jw: clean-build-dir clean-externals
+	$(call section,"building jw")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_JW_EXTERNAL=ON \
 			&& \
 		cmake --build . --config Release
 

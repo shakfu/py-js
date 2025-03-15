@@ -122,6 +122,8 @@ endif()
 if(BUILD_DEMO_EXTERNALS)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/cmx)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/demo)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/mx)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/jw)
 endif()
 
 # thirdparty externals
@@ -188,6 +190,4 @@ endif()
 if(BUILD_JMX_EXTERNAL)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
 endif()
-
-
 

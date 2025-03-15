@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 265.0, 92.0, 887.0, 769.0 ],
+		"rect" : [ 265.0, 92.0, 885.0, 769.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"showrootpatcherontab" : 0,
 		"showontab" : 0,
@@ -31,7 +31,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 887.0, 743.0 ],
+						"rect" : [ 0.0, 26.0, 885.0, 743.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 2,
 						"boxes" : [ 							{
@@ -413,13 +413,11 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-24",
-									"linecount" : 16,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 31.0, 689.0, 158.0, 223.0 ],
-									"text" : "Applications\nLibrary\nSystem\nUsers\nVolumes\nbin\ncores\ndev\netc\nhome\nopt\nprivate\nsbin\ntmp\nusr\nvar"
+									"patching_rect" : [ 31.0, 689.0, 48.0, 22.0 ]
 								}
 
 							}
@@ -563,7 +561,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 887.0, 743.0 ],
+						"rect" : [ 0.0, 26.0, 885.0, 743.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 2,
 						"boxes" : [ 							{
@@ -933,7 +931,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 887.0, 743.0 ],
+						"rect" : [ 0.0, 26.0, 885.0, 743.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
@@ -1674,7 +1672,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 265.0, 118.0, 887.0, 743.0 ],
+						"rect" : [ 265.0, 118.0, 885.0, 743.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
@@ -2913,13 +2911,16 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-21",
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 35.0, 353.0, 160.0, 22.0 ],
+									"patching_rect" : [ 35.0, 353.0, 160.0, 49.0 ],
 									"presentation" : 1,
-									"presentation_rect" : [ 76.0, 353.0, 52.0, 22.0 ]
+									"presentation_linecount" : 11,
+									"presentation_rect" : [ 76.0, 353.0, 52.0, 156.0 ],
+									"text" : "\"3.13.2 (main, Feb  4 2025, 14:51:09) [Clang 16.0.0 (clang-1600.0.26.6)]\""
 								}
 
 							}
