@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <zmq.h>
 
+#define RESPONSE_BUFFER_SIZE 64
+
 // derived from max-sdk/sources/advanced/simplethread
 
 typedef struct _zt {
@@ -104,7 +106,7 @@ void* zt_threadproc(t_zt* x)
     void* requester = zmq_socket(context, ZMQ_REQ);
     zmq_connect(requester, "tcp://localhost:5555");
 
-    char buffer[10];
+    char buffer[RESPONSE_BUFFER_SIZE];
     t_symbol* req;
     int is_new = 0;
     while (1) {
@@ -119,18 +121,17 @@ void* zt_threadproc(t_zt* x)
         if (is_new) {
             post("sent: %s", req->s_name);
             zmq_send(requester, req->s_name, strlen(req->s_name), 0);
-            zmq_recv(requester, buffer, 10, 0);
+            zmq_recv(requester, buffer, RESPONSE_BUFFER_SIZE, 0);
             post("received: %s", buffer);
             systhread_mutex_lock(x->x_mutex);
             x->x_response = gensym(buffer);
             x->x_is_new = 0;
             systhread_mutex_unlock(x->x_mutex);
+            qelem_set(x->x_qelem);
         }
     }
     zmq_close(requester);
     zmq_ctx_destroy(context);
-
-    qelem_set(x->x_qelem); // notify main thread using qelem mechanism
 
     systhread_sleep(x->x_sleeptime); // sleep a bit
 
@@ -182,7 +183,7 @@ void *zt_new(void)
     t_zt *x;
 
     x = (t_zt *)object_alloc(zt_class);
-    x->x_outlet = outlet_new(x,NULL);
+    x->x_outlet = outlet_new(x, NULL);
     x->x_qelem = qelem_new(x,(method)zt_qfn);
     x->x_systhread = NULL;
     systhread_mutex_new(&x->x_mutex,0);
