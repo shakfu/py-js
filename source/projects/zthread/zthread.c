@@ -8,65 +8,68 @@
 
 // derived from max-sdk/sources/advanced/simplethread
 
-typedef struct _zthread {
+typedef struct _zt {
     t_object            x_ob;                   // standard max object
     t_systhread         x_systhread;            // thread reference
     t_systhread_mutex   x_mutex;                // mutual exclusion lock for threadsafety
     int                 x_systhread_cancel;     // thread cancel flag
     void                *x_qelem;               // for message passing between threads
     void                *x_outlet;              // our outlet
-    int                 x_foo;                  // simple data to pass between threads
     int                 x_sleeptime;            // how many milliseconds to sleep
-} t_zthread;
+    t_symbol*           x_request;              // code to be evaluated remotely
+    t_symbol*           x_response;             // result of remote evaluation
+    int                 x_is_new;               // 1 means there's a new request
+} t_zt;
 
-void zthread_bang(t_zthread *x);
-void zthread_foo(t_zthread *x, long foo);
-void zthread_sleeptime(t_zthread *x, long sleeptime);
-void zthread_stop(t_zthread *x);
-void zthread_cancel(t_zthread *x);
-void *zthread_threadproc(t_zthread *x);
-void zthread_qfn(t_zthread *x);
-void zthread_assist(t_zthread *x, void *b, long m, long a, char *s);
-void zthread_free(t_zthread *x);
-void *zthread_new(void);
+void zt_bang(t_zt *x);
+void zt_sleeptime(t_zt *x, long sleeptime);
+void zt_stop(t_zt *x);
+void zt_cancel(t_zt *x);
+void *zt_threadproc(t_zt *x);
+void zt_qfn(t_zt *x);
+void zt_assist(t_zt *x, void *b, long m, long a, char *s);
+void zt_free(t_zt *x);
+void *zt_new(void);
+t_max_err zt_py(t_zt* x, t_symbol* s);
 
-t_class *zthread_class;
+t_class *zt_class;
 
 void ext_main(void *r)
 {
     t_class *c;
 
-    c = class_new("zthread", (method)zthread_new, (method)zthread_free, sizeof(t_zthread), 0L, 0);
+    c = class_new("zthread", (method)zt_new, (method)zt_free, sizeof(t_zt), 0L, 0);
 
-    class_addmethod(c, (method)zthread_bang,        "bang",         0);
-    class_addmethod(c, (method)zthread_foo,         "foo",          A_DEFLONG, 0);
-    class_addmethod(c, (method)zthread_sleeptime,   "sleeptime",    A_DEFLONG, 0);
-    class_addmethod(c, (method)zthread_cancel,      "cancel",       0);
-    class_addmethod(c, (method)zthread_assist,      "assist",       A_CANT, 0);
+    class_addmethod(c, (method)zt_bang,        "bang",         0);
+    class_addmethod(c, (method)zt_py,          "py",           A_DEFSYM, 0);
+    class_addmethod(c, (method)zt_sleeptime,   "sleeptime",    A_DEFLONG, 0);
+    class_addmethod(c, (method)zt_cancel,      "cancel",       0);
+    class_addmethod(c, (method)zt_assist,      "assist",       A_CANT, 0);
 
     class_register(CLASS_BOX,c);
-    zthread_class = c;
+    zt_class = c;
 }
 
-void zthread_bang(t_zthread *x)
+void zt_bang(t_zt *x)
 {
-    zthread_stop(x);        // kill thread if, any
+    zt_stop(x);        // kill thread if, any
 
     // create new thread + begin execution
     if (x->x_systhread == NULL) {
         post("starting a new thread");
-        systhread_create((method) zthread_threadproc, x, 0, 0, 0, &x->x_systhread);
+        systhread_create((method) zt_threadproc, x, 0, 0, 0, &x->x_systhread);
     }
 }
 
-void zthread_foo(t_zthread *x, long foo)
+t_max_err zt_py(t_zt* x, t_symbol* s)
 {
     systhread_mutex_lock(x->x_mutex);
-    x->x_foo = (int)foo;    // override our current value
+    x->x_request = s;    // override our current value
+    x->x_is_new = 1;
     systhread_mutex_unlock(x->x_mutex);
 }
 
-void zthread_sleeptime(t_zthread *x, long sleeptime)
+void zt_sleeptime(t_zt *x, long sleeptime)
 {
     if (sleeptime<10)
         sleeptime = 10;
@@ -74,7 +77,7 @@ void zthread_sleeptime(t_zthread *x, long sleeptime)
 }
 
 
-void zthread_stop(t_zthread *x)
+void zt_stop(t_zt *x)
 {
     unsigned int ret;
 
@@ -87,37 +90,45 @@ void zthread_stop(t_zthread *x)
 }
 
 
-void zthread_cancel(t_zthread *x)
+void zt_cancel(t_zt *x)
 {
-    zthread_stop(x);                                    // kill thread if, any
+    zt_stop(x);                                    // kill thread if, any
     outlet_anything(x->x_outlet, gensym("cancelled"), 0, NULL);
 }
 
-void* zthread_threadproc(t_zthread* x)
-{
 
-    post("Connecting to hello world server…\n");
+void* zt_threadproc(t_zt* x)
+{
+    post("Connecting to server…\n");
     void* context = zmq_ctx_new();
     void* requester = zmq_socket(context, ZMQ_REQ);
     zmq_connect(requester, "tcp://localhost:5555");
 
-    int request_nbr = 0;
-    post("request_nbr: %i", request_nbr);
-    for (request_nbr = 0; request_nbr != 10; request_nbr++) {
-        // if (x->x_systhread_cancel)
-        //  break;
-        char buffer[10];
-        post("Sending Hello %d…\n", request_nbr);
-        zmq_send(requester, "Hello", 5, 0);
-        zmq_recv(requester, buffer, 10, 0);
-        post("Received (%d): %s\n", request_nbr, buffer);
+    char buffer[10];
+    t_symbol* req;
+    int is_new = 0;
+    while (1) {
+        if (x->x_systhread_cancel) {
+            post("cancelling thread process");
+            break;
+        }
+        systhread_mutex_lock(x->x_mutex);
+        req = x->x_request;
+        is_new = x->x_is_new;
+        systhread_mutex_unlock(x->x_mutex);
+        if (is_new) {
+            post("sent: %s", req->s_name);
+            zmq_send(requester, req->s_name, strlen(req->s_name), 0);
+            zmq_recv(requester, buffer, 10, 0);
+            post("received: %s", buffer);
+            systhread_mutex_lock(x->x_mutex);
+            x->x_response = gensym(buffer);
+            x->x_is_new = 0;
+            systhread_mutex_unlock(x->x_mutex);
+        }
     }
     zmq_close(requester);
     zmq_ctx_destroy(context);
-
-    systhread_mutex_lock(x->x_mutex);
-    x->x_foo++; // fiddle with shared data
-    systhread_mutex_unlock(x->x_mutex);
 
     qelem_set(x->x_qelem); // notify main thread using qelem mechanism
 
@@ -130,20 +141,21 @@ void* zthread_threadproc(t_zthread* x)
     return NULL;
 }
 
+
 // triggered by the helper thread
-void zthread_qfn(t_zthread *x)
+void zt_qfn(t_zt *x)
 {
-    int myfoo;
+    t_symbol* response;
 
     systhread_mutex_lock(x->x_mutex);
-    myfoo = x->x_foo;                                                           // access shared data
+    response = x->x_response;                                                           // access shared data
     systhread_mutex_unlock(x->x_mutex);
 
     // *never* wrap outlet calls with systhread_mutex_lock()
-    outlet_int(x->x_outlet, myfoo);
+    outlet_anything(x->x_outlet, response, 0, NULL);
 }
 
-void zthread_assist(t_zthread *x, void *b, long m, long a, char *s)
+void zt_assist(t_zt *x, void *b, long m, long a, char *s)
 {
     if (m==1)
         sprintf(s,"bang starts a new thread");
@@ -151,10 +163,10 @@ void zthread_assist(t_zthread *x, void *b, long m, long a, char *s)
         sprintf(s,"report when done/cancelled");
 }
 
-void zthread_free(t_zthread *x)
+void zt_free(t_zt *x)
 {
     // stop our thread if it is still running
-    zthread_stop(x);
+    zt_stop(x);
 
     // free our qelem
     if (x->x_qelem)
@@ -165,16 +177,17 @@ void zthread_free(t_zthread *x)
         systhread_mutex_free(x->x_mutex);
 }
 
-void *zthread_new(void)
+void *zt_new(void)
 {
-    t_zthread *x;
+    t_zt *x;
 
-    x = (t_zthread *)object_alloc(zthread_class);
+    x = (t_zt *)object_alloc(zt_class);
     x->x_outlet = outlet_new(x,NULL);
-    x->x_qelem = qelem_new(x,(method)zthread_qfn);
+    x->x_qelem = qelem_new(x,(method)zt_qfn);
     x->x_systhread = NULL;
     systhread_mutex_new(&x->x_mutex,0);
-    x->x_foo = 0;
+    x->x_request = gensym("");
+    x->x_response = gensym("");
     x->x_sleeptime = 1000;
 
     return(x);

@@ -120,8 +120,10 @@ void* jmx_threadproc(t_jmx* x)
     int request_nbr = 0;
     post("request_nbr: %i", request_nbr);
     for (request_nbr = 0; request_nbr != 10; request_nbr++) {
-        // if (x->x_systhread_cancel)
-        //  break;
+        if (x->x_systhread_cancel) {
+            post("cancelling thread process");
+            break;
+        }
         char buffer[10];
         post("Sending Hello %d…\n", request_nbr);
         zmq_send(requester, "Hello", 5, 0);

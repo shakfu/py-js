@@ -126,7 +126,7 @@ all: default
 		shared-pkg shared-ext shared-tiny-ext \
 		static-pkg static-ext static-tiny-ext \
 		mambo mambo-static mambo-shared mambo-framework \
-		jmx jw
+		jmx zthread
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -234,6 +234,15 @@ jmx: clean-build-dir clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_JMX_EXTERNAL=ON \
+			&& \
+		cmake --build . --config Release
+
+zthread: clean-build-dir clean-externals
+	$(call section,"building zthread")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_ZTHREAD_EXTERNAL=ON \
 			&& \
 		cmake --build . --config Release
 
