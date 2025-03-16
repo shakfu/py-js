@@ -125,7 +125,8 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
 		static-pkg static-ext static-tiny-ext \
-		mambo mambo-static mambo-shared mambo-framework \
+		mambo mambo-static mambo-shared \
+		mambo-framework mambo-framework-pkg \
 		jmx zthread
 
 # -----------------------------------------------------------------------
@@ -165,7 +166,7 @@ mambo-shared: clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_DYNAMIC=ON \
+			-DBUILD_SHARED=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -177,6 +178,17 @@ mambo-framework: clean-externals
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
 			-DBUILD_FRAMEWORK=ON \
+			&& \
+		cmake --build . --config Release
+
+mambo-framework-pkg: clean-externals
+	$(call section,"building mambo-framework-pkg")
+	@./source/scripts/buildpy.py --max-package -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_FRAMEWORK_PKG=ON \
 			&& \
 		cmake --build . --config Release
 

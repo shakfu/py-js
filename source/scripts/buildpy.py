@@ -6,7 +6,7 @@ repo: https://github.com/shakfu/buildpy
 features:
 
 - Single script which downloads, builds python from source
-- Different build configurations (static, dynamic) possible
+- Different build configurations (static, dynamic, framework) possible
 - Trims python builds and zips site-packages by default.
 
 class structure:
@@ -43,7 +43,7 @@ from pathlib import Path
 from typing import Callable, Optional, Union
 from urllib.request import urlretrieve
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 # ----------------------------------------------------------------------------
 # type aliases
@@ -936,6 +936,7 @@ class Project(ShellCmd):
     def __init__(self):
         self.cwd = Path.cwd()
         self.build = self.cwd / "build"
+        self.support = self.cwd / "support"
         self.downloads = self.build / "downloads"
         self.src = self.build / "src"
         self.install = self.build / "install"
@@ -1265,7 +1266,7 @@ class PythonBuilder(Builder):
         # "--with-system-libmpdec",
         # "--without-builtin-hashlib-hashes",
         # "--without-doc-strings",
-        "--without-ensurepip",
+        # "--without-ensurepip",
         # "--without-readline",
         # "--without-static-libpython",
     ]
@@ -1310,6 +1311,7 @@ class PythonBuilder(Builder):
         pkgs: Optional[list[str]] = None,
         cfg_opts: Optional[list[str]] = None,
         jobs: int = 1,
+        is_max_package: bool = False,
     ):
 
         super().__init__(version, project)
@@ -1318,6 +1320,7 @@ class PythonBuilder(Builder):
         self.pkgs = pkgs or []
         self.cfg_opts = cfg_opts or []
         self.jobs = jobs
+        self.is_max_package = is_max_package
         self.log = logging.getLogger(self.__class__.__name__)
 
     def get_config(self):
@@ -1347,7 +1350,11 @@ class PythonBuilder(Builder):
     def prefix(self):
         """python builder prefix path"""
         if PLATFORM == "Darwin" and self.build_type == "framework":
-            return self.project.install / "Python.framework" / "Versions" / self.ver
+            if self.is_max_package:
+                install_dir = self.project.support
+            else:
+                install_dir = self.project.install
+            return install_dir / "Python.framework" / "Versions" / self.ver
         name = self.name.lower() + "-" + self.build_type
         return self.project.install / name
 
@@ -1373,7 +1380,10 @@ class PythonBuilder(Builder):
             self.config_options.extend([
                 "--enable-shared", "--without-static-libpython"])
         elif self.build_type == "framework":
-            prefix = self.project.install
+            if self.is_max_package:
+                prefix = self.project.support
+            else:
+                prefix = self.project.install
             self.config_options.append(f"--enable-framework={prefix}")
         elif self.build_type != "static":
             self.fail(f"{self.build_type} not recognized build type")
@@ -1469,7 +1479,10 @@ class PythonBuilder(Builder):
             elif self.build_type == "framework":
                 dylib = self.prefix / self.name
                 self.chmod(dylib)
-                _id = f"@loader_path/../Resources/Python.framework/Versions/{self.ver}/Python" 
+                if self.is_max_package:
+                    _id = f"@loader_path/../../../../support/Python.framework/Versions/{self.ver}/Python"
+                else:
+                    _id = f"@loader_path/../Resources/Python.framework/Versions/{self.ver}/Python"
                 self.cmd(f"install_name_tool -id {_id} {dylib}")
                 # changing executable
                 to = f"@executable_path/../Python"
@@ -1566,6 +1579,7 @@ if __name__ == "__main__":
     opt("-a", "--cfg-opts", help="add config options", type=str, nargs="+", metavar="CFG")
     opt("-c", "--config", default="shared_mid", help="build configuration (default: %(default)s)", metavar="NAME")
     opt("-d", "--debug", help="build debug python", action="store_true")
+    opt("-m", "--max-package", help="max package build", action="store_true")
     opt("-o", "--optimize", help="optimize build", action="store_true")
     opt("-p", "--pkgs", help="install pkgs", type=str, nargs="+", metavar="PKG")
     opt("-r", "--reset", help="reset build", action="store_true")
@@ -1591,6 +1605,7 @@ if __name__ == "__main__":
         pkgs=args.pkgs,
         cfg_opts=args.cfg_opts,
         jobs=args.jobs,
+        is_max_package=args.max_package,
     )
     if args.write:
         if not args.json:

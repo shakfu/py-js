@@ -1,31 +1,38 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
 
-option(BUILD_DYNAMIC "Build a shared external variant" OFF)
+option(BUILD_SHARED "Build a shared external variant" OFF)
 option(BUILD_STATIC "Build a static external variant" OFF)
 option(BUILD_FRAMEWORK "Build a shared framework external variant" OFF)
+option(BUILD_FRAMEWORK_PKG "Build a framework external in a package" OFF)
 
 set(DEPS_DIR "${CMAKE_SOURCE_DIR}/build/install")
 set(EXTERNAL_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}.mxo")
 set(EXTERNAL_RESOURCES_DIR "${EXTERNAL_DIR}/Contents/Resources")
+set(SUPPORT_DIR "${CMAKE_SOURCE_DIR}/support")
 
-MESSAGE(STATUS "BUILD_STATIC: ${BUILD_STATIC}")
-MESSAGE(STATUS "BUILD_FRAMEWORK: ${BUILD_FRAMEWORK}")
-MESSAGE(STATUS "BUILD_DYNAMIC: ${BUILD_DYNAMIC}")
-
-if(BUILD_DYNAMIC)
+if(BUILD_SHARED)
+    MESSAGE(STATUS "BUILD_SHARED: ${BUILD_SHARED}")
     set(Python3_ROOT_DIR "${DEPS_DIR}/python-shared")
     set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
 endif()
 
+if(BUILD_STATIC)
+    MESSAGE(STATUS "BUILD_STATIC: ${BUILD_STATIC}")
+    set(Python3_ROOT_DIR "${DEPS_DIR}/python-static")
+    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
+endif()
+
 if(BUILD_FRAMEWORK)
+    MESSAGE(STATUS "BUILD_FRAMEWORK: ${BUILD_FRAMEWORK}")
     set(Python3_ROOT_DIR "${DEPS_DIR}/Python.framework")
     set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
 endif()
 
-if(BUILD_STATIC)
-    set(Python3_ROOT_DIR "${DEPS_DIR}/python-static")
-    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
+if(BUILD_FRAMEWORK_PKG)
+    MESSAGE(STATUS "BUILD_FRAMEWORK_PKG: ${BUILD_FRAMEWORK_PKG}")
+    set(Python3_ROOT_DIR "${SUPPORT_DIR}/Python.framework")
+    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
 endif()
 
 find_package (Python3 COMPONENTS Interpreter Development REQUIRED)
@@ -104,24 +111,17 @@ target_link_libraries(
     "${Python3_LIBRARIES}"
     "$<$<PLATFORM_ID:Darwin>:-ldl>"
     "$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"
-    $<$<BOOL:${BUILD_STATIC}>:${STATIC_LINK_DEPS}>
+    "$<$<BOOL:${BUILD_STATIC}>:${STATIC_LINK_DEPS}>"
 )
 
-if(BUILD_DYNAMIC OR BUILD_STATIC)
+if(BUILD_SHARED OR BUILD_STATIC)
 file(
     COPY "${Python3_ROOT_DIR}/lib" 
     DESTINATION "${EXTERNAL_RESOURCES_DIR}"
 )
 endif()
 
-if(BUILD_FRAMEWORK)
-file(
-    COPY "${Python3_ROOT_DIR}" 
-    DESTINATION "${EXTERNAL_RESOURCES_DIR}"
-)
-endif()
-
-if(BUILD_DYNAMIC)
+if(BUILD_SHARED)
 ADD_CUSTOM_COMMAND(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/lib/libpython3.*.dylib"
@@ -132,21 +132,33 @@ if(BUILD_STATIC)
 ADD_CUSTOM_COMMAND(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND rm -f "${EXTERNAL_RESOURCES_DIR}/lib/libpython3.*.a"
-    COMMAND strip -x "${EXTERNAL_DIR}/Contents/MacOS/mambo"
+    COMMAND strip -x "${EXTERNAL_DIR}/Contents/MacOS/${PROJECT_NAME}"
 )
 endif()
 
 if(BUILD_FRAMEWORK)
+file(
+    COPY "${Python3_ROOT_DIR}"
+    DESTINATION "${EXTERNAL_RESOURCES_DIR}"
+)
 ADD_CUSTOM_COMMAND(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/Python.framework/Versions/Current/Python"
 )
 endif()
 
+if(BUILD_FRAMEWORK_PKG)
+ADD_CUSTOM_COMMAND(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND strip -x "${SUPPORT_DIR}/Python.framework/Versions/Current/Python"
+)
+endif()
+
 # cleanup to prevent cache distorting conditiols in subsequent runs
-unset(BUILD_DYNAMIC CACHE)
+unset(BUILD_SHARED CACHE)
 unset(BUILD_STATIC CACHE)
 unset(BUILD_FRAMEWORK CACHE)
+unset(BUILD_FRAMEWORK_PKG CACHE)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
 
