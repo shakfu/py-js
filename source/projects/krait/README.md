@@ -8,12 +8,39 @@ I called it `krait`, in honour of the 'Krait Lightspeeder' in the original [Elit
 
 ## Building
 
-From the root of the `py-js` project
+From the root of the `py-js` project, there are several options to build the external:
 
-```bash
-make projects
+- For a fast non-relocatable build which references your existing python installation
+
+```sh
+make krait
 ```
 
+- For a relocatable dynamically-linked build
+
+```sh
+make krait-shared
+```
+
+- For a relocatable statically-linked build
+
+```sh
+make krait-static
+```
+
+- For a relocatable dynamically-linked framework build
+
+```sh
+make krait-framework
+```
+
+- For a dynamically-linked framework build for relocatable Max packages
+
+```sh
+make krait-framework-pkg
+```
+
+Finally, open the `help/krait.maxhelp` help file to test the external.
 This will build all subprojects, including `krait`, using the standard cmake build process.
 
 ## Tests

@@ -124,10 +124,7 @@ all: default
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
-		static-pkg static-ext static-tiny-ext \
-		mamba mamba-static mamba-shared \
-		mamba-framework mamba-framework-pkg \
-		jmx zthread
+		static-pkg static-ext static-tiny-ext
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -159,76 +156,12 @@ projects: clean-build-dir clean-externals
 			&& \
 		cmake --build . --config Release
 
-mamba: clean-externals
-	$(call section,"building mamba")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
-			-DBUILD_VARIANT=local \
-			&& \
-		cmake --build . --config Release
-
-
-mamba-static: clean-externals
-	$(call section,"building mamba-static")
-	@./source/scripts/buildpy.py -c static-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
-			-DBUILD_VARIANT=static-ext \
-			&& \
-		cmake --build . --config Release
-
-mamba-shared: clean-externals
-	$(call section,"building mamba-shared")
-	@./source/scripts/buildpy.py -c shared-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
-			-DBUILD_VARIANT=shared-ext \
-			&& \
-		cmake --build . --config Release
-
-mamba-framework: clean-externals
-	$(call section,"building mamba-framework")
-	@./source/scripts/buildpy.py -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
-			-DBUILD_VARIANT=framework-ext \
-			&& \
-		cmake --build . --config Release
-
-mamba-framework-pkg: clean-externals
-	$(call section,"building mamba-framework-pkg")
-	@./source/scripts/buildpy.py --max-package -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
-			-DBUILD_VARIANT=framework-pkg \
-			&& \
-		cmake --build . --config Release
-
 demos: clean-build-dir clean-externals
 	$(call section,"building demos using cmake with xcode")
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_DEMO_EXTERNALS=ON \
-			&& \
-		cmake --build . --config Release
-
-jw: clean-build-dir clean-externals
-	$(call section,"building jw")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_JW_EXTERNAL=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -248,24 +181,6 @@ mpy: clean-build-dir clean-externals
 		cmake -GXcode .. \
 			-DFETCH_MICROPYTHON=ON \
 			-DBUILD_MICROPYTHON_EXTERNAL=ON \
-			&& \
-		cmake --build . --config Release
-
-jmx: clean-build-dir clean-externals
-	$(call section,"building jmx")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_JMX_EXTERNAL=ON \
-			&& \
-		cmake --build . --config Release
-
-zthread: clean-build-dir clean-externals
-	$(call section,"building zthread")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_ZTHREAD_EXTERNAL=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -348,6 +263,144 @@ relocatable-pkg-nopip: clean-framework-pkg
 beeware-ext: clean-externals
 	$(call call-builder,"pyjs" "beeware_ext" "--install" "--build" "--release")
 
+# -----------------------------------------------------------------------
+# experimental python3 externals
+
+.PHONY: jmx zthread \
+		mamba mamba-static mamba-shared \
+		mamba-framework mamba-framework-pkg \
+		krait krait-static krait-shared \
+		krait-framework krait-framework-pkg
+
+
+
+
+mamba: clean-externals
+	$(call section,"building mamba")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_VARIANT=local \
+			&& \
+		cmake --build . --config Release
+
+
+mamba-static: clean-externals
+	$(call section,"building mamba-static")
+	@./source/scripts/buildpy.py -c static-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_VARIANT=static-ext \
+			&& \
+		cmake --build . --config Release
+
+mamba-shared: clean-externals
+	$(call section,"building mamba-shared")
+	@./source/scripts/buildpy.py -c shared-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_VARIANT=shared-ext \
+			&& \
+		cmake --build . --config Release
+
+mamba-framework: clean-externals
+	$(call section,"building mamba-framework")
+	@./source/scripts/buildpy.py -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_VARIANT=framework-ext \
+			&& \
+		cmake --build . --config Release
+
+mamba-framework-pkg: clean-externals
+	$(call section,"building mamba-framework-pkg")
+	@./source/scripts/buildpy.py --max-package -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_VARIANT=framework-pkg \
+			&& \
+		cmake --build . --config Release
+
+krait: clean-externals
+	$(call section,"building krait")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_VARIANT=local \
+			&& \
+		cmake --build . --config Release
+
+krait-static: clean-externals
+	$(call section,"building krait-static")
+	@./source/scripts/buildpy.py -c static-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_VARIANT=static-ext \
+			&& \
+		cmake --build . --config Release
+
+krait-shared: clean-externals
+	$(call section,"building krait-shared")
+	@./source/scripts/buildpy.py -c shared-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_VARIANT=shared-ext \
+			&& \
+		cmake --build . --config Release
+
+krait-framework: clean-externals
+	$(call section,"building krait-framework")
+	@./source/scripts/buildpy.py -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_VARIANT=framework-ext \
+			&& \
+		cmake --build . --config Release
+
+krait-framework-pkg: clean-externals
+	$(call section,"building krait-framework-pkg")
+	@./source/scripts/buildpy.py --max-package -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_VARIANT=framework-pkg \
+			&& \
+		cmake --build . --config Release
+
+jmx: clean-build-dir clean-externals
+	$(call section,"building jmx")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_JMX_EXTERNAL=ON \
+			&& \
+		cmake --build . --config Release
+
+zthread: clean-build-dir clean-externals
+	$(call section,"building zthread")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_ZTHREAD_EXTERNAL=ON \
+			&& \
+		cmake --build . --config Release
 
 # -----------------------------------------------------------------------
 # release external targets

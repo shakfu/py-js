@@ -2,7 +2,7 @@
  * @file krait.cpp
  * @author shakfu (https://github.com/shakfu)
  * @brief another experiment in mixing c, cpp, and python in a max external
- * @version 0.1
+ * @version 0.1.2
  * @date 2022-05-28
  * 
  * @copyright Copyright (c) 2022
@@ -85,7 +85,6 @@ void ext_main(void* r)
     CLASS_ATTR_LABEL(c, "name", 0,  "unique object id");
     CLASS_ATTR_SYM(c, "name", 0,   t_krait, name);
     CLASS_ATTR_BASIC(c, "name", 0);
-    // CLASS_ATTR_ACCESSORS(c, "name", NULL, krait_name_set);
 
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
@@ -136,7 +135,7 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv)
 
         x->name = gensym("");
         x->outlet = bangout((t_object*)x);
-        x->py = new pyjs::PythonInterpreter(); // <-- can also be a struct
+        x->py = new pyjs::PythonInterpreter(krait_class); // <-- can also be a struct
 
         attr_args_process(x, argc, argv);
     }
@@ -145,22 +144,6 @@ void* krait_new(t_symbol* s, long argc, t_atom* argv)
 
 void krait_bang(t_krait* x)
 {
-    // int argc = 0;
-    // t_atom* argv = NULL;
-    // PyObject* pval = x->py->eval_pcode((char*)"[1,2,3]");
-    // assert(pval != NULL);
-    // x->py->plist_to_atoms(pval, &argc, &argv);
-    // post("argc: %d", argc);
-    // outlet_list(x->outlet, NULL, argc, argv);
-
-    // t_object * mycoll = (t_object *)newinstance(gensym("coll"), 0, NULL);
-    // if (mycoll) {
-    //     post("newinstance coll sucessful");
-    //     freeobject(mycoll);
-    // }
-    // 
-    // see: stringload for loading patches
-
     outlet_bang(x->outlet);
 }
 
@@ -218,15 +201,4 @@ t_max_err krait_pipe(t_krait* x, t_symbol* s, long argc, t_atom* argv)
     return x->py->pipe(s, argc, argv, x->outlet);
 }
 
-
-// t_max_err krait_name_set(t_krait* x, t_object* attr, long argc, t_atom* argv)
-// {
-//     if (argc && argv) {
-//         atom_setsym(&x->name, gensym("hello"));
-//     } else {
-//         atom_setsym(&x->name, gensym(""));
-//     }
-//     return MAX_ERR_NONE;
-
-// }
 

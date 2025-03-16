@@ -202,7 +202,7 @@ t_py* py_init(t_class* c)
 
 #if defined(__APPLE__) && defined(BUILD_SHARED_PKG)
     const char* package_path = string_getptr(
-        py_get_path_to_package(py_class, "/support/python" PY_VER));
+        py_get_path_to_package(c, "/support/python" PY_VER));
     python_home = Py_DecodeLocale(package_path, NULL);
 #endif
 

@@ -51,10 +51,16 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#define if_null_error(x) if(x == NULL) { goto error; }
-
 namespace pyjs
 {
+
+// ---------------------------------------------------------------------------
+// macros
+
+#define if_null_error(x) if(x == NULL) { goto error; }
+#define _STR(x) #x
+#define STR(x) _STR(x)
+#define PY_VER STR(PY_MAJOR_VERSION) "." STR(PY_MINOR_VERSION)
 
 // ---------------------------------------------------------------------------
 // constants
@@ -90,7 +96,7 @@ class PythonInterpreter
         PyObject* p_globals;        //!< per object 'globals' python namespace
 
     public:
-        PythonInterpreter();
+        PythonInterpreter(t_class* c);
         ~PythonInterpreter();
 
         // helpers
@@ -125,7 +131,6 @@ class PythonInterpreter
         PyObject* eval_pcode(char* pcode);
         t_max_err exec_pcode(char* pcode);
         t_max_err execfile_path(char* path);
-        t_max_err locate_path_from_symbol(t_symbol* s);
 
         // core message methods
         t_max_err import(t_symbol* s);
@@ -148,6 +153,11 @@ class PythonInterpreter
         bool table_exists(char* table_name);
         t_max_err plist_to_table(char* table_name, PyObject* pval);
         PyObject* table_to_plist(char* table_name);
+
+        // path helpers
+        t_max_err locate_path_from_symbol(t_symbol* s);
+        t_string* get_path_to_package(t_class* c, char* subpath);
+        t_string* get_path_to_external(t_class* c, char* subpath);
 };
 
 #endif /* PY_INTERPRETER_H */
@@ -170,7 +180,7 @@ class PythonInterpreter
 /**
  * @brief      Constructs a new PythonInterpreter instance.
  */
-PythonInterpreter::PythonInterpreter()
+PythonInterpreter::PythonInterpreter(t_class* c)
 {
     this->p_name = symbol_unique();
     this->p_pythonpath = gensym("");
@@ -179,8 +189,44 @@ PythonInterpreter::PythonInterpreter()
     this->p_log_level = log_level::PY_LOG_LEVEL;
 
     // python init
+    wchar_t* python_home = NULL;
 
+    if (c) { // special-case pythonhome config, only makes sense if c not NULL
+
+#if defined(__APPLE__) && defined(BUILD_STATIC)
+    const char* resources_path = string_getptr(
+        this->get_path_to_external(c, "/Contents/Resources"));
+    python_home = Py_DecodeLocale(resources_path, NULL);
+#endif
+
+#if defined(__APPLE__) && defined(BUILD_SHARED_PKG)
+    const char* package_path = string_getptr(
+        this->get_path_to_package(c, "/support/python" PY_VER));
+    python_home = Py_DecodeLocale(package_path, NULL);
+#endif
+
+    } // end special-case python-home config
+
+#if PY_VERSION_HEX < 0x0308000
+    if (python_home != NULL) {
+        Py_SetPythonHome(python_home);
+        PyMem_RawFree(python_home);
+    }
     Py_Initialize();
+#else
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+    config.parse_argv = 0; // Disable parsing command line arguments
+    config.isolated = 0;   // default is disabled
+    config.home = python_home;
+
+    PyStatus status = Py_InitializeFromConfig(&config);
+    if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&config);
+        this->log_error((char*)"could not initialize python");
+    }
+    PyConfig_Clear(&config);
+#endif
 
     PyObject* main_mod = PyImport_AddModule(this->p_name->s_name); // borrowed
     this->p_globals = PyModule_GetDict(main_mod); // borrowed reference
@@ -330,62 +376,6 @@ void PythonInterpreter::print_atom(int argc, t_atom* argv)
             break;
         }
     }
-}
-
-
-/**
- * @brief Searches the Max filesystem context for a file given by a symbol
- *
- * @param s symbol to be searched
- * @return t_max_err
- */
-t_max_err PythonInterpreter::locate_path_from_symbol(t_symbol* s)
-{
-    t_fourcc filetype = FOUR_CHAR_CODE('TEXT');
-    t_fourcc outtype = 0;
-    short path_code = 0;
-    char filename[MAX_PATH_CHARS];
-    char pathname[MAX_PATH_CHARS];
-    t_max_err ret = MAX_ERR_NONE;
-
-    if (s == gensym("")) { // if no arg supplied to ask for file
-        filename[0] = 0;
-
-        if (open_dialog(filename, &path_code,
-                        &outtype, &filetype, 1))
-            // non-zero: cancelled
-            ret = MAX_ERR_GENERIC;
-        goto finally;
-
-    } else {
-        // must copy symbol before calling locatefile_extended
-        strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
-        if (locatefile_extended(filename, &path_code,
-                                &outtype, &filetype, 1)) {
-            // nozero: not found
-            this->log_error((char*)"can't find file %s", s->s_name);
-            ret = MAX_ERR_GENERIC;
-            goto finally;
-        } else {
-            pathname[0] = 0;
-            ret = path_toabsolutesystempath(path_code, filename, pathname);
-            if (ret != MAX_ERR_NONE) {
-                this->log_error((char*)"can't convert %s to absolutepath", s->s_name);
-                goto finally;
-            }
-        }
-
-        // success
-        // set attribute from pathname symbol
-        this->log_debug((char*)"filename: %s", filename);
-        this->log_debug((char*)"pathname: %s", pathname);
-        this->p_source_name = gensym(filename);
-        this->p_source_path = gensym(pathname);
-        assert(ret == MAX_ERR_NONE);
-    }
-
-finally:
-    return ret;
 }
 
 
@@ -1727,6 +1717,128 @@ error:
     this->log_error((char*)"table to list conversion failed");
     Py_RETURN_NONE;
 }
+
+// ---------------------------------------------------------------------------------------
+// path helpers
+
+/**
+ * @brief Searches the Max filesystem context for a file given by a symbol
+ *
+ * @param s symbol to be searched
+ * @return t_max_err
+ */
+t_max_err PythonInterpreter::locate_path_from_symbol(t_symbol* s)
+{
+    t_fourcc filetype = FOUR_CHAR_CODE('TEXT');
+    t_fourcc outtype = 0;
+    short path_code = 0;
+    char filename[MAX_PATH_CHARS];
+    char pathname[MAX_PATH_CHARS];
+    t_max_err ret = MAX_ERR_NONE;
+
+    if (s == gensym("")) { // if no arg supplied to ask for file
+        filename[0] = 0;
+
+        if (open_dialog(filename, &path_code,
+                        &outtype, &filetype, 1))
+            // non-zero: cancelled
+            ret = MAX_ERR_GENERIC;
+        goto finally;
+
+    } else {
+        // must copy symbol before calling locatefile_extended
+        strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
+        if (locatefile_extended(filename, &path_code,
+                                &outtype, &filetype, 1)) {
+            // nozero: not found
+            this->log_error((char*)"can't find file %s", s->s_name);
+            ret = MAX_ERR_GENERIC;
+            goto finally;
+        } else {
+            pathname[0] = 0;
+            ret = path_toabsolutesystempath(path_code, filename, pathname);
+            if (ret != MAX_ERR_NONE) {
+                this->log_error((char*)"can't convert %s to absolutepath", s->s_name);
+                goto finally;
+            }
+        }
+
+        // success
+        // set attribute from pathname symbol
+        this->log_debug((char*)"filename: %s", filename);
+        this->log_debug((char*)"pathname: %s", pathname);
+        this->p_source_name = gensym(filename);
+        this->p_source_path = gensym(pathname);
+        assert(ret == MAX_ERR_NONE);
+    }
+
+finally:
+    return ret;
+}
+
+
+/**
+ * @brief  Return path to external with optional subpath
+ *
+ * @param  c        t_class instance
+ * @param  subpath  The subpath or NULL (if not)
+ *
+ * @return path to external + (optional subpath)
+ */
+t_string* PythonInterpreter::get_path_to_external(t_class* c, char* subpath)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    short path_id = class_getpath(c);
+    t_string* result;
+
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
+#endif
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename,
+                  c->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    result = string_new(external_path);
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+    return result;
+}
+
+/**
+ * @brief  Return path to package with optional subpath
+ *
+ * @param  c        t_class instance
+ * @param  subpath  The subpath or NULL (if not)
+ *
+ * @return path to package + (optional subpath)
+ */
+t_string* PythonInterpreter::get_path_to_package(t_class* c, char* subpath)
+{
+    char _dummy[MAX_PATH_CHARS];
+    char externals_folder[MAX_PATH_CHARS];
+    char package_folder[MAX_PATH_CHARS];
+
+    t_string* result;
+    t_string* external_path = this->get_path_to_external(c, NULL);
+
+    const char* ext_path_c = string_getptr(external_path);
+
+    path_splitnames(ext_path_c, externals_folder, _dummy); // ignore filename
+    path_splitnames(externals_folder, package_folder,
+                    _dummy); // ignore filename
+
+    result = string_new((char*)package_folder);
+
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+
+    return result;
+}
+
 
 // ===========================================================================
 
