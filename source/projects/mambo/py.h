@@ -192,6 +192,8 @@ t_py* py_init(t_class* c)
 {
     wchar_t* python_home = NULL;
 
+    if (c) { // special-case pythonhome config, only makes sense if c not NULL
+
 #if defined(__APPLE__) && defined(BUILD_STATIC)
     const char* resources_path = string_getptr(
         py_get_path_to_external(c, "/Contents/Resources"));
@@ -203,6 +205,8 @@ t_py* py_init(t_class* c)
         py_get_path_to_package(py_class, "/support/python" PY_VER));
     python_home = Py_DecodeLocale(package_path, NULL);
 #endif
+
+    } // end special-case python-home config
 
     t_py* x = (t_py*)malloc(sizeof(struct t_py));
 
@@ -237,8 +241,6 @@ t_py* py_init(t_class* c)
     }
     PyConfig_Clear(&config);
 #endif
-
-    // Py_Initialize();
 
     // python init
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed

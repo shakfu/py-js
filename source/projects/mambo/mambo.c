@@ -78,7 +78,8 @@ void* mambo_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_mambo* x = (t_mambo*)object_alloc(mambo_class);
     x->c_outlet = bangout(x);
-    x->py = py_init(mambo_class); // init with class to external path
+    x->py = py_init(mambo_class); // pass class for possible relocatable builds,
+                                  // or NULL for strictly local builds.
     return x;
 }
 
@@ -89,7 +90,7 @@ void* mambo_new(t_symbol* s, long argc, t_atom* argv)
  */
 void mambo_free(t_mambo* x)
 {
-    py_free(x->py); // must be called in the free metho to cleanup python.
+    py_free(x->py); // must be called in the free method to cleanup python.
 }
 
 /**

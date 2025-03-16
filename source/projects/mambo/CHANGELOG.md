@@ -2,6 +2,8 @@
 
 ## [0.1.x]
 
+- Added `mambo-framework-pkg` build for Max packages.
+
 - Shared, static, and framework builds successful on macOS.
 
 - Added shared, static, and framework builds via: `make mambo-shared`, `make mambo-static` and `make mambo-framework` respectively.

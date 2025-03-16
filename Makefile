@@ -159,6 +159,15 @@ projects: clean-build-dir clean-externals
 			&& \
 		cmake --build . --config Release
 
+mambo: clean-externals
+	$(call section,"building mambo")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
+			&& \
+		cmake --build . --config Release
+
 mambo-shared: clean-externals
 	$(call section,"building mambo-shared")
 	@./source/scripts/buildpy.py -c shared-mid
