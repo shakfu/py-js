@@ -27,7 +27,6 @@ option(BUILD_ZEDIT_EXTERNAL "Build the zedit external" OFF)
 option(BUILD_ZPY_EXTERNAL "Build the zpy external" OFF)
 option(BUILD_ZTHREAD_EXTERNAL "Build the zthread external" OFF)
 option(BUILD_JMX_EXTERNAL "Build the jmx external" OFF)
-option(BUILD_MAMBO_EXTERNAL "Build the mambo external" OFF)
 
 # micropython external build options
 option(FETCH_MICROPYTHON "Download latest micropython and use that to build external" OFF)
@@ -101,7 +100,6 @@ if(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS)
 set(BUILD_COBRA_EXTERNAL ON)
 set(BUILD_KRAIT_EXTERNAL ON)
 set(BUILD_MAMBA_EXTERNAL ON)
-set(BUILD_MAMBO_EXTERNAL ON)
 set(BUILD_MXPY_EXTERNAL ON)
 endif()
 
@@ -156,10 +154,6 @@ endif()
 
 if(BUILD_MAMBA_EXTERNAL)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
-endif()
-
-if(BUILD_MAMBO_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mambo)
 endif()
 
 if(BUILD_MXPY_EXTERNAL)

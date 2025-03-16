@@ -1,5 +1,5 @@
 /**
-    @file mamba - an experimental attempt to modularize the python object
+    @file mamba - modularizing the python interpreter for Max.
 
     The idea is that it can be included as a header and then used in any
    external context.
@@ -40,7 +40,7 @@ t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void*
 t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 
 
-static t_class* s_mamba_class = NULL;
+static t_class* mamba_class = NULL;
 
 void ext_main(void* r)
 {
@@ -62,11 +62,11 @@ void ext_main(void* r)
 
     class_register(CLASS_BOX, c);
 
-    s_mamba_class = c;
+    mamba_class = c;
 }
 
 /**
- * @brief Mamba new method
+ * @brief Mambo new method
  *
  * @param s symbol
  * @param argc atom argument count
@@ -76,24 +76,25 @@ void ext_main(void* r)
  */
 void* mamba_new(t_symbol* s, long argc, t_atom* argv)
 {
-    t_mamba* x = (t_mamba*)object_alloc(s_mamba_class);
+    t_mamba* x = (t_mamba*)object_alloc(mamba_class);
     x->c_outlet = bangout(x);
-    x->py = py_init(); // This is all that is need to init the `py` obj
+    x->py = py_init(mamba_class); // pass class for possible relocatable builds,
+                                  // or NULL for strictly local builds.
     return x;
 }
 
 /**
- * @brief Mamba free method
+ * @brief Mambo free method
  *
  * @param x pointer to mamba object
  */
 void mamba_free(t_mamba* x)
 {
-    py_free(x->py); // must be called in the free metho to cleanup python.
+    py_free(x->py); // must be called in the free method to cleanup python.
 }
 
 /**
- * @brief Mamba bang method
+ * @brief Mambo bang method
  *
  * @param x pointer to mamba object
  */
@@ -101,7 +102,7 @@ void mamba_bang(t_mamba* x) { outlet_bang(x->c_outlet); }
 
 
 /**
- * @brief Mamba import method
+ * @brief Mambo import method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -114,7 +115,7 @@ t_max_err mamba_import(t_mamba* x, t_symbol* s)
 }
 
 /**
- * @brief Mamba eval method
+ * @brief Mambo eval method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -129,7 +130,7 @@ t_max_err mamba_eval(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 /**
- * @brief Mamba exec method
+ * @brief Mambo exec method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -144,7 +145,7 @@ t_max_err mamba_exec(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 /**
- * @brief Mamba execfile method
+ * @brief Mambo execfile method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -157,7 +158,7 @@ t_max_err mamba_execfile(t_mamba* x, t_symbol* s)
 }
 
 /**
- * @brief Mamba call method
+ * @brief Mambo call method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -173,7 +174,7 @@ t_max_err mamba_call(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* out
 }
 
 /**
- * @brief Mamba assign method
+ * @brief Mambo assign method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -189,7 +190,7 @@ t_max_err mamba_assign(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 
 
 /**
- * @brief Mamba code method
+ * @brief Mambo code method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -205,7 +206,7 @@ t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* out
 }
 
 /**
- * @brief Mamba anything method
+ * @brief Mambo anything method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -221,7 +222,7 @@ t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void*
 }
 
 /**
- * @brief Mamba pipe method
+ * @brief Mambo pipe method
  *
  * @param x pointer to mamba object
  * @param s symbol
@@ -235,3 +236,5 @@ t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* out
 {
     return py_pipe(x->py, s, argc, argv, x->c_outlet);
 }
+
+

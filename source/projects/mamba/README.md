@@ -2,24 +2,61 @@
 
 This project is a single-header python3 library for Max externals. It is the result of an attempt to modularize the python interpreter for Max and make it re-usable so that it can be easily nested inside another external.
 
-The idea is that by including a single header file any max external can provide general or specialized python 'services'.
+The idea is that by including a single header file, `py.h` any max external can provide general or specialized python 'services'.
 
-The project is implemented in the header file `py.h`.
+The name of this header is likely to change to differentiate it from the `py` object and its header. Other names could be `mpy.h` or `mamba.h`
 
-The name of this header is likely to change to differentiate it from the `py` object and its header.
+## Build System
 
-Other names could be `mpy.h` or `mamba.h`
+Recent work on mamba's build system has made it now possible, using the `source/scripts/buildpy.py` script from the [buildpy](https://github.com/shakfu/buildpy) project and `cmake`, to build relocatable python3 externals along the lines of what the `builder` module provides for the `py` and `pyjs` externals.
 
-## Building
+The key benefit of this combination is that it provides a lightweight way to embed Python in Max externals without requiring a full Python installation. The single-header approach makes it easy to integrate into Max projects while the build system ensures the Python environment is properly configured and relocatable. This allows Max developers to leverage Python's extensive ecosystem of libraries and tools while maintaining a small footprint and avoiding dependency issues.
 
-From the root of the `py-js` project
+## Usage
 
-```bash
-make projects
+There are several options to build the external:
+
+- For a fast non-relocatable build which references your existing python installation
+
+```sh
+make mamba
 ```
 
-This will build all subprojects, including `mamba`, using the standard cmake build process.
+- For a relocatable dynamically-linked build
 
-## Tests
+```sh
+make mamba-shared
+```
 
-See `mamba.maxhelp` in `py-js/help`
+- For a relocatable statically-linked build
+
+```sh
+make mamba-static
+```
+
+- For a relocatable dynamically-linked framework build
+
+```sh
+make mamba-framework
+```
+
+- For a dynamically-linked framework build for relocatable Max packages
+
+```sh
+make mamba-framework-pkg
+```
+
+Finally, open the `help/mamba.maxhelp` help file to test the external.
+
+## Comparison of Build Variants
+
+| Variant   | Build Command              | Size (MB) | Notes               |
+| :-------- | :------------------------- | :-------- | :------------------ |
+| Local     | `make mamba`               | 0.19      | non-relocatable     |
+| Shared    | `make mamba-shared`        | 8.6       |                     |
+| Static    | `make mamba-static`        | 11.2      |                     |
+| Framework | `make mamba-framework`     | 11.9      | includes executable |
+| Package   | `make mamba-framework-pkg` | 11.9      | includes executable |
+
+Note that in the the package variant above, the external is relocatable as long as it is part of the containing package, as it refers to a `Python.framework` in the `support` folder. The other variants, with the exception of the `local` build, are self-contained externals.
+

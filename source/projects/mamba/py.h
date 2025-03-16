@@ -1,5 +1,5 @@
 /** \file py.h
-    \brief A single-header pyyhon3 library for Max externals.
+    \brief A single-header python3 library for Max externals.
 
     This library is supposed to enable nested py objects in a given
     Max external. This library is in the public domain.
@@ -43,7 +43,7 @@ extern "C" {
 typedef struct t_py t_py;
 
 // init / free methods
-t_py* py_init(void);
+t_py* py_init(t_class* c);
 void py_free(t_py* x);
 
 // core methods
@@ -63,6 +63,10 @@ t_max_err py_pipe(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
 t_max_err py_exec_file_input(t_py* x, const char* code);
 t_max_err py_exec_single_input(t_py* x, const char* code);
 
+// get runtime python version
+#define _STR(x) #x
+#define STR(x) _STR(x)
+#define PY_VER STR(PY_MAJOR_VERSION) "." STR(PY_MINOR_VERSION)
 
 #ifdef __cplusplus
 }
@@ -112,7 +116,10 @@ void py_log(t_py* x, char* fmt, ...);
 void py_error(t_py* x, char* fmt, ...);
 void py_handle_error(t_py* x, char* fmt, ...);
 
+t_string* py_get_path_to_package(t_class* c, char* subpath);
+t_string* py_get_path_to_external(t_class* c, char* subpath);
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
+
 t_max_err py_handle_float_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_long_output(t_py* x, void* outlet, PyObject* pval);
 t_max_err py_handle_string_output(t_py* x, void* outlet, PyObject* pval);
@@ -181,10 +188,26 @@ void py_error(t_py* x, char* fmt, ...)
  *
  * @return t_py*  pointer to object structure
  */
-t_py* py_init(void)
+t_py* py_init(t_class* c)
 {
-    // t_py *x = calloc(1, sizeof *x);
-    // t_py *x = calloc(1, sizeof (struct t_py));
+    wchar_t* python_home = NULL;
+
+    if (c) { // special-case pythonhome config, only makes sense if c not NULL
+
+#if defined(__APPLE__) && defined(BUILD_STATIC)
+    const char* resources_path = string_getptr(
+        py_get_path_to_external(c, "/Contents/Resources"));
+    python_home = Py_DecodeLocale(resources_path, NULL);
+#endif
+
+#if defined(__APPLE__) && defined(BUILD_SHARED_PKG)
+    const char* package_path = string_getptr(
+        py_get_path_to_package(py_class, "/support/python" PY_VER));
+    python_home = Py_DecodeLocale(package_path, NULL);
+#endif
+
+    } // end special-case python-home config
+
     t_py* x = (t_py*)malloc(sizeof(struct t_py));
 
     x->p_name = symbol_unique();
@@ -198,7 +221,26 @@ t_py* py_init(void)
     x->p_code_path = 0;
     x->p_code_filepath = gensym("");
 
+#if PY_VERSION_HEX < 0x0308000
+    if (python_home != NULL) {
+        Py_SetPythonHome(python_home);
+        PyMem_RawFree(python_home);
+    }
     Py_Initialize();
+#else
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+    config.parse_argv = 0; // Disable parsing command line arguments
+    config.isolated = 0;   // default is disabled
+    config.home = python_home;
+
+    PyStatus status = Py_InitializeFromConfig(&config);
+    if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&config);
+        py_error(x, "could not initialize python");
+    }
+    PyConfig_Clear(&config);
+#endif
 
     // python init
     PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
@@ -232,6 +274,69 @@ void py_free(t_py* x)
 
 // ---------------------------------------------------------------------------------------
 // HELPERS
+
+
+/**
+ * @brief  Return path to external with optional subpath
+ *
+ * @param  c        t_class instance
+ * @param  subpath  The subpath or NULL (if not)
+ *
+ * @return path to external + (optional subpath)
+ */
+t_string* py_get_path_to_external(t_class* c, char* subpath)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    short path_id = class_getpath(c);
+    t_string* result;
+
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
+#endif
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename,
+                  c->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    result = string_new(external_path);
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+    return result;
+}
+
+/**
+ * @brief  Return path to package with optional subpath
+ *
+ * @param  c        t_class instance
+ * @param  subpath  The subpath or NULL (if not)
+ *
+ * @return path to package + (optional subpath)
+ */
+t_string* py_get_path_to_package(t_class* c, char* subpath)
+{
+    char _dummy[MAX_PATH_CHARS];
+    char externals_folder[MAX_PATH_CHARS];
+    char package_folder[MAX_PATH_CHARS];
+
+    t_string* result;
+    t_string* external_path = py_get_path_to_external(c, NULL);
+
+    const char* ext_path_c = string_getptr(external_path);
+
+    path_splitnames(ext_path_c, externals_folder, _dummy); // ignore filename
+    path_splitnames(externals_folder, package_folder,
+                    _dummy); // ignore filename
+
+    result = string_new((char*)package_folder);
+
+    if (subpath != NULL) {
+        string_append(result, subpath);
+    }
+
+    return result;
+}
 
 
 /**

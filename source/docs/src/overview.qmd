@@ -30,7 +30,6 @@ name       | sdk        | lang   | description
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
-[mambo]    | max-sdk    | c      | a `mamba` variant with a relocatable python3 interpreter (shared, static, framework)
 [krait]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 [cobra]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
 [mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max

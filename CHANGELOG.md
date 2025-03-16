@@ -19,7 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Changed the main `CMakeLists.txt` file to enable single-project build options.
 
-- Added `mambo` external which uses a new way of building relocatable python3 externals. It includes a tweaked version of the `mamba` single-header c-based python3 library, and makes use of a slightly modified version of the `source/scripts/buildpy.py` script which was [developed externally](https://github.com/shakfu/buildpy). So far, shared, static, and framework builds are possible via: `make mambo-shared`, `make mambo-static` and `make mambo-framework` respectively.
+- Merged `mambo` features into `mamba`. `mambo` is removed as a separate subproject.
+
+- Added `mambo` variant of `mamba` which uses a new way of building relocatable python3 externals. It includes a tweaked version of the `mamba` single-header c-based python3 library, and makes use of a slightly modified version of the `source/scripts/buildpy.py` script which was [developed externally](https://github.com/shakfu/buildpy). So far, shared, static, and framework builds are possible via: `make mambo-shared`, `make mambo-static` and `make mambo-framework` respectively.
 
 - Added additional 'category' folders in `py-js/source` to improve classification of externals
 

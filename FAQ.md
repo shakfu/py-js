@@ -28,6 +28,8 @@ Definitely, if python is installed using [Homebrew](https://brew.sh) you can cre
 
 The `make default` build creates a lightweight external dynamically linked to your local python3 interpreter; other build variants such as `framework-pkg` embeds python3 into an external that is dynamically linked to a python3 interpreter which is part of the containing Max package; and another such as `framework-ext` embeds python into the external itself without any dependencies. There are other ways as well. The section, [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones), gives an overview of the different approaches.
 
+Recent work on the `mamba` single-header c library project makes it possible build relocatable python3 externals along the lines of what is possible with `py` and `pyjs`
+
 ## Installation
 
 ### Can I use two different python3 externals in the same patch?

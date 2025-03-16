@@ -125,8 +125,8 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
 		static-pkg static-ext static-tiny-ext \
-		mambo mambo-static mambo-shared \
-		mambo-framework mambo-framework-pkg \
+		mamba mamba-static mamba-shared \
+		mamba-framework mamba-framework-pkg \
 		jmx zthread
 
 # -----------------------------------------------------------------------
@@ -159,56 +159,57 @@ projects: clean-build-dir clean-externals
 			&& \
 		cmake --build . --config Release
 
-mambo: clean-externals
-	$(call section,"building mambo")
+mamba: clean-externals
+	$(call section,"building mamba")
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_MAMBA_EXTERNAL=ON \
 			-DBUILD_VARIANT=local \
 			&& \
 		cmake --build . --config Release
 
-mambo-static: clean-externals
-	$(call section,"building mambo-static")
+
+mamba-static: clean-externals
+	$(call section,"building mamba-static")
 	@./source/scripts/buildpy.py -c static-mid
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_MAMBA_EXTERNAL=ON \
 			-DBUILD_VARIANT=static-ext \
 			&& \
 		cmake --build . --config Release
 
-mambo-shared: clean-externals
-	$(call section,"building mambo-shared")
+mamba-shared: clean-externals
+	$(call section,"building mamba-shared")
 	@./source/scripts/buildpy.py -c shared-mid
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_MAMBA_EXTERNAL=ON \
 			-DBUILD_VARIANT=shared-ext \
 			&& \
 		cmake --build . --config Release
 
-mambo-framework: clean-externals
-	$(call section,"building mambo-framework")
+mamba-framework: clean-externals
+	$(call section,"building mamba-framework")
 	@./source/scripts/buildpy.py -c framework-mid
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_MAMBA_EXTERNAL=ON \
 			-DBUILD_VARIANT=framework-ext \
 			&& \
 		cmake --build . --config Release
 
-mambo-framework-pkg: clean-externals
-	$(call section,"building mambo-framework-pkg")
+mamba-framework-pkg: clean-externals
+	$(call section,"building mamba-framework-pkg")
 	@./source/scripts/buildpy.py --max-package -c framework-mid
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_MAMBA_EXTERNAL=ON \
 			-DBUILD_VARIANT=framework-pkg \
 			&& \
 		cmake --build . --config Release
