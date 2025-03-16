@@ -20,21 +20,171 @@ Also according to the above forum post, one must include `common_symbols_init();
 
 ## Jupyter Message Protocol
 
-### Header
+see: <https://jupyter-client.readthedocs.io/en/latest/messaging.html>
+
+### Example
 
 ```python
 {
-    'msg_id' : str, # typically UUID, must be unique per message
-    'session' : str, # typically UUID, should be unique per session
-    'username' : str,
-    # ISO 8601 timestamp for when the message is created
-    'date': str,
-    # All recognized message type strings are listed below.
-    'msg_type' : str,
-    # the message protocol version
-    'version' : '5.0',
+    "header": {
+        "msg_id": str,  # typically UUID, must be unique per message
+        "session": str,  # typically UUID, should be unique per session
+        "username": str,
+        # ISO 8601 timestamp for when the message is created
+        "date": str,
+        # All recognized message type strings are listed below.
+        "msg_type": str,
+        # the message protocol version
+        "version": "5.0",
+        # Optional subshell_id
+        "subshell_id": str | None,
+    },
+    "parent_header": {
+        # parent_header is a copy of the request's header
+        # When a message is the “result” of another message, such as a 
+        # side-effect (output or status) or direct reply, the parent_header is a 
+        # copy of the header of the message that “caused” the current message.
+        # _reply messages MUST have a parent_header, and side-effects
+        # typically have a parent. If there is no parent, an empty dict should be used.
+        # This parent is used by clients to route message handling
+        # to the right place, such as outputs to a cell.
+    },
+    "metadata": {
+        # The metadata dict contains information about the message that is not part
+        # of the content. This is not often used, but can be an extra location to
+        # store information about requests and replies, such as extensions adding
+        # information about request or execution context.    
+    },
+    "content": {
+        # The content dict is the body of the message. Its structure is dictated
+        # by the msg_type field in the header.
+
+        # Source code to be executed by the kernel, one or more lines.
+        'code' : str,
+
+        # A boolean flag which, if True, signals the kernel to execute
+        # this code as quietly as possible.
+        # silent=True forces store_history to be False,
+        # and will *not*:
+        #   - broadcast output on the IOPUB channel
+        #   - have an execute_result
+        # The default is False.
+        'silent' : bool,
+
+        # A boolean flag which, if True, signals the kernel to populate history
+        # The default is True if silent is False.  If silent is True, store_history
+        # is forced to be False.
+        'store_history' : bool,
+
+        # A dict mapping names to expressions to be evaluated in the
+        # user's dict. The rich display-data representation of each will be evaluated after execution.
+        # See the display_data content for the structure of the representation data.
+        'user_expressions' : dict,
+
+        # Some frontends do not support stdin requests.
+        # If this is true, code running in the kernel can prompt the user for input
+        # with an input_request message (see below). If it is false, the kernel
+        # should not send these messages.
+        'allow_stdin' : True,
+
+        # A boolean flag, which, if True, aborts the execution queue if an exception is encountered.
+        # If False, queued execute_requests will execute even if this request generates an exception.
+        'stop_on_error' : True,
+
+    },
+    "buffers": [
+        # Finally, a list of additional binary buffers can be associated with a
+        # message. While this is part of the protocol, no official messages make
+        # use of these buffers. They are used by extension messages, such as
+        # IPython Parallel’s apply and some of ipywidgets’ comm messages.
+    ],
 }
 ```
 
-> The session id in a message header identifies a unique entity with state, such as a kernel process or client process.
-> A client session id, in message headers from a client, should be unique among all clients connected to a kernel. When a client reconnects to a kernel, it should use the same client session id in its message headers. When a client restarts, it should generate a new client session id.
+Details
+
+```text
+The session ID in a message header identifies a unique entity with state, such as a kernel process or client process.
+
+A client session ID, in message headers from a client, should be unique among all clients connected to a kernel. When a client reconnects to a kernel, it should use the same client session ID in its message headers. When a client restarts, it should generate a new client session ID.
+
+A kernel session ID, in message headers from a kernel, should identify a particular kernel process. If a kernel is restarted, the kernel session ID should be regenerated.
+
+The session ID in a message header can be used to identify the sending entity. For example, if a client disconnects and reconnects to a kernel, and messages from the kernel have a different kernel session ID than prior to the disconnect, the client should assume that the kernel was restarted.
+
+The subshell_id is only used in shell messages of kernels that support subshells (Kernel subshells). If it is not included or is None then the shell message is handled by the parent subshell (main shell), if it is a string subshell ID then it is handled by the subshell with that ID.
+
+Parent header. When a message is the “result” of another message, such as a side-effect (output or status) or direct reply, the parent_header is a copy of the header of the message that “caused” the current message. _reply messages MUST have a parent_header, and side-effects typically have a parent. If there is no parent, an empty dict should be used. This parent is used by clients to route message handling to the right place, such as outputs to a cell.
+
+Metadata. The metadata dict contains information about the message that is not part of the content. This is not often used, but can be an extra location to store information about requests and replies, such as extensions adding information about request or execution context.
+
+Content. The content dict is the body of the message. Its structure is dictated by the msg_type field in the header, described in detail for each message below.
+
+Buffers. Finally, a list of additional binary buffers can be associated with a message. While this is part of the protocol, no official messages make use of these buffers. They are used by extension messages, such as IPython Parallel’s apply and some of ipywidgets’ comm messages.
+
+Changed in version 5.0: version key added to the header.
+
+Changed in version 5.1: date in the header was accidentally omitted from the spec prior to 5.1, but it has always been in the canonical implementation, so implementers are strongly encouraged to include it. It will be mandatory in 5.1.
+
+Changed in version 5.5: subshell_id added to the header.
+
+```
+
+## Message Types for the Content Dict
+
+### Request-Reply
+
+msg types: `execute_reply` sent from the kernel given a `execute_request` msg
+
+```python
+{
+   'status' : 'error',
+   'ename' : str,   # Exception name, as a string
+   'evalue' : str,  # Exception value, as a string
+   'traceback' : list(str), # traceback frames as strings
+}
+```
+
+### Execute
+
+msg type: `execute_request`
+
+```python
+content = {
+    # Source code to be executed by the kernel, one or more lines.
+    'code' : str,
+
+    # A boolean flag which, if True, signals the kernel to execute
+    # this code as quietly as possible.
+    # silent=True forces store_history to be False,
+    # and will *not*:
+    #   - broadcast output on the IOPUB channel
+    #   - have an execute_result
+    # The default is False.
+    'silent' : bool,
+
+    # A boolean flag which, if True, signals the kernel to populate history
+    # The default is True if silent is False.  If silent is True, store_history
+    # is forced to be False.
+    'store_history' : bool,
+
+    # A dict mapping names to expressions to be evaluated in the
+    # user's dict. The rich display-data representation of each will be evaluated after execution.
+    # See the display_data content for the structure of the representation data.
+    'user_expressions' : dict,
+
+    # Some frontends do not support stdin requests.
+    # If this is true, code running in the kernel can prompt the user for input
+    # with an input_request message (see below). If it is false, the kernel
+    # should not send these messages.
+    'allow_stdin' : True,
+
+    # A boolean flag, which, if True, aborts the execution queue if an exception is encountered.
+    # If False, queued execute_requests will execute even if this request generates an exception.
+    'stop_on_error' : True,
+}
+```
+
+
+
+

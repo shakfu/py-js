@@ -673,9 +673,12 @@ install-numpy: numpy sign
 
 # Styling
 # -----------------------------------------------------------------------
-.PHONY: docs style clang-format duplo cflow
+.PHONY: docs doxygen style clang-format duplo cflow
 
 docs:
+	@cd source/docs && $(MAKE)
+
+doxygen:
 	@doxygen
 
 style: clang-format

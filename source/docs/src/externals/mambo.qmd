@@ -2,39 +2,45 @@
 title: "mambo: a single-header c-based python3 library for max externals"
 ---
 
-`mambo` is a variant of the `mamba` single-header library used in concert with the light-weight `buildpy.py` script and `cmake` to build a relocatable python3 external along the lines of what the `builder` module does with the `py` and `pyjs`.
+`mambo` is a variant of the `mamba` single-header library used in concert with the light-weight `source/scripts/buildpy.py` script and `cmake` to build relocatable python3 externals along the lines of what the `builder` module does with the `py` and `pyjs` externals.
+
+The key benefit in this design is that it provides a lightweight way to embed Python in Max externals without requiring a full Python installation. The single-header approach makes it easy to integrate into Max projects while the build system ensures the Python environment is properly configured and relocatable. This allows Max developers to leverage Python's extensive ecosystem of libraries and tools while maintaining a small footprint and avoiding dependency issues.
 
 ## Usage
 
-1. Build Relocatable Python
+1. Build the external, you have a five build options
 
-    Python source code (current version) is downloaded from python.org, configured, built, shrunk and prepared for embedding.
+    a. For a fast non-relocatable build which references your existing python installation
 
     ```sh
-    ./source/scripts/buildpy.py
+    make mambo
     ```
 
-2. Build the external, you have a three build options
-
-    a. For a dynamically-linked build
+    b. For a relocatable dynamically-linked build
 
     ```sh
     make mambo-shared
     ```
 
-    b. For a statically-linked build
+    c. For a relocatable statically-linked build
 
     ```sh
     make mambo-static
     ```
 
-    c. For a dynamically-linked framework build
+    d. For a relocatable dynamically-linked framework build
 
     ```sh
     make mambo-framework
     ```
 
-3. Test it
+    e. For a dynamically-linked framework build for relocatable Max packages
+
+    ```sh
+    make mambo-framework-pkg
+    ```
+
+2. Test it
 
     Open the `help/mambo.maxhelp` file to test the external.
 
@@ -50,6 +56,6 @@ title: "mambo: a single-header c-based python3 library for max externals"
 
 ## Next Steps
 
-- [ ] Add package build variants.
+- [x] Add package build variants.
 
 - [ ] Merge changes with `mamba`.
