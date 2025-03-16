@@ -1,5 +1,5 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/common.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/scripts/common.cmake)
 
 
 find_package(Python3 COMPONENTS Interpreter Development)
