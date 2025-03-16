@@ -3,7 +3,10 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/cmake/common.cmake)
 
 include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/python3_external.cmake)
 
-python3_external(${PROJECT_NAME} ${BUILD_VARIANT})
+python3_external(
+    PROJECT_NAME ${PROJECT_NAME}
+    BUILD_VARIANT ${BUILD_VARIANT}
+)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
 

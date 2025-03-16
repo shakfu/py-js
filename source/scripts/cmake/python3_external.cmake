@@ -1,168 +1,178 @@
-function(python3_external PROJECT_NAME BUILD_VARIANT)
+function(python3_external)
+    set(options)
+    set(oneValueArgs PROJECT_NAME BUILD_VARIANT)
+    set(multiValueArgs)
 
-set(variants local shared-ext static-ext framework-ext framework-pkg)
+    cmake_parse_arguments(
+        PY3EXT
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
 
-if (NOT ${BUILD_VARIANT} IN_LIST variants)
-    message(FATAL_ERROR 
-        "BUILD_VARIANT must be one of local, shared-ext, static-ext, "
-        "framework-ext, framework-pkg" )
-endif()
+    set(variants local shared-ext static-ext framework-ext framework-pkg)
 
-if(BUILD_VARIANT STREQUAL "shared-ext")
-    set(BUILD_SHARED 1)
-elseif(BUILD_VARIANT STREQUAL "static-ext")
-    set(BUILD_STATIC 1)
-elseif(BUILD_VARIANT STREQUAL "framework-ext")
-    set(BUILD_FRAMEWORK 1)
-elseif(BUILD_VARIANT STREQUAL "framework-pkg")
-    set(BUILD_FRAMEWORK_PKG 1)
-endif()
+    if (NOT ${PY3EXT_BUILD_VARIANT} IN_LIST variants)
+        message(FATAL_ERROR 
+            "BUILD_VARIANT must be one of local, shared-ext, static-ext, "
+            "framework-ext, framework-pkg" )
+    endif()
 
-message(STATUS "PROJECT_NAME: ${PROJECT_NAME}")
-message(STATUS "BUILD_VARIANT: ${BUILD_VARIANT}")
+    if(PY3EXT_BUILD_VARIANT STREQUAL "shared-ext")
+        set(BUILD_SHARED_EXT 1)
+    elseif(PY3EXT_BUILD_VARIANT STREQUAL "static-ext")
+        set(BUILD_STATIC_EXT 1)
+    elseif(PY3EXT_BUILD_VARIANT STREQUAL "framework-ext")
+        set(BUILD_FRAMEWORK_EXT 1)
+    elseif(PY3EXT_BUILD_VARIANT STREQUAL "framework-pkg")
+        set(BUILD_FRAMEWORK_PKG 1)
+    endif()
 
-set(DEPS_DIR "${CMAKE_SOURCE_DIR}/build/install")
-set(EXTERNAL_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}.mxo")
-set(EXTERNAL_RESOURCES_DIR "${EXTERNAL_DIR}/Contents/Resources")
-set(SUPPORT_DIR "${CMAKE_SOURCE_DIR}/support")
+    message(STATUS "PROJECT_NAME: ${PY3EXT_PROJECT_NAME}")
+    message(STATUS "BUILD_VARIANT: ${PY3EXT_BUILD_VARIANT}")
 
-if(BUILD_SHARED)
-    set(Python3_ROOT_DIR "${DEPS_DIR}/python-shared")
-    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
-endif()
+    set(DEPS_DIR "${CMAKE_SOURCE_DIR}/build/install")
+    set(EXTERNAL_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PY3EXT_PROJECT_NAME}.mxo")
+    set(EXTERNAL_RESOURCES_DIR "${EXTERNAL_DIR}/Contents/Resources")
+    set(SUPPORT_DIR "${CMAKE_SOURCE_DIR}/support")
 
-if(BUILD_STATIC)
-    set(Python3_ROOT_DIR "${DEPS_DIR}/python-static")
-    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
-endif()
+    if(BUILD_SHARED_EXT)
+        set(Python3_ROOT_DIR "${DEPS_DIR}/python-shared")
+        set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
+    endif()
 
-if(BUILD_FRAMEWORK)
-    set(Python3_ROOT_DIR "${DEPS_DIR}/Python.framework")
-    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
-endif()
+    if(BUILD_STATIC_EXT)
+        set(Python3_ROOT_DIR "${DEPS_DIR}/python-static")
+        set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
+    endif()
 
-if(BUILD_FRAMEWORK_PKG)
-    set(Python3_ROOT_DIR "${SUPPORT_DIR}/Python.framework")
-    set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
-endif()
+    if(BUILD_FRAMEWORK_EXT)
+        set(Python3_ROOT_DIR "${DEPS_DIR}/Python.framework")
+        set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
+    endif()
 
-find_package (Python3 COMPONENTS Interpreter Development REQUIRED)
+    if(BUILD_FRAMEWORK_PKG)
+        set(Python3_ROOT_DIR "${SUPPORT_DIR}/Python.framework")
+        set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
+    endif()
 
-message(STATUS "Python3_ROOT_DIR: ${Python3_ROOT_DIR}")
-message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+    find_package (Python3 COMPONENTS Interpreter Development REQUIRED)
 
-file(GLOB PROJECT_SRC
-    "*.h"
-    "*.c"
-    "*.cpp"
-)
+    message(STATUS "Python3_ROOT_DIR: ${Python3_ROOT_DIR}")
+    message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 
-include_directories( 
-    "${MAX_SDK_INCLUDES}"
-    "${MAX_SDK_MSP_INCLUDES}"
-    "${MAX_SDK_JIT_INCLUDES}"
-)
+    file(GLOB PROJECT_SRC
+        "*.h"
+        "*.c"
+        "*.cpp"
+    )
 
-add_library( 
-    ${PROJECT_NAME} 
-    MODULE
-    ${PROJECT_SRC}
-)
+    include_directories( 
+        "${MAX_SDK_INCLUDES}"
+        "${MAX_SDK_MSP_INCLUDES}"
+        "${MAX_SDK_JIT_INCLUDES}"
+    )
 
-target_include_directories(
-    ${PROJECT_NAME}
-    PRIVATE
-    ${Python3_INCLUDE_DIRS}
-    $<$<BOOL:${BUILD_STATIC}>:${DEPS_DIR}/bzip2/include>
-    $<$<BOOL:${BUILD_STATIC}>:${DEPS_DIR}/openssl/include>
-    $<$<BOOL:${BUILD_STATIC}>:${DEPS_DIR}/xz/include>
-)
+    add_library( 
+        ${PY3EXT_PROJECT_NAME} 
+        MODULE
+        ${PROJECT_SRC}
+    )
 
-target_compile_definitions(
-    ${PROJECT_NAME}
-    PRIVATE
-    -DNDEBUG
-    $<$<BOOL:${BUILD_STATIC}>:-DBUILD_STATIC> # help static find pyhome
-)
+    target_include_directories(
+        ${PY3EXT_PROJECT_NAME}
+        PRIVATE
+        ${Python3_INCLUDE_DIRS}
+        $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/bzip2/include>
+        $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/openssl/include>
+        $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/xz/include>
+    )
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE
-    $<$<PLATFORM_ID:Darwin>:-Wno-unused-result>
-    $<$<PLATFORM_ID:Darwin>:-Wsign-compare>
-    $<$<PLATFORM_ID:Darwin>:-Wunreachable-code>
-    $<$<PLATFORM_ID:Darwin>:-Wall>  
-    $<$<PLATFORM_ID:Darwin>:-g>
-    $<$<PLATFORM_ID:Darwin>:-fwrapv>
-    $<$<PLATFORM_ID:Darwin>:-O3>
-)
+    target_compile_definitions(
+        ${PY3EXT_PROJECT_NAME}
+        PRIVATE
+        -DNDEBUG
+        $<$<BOOL:${BUILD_STATIC_EXT}>:-DBUILD_STATIC> # help static find pyhome
+    )
 
-target_link_directories(
-    ${PROJECT_NAME} 
-    PRIVATE
-    ${Python3_LIBRARY_DIRS}
-    $<$<BOOL:${BUILD_STATIC}>:${DEPS_DIR}/bzip2/lib>
-    $<$<BOOL:${BUILD_STATIC}>:${DEPS_DIR}/openssl/lib>
-    $<$<BOOL:${BUILD_STATIC}>:${DEPS_DIR}/xz/lib>
-)
+    target_compile_options(
+        ${PY3EXT_PROJECT_NAME}
+        PRIVATE
+        $<$<PLATFORM_ID:Darwin>:-Wno-unused-result>
+        $<$<PLATFORM_ID:Darwin>:-Wsign-compare>
+        $<$<PLATFORM_ID:Darwin>:-Wunreachable-code>
+        $<$<PLATFORM_ID:Darwin>:-Wall>  
+        $<$<PLATFORM_ID:Darwin>:-g>
+        $<$<PLATFORM_ID:Darwin>:-fwrapv>
+        $<$<PLATFORM_ID:Darwin>:-O3>
+    )
 
-set(STATIC_LINK_DEPS
-    "$<$<PLATFORM_ID:Darwin>:-framework SystemConfiguration>"
-    "$<$<PLATFORM_ID:Darwin>:-lssl>"
-    "$<$<PLATFORM_ID:Darwin>:-lbz2>"
-    "$<$<PLATFORM_ID:Darwin>:-llzma>"
-    "$<$<PLATFORM_ID:Darwin>:-lz>"
-    "$<$<PLATFORM_ID:Darwin>:-lcrypto>"
-    "$<$<PLATFORM_ID:Darwin>:-lsqlite3>"
-)
+    target_link_directories(
+        ${PY3EXT_PROJECT_NAME} 
+        PRIVATE
+        ${Python3_LIBRARY_DIRS}
+        $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/bzip2/lib>
+        $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/openssl/lib>
+        $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/xz/lib>
+    )
 
-target_link_libraries(
-    ${PROJECT_NAME} 
-    PRIVATE
-    "${Python3_LIBRARIES}"
-    "$<$<PLATFORM_ID:Darwin>:-ldl>"
-    "$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"
-    "$<$<BOOL:${BUILD_STATIC}>:${STATIC_LINK_DEPS}>"
-)
+    set(STATIC_LINK_DEPS
+        "$<$<PLATFORM_ID:Darwin>:-framework SystemConfiguration>"
+        "$<$<PLATFORM_ID:Darwin>:-lssl>"
+        "$<$<PLATFORM_ID:Darwin>:-lbz2>"
+        "$<$<PLATFORM_ID:Darwin>:-llzma>"
+        "$<$<PLATFORM_ID:Darwin>:-lz>"
+        "$<$<PLATFORM_ID:Darwin>:-lcrypto>"
+        "$<$<PLATFORM_ID:Darwin>:-lsqlite3>"
+    )
 
-if(BUILD_SHARED OR BUILD_STATIC)
-file(
-    COPY "${Python3_ROOT_DIR}/lib" 
-    DESTINATION "${EXTERNAL_RESOURCES_DIR}"
-)
-endif()
+    target_link_libraries(
+        ${PY3EXT_PROJECT_NAME} 
+        PRIVATE
+        "${Python3_LIBRARIES}"
+        "$<$<PLATFORM_ID:Darwin>:-ldl>"
+        "$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"
+        "$<$<BOOL:${BUILD_STATIC_EXT}>:${STATIC_LINK_DEPS}>"
+    )
 
-if(BUILD_SHARED)
-ADD_CUSTOM_COMMAND(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/lib/libpython3.*.dylib"
-)   
-endif()
+    if(BUILD_SHARED_EXT OR BUILD_STATIC_EXT)
+        file(
+            COPY "${Python3_ROOT_DIR}/lib" 
+            DESTINATION "${EXTERNAL_RESOURCES_DIR}"
+        )
+    endif()
 
-if(BUILD_STATIC)
-ADD_CUSTOM_COMMAND(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND rm -f "${EXTERNAL_RESOURCES_DIR}/lib/libpython3.*.a"
-    COMMAND strip -x "${EXTERNAL_DIR}/Contents/MacOS/${PROJECT_NAME}"
-)
-endif()
+    if(BUILD_SHARED_EXT)
+        ADD_CUSTOM_COMMAND(
+            TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+            COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/lib/libpython3.*.dylib"
+        )   
+    endif()
 
-if(BUILD_FRAMEWORK)
-file(
-    COPY "${Python3_ROOT_DIR}"
-    DESTINATION "${EXTERNAL_RESOURCES_DIR}"
-)
-ADD_CUSTOM_COMMAND(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/Python.framework/Versions/Current/Python"
-)
-endif()
+    if(BUILD_STATIC_EXT)
+        ADD_CUSTOM_COMMAND(
+            TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+            COMMAND rm -f "${EXTERNAL_RESOURCES_DIR}/lib/libpython3.*.a"
+            COMMAND strip -x "${EXTERNAL_DIR}/Contents/MacOS/${PY3EXT_PROJECT_NAME}"
+        )
+    endif()
 
-if(BUILD_FRAMEWORK_PKG)
-ADD_CUSTOM_COMMAND(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND strip -x "${SUPPORT_DIR}/Python.framework/Versions/Current/Python"
-)
-endif()
+    if(BUILD_FRAMEWORK_EXT)
+        file(
+            COPY "${Python3_ROOT_DIR}"
+            DESTINATION "${EXTERNAL_RESOURCES_DIR}"
+        )
+        ADD_CUSTOM_COMMAND(
+            TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+            COMMAND strip -x "${EXTERNAL_RESOURCES_DIR}/Python.framework/Versions/Current/Python"
+        )
+    endif()
 
+    if(BUILD_FRAMEWORK_PKG)
+        ADD_CUSTOM_COMMAND(
+            TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+            COMMAND strip -x "${SUPPORT_DIR}/Python.framework/Versions/Current/Python"
+        )
+    endif()
 endfunction()
