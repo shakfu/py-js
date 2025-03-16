@@ -1,6 +1,8 @@
-# CHANGELOG for `mamba` object
+# CHANGELOG for `mambo` object
 
 ## [0.1.x]
+
+- Changed build process to use re-usable cmake function.
 
 - Added `mambo-framework-pkg` build for Max packages.
 

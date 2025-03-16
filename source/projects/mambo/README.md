@@ -6,51 +6,51 @@ The key benefit in this design is that it provides a lightweight way to embed Py
 
 ## Usage
 
-1. Build the external, you have a five build options
+There are several options to build the external:
 
-    a. For a fast non-relocatable build which references your existing python installation
+- For a fast non-relocatable build which references your existing python installation
 
-    ```sh
-    make mambo
-    ```
+```sh
+make mambo
+```
 
-    b. For a relocatable dynamically-linked build
+- For a relocatable dynamically-linked build
 
-    ```sh
-    make mambo-shared
-    ```
+```sh
+make mambo-shared
+```
 
-    c. For a relocatable statically-linked build
+- For a relocatable statically-linked build
 
-    ```sh
-    make mambo-static
-    ```
+```sh
+make mambo-static
+```
 
-    d. For a relocatable dynamically-linked framework build
+- For a relocatable dynamically-linked framework build
 
-    ```sh
-    make mambo-framework
-    ```
+```sh
+make mambo-framework
+```
 
-    e. For a dynamically-linked framework build for relocatable Max packages
+- For a dynamically-linked framework build for relocatable Max packages
 
-    ```sh
-    make mambo-framework-pkg
-    ```
+```sh
+make mambo-framework-pkg
+```
 
-2. Test it
-
-    Open the `help/mambo.maxhelp` file to test the external.
-
-    Feel free to looking inside it the external by right-click on it and select `Package contents`.
+Finally, open the `help/mambo.maxhelp` help file to test the external.
 
 ## Comparison of Build Variants
 
-| Variant   | Build Command          | Size (MB) | Notes               |
-| :-------- | :--------------------- | :-------- | :------------------ |
-| Shared    | `make mambo-shared`    | 8.6       |                     |
-| Static    | `make mambo-static`    | 11.2      |                     |
-| Framework | `make mambo-framework` | 11.9      | includes executable |
+| Variant   | Build Command              | Size (MB) | Notes               |
+| :-------- | :------------------------- | :-------- | :------------------ |
+| Local     | `make mambo`               | 0.19      | non-relocatable     |
+| Shared    | `make mambo-shared`        | 8.6       |                     |
+| Static    | `make mambo-static`        | 11.2      |                     |
+| Framework | `make mambo-framework`     | 11.9      | includes executable |
+| Package   | `make mambo-framework-pkg` | 11.9      | includes executable |
+
+Note that in the the package variant above, the external is relocatable as long as it is part of the containing package, as it refers to a `Python.framework` in the `support` folder. The other variants, with the exception of the `local` build, are self-contained externals.
 
 ## Next Steps
 

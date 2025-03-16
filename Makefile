@@ -175,7 +175,7 @@ mambo-shared: clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_SHARED=ON \
+			-DBUILD_MAMBO_SHARED=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -186,7 +186,7 @@ mambo-framework: clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_FRAMEWORK=ON \
+			-DBUILD_MAMBO_FRAMEWORK=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -197,7 +197,7 @@ mambo-framework-pkg: clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_FRAMEWORK_PKG=ON \
+			-DBUILD_MAMBO_FRAMEWORK_PKG=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -208,7 +208,7 @@ mambo-static: clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_STATIC=ON \
+			-DBUILD_MAMBO_STATIC=ON \
 			&& \
 		cmake --build . --config Release
 
