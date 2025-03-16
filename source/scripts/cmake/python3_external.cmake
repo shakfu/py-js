@@ -1,5 +1,25 @@
-function(configure_python_external PROJECT_NAME
-    BUILD_SHARED BUILD_STATIC BUILD_FRAMEWORK BUILD_FRAMEWORK_PKG)
+function(python3_external PROJECT_NAME BUILD_VARIANT)
+
+set(variants local shared-ext static-ext framework-ext framework-pkg)
+
+if (NOT ${BUILD_VARIANT} IN_LIST variants)
+    message(FATAL_ERROR 
+        "BUILD_VARIANT must be one of local, shared-ext, static-ext, "
+        "framework-ext, framework-pkg" )
+endif()
+
+if(BUILD_VARIANT STREQUAL "shared-ext")
+    set(BUILD_SHARED 1)
+elseif(BUILD_VARIANT STREQUAL "static-ext")
+    set(BUILD_STATIC 1)
+elseif(BUILD_VARIANT STREQUAL "framework-ext")
+    set(BUILD_FRAMEWORK 1)
+elseif(BUILD_VARIANT STREQUAL "framework-pkg")
+    set(BUILD_FRAMEWORK_PKG 1)
+endif()
+
+message(STATUS "PROJECT_NAME: ${PROJECT_NAME}")
+message(STATUS "BUILD_VARIANT: ${BUILD_VARIANT}")
 
 set(DEPS_DIR "${CMAKE_SOURCE_DIR}/build/install")
 set(EXTERNAL_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}.mxo")
@@ -7,33 +27,29 @@ set(EXTERNAL_RESOURCES_DIR "${EXTERNAL_DIR}/Contents/Resources")
 set(SUPPORT_DIR "${CMAKE_SOURCE_DIR}/support")
 
 if(BUILD_SHARED)
-    MESSAGE(STATUS "BUILD_SHARED: ${BUILD_SHARED}")
     set(Python3_ROOT_DIR "${DEPS_DIR}/python-shared")
     set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
 endif()
 
 if(BUILD_STATIC)
-    MESSAGE(STATUS "BUILD_STATIC: ${BUILD_STATIC}")
     set(Python3_ROOT_DIR "${DEPS_DIR}/python-static")
     set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/bin/python3")
 endif()
 
 if(BUILD_FRAMEWORK)
-    MESSAGE(STATUS "BUILD_FRAMEWORK: ${BUILD_FRAMEWORK}")
     set(Python3_ROOT_DIR "${DEPS_DIR}/Python.framework")
     set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
 endif()
 
 if(BUILD_FRAMEWORK_PKG)
-    MESSAGE(STATUS "BUILD_FRAMEWORK_PKG: ${BUILD_FRAMEWORK_PKG}")
     set(Python3_ROOT_DIR "${SUPPORT_DIR}/Python.framework")
     set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/Versions/Current/bin/python3")
 endif()
 
 find_package (Python3 COMPONENTS Interpreter Development REQUIRED)
 
-MESSAGE(STATUS "Python3_ROOT_DIR: ${Python3_ROOT_DIR}")
-MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+message(STATUS "Python3_ROOT_DIR: ${Python3_ROOT_DIR}")
+message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 
 file(GLOB PROJECT_SRC
     "*.h"
@@ -148,11 +164,5 @@ ADD_CUSTOM_COMMAND(
     COMMAND strip -x "${SUPPORT_DIR}/Python.framework/Versions/Current/Python"
 )
 endif()
-
-# cleanup to prevent cache distorting conditionals in subsequent runs
-# unset(BUILD_SHARED CACHE)
-# unset(BUILD_STATIC CACHE)
-# unset(BUILD_FRAMEWORK CACHE)
-# unset(BUILD_FRAMEWORK_PKG CACHE)
 
 endfunction()

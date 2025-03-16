@@ -33,6 +33,9 @@ option(BUILD_MAMBO_EXTERNAL "Build the mambo external" OFF)
 option(FETCH_MICROPYTHON "Download latest micropython and use that to build external" OFF)
 option(BUILD_MICROPYTHON_EXTERNAL "Build the micropython external" OFF)
 
+# string options
+set(BUILD_VARIANT "" CACHE STRING "specify build variant")
+
 
 # use ccache if available
 find_program(CCACHE_PROGRAM ccache)

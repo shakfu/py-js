@@ -165,39 +165,7 @@ mambo: clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
-			&& \
-		cmake --build . --config Release
-
-mambo-shared: clean-externals
-	$(call section,"building mambo-shared")
-	@./source/scripts/buildpy.py -c shared-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_MAMBO_SHARED=ON \
-			&& \
-		cmake --build . --config Release
-
-mambo-framework: clean-externals
-	$(call section,"building mambo-framework")
-	@./source/scripts/buildpy.py -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_MAMBO_FRAMEWORK=ON \
-			&& \
-		cmake --build . --config Release
-
-mambo-framework-pkg: clean-externals
-	$(call section,"building mambo-framework-pkg")
-	@./source/scripts/buildpy.py --max-package -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_MAMBO_FRAMEWORK_PKG=ON \
+			-DBUILD_VARIANT=local \
 			&& \
 		cmake --build . --config Release
 
@@ -208,7 +176,40 @@ mambo-static: clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_MAMBO_EXTERNAL=ON \
-			-DBUILD_MAMBO_STATIC=ON \
+			-DBUILD_VARIANT=static-ext \
+			&& \
+		cmake --build . --config Release
+
+mambo-shared: clean-externals
+	$(call section,"building mambo-shared")
+	@./source/scripts/buildpy.py -c shared-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_VARIANT=shared-ext \
+			&& \
+		cmake --build . --config Release
+
+mambo-framework: clean-externals
+	$(call section,"building mambo-framework")
+	@./source/scripts/buildpy.py -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_VARIANT=framework-ext \
+			&& \
+		cmake --build . --config Release
+
+mambo-framework-pkg: clean-externals
+	$(call section,"building mambo-framework-pkg")
+	@./source/scripts/buildpy.py --max-package -c framework-mid
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_MAMBO_EXTERNAL=ON \
+			-DBUILD_VARIANT=framework-pkg \
 			&& \
 		cmake --build . --config Release
 
