@@ -71,13 +71,13 @@ HOMEBREW_DEPENDENCIES = "python cmake zmq czmq"
 # $(call section,string)
 section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 
-# $(call pybuild,name)
+# $(call call-builder,name,etc.)
 define call-builder
 $(call section,"builder $1 $2 $3 $4 $5 $6")
 @cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4 $5 $6
 endef
 
-# $(call xbuild,name)
+# $(call xbuild-targets,name)
 define xbuild-targets
 $(call section,"build $1")
 @for target in $(TARGETS); do \
@@ -85,7 +85,7 @@ $(call section,"build $1")
 	done
 endef
 
-# $(call xbuild,name,flags)
+# $(call xbuild-targets-flags,name,flags)
 define xbuild-targets-flags
 $(call section,"build $1 with flags: $2")
 @for target in $(TARGETS); do \
@@ -94,14 +94,14 @@ $(call section,"build $1 with flags: $2")
 endef
 
 
-# $(call xclean,name)
+# $(call xclean-target,name)
 define xclean-target
 $(call section,"cleaning build artifacts from $1 target")
 @rm -rf '$(PYDIR)'/targets/$1/build
 endef
 
 
-# $(call xclean,name)
+# $(call xcleanlib,name)
 define xcleanlib
 $(call section,"cleaning build product from python build $1")
 @rm -rf '$(PYDIR)'/targets/build/lib/$1
@@ -189,7 +189,7 @@ net: clean-build-dir clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_ZMQ_EXTERNALS=ON \
+			-DBUILD_NET_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -272,19 +272,15 @@ beeware-ext: clean-externals
 		krait krait-static krait-shared \
 		krait-framework krait-framework-pkg
 
-
-
-
 mamba: clean-externals
 	$(call section,"building mamba")
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_TARGETS=mamba \
 			-DBUILD_VARIANT=local \
 			&& \
 		cmake --build . --config Release
-
 
 mamba-static: clean-externals
 	$(call section,"building mamba-static")
@@ -292,7 +288,7 @@ mamba-static: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_TARGETS=mamba \
 			-DBUILD_VARIANT=static-ext \
 			&& \
 		cmake --build . --config Release
@@ -303,7 +299,7 @@ mamba-shared: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_TARGETS=mamba \
 			-DBUILD_VARIANT=shared-ext \
 			&& \
 		cmake --build . --config Release
@@ -314,7 +310,7 @@ mamba-framework: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_TARGETS=mamba \
 			-DBUILD_VARIANT=framework-ext \
 			&& \
 		cmake --build . --config Release
@@ -325,7 +321,7 @@ mamba-framework-pkg: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_MAMBA_EXTERNAL=ON \
+			-DBUILD_TARGETS=mamba \
 			-DBUILD_VARIANT=framework-pkg \
 			&& \
 		cmake --build . --config Release
@@ -335,7 +331,7 @@ krait: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_TARGETS=krait \
 			-DBUILD_VARIANT=local \
 			&& \
 		cmake --build . --config Release
@@ -346,7 +342,7 @@ krait-static: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_TARGETS=krait \
 			-DBUILD_VARIANT=static-ext \
 			&& \
 		cmake --build . --config Release
@@ -357,7 +353,7 @@ krait-shared: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_TARGETS=krait \
 			-DBUILD_VARIANT=shared-ext \
 			&& \
 		cmake --build . --config Release
@@ -368,7 +364,7 @@ krait-framework: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_TARGETS=krait \
 			-DBUILD_VARIANT=framework-ext \
 			&& \
 		cmake --build . --config Release
@@ -379,7 +375,7 @@ krait-framework-pkg: clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_KRAIT_EXTERNAL=ON \
+			-DBUILD_TARGETS=krait \
 			-DBUILD_VARIANT=framework-pkg \
 			&& \
 		cmake --build . --config Release
@@ -389,7 +385,7 @@ jmx: clean-build-dir clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_JMX_EXTERNAL=ON \
+			-DBUILD_TARGETS=jmx \
 			&& \
 		cmake --build . --config Release
 
@@ -398,7 +394,16 @@ zthread: clean-build-dir clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_ZTHREAD_EXTERNAL=ON \
+			-DBUILD_TARGETS=zthread \
+			&& \
+		cmake --build . --config Release
+
+zpy: clean-build-dir clean-externals
+	$(call section,"building zpy")
+	@mkdir -p build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_TARGETS=zpy \
 			&& \
 		cmake --build . --config Release
 

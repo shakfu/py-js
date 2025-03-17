@@ -22,7 +22,7 @@ on:
       py_version:
         type: choice
         description: Please select a python version
-        default: '3.11'
+        default: '3.13'
         required: true
         options:
           - '3.7'
@@ -30,6 +30,8 @@ on:
           - '3.9'
           - '3.10'
           - '3.11'
+          - '3.12'
+          - '3.13'
 
 env:
   arch: darwin-x86

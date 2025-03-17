@@ -559,7 +559,7 @@ void* zedit_new(void)
     x->x_is_running = false;
     x->x_root_dir = get_path_to_webroot(zedit_class);
 
-    x->py = py_init(); // This is all that is need to init the `py` obj
+    x->py = py_init(zedit_class); // This is all that is need to init the `py` obj
 
     // set global
     s_root_dir = string_getptr(x->x_root_dir);

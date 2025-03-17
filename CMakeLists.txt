@@ -14,27 +14,13 @@ option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals" OFF)
 option(BUILD_NET_EXTERNALS "Enable building networking externals" OFF)
 option(BUILD_DEMO_EXTERNALS "Enable demo (scratch) externals" OFF)
 
-# individual build options
-option(BUILD_PY_EXTERNAL "Build the py external" OFF)
-option(BUILD_PYJS_EXTERNAL "Build the pyjs external" OFF)
-option(BUILD_COBRA_EXTERNAL "Build the cobra external" OFF)
-option(BUILD_KRAIT_EXTERNAL "Build the krait external" OFF)
-option(BUILD_MAMBA_EXTERNAL "Build the mamba external" OFF)
-option(BUILD_MXPY_EXTERNAL "Build the mxpy external" OFF)
-option(BUILD_PKTPY_EXTERNAL "Build the pktpy external" OFF)
-option(BUILD_PKTPY2_EXTERNAL "Build the pktpy2 external" OFF)
-option(BUILD_ZEDIT_EXTERNAL "Build the zedit external" OFF)
-option(BUILD_ZPY_EXTERNAL "Build the zpy external" OFF)
-option(BUILD_ZTHREAD_EXTERNAL "Build the zthread external" OFF)
-option(BUILD_JMX_EXTERNAL "Build the jmx external" OFF)
-
 # micropython external build options
 option(FETCH_MICROPYTHON "Download latest micropython and use that to build external" OFF)
 option(BUILD_MICROPYTHON_EXTERNAL "Build the micropython external" OFF)
 
 # string options
 set(BUILD_VARIANT "" CACHE STRING "specify build variant")
-
+set(BUILD_TARGETS "" CACHE STRING "specify build targets")
 
 # use ccache if available
 find_program(CCACHE_PROGRAM ccache)
@@ -88,103 +74,41 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     endif()
 endif()
 
-
-# python3 externals
-
 if(BUILD_PYTHON3_CORE_EXTERNALS)
-set(BUILD_PY_EXTERNAL ON)
-set(BUILD_PYJS_EXTERNAL ON)
+list(APPEND BUILD_TARGETS py pyjs)
 endif()
 
 if(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS)
-set(BUILD_COBRA_EXTERNAL ON)
-set(BUILD_KRAIT_EXTERNAL ON)
-set(BUILD_MAMBA_EXTERNAL ON)
-set(BUILD_MXPY_EXTERNAL ON)
+list(APPEND BUILD_TARGETS cobra krait mamba mxpy)
 endif()
 
-# python variants
 if(BUILD_POCKETPY_EXTERNALS)
-set(BUILD_PKTPY_EXTERNAL ON)
-set(BUILD_PKTPY2_EXTERNAL ON)
+list(APPEND BUILD_TARGETS pktpy pktpy2)
 endif()
 
-
-# networking externals
 if(BUILD_NET_EXTERNALS)
-set(BUILD_ZEDIT_EXTERNAL ON)
-set(BUILD_ZPY_EXTERNAL ON)
-set(BUILD_ZTHREAD_EXTERNAL ON)
-set(BUILD_JMX_EXTERNAL ON)
+list(APPEND BUILD_TARGETS zedit zpy zthread jmx)
 endif()
 
-
-# demo externals
-if(BUILD_DEMO_EXTERNALS)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/cmx)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/demo)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/mx)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/demos/jw)
-endif()
-
-# thirdparty externals
+set(THIRDPARTY_EXTERNALS shell jit.fill2 jit.foo)
 if(BUILD_THIRDPARTY_EXTERNALS)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/thirdparty/jit.foo)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/thirdparty/jit.fill2)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/thirdparty/shell)
+list(APPEND BUILD_TARGETS ${THIRDPARTY_EXTERNALS})
 endif()
 
-# single-build-options
-
-if(BUILD_PY_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/py)
+set(DEMO_EXTERNALS mx cmx demo)
+if(BUILD_DEMO_EXTERNALS)
+list(APPEND BUILD_TARGETS ${DEMO_EXTERNALS})
 endif()
 
-if(BUILD_PYJS_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pyjs)
-endif()
+foreach(proj ${BUILD_TARGETS})
+    message(STATUS "to build: ${proj}")
+    if(proj IN_LIST THIRDPARTY_EXTERNALS)
+        add_subdirectory(${CMAKE_SOURCE_DIR}/source/thirdparty/${proj})
+    elseif(proj IN_LIST DEMO_EXTERNALS)
+        add_subdirectory(${CMAKE_SOURCE_DIR}/source/demos/${proj})
+    else()
+        add_subdirectory(${CMAKE_SOURCE_DIR}/source/projects/${proj})
+    endif()
+endforeach()
 
-if(BUILD_COBRA_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/cobra)
-endif()
-
-if(BUILD_KRAIT_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/krait)
-endif()
-
-if(BUILD_MAMBA_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mamba)
-endif()
-
-if(BUILD_MXPY_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mxpy)
-endif()
-
-if(BUILD_PKTPY_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy)
-endif()
-
-if(BUILD_PKTPY2_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/pktpy2)
-endif()
-
-if(BUILD_MICROPYTHON_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mpy)
-endif()
-
-if(BUILD_ZEDIT_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zedit)
-endif()
-
-if(BUILD_ZPY_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zpy)
-endif()
-
-if(BUILD_ZTHREAD_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/zthread)
-endif()
-
-if(BUILD_JMX_EXTERNAL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source/projects/jmx)
-endif()
 
