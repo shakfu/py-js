@@ -194,6 +194,11 @@ void ext_main(void* module_ref)
     class_register(CLASS_BOX, c);
 
     py_class = c;
+
+#if defined(INCLUDE_COMMONSYMS)
+    common_symbols_init(); // otherwise will crash!
+#endif
+
 }
 
 /*--------------------------------------------------------------------------*/

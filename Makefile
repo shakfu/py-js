@@ -38,7 +38,7 @@ EXTENSION = $(PYDIR)/api.pyx
 INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
 				   # this requires numpy to be available to the python
 				   # interpreter.
-CYTHON_OPTIONS = -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
+CYTHON_OPTIONS = --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
 				 -X emit_code_comments=False
 
 

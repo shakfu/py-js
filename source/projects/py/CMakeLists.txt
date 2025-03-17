@@ -62,6 +62,7 @@ target_compile_definitions(
 	${PROJECT_NAME}
 	PRIVATE
 	-DNDEBUG
+	$<$<BOOL:${INCLUDE_COMMONSYMS}>:-DINCLUDE_COMMONSYMS>
 )
 
 target_compile_options(
@@ -82,7 +83,7 @@ if(INCLUDE_API_MODULE)
 
 add_custom_command(
 	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/api.c
-	COMMAND cython -3 -E INCLUDE_NUMPY=${CYTHON_INCL_NUMPY} api.pyx
+	COMMAND cython -3 --timestamps -E INCLUDE_NUMPY=${CYTHON_INCL_NUMPY} api.pyx
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	DEPENDS api.pyx
 	COMMENT "Generating api.c"

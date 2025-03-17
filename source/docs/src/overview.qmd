@@ -177,15 +177,15 @@ Now you can build almost all the externals (including `py` and `pyjs`) in one sh
 make projects
 ```
 
-This builds all of the externals *except* for the networking variants, since they have some additional dependencies.
+This builds all of the externals *except* for the networking variants, since they have some additional dependencies related to the lightweight networking [zeromq](https://zeromq.org) library. 
 
-To build the networking externals you need a few more dependencies related to the lightweight networking [zeromq](https://zeromq.org) library:
+If you would like to build them first install:
 
 ```sh
 brew install zmq czmq
 ```
 
-Now you can build them via:
+Then
 
 ```sh
 make net

@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Changed cython options for the `api` module, with the addition of `--timestamps` option, set in the `Makefile` and `CMakeLists.txt` files, the c-code is now only generated if the `api.pyx` is modified.
+
 - Added `api.Object`, a subclass of `api.MaxObject`, to act as a superclass to class wrappers which don't have special treatment in the Max c-api and can be called by the usual obex-style methods. Converted the `api.Coll` to be a subclass of `api.Object` with docs generated from the `coll.maxref.xml` using the `source/scripts/maxref.py` script.
 
 - Added `api.Coll` with tests and examples, for python control of `coll` objects.

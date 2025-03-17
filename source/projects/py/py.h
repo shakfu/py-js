@@ -33,6 +33,11 @@
 #include "ext.h"
 #include "ext_obex.h"
 
+/* optional */
+#if defined(INCLUDE_COMMONSYMS)
+#include "commonsyms.h"
+#endif
+
 /* python */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
