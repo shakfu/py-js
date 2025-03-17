@@ -18,6 +18,11 @@
 #include "ext.h"
 #include "ext_obex.h"
 
+#ifdef CMX_CPP_HEADER
+#include <string>
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
 
 // ---------------------------------------------------------------------------
 // constants
@@ -28,9 +33,13 @@
 // ---------------------------------------------------------------------------
 // forward declarations
 
-// t_symbol* locate_path_to_external(t_class* c);
+#ifdef CMX_CPP_HEADER
+std::string get_path_to_external(t_class* c, char* subpath);
+std::string get_path_to_package(t_class* c, char* subpath);
+#else
 t_string* get_path_to_external(t_class* c, char* subpath);
 t_string* get_path_to_package(t_class* c, char* subpath);
+#endif
 t_object* create_object(t_object* x, const char* text);
 void path_basename(const char* path, char* filename);
 void path_dirname(const char* path, char* parent_directory);
@@ -44,6 +53,63 @@ void path_join(char* destination, const char* path1, const char* path2);
 
 #ifdef CMX_IMPLEMENTATION
 
+
+#ifdef CMX_CPP_HEADER
+/**
+ * @brief      Return path to external with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to external + (optional subpath)
+ */
+std::string get_path_to_external(t_class* c, char* subpath)
+{
+    char external_path[MAX_PATH_CHARS];
+    char external_name[MAX_PATH_CHARS];
+    char conform_path[MAX_PATH_CHARS];
+    short path_id = class_getpath(c);
+    fs::path result;
+
+#ifdef __APPLE__
+    const char* ext_filename = "%s.mxo";
+#else
+    const char* ext_filename = "%s.mxe64";
+#endif
+    snprintf_zero(external_name, MAX_FILENAME_CHARS, ext_filename, c->c_sym->s_name);
+    path_toabsolutesystempath(path_id, external_name, external_path);
+    path_nameconform(external_path, conform_path, PATH_STYLE_NATIVE,
+                     PATH_TYPE_TILDE);
+    result = fs::path(external_path);
+    if (subpath != NULL) {
+        result /= subpath;
+    }
+    return result.string();
+}
+
+
+/**
+ * @brief      Return path to package with optional subpath
+ *
+ * @param      c        t_class instance
+ * @param      subpath  The subpath or NULL (if not)
+ *
+ * @return     path to package + (optional subpath)
+ */
+std::string get_path_to_package(t_class* c, char* subpath)
+{
+    fs::path external_path = fs::path(get_path_to_external(c, NULL));
+    fs::path externals_folder = external_path.parent_path();
+    fs::path package_folder = externals_folder.parent_path();
+
+    if (subpath != NULL) {
+        package_folder /= subpath;
+    }
+
+    return package_folder.string();
+}
+
+#else
 
 /**
  * @brief      Return path to external with optional subpath
@@ -111,6 +177,8 @@ t_string* get_path_to_package(t_class* c, char* subpath)
 
     return result;
 }
+
+#endif
 
 
 /**

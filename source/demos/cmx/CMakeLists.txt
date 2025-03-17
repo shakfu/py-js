@@ -1,12 +1,11 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/cmake/common.cmake)
 
-
 #############################################################
 # CMX: Common Max Library
 #############################################################
 
-enable_language(C)
+option(CPP_HEADER "Use in c++ external" OFF)
 
 
 include_directories( 
@@ -15,17 +14,31 @@ include_directories(
 	"${MAX_SDK_JIT_INCLUDES}"
 )
 
-file(GLOB PROJECT_SRC
-     "*.h"
-	"*.c"
-     "*.cpp"
-)
+if(CPP_HEADER)
+	set(PROJECT_SRC cmx.cpp)
+else()
+	set(PROJECT_SRC cmx.c)
+endif()
 
 add_library( 
 	${PROJECT_NAME}
 	STATIC
 	${PROJECT_SRC}
 )
+
+if(CPP_HEADER)
+target_compile_features(
+	${PROJECT_NAME}
+	PRIVATE
+	cxx_std_17
+)
+target_compile_definitions(
+	${PROJECT_NAME}
+	PRIVATE
+	CMX_CPP_HEADER
+)
+endif()
+
 
 
 # header propogates to sibling directories which link to this target (cmx)

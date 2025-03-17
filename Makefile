@@ -494,16 +494,15 @@ build-beeware-ext: clean-static-ext
 	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
 
 
-# re-compile only
+# cython re-generation of api.c only if api.pyx is modified
 # -----------------------------------------------------------------------
-.PHONY: compile-extension api
+.PHONY: api
 
-compile-extension:
+source/projects/py/api.c: source/projects/py/api.pyx
 	$(call section,"generate c code from cython extension")
 	@cython -3 $(CYTHON_OPTIONS) $(EXTENSION)
 
-api: compile-extension
-
+api: source/projects/py/api.c
 
 # -----------------------------------------------------------------------
 # utilities
