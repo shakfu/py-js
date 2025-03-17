@@ -57,7 +57,7 @@ t_max_err cobra_import(t_cobra* x, t_symbol* s);
 t_max_err cobra_defer(t_cobra* x, t_symbol* s, long argc, t_atom* argv);
 
 
-static t_class *s_cobra_class = NULL;
+static t_class *cobra_class = NULL;
 
 void ext_main(void *r)
 {
@@ -81,7 +81,7 @@ void ext_main(void *r)
 
     class_register(CLASS_BOX, c);
 
-    s_cobra_class = c;
+    cobra_class = c;
 }
 
 
@@ -98,11 +98,11 @@ void ext_main(void *r)
  */
 void *cobra_new(t_symbol *s, long argc, t_atom *argv)
 {
-    t_cobra *x = (t_cobra *)object_alloc(s_cobra_class);
+    t_cobra *x = (t_cobra *)object_alloc(cobra_class);
     long attrstart = attr_args_offset(argc, argv);
     t_atom a;
 
-    x->py = (t_py*)py_init(); // Initialize and allocate python interpreter instance
+    x->py = (t_py*)py_init(cobra_class); // Initialize and allocate python interpreter instance
 
     x->c_inletnum = 0;
     x->c_proxy = proxy_new(x, 1, &x->c_inletnum);

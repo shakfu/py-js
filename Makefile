@@ -109,6 +109,19 @@ $(call section,"cleaning build product from python build $1")
 endef
 
 
+# $(call build-target,name,variant)
+define build-target
+$(call section,"building $1 as $2")
+@mkdir -p build && \
+	cd build && \
+	cmake -GXcode .. \
+		-DBUILD_TARGETS=$(1) \
+		-DBUILD_VARIANT=$(2) \
+		&& \
+	cmake --build . --config Release
+endef
+
+
 # ============================================================================
 # TARGETS
 
@@ -119,7 +132,8 @@ all: default
 # High-Level
 # -----------------------------------------------------------------------
 .PHONY: default local-sys core projects \
-		demos net thirdparty mpy \
+		experimentals demos net thirdparty \
+		pocketpy mpy \
 		dev ninja \
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
@@ -136,11 +150,29 @@ local-sys: clean-local-sys api
 	$(call call-builder,"pyjs" "local_sys")
 
 core: api clean-build-dir clean-externals
-	$(call section,"building core externals using cmake with xcode with auto-signing")
+	$(call section,"building core externals using cmake with xcode for auto-signing")
 	@mkdir build && \
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+experimentals: clean-build-dir clean-externals
+	$(call section,"building experimental externals using cmake with xcode")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
+			&& \
+		cmake --build . --config Release
+
+pocketpy: clean-build-dir clean-externals
+	$(call section,"building pocketpy externals using cmake with xcode")
+	@mkdir build && \
+		cd build && \
+		cmake -GXcode .. \
+			-DBUILD_POCKETPY_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -189,7 +221,7 @@ net: clean-build-dir clean-externals
 	@mkdir -p build && \
 		cd build && \
 		cmake -GXcode .. \
-			-DBUILD_NET_EXTERNALS=ON \
+			-DBUILD_NETWORKING_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 
@@ -205,7 +237,7 @@ dev: clean-build-dir clean-externals
 			&& \
 		cmake --build . --config Release && \
 		cd .. && \
-		make sign
+		$(MAKE) sign
 
 ninja: clean-build-dir clean-externals
 	$(call section,"building using cmake / ninja then sign externals subsequently")
@@ -214,21 +246,22 @@ ninja: clean-build-dir clean-externals
 		cmake .. -G Ninja \
 			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
 			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
+			-DBUILD_NETWORKING_EXTERNALS=ON \
 			-DBUILD_POCKETPY_EXTERNALS=ON \
 			-DBUILD_DEMO_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release && \
 		cd .. && \
-		make sign
+		$(MAKE) sign
 
 
 homebrew-pkg: clean-homebrew-pkg
 	$(call call-builder,"pyjs" "homebrew_pkg")
-	@make sign
+	@$(MAKE) sign
 
 homebrew-ext: clean-homebrew-ext
 	$(call call-builder,"pyjs" "homebrew_ext")
-	@make sign
+	@$(MAKE) sign
 
 shared-pkg: clean-shared-pkg
 	$(call call-builder,"pyjs" "shared_pkg" "--install" "--build" "-p" "$(PYTHON_VERSION)")
@@ -272,140 +305,50 @@ beeware-ext: clean-externals
 		krait krait-static krait-shared \
 		krait-framework krait-framework-pkg
 
+
 mamba: clean-externals
-	$(call section,"building mamba")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=mamba \
-			-DBUILD_VARIANT=local \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,mamba,local)
 
 mamba-static: clean-externals
-	$(call section,"building mamba-static")
-	@./source/scripts/buildpy.py -c static-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=mamba \
-			-DBUILD_VARIANT=static-ext \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,mamba,static-ext)
 
 mamba-shared: clean-externals
-	$(call section,"building mamba-shared")
-	@./source/scripts/buildpy.py -c shared-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=mamba \
-			-DBUILD_VARIANT=shared-ext \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,mamba,shared-ext)
 
 mamba-framework: clean-externals
-	$(call section,"building mamba-framework")
-	@./source/scripts/buildpy.py -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=mamba \
-			-DBUILD_VARIANT=framework-ext \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,mamba,framework-ext)
 
 mamba-framework-pkg: clean-externals
-	$(call section,"building mamba-framework-pkg")
-	@./source/scripts/buildpy.py --max-package -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=mamba \
-			-DBUILD_VARIANT=framework-pkg \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,mamba,framework-pkg)
+
 
 krait: clean-externals
-	$(call section,"building krait")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=krait \
-			-DBUILD_VARIANT=local \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,krait,local)
 
 krait-static: clean-externals
-	$(call section,"building krait-static")
-	@./source/scripts/buildpy.py -c static-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=krait \
-			-DBUILD_VARIANT=static-ext \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,krait,static-ext)
 
 krait-shared: clean-externals
-	$(call section,"building krait-shared")
-	@./source/scripts/buildpy.py -c shared-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=krait \
-			-DBUILD_VARIANT=shared-ext \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,krait,shared-ext)
 
 krait-framework: clean-externals
-	$(call section,"building krait-framework")
-	@./source/scripts/buildpy.py -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=krait \
-			-DBUILD_VARIANT=framework-ext \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,krait,framework-ext)
 
 krait-framework-pkg: clean-externals
-	$(call section,"building krait-framework-pkg")
-	@./source/scripts/buildpy.py --max-package -c framework-mid
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=krait \
-			-DBUILD_VARIANT=framework-pkg \
-			&& \
-		cmake --build . --config Release
+	$(call build-target,krait,framework-pkg)
 
-jmx: clean-build-dir clean-externals
-	$(call section,"building jmx")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=jmx \
-			&& \
-		cmake --build . --config Release
 
-zthread: clean-build-dir clean-externals
-	$(call section,"building zthread")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=zthread \
-			&& \
-		cmake --build . --config Release
+jmx: clean-externals
+	$(call build-target,jmx,local)
 
-zpy: clean-build-dir clean-externals
-	$(call section,"building zpy")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_TARGETS=zpy \
-			&& \
-		cmake --build . --config Release
+zpy: clean-externals
+	$(call build-target,zpy,local)
+
+zthread: clean-externals
+	$(call build-target,zthread,local)
+
+
+
 
 # -----------------------------------------------------------------------
 # release external targets
@@ -660,7 +603,6 @@ log-tiny:
 	@echo "building 'static-tiny-ext' capturing output to logs/framework-ext.log"
 	@mkdir -p logs
 	@time make tiny > logs/tiny.log 2>&1
-
 
 
 # Testing
