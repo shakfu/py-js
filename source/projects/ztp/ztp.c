@@ -11,7 +11,8 @@
 
 #include <zmq.h>
 
-#define RESPONSE_BUFFER_SIZE 64
+#define ZTP_DEFAULT_ADDRESS "tcp://localhost:5555"
+#define ZTP_RESPONSE_BUFFER_SIZE 64
 
 typedef struct _ztp {
     t_object            x_ob;                   // standard max object
@@ -26,6 +27,7 @@ typedef struct _ztp {
     int                 x_is_new;               // 1 means there's a new request
     t_symbol*           x_python;               // full path to the python3 executable
     t_symbol*           x_server;               // path to the python3 server file
+    t_symbol*           x_address;              // server address e.g. tcp://localhost:5555
 } t_ztp;
 
 void ztp_bang(t_ztp *x);
@@ -44,7 +46,6 @@ void ztp_server_do(t_ztp *x, t_symbol *s, short argc, t_atom *argv);
 void ztp_serve(t_ztp *x);
 t_max_err ztp_server_attr_get(t_ztp* x, t_object* attr, long* argc,t_atom** argv);
 t_max_err ztp_server_attr_set(t_ztp* x, t_object* attr, long argc,t_atom* argv);
-
 
 
 t_class *ztp_class;
@@ -71,10 +72,55 @@ void ext_main(void *r)
     CLASS_ATTR_SYM(c,   "server", 0,  t_ztp, x_server);
     CLASS_ATTR_BASIC(c, "server", 0);
     CLASS_ATTR_ACCESSORS(c, "server", ztp_server_attr_get, ztp_server_attr_set);
+    CLASS_ATTR_SYM(c,   "address", 0,  t_ztp, x_address);
+    CLASS_ATTR_BASIC(c, "address", 0);
 
     class_register(CLASS_BOX,c);
     ztp_class = c;
 }
+
+
+void *ztp_new(t_symbol* s, long argc, t_atom* argv)
+{
+    t_ztp *x;
+
+    x = (t_ztp *)object_alloc(ztp_class);
+    x->x_outlet = outlet_new(x, NULL);
+    x->x_qelem = qelem_new(x,(method)ztp_qfn);
+    x->x_systhread = NULL;
+    systhread_mutex_new(&x->x_mutex,0);
+    x->x_request = gensym("");
+    x->x_response = gensym("");
+    x->x_sleeptime = 1000;
+    x->x_is_new = 0;
+    x->x_address = gensym(ZTP_DEFAULT_ADDRESS);
+    x->x_python = gensym("");
+    x->x_server = gensym("");
+
+    attr_args_process(x, argc, argv);
+
+    post("x_python: %s", x->x_python->s_name);
+    post("x_server: %s", x->x_server->s_name);
+    post("x_address: %s", x->x_address->s_name);
+
+    return(x);
+}
+
+
+void ztp_free(t_ztp *x)
+{
+    // stop our thread if it is still running
+    ztp_stop(x);
+
+    // free our qelem
+    if (x->x_qelem)
+        qelem_free(x->x_qelem);
+
+    // free out mutex
+    if (x->x_mutex)
+        systhread_mutex_free(x->x_mutex);
+}
+
 
 void ztp_bang(t_ztp *x)
 {
@@ -87,6 +133,7 @@ void ztp_bang(t_ztp *x)
     }
 }
 
+
 t_max_err ztp_py(t_ztp* x, t_symbol* s)
 {
     systhread_mutex_lock(x->x_mutex);
@@ -94,6 +141,7 @@ t_max_err ztp_py(t_ztp* x, t_symbol* s)
     x->x_is_new = 1;
     systhread_mutex_unlock(x->x_mutex);
 }
+
 
 void ztp_sleeptime(t_ztp *x, long sleeptime)
 {
@@ -120,7 +168,7 @@ void ztp_cancel(t_ztp *x)
 {
     ztp_py(x, gensym("ZTP_EXIT"));
 
-    ztp_stop(x);                                    // kill thread if, any
+    ztp_stop(x);  // kill thread if, any
     outlet_anything(x->x_outlet, gensym("cancelled"), 0, NULL);
 }
 
@@ -128,7 +176,6 @@ void ztp_cancel(t_ztp *x)
 void ztp_serve(t_ztp *x)
 {
     defer_low((t_object *)x, (method)ztp_server_do,  NULL, 0, NULL);
-
 }
 
 
@@ -137,9 +184,9 @@ void* ztp_threadproc(t_ztp* x)
     post("Connecting to server…\n");
     void* context = zmq_ctx_new();
     void* requester = zmq_socket(context, ZMQ_REQ);
-    zmq_connect(requester, "tcp://localhost:5555");
+    zmq_connect(requester, x->x_address->s_name);
 
-    char buffer[RESPONSE_BUFFER_SIZE];
+    char buffer[ZTP_RESPONSE_BUFFER_SIZE];
     t_symbol* req;
     int is_new = 0;
     while (1) {
@@ -154,7 +201,7 @@ void* ztp_threadproc(t_ztp* x)
         if (is_new) {
             post("sent: %s", req->s_name);
             zmq_send(requester, req->s_name, strlen(req->s_name), 0);
-            zmq_recv(requester, buffer, RESPONSE_BUFFER_SIZE, 0);
+            zmq_recv(requester, buffer, ZTP_RESPONSE_BUFFER_SIZE, 0);
             post("received: %s", buffer);
             systhread_mutex_lock(x->x_mutex);
             x->x_response = gensym(buffer);
@@ -182,7 +229,7 @@ void ztp_qfn(t_ztp *x)
     t_symbol* response;
 
     systhread_mutex_lock(x->x_mutex);
-    response = x->x_response;                                                           // access shared data
+    response = x->x_response;           // access shared data
     systhread_mutex_unlock(x->x_mutex);
 
     // *never* wrap outlet calls with systhread_mutex_lock()
@@ -197,43 +244,6 @@ void ztp_assist(t_ztp *x, void *b, long m, long a, char *s)
         sprintf(s,"report when done/cancelled");
 }
 
-void ztp_free(t_ztp *x)
-{
-    // stop our thread if it is still running
-    ztp_stop(x);
-
-    // free our qelem
-    if (x->x_qelem)
-        qelem_free(x->x_qelem);
-
-    // free out mutex
-    if (x->x_mutex)
-        systhread_mutex_free(x->x_mutex);
-}
-
-void *ztp_new(t_symbol* s, long argc, t_atom* argv)
-{
-    t_ztp *x;
-
-    x = (t_ztp *)object_alloc(ztp_class);
-    x->x_outlet = outlet_new(x, NULL);
-    x->x_qelem = qelem_new(x,(method)ztp_qfn);
-    x->x_systhread = NULL;
-    systhread_mutex_new(&x->x_mutex,0);
-    x->x_request = gensym("");
-    x->x_response = gensym("");
-    x->x_sleeptime = 1000;
-    x->x_is_new = 0;
-    x->x_python = gensym("");
-    x->x_server = gensym("");
-
-    attr_args_process(x, argc, argv);
-
-    post("x_python: %s", x->x_python->s_name);
-    post("x_server: %s", x->x_server->s_name);
-
-    return(x);
-}
 
 void ztp_server_do(t_ztp *x, t_symbol *s, short argc, t_atom *argv)
 {
