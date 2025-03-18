@@ -263,7 +263,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 235.0, 168.0, 76.0, 21.0 ],
-					"text" : "zthread"
+					"text" : "ztp"
 				}
 
 			}
@@ -387,7 +387,7 @@
  ],
 		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
-				"name" : "zthread.mxo",
+				"name" : "ztp.mxo",
 				"type" : "iLaX"
 			}
  ],

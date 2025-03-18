@@ -1,4 +1,4 @@
-// alternative run_cmd functions for zthread.c
+// alternative run_cmd functions for ztp.c
 
 #define PYTHON_EXE "/absolute-path-to/python3"
 

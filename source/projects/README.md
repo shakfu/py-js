@@ -61,13 +61,13 @@ For static compilation, the dependencies are `libzmq.a` (itself depending on `li
 
 ### zpy
 
-The `zpy` consists of relatively thin zeromq (using the czmq wrapper) client embedded in a Max external. It talks to a corresponding server (written in python3) which is run (currently manually) in a separate process in a  REQUEST-REPLY pattern.
+The `zpy` consists of relatively thin zeromq (using the czmq wrapper) client embedded in a Max external. It talks to a corresponding server (written in python3) which is run (currently manually) in a separate process in a REQUEST-REPLY pattern.
 
-This prototype blocks the ui thread when it is run. The next example, `zthread`, solves this issue.
+This prototype blocks the ui thread when it is run. The next example, `ztp`, solves this issue.
 
-### zthread
+### ztp
 
-`zthread` is a `zeromq` client + Max threads to make it non-blocking. This works: one thread per zmq socket as per the zmq rules.
+The `ztp` external, the name refers to python, threaded and zeromq, is a `zeromq` client with Max threads to make it non-blocking and it spawns a zeromq python interpreter server. This works: one thread per zmq socket as per the zmq rules.
 
 ### jmx
 

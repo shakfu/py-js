@@ -87,7 +87,7 @@ list(APPEND BUILD_TARGETS pktpy pktpy2)
 endif()
 
 if(BUILD_NET_EXTERNALS)
-list(APPEND BUILD_TARGETS zedit zpy zthread jmx)
+list(APPEND BUILD_TARGETS zedit zpy ztp jmx)
 endif()
 
 set(THIRDPARTY_EXTERNALS shell jit.fill2 jit.foo)

@@ -39,7 +39,7 @@ book:
       chapters:
         - src/externals/zedit.qmd
         - src/externals/zpy.qmd
-        - src/externals/zthread.qmd
+        - src/externals/ztp.qmd
         - src/externals/jmx.qmd
 
     # - part: "Builder"

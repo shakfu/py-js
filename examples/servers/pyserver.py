@@ -96,7 +96,7 @@ def py_eval(code: str) -> Optional[Any]:
 
 
 def serve():
-    log = logging.getLogger("zthread")
+    log = logging.getLogger("ztp")
     log.info("server starting...")
 
     with zmq.Context() as ctx:
@@ -111,7 +111,7 @@ def serve():
 
             msg = message.decode()
 
-            if msg == 'ZTHREAD_EXIT':
+            if msg == 'ZTP_EXIT':
                 time.sleep(0.2)
                 socket.send_string("closing connection")
                 time.sleep(0.2)

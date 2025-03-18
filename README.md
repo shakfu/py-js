@@ -52,9 +52,9 @@ The two pocketpy variants can be built with the cmake option, `-DBUILD_POCKETPY_
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
+[ztp]      | max-sdk    | c      | non-blocking communications with zeromq + threads + spawned python
 [jmx]      | max-sdk    | c      | explore how to embed a [jupyter client](https://jupyter-client.readthedocs.io/en/stable/messaging.html) or [kernel](https://github.com/jupyter-xeus/xeus-python) in an external
 [zpy]      | max-sdk    | c      | uses [zeromq](https://zeromq.org) for 2way-comms with an external python process
-[zthread]  | max-sdk    | c      | exploration of zeromq and Max threads
 
 Note: networking (zmq-based) externals are not enabled by default since they require zeromq libraries to be installed. To build them use the `-DBUILD_NETWORKING_EXTERNALS=ON` option with cmake or just `make net`
 
@@ -258,4 +258,4 @@ Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing h
 [zedit]: https://github.com/shakfu/py-js/tree/main/source/projects/zedit
 [mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
 [jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
-[zthread]: https://github.com/shakfu/py-js/tree/main/source/projects/zthread
+[ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/ztp

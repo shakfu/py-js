@@ -21,7 +21,6 @@ workbook.leo
 .vscode
 .venv
 __pycache__
-archive
 build
 CMakeFiles
 env.sh

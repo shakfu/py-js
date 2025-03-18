@@ -288,7 +288,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 235.0, 168.0, 348.0, 21.0 ],
-					"text" : "zthread @python /opt/homebrew/bin/python3 @server pyserver.py"
+					"text" : "ztp @python /opt/homebrew/bin/python3 @server pyserver.py"
 				}
 
 			}
@@ -426,7 +426,7 @@
  ],
 		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
-				"name" : "zthread.mxo",
+				"name" : "ztp.mxo",
 				"type" : "iLaX"
 			}
  ],

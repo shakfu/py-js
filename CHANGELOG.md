@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Renamed `zthread` to `ztp` to emphasize the use of zeromq + threads + python
+
 - Building `py` and `pyjs` via `make` doesn't require `cython` to be installed.
 
 - Restructured `CMakeLists.txt` to improve organization and readability:

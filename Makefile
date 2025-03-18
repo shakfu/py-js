@@ -299,7 +299,7 @@ beeware-ext: clean-externals
 # -----------------------------------------------------------------------
 # experimental python3 externals
 
-.PHONY: py pyjs cobra jmx zthread shell \
+.PHONY: py pyjs cobra jmx ztp shell \
 		mamba mamba-static mamba-shared \
 		mamba-framework mamba-framework-pkg \
 		krait krait-static krait-shared \
@@ -326,7 +326,7 @@ jmx: clean-externals
 zpy: clean-externals
 	$(call build-target,$@,local)
 
-zthread: clean-externals
+ztp: clean-externals
 	$(call build-target,$@,local)
 
 shell:
