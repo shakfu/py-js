@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Building `py` and `pyjs` via `make` doesn't require `cython` to be installed.
+
 - Restructured `CMakeLists.txt` to improve organization and readability:
   - Added list-based grouped build options for different external types (core, experimental, pocketpy, etc.)
   - Improved handling of build variants and targets

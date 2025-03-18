@@ -10,36 +10,11 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 307.0, 180.0, 640.0, 506.0 ],
+		"rect" : [ 95.0, 263.0, 640.0, 506.0 ],
 		"default_fontsize" : 10.0,
 		"default_fontname" : "Verdana",
 		"gridsize" : [ 5.0, 5.0 ],
 		"boxes" : [ 			{
-				"box" : 				{
-					"attr" : "server",
-					"id" : "obj-7",
-					"maxclass" : "attrui",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 19.0, 12.0, 468.0, 21.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-20",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 208.0, 65.0, 36.0, 21.0 ],
-					"text" : "serve"
-				}
-
-			}
-, 			{
 				"box" : 				{
 					"id" : "obj-23",
 					"maxclass" : "message",
@@ -94,7 +69,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 360.0, 268.0, 58.0, 21.0 ],
+					"patching_rect" : [ 360.0, 218.0, 58.0, 21.0 ],
 					"text" : "loadbang"
 				}
 
@@ -106,7 +81,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 360.0, 298.0, 35.0, 21.0 ],
+					"patching_rect" : [ 360.0, 268.0, 35.0, 21.0 ],
 					"text" : "set 0"
 				}
 
@@ -118,8 +93,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 360.0, 371.0, 83.0, 21.0 ],
-					"text" : "542"
+					"patching_rect" : [ 393.0, 371.0, 50.0, 21.0 ],
+					"text" : "0"
 				}
 
 			}
@@ -155,7 +130,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 424.0, 216.5, 24.0, 24.0 ]
+					"patching_rect" : [ 424.0, 168.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -176,11 +151,11 @@
 					"fontname" : "Verdana",
 					"fontsize" : 10.0,
 					"id" : "obj-13",
-					"linecount" : 2,
+					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 327.0, 45.0, 182.0, 31.0 ],
+					"patching_rect" : [ 324.0, 33.0, 119.0, 43.0 ],
 					"text" : "how long to sleep between \"ticks\" default 1000, min 10"
 				}
 
@@ -287,8 +262,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 235.0, 168.0, 348.0, 21.0 ],
-					"text" : "zthread @python /opt/homebrew/bin/python3 @server pyserver.py"
+					"patching_rect" : [ 235.0, 168.0, 76.0, 21.0 ],
+					"text" : "zthread"
 				}
 
 			}
@@ -354,13 +329,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-20", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-21", 0 ]
 				}
 
@@ -399,13 +367,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-5", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-7", 0 ]
 				}
 
 			}

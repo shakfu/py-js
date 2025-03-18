@@ -110,7 +110,7 @@ If you'd rather build them or any of the other externals yourself then the proce
 
     [?] It is possible to install `py-js` directly into `$HOME/Documents/Max 8/Packages`, but it requires moving the place of compilation to a location in your filesystem that is not exposed to errors due to icloud syncing or spaces in the path. This split is possible, but it is not recommended for the purposes of this quickstart.
 
-4. Install [cython](https://cython.org) via `pip3 install cython`, required for translating the cython-based `api.pyx`, which wraps the the Max c-api, to c.
+4. Optionally, install [cython](https://cython.org) via `pip3 install cython`, if you want to make changes to the cython-based `api.pyx` module, which wraps the Max c-api.
 
 5. To build only the `py` and `pyjs` externals, type the following in the root directory of the `py-js` project (other installation options are detailed below):
 

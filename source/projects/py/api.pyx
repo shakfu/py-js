@@ -26,7 +26,7 @@ Extension Classes:
 - PyMxObject: Alternative `py` external extension type (obj pointer retrieved via uintptr_t)
 
 Simple Wrappers:
-    These are generated wrappers (using the scripts/maxref.py -c <name>) which inherit
+    These are semi-generated wrappers (using the scripts/maxref.py -c <name>) which inherit
     from the `Object` extension class, which itself inherits from `MaxObject`.
 - Object(MaxObject): the superclass for simple max objects
 - Coll(Object): wrapper for max coll objects

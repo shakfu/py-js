@@ -299,12 +299,38 @@ beeware-ext: clean-externals
 # -----------------------------------------------------------------------
 # experimental python3 externals
 
-.PHONY: jmx zthread \
+.PHONY: py pyjs cobra jmx zthread shell \
 		mamba mamba-static mamba-shared \
 		mamba-framework mamba-framework-pkg \
 		krait krait-static krait-shared \
 		krait-framework krait-framework-pkg
 
+py: clean-externals
+	$(call build-target,$@,local)
+
+pyjs: clean-externals
+	$(call build-target,$@,local)
+
+cobra: clean-externals
+	$(call build-target,$@,local)
+
+pktpy: clean-externals
+	$(call build-target,$@,local)
+
+pktpy2: clean-externals
+	$(call build-target,$@,local)
+
+jmx: clean-externals
+	$(call build-target,$@,local)
+
+zpy: clean-externals
+	$(call build-target,$@,local)
+
+zthread: clean-externals
+	$(call build-target,$@,local)
+
+shell:
+	$(call build-target,$@,local)
 
 mamba: clean-externals
 	$(call build-target,mamba,local)
@@ -336,17 +362,6 @@ krait-framework: clean-externals
 
 krait-framework-pkg: clean-externals
 	$(call build-target,krait,framework-pkg)
-
-
-jmx: clean-externals
-	$(call build-target,jmx,local)
-
-zpy: clean-externals
-	$(call build-target,zpy,local)
-
-zthread: clean-externals
-	$(call build-target,zthread,local)
-
 
 
 

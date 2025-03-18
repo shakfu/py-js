@@ -94,7 +94,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 335.0, 43.0, 81.0, 22.0 ],
-					"text" : "read world.py"
+					"text" : "read hello.py"
 				}
 
 			}
@@ -106,7 +106,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 181.0, 43.0, 79.0, 22.0 ],
-					"text" : "load world.py"
+					"text" : "load hello.py"
 				}
 
 			}

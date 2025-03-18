@@ -4,11 +4,14 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <spawn.h>
+#include <sys/wait.h>
+
 #include <zmq.h>
 
 #define RESPONSE_BUFFER_SIZE 64
-
-// derived from max-sdk/sources/advanced/simplethread
 
 typedef struct _zt {
     t_object            x_ob;                   // standard max object
@@ -21,6 +24,8 @@ typedef struct _zt {
     t_symbol*           x_request;              // code to be evaluated remotely
     t_symbol*           x_response;             // result of remote evaluation
     int                 x_is_new;               // 1 means there's a new request
+    t_symbol*           x_python;               // full path to the python3 executable
+    t_symbol*           x_server;               // path to the python3 server file
 } t_zt;
 
 void zt_bang(t_zt *x);
@@ -31,22 +36,41 @@ void *zt_threadproc(t_zt *x);
 void zt_qfn(t_zt *x);
 void zt_assist(t_zt *x, void *b, long m, long a, char *s);
 void zt_free(t_zt *x);
-void *zt_new(void);
+void *zt_new(t_symbol* s, long argc, t_atom* argv);
 t_max_err zt_py(t_zt* x, t_symbol* s);
+t_symbol* zt_locate_path_from_symbol(t_zt* x, t_symbol* s);
+void zt_run_server(t_zt* x);
+void zt_server_do(t_zt *x, t_symbol *s, short argc, t_atom *argv);
+void zt_serve(t_zt *x);
+t_max_err zt_server_attr_get(t_zt* x, t_object* attr, long* argc,t_atom** argv);
+t_max_err zt_server_attr_set(t_zt* x, t_object* attr, long argc,t_atom* argv);
+
+
 
 t_class *zt_class;
+
+extern char **environ;
+
 
 void ext_main(void *r)
 {
     t_class *c;
 
-    c = class_new("zthread", (method)zt_new, (method)zt_free, sizeof(t_zt), 0L, 0);
+    c = class_new("zthread", (method)zt_new, (method)zt_free, sizeof(t_zt),
+        0L, A_GIMME, 0);
 
     class_addmethod(c, (method)zt_bang,        "bang",         0);
     class_addmethod(c, (method)zt_py,          "py",           A_DEFSYM, 0);
     class_addmethod(c, (method)zt_sleeptime,   "sleeptime",    A_DEFLONG, 0);
     class_addmethod(c, (method)zt_cancel,      "cancel",       0);
+    class_addmethod(c, (method)zt_serve,       "serve",        0);
     class_addmethod(c, (method)zt_assist,      "assist",       A_CANT, 0);
+
+    CLASS_ATTR_SYM(c,   "python", 0,  t_zt, x_python);
+    CLASS_ATTR_BASIC(c, "python", 0);
+    CLASS_ATTR_SYM(c,   "server", 0,  t_zt, x_server);
+    CLASS_ATTR_BASIC(c, "server", 0);
+    CLASS_ATTR_ACCESSORS(c, "server", zt_server_attr_get, zt_server_attr_set);
 
     class_register(CLASS_BOX,c);
     zt_class = c;
@@ -98,6 +122,13 @@ void zt_cancel(t_zt *x)
 
     zt_stop(x);                                    // kill thread if, any
     outlet_anything(x->x_outlet, gensym("cancelled"), 0, NULL);
+}
+
+
+void zt_serve(t_zt *x)
+{
+    defer_low((t_object *)x, (method)zt_server_do,  NULL, 0, NULL);
+
 }
 
 
@@ -180,7 +211,7 @@ void zt_free(t_zt *x)
         systhread_mutex_free(x->x_mutex);
 }
 
-void *zt_new(void)
+void *zt_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_zt *x;
 
@@ -192,7 +223,92 @@ void *zt_new(void)
     x->x_request = gensym("");
     x->x_response = gensym("");
     x->x_sleeptime = 1000;
+    x->x_is_new = 0;
+    x->x_python = gensym("");
+    x->x_server = gensym("");
+
+    attr_args_process(x, argc, argv);
+
+    post("x_python: %s", x->x_python->s_name);
+    post("x_server: %s", x->x_server->s_name);
 
     return(x);
 }
 
+void zt_server_do(t_zt *x, t_symbol *s, short argc, t_atom *argv)
+{
+    zt_run_server(x);
+}
+
+
+void zt_run_server(t_zt *x)
+{
+    pid_t pid;
+    char *argv[] = {x->x_python->s_name, x->x_server->s_name, NULL};
+    if(posix_spawn(&pid, argv[0], NULL, NULL, argv, environ) != 0) {
+        error("run_server failed");
+        return;
+    } else {
+        post("process %d started", pid);
+    }
+    waitpid(pid, NULL, WNOHANG);
+}
+
+
+t_symbol* zt_locate_path_from_symbol(t_zt* x, t_symbol* s)
+{
+    char filename[MAX_PATH_CHARS];
+    char pathname[MAX_PATH_CHARS];
+    short path;
+    t_fourcc type = FOUR_CHAR_CODE('TEXT');
+    t_max_err err;
+
+    strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
+    if (locatefile_extended(filename, &path, &type, &type, 1)) {
+        // nozero: not found
+        error("can't find file %s", s->s_name);
+        return gensym("");
+    }
+
+    pathname[0] = 0;
+    err = path_toabsolutesystempath(path, filename, pathname);
+    if (err != MAX_ERR_NONE) {
+        error("can't convert %s to absolutepath", s->s_name);
+        return gensym("");
+    }
+    // post("full path is: %s", pathname);
+    return gensym(pathname);
+}
+
+
+t_max_err zt_server_attr_get(t_zt* x, t_object* attr, long* argc,t_atom** argv)
+{
+    char alloc;
+
+    if (argc && argv) {
+        if (atom_alloc(argc, argv, &alloc)) {
+            return MAX_ERR_OUT_OF_MEM;
+        }
+        if (alloc) {
+            atom_setsym(*argv, x->x_server);
+        }
+    }
+    return MAX_ERR_NONE;
+}
+
+
+t_max_err zt_server_attr_set(t_zt* x, t_object* attr, long argc,t_atom* argv)
+{
+    if (argc && argv) {
+
+        t_symbol* entry = atom_getsym(argv);
+        t_symbol* fullpath = zt_locate_path_from_symbol(x, entry);
+
+        if (fullpath != gensym("")) {
+            x->x_server = fullpath;
+        } else {
+            x->x_server = entry;
+        }
+    }
+    return MAX_ERR_NONE;
+}
