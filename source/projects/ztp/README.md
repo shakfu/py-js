@@ -24,5 +24,3 @@ brew install zmq
 ## Learnings
 
 - This works: one thread per zmq socket as per the zmq rules.
-
-- 

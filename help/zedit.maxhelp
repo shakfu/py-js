@@ -2,42 +2,18 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 8,
-			"minor" : 5,
-			"revision" : 4,
+			"major" : 9,
+			"minor" : 0,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
 		"rect" : [ 467.0, 180.0, 616.0, 585.0 ],
-		"bglocked" : 0,
-		"openinpresentation" : 0,
 		"default_fontsize" : 10.0,
-		"default_fontface" : 0,
 		"default_fontname" : "Verdana",
-		"gridonopen" : 1,
 		"gridsize" : [ 5.0, 5.0 ],
-		"gridsnaponopen" : 1,
-		"objectsnaponopen" : 1,
-		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
-		"lefttoolbarpinned" : 0,
-		"toptoolbarpinned" : 0,
-		"righttoolbarpinned" : 0,
-		"bottomtoolbarpinned" : 0,
-		"toolbars_unpinned_last_save" : 0,
-		"tallnewobj" : 0,
-		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
-		"devicewidth" : 0.0,
-		"description" : "",
-		"digest" : "",
-		"tags" : "",
-		"style" : "",
-		"subpatcher_template" : "",
-		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
 					"bgmode" : 0,
@@ -90,7 +66,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 85.0, 521.0, 167.0, 21.0 ]
+					"patching_rect" : [ 85.0, 521.0, 167.0, 21.0 ],
+					"text" : "cancelled"
 				}
 
 			}
@@ -304,7 +281,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 418.0, 13.5, 177.0, 22.0 ],
 					"text" : "http://localhost:8000/api/hello",
-					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ]
+					"textcolor" : [ 0.317647, 0.654902, 0.976471, 1.0 ]
 				}
 
 			}
@@ -355,7 +332,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 23.0, 13.5, 132.0, 22.0 ],
 					"text" : "http://localhost:8000",
-					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ]
+					"textcolor" : [ 0.317647, 0.654902, 0.976471, 1.0 ]
 				}
 
 			}
@@ -754,9 +731,10 @@
 
 			}
  ],
+		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
 				"name" : "py_repl.maxpat",
-				"bootpath" : "~/Downloads/projects/py-js/patchers/bpatchers_ui",
+				"bootpath" : "~/projects/py-js/patchers/bpatchers_ui",
 				"patcherrelativepath" : "../patchers/bpatchers_ui",
 				"type" : "JSON",
 				"implicit" : 1

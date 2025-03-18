@@ -93,13 +93,11 @@ $(call section,"build $1 with flags: $2")
 	done
 endef
 
-
 # $(call xclean-target,name)
 define xclean-target
 $(call section,"cleaning build artifacts from $1 target")
 @rm -rf '$(PYDIR)'/targets/$1/build
 endef
-
 
 # $(call xcleanlib,name)
 define xcleanlib
@@ -108,11 +106,11 @@ $(call section,"cleaning build product from python build $1")
 @rm -rf '${BUILDDIR}'/lib/$1
 endef
 
-
-# $(call build-target,name,variant)
-define build-target
-$(call section,"building $1 as $2")
-@mkdir -p build && \
+# $(call xcode-target,name,variant)
+define xcode-target
+$(call section,"xcode building $1 as $2")
+@./source/scripts/buildpy.py -t $2 && \
+	mkdir -p build && \
 	cd build && \
 	cmake -GXcode .. \
 		-DBUILD_TARGETS=$(1) \
@@ -121,6 +119,35 @@ $(call section,"building $1 as $2")
 	cmake --build . --config Release
 endef
 
+# $(call make-target,name,variant) with make backend
+define make-target
+$(call section,"make building $1 as $2")
+@./source/scripts/buildpy.py -t $2 && \
+	mkdir -p build && \
+	cd build && \
+	cmake .. -G"Unix Makefiles" \
+		-DBUILD_TARGETS=$(1) \
+		-DBUILD_VARIANT=$(2) \
+		&& \
+	cmake --build . --config Release && \
+	cd .. && \
+	$(MAKE) sign
+endef
+
+# $(call ninja-target,name,variant) with ninja backend
+define ninja-target
+$(call section,"ninja building $1 as $2")
+@./source/scripts/buildpy.py -t $2 && \
+	mkdir -p build && \
+	cd build && \
+	cmake .. -G"Ninja" \
+		-DBUILD_TARGETS=$(1) \
+		-DBUILD_VARIANT=$(2) \
+		&& \
+	cmake --build . --config Release && \
+	cd .. && \
+	$(MAKE) sign
+endef
 
 # ============================================================================
 # TARGETS
@@ -299,69 +326,77 @@ beeware-ext: clean-externals
 # -----------------------------------------------------------------------
 # experimental python3 externals
 
-.PHONY: py pyjs cobra jmx ztp shell \
+.PHONY: py pyjs cobra jmx ztp zpy zedit shell \
 		mamba mamba-static mamba-shared \
 		mamba-framework mamba-framework-pkg \
 		krait krait-static krait-shared \
 		krait-framework krait-framework-pkg
 
-py: clean-externals
-	$(call build-target,$@,local)
+py: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-pyjs: clean-externals
-	$(call build-target,$@,local)
+pyjs: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-cobra: clean-externals
-	$(call build-target,$@,local)
+cobra: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-pktpy: clean-externals
-	$(call build-target,$@,local)
+pktpy: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-pktpy2: clean-externals
-	$(call build-target,$@,local)
+pktpy2: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-jmx: clean-externals
-	$(call build-target,$@,local)
+jmx: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-zpy: clean-externals
-	$(call build-target,$@,local)
+zedit: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-ztp: clean-externals
-	$(call build-target,$@,local)
+zedit-shared: clean-cmake-cache clean-externals
+	$(call xcode-target,zedit,shared-ext)
 
-shell:
-	$(call build-target,$@,local)
+zedit-static: clean-cmake-cache clean-externals
+	$(call xcode-target,zedit,static-ext)
 
-mamba: clean-externals
-	$(call build-target,mamba,local)
+zpy: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-mamba-static: clean-externals
-	$(call build-target,mamba,static-ext)
+ztp: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-mamba-shared: clean-externals
-	$(call build-target,mamba,shared-ext)
+shell: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
-mamba-framework: clean-externals
-	$(call build-target,mamba,framework-ext)
+mamba: clean-cmake-cache clean-externals
+	$(call xcode-target,mamba,local)
 
-mamba-framework-pkg: clean-externals
-	$(call build-target,mamba,framework-pkg)
+mamba-static: clean-cmake-cache clean-externals
+	$(call xcode-target,mamba,static-ext)
 
+mamba-shared: clean-cmake-cache clean-externals
+	$(call xcode-target,mamba,shared-ext)
 
-krait: clean-externals
-	$(call build-target,krait,local)
+mamba-framework: clean-cmake-cache clean-externals
+	$(call xcode-target,mamba,framework-ext)
 
-krait-static: clean-externals
-	$(call build-target,krait,static-ext)
+mamba-framework-pkg: clean-cmake-cache clean-externals
+	$(call xcode-target,mamba,framework-pkg)
 
-krait-shared: clean-externals
-	$(call build-target,krait,shared-ext)
+krait: clean-cmake-cache clean-externals
+	$(call xcode-target,krait,local)
 
-krait-framework: clean-externals
-	$(call build-target,krait,framework-ext)
+krait-static: clean-cmake-cache clean-externals
+	$(call xcode-target,krait,static-ext)
 
-krait-framework-pkg: clean-externals
-	$(call build-target,krait,framework-pkg)
+krait-shared: clean-cmake-cache clean-externals
+	$(call xcode-target,krait,shared-ext)
+
+krait-framework: clean-cmake-cache clean-externals
+	$(call xcode-target,krait,framework-ext)
+
+krait-framework-pkg: clean-cmake-cache clean-externals
+	$(call xcode-target,krait,framework-pkg)
 
 
 
@@ -736,7 +771,8 @@ cflow:
 	clean-framework-pkg clean-framework-ext \
 	clean-shared-pkg clean-shared-ext \
 	clean-static-pkg clean-static-ext \
-	clean-relocatable-pkg clean-mambo
+	clean-relocatable-pkg clean-mambo \
+	clean-cmake-cache
 
 clean: clean-externals clean-support clean-targets clean-build clean-docs
 
@@ -790,11 +826,10 @@ clean-support:
 	$(call section,"cleaning support directory")
 	@rm -rf $(ROOTDIR)/support/*
 
-clean-mambo:
-	$(call section,"cleaning mambo")
-	@rm -rf $(ROOTDIR)/build/install/python-shared
-	@rm -rf $(ROOTDIR)/build/install/python-static
-	@rm -rf $(ROOTDIR)/build/install/Python.framework
+clean-cmake-cache:
+	$(call section,"cleaning CMakeCache.txt file and CMakeFiles")
+	@rm -rf $(ROOTDIR)/build/CMakeCache.txt
+	@rm -rf $(ROOTDIR)/build/CMakeFiles
 
 clean-xcode: clean-build
 	$(call section,"cleaning xcode detritus")

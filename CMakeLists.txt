@@ -86,7 +86,7 @@ if(BUILD_POCKETPY_EXTERNALS)
 list(APPEND BUILD_TARGETS pktpy pktpy2)
 endif()
 
-if(BUILD_NET_EXTERNALS)
+if(BUILD_NETWORKING_EXTERNALS)
 list(APPEND BUILD_TARGETS zedit zpy ztp jmx)
 endif()
 

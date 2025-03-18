@@ -25,7 +25,7 @@ typedef struct _ztp {
     t_symbol*           x_request;              // code to be evaluated remotely
     t_symbol*           x_response;             // result of remote evaluation
     int                 x_is_new;               // 1 means there's a new request
-    t_symbol*           x_python;               // full path to the python3 executable
+    t_symbol*           x_python_exe;           // full path to the python3 executable
     t_symbol*           x_server;               // path to the python3 server file
     t_symbol*           x_address;              // server address e.g. tcp://localhost:5555
 } t_ztp;
@@ -67,7 +67,7 @@ void ext_main(void *r)
     class_addmethod(c, (method)ztp_serve,       "serve",        0);
     class_addmethod(c, (method)ztp_assist,      "assist",       A_CANT, 0);
 
-    CLASS_ATTR_SYM(c,   "python", 0,  t_ztp, x_python);
+    CLASS_ATTR_SYM(c,   "python", 0,  t_ztp, x_python_exe);
     CLASS_ATTR_BASIC(c, "python", 0);
     CLASS_ATTR_SYM(c,   "server", 0,  t_ztp, x_server);
     CLASS_ATTR_BASIC(c, "server", 0);
@@ -94,14 +94,14 @@ void *ztp_new(t_symbol* s, long argc, t_atom* argv)
     x->x_sleeptime = 1000;
     x->x_is_new = 0;
     x->x_address = gensym(ZTP_DEFAULT_ADDRESS);
-    x->x_python = gensym("");
+    x->x_python_exe = gensym("");
     x->x_server = gensym("");
 
     attr_args_process(x, argc, argv);
 
-    post("x_python: %s", x->x_python->s_name);
-    post("x_server: %s", x->x_server->s_name);
-    post("x_address: %s", x->x_address->s_name);
+    post("python_exe: %s", x->x_python_exe->s_name);
+    post("server: %s", x->x_server->s_name);
+    post("address: %s", x->x_address->s_name);
 
     return(x);
 }
@@ -254,7 +254,7 @@ void ztp_server_do(t_ztp *x, t_symbol *s, short argc, t_atom *argv)
 void ztp_run_server(t_ztp *x)
 {
     pid_t pid;
-    char *argv[] = {x->x_python->s_name, x->x_server->s_name, NULL};
+    char *argv[] = {x->x_python_exe->s_name, x->x_server->s_name, NULL};
     if(posix_spawn(&pid, argv[0], NULL, NULL, argv, environ) != 0) {
         error("run_server failed");
         return;

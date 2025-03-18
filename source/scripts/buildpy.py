@@ -79,6 +79,7 @@ if PLATFORM == "Darwin":
 DEFAULT_PY_VERSION = "3.13.2"
 DEBUG = getenv('DEBUG', default=True)
 COLOR = getenv('COLOR', default=True)
+BUILD_TYPES = ['local', 'shared-ext', 'static-ext', 'framework-ext', 'framework-pkg']
 
 # ----------------------------------------------------------------------------
 # logging config
@@ -1586,12 +1587,37 @@ if __name__ == "__main__":
     opt("-v", "--version", default=DEFAULT_PY_VERSION, help="python version (default: %(default)s)")
     opt("-w", "--write", help="write configuration", action="store_true")
     opt("-j", "--jobs", help="# of build jobs (default: %(default)s)", type=int, default=4)
-    opt("-s", "--json", help="serialize config to json file")
+    opt("-s", "--json", help="serialize config to json file", action="store_true")
+    opt("-t", "--type", help="build based on build type")
 
     args = parser.parse_args()
     python_builder_class: type[PythonBuilder] = PythonBuilder
     if args.debug:
         python_builder_class = PythonDebugBuilder
+
+    if args.type and args.type in BUILD_TYPES:
+        if args.type == 'local':
+            sys.exit(0)
+        cfg = {
+            'shared-ext': 'shared_mid',
+            'static-ext': 'static_mid',
+            'framework-ext': 'framework_mid',
+            'framework-pkg': 'framework_mid',            
+        }[args.type]
+        is_max_package = args.type[-3:] == 'pkg'
+        builder = python_builder_class(
+            version=args.version,
+            config=cfg,
+            optimize=args.optimize,
+            pkgs=args.pkgs,
+            cfg_opts=args.cfg_opts,
+            jobs=args.jobs,
+            is_max_package=is_max_package,
+        )
+        if args.reset:
+            builder.remove("build")
+        builder.process()
+        sys.exit(0)
 
     if '-' in args.config:
         _config = args.config.replace('-', '_')
