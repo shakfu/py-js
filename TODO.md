@@ -1,9 +1,6 @@
 # TODO
 
-
-- [ ] archive `zpy`, which is not so useful now.
-
-- [x] rename `zthread` to `ztp` for 'zeromq-threaded-python', enable additional build variants.
+- [ ] archive `zpy`, which is not so useful now, given `ztp`
 
 - [ ] `krait` and `cobra` to swap names
 
@@ -12,3 +9,5 @@
 
 - [ ] Try pyodide in the browser to communicate with Max via the external / 
   mongoose websockets.
+
+- [x] rename `zthread` to `ztp` for 'zeromq-threaded-python', enable additional build variants.
