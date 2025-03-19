@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Swapped names of `cobra` and `krait` projects.
+
 - Renamed `zthread` to `ztp` to emphasize the use of zeromq + threads + python
 
 - Building `py` and `pyjs` via `make` doesn't require `cython` to be installed.
@@ -28,7 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Changed the main `CMakeLists.txt` file to enable single-project build options.
 
-- Merged `mambo` features into `mamba` and `krait`. `mambo` is removed as a separate subproject.
+- Merged `mambo` features into `mamba` and `cobra`. `mambo` is removed as a separate subproject.
 
 - Added `mambo` variant of `mamba` which uses a new way of building relocatable python3 externals. It includes a tweaked version of the `mamba` single-header c-based python3 library, and makes use of a slightly modified version of the `source/scripts/buildpy.py` script which was [developed externally](https://github.com/shakfu/buildpy). So far, shared, static, and framework builds are possible via: `make mambo-shared`, `make mambo-static` and `make mambo-framework` respectively.
 
@@ -85,7 +87,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - Discovered builtin way for max to find the external using an included but undocumented function. This is by way of the `class_getpath` function. This is demonstrated (partially) in the `py.c` method `t_symbol* py_locate_path_to_external(t_py* x)`
 
-- Added the `krait` project, which pushes the single-header implementation into cpp territory with a cpp class `PythonInterpreter` implementing and encapsulating all of the functionality. This is final extension of the idea of modular python3 interpreter which can be easily nested into any Max external object.
+- Added the `cobra` project, which pushes the single-header implementation into cpp territory with a cpp class `PythonInterpreter` implementing and encapsulating all of the functionality. This is final extension of the idea of modular python3 interpreter which can be easily nested into any Max external object.
 
 - Added the `mamba` project: a single header python3 library for max externals which provides the `t_py` max type providings max-friendly python3 interpreter methods.  The idea is that an object from this type be instanciated and nested inside any another external.
 

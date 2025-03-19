@@ -11,7 +11,7 @@ This subproject provides an example of a python3 external whith the following fe
 
 This ui in this project is very powerfull using typescript/javascript-based web technologies. This is probably overkill for a python3 external, but illustratrive nonetheless of the potential achieved by embedding an small webserver in an external.
 
-For simpler exmaples of user interfaces which interact with python3 externals see the `patchers/bpatchers_ui` and the `patchers/bpatcher_py` folders.
+For simpler examples of user interfaces which interact with python3 externals see the `patchers/bpatchers_ui` and the `patchers/bpatcher_py` folders.
 
 ## Usage
 

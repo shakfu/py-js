@@ -24,9 +24,9 @@ book:
 
     - part: "Experimental Externals"
       chapters:
-        - src/externals/krait.qmd
-        - src/externals/mamba.qmd
         - src/externals/cobra.qmd
+        - src/externals/mamba.qmd
+        - src/externals/krait.qmd
         - src/externals/mxpy.qmd
 
     - part: "Alternative Externals"

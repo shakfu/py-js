@@ -2,8 +2,11 @@
 
 ## [0.1.x]
 
-- Updated initialization code related to recently updated `mamba py.h` dependency
+- Changed name of the project to `cobra`
 
-- Added docs
+- Added new general build system
 
-- Refactored to re-use mamba's `py.h` single-header library.
+## [0.1.1]
+
+- Added changelog
+- Added py_interpreter.h

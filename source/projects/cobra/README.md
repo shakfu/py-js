@@ -1,23 +1,48 @@
-# cobra: an ITM-based python evaluator
+# cobra: a single-header c++ python3 library for max externals
 
-This project provide a proof-of-concept to defer the evaluation of a python function via Max's ITM-based sequencing.
+Provides a single-header cpp-centric `py_interpreter.h` library with a python3 interpreter class.
 
-Note that it has a dependency on another subproject: it includes mamba's single header c library, `py.h`, to reduce boilerplate and provide python interpreter 'services'.
+Note that `cobra.cpp` is just a demonstration of an external using `py_interpreter.h`.
 
-## Current Status
-
-Crashes on Python3.13 (this is under investigation)
+I called it `cobra`, in honour of the 'Krait Lightspeeder' in the original [Elite](https://en.wikipedia.org/wiki/Elite_(video_game)).
 
 ## Building
 
-From the root of the `py-js` project
+From the root of the `py-js` project, there are several options to build the external:
 
-```bash
-make projects
+- For a fast non-relocatable build which references your existing python installation
+
+```sh
+make cobra
 ```
 
-This will build all subprojects, including `cobra`, using the standard cmake buildsystem.
+- For a relocatable dynamically-linked build
 
-## Help
+```sh
+make cobra-shared
+```
 
-See `cobra.maxhelp` in `py-js/help` folder.
+- For a relocatable statically-linked build
+
+```sh
+make cobra-static
+```
+
+- For a relocatable dynamically-linked framework build
+
+```sh
+make cobra-framework
+```
+
+- For a dynamically-linked framework build for relocatable Max packages
+
+```sh
+make cobra-framework-pkg
+```
+
+Finally, open the `help/cobra.maxhelp` help file to test the external.
+This will build all subprojects, including `cobra`, using the standard cmake build process.
+
+## Tests
+
+See `cobra.maxhelp` in `py-js/help`

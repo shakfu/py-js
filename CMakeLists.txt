@@ -79,7 +79,7 @@ list(APPEND BUILD_TARGETS py pyjs)
 endif()
 
 if(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS)
-list(APPEND BUILD_TARGETS cobra krait mamba mxpy)
+list(APPEND BUILD_TARGETS krait cobra mamba mxpy)
 endif()
 
 if(BUILD_POCKETPY_EXTERNALS)

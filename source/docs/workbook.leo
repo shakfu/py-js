@@ -182,8 +182,8 @@
 <v t="sta.20240722221351.1"><vh>externals</vh>
 <v t="sta.20240722223901.1"><vh>@auto-md py.qmd</vh></v>
 <v t="sta.20240722223914.1"><vh>@auto-md pyjs.qmd</vh></v>
-<v t="sta.20240722230725.1"><vh>@auto-md cobra.qmd</vh></v>
-<v t="sta.20240722230736.1"><vh>@auto-md krait.qmd</vh></v>
+<v t="sta.20240722230725.1"><vh>@auto-md krait.qmd</vh></v>
+<v t="sta.20240722230736.1"><vh>@auto-md cobra.qmd</vh></v>
 <v t="sta.20240722230745.1"><vh>@auto-md mamba.qmd</vh></v>
 <v t="sta.20240722230753.1"><vh>@auto-md mpy.qmd</vh></v>
 <v t="sta.20240722230803.1"><vh>@auto-md pktpy.qmd</vh></v>

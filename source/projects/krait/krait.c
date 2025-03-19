@@ -1,5 +1,5 @@
 /**
-    @file cobra - an ITM-based python evaluator
+    @file krait - an ITM-based python evaluator
 
     Experiment to defer the evaluation of a python function
     via the ITM-based sequencing.
@@ -17,7 +17,7 @@
 
 
 // datastructure
-typedef struct cobra
+typedef struct krait
 {
     t_object c_obj;
 
@@ -37,81 +37,81 @@ typedef struct cobra
     void *c_outlet;
     void *c_outlet2;
 
-} t_cobra;
+} t_krait;
 
 // prototypes
-void *cobra_new(t_symbol *s, long argc, t_atom *argv);
-void cobra_free(t_cobra *x);
-void cobra_assist(t_cobra *x, void *b, long m, long a, char *s);
-void cobra_inletinfo(t_cobra *x, void *b, long a, char *t);
-void cobra_int(t_cobra *x, long n);
-void cobra_float(t_cobra *x, double f);
-void cobra_list(t_cobra *x, t_symbol *s, long argc, t_atom *argv);
-void cobra_anything(t_cobra *x, t_symbol *msg, long argc, t_atom *argv);
-void cobra_tick(t_cobra *x);
-void cobra_bang(t_cobra *x);
-void cobra_stop(t_cobra *x);
-void cobra_clocktick(t_cobra *x);
+void *krait_new(t_symbol *s, long argc, t_atom *argv);
+void krait_free(t_krait *x);
+void krait_assist(t_krait *x, void *b, long m, long a, char *s);
+void krait_inletinfo(t_krait *x, void *b, long a, char *t);
+void krait_int(t_krait *x, long n);
+void krait_float(t_krait *x, double f);
+void krait_list(t_krait *x, t_symbol *s, long argc, t_atom *argv);
+void krait_anything(t_krait *x, t_symbol *msg, long argc, t_atom *argv);
+void krait_tick(t_krait *x);
+void krait_bang(t_krait *x);
+void krait_stop(t_krait *x);
+void krait_clocktick(t_krait *x);
 
-t_max_err cobra_import(t_cobra* x, t_symbol* s);
-t_max_err cobra_defer(t_cobra* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err krait_import(t_krait* x, t_symbol* s);
+t_max_err krait_defer(t_krait* x, t_symbol* s, long argc, t_atom* argv);
 
 
-static t_class *cobra_class = NULL;
+static t_class *krait_class = NULL;
 
 void ext_main(void *r)
 {
-    t_class *c = class_new( "cobra", (method)cobra_new, (method)cobra_free, sizeof(t_cobra), (method)0L, A_GIMME, 0);
+    t_class *c = class_new( "krait", (method)krait_new, (method)krait_free, sizeof(t_krait), (method)0L, A_GIMME, 0);
 
-    class_addmethod(c, (method)cobra_bang,      "bang",         0);
-    class_addmethod(c, (method)cobra_stop,      "stop",         0);
-    class_addmethod(c, (method)cobra_int,       "int",          A_LONG, 0);
-    class_addmethod(c, (method)cobra_float,     "float",        A_FLOAT, 0);
-    class_addmethod(c, (method)cobra_list,      "list",         A_GIMME, 0);
-    class_addmethod(c, (method)cobra_anything,  "anything",     A_GIMME, 0);
+    class_addmethod(c, (method)krait_bang,      "bang",         0);
+    class_addmethod(c, (method)krait_stop,      "stop",         0);
+    class_addmethod(c, (method)krait_int,       "int",          A_LONG, 0);
+    class_addmethod(c, (method)krait_float,     "float",        A_FLOAT, 0);
+    class_addmethod(c, (method)krait_list,      "list",         A_GIMME, 0);
+    class_addmethod(c, (method)krait_anything,  "anything",     A_GIMME, 0);
 
-    class_addmethod(c, (method)cobra_assist,    "assist",       A_CANT, 0);
-    class_addmethod(c, (method)cobra_inletinfo, "inletinfo",    A_CANT, 0);
+    class_addmethod(c, (method)krait_assist,    "assist",       A_CANT, 0);
+    class_addmethod(c, (method)krait_inletinfo, "inletinfo",    A_CANT, 0);
 
-    class_addmethod(c, (method)cobra_import,    "import",       A_SYM,  0);
-    class_addmethod(c, (method)cobra_defer,     "defer",       A_GIMME, 0);
+    class_addmethod(c, (method)krait_import,    "import",       A_SYM,  0);
+    class_addmethod(c, (method)krait_defer,     "defer",       A_GIMME, 0);
 
     class_time_addattr(c, "delaytime", "Delay Time", TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK | TIME_FLAGS_TRANSPORT);
     class_time_addattr(c, "quantize", "Quantization", TIME_FLAGS_TICKSONLY);
 
     class_register(CLASS_BOX, c);
 
-    cobra_class = c;
+    krait_class = c;
 }
 
 
 /**
- * @brief Initializes the cobra object
+ * @brief Initializes the krait object
  *
  * @param s symbol value
  * @param argc number of arguments
  * @param argv array of atom values
  *
- * @return pointer to cobra object
+ * @return pointer to krait object
  *
  * @note: initial optional arg is delay time
  */
-void *cobra_new(t_symbol *s, long argc, t_atom *argv)
+void *krait_new(t_symbol *s, long argc, t_atom *argv)
 {
-    t_cobra *x = (t_cobra *)object_alloc(cobra_class);
+    t_krait *x = (t_krait *)object_alloc(krait_class);
     long attrstart = attr_args_offset(argc, argv);
     t_atom a;
 
-    x->py = (t_py*)py_init(cobra_class); // Initialize and allocate python interpreter instance
+    x->py = (t_py*)py_init(krait_class); // Initialize and allocate python interpreter instance
 
     x->c_inletnum = 0;
     x->c_proxy = proxy_new(x, 1, &x->c_inletnum);
     x->c_outlet2 = bangout(x);
     x->c_outlet = bangout(x);
 
-    x->c_timeobj = (t_object *) time_new((t_object *)x, gensym("delaytime"), (method)cobra_tick, TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK);
+    x->c_timeobj = (t_object *) time_new((t_object *)x, gensym("delaytime"), (method)krait_tick, TIME_FLAGS_TICKSONLY | TIME_FLAGS_USECLOCK);
     x->c_quantize = (t_object *) time_new((t_object *)x, gensym("quantize"), NULL, TIME_FLAGS_TICKSONLY);
-    x->c_clock = clock_new((t_object *)x, (method)cobra_clocktick);
+    x->c_clock = clock_new((t_object *)x, (method)krait_clocktick);
 
     // x->c_name = symbol_unique();
     x->c_func = NULL;
@@ -131,13 +131,13 @@ void *cobra_new(t_symbol *s, long argc, t_atom *argv)
 }
 
 /**
- * @brief Frees the cobra object
+ * @brief Frees the krait object
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  *
  * @note: `py_free` is called to cleanup the python instance
  */
-void cobra_free(t_cobra *x)
+void krait_free(t_krait *x)
 {
     freeobject(x->c_timeobj);
     freeobject(x->c_quantize);
@@ -149,7 +149,7 @@ void cobra_free(t_cobra *x)
 /**
  * @brief Handles assist messages
  */
-void cobra_assist(t_cobra *x, void *b, long m, long a, char *s)
+void krait_assist(t_krait *x, void *b, long m, long a, char *s)
 {
     if (m == ASSIST_INLET) {    // Inlets
         switch (a) {
@@ -168,7 +168,7 @@ void cobra_assist(t_cobra *x, void *b, long m, long a, char *s)
 /**
  * @brief Handles inlet info
  */
-void cobra_inletinfo(t_cobra *x, void *b, long a, char *t)
+void krait_inletinfo(t_krait *x, void *b, long a, char *t)
 {
     if (a)
         *t = 1;
@@ -177,21 +177,21 @@ void cobra_inletinfo(t_cobra *x, void *b, long a, char *t)
 /**
  * @brief Handles int messages
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  * @param n int value
  */
-void cobra_int(t_cobra *x, long n)
+void krait_int(t_krait *x, long n)
 {
-    cobra_float(x, n);
+    krait_float(x, n);
 }
 
 /**
  * @brief Handles float messages
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  * @param f float value
  */
-void cobra_float(t_cobra *x, double f)
+void krait_float(t_krait *x, double f)
 {
     t_atom a;
 
@@ -199,44 +199,44 @@ void cobra_float(t_cobra *x, double f)
     time_setvalue(x->c_timeobj, NULL, 1, &a);
 
     if (proxy_getinlet((t_object *)x) == 0)
-        cobra_bang(x);
+        krait_bang(x);
 }
 
 /**
  * @brief Handles list messages
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  * @param s symbol value
  * @param argc number of arguments
  * @param argv array of atom values
  */
-void cobra_list(t_cobra *x, t_symbol *s, long argc, t_atom *argv)
+void krait_list(t_krait *x, t_symbol *s, long argc, t_atom *argv)
 {
-    cobra_anything(x, NULL, argc, argv);
+    krait_anything(x, NULL, argc, argv);
 }
 
 /**
  * @brief Sets the delay time
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  * @param msg symbol value
  * @param argc number of arguments
  * @param argv array of atom values
  */
-void cobra_anything(t_cobra *x, t_symbol *msg, long argc, t_atom *argv)
+void krait_anything(t_krait *x, t_symbol *msg, long argc, t_atom *argv)
 {
     time_setvalue(x->c_timeobj, msg, argc, argv);
 
     if (proxy_getinlet((t_object *)x) == 0)
-        cobra_bang(x);
+        krait_bang(x);
 }
 
 /**
  * @brief Calls the python function
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  */
-void cobra_tick(t_cobra *x)
+void krait_tick(t_krait *x)
 {
     if (x->c_func != NULL) {
         PyObject* pval = PyObject_CallObject(x->c_func, NULL);
@@ -260,9 +260,9 @@ void cobra_tick(t_cobra *x)
 /**
  * @brief Schedules the delay time
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  */
-void cobra_bang(t_cobra *x)
+void krait_bang(t_krait *x)
 {
     double ms, tix;
 
@@ -276,9 +276,9 @@ void cobra_bang(t_cobra *x)
 /**
  * @brief Handles the clock tick
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  */
-void cobra_clocktick(t_cobra *x)
+void krait_clocktick(t_krait *x)
 {
     outlet_bang(x->c_outlet2);
 }
@@ -286,9 +286,9 @@ void cobra_clocktick(t_cobra *x)
 /**
  * @brief Stops the delay time
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  */
-void cobra_stop(t_cobra *x)
+void krait_stop(t_krait *x)
 {
     post("stop");
     time_stop(x->c_timeobj);
@@ -299,12 +299,12 @@ void cobra_stop(t_cobra *x)
 /**
  * @brief Imports a python module
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  * @param s symbol value
  *
  * @return t_max_err
  */
-t_max_err cobra_import(t_cobra* x, t_symbol* s)
+t_max_err krait_import(t_krait* x, t_symbol* s)
 {
     return py_import(x->py, s); // returns t_max_err
 }
@@ -313,14 +313,14 @@ t_max_err cobra_import(t_cobra* x, t_symbol* s)
 /**
  * @brief Defers the python function
  *
- * @param x pointer to cobra object
+ * @param x pointer to krait object
  * @param s symbol value
  * @param argc number of arguments
  * @param argv array of atom values
  *
  * @return t_max_err
  */
-t_max_err cobra_defer(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err krait_defer(t_krait* x, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();

@@ -19,7 +19,7 @@ Currently implemented in the `py` directory, both of these externals are built t
 
 ## B. Implementation and Packaging Experiments
 
-### cobra
+### krait
 
 Deferred and clocked evaluation of a python function via Max's ITM-based sequencing
 
@@ -27,7 +27,7 @@ Deferred and clocked evaluation of a python function via Max's ITM-based sequenc
 
 A Single-header python3 c library to nest python3 objects in other externals
 
-### krait
+### cobra
 
 A Single-header python3 c++ library to nest python3 objects in other externals
 

@@ -329,8 +329,8 @@ beeware-ext: clean-externals
 .PHONY: py py-static py-shared py-framework py-framework-pkg \
 		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
 		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
-		krait krait-static krait-shared krait-framework krait-framework-pkg \
-		cobra jmx ztp zpy zedit shell
+		cobra cobra-static cobra-shared cobra-framework cobra-framework-pkg \
+		krait jmx ztp zpy zedit shell
 
 
 py: clean-cmake-cache clean-externals
@@ -378,22 +378,22 @@ mamba-framework: clean-cmake-cache clean-externals
 mamba-framework-pkg: clean-cmake-cache clean-externals
 	$(call xcode-target,mamba,framework-pkg)
 
-krait: clean-cmake-cache clean-externals
-	$(call xcode-target,krait,local)
-
-krait-static: clean-cmake-cache clean-externals
-	$(call xcode-target,krait,static-ext)
-
-krait-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,krait,shared-ext)
-
-krait-framework: clean-cmake-cache clean-externals
-	$(call xcode-target,krait,framework-ext)
-
-krait-framework-pkg: clean-cmake-cache clean-externals
-	$(call xcode-target,krait,framework-pkg)
-
 cobra: clean-cmake-cache clean-externals
+	$(call xcode-target,cobra,local)
+
+cobra-static: clean-cmake-cache clean-externals
+	$(call xcode-target,cobra,static-ext)
+
+cobra-shared: clean-cmake-cache clean-externals
+	$(call xcode-target,cobra,shared-ext)
+
+cobra-framework: clean-cmake-cache clean-externals
+	$(call xcode-target,cobra,framework-ext)
+
+cobra-framework-pkg: clean-cmake-cache clean-externals
+	$(call xcode-target,cobra,framework-pkg)
+
+krait: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 
 pktpy: clean-cmake-cache clean-externals

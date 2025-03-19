@@ -2,11 +2,10 @@
 
 ## [0.1.x]
 
-## [0.1.2]
+- Changed name of the project to `krait`
 
-- Added new general build system
+- Updated initialization code related to recently updated `mamba py.h` dependency
 
-## [0.1.1]
+- Added docs
 
-- Added changelog
-- Added py_interpreter.h
+- Refactored to re-use mamba's `py.h` single-header library.
