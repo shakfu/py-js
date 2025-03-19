@@ -1,7 +1,14 @@
 function(python3_external)
-    set(options)
-    set(oneValueArgs PROJECT_NAME BUILD_VARIANT)
+    set(options
+        DEBUG
+        INCLUDE_COMMONSYMS
+    )
+    set(oneValueArgs 
+        PROJECT_NAME
+        BUILD_VARIANT
+    )
     set(multiValueArgs
+        PROJECT_SOURCE
         INCLUDE_DIRS
         LINK_LIBS
         LINK_DIRS
@@ -20,12 +27,15 @@ function(python3_external)
 
     message(STATUS "PROJECT_NAME: ${PY3EXT_PROJECT_NAME}")
     message(STATUS "BUILD_VARIANT: ${PY3EXT_BUILD_VARIANT}")
-    # message(STATUS "PY3EXT_INCLUDE_DIRS: ${PY3EXT_INCLUDE_DIRS}")
-    # message(STATUS "PY3EXT_COMPILE_DEFINITIONS: ${PY3EXT_COMPILE_DEFINITIONS}")
-    # message(STATUS "PY3EXT_COMPILE_OPTIONS: ${PY3EXT_COMPILE_OPTIONS}")
-    # message(STATUS "PY3EXT_LINK_LIBS: ${PY3EXT_LINK_LIBS}")
-    # message(STATUS "PY3EXT_LINK_DIRS: ${PY3EXT_LINK_DIRS}")
-    # message(STATUS "PY3EXT_LINK_OPTIONS: ${PY3EXT_LINK_OPTIONS}")
+    if(DEBUG)
+        message(STATUS "PROJECT_SOURCE: ${PY3EXT_PROJECT_SOURCE}")
+        message(STATUS "PY3EXT_INCLUDE_DIRS: ${PY3EXT_INCLUDE_DIRS}")
+        message(STATUS "PY3EXT_COMPILE_DEFINITIONS: ${PY3EXT_COMPILE_DEFINITIONS}")
+        message(STATUS "PY3EXT_COMPILE_OPTIONS: ${PY3EXT_COMPILE_OPTIONS}")
+        message(STATUS "PY3EXT_LINK_LIBS: ${PY3EXT_LINK_LIBS}")
+        message(STATUS "PY3EXT_LINK_DIRS: ${PY3EXT_LINK_DIRS}")
+        message(STATUS "PY3EXT_LINK_OPTIONS: ${PY3EXT_LINK_OPTIONS}")
+    endif()
 
     set(variants local shared-ext static-ext framework-ext framework-pkg)
     set(self_contained shared-ext static-ext framework-ext)
@@ -76,11 +86,15 @@ function(python3_external)
     message(STATUS "Python3_ROOT_DIR: ${Python3_ROOT_DIR}")
     message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 
+    if(PY3EXT_PROJECT_SOURCE)
+        set(PROJECT_SRC ${PY3EXT_PROJECT_SOURCE})
+    else()
     file(GLOB PROJECT_SRC
         "*.h"
         "*.c"
         "*.cpp"
     )
+    endif()
 
     include_directories( 
         "${MAX_SDK_INCLUDES}"
@@ -92,6 +106,7 @@ function(python3_external)
         ${PY3EXT_PROJECT_NAME} 
         MODULE
         ${PROJECT_SRC}
+        $<$<BOOL:${PY3EXT_INCLUDE_COMMONSYMS}>:${MAX_SDK_INCLUDES}/common/commonsyms.c>
     )
 
     target_include_directories(
@@ -110,6 +125,7 @@ function(python3_external)
         ${PY3EXT_COMPILE_DEFINITIONS}
         -DNDEBUG
         $<$<BOOL:${BUILD_STATIC_EXT}>:-DBUILD_STATIC> # help static find pyhome
+        $<$<BOOL:${PY3EXT_INCLUDE_COMMONSYMS}>:-DINCLUDE_COMMONSYMS>
         # $<IN_LIST:${PY3EXT_BUILD_VARIANT},${self_contained}:-DSELFCONTAINED_EXTERNAL> # special case
     )
 
@@ -124,6 +140,8 @@ function(python3_external)
         $<$<PLATFORM_ID:Darwin>:-g>
         $<$<PLATFORM_ID:Darwin>:-fwrapv>
         $<$<PLATFORM_ID:Darwin>:-O3>
+        $<$<PLATFORM_ID:Windows>:/O2>
+        $<$<PLATFORM_ID:Windows>:/MD> # api module works with this
     )
 
     target_link_directories(
