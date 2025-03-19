@@ -327,14 +327,14 @@ beeware-ext: clean-externals
 # experimental python3 externals
 
 .PHONY: py py-static py-shared py-framework py-framework-pkg \
-		pyjs cobra jmx ztp zpy zedit shell \
-		mamba mamba-static mamba-shared \
-		mamba-framework mamba-framework-pkg \
-		krait krait-static krait-shared \
-		krait-framework krait-framework-pkg
+		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
+		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
+		krait krait-static krait-shared krait-framework krait-framework-pkg \
+		cobra jmx ztp zpy zedit shell
+
 
 py: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call xcode-target,py,local)
 
 py-static: clean-cmake-cache clean-externals
 	$(call xcode-target,py,static-ext)
@@ -349,7 +349,7 @@ py-framework-pkg: clean-cmake-cache clean-externals
 	$(call xcode-target,py,framework-pkg)
 
 pyjs: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call xcode-target,pyjs,local)
 
 pyjs-static: clean-cmake-cache clean-externals
 	$(call xcode-target,pyjs,static-ext)
@@ -362,36 +362,6 @@ pyjs-framework: clean-cmake-cache clean-externals
 
 pyjs-framework-pkg: clean-cmake-cache clean-externals
 	$(call xcode-target,pyjs,framework-pkg)
-
-cobra: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
-
-pktpy: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
-
-pktpy2: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
-
-jmx: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
-
-zedit: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
-
-zedit-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,zedit,shared-ext)
-
-zedit-static: clean-cmake-cache clean-externals
-	$(call xcode-target,zedit,static-ext)
-
-zpy: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
-
-ztp: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
-
-shell: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
 
 mamba: clean-cmake-cache clean-externals
 	$(call xcode-target,mamba,local)
@@ -423,6 +393,35 @@ krait-framework: clean-cmake-cache clean-externals
 krait-framework-pkg: clean-cmake-cache clean-externals
 	$(call xcode-target,krait,framework-pkg)
 
+cobra: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+pktpy: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+pktpy2: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+jmx: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+zedit: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+zedit-shared: clean-cmake-cache clean-externals
+	$(call xcode-target,zedit,shared-ext)
+
+zedit-static: clean-cmake-cache clean-externals
+	$(call xcode-target,zedit,static-ext)
+
+zpy: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+ztp: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+shell: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
 
 # -----------------------------------------------------------------------
