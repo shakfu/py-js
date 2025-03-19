@@ -330,7 +330,7 @@ beeware-ext: clean-externals
 		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
 		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
 		cobra cobra-static cobra-shared cobra-framework cobra-framework-pkg \
-		krait jmx ztp zpy zedit shell
+		krait jmx ztp zpy zedit shell xpyc
 
 
 py: clean-cmake-cache clean-externals
@@ -418,6 +418,9 @@ zpy: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 
 ztp: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
+xpyc: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 
 shell: clean-cmake-cache clean-externals

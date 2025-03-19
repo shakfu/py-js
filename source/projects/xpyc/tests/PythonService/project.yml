@@ -1,0 +1,30 @@
+name: PythonService
+options:
+  bundleIdPrefix: xpyc
+settings:
+  ARCHS: $(NATIVE_ARCH)
+  MACOSX_DEPLOYMENT_TARGET: "10.13"
+  CODE_SIGN_IDENTITY: "-"
+  DEVELOPMENT_TEAM: ""
+  GCC_OPTIMIZATION_LEVEL: 0
+  GCC_NO_COMMON_BLOCKS: No
+  HEADER_SEARCH_PATHS:
+    - $(PROJECT_HEADERS)
+  INFOPLIST_FILE: $(SRCROOT)/Info.plist
+  LIBRARY_SEARCH_PATHS: $(PROJECT_LIBS)
+  OTHER_LDFLAGS:
+    - $(PROJECT_LDFLAGS)
+  PRODUCT_NAME: $(TARGET_NAME)
+  WRAPPER_EXTENSION: xpc
+configFiles:
+  Debug: project.xcconfig
+  Release: project.xcconfig
+
+targets:
+  PythonService:
+    type: bundle
+    platform: macOS
+    sources:
+      - main.c
+    dependencies:
+      - sdk: CoreFoundation.framework

@@ -1,0 +1,17 @@
+
+
+TARGET_NAME = PythonService
+VERSION = 3.13
+ABIFLAGS = 
+PREFIX = /opt/homebrew/opt/python@$(VERSION)/Frameworks/Python.framework/Versions/$(VERSION)
+LIBS = -ldl
+
+// --------------------------------------------------------------------------------
+
+PY_HEADERS = $(PREFIX)/include/python$(VERSION)$(ABIFLAGS) $(NUMPY_HEADERS)
+PY_LIBS = $(PREFIX)/lib
+PY_LDFLAGS = $(LIBS) -lpython$(VERSION)$(ABIFLAGS)
+
+PROJECT_HEADERS = $(PY_HEADERS)
+PROJECT_LIBS = $(PY_LIBS)
+PROJECT_LDFLAGS = $(LIBS) -lpython$(VERSION)$(ABIFLAGS)

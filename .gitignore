@@ -1,6 +1,7 @@
 # dirs, files, and patters to exclude
 **/project.xcworkspace
 **/xcshareddata
+**/xcuserdata
 *.dylib
 *.mxe
 *.mxe64
