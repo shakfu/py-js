@@ -421,16 +421,11 @@ zpy: clean-cmake-cache clean-externals
 ztp: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 
-# python-service:
-# 	rm -rf $(ROOTDIR)/source/projects/xpyc/PythonService.xpc
-
-clean-python-service:
-	@rm -rf $(ROOTDIR)/source/projects/xpyc/PythonService.xpc
-
 python-service: clean-python-service
-	@cd source/projects/xpyc/tests/PythonService/PythonService && \
-		xcodebuild -arch arm64 -project PythonService.xcodeproj && \
-		mv build/Release/PythonService.xpc ../../../
+	@cd source/projects/xpyc/services && \
+		xcodebuild -project PythonService.xcodeproj \
+			SYMROOT=$(ROOTDIR)/build/python_service \
+			BUILD_DIR=$(ROOTDIR)/build
 
 xpyc: clean-cmake-cache clean-externals python-service
 	$(call xcode-target,$@,local)
@@ -810,7 +805,7 @@ cflow:
 	clean-shared-pkg clean-shared-ext \
 	clean-static-pkg clean-static-ext \
 	clean-relocatable-pkg clean-mambo \
-	clean-cmake-cache
+	clean-cmake-cache clean-python-service
 
 clean: clean-externals clean-support clean-targets clean-build clean-docs
 
@@ -868,6 +863,9 @@ clean-cmake-cache:
 	$(call section,"cleaning CMakeCache.txt file and CMakeFiles")
 	@rm -rf $(ROOTDIR)/build/CMakeCache.txt
 	@rm -rf $(ROOTDIR)/build/CMakeFiles
+
+clean-python-service:
+	@rm -rf $(ROOTDIR)/source/projects/xpyc/PythonService.xpc
 
 clean-xcode: clean-build
 	$(call section,"cleaning xcode detritus")

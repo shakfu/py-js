@@ -155,6 +155,7 @@
 		127533162D8B481F002E5098 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
 				CODE_SIGN_ENTITLEMENTS = PythonService/PythonService.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -181,6 +182,7 @@
 		127533172D8B481F002E5098 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
 				CODE_SIGN_ENTITLEMENTS = PythonService/PythonService.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
