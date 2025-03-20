@@ -261,4 +261,5 @@ Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing h
 [mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
 [jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
 [ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/ztp
-[ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/xpyc
+[xpyc]: https://github.com/shakfu/py-js/tree/main/source/projects/xpyc
+
