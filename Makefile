@@ -16,6 +16,8 @@ PYTHON = python3
 # or just uncomment the line below, to use on more than one build.
 # PYTHON_VERSION = 3.13.2
 
+# target: first second
+
 # paths
 ROOTDIR := $(shell pwd)
 SRCDIR := $(ROOTDIR)/source
@@ -40,7 +42,6 @@ INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
 				   # interpreter.
 CYTHON_OPTIONS = --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
 				 -X emit_code_comments=False
-
 
 # change MAX_VERSION from 9 to 8 or vice-versa
 
@@ -330,7 +331,7 @@ beeware-ext: clean-externals
 		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
 		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
 		cobra cobra-static cobra-shared cobra-framework cobra-framework-pkg \
-		krait jmx ztp zpy zedit shell xpyc
+		krait jmx ztp zpy zedit shell xpyc python-service
 
 
 py: clean-cmake-cache clean-externals
@@ -420,12 +421,22 @@ zpy: clean-cmake-cache clean-externals
 ztp: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 
-xpyc: clean-cmake-cache clean-externals
+# python-service:
+# 	rm -rf $(ROOTDIR)/source/projects/xpyc/PythonService.xpc
+
+clean-python-service:
+	@rm -rf $(ROOTDIR)/source/projects/xpyc/PythonService.xpc
+
+python-service: clean-python-service
+	@cd source/projects/xpyc/tests/PythonService/PythonService && \
+		xcodebuild -arch arm64 -project PythonService.xcodeproj && \
+		mv build/Release/PythonService.xpc ../../../
+
+xpyc: clean-cmake-cache clean-externals python-service
 	$(call xcode-target,$@,local)
 
 shell: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
-
 
 # -----------------------------------------------------------------------
 # release external targets

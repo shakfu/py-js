@@ -71,29 +71,3 @@ int main(int argc, const char *argv[])
 
     return 0;
 }
-
-/*
-
- To use this service from an app or other process, use xpc_session to establish a connection to the service.
- 
-     xpc_rich_error_t error;
-     xpc_session_t session = xpc_session_create_xpc_service("xpyc.PythonService", NULL, 0, &error);
-
- Once you have a connection to the service, create a Codable request and send it to the service.
-
-     xpc_rich_error_t error;
-
-     xpc_object_t message = xpc_dictionary_create(NULL, NULL, 0);
-     xpc_dictionary_set_int64(message, "firstNumber", 23);
-     xpc_dictionary_set_int64(message, "secondNumber", 19);
-
-     xpc_object_t reply = xpc_session_send_message_with_reply_sync(session, message, &error);
-     int64_t result = xpc_dictionary_get_int64(reply, "result");
-     
-     printf("Got result of calculation: %lld", result);
-
- When you're done using the connection, cancel it by doing the following:
- 
-     xpc_session_cancel(session);
-
-*/

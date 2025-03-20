@@ -14,7 +14,7 @@ pdf documentation - [Python3-Externals-for-Max-MSP.pdf](https://github.com/shakf
 
 This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for Max/MSP. It then evolved into an umbrella project for exploring different ways of using python3 in Max/MSP.
 
-Along the way, a number of externals have been developed for use in a live Max environment (click on the links to see more detailed documentation):
+Along the way, a number of externals have been developed for use in a live Max environment (see  below and click on the links to see more detailed documentation):
 
 **Python3 Core Externals:**
 
@@ -35,6 +35,8 @@ name       | sdk        | lang   | description
 [mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 [zedit]    | max-sdk    | c      | a web-based python editor using [codemirror](https://codemirror.net) and the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
 [pymx]     | min-api    | c++    | concise python3 external, modern, using [pybind11](https://github.com/pybind/pybind11) and [min-api](https://github.com/Cycling74/min-api)
+[xpyc]     | max-sdk    | c      | uses [xpc](https://developer.apple.com/documentation/xpc?language=objc) for 2way-comms with a python process
+
 
 With the exception of `pymx`, which has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-api](https://github.com/Cycling74/min-api) SDK, the experimental subgroup can be built as a whole with the cmake option, `-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON`, or just `make experimentals`.
 
@@ -112,7 +114,7 @@ If you'd rather build them or any of the other externals yourself then the proce
 
 4. Optionally, install [cython](https://cython.org) via `pip3 install cython`, if you want to make changes to the cython-based `api.pyx` module, which wraps the Max c-api.
 
-5. To build only the `py` and `pyjs` externals, type the following in the root directory of the `py-js` project (other installation options are detailed below):
+5. Any one of the named externals can be built individually via `make <name>` in the root directory of the `py-js` project, otherwise to build both the `py` and `pyjs` externals, type the following (other installation options are detailed below):
 
     ```sh
     make
@@ -259,3 +261,4 @@ Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing h
 [mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
 [jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
 [ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/ztp
+[ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/xpyc
