@@ -14,13 +14,25 @@
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-21",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 309.5, 229.0, 80.0, 22.0 ],
+					"text" : "request str(1)"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-17",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 309.5, 195.0, 128.0, 22.0 ],
-					"text" : "request \\\"abc\\\".upper()"
+					"patching_rect" : [ 309.5, 195.0, 135.0, 22.0 ],
+					"text" : "request sum.__name__"
 				}
 
 			}
@@ -104,7 +116,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 51.0, 279.0, 108.0, 22.0 ],
-					"text" : "nan"
+					"text" : "sum"
 				}
 
 			}
@@ -199,8 +211,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 23.0, 17.0, 578.0, 24.0 ],
-					"text" : "xpyc: an xpc client embedded in an external (now just addition of two numbers)"
+					"patching_rect" : [ 23.0, 17.0, 325.0, 24.0 ],
+					"text" : "xpyc: an xpc client embedded in an external"
 				}
 
 			}
@@ -321,6 +333,13 @@
 					"destination" : [ "obj-9", 0 ],
 					"order" : 0,
 					"source" : [ "obj-2", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-21", 0 ]
 				}
 
 			}

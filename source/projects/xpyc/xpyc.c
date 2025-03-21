@@ -252,13 +252,14 @@ void xpyc_request(t_xpyc* x, t_symbol* s, int argc, t_atom* argv)
         post("result: %lld", result);
         outlet_int(x->outlet, result);;        
     }
-    else if (result_type = XPYC_TYPE_DOUBLE) {
+
+    else if (result_type == XPYC_TYPE_DOUBLE) {
         double result = xpc_dictionary_get_double(reply, "result");
         post("result: %f", result);
-        outlet_float(x->outlet, result);;                
+        outlet_float(x->outlet, result);
     }
 
-    else if (result_type = XPYC_TYPE_STRING) {
+    else if (result_type == XPYC_TYPE_STRING) {
         const char* result = xpc_dictionary_get_string(reply, "result");
         post("result: %s", result);
         outlet_anything(x->outlet, gensym(result), 0, NIL);
