@@ -95,14 +95,32 @@ void evaluate_python(xpc_object_t reply, const char* code)
     PyDict_SetItemString(globals, "__builtins__", builtins);
 
     PyObject* pval = PyRun_String(code, Py_eval_input, globals, globals);
-    long long_result = PyLong_AsLong(pval);
+    if (PyLong_Check(pval)) {
+        ValueType value_type = get_pyobject_type(pval);
+        long result = PyLong_AsLong(pval);
+        xpc_dictionary_set_int64(reply, "result_type", (long)value_type);
+        xpc_dictionary_set_int64(reply, "result", result);
+    } else if(PyFloat_Check(pval)) {
+        double result = PyFloat_AsDouble(pval);
+        ValueType value_type = get_pyobject_type(pval);
+        xpc_dictionary_set_int64(reply, "result_type", (long)value_type);
+        xpc_dictionary_set_double(reply, "result", result);
+    } else if(PyUnicode_Check(pval)) {
+        const char* result = PyUnicode_AsUTF8(pval);
+        if (result == NULL) {
+            goto error;
+        }
+        ValueType value_type = get_pyobject_type(pval);
+        xpc_dictionary_set_int64(reply, "result_type", (long)value_type);
+        xpc_dictionary_set_string(reply, "result", result);
+    }
+    goto finally;
 
-    ValueType value_type = get_pyobject_type(pval);
-    xpc_dictionary_set_int64(reply, "result_type", (long)value_type);
-    xpc_dictionary_set_int64(reply, "result", long_result);
+error:
+    xpc_dictionary_set_int64(reply, "result_type", XPYC_TYPE_ERROR);
+    xpc_dictionary_set_string(reply, "result", "error");
 
-    // printf("result: %ld\n", long_result);
-
+finally:
     Py_XDECREF(pval);
     Py_XDECREF(globals);
     Py_Finalize();

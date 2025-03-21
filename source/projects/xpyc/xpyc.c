@@ -72,40 +72,63 @@ void xpyc_bang(t_xpyc* x)
     outlet_bang(x->outlet);
 }
 
-const char* xpyc_get_type(long type_id)
+
+typedef enum {
+    XPYC_TYPE_NONE,
+    XPYC_TYPE_CONNECTION,
+    XPYC_TYPE_ENDPOINT,
+    XPYC_TYPE_BOOL,
+    XPYC_TYPE_INT64,
+    XPYC_TYPE_UINT64,
+    XPYC_TYPE_DOUBLE,
+    XPYC_TYPE_DATE,
+    XPYC_TYPE_DATA,
+    XPYC_TYPE_STRING,
+    XPYC_TYPE_UUID,
+    XPYC_TYPE_FD,
+    XPYC_TYPE_SHMEM,
+    XPYC_TYPE_ARRAY,
+    XPYC_TYPE_DICTIONARY,
+    XPYC_TYPE_ERROR,
+    XPYC_TYPE_RICH_ERROR
+} ValueType;
+
+const char* xpyc_get_type(ValueType type_id)
 {
     switch (type_id) {
-    case 0: return "NONE";
+    case XPYC_TYPE_NONE: return "NONE";
         break;
-    case 1: return "CONNECTION";
+    case XPYC_TYPE_CONNECTION: return "CONNECTION";
         break;
-    case 2: return "ENDPOINT";
+    case XPYC_TYPE_ENDPOINT: return "ENDPOINT";
         break;
-    case 3: return "BOOL";
+    case XPYC_TYPE_BOOL: return "BOOL";
         break;
-    case 4: return "INT64";
+    case XPYC_TYPE_INT64: return "INT64";
         break;
-    case 5: return "UINT64";
+    case XPYC_TYPE_UINT64: return "UINT64";
         break;
-    case 6: return "DOUBLE";
+    case XPYC_TYPE_DOUBLE: return "DOUBLE";
         break;
-    case 7: return "DATE";
+    case XPYC_TYPE_DATE: return "DATE";
         break;
-    case 8: return "STRING";
+    case XPYC_TYPE_DATA: return "DATA";
         break;
-    case 9: return "UUID";
+    case XPYC_TYPE_STRING: return "STRING";
         break;
-    case 10: return "FD";
+    case XPYC_TYPE_UUID: return "UUID";
         break;
-    case 11: return "SHMEM";
+    case XPYC_TYPE_FD: return "FD";
         break;
-    case 12: return "ARRAY";
+    case XPYC_TYPE_SHMEM: return "SHMEM";
         break;
-    case 13: return "DICTIONARY";
+    case XPYC_TYPE_ARRAY: return "ARRAY";
         break;
-    case 14: return "ERROR";
+    case XPYC_TYPE_DICTIONARY: return "DICTIONARY";
         break;
-    case 15: return "RICH_ERROR";
+    case XPYC_TYPE_ERROR: return "ERROR";
+        break;
+    case XPYC_TYPE_RICH_ERROR: return "RICH_ERROR";
         break;
     default:
         return "NONE";
@@ -217,18 +240,32 @@ void xpyc_request(t_xpyc* x, t_symbol* s, int argc, t_atom* argv)
     xpc_dictionary_set_string(message, "code", code->s_name);
     // xpc_dictionary_set_int64(message, "firstNumber", first_number);
     // xpc_dictionary_set_int64(message, "secondNumber", second_number);
-    
 
 
     xpc_object_t reply = xpc_session_send_message_with_reply_sync(session, message, &error);
     int64_t result_type = xpc_dictionary_get_int64(reply, "result_type");
-    int64_t result = xpc_dictionary_get_int64(reply, "result");
 
     post("result_type: %s", xpyc_get_type(result_type));
-    post("result: %lld", result);
+
+    if (result_type == XPYC_TYPE_INT64) {
+        int64_t result = xpc_dictionary_get_int64(reply, "result");
+        post("result: %lld", result);
+        outlet_int(x->outlet, result);;        
+    }
+    else if (result_type = XPYC_TYPE_DOUBLE) {
+        double result = xpc_dictionary_get_double(reply, "result");
+        post("result: %f", result);
+        outlet_float(x->outlet, result);;                
+    }
+
+    else if (result_type = XPYC_TYPE_STRING) {
+        const char* result = xpc_dictionary_get_string(reply, "result");
+        post("result: %s", result);
+        outlet_anything(x->outlet, gensym(result), 0, NIL);
+    }
 
     xpc_session_cancel(session);
 
-    outlet_int(x->outlet, result);
+    // outlet_int(x->outlet, result);
 }
 
