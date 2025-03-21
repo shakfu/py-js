@@ -166,7 +166,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = PythonService;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LIBRARY_SEARCH_PATHS = "/opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/lib/python3.13/config-3.13-darwin";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"-ldl",
@@ -193,7 +193,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = PythonService;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LIBRARY_SEARCH_PATHS = "/opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/lib/python3.13/config-3.13-darwin";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"-ldl",

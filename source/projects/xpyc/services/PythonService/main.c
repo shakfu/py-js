@@ -1,10 +1,76 @@
 #import <stdio.h>
 #import <xpc/xpc.h>
 #import <Python.h>
+#include <datetime.h>
 
-long evaluate_python(const char* code);
+void evaluate_python(xpc_object_t reply, const char* code);
 
-long evaluate_python(const char* code)
+typedef enum {
+    XPYC_TYPE_NONE,
+    XPYC_TYPE_CONNECTION,
+    XPYC_TYPE_ENDPOINT,
+    XPYC_TYPE_BOOL,
+    XPYC_TYPE_INT64,
+    XPYC_TYPE_UINT64,
+    XPYC_TYPE_DOUBLE,
+    XPYC_TYPE_DATE,
+    XPYC_TYPE_DATA,
+    XPYC_TYPE_STRING,
+    XPYC_TYPE_UUID,
+    XPYC_TYPE_FD,
+    XPYC_TYPE_SHMEM,
+    XPYC_TYPE_ARRAY,
+    XPYC_TYPE_DICTIONARY,
+    XPYC_TYPE_ERROR,
+    XPYC_TYPE_RICH_ERROR
+} ValueType;
+
+
+
+ValueType get_pyobject_type(PyObject* obj)
+{
+    if (PyBool_Check(obj)) {
+        return XPYC_TYPE_BOOL;
+    }
+    else if (PyLong_Check(obj)) {
+        return XPYC_TYPE_INT64;
+    }
+    else if (PyFloat_Check(obj)) {
+        return XPYC_TYPE_DOUBLE;
+    }
+    else if (PyBytes_Check(obj)) {
+        return XPYC_TYPE_DATA;
+    }
+    else if (PyUnicode_Check(obj)) {
+        return XPYC_TYPE_STRING;
+    }
+    else if (PyTuple_Check(obj)) {
+        return XPYC_TYPE_NONE;
+    }
+    else if (PyList_Check(obj)) {
+        return XPYC_TYPE_NONE;
+    }
+    else if (PySet_Check(obj)) {
+        return XPYC_TYPE_NONE;
+    }
+    else if (PyDict_Check(obj)) {
+        return XPYC_TYPE_DICTIONARY;
+    }
+    else if (PyDateTime_Check(obj)) {
+        return XPYC_TYPE_DATE;
+    }
+    else if (PyUnicode_Check(obj)) {
+        return XPYC_TYPE_NONE;
+    }
+    else if (obj == Py_None) {
+        return XPYC_TYPE_NONE;
+    }
+    else {
+        return XPYC_TYPE_NONE;
+    }
+}
+
+void evaluate_python(xpc_object_t reply, const char* code)
 {
     wchar_t* python_home = NULL;
     PyStatus status;
@@ -29,15 +95,17 @@ long evaluate_python(const char* code)
     PyDict_SetItemString(globals, "__builtins__", builtins);
 
     PyObject* pval = PyRun_String(code, Py_eval_input, globals, globals);
-
     long long_result = PyLong_AsLong(pval);
 
-    printf("result: %ld\n", long_result);
+    ValueType value_type = get_pyobject_type(pval);
+    xpc_dictionary_set_int64(reply, "result_type", (long)value_type);
+    xpc_dictionary_set_int64(reply, "result", long_result);
+
+    // printf("result: %ld\n", long_result);
 
     Py_XDECREF(pval);
     Py_XDECREF(globals);
     Py_Finalize();
-    return long_result;
 }
 
 int main(int argc, const char *argv[])
@@ -55,8 +123,10 @@ int main(int argc, const char *argv[])
             
             // Create a reply and send it back to the client.
             xpc_object_t reply = xpc_dictionary_create_reply(message);
-//            xpc_dictionary_set_int64(reply, "result", firstNumber + secondNumber);
-            xpc_dictionary_set_int64(reply, "result", evaluate_python(code));
+
+            evaluate_python(reply, code);
+            // xpc_dictionary_set_int64(reply, "result", firstNumber + secondNumber);
+            // xpc_dictionary_set_int64(reply, "result", evaluate_python(code));
             xpc_rich_error_t replyError = xpc_session_send_message(peer, reply);
             if (replyError) {
                 printf("Reply failed, error: %s", xpc_rich_error_copy_description(replyError));
