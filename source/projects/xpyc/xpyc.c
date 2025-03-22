@@ -265,8 +265,14 @@ void xpyc_request(t_xpyc* x, t_symbol* s, int argc, t_atom* argv)
         outlet_anything(x->outlet, gensym(result), 0, NIL);
     }
 
-    xpc_session_cancel(session);
+    else if (result_type == XPYC_TYPE_NONE) {
+        post("result: None");
+    }
 
-    // outlet_int(x->outlet, result);
+    if (session) {
+        xpc_session_cancel(session);
+        xpc_release(session);
+    }
+
 }
 
