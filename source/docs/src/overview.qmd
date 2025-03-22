@@ -37,7 +37,7 @@ name       | sdk        | lang   | description
 [mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 [zedit]    | max-sdk    | c      | a web-based python editor using [codemirror](https://codemirror.net) and the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
 [pymx]     | min-api    | c++    | concise python3 external, modern, using [pybind11](https://github.com/pybind/pybind11) and [min-api](https://github.com/Cycling74/min-api)
-[xpyc]     | max-sdk    | c      | uses [xpc](https://developer.apple.com/documentation/xpc?language=objc) for 2way-comms with a python process
+[xpyc]     | max-sdk    | c      | uses [xpc](https://developer.apple.com/documentation/xpc?language=objc) for inter-process communication with a python service
 
 
 With the exception of `pymx`, which has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-api](https://github.com/Cycling74/min-api) SDK, the experimental subgroup can be built as a whole with the cmake option, `-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON`, or just `make experimentals`.
@@ -48,7 +48,7 @@ name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [pktpy]    | max-sdk    | c++    | uses v.1.4.6 of the [pocketpy](https://github.com/blueloveTH/pocketpy) single-header c++ library
 [pktpy2]   | max-sdk    | c      | uses the newer v2.0.5 [pocketpy](https://github.com/blueloveTH/pocketpy) c11 library
-[mpy] [2]  | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
+[mpy]      | max-sdk    | c      | a proof-of-concept embedding [micropython](https://github.com/micropython/micropython)
 
 The two pocketpy variants can be built with the cmake option, `-DBUILD_POCKETPY_EXTERNALS=ON` or `make pocketpy`, whereas the external based on micropython, `mpy` is not enabled by default since it is still in early stages and more of a proof-of-concept to embed micropython in an external. To build it use the `-DBUILD_MICROPYTHON_EXTERNAL=ON` option with cmake or `make mpy`.
 
