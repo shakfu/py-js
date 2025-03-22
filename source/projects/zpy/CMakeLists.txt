@@ -53,7 +53,6 @@ target_link_libraries(
 	PRIVATE
 	"$<$<PLATFORM_ID:Darwin>:-ldl>"
 	"$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"
-	"-lczmq"
 	"-lzmq"
 	"-lsodium"
 )

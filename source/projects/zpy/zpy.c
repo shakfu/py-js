@@ -5,11 +5,12 @@
 #include "ext.h"
 #include "ext_obex.h"
 
-#include <czmq.h>
+#include <zmq.h>
 
 
 #define ZPY_ADDRESS "tcp://localhost:5555"
-#define ZPY_BUFFER_SIZE 20
+#define ZPY_REQUEST_BUFFER_SIZE 128
+#define ZPY_RESPONSE_BUFFER_SIZE 512
 
 typedef struct _zpy
 {
@@ -99,21 +100,22 @@ void zpy_bang(t_zpy *x)
     object_post((t_object*)x, "bang zpy");
 }
 
-
 t_max_err communicate(t_zpy* x, char * request)
 {
-    post("Connecting to zpy server...");
-    zsock_t *requester = zsock_new(ZMQ_REQ);
-    zsock_connect (requester, "tcp://localhost:5555");
+    post("Connecting to server…\n");
+    void* context = zmq_ctx_new();
+    void* requester = zmq_socket(context, ZMQ_REQ);
+    zmq_connect(requester, "tcp://localhost:5555");
 
     post("client sending request '%s' with length: %zu", request, strlen(request));
-    zstr_send (requester, request);
-
-    char *response = zstr_recv(requester);
-    post("client received response: '%s' with length: %zu", response, strlen(response));
+    char response[ZPY_RESPONSE_BUFFER_SIZE];
+    post("sent: %s", request);
+    zmq_send(requester, request, strlen(request), 0);
+    // zmq_recv(requester, response, ZPY_RESPONSE_BUFFER_SIZE, ZMQ_DONTWAIT);
+    zmq_recv(requester, response, ZPY_RESPONSE_BUFFER_SIZE, 0);
 
     if (strlen(response) > 0) {
-        post("client outputing response: '%s'", response);
+        post("received: '%s'", response);
         t_atom *av = NULL;
         long ac = 0;
         t_max_err err = MAX_ERR_NONE;
@@ -121,13 +123,13 @@ t_max_err communicate(t_zpy* x, char * request)
         outlet_anything(x->p_outlet_left, gensym("list"), ac, av);
         outlet_bang(x->p_outlet_right);
         sysmem_freeptr(av);
-        zstr_free (&response);
-        zsock_destroy(&requester);
+        zmq_close(requester);
+        zmq_ctx_destroy(context);
         return err;
     } else {
         outlet_bang(x->p_outlet_middle);
-        zstr_free (&response);
-        zsock_destroy(&requester);
+        zmq_close(requester);
+        zmq_ctx_destroy(context);
         return MAX_ERR_GENERIC;
     }
 }
@@ -135,7 +137,7 @@ t_max_err communicate(t_zpy* x, char * request)
 
 t_max_err zpy_test(t_zpy* x, t_symbol* s)
 {
-    char request[ZPY_BUFFER_SIZE];
+    char request[ZPY_REQUEST_BUFFER_SIZE];
 
     object_post((t_object*)x, "client test %s", s->s_name);
 
@@ -147,7 +149,7 @@ t_max_err zpy_test(t_zpy* x, t_symbol* s)
 
 t_max_err zpy_eval(t_zpy* x, t_symbol* s, long argc, t_atom* argv)
 {
-    char request[ZPY_BUFFER_SIZE];
+    char request[ZPY_REQUEST_BUFFER_SIZE];
 
     strcpy(request, atom_getsym(argv)->s_name);
 

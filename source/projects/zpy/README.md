@@ -1,13 +1,13 @@
 # zpy: python3 via zmq in max
 
-A max external which uses `czmq` to connect to a separate python process
+A max external which uses `zmq` to connect to a separate python process
 
-The objective is to replicate what the `py` external does but using czmq.
+The objective is to replicate what the `py` external does but using zmq.
 
 ## Requires
 
 ```bash
-brew install czmq
+brew install zmq
 ```
 
 ## Status
