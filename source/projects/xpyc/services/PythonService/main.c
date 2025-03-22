@@ -117,6 +117,12 @@ void evaluate_python(xpc_object_t reply, const char* code)
 {
     py_init(); // run once
 
+    if (code == "XPYC_EXIT") {
+        // called by external_free method to cleanup python 
+        py_free();
+        return;
+    }
+
     PyObject* co = NULL;
     PyObject* pval = NULL;
     int is_eval = 1;
@@ -168,7 +174,7 @@ void evaluate_python(xpc_object_t reply, const char* code)
         xpc_dictionary_set_int64(reply, "result_type", (long)XPYC_TYPE_NONE);
         // xpc_dictionary_set_string(reply, "result", "could not eval or exec code");               
     }
-    
+
     return;
 
 error:
