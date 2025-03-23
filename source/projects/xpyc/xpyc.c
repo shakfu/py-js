@@ -6,6 +6,8 @@
 
 // minimal test object
 
+#define XPYC_MAX_ATOMS 1024
+
 typedef struct _xpyc
 {
     t_object ob;  // the object itself (must be first)
@@ -16,7 +18,7 @@ void* xpyc_new(t_symbol* s, long argc, t_atom* argv);
 void xpyc_free(t_xpyc* x);
 void xpyc_assist(t_xpyc* x, void* b, long m, long a, char* s);
 void xpyc_bang(t_xpyc* x);
-void xpyc_request(t_xpyc* x, t_symbol* s);
+t_max_err xpyc_anything(t_xpyc* x, t_symbol* s, long argc, t_atom* argv);
 
 void* xpyc_class;
 
@@ -28,9 +30,9 @@ void ext_main(void* r)
                   0L /* leave NULL!! */, A_GIMME, 0);
 
     /* you CAN'T call this from the patcher */
-    class_addmethod(c, (method)xpyc_assist,  "assist",  A_CANT,  0);
-    class_addmethod(c, (method)xpyc_bang,    "bang",             0);
-    class_addmethod(c, (method)xpyc_request, "request", A_SYM,   0);
+    class_addmethod(c, (method)xpyc_assist,     "assist",   A_CANT,  0);
+    class_addmethod(c, (method)xpyc_bang,       "bang",              0);
+    class_addmethod(c, (method)xpyc_anything,   "anything", A_GIMME, 0);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     xpyc_class = c;
@@ -50,13 +52,12 @@ void xpyc_assist(t_xpyc* x, void* b, long m, long a, char* s)
 
 void xpyc_free(t_xpyc* x)
 {
-    xpyc_request(x, gensym("XPYC_EXIT"));
+    xpyc_anything(x, gensym("XPYC_EXIT"), 0, NULL);
 }
 
 void* xpyc_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_xpyc* x = NULL;
-    long i;
 
     if ((x = (t_xpyc*)object_alloc(xpyc_class))) {
 
@@ -136,20 +137,97 @@ const char* xpyc_get_type(ValueType type_id)
     }
 }
 
-void xpyc_request(t_xpyc* x, t_symbol* code)
+
+char* str_replace(const char* s, const char* old, const char* new)
 {
+    char* result;
+    int i, cnt = 0;
+    size_t new_len = strlen(new);
+    size_t old_len = strlen(old);
+
+    // Counting the number of times old word occurs in the string
+    for (i = 0; s[i] != '\0'; i++) {
+        if (strstr(&s[i], old) == &s[i]) {
+            cnt++;
+
+            // Jumping to index after the old word.
+            i += old_len - 1;
+        }
+    }
+
+    // Making new string of enough length
+    size_t maxlen = i + cnt * (new_len - old_len) + 1;
+    result = (char*)sysmem_newptr(maxlen);
+
+    i = 0;
+    while (*s) {
+        // compare the substring with the result
+        if (strstr(s, old) == s) {
+            strncpy_zero(&result[i], new, maxlen);
+            i += new_len;
+            s += old_len;
+        } else
+            result[i++] = *s++;
+    }
+
+    result[i] = '\0';
+    return result;
+}
+
+
+t_max_err xpyc_anything(t_xpyc* x, t_symbol* s, long argc, t_atom* argv)
+{
+    t_atom atoms[XPYC_MAX_ATOMS];
+    long textsize = 0;
+    char* text = NULL;
+
+    if (s == gensym("")) {
+        return MAX_ERR_GENERIC;
+    }
+
+    // set symbol as first atom in new atoms array
+    atom_setsym(atoms, s);
+
+    for (int i = 0; i < argc; i++) {
+        switch ((argv + i)->a_type) {
+        case A_FLOAT: {
+            atom_setfloat((atoms + (i + 1)), atom_getfloat(argv + i));
+            break;
+        }
+        case A_LONG: {
+            atom_setlong((atoms + (i + 1)), atom_getlong(argv + i));
+            break;
+        }
+        case A_SYM: {
+            atom_setsym((atoms + (i + 1)), atom_getsym(argv + i));
+            break;
+        }
+        default:
+            object_error((t_object*)x, "cannot process unknown type");
+            break;
+        }
+    }
+
+    t_max_err err = atom_gettext(argc+1, atoms, &textsize, &text,
+                                 OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err != MAX_ERR_NONE && !textsize && !text) {
+        goto error;
+    }
+
+    post("text: %s", text);
+
+    char* code = str_replace(text, "\\", "");
+
     xpc_rich_error_t error;
     xpc_session_t session = xpc_session_create_xpc_service("xpyc.PythonService", NULL, 0, &error);
 
-    // Once you have a connection to the service, create a Codable request and send it to the service.
-
-    //     xpc_rich_error_t error;
-
     xpc_object_t message = xpc_dictionary_create(NULL, NULL, 0);
 
-    xpc_dictionary_set_string(message, "code", code->s_name);
+    post("code: %s", code);
 
-    if (code == gensym("XPYC_EXIT")) {
+    xpc_dictionary_set_string(message, "code", code);
+
+    if (gensym(code) == gensym("XPYC_EXIT")) {
         goto cleanup;
     }
 
@@ -182,9 +260,17 @@ void xpyc_request(t_xpyc* x, t_symbol* code)
 
 
 cleanup:
+    sysmem_freeptr(code);
+    sysmem_freeptr(text);
+
     if (session) {
         xpc_session_cancel(session);
         xpc_release(session);
     }
-}
 
+    return MAX_ERR_NONE;
+
+error:
+
+    return MAX_ERR_GENERIC;
+}

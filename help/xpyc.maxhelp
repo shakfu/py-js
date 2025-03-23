@@ -19,8 +19,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 453.0, 151.0, 120.0, 22.0 ],
-					"text" : "request sys.version"
+					"patching_rect" : [ 453.0, 151.0, 69.0, 22.0 ],
+					"text" : "sys.version"
 				}
 
 			}
@@ -31,8 +31,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 455.5, 103.0, 115.0, 22.0 ],
-					"text" : "request \"import sys\""
+					"patching_rect" : [ 455.5, 103.0, 63.0, 22.0 ],
+					"text" : "import sys"
 				}
 
 			}
@@ -43,8 +43,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 309.5, 229.0, 80.0, 22.0 ],
-					"text" : "request str(1)"
+					"patching_rect" : [ 309.5, 229.0, 36.0, 22.0 ],
+					"text" : "str(1)"
 				}
 
 			}
@@ -55,8 +55,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 309.5, 195.0, 135.0, 22.0 ],
-					"text" : "request sum.__name__"
+					"patching_rect" : [ 309.5, 195.0, 91.0, 22.0 ],
+					"text" : "sum.__name__"
 				}
 
 			}
@@ -67,8 +67,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 309.5, 162.0, 92.0, 22.0 ],
-					"text" : "request 1.2+3.2"
+					"patching_rect" : [ 309.5, 162.0, 49.0, 22.0 ],
+					"text" : "1.2+3.2"
 				}
 
 			}
@@ -79,8 +79,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 315.0, 124.0, 81.0, 22.0 ],
-					"text" : "request 2**10"
+					"patching_rect" : [ 315.0, 124.0, 38.0, 22.0 ],
+					"text" : "2**10"
 				}
 
 			}
@@ -103,8 +103,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 201.0, 124.0, 97.0, 22.0 ],
-					"text" : "request 100*200"
+					"patching_rect" : [ 201.0, 124.0, 53.0, 22.0 ],
+					"text" : "100*200"
 				}
 
 			}
@@ -127,8 +127,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 51.0, 124.0, 86.0, 22.0 ],
-					"text" : "request 1+200"
+					"patching_rect" : [ 51.0, 124.0, 42.0, 22.0 ],
+					"text" : "1+200"
 				}
 
 			}
@@ -139,8 +139,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 51.0, 279.0, 108.0, 22.0 ],
-					"text" : "\"1\""
+					"patching_rect" : [ 51.0, 279.0, 108.0, 22.0 ]
 				}
 
 			}
