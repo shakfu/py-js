@@ -31,7 +31,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 445.0, 98.0, 115.0, 22.0 ],
+					"patching_rect" : [ 455.5, 103.0, 115.0, 22.0 ],
 					"text" : "request \"import sys\""
 				}
 
@@ -139,7 +139,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 51.0, 279.0, 108.0, 22.0 ]
+					"patching_rect" : [ 51.0, 279.0, 108.0, 22.0 ],
+					"text" : "\"1\""
 				}
 
 			}

@@ -1,16 +1,8 @@
 #import <stdio.h>
+#import <string.h>
 #import <xpc/xpc.h>
 #import <Python.h>
 #include <datetime.h>
-
-void evaluate_python(xpc_object_t reply, const char* code);
-
-
-struct Memory {
-    PyObject* globals;
-};
-
-struct Memory mem;
 
 typedef enum {
     XPYC_TYPE_NONE,
@@ -31,6 +23,19 @@ typedef enum {
     XPYC_TYPE_ERROR,
     XPYC_TYPE_RICH_ERROR
 } ValueType;
+
+
+ValueType get_pyobject_type(PyObject* obj);
+void py_init(void);
+void py_free(void);
+void evaluate_python(xpc_object_t reply, const char* code);
+
+
+struct Memory {
+    PyObject* globals;
+};
+
+struct Memory mem;
 
 
 
@@ -117,8 +122,8 @@ void evaluate_python(xpc_object_t reply, const char* code)
 {
     py_init(); // run once
 
-    if (code == "XPYC_EXIT") {
-        // called by external_free method to cleanup python 
+    if (strcmp(code, "XPYC_EXIT") == 0) {
+        // called by external_free method to cleanup python
         py_free();
         return;
     }
@@ -145,7 +150,6 @@ void evaluate_python(xpc_object_t reply, const char* code)
     }
     Py_DECREF(co);
 
-    // PyObject* pval = PyRun_String(code, Py_eval_input, mem.globals, mem.globals);
     if (is_eval) {
         if (PyLong_Check(pval)) {
             ValueType value_type = get_pyobject_type(pval);
@@ -172,7 +176,6 @@ void evaluate_python(xpc_object_t reply, const char* code)
     else {
         // exec
         xpc_dictionary_set_int64(reply, "result_type", (long)XPYC_TYPE_NONE);
-        // xpc_dictionary_set_string(reply, "result", "could not eval or exec code");               
     }
 
     return;
@@ -207,7 +210,6 @@ int main(int argc, const char *argv[])
     
     // Resuming the serviceListener starts this service. This method does not return.
     dispatch_main();
-    // py_free();
 
     return 0;
 }
