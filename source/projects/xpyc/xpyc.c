@@ -214,7 +214,7 @@ t_max_err xpyc_anything(t_xpyc* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    post("text: %s", text);
+    // post("text: %s", text);
 
     char* code = str_replace(text, "\\", "");
 
@@ -223,7 +223,7 @@ t_max_err xpyc_anything(t_xpyc* x, t_symbol* s, long argc, t_atom* argv)
 
     xpc_object_t message = xpc_dictionary_create(NULL, NULL, 0);
 
-    post("code: %s", code);
+    // post("code: %s", code);
 
     xpc_dictionary_set_string(message, "code", code);
 
@@ -260,8 +260,8 @@ t_max_err xpyc_anything(t_xpyc* x, t_symbol* s, long argc, t_atom* argv)
 
 
 cleanup:
-    sysmem_freeptr(code);
     sysmem_freeptr(text);
+    sysmem_freeptr(code);
 
     if (session) {
         xpc_session_cancel(session);

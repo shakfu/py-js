@@ -1,4 +1,4 @@
-# xpyc: python3 via xpc in max
+# xpyc: a max external which communicates with python3 via xpc
 
 A proof-of-concept stage Max external which uses [xpc](https://developer.apple.com/documentation/xpc?language=objc), a "lightweight mechanism for basic interprocess communication", to connect to a separate python process via an xpc service.
 

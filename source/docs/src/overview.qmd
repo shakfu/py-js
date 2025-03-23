@@ -184,7 +184,7 @@ This builds all of the externals *except* for the networking variants, since the
 If you would like to build them first install:
 
 ```sh
-brew install zmq czmq
+brew install zmq
 ```
 
 Then

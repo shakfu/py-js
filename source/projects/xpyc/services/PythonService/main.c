@@ -128,6 +128,8 @@ void evaluate_python(xpc_object_t reply, const char* code)
         return;
     }
 
+    // sleep(1); // uncomment to prove that communication is blocking
+
     PyObject* co = NULL;
     PyObject* pval = NULL;
     int is_eval = 1;
