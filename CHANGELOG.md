@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Added a single-script version of [py2max](https://github.com/shakfu/py2max), a python library for offline generation of Max/MSP patcher (.maxpat) files, to facilitate `.maxpat` test generation using `maxref.py`.
+
 - Swapped names of `cobra` and `krait` projects.
 
 - Renamed `zthread` to `ztp` to emphasize the use of zeromq + threads + python

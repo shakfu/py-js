@@ -2,5 +2,6 @@
 
 [0.1.0]
 
-- Proof-of-concept created to demonstrate accessing a python interpreter via the use of zeromq channels. The problem is this a blocking process.
+- Dropped `cmzq` in order to work directly with `zeromq`.
 
+- Created proof-of-concept external using the `czmq` library to demonstrate accessing a python interpreter via the use of zeromq channels.

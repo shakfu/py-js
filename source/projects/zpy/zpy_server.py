@@ -47,7 +47,7 @@ while True:
     print(f"Received request: {message}")
 
     #  Do some 'work'
-    time.sleep(1)
+    # time.sleep(0.1)
 
     response = parse(message)
     print(f'response: {response}')
