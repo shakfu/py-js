@@ -6,9 +6,9 @@ This overview will cover the following the `py` external implementation:
 
 The `py` external provides a more featureful two-way interface between max and python in a way that feels natural to both languages.
 
-The external has access to builtin python modules and the whole universe of 3rd party modules, and further has the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects.
+The external has access to builtin python modules and the whole universe of 3rd party modules, and further has the option of importing a builtin `api` module which uses [cython](https://cython.org) to wrap selective portions of the max c-api. This allows regular python code to directly access the max-c-api and script Max objects. In addition, a pure python `py_prelude.py` module is pre-loaded in every `py` instance as an extended set of builtins.
 
-A general purpose Max external that embeds a python3 interpreter and is made up of three integrated parts which make it quite straightforward to extend:
+So in summary, `py` is a general purpose Max external that embeds a python3 interpreter and is made up of three integrated parts which make it quite straightforward to extend:
 
 1. The `py` Max external which is written in c using both the `Max c-api` and the `Python3 c-api`.
 
@@ -16,7 +16,17 @@ A general purpose Max external that embeds a python3 interpreter and is made up 
 
 3. A powerful builtin `api` module which is derived from a cython-based wrapper of a subset of the `Max c-api`.
 
-The following cheatsheat provides a brief view of key attributes and methods:
+As of 24, March 2025, the relative size of these modules (in number of tokens) is:
+
+id  | name             | language   | comment       | code          | note
+:-- | :--------------- | :--------- | :------------ | :------------ | :-------------
+1   | `py.c`           | c          | 729           | 1,598         | handwritten
+2   | `py_prelude.py`  | python     | 95            | 181           | handwritten
+3   | `api.pyx`        | cython     | 2,014         | 3,714         | handwritten
+4   | `api.c `         | c          | 3,185         | 147,855       | generated from (3)
+
+
+The following cheatsheat provides a brief view of key attributes and methods of the `py` external:
 
 ```text
 globals

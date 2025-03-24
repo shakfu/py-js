@@ -7,5 +7,3 @@ This folder serves as a place for testing ideas and prototyping external impleme
 ```sh
 make demos
 ```
-
-
