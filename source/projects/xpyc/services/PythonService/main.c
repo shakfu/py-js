@@ -4,6 +4,8 @@
 #import <Python.h>
 #include <datetime.h>
 
+#define XPYC_MAX_ATOMS 1024
+
 typedef enum {
     XPYC_TYPE_NONE,
     XPYC_TYPE_CONNECTION,
@@ -184,7 +186,23 @@ void evaluate_python(xpc_object_t reply, const char* code)
 
 error:
     xpc_dictionary_set_int64(reply, "result_type", (long)XPYC_TYPE_ERROR);
-    xpc_dictionary_set_string(reply, "result", "could not eval or exec code");
+
+    if (!PyErr_Occurred()) // borrowed
+        return;
+
+    // get error info
+    PyObject *ptype, *pvalue, *ptraceback;
+    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+    PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+    Py_XDECREF(ptype);
+
+    PyObject* pvalue_pstr = PyObject_Repr(pvalue);
+    const char* pvalue_str = PyUnicode_AsUTF8(pvalue_pstr);
+    Py_XDECREF(pvalue);
+    Py_XDECREF(pvalue_pstr);
+    Py_XDECREF(ptraceback);
+
+    xpc_dictionary_set_string(reply, "result", pvalue_str);
 }
 
 int main(int argc, const char *argv[])
