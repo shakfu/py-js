@@ -177,6 +177,13 @@ def test_matrix_fill():
     m.fill(a, plane=0)
     api.bang_success()
 
+def test_matrix_fill_all():
+    m = mem["m"]
+    m.myfill2d()    
+    # a = api.Atom.from_seq([5] * m.matrix_len)
+    # m.fill_all(a)
+    api.bang_success()
+
 
 def test_matrix_clear():
     m = mem["m"]

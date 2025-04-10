@@ -40,6 +40,7 @@ std::string get_path_to_package(t_class* c, char* subpath);
 t_string* get_path_to_external(t_class* c, char* subpath);
 t_string* get_path_to_package(t_class* c, char* subpath);
 #endif
+
 t_object* create_object(t_object* x, const char* text);
 void path_basename(const char* path, char* filename);
 void path_dirname(const char* path, char* parent_directory);
@@ -179,6 +180,31 @@ t_string* get_path_to_package(t_class* c, char* subpath)
 }
 
 #endif
+
+t_symbol* locate_path_from_symbol(t_object* x, t_symbol* s)
+{
+    char filename[MAX_PATH_CHARS];
+    char pathname[MAX_PATH_CHARS];
+    short path;
+    t_fourcc type = FOUR_CHAR_CODE('TEXT');
+    t_max_err err;
+
+    strncpy_zero(filename, s->s_name, MAX_PATH_CHARS);
+    if (locatefile_extended(filename, &path, &type, &type, 1)) {
+        // nozero: not found
+        error("can't find file %s", s->s_name);
+        return gensym("");
+    }
+
+    pathname[0] = 0;
+    err = path_toabsolutesystempath(path, filename, pathname);
+    if (err != MAX_ERR_NONE) {
+        error("can't convert %s to absolutepath", s->s_name);
+        return gensym("");
+    }
+    // post("full path is: %s", pathname->s_name);
+    return gensym(pathname);
+}
 
 
 /**

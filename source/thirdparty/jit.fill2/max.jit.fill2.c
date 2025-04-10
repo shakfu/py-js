@@ -1,6 +1,6 @@
 /*
-        Copyright 2001-2005 - Cycling '74
-        Joshua Kit Clayton jkc@cycling74.com
+    Copyright 2001-2005 - Cycling '74
+    Joshua Kit Clayton jkc@cycling74.com
 */
 
 #include "jit.common.h"
@@ -23,6 +23,7 @@ void max_jit_fill_assist(t_max_jit_fill* x, void* b, long m, long a, char* s);
 void max_jit_fill_int(t_max_jit_fill* x, long val);
 void max_jit_fill_float(t_max_jit_fill* x, double val);
 void max_jit_fill_list(t_max_jit_fill* x, t_symbol* s, long argc, t_atom* argv);
+void max_jit_set_data(t_max_jit_fill* x, t_symbol* s, long argc, t_atom* argv);
 
 t_class* max_jit_fill_class = NULL;
 
@@ -43,6 +44,7 @@ C74_EXPORT void ext_main(void* r)
 
     class_addmethod(c, (method)max_jit_fill_int,    "int",   A_LONG, 0);
     class_addmethod(c, (method)max_jit_fill_float,  "float", A_FLOAT, 0);
+    class_addmethod(c, (method)max_jit_set_data,    "setdata", A_GIMME, 0);
 
     max_jit_class_addmethod_defer_low(c, (method)max_jit_fill_list, "list");
 
@@ -218,4 +220,96 @@ void* max_jit_fill_new(t_symbol* s, long argc, t_atom* argv)
         max_jit_attr_args(x, argc, argv); // handle attribute args
     }
     return (x);
+}
+
+
+// def myfill2d(self):
+//     cdef int i, j, z = 0
+//     cdef char* p = NULL
+//     cdef char* bp = self.data
+
+//     xs = list(range(self.height * self.width * self.planecount))
+
+//     for i in range(self.info.dim[0]):
+//         for j in range(self.info.dim[1]):
+//             p = bp + (j * self.info.dimstride[1]) + (i * self.info.dimstride[0])
+//             for k in range(self.planecount):
+//                 p[0] = <long>xs[z]
+//                 p += 1
+//                 z += 1
+
+
+void max_jit_set_data(t_max_jit_fill* x, t_symbol* s, long argc, t_atom* argv)
+{
+    void* matrix;
+    long err, i, j;
+    long savelock, offset0, offset1;
+    t_jit_matrix_info info;
+    char *bp, *p;
+
+    if (argc && argv) {
+        // find matrix
+        matrix = jit_object_findregistered(x->matrix_name);
+        if (matrix && jit_object_method(matrix, _jit_sym_class_jit_matrix)) {
+            savelock = (long)jit_object_method(matrix, _jit_sym_lock, 1);
+            jit_object_method(matrix, _jit_sym_getinfo, &info);
+            jit_object_method(matrix, _jit_sym_getdata, &bp);
+
+            if (!bp) {
+                jit_object_method(matrix, _jit_sym_lock, savelock);
+                goto out;
+            }
+
+            // limited to filling at most into 2 dimensions per list
+            offset0 = (x->offsetcount > 0) ? x->offset[0] : 0;
+            offset1 = (x->offsetcount > 1) ? x->offset[1] : 0;
+            post("argc: %d", argc);
+            post("offset0: %d", offset0);
+            post("offset1: %d", offset1);
+            CLIP_ASSIGN(offset0, 0, info.dim[0] - 1);
+            CLIP_ASSIGN(offset1, 0, info.dim[1] - 1);
+            CLIP_ASSIGN(argc, 0, (info.dim[0] * (info.dim[1] - offset1)) - offset0);
+            post("clipped argc: %d", argc);
+            post("clipped offset0: %d", offset0);
+            post("clipped offset1: %d", offset1);
+            j = offset0 + offset1 * info.dim[0];
+
+            if (info.type == _jit_sym_char) {
+                bp += x->plane;
+                for (i = 0; i < argc; i++, j++) {
+                    p = bp + (j / info.dim[0]) * info.dimstride[1] + (j % info.dim[0]) * info.dimstride[0];
+                    *((uchar*)p) = jit_atom_getcharfix(argv + i);
+                }
+            }
+            else if (info.type == _jit_sym_long) {
+                bp += x->plane * 4;
+                for (i = 0; i < argc; i++, j++) {
+                    p = bp + (j / info.dim[0]) * info.dimstride[1] + (j % info.dim[0]) * info.dimstride[0];
+                    *((t_int32*)p) = (t_int32)jit_atom_getlong(argv + i);
+                }
+            }
+            else if (info.type == _jit_sym_float32) {
+                bp += x->plane * 4;
+                for (i = 0; i < argc; i++, j++) {
+                    p = bp + (j / info.dim[0]) * info.dimstride[1] + (j % info.dim[0]) * info.dimstride[0];
+                    *((float*)p) = jit_atom_getfloat(argv + i);
+                }
+            }
+            if (info.type == _jit_sym_float64) {
+                bp += x->plane * 8;
+                for (i = 0; i < argc; i++, j++) {
+                    p = bp + (j / info.dim[0]) * info.dimstride[1] + (j % info.dim[0]) * info.dimstride[0];
+                    *((double*)p) = jit_atom_getfloat(argv + i);
+                }
+            }
+
+            jit_object_method(matrix, _jit_sym_lock, savelock);
+        }
+        else {
+            jit_error_sym(x, _jit_sym_err_calculate);
+        }
+    }
+out:
+    outlet_bang(x->bangout);
+    return;
 }

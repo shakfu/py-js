@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 69.0, 93.0, 763.0, 739.0 ],
+		"rect" : [ 75.0, 92.0, 763.0, 739.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"showrootpatcherontab" : 0,
 		"showontab" : 0,
@@ -303,7 +303,7 @@
 
 											}
  ],
-										"originid" : "pat-22"
+										"originid" : "pat-8"
 									}
 ,
 									"patching_rect" : [ 411.0, 380.0, 73.0, 22.0 ],
@@ -1086,6 +1086,18 @@
 						"showontab" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-42",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 610.0, 165.0, 112.0, 22.0 ],
+									"text" : "test_matrix_fill_all()"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-46",
 									"maxclass" : "comment",
 									"numinlets" : 1,
@@ -1331,7 +1343,7 @@
 
 											}
  ],
-										"originid" : "pat-20"
+										"originid" : "pat-12"
 									}
 ,
 									"patching_rect" : [ 411.0, 380.0, 73.0, 22.0 ],
@@ -2029,6 +2041,14 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-42", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-12", 0 ],
 									"source" : [ "obj-5", 1 ]
 								}
@@ -2084,7 +2104,7 @@
 
 							}
  ],
-						"originid" : "pat-8"
+						"originid" : "pat-10"
 					}
 ,
 					"patching_rect" : [ 141.0, 23.0, 41.0, 22.0 ],
@@ -2113,6 +2133,18 @@
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-42",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 610.0, 165.0, 112.0, 22.0 ],
+									"text" : "test_matrix_fill_all()"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-46",
 									"maxclass" : "comment",
@@ -2359,7 +2391,7 @@
 
 											}
  ],
-										"originid" : "pat-18"
+										"originid" : "pat-16"
 									}
 ,
 									"patching_rect" : [ 411.0, 380.0, 73.0, 22.0 ],
@@ -3057,6 +3089,14 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-42", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-12", 0 ],
 									"source" : [ "obj-5", 1 ]
 								}
@@ -3112,7 +3152,7 @@
 
 							}
  ],
-						"originid" : "pat-10"
+						"originid" : "pat-14"
 					}
 ,
 					"patching_rect" : [ 81.0, 23.0, 41.0, 22.0 ],
@@ -3137,10 +3177,22 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 69.0, 119.0, 763.0, 713.0 ],
+						"rect" : [ 75.0, 118.0, 763.0, 713.0 ],
 						"gridsize" : [ 15.0, 15.0 ],
 						"showontab" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-42",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 610.0, 165.0, 112.0, 22.0 ],
+									"text" : "test_matrix_fill_all()"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-46",
 									"maxclass" : "comment",
@@ -3387,7 +3439,7 @@
 
 											}
  ],
-										"originid" : "pat-14"
+										"originid" : "pat-20"
 									}
 ,
 									"patching_rect" : [ 411.0, 380.0, 73.0, 22.0 ],
@@ -3721,7 +3773,7 @@
 , 							{
 								"box" : 								{
 									"cols" : 8,
-									"colwidth" : 22,
+									"colwidth" : 27,
 									"fontface" : 0,
 									"fontname" : "Arial",
 									"fontsize" : 13.0,
@@ -4085,6 +4137,14 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-42", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-12", 0 ],
 									"source" : [ "obj-5", 1 ]
 								}
@@ -4140,7 +4200,7 @@
 
 							}
  ],
-						"originid" : "pat-12"
+						"originid" : "pat-18"
 					}
 ,
 					"patching_rect" : [ 22.0, 23.0, 42.0, 22.0 ],
