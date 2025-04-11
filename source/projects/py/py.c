@@ -236,7 +236,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_pythonpath = gensym("");
 
         // text editor
-        x->p_code = sysmem_newhandle(0);
+        x->p_code = (t_handle)sysmem_newhandle(0);
         x->p_code_size = 0;
         x->p_code_editor = NULL;
         x->p_code_filetype = FOUR_CHAR_CODE('TEXT');
@@ -809,9 +809,8 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
                         &x->p_code_outtype, &x->p_code_filetype, 1)) {
                 /* non-zero: cancelled */
                 ret = MAX_ERR_GENERIC;
-            }
-        goto finally;
-
+                goto finally;
+        }
     } else {
 
         strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
@@ -2689,7 +2688,7 @@ void py_edclose(t_py* x, char** text, long size)
         sysmem_freehandle(x->p_code);
     }
 
-    x->p_code = sysmem_newhandleclear(size + 1);
+    x->p_code = (t_handle)sysmem_newhandleclear(size + 1);
     sysmem_copyptr(*text, *x->p_code, size);
     x->p_code_size = size + 1;
     x->p_code_editor = NULL;

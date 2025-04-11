@@ -127,20 +127,24 @@ void pyjs_init_builtins(t_pyjs* x)
     int err = -1;
 
     p_name = PyUnicode_FromString(x->p_name->s_name);
-    if (p_name == NULL)
+    if (p_name == NULL) {
         goto error;
+    }
 
     builtins = PyEval_GetBuiltins();
-    if (builtins == NULL)
+    if (builtins == NULL) {
         goto error;
+    }
 
     err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
-    if (err == -1)
+    if (err == -1) {
         goto error;
+    }
 
     err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
-    if (err == -1)
+    if (err == -1) {
         goto error;
+    }
 
     Py_XDECREF(p_name);
     return;
@@ -339,11 +343,10 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
     if (s == gensym("")) { /* if no arg supplied ask for file */
         p_code_filename[0] = 0;
 
-        if (open_dialog(p_code_filename, &p_code_path, &p_code_outtype,
-                        &p_code_filetype, 1))
-            /* non-zero: cancelled */
-            return;
-
+        if (open_dialog(p_code_filename, &p_code_path, &p_code_outtype, &p_code_filetype, 1)) {
+                /* non-zero: cancelled */
+                return;
+            }
     } else {
         /* must copy symbol before calling locatefile_extended */
         strncpy_zero(p_code_filename, s->s_name, MAX_PATH_CHARS);
@@ -352,15 +355,16 @@ void pyjs_locate_path_from_symbol(t_pyjs* x, t_symbol* s)
             /* nozero: not found */
             pyjs_error(x, "can't find file %s", s->s_name);
             return;
-        } else {
-            p_code_pathname[0] = 0;
-            err = path_toabsolutesystempath(p_code_path, p_code_filename,
-                                            p_code_pathname);
-            if (err != MAX_ERR_NONE) {
-                pyjs_error(x, "can't convert %s to absolutepath", s->s_name);
-                return;
-            }
         }
+
+        p_code_pathname[0] = 0;
+        err = path_toabsolutesystempath(p_code_path, p_code_filename,
+                                        p_code_pathname);
+        if (err != MAX_ERR_NONE) {
+            pyjs_error(x, "can't convert %s to absolutepath", s->s_name);
+            return;
+        }
+
 
         /* sucess: set attribute from pathname symbol */
         x->p_code_filepath = gensym(p_code_pathname);
@@ -428,8 +432,9 @@ t_max_err pyjs_handle_float_output(t_pyjs* x, PyObject* pfloat, t_atom* rv)
     if (PyFloat_Check(pfloat)) {
         float float_result = (float)PyFloat_AsDouble(pfloat);
         if (float_result == -1.0) {
-            if (PyErr_Occurred())
+            if (PyErr_Occurred()) {
                 goto error;
+            }
         }
         atom_setfloat(atom_result, float_result);
         atom_setobj(
@@ -465,8 +470,9 @@ t_max_err pyjs_handle_long_output(t_pyjs* x, PyObject* plong, t_atom* rv)
     if (PyLong_Check(plong)) {
         long long_result = PyLong_AsLong(plong);
         if (long_result == -1) {
-            if (PyErr_Occurred())
+            if (PyErr_Occurred()) {
                 goto error;
+            }
         }
         atom_setlong(atom_result, long_result);
         atom_setobj(
@@ -569,8 +575,9 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
             if (PyFloat_Check(item)) {
                 float float_item = PyFloat_AsDouble(item);
                 if (float_item == -1.0) {
-                    if (PyErr_Occurred())
+                    if (PyErr_Occurred()) {
                         goto error;
+                    }
                 }
                 atom_setfloat(atoms + i, float_item);
                 pyjs_log(x, "%d float: %f\n", i, float_item);
@@ -580,8 +587,9 @@ t_max_err pyjs_handle_list_output(t_pyjs* x, PyObject* plist, t_atom* rv)
             if (PyLong_Check(item)) {
                 long long_item = PyLong_AsLong(item);
                 if (long_item == -1) {
-                    if (PyErr_Occurred())
+                    if (PyErr_Occurred()) {
                         goto error;
+                    }
                 }
                 atom_setlong(atoms + i, long_item);
                 pyjs_log(x, "%d long: %ld\n", i, long_item);
@@ -718,24 +726,24 @@ t_max_err pyjs_handle_output(t_pyjs* x, PyObject* pval, t_atom* rv)
         return pyjs_handle_float_output(x, pval, rv);
     }
 
-    else if (PyLong_Check(pval)) {
+    if (PyLong_Check(pval)) {
         return pyjs_handle_long_output(x, pval, rv);
     }
 
-    else if (PyUnicode_Check(pval)) {
+    if (PyUnicode_Check(pval)) {
         return pyjs_handle_string_output(x, pval, rv);
     }
 
-    else if (PySequence_Check(pval) && !PyBytes_Check(pval)
+    if (PySequence_Check(pval) && !PyBytes_Check(pval)
              && !PyByteArray_Check(pval)) {
         return pyjs_handle_list_output(x, pval, rv);
     }
 
-    else if (PyDict_Check(pval)) {
+    if (PyDict_Check(pval)) {
         return pyjs_handle_dict_output(x, pval, rv);
     }
 
-    else if (pval == Py_None) {
+    if (pval == Py_None) {
         return MAX_ERR_NONE;
     }
 
@@ -978,28 +986,34 @@ t_max_err pyjs_eval_to_json(t_pyjs* x, t_symbol* s, long argc, t_atom* argv,
     char* cstring = atom_getsym(argv)->s_name;
 
     pval = PyRun_String(cstring, Py_eval_input, x->p_globals, x->p_globals);
-    if (pval == NULL)
+    if (pval == NULL) {
         goto error;
+    }
 
     json_module = PyImport_ImportModule("json");
-    if (json_module == NULL)
+    if (json_module == NULL) {
         goto error;
+    }
 
     json_dict = PyModule_GetDict(json_module); // borrowed ref
-    if (json_dict == NULL)
+    if (json_dict == NULL) {
         goto error;
+    }
 
     json_dumps = PyDict_GetItemString(json_dict, "dumps"); // borrowed ref
-    if (json_dumps == NULL)
+    if (json_dumps == NULL) {
         goto error;
+    }
 
     json_pstr = PyObject_CallFunctionObjArgs(json_dumps, pval, NULL);
-    if (json_pstr == NULL)
+    if (json_pstr == NULL) {
         goto error;
+    }
 
     const char* unicode_result = PyUnicode_AsUTF8(json_pstr);
-    if (unicode_result == NULL)
+    if (unicode_result == NULL) {
         goto error;
+    }
 
     atom_setsym(atoms, gensym(unicode_result));
     atom_setobj(rv,

@@ -6,7 +6,9 @@
 
 // minimal test object
 
-#define XPYC_MAX_ATOMS 1024
+enum {
+    XPYC_MAX_ATOMS = 1024
+};
 
 typedef struct _xpyc
 {
@@ -141,7 +143,8 @@ const char* xpyc_get_type(ValueType type_id)
 char* str_replace(const char* s, const char* old, const char* new)
 {
     char* result;
-    int i, cnt = 0;
+    int i = 0;
+    int cnt = 0;
     size_t new_len = strlen(new);
     size_t old_len = strlen(old);
 
@@ -156,7 +159,7 @@ char* str_replace(const char* s, const char* old, const char* new)
     }
 
     // Making new string of enough length
-    size_t maxlen = i + cnt * (new_len - old_len) + 1;
+    size_t maxlen = (i + cnt * (new_len - old_len)) + 1;
     result = (char*)sysmem_newptr(maxlen);
 
     i = 0;
@@ -166,8 +169,9 @@ char* str_replace(const char* s, const char* old, const char* new)
             strncpy_zero(&result[i], new, maxlen);
             i += new_len;
             s += old_len;
-        } else
+        } else {
             result[i++] = *s++;
+        }
     }
 
     result[i] = '\0';
