@@ -220,6 +220,9 @@ t_max_err xpyc_anything(t_xpyc* x, t_symbol* s, long argc, t_atom* argv)
 
     xpc_rich_error_t error;
     xpc_session_t session = xpc_session_create_xpc_service("xpyc.PythonService", NULL, 0, &error);
+    if (session == NULL) {
+        goto cleanup;
+    }
 
     xpc_object_t message = xpc_dictionary_create(NULL, NULL, 0);
 
@@ -232,6 +235,10 @@ t_max_err xpyc_anything(t_xpyc* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     xpc_object_t reply = xpc_session_send_message_with_reply_sync(session, message, &error);
+    if (reply == NULL) {
+        goto cleanup;
+    }
+
     int64_t result_type = xpc_dictionary_get_int64(reply, "result_type");
 
     post("result_type: %s", xpyc_get_type(result_type));

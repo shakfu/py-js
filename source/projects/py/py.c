@@ -2609,14 +2609,15 @@ void py_read(t_py* x, t_symbol* s)
  */
 void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    t_max_err err;
+    short err;
     t_filehandle fh;
 
     py_locate_path_from_symbol(x, s);
     err = path_opensysfile(x->p_code_filename, x->p_code_path, &fh, READ_PERM);
     if (!err) {
-        sysfile_readtextfile(fh, x->p_code, 0,
-                             TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
+        sysfile_readtextfile(fh, x->p_code, 0, TEXT_LB_NATIVE);
+        // sysfile_readtextfile(fh, x->p_code, 0,
+        //                      TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
         sysfile_close(fh);
         x->p_code_size = sysmem_handlesize(x->p_code);
     }

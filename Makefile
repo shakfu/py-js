@@ -60,7 +60,13 @@ COLOR_RESET = "\033[m"
 # if using macos and the homebrew package manager, 
 # you can check if build dependencies are installed by
 # `make check-deps`
-HOMEBREW_DEPENDENCIES = "python cmake zmq czmq"
+HOMEBREW := $(shell brew --prefix)
+CLANG_TIDY := $(HOMEBREW)/opt/llvm/bin/clang-tidy
+PYTHON3_INCLUDES := $(shell python3-config --include)
+MAX_INCLUDES := source/max-sdk-base/c74support/max-includes
+MSP_INCLUDES := source/max-sdk-base/c74support/msp-includes
+HOMEBREW_INCLUDES := $(HOMEBREW)/include
+HOMEBREW_DEPENDENCIES = "python cmake zmq"
 
 # ifdef MYFLAG
 # CFLAGS += -DMYFLAG
@@ -76,6 +82,13 @@ section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
 define call-builder
 $(call section,"builder $1 $2 $3 $4 $5 $6")
 @cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4 $5 $6
+endef
+
+define tidy-target
+$(call section,"run clang-tidy on $1")
+@$(CLANG_TIDY) '$1' -- \
+	-I $(MAX_INCLUDES) -I $(MSP_INCLUDES) \
+	-I $(PYTHON3_INCLUDES) -I $(HOMEBREW_INCLUDES)
 endef
 
 # $(call xbuild-targets,name)
@@ -771,6 +784,25 @@ clang-format:
 	$(call section,"clang-format")
 	@clang-format -i -style=file $(PYDIR)/py.c
 	@clang-format -i -style=file $(PYDIR)/pyjs.c
+
+
+tidy-py:
+	$(call tidy-target,source/projects/py/py.c)
+
+tidy-pyjs:
+	$(call tidy-target,source/projects/pyjs/pyjs.c)
+
+tidy-cobra:
+	$(call tidy-target,source/projects/cobra/cobra.cpp)
+
+tidy-mamba:
+	$(call tidy-target,source/projects/mamba/mamba.c)
+
+tidy-ztp:
+	$(call tidy-target,source/projects/ztp/ztp.c)
+
+tidy-xpyc:
+	$(call tidy-target,source/projects/xpyc/xpyc.c)
 
 lizard:
 	$(call section,"lizard complexity analysis")

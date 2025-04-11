@@ -140,6 +140,7 @@ t_max_err ztp_py(t_ztp* x, t_symbol* s)
     x->x_request = s;    // override our current value
     x->x_is_new = 1;
     systhread_mutex_unlock(x->x_mutex);
+    return MAX_ERR_NONE;
 }
 
 
