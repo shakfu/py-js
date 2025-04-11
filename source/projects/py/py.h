@@ -125,11 +125,11 @@ void* get_outlet(t_py* x);
 /* Common handlers */
 
 void py_handle_error(t_py* x, char* fmt, ...);
-t_max_err py_handle_float_output(t_py* x, PyObject* pval);
-t_max_err py_handle_long_output(t_py* x, PyObject* pval);
-t_max_err py_handle_string_output(t_py* x, PyObject* pval);
-t_max_err py_handle_list_output(t_py* x, PyObject* pval);
-t_max_err py_handle_dict_output(t_py* x, PyObject* pval);
+t_max_err py_handle_float_output(t_py* x, PyObject* pfloat);
+t_max_err py_handle_long_output(t_py* x, PyObject* plong);
+t_max_err py_handle_string_output(t_py* x, PyObject* pstring);
+t_max_err py_handle_list_output(t_py* x, PyObject* plist);
+t_max_err py_handle_dict_output(t_py* x, PyObject* pdict);
 t_max_err py_handle_output(t_py* x, PyObject* pval);
 
 /*--------------------------------------------------------------------------*/
@@ -179,7 +179,7 @@ t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv);
 
 t_max_err py_send(t_py* x, t_symbol* s, long argc, t_atom* argv);
 void py_scan(t_py* x);
-long py_scan_callback(t_py* x, t_object* obj);
+long py_scan_callback(t_py* x, t_object* box);
 
 /*--------------------------------------------------------------------------*/
 /* Code editor Methods */

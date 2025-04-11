@@ -264,14 +264,16 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         attr_args_process(x, argc, argv);
 
         // set patcher object
-        object_obex_lookup(x, gensym("#P"), (t_patcher**)&x->p_patcher);
-        if (x->p_patcher == NULL)
+        object_obex_lookup(x, gensym("#P"), &x->p_patcher);
+        if (x->p_patcher == NULL) {
             error("patcher object not created.");
+        }
 
         // set box object
-        object_obex_lookup(x, gensym("#B"), (t_box**)&x->p_box);
-        if (x->p_box == NULL)
+        object_obex_lookup(x, gensym("#B"), &x->p_box);
+        if (x->p_box == NULL) {
             error("box object not created.");
+        }
 
         // create scripting name
         t_max_err err = jbox_set_varname(x->p_box, x->p_name);
@@ -391,7 +393,7 @@ void py_init(t_py* x)
 
     if (py_global_obj_count == 1) {
         // if first py object create the py_global_registry;
-        py_global_registry = (t_hashtab*)hashtab_new(0);
+        py_global_registry = hashtab_new(0);
         hashtab_flags(py_global_registry, OBJ_FLAG_REF);
     }
 
@@ -410,10 +412,13 @@ void py_free(t_py* x)
     // code editor cleanup
     object_free(x->p_code_editor);
     object_free(x->p_clock);
-    if (x->p_sched_atoms)
+    if (x->p_sched_atoms) {
         object_free(x->p_sched_atoms);
-    if (x->p_code)
+    }
+    
+    if (x->p_code) {
         sysmem_freehandle(x->p_code);
+    }
 
     Py_XDECREF(x->p_globals);
     // python objects cleanup
@@ -575,7 +580,7 @@ void py_postargs(t_symbol* s, long argc, t_atom* argv)
  *
  * Returns a reference to the main object outlet
  */
-void* get_outlet(t_py* x) { return (void*)x->p_outlet_left; }
+void* get_outlet(t_py* x) { return x->p_outlet_left; }
 
 /**
  * @brief Post INFO msg to Max console.
@@ -664,20 +669,24 @@ void py_init_builtins(t_py* x)
     int err = -1;
 
     p_name = PyUnicode_FromString(x->p_name->s_name);
-    if (p_name == NULL)
+    if (p_name == NULL) {
         goto error;
+    }
 
     builtins = PyEval_GetBuiltins(); // borrowed, deprecated since 3.13: use PyEval_GetFrameBuiltins (new ref)
-    if (builtins == NULL)
+    if (builtins == NULL) {
         goto error;
+    }
 
     err = PyDict_SetItemString(builtins, "PY_OBJ_NAME", p_name);
-    if (err == -1)
+    if (err == -1) {
         goto error;
+    }
 
     err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
-    if (err == -1)
+    if (err == -1) {
         goto error;
+    }
 
     p_code_obj = PyRun_String(PY_PRELUDE_MODULE, Py_file_input, x->p_globals,
                               x->p_globals);
@@ -797,9 +806,10 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
         x->p_code_filename[0] = 0;
 
         if (open_dialog(x->p_code_filename, &x->p_code_path,
-                        &x->p_code_outtype, &x->p_code_filetype, 1))
-            /* non-zero: cancelled */
-            ret = MAX_ERR_GENERIC;
+                        &x->p_code_outtype, &x->p_code_filetype, 1)) {
+                /* non-zero: cancelled */
+                ret = MAX_ERR_GENERIC;
+            }
         goto finally;
 
     } else {
@@ -862,7 +872,8 @@ void py_appendtodict(t_py* x, t_dictionary* dict)
 char* str_replace(const char* s, const char* old, const char* new)
 {
     char* result;
-    int i, cnt = 0;
+    int i = 0;
+    int cnt = 0;
     size_t new_len = strlen(new);
     size_t old_len = strlen(old);
 
@@ -877,7 +888,7 @@ char* str_replace(const char* s, const char* old, const char* new)
     }
 
     // Making new string of enough length
-    size_t maxlen = i + cnt * (new_len - old_len) + 1;
+    size_t maxlen = (i + cnt * (new_len - old_len)) + 1;
     result = (char*)sysmem_newptr(maxlen);
 
     i = 0;
@@ -887,8 +898,9 @@ char* str_replace(const char* s, const char* old, const char* new)
             strncpy_zero(&result[i], new, maxlen);
             i += new_len;
             s += old_len;
-        } else
+        } else {
             result[i++] = *s++;
+        }
     }
 
     result[i] = '\0';
@@ -961,15 +973,17 @@ void path_join(char* destination, const char* path1, const char* path2)
         directory_separator[0] = '\\';
 #endif
         const char* last_char = path1;
-        while (*last_char != '\0')
+        while (*last_char != '\0') {
             last_char++;
+        }
         int append_directory_separator = 0;
         if (strcmp(last_char, directory_separator) != 0) {
             append_directory_separator = 1;
         }
         strncpy_zero(destination, path1, MAX_PATH_CHARS);
-        if (append_directory_separator)
+        if (append_directory_separator) {
             strncat_zero(destination, directory_separator, MAX_PATH_CHARS);
+        }
         strncat_zero(destination, path2, MAX_PATH_CHARS);
     }
 }
@@ -1201,8 +1215,9 @@ t_max_err py_task(t_py* x)
  */
 void py_handle_error(t_py* x, char* fmt, ...)
 {
-    if (!PyErr_Occurred()) // borrowed
+    if (!PyErr_Occurred()) { // borrowed 
         return;
+    }
 
     char msg[PY_MAX_ELEMS];
 
@@ -1212,7 +1227,9 @@ void py_handle_error(t_py* x, char* fmt, ...)
     va_end(va);
 
     // get error info
-    PyObject *ptype, *pvalue, *ptraceback;
+    PyObject *ptype = NULL;
+    PyObject *pvalue = NULL;
+    PyObject *ptraceback = NULL;
     PyErr_Fetch(&ptype, &pvalue, &ptraceback);
     PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
     Py_XDECREF(ptype);
@@ -1460,10 +1477,10 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
             py_handle_list_output(x, pval); // this decrefs pval
             py_bang_success(x);
             return MAX_ERR_NONE;
-        } else {
-            py_error(x, "expected list output got something else");
-            goto error;
         }
+
+        py_error(x, "expected list output got something else");
+        goto error;
     }
 
 error:
@@ -1498,44 +1515,42 @@ t_max_err py_handle_output(t_py* x, PyObject* pval)
         return py_handle_float_output(x, pval);
     }
 
-    else if (PyLong_Check(pval)) {
+    if (PyLong_Check(pval)) {
         return py_handle_long_output(x, pval);
     }
 
-    else if (PyUnicode_Check(pval)) {
+    if (PyUnicode_Check(pval)) {
         return py_handle_string_output(x, pval);
     }
 
-    else if (PySequence_Check(pval) && !PyBytes_Check(pval)
+    if (PySequence_Check(pval) && !PyBytes_Check(pval)
              && !PyByteArray_Check(pval)) {
         return py_handle_list_output(x, pval);
     }
 
-    else if (PyDict_Check(pval)) {
+    if (PyDict_Check(pval)) {
         return py_handle_dict_output(x, pval);
     }
 
-    else if (PyFunction_Check(pval)) {
+    if (PyFunction_Check(pval)) {
         return py_func_to_pyobj(x, "sig", pval);
     }
 
-    else if (Py_IsNone(pval)) {
+    if (Py_IsNone(pval)) {
         return MAX_ERR_GENERIC;
     }
 
-    else {
+    // try to convert it repr(pval) string
+    PyObject * rep = PyObject_Repr(pval);
+    Py_CLEAR(pval);
 
-        // try to convert it repr(pval) string
-        PyObject * rep = PyObject_Repr(pval);
-        Py_CLEAR(pval);
-
-        if (rep != NULL ) {
-            return py_handle_string_output(x, rep);
-        }
-
-        py_error(x, "cannot handle his type of value");
-        return MAX_ERR_GENERIC;
+    if (rep != NULL ) {
+        return py_handle_string_output(x, rep);
     }
+
+    py_error(x, "cannot handle his type of value");
+    return MAX_ERR_GENERIC;
+    
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1664,12 +1679,11 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
         py_handle_output(x, pval);
         PyGILState_Release(gstate);
         return MAX_ERR_NONE;
-    } else {
-        py_handle_error(x, "eval %s", py_argv);
-        PyGILState_Release(gstate);
-        py_bang_failure(x);
-        return MAX_ERR_GENERIC;
     }
+    py_handle_error(x, "eval %s", py_argv);
+    PyGILState_Release(gstate);
+    py_bang_failure(x);
+    return MAX_ERR_GENERIC;
 }
 
 /**
@@ -1801,8 +1815,9 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     PyObject* list = NULL;
     int res = 0;
 
-    if (s != gensym(""))
+    if (s != gensym("")) {
         py_debug(x, "s: %s", s->s_name);
+    }
 
     // first atom in argv must be a symbol
     if (argv->a_type != A_SYM) {
@@ -2545,7 +2560,7 @@ t_max_err py_send(t_py* x, t_symbol* s, long argc, t_atom* argv)
     }
 
     // methods to get method type
-    t_messlist* messlist = object_mess((t_object*)obj, msg_sym);
+    t_messlist* messlist = object_mess(obj, msg_sym);
     if (messlist) {
         post("messlist->m_sym  (name of msg): %s", messlist->m_sym->s_name);
         post("messlist->m_type (type of msg): %d", messlist->m_type[0]);
@@ -2576,10 +2591,10 @@ error:
  */
 void py_dblclick(t_py* x)
 {
-    if (x->p_code_editor)
+    if (x->p_code_editor) {
         object_attr_setchar(x->p_code_editor, gensym("visible"), 1);
-    else {
-        x->p_code_editor = object_new(CLASS_NOBOX, gensym("jed"), x, 0);
+    } else {
+        x->p_code_editor = (t_object*)object_new(CLASS_NOBOX, gensym("jed"), x, 0);
         object_method(x->p_code_editor, gensym("settext"), *x->p_code,
                       gensym("utf-8"));
         object_attr_setchar(x->p_code_editor, gensym("scratch"), 1);
@@ -2636,9 +2651,10 @@ void py_run(t_py* x)
 
     PyObject* pval = NULL;
 
-    if ((*(x->p_code) != NULL) && (*(x->p_code)[0] == '\0'))
+    if ((*(x->p_code) != NULL) && (*(x->p_code)[0] == '\0')) {
         // is empty string
         goto error;
+    }
 
     pval = PyRun_String(*(x->p_code), Py_file_input, x->p_globals,
                         x->p_globals);
@@ -2669,11 +2685,12 @@ error:
  */
 void py_edclose(t_py* x, char** text, long size)
 {
-    if (x->p_code)
+    if (x->p_code) {
         sysmem_freehandle(x->p_code);
+    }
 
     x->p_code = sysmem_newhandleclear(size + 1);
-    sysmem_copyptr((char*)*text, *x->p_code, size);
+    sysmem_copyptr(*text, *x->p_code, size);
     x->p_code_size = size + 1;
     x->p_code_editor = NULL;
     if (x->p_run_on_close) {
