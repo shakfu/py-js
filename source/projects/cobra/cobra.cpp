@@ -40,8 +40,8 @@ void cobra_bang(t_cobra*);
 
 // core methods
 t_max_err cobra_import(t_cobra* x, t_symbol* s);
-t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err cobra_exec(t_cobra* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err cobra_eval(t_cobra* x, t_symbol* s);
+t_max_err cobra_exec(t_cobra* x, t_symbol* s);
 t_max_err cobra_execfile(t_cobra* x, t_symbol* s);
 
 // extra py methods
@@ -72,9 +72,9 @@ void ext_main(void* r)
 
     class_addmethod(c, (method)cobra_bang,       "bang",                 0);
     class_addmethod(c, (method)cobra_import,     "import",   A_SYM,      0);
-    class_addmethod(c, (method)cobra_eval,       "eval",     A_GIMME,    0);
-    class_addmethod(c, (method)cobra_exec,       "exec",     A_GIMME,    0);
-    class_addmethod(c, (method)cobra_execfile,   "execfile", A_DEFSYM,   0);
+    class_addmethod(c, (method)cobra_eval,       "eval",     A_SYM,      0);
+    class_addmethod(c, (method)cobra_exec,       "exec",     A_SYM,      0);
+    class_addmethod(c, (method)cobra_execfile,   "execfile", A_SYM,      0);
 
     class_addmethod(c, (method)cobra_assign,     "assign",   A_GIMME,    0);
     class_addmethod(c, (method)cobra_call,       "call",     A_GIMME,    0);
@@ -154,15 +154,15 @@ t_max_err cobra_import(t_cobra* x, t_symbol* s)
 }
 
 
-t_max_err cobra_eval(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err cobra_eval(t_cobra* x, t_symbol* s)
 {
-    return x->py->eval(s, argc, argv, x->outlet);
+    return x->py->eval(s, x->outlet);
 }
 
 
-t_max_err cobra_exec(t_cobra* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err cobra_exec(t_cobra* x, t_symbol* s)
 {
-    return x->py->exec(s, argc, argv);
+    return x->py->exec(s);
 }
 
 

@@ -28,16 +28,16 @@ void mamba_bang(t_mamba* x);
 
 // core py methods
 t_max_err mamba_import(t_mamba* x, t_symbol* s);
-t_max_err mamba_eval(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err mamba_exec(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err mamba_eval(t_mamba* x, t_symbol* s);
+t_max_err mamba_exec(t_mamba* x, t_symbol* s);
 t_max_err mamba_execfile(t_mamba* x, t_symbol* s);
 
 // extra py methods
-t_max_err mamba_call(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err mamba_call(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err mamba_assign(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv);
 
 
 static t_class* mamba_class = NULL;
@@ -50,9 +50,9 @@ void ext_main(void* r)
     class_addmethod(c, (method)mamba_bang,      "bang", 0);
 
     class_addmethod(c, (method)mamba_import,    "import",   A_SYM, 0);
-    class_addmethod(c, (method)mamba_eval,      "eval",     A_GIMME, 0);
-    class_addmethod(c, (method)mamba_exec,      "exec",     A_GIMME, 0);
-    class_addmethod(c, (method)mamba_execfile,  "execfile", A_DEFSYM, 0);
+    class_addmethod(c, (method)mamba_eval,      "eval",     A_SYM, 0);
+    class_addmethod(c, (method)mamba_exec,      "exec",     A_SYM, 0);
+    class_addmethod(c, (method)mamba_execfile,  "execfile", A_SYM, 0);
 
     class_addmethod(c, (method)mamba_assign,    "assign",   A_GIMME, 0);
     class_addmethod(c, (method)mamba_call,      "call",     A_GIMME, 0);
@@ -119,14 +119,12 @@ t_max_err mamba_import(t_mamba* x, t_symbol* s)
  *
  * @param x pointer to mamba object
  * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
  *
  * @return t_max_err
  */
-t_max_err mamba_eval(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err mamba_eval(t_mamba* x, t_symbol* s)
 {
-    return py_eval(x->py, s, argc, argv, x->c_outlet);
+    return py_eval(x->py, s, x->c_outlet);
 }
 
 /**
@@ -134,14 +132,12 @@ t_max_err mamba_eval(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
  *
  * @param x pointer to mamba object
  * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
  *
  * @return t_max_err
  */
-t_max_err mamba_exec(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err mamba_exec(t_mamba* x, t_symbol* s)
 {
-    return py_exec(x->py, s, argc, argv);
+    return py_exec(x->py, s);
 }
 
 /**
@@ -168,7 +164,7 @@ t_max_err mamba_execfile(t_mamba* x, t_symbol* s)
  *
  * @return t_max_err
  */
-t_max_err mamba_call(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err mamba_call(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_call(x->py, s, argc, argv, x->c_outlet);
 }
@@ -200,7 +196,7 @@ t_max_err mamba_assign(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
  *
  * @return t_max_err
  */
-t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_code(x->py, s, argc, argv, x->c_outlet);
 }
@@ -216,7 +212,7 @@ t_max_err mamba_code(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* out
  *
  * @return t_max_err
  */
-t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_anything(x->py, s, argc, argv, x->c_outlet);
 }
@@ -232,7 +228,7 @@ t_max_err mamba_anything(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void*
  *
  * @return t_max_err
  */
-t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err mamba_pipe(t_mamba* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_pipe(x->py, s, argc, argv, x->c_outlet);
 }

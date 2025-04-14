@@ -134,8 +134,8 @@ class PythonInterpreter
 
         // core message methods
         t_max_err import(t_symbol* s);
-        t_max_err eval(t_symbol* s, long argc, t_atom* argv, void* outlet);
-        t_max_err exec(t_symbol* s, long argc, t_atom* argv);
+        t_max_err eval(t_symbol* s, void* outlet);
+        t_max_err exec(t_symbol* s);
         t_max_err execfile(t_symbol* s);
 
         // extra message method helpers
@@ -1171,22 +1171,14 @@ t_max_err PythonInterpreter::import(t_symbol* s)
 /**
  * @brief Evaluate a max symbol as a python expression
  *
- * @param s symbol of object to be evaluated
- * @param argc atom argument count
- * @param argv atom argument vector
+ * @param s symbol of code to be evaluated
  * @param outlet object outlet
  *
  * @return t_max_err error code
  */
-t_max_err PythonInterpreter::eval(t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err PythonInterpreter::eval(t_symbol* s, void* outlet)
 {
-    char* pcode = atom_getsym(argv)->s_name;
-
-    if (pcode == NULL) {
-        return MAX_ERR_GENERIC;
-    }
-
-    PyObject* pval = this->eval_pcode(pcode);
+    PyObject* pval = this->eval_pcode(s->s_name);
 
     if (pval == NULL) {
         return MAX_ERR_GENERIC;
@@ -1200,18 +1192,12 @@ t_max_err PythonInterpreter::eval(t_symbol* s, long argc, t_atom* argv, void* ou
 /**
  * @brief Execute a max symbol as a line of python code
  *
- * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
+ * @param s symbol of code to be executed
  * @return t_max_err error code
  */
-t_max_err PythonInterpreter::exec(t_symbol* s, long argc, t_atom* argv)
+t_max_err PythonInterpreter::exec(t_symbol* s)
 {
-    char* pcode = atom_getsym(argv)->s_name;
-    if (pcode == NULL) {
-        return MAX_ERR_GENERIC;
-    }
-    return this->exec_pcode(pcode);
+    return this->exec_pcode(s->s_name);
 }
 
 

@@ -7,6 +7,8 @@ python3_external(
     PROJECT_NAME ${PROJECT_NAME}
     BUILD_VARIANT ${BUILD_VARIANT}
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../mamba
+    COMPILE_OPTIONS -std=c99 -Wall -Wextra -pedantic
+
 )
 
 if(APPLE AND NOT BUILD_VARIANT STREQUAL local)

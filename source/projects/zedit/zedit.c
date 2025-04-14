@@ -43,7 +43,7 @@ typedef struct _zedit {
     int x_systhread_cancel;    // thread cancel flag
     void* x_qelem;             // for message passing between threads
     void* x_outlet;            // the only outlet
-    int x_foo;                 // simple data to pass between threads
+    long x_foo;                // simple data to pass between threads
     int x_sleeptime;           // how many milliseconds to sleep
     int x_is_running;          // status of zediter
     t_string* x_root_dir;      // root path to statically serve from
@@ -72,16 +72,16 @@ void zedit_bang(t_zedit* x);
 
 // core py methods
 t_max_err zedit_import(t_zedit* x, t_symbol* s);
-t_max_err zedit_eval(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err zedit_exec(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err zedit_eval(t_zedit* x, t_symbol* s);
+t_max_err zedit_exec(t_zedit* x, t_symbol* s);
 t_max_err zedit_execfile(t_zedit* x, t_symbol* s);
 
 // extra py methods
-t_max_err zedit_call(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err zedit_call(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
 t_max_err zedit_assign(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
-t_max_err zedit_code(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err zedit_anything(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err zedit_pipe(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
+t_max_err zedit_code(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err zedit_anything(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err zedit_pipe(t_zedit* x, t_symbol* s, long argc, t_atom* argv);
 
 // code evaluation methods
 t_max_err zedit_exec_file_input(t_zedit* x, const char* code);
@@ -390,15 +390,15 @@ void ext_main(void* r)
 
     class_addmethod(c, (method)zedit_bang,      "bang",                 0);
     class_addmethod(c, (method)zedit_start,     "start",                0);
-    class_addmethod(c, (method)zedit_foo,       "foo",      A_DEFLONG,  0);
+    class_addmethod(c, (method)zedit_foo,       "foo",       A_DEFLONG, 0);
     class_addmethod(c, (method)zedit_sleeptime, "sleeptime", A_DEFLONG, 0);
     class_addmethod(c, (method)zedit_cancel,    "cancel",               0);
     class_addmethod(c, (method)zedit_assist,    "assist",   A_CANT,     0);
 
     class_addmethod(c, (method)zedit_import,    "import",   A_SYM,      0);
-    class_addmethod(c, (method)zedit_eval,      "eval",     A_GIMME,    0);
-    class_addmethod(c, (method)zedit_exec,      "exec",     A_GIMME,    0);
-    class_addmethod(c, (method)zedit_execfile,  "execfile", A_DEFSYM,   0);
+    class_addmethod(c, (method)zedit_eval,      "eval",     A_SYM,      0);
+    class_addmethod(c, (method)zedit_exec,      "exec",     A_SYM,      0);
+    class_addmethod(c, (method)zedit_execfile,  "execfile", A_SYM,      0);
 
     class_addmethod(c, (method)zedit_call,      "call",     A_GIMME,    0);
     class_addmethod(c, (method)zedit_code,      "code",     A_GIMME,    0);
@@ -578,15 +578,15 @@ t_max_err zedit_import(t_zedit* x, t_symbol* s)
     return py_import(x->py, s); // returns t_max_err
 }
 
-t_max_err zedit_eval(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err zedit_eval(t_zedit* x, t_symbol* s)
 {
-    return py_eval(x->py, s, argc, argv, x->x_outlet);
+    return py_eval(x->py, s, x->x_outlet);
 }
 
 
-t_max_err zedit_exec(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err zedit_exec(t_zedit* x, t_symbol* s)
 {
-    return py_exec(x->py, s, argc, argv);
+    return py_exec(x->py, s);
 }
 
 
@@ -608,7 +608,7 @@ t_max_err zedit_execfile(t_zedit* x, t_symbol* s)
 }
 
 
-t_max_err zedit_call(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err zedit_call(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_call(x->py, s, argc, argv, x->x_outlet);
 }
@@ -620,19 +620,19 @@ t_max_err zedit_assign(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
 }
 
 
-t_max_err zedit_code(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err zedit_code(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_code(x->py, s, argc, argv, x->x_outlet);
 }
 
 
-t_max_err zedit_anything(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err zedit_anything(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_anything(x->py, s, argc, argv, x->x_outlet);
 }
 
 
-t_max_err zedit_pipe(t_zedit* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err zedit_pipe(t_zedit* x, t_symbol* s, long argc, t_atom* argv)
 {
     return py_pipe(x->py, s, argc, argv, x->x_outlet);
 }

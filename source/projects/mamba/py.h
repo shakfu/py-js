@@ -48,8 +48,8 @@ void py_free(t_py* x);
 
 // core methods
 t_max_err py_import(t_py* x, t_symbol* s);
-t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet);
-t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_eval(t_py* x, t_symbol* s, void* outlet);
+t_max_err py_exec(t_py* x, t_symbol* s);
 t_max_err py_execfile(t_py* x, t_symbol* s);
 
 // extra methods
@@ -772,22 +772,19 @@ error:
  * @brief Evaluate a max symbol as a python expression
  *
  * @param x pointer to object structure
- * @param s symbol of object to be evaluated
- * @param argc atom argument count
- * @param argv atom argument vector
+ * @param s symbol of code to be evaluated
  * @param outlet object outlet
  *
  * @return t_max_err error code
  */
-t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
+t_max_err py_eval(t_py* x, t_symbol* s, void* outlet)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    char* py_argv = atom_getsym(argv)->s_name;
-    py_log(x, (char*)"%s %s", s->s_name, py_argv);
+    py_log(x, (char*)"eval %s", s->s_name);
 
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
+    PyObject* pval = PyRun_String(s->s_name, Py_eval_input, x->p_globals,
                                   x->p_globals);
 
     if (pval != NULL) {
@@ -795,7 +792,7 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv, void* outlet)
         PyGILState_Release(gstate);
         return MAX_ERR_NONE;
     } else {
-        py_handle_error(x, (char*)"eval %s", py_argv);
+        py_handle_error(x, (char*)"eval %s", s->s_name);
         PyGILState_Release(gstate);
         return MAX_ERR_GENERIC;
     }
@@ -870,36 +867,28 @@ error:
  * @brief Execute a max symbol as a line of python code
  *
  * @param x pointer to object structure
- * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
+ * @param s symbol of code string to exec
  * @return t_max_err error code
  */
-t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_exec(t_py* x, t_symbol* s)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    char* py_argv = NULL;
     PyObject* pval = NULL;
 
-    py_argv = atom_getsym(argv)->s_name;
-    if (py_argv == NULL) {
-        goto error;
-    }
-
-    pval = PyRun_String(py_argv, Py_single_input, x->p_globals, x->p_globals);
+    pval = PyRun_String(s->s_name, Py_single_input, x->p_globals, x->p_globals);
     if (pval == NULL) {
         goto error;
     }
     Py_DECREF(pval);
     PyGILState_Release(gstate);
 
-    py_log(x, (char*)"exec %s", py_argv);
+    py_log(x, (char*)"exec %s", s->s_name);
     return MAX_ERR_NONE;
 
 error:
-    py_handle_error(x, (char*)"exec %s", py_argv);
+    py_handle_error(x, (char*)"exec %s", s->s_name);
     Py_XDECREF(pval);
     PyGILState_Release(gstate);
     return MAX_ERR_GENERIC;
