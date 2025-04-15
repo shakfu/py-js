@@ -74,6 +74,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     endif()
 endif()
 
+# include functions to use later
+include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/fn_python3_external.cmake)
+
+
 if(BUILD_PYTHON3_CORE_EXTERNALS)
 list(APPEND BUILD_TARGETS py pyjs)
 endif()

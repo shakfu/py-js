@@ -1,3 +1,7 @@
+unset(CMAKE_OSX_DEPLOYMENT_TARGET)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "requires >= 10.15" FORCE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+
 function(python3_external)
     set(options
         DEBUG
