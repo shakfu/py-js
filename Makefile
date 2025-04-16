@@ -801,6 +801,9 @@ tidy-cobra:
 tidy-mamba:
 	$(call tidy-target,source/projects/mamba/mamba.c)
 
+tidy-mxpy:
+	$(call tidy-target,source/projects/mxpy/mxpy.c)
+
 tidy-ztp:
 	$(call tidy-target,source/projects/ztp/ztp.c)
 
