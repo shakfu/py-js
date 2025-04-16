@@ -29,34 +29,34 @@ t_symbol* mxpy_locate_path_to_external(t_mxpy* x);
 
 static t_class* mxpy_class;
 
-#define py_error(x, ...) object_error((t_object*)(x), __VA_ARGS__);
-#define py_warn(x, ...)  object_warn((t_object*)(x), __VA_ARGS__);
-#define py_info(x, ...) object_post((t_object*)(x), __VA_ARGS__);
-#define py_debug(x, ...) if ((x->x_debug)) object_post((t_object*)(x), __VA_ARGS__);
+#define mxpy_error(x, ...) object_error((t_object*)(x), __VA_ARGS__);
+#define mxpy_warn(x, ...)  object_warn((t_object*)(x), __VA_ARGS__);
+#define mxpy_info(x, ...) object_post((t_object*)(x), __VA_ARGS__);
+#define mxpy_debug(x, ...) if ((x->x_debug)) object_post((t_object*)(x), __VA_ARGS__);
 
 static PyObject* mxpy_atom_to_pyobject(t_mxpy* x, t_atom* atom)
 {
-    py_debug(x, "mxpy_atom_to_pyobject start");
+    mxpy_debug(x, "mxpy_atom_to_pyobject start");
 
     switch (atom->a_type) {
 
     case A_LONG:
-        py_debug(x, "int: %i", atom_getlong(atom));
+        mxpy_debug(x, "int: %i", atom_getlong(atom));
         return PyLong_FromLong(atom_getlong(atom));
 
     case A_FLOAT:
-        py_debug(x, "float: %f", atom_getfloat(atom));
+        mxpy_debug(x, "float: %f", atom_getfloat(atom));
         return PyFloat_FromDouble(atom_getfloat(atom));
 
     case A_SYM:
-        py_debug(x, "symbol: %s", atom_getsym(atom)->s_name);
+        mxpy_debug(x, "symbol: %s", atom_getsym(atom)->s_name);
         return PyUnicode_FromString(atom_getsym(atom)->s_name);
 
     case A_NOTHING:
         Py_RETURN_NONE;
 
     default:
-        py_warn(x, "Warning: type %d unsupported for conversion to Python.",
+        mxpy_warn(x, "Warning: type %d unsupported for conversion to Python.",
              atom->a_type);
         Py_RETURN_NONE;
     }
@@ -64,7 +64,7 @@ static PyObject* mxpy_atom_to_pyobject(t_mxpy* x, t_atom* atom)
 
 static PyObject* mxpy_atoms_to_pylist(t_mxpy* x, int argc, t_atom* argv)
 {
-    py_debug(x, "mxpy_atoms_to_pylist start");
+    mxpy_debug(x, "mxpy_atoms_to_pylist start");
 
     PyObject* list = PyTuple_New(argc);
     for (int i = 0; i < argc; i++) {
@@ -76,7 +76,7 @@ static PyObject* mxpy_atoms_to_pylist(t_mxpy* x, int argc, t_atom* argv)
 
 static void mxpy_pyobject_to_atom(t_mxpy* x, PyObject* value, t_atom* atom)
 {
-    py_debug(x, "mxpy_pyobject_to_atom start");
+    mxpy_debug(x, "mxpy_pyobject_to_atom start");
 
     if (value == Py_True) {
         atom_setlong(atom, 1);
@@ -95,7 +95,7 @@ static void mxpy_pyobject_to_atom(t_mxpy* x, PyObject* value, t_atom* atom)
 
 static void mxpy_new_list_from_sequence(t_mxpy* x, PyObject* seq, int* argc, t_atom** argv)
 {
-    py_debug(x, "mxpy_new_list_from_sequence start");
+    mxpy_debug(x, "mxpy_new_list_from_sequence start");
 
     Py_ssize_t len = 0;
     Py_ssize_t i;
@@ -113,7 +113,7 @@ static void mxpy_new_list_from_sequence(t_mxpy* x, PyObject* seq, int* argc, t_a
 
 static void mxpy_emit_outlet_message(t_mxpy* x, PyObject* value, void* x_outlet)
 {
-    py_debug(x, "mxpy_emit_outlet_message start");
+    mxpy_debug(x, "mxpy_emit_outlet_message start");
 
     if (value == Py_True) {
         outlet_float(x_outlet, 1.0);
@@ -149,7 +149,6 @@ static void mxpy_emit_outlet_message(t_mxpy* x, PyObject* value, void* x_outlet)
     }
 }
 
-
 /**
  * @brief      Return path to external with optional subpath
  *
@@ -182,7 +181,6 @@ static t_string* mxpy_get_path_to_external(t_class* c, char* subpath)
     }
     return result;
 }
-
 
 /**
  * @brief      Return path to package with optional subpath
@@ -218,16 +216,15 @@ static t_string* mxpy_get_path_to_package(t_class* c, char* subpath)
     return result;
 }
 
-
 static void mxpy_bang(t_mxpy* x)
 {
-    py_debug(x, "mxpy_bang start");
+    mxpy_debug(x, "mxpy_bang start");
     mxpy_eval(x, gensym("mx_bang"), 0, NULL);
 }
 
 static void mxpy_sym(t_mxpy* x, t_symbol* s)
 {
-    py_debug(x, "mxpy_sym start");
+    mxpy_debug(x, "mxpy_sym start");
     t_atom atoms[1];
     atom_setsym(atoms, s);
     mxpy_eval(x, gensym("mx_symbol"), 1, atoms);
@@ -235,7 +232,7 @@ static void mxpy_sym(t_mxpy* x, t_symbol* s)
 
 static void mxpy_int(t_mxpy* x, long n)
 {
-    py_debug(x, "mxpy_int start");
+    mxpy_debug(x, "mxpy_int start");
     t_atom atoms[1];
     atom_setlong(atoms, n);
     mxpy_eval(x, gensym("mx_int"), 1, atoms);
@@ -243,7 +240,7 @@ static void mxpy_int(t_mxpy* x, long n)
 
 static void mxpy_float(t_mxpy* x, double n)
 {
-    py_debug(x, "mxpy_float start");
+    mxpy_debug(x, "mxpy_float start");
     t_atom atoms[1];
     atom_setfloat(atoms, n);
     mxpy_eval(x, gensym("mx_float"), 1, atoms);
@@ -251,15 +248,15 @@ static void mxpy_float(t_mxpy* x, double n)
 
 static void mxpy_eval(t_mxpy* x, t_symbol* s, int argc, t_atom* argv)
 {
-    py_debug(x, "mxpy_eval start");
-    py_debug(x, "s: %s argc: %i", s->s_name, argc);
+    mxpy_debug(x, "mxpy_eval start");
+    mxpy_debug(x, "s: %s argc: %i", s->s_name, argc);
 
     PyObject* func = NULL;
     PyObject* args = NULL;
     PyObject* value = NULL;
 
     if (x->py_object == NULL) {
-        py_warn(x, "Warning: message sent to uninitialized python object.");
+        mxpy_warn(x, "Warning: message sent to uninitialized python object.");
         return;
     }
 
@@ -267,10 +264,10 @@ static void mxpy_eval(t_mxpy* x, t_symbol* s, int argc, t_atom* argv)
     args = mxpy_atoms_to_pylist(x, argc, argv);
 
     if (!func) {
-        py_warn(x, "Warning: no Python function found for s %s.", s->s_name);
+        mxpy_warn(x, "Warning: no Python function found for s %s.", s->s_name);
     } else {
         if (!PyCallable_Check(func)) {
-            py_warn(x, "Warning: Python attribute for s %s is not callable.",
+            mxpy_warn(x, "Warning: Python attribute for s %s is not callable.",
                  s->s_name);
         } else {
             value = PyObject_CallObject(func, args);
@@ -283,7 +280,7 @@ static void mxpy_eval(t_mxpy* x, t_symbol* s, int argc, t_atom* argv)
     }
 
     if (value == NULL) {
-        py_warn(x, "Warning: Python call for '%s' failed.", s->s_name);
+        mxpy_warn(x, "Warning: Python call for '%s' failed.", s->s_name);
 
     } else {
         if (PyTuple_Check(value)) {
@@ -303,8 +300,17 @@ static void mxpy_eval(t_mxpy* x, t_symbol* s, int argc, t_atom* argv)
 
 static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
 {
+    PyObject* module_path = NULL;
+    PyObject* sys_path = NULL;
+    PyObject* os_name = NULL;
+    PyObject* os_module = NULL;
+    PyObject* module_name = NULL;
+    PyObject* module = NULL;
+    PyObject* func = NULL;
+    PyObject* args = NULL;
+
     if (argc < 2) {
-        py_error(x, "python module and function args required.");
+        mxpy_error(x, "python module and function args required.");
         goto except;
     }
 
@@ -316,29 +322,20 @@ static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
 
     Py_Initialize();
 
-    PyObject* module_path = NULL;
-    PyObject* sys_path = NULL;
-    PyObject* os_name = NULL;
-    PyObject* os_module = NULL;
-    PyObject* module_name = NULL;
-    PyObject* module = NULL;
-    PyObject* func = NULL;
-    PyObject* args = NULL;
-
     module_path = PyUnicode_FromString(modpath_cstr);
     if (module_path == NULL) {
-        py_error(x, "could not get python module_path");
+        mxpy_error(x, "could not get python module_path");
         goto except;
     }
     
     sys_path = PySys_GetObject((char*)"path"); // borrowed reference
     if (sys_path == NULL) {
-        py_error(x, "could not get python sys.path");
+        mxpy_error(x, "could not get python sys.path");
         goto except;
     }
 
     if (!PySequence_Contains(sys_path, module_path)) {
-        py_info(x, "Appending %s to Python load path", modpath_cstr);
+        mxpy_info(x, "Appending %s to Python load path", modpath_cstr);
         PyList_Append(sys_path, module_path);
     }
     Py_DECREF(module_path);
@@ -349,10 +346,10 @@ static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
     Py_DECREF(os_name);
 
     if (os_module == NULL) {
-        py_error(x, "unable to import os module");
+        mxpy_error(x, "unable to import os module");
         goto except;
     }
-    py_info(x, "os module imported");
+    mxpy_info(x, "os module imported");
     Py_DECREF(os_module);
 
     // try loading the module
@@ -361,7 +358,7 @@ static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
     Py_DECREF(module_name);
 
     if (module == NULL) {
-        py_error(x, "unable to import Python module %s.",
+        mxpy_error(x, "unable to import Python module %s.",
                  atom_getsym(argv + 0)->s_name);
         goto except;
     }
@@ -370,20 +367,20 @@ static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
         module, atom_getsym(argv + 1)->s_name);
 
     if (func == NULL) {
-         py_error(x, "Python function %s not found.",
+         mxpy_error(x, "Python function %s not found.",
              atom_getsym(argv + 1)->s_name);
     }
 
-    py_debug(x, "%s module imported", atom_getsym(argv + 0)->s_name);
+    mxpy_debug(x, "%s module imported", atom_getsym(argv + 0)->s_name);
     if (!PyCallable_Check(func)) {
-         py_error(x, "Python attribute %s is not callable.",
+         mxpy_error(x, "Python attribute %s is not callable.",
              atom_getsym(argv + 1)->s_name);
          goto except;
     }
 
     args = mxpy_atoms_to_pylist(x, argc - 2, argv + 2);
     if (args == NULL) {
-        py_error(x, "could not convert atom list to python list");
+        mxpy_error(x, "could not convert atom list to python list");
         goto except;
     }
 
@@ -406,7 +403,6 @@ finally:
 }    
 
 
-
 static void* mxpy_new(t_symbol* s, int argc, t_atom* argv)
 {
     t_mxpy* x = (t_mxpy*)object_alloc(mxpy_class);
@@ -422,12 +418,12 @@ static void* mxpy_new(t_symbol* s, int argc, t_atom* argv)
 
         return mxpy_init(x, argc, argv);
     }
-
+    return NULL;
 }
 
 static void mxpy_free(t_mxpy* x)
 {
-    py_debug(x, "python freeing object");
+    mxpy_debug(x, "python freeing object");
 
     if (x) {
         object_free(x->x_outlet); // ????
