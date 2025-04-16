@@ -301,6 +301,112 @@ static void mxpy_eval(t_mxpy* x, t_symbol* s, int argc, t_atom* argv)
     }
 }
 
+static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
+{
+    if (argc < 2) {
+        py_error(x, "python module and function args required.");
+        goto except;
+    }
+
+    // get package root and then add path mxpy dir to pythonpath
+    // all this to import py-js/source/projects/mxpy/python_help.py
+    t_string* modpath = mxpy_get_path_to_package(mxpy_class,
+                                                 "/source/projects/mxpy");
+    const char* modpath_cstr = string_getptr(modpath);
+
+    Py_Initialize();
+
+    PyObject* module_path = NULL;
+    PyObject* sys_path = NULL;
+    PyObject* os_name = NULL;
+    PyObject* os_module = NULL;
+    PyObject* module_name = NULL;
+    PyObject* module = NULL;
+    PyObject* func = NULL;
+    PyObject* args = NULL;
+
+    module_path = PyUnicode_FromString(modpath_cstr);
+    if (module_path == NULL) {
+        py_error(x, "could not get python module_path");
+        goto except;
+    }
+    
+    sys_path = PySys_GetObject((char*)"path"); // borrowed reference
+    if (sys_path == NULL) {
+        py_error(x, "could not get python sys.path");
+        goto except;
+    }
+
+    if (!PySequence_Contains(sys_path, module_path)) {
+        py_info(x, "Appending %s to Python load path", modpath_cstr);
+        PyList_Append(sys_path, module_path);
+    }
+    Py_DECREF(module_path);
+
+    // try loading a system module
+    os_name = PyUnicode_FromString("os");
+    os_module = PyImport_Import(os_name);
+    Py_DECREF(os_name);
+
+    if (os_module == NULL) {
+        py_error(x, "unable to import os module");
+        goto except;
+    }
+    py_info(x, "os module imported");
+    Py_DECREF(os_module);
+
+    // try loading the module
+    module_name = mxpy_atom_to_pyobject(x, &argv[0]);
+    module = PyImport_Import(module_name);
+    Py_DECREF(module_name);
+
+    if (module == NULL) {
+        py_error(x, "unable to import Python module %s.",
+                 atom_getsym(argv + 0)->s_name);
+        goto except;
+    }
+
+    func = PyObject_GetAttrString(
+        module, atom_getsym(argv + 1)->s_name);
+
+    if (func == NULL) {
+         py_error(x, "Python function %s not found.",
+             atom_getsym(argv + 1)->s_name);
+    }
+
+    py_debug(x, "%s module imported", atom_getsym(argv + 0)->s_name);
+    if (!PyCallable_Check(func)) {
+         py_error(x, "Python attribute %s is not callable.",
+             atom_getsym(argv + 1)->s_name);
+         goto except;
+    }
+
+    args = mxpy_atoms_to_pylist(x, argc - 2, argv + 2);
+    if (args == NULL) {
+        py_error(x, "could not convert atom list to python list");
+        goto except;
+    }
+
+    x->py_object = PyObject_CallObject(func, args);
+
+    assert(!PyErr_Occurred());
+    assert(x);
+    goto finally;
+
+except:
+    assert(PyErr_Occurred());
+    error("failed to initialize mxpy object");
+    x = NULL;
+
+finally:
+    Py_XDECREF(args);
+    Py_XDECREF(func);
+    Py_XDECREF(module);
+    return x;
+}    
+
+
+
 static void* mxpy_new(t_symbol* s, int argc, t_atom* argv)
 {
     t_mxpy* x = (t_mxpy*)object_alloc(mxpy_class);
@@ -312,108 +418,11 @@ static void* mxpy_new(t_symbol* s, int argc, t_atom* argv)
         // create an outlet on which to return values
         x->x_outlet = outlet_new(x, NULL);
 
-
         attr_args_process(x, argc, argv);
 
-        if (argc < 2) {
-            py_error(x, "python module and function args required.");
-            goto except;
-        }
-
-        // get package root and then add path mxpy dir to pythonpath
-        // all this to import py-js/source/projects/mxpy/python_help.py
-        t_string* modpath = mxpy_get_path_to_package(mxpy_class,
-                                                     "/source/projects/mxpy");
-        const char* modpath_cstr = string_getptr(modpath);
-
-        PyObject* module_path = NULL;
-        PyObject* sys_path = NULL;
-        PyObject* os_name = NULL;
-        PyObject* os_module = NULL;
-        PyObject* module_name = NULL;
-        PyObject* module = NULL;
-        PyObject* func = NULL;
-        PyObject* args = NULL;
-
-        module_path = PyUnicode_FromString(modpath_cstr);
-        if (module_path == NULL) {
-            py_error(x, "could not get python module_path");
-            goto except;
-        }
-        
-        sys_path = PySys_GetObject((char*)"path"); // borrowed reference
-        if (sys_path == NULL) {
-            py_error(x, "could not get python sys.path");
-            goto except;
-        }
-
-        if (!PySequence_Contains(sys_path, module_path)) {
-            py_info(x, "Appending %s to Python load path", modpath_cstr);
-            PyList_Append(sys_path, module_path);
-        }
-        Py_DECREF(module_path);
-
-        // try loading a system module
-        os_name = PyUnicode_FromString("os");
-        os_module = PyImport_Import(os_name);
-        Py_DECREF(os_name);
-
-        if (os_module == NULL) {
-            py_error(x, "unable to import os module");
-            goto except;
-        }
-        py_info(x, "os module imported");
-        Py_DECREF(os_module);
-
-        // try loading the module
-        module_name = mxpy_atom_to_pyobject(x, &argv[0]);
-        module = PyImport_Import(module_name);
-        Py_DECREF(module_name);
-
-        if (module == NULL) {
-            py_error(x, "unable to import Python module %s.",
-                     atom_getsym(argv + 0)->s_name);
-            goto except;
-        }
-
-        func = PyObject_GetAttrString(
-            module, atom_getsym(argv + 1)->s_name);
-
-        if (func == NULL) {
-             py_error(x, "Python function %s not found.",
-                 atom_getsym(argv + 1)->s_name);
-        }
-
-        py_debug(x, "%s module imported", atom_getsym(argv + 0)->s_name);
-        if (!PyCallable_Check(func)) {
-             py_error(x, "Python attribute %s is not callable.",
-                 atom_getsym(argv + 1)->s_name);
-             goto except;
-        }
-
-        args = mxpy_atoms_to_pylist(x, argc - 2, argv + 2);
-        if (args == NULL) {
-            py_error(x, "could not convert atom list to python list");
-            goto except;
-        }
-
-        x->py_object = PyObject_CallObject(func, args);
-
-        assert(!PyErr_Occurred());
-        assert(x);
-        goto finally;
-
-    except:
-        assert(PyErr_Occurred());
-        error("failed to initialize mxpy object");
-        x = NULL;
-
-    finally:
-        Py_XDECREF(args);
-        Py_XDECREF(func);
-        Py_XDECREF(module);
-        return x;
+        return mxpy_init(x, argc, argv);
     }
+
 }
 
 static void mxpy_free(t_mxpy* x)
@@ -452,6 +461,4 @@ void ext_main(void* r)
     class_register(CLASS_BOX, c);
 
     mxpy_class = c;
-
-    Py_Initialize();
 }
