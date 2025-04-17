@@ -322,6 +322,9 @@ static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
 
     Py_Initialize();
 
+    const char * py_version = Py_GetVersion();
+    mxpy_info(x, "mxpy 0.1.1 on python %s", py_version);
+
     module_path = PyUnicode_FromString(modpath_cstr);
     if (module_path == NULL) {
         mxpy_error(x, "could not get python module_path");
