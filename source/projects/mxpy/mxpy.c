@@ -13,26 +13,37 @@ typedef struct _mxpy {
     int x_debug;         ///< Switch on and off debug logging.
 } t_mxpy;
 
-// forward declarations
-static void mxpy_pyobject_to_atom(t_mxpy* x, PyObject* value, t_atom* atom);
-static PyObject* mxpy_atom_to_pyobject(t_mxpy* x, t_atom* atom);
-static PyObject* mxpy_atoms_to_pylist(t_mxpy* x, int argc, t_atom* argv);
-static void mxpy_new_list_from_sequence(t_mxpy* x, PyObject* seq, int* argc, t_atom** argv);
-static void mxpy_emit_outlet_message(t_mxpy* x, PyObject* value, void* x_outlet);
-
-static void mxpy_eval(t_mxpy* x, t_symbol* s, int argc, t_atom* argv);
-static void* mxpy_new(t_symbol* s, int argc, t_atom* argv);
-static void mxpy_free(t_mxpy* x);
-
-t_symbol* mxpy_locate_path_to_external(t_mxpy* x);
-// end forward declaration
-
-static t_class* mxpy_class;
+// logging
 
 #define mxpy_error(x, ...) object_error((t_object*)(x), __VA_ARGS__);
 #define mxpy_warn(x, ...)  object_warn((t_object*)(x), __VA_ARGS__);
 #define mxpy_info(x, ...) object_post((t_object*)(x), __VA_ARGS__);
 #define mxpy_debug(x, ...) if ((x->x_debug)) object_post((t_object*)(x), __VA_ARGS__);
+
+// forward declarations
+static PyObject* mxpy_atom_to_pyobject(t_mxpy* x, t_atom* atom);
+static PyObject* mxpy_atoms_to_pylist(t_mxpy* x, int argc, t_atom* argv);
+static void mxpy_pyobject_to_atom(t_mxpy* x, PyObject* value, t_atom* atom);
+static void mxpy_new_list_from_sequence(t_mxpy* x, PyObject* seq, int* argc, t_atom** argv);
+static void mxpy_emit_outlet_message(t_mxpy* x, PyObject* value, void* x_outlet);
+
+static void mxpy_bang(t_mxpy* x);
+static void mxpy_sym(t_mxpy* x, t_symbol* s);
+static void mxpy_int(t_mxpy* x, long n);
+static void mxpy_float(t_mxpy* x, double n);
+
+static void mxpy_eval(t_mxpy* x, t_symbol* s, int argc, t_atom* argv);
+static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv);
+
+static void* mxpy_new(t_symbol* s, int argc, t_atom* argv);
+static void mxpy_free(t_mxpy* x);
+
+static t_string* mxpy_get_path_to_package(t_class* c, char* subpath);
+static t_symbol* mxpy_locate_path_to_external(t_mxpy* x);
+// end forward declaration
+
+static t_class* mxpy_class;
+
 
 static PyObject* mxpy_atom_to_pyobject(t_mxpy* x, t_atom* atom)
 {
@@ -149,14 +160,6 @@ static void mxpy_emit_outlet_message(t_mxpy* x, PyObject* value, void* x_outlet)
     }
 }
 
-/**
- * @brief      Return path to external with optional subpath
- *
- * @param      c        t_class instance
- * @param      subpath  The subpath or NULL (if not)
- *
- * @return     path to external + (optional subpath)
- */
 static t_string* mxpy_get_path_to_external(t_class* c, char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
@@ -182,14 +185,6 @@ static t_string* mxpy_get_path_to_external(t_class* c, char* subpath)
     return result;
 }
 
-/**
- * @brief      Return path to package with optional subpath
- *
- * @param      c        t_class instance
- * @param      subpath  The subpath or NULL (if not)
- *
- * @return     path to package + (optional subpath)
- */
 static t_string* mxpy_get_path_to_package(t_class* c, char* subpath)
 {
     char _dummy[MAX_PATH_CHARS];
@@ -316,8 +311,9 @@ static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
 
     // get package root and then add path mxpy dir to pythonpath
     // all this to import py-js/source/projects/mxpy/python_help.py
-    t_string* modpath = mxpy_get_path_to_package(mxpy_class,
-                                                 "/source/projects/mxpy");
+    t_string* modpath = mxpy_get_path_to_package(
+        mxpy_class, "/source/projects/mxpy");
+
     const char* modpath_cstr = string_getptr(modpath);
 
     Py_Initialize();
@@ -338,7 +334,7 @@ static void* mxpy_init(t_mxpy* x, int argc, t_atom* argv)
     }
 
     if (!PySequence_Contains(sys_path, module_path)) {
-        mxpy_info(x, "Appending %s to Python load path", modpath_cstr);
+        mxpy_info(x, "appending %s to Python load path", modpath_cstr);
         PyList_Append(sys_path, module_path);
     }
     Py_DECREF(module_path);
@@ -403,7 +399,7 @@ finally:
     Py_XDECREF(func);
     Py_XDECREF(module);
     return x;
-}    
+}
 
 
 static void* mxpy_new(t_symbol* s, int argc, t_atom* argv)
@@ -439,6 +435,7 @@ static void mxpy_free(t_mxpy* x)
         x->py_object = NULL;
     }
 }
+
 
 void ext_main(void* r)
 {
