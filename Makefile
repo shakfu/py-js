@@ -413,6 +413,9 @@ krait: clean-cmake-cache clean-externals
 mxpy: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 
+pyx: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
+
 pktpy: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 

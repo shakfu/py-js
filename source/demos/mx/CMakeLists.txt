@@ -11,10 +11,11 @@ include_directories(
 )
 
 file(GLOB PROJECT_SRC
-     "*.h"
-	 "*.c"
-     "*.cpp"
+	"*.h"
+	"*.c"
+	"*.cpp"
 )
+
 add_library( 
 	${PROJECT_NAME} 
 	MODULE
