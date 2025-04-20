@@ -3,8 +3,8 @@
 #define PY_INTERPRETER_IMPLEMENTATION
 #include "py_interpreter.h"
 
-class PythonExternal : public MaxCpp6<PythonExternal> {
-
+class PythonExternal : public MaxCpp6<PythonExternal>
+{
 private:
 	pyjs::PythonInterpreter* py;
 
@@ -14,10 +14,11 @@ public:
 		setupIO(2, 2); // inlets / outlets
 		this->py = new pyjs::PythonInterpreter(m_class);
 	}
+
 	~PythonExternal()
 	{
 		delete this->py;
-	}	
+	}
 	
 	// methods:
 	void bang(long inlet)
@@ -89,7 +90,8 @@ public:
 
 };
 
-C74_EXPORT int main(void) {
+C74_EXPORT int main(void)
+{
 	// create a class with the given name:
 	PythonExternal::makeMaxClass("pyx");
 	REGISTER_METHOD(PythonExternal, bang);
