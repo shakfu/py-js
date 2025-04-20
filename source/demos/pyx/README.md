@@ -18,6 +18,10 @@ make sh
 
 ## Possible Future Directions
 
+- [ ] Use `nanobind` or `pybind11`
+
+- [ ] Include option to enable `api` module
+
 - [ ] integrate `maxcpp` and `cobra` such that to enable something like the following example where the inherited `PythonExternal` class already include python methods.
 
 ```c++

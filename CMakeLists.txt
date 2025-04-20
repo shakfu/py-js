@@ -104,6 +104,10 @@ if(BUILD_DEMO_EXTERNALS)
 list(APPEND BUILD_TARGETS ${DEMO_EXTERNALS})
 endif()
 
+if(BUILD_MICROPYTHON_EXTERNAL)
+list(APPEND BUILD_TARGETS mpy)
+endif()
+
 foreach(proj ${BUILD_TARGETS})
     message(STATUS "to build: ${proj}")
     if(proj IN_LIST THIRDPARTY_EXTERNALS)
