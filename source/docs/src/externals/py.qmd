@@ -200,17 +200,17 @@ There are 3 general deployment variations:
 
 1. **Linked to system python**. Linking the externals to your system python (homebrew, built from source, etc.) This has the benefit of re-using your existing python modules and is the default option.
 
-2. **Embedded in package**. Embedding the python interpreter in a Max package: in this variation, a dedicated python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external. This makes it size efficient and usable in standalones.
+2. **Embedded in package**. Embedding the python interpreter in a Max package: in this variation, a custom python distribution (zipped or otherwise) is placed in the `support` folder of the `py/js` package (or any other package) and is linked to the `py` external. This makes it size efficient and usable in standalones.
 
 3. **Embedded in external**. The external itself as a container for the python interpreter: a custom python distribution (zipped or otherwise) is stored inside the external bundle itself, which can make it portable and usable in standalones.
 
 As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case, and the [related build variations which exist](#building-self-contained-python3-externals-for-packages-and-standalones).
 
-Deployment Scenario    | `py`
-:--------------------- | :--:
-Linked to sys python   | yes
-Embeddded in package   | yes
-Embeddded in external  | yes
+Deployment Scenario    | Available | Python Versions       |
+:--------------------- | :-------: | :-------------------- |
+Linked to sys python   | yes       | version of sys python |
+Embeddded in package   | yes       | 3.8 to 3.13 inclusive |
+Embeddded in external  | yes       | 3.8 to 3.13 inclusive |
 
 ## Quickstart
 
@@ -322,14 +322,14 @@ The `Makefile` in the project root provides a simplified interface to this build
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
 1    | `make static-ext`      | static     | external   | 9.0     | 8.8
-2    | `make static-tiny-ext` | static     | external   | 6.7     | 6.2  [2]
+2    | `make static-tiny-ext` | static     | external   | 6.7     | 6.2
 3    | `make shared-ext`      | shared     | external   | 16.4    | 15.8
-4    | `make shared-tiny-ext` | shared     | external   | 6.7     | 6.2  [2]
-5    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8 [3]
+4    | `make shared-tiny-ext` | shared     | external   | 6.7     | 6.2
+5    | `make framework-pkg`   | framework  | package    | 22.8    | 22.8
 
-[2] In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoretical minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo. Note the size of externals in Python 3.12.4 (although some of extra size is attributed improved ssl integration):
+In this table, size figures are for python 3.10.x but for python 3.11.4 they increase to 8.5 MB and 8.1 respectively. Generally, external size increases with each new python version as features are added, but this is also somewhat mitigated by the removal of deprecated builtin packages and extensions. If you want to achieve the theoretical minimal size for the `py` and `pyjs` externals, use python 3.8.x and/or a tiny variant (with a more recent version). Another option, if you need circa 1 MB size for a self-contained external, look at the `pktpy` subproject in this repo. Note the size of externals in Python 3.12.4 (although some of extra size is attributed improved ssl integration):
 
-[3] Size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
+Also note that size, in this case, is not the individual external but the uncompressed size of the package which includes patches, help files and **both** externals. This can also vary by python version used to compile the external.
 
 idx  | command                | type       | format     | py size |  pyjs size
 :--: | :--------------------- | :--------- | :--------- | :------ | :----------
@@ -353,7 +353,7 @@ This section assumes that you have completed the [Quickstart](#quickstart) above
 
 Again, if you'd rather not compile anything there are self-contained python3 externals which can be included in standalones in the [releases](https://github.com/shakfu/py-js/releases) section.
 
-If you don't mind compiling (and have xcode installed) then pick one of the following options:
+If you don't mind compiling (and have Xcode installed) then pick one of the following options:
 
 1. To build statically-compiled self-contained python3 externals:
 
@@ -386,6 +386,14 @@ If you don't mind compiling (and have xcode installed) then pick one of the foll
     ```
 
 With all of the above options, a python3 source distribution (matching your own python3 version) is automatically downloaded from [python.org](https://www.python.org) with dependencies, and then compiled into a static or shared version of python3 which is then used to compile the externals.
+
+If you would rather specify the python version, then you can specify the `PYTHON_VERSION` environment variable, as in:
+
+```sh
+make shared-ext PYTHON_VERSION=3.10.17
+```
+
+Note that as of this writing, the `py` external and the `pyjs` externals are tested successfully to build and run with Python versions `3.8.20`, `3.9.22`, `3.10.17`, `3.11.12`, `3.12.10` and `3.13.3`. Feel free to use the version specification method above with any build variant.
 
 At the end of this process you should find two externals in the `py-js/externals` folder: `py.mxo` and `pyjs.mxo`.
 
@@ -628,22 +636,22 @@ There is generally tradeoff of size vs. portability:
 
 build command       | format       | size_mb  | deploy_as | pip      | portable | numpy
 :-------------------| :----------- | :------: | :-------: | :-------:| :-------:| :-------:
-make                | framework    | 0.3      | external  | yes [1]  | no       | yes
-make homebrew-ext   | hybrid  [3]  | 13.6     | external  | no       | yes      | yes
-make homebrew-pkg   | hybrid  [3]  | 13.9     | package   | yes      | yes      | yes
-make static-ext     | static       | 9.0      | external  | no       | yes      | no [2]
+make                | framework    | 0.3      | external  | yes [^1] | no       | yes
+make homebrew-ext   | hybrid  [^3] | 13.6     | external  | no       | yes      | yes
+make homebrew-pkg   | hybrid       | 13.9     | package   | yes      | yes      | yes
+make static-ext     | static       | 9.0      | external  | no       | yes      | no [^2]
 make shared-ext     | shared       | 15.7     | external  | no       | yes      | yes
-make shared-pkg     | shared       | 18.7     | package   | yes      | no [4]   | yes
+make shared-pkg     | shared       | 18.7     | package   | yes      | no [^4]  | yes
 make framework-ext  | framework    | 16.8     | external  | no       | yes      | yes
 make framework-pkg  | framework    | 16.8     | package   | yes      | yes      | yes
 
-[1] has automatic access to your system python's site-packages
+[^1]: In this case, `pip` has automatic access to your system python's site-packages
 
-[2] current static external implementation does not work with numpy due to symbol access issues.
+[^2]: The static external implementation does not work well with embedding `numpy` due to symbol access issues, but is still usable via the buffer protocol and memoryview interfaces.
 
-[3] *hybrid* means that the source system was a `framework` and the destination system is `shared`.
+[^3]: *hybrid* means that the source system was a `framework` and the destination system is `shared`.
 
-[4] the shared-pkg variant does not build a compliant 'Framework-type' bundle and hence cannot be notarized.
+[^4]: the `shared-pkg` variant does not build a compliant `.framework` bundle and hence cannot be notarized.
 
 - *pip*: the build allows or provides for pip installation
 

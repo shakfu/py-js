@@ -4,7 +4,7 @@ title: "py-js: python3 objects for max"
 
 Simple (and extensible) [python3](https://www.python.org) externals for [MaxMSP](https://cycling74.com).
 
-Cross-platform: currently builds 'natively' on macOS (`x86_64` or `arm64`) and Windows (with MSVC).
+Cross-platform: currently builds 'natively' on macOS (`x86_64` or `arm64`) and Windows (MSVC) with Python versions 3.8 to 3.13 inclusive.
 
 repo - <https://github.com/shakfu/py-js>
 
@@ -134,7 +134,7 @@ If you'd rather build them or any of the other externals yourself then the proce
 
 The `make`, or `make core` methods of building core the externals are generally very fast and produce externals which have access to python libraries of the local python system referemced during compilation. The tradeoff is that since the external are dynamically linked with local dependencies, they are therefore not usable in standalones and relocatable Max packages.
 
-No worries, if you need portable relocatable python3 externals for your package or standalone and more granular build options then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section.
+No worries, if you need portable relocatable python3 externals for your package or standalone with more granular build options such as specifying the python version and the type of build then make sure to read the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js#building-self-contained-python3-externals-for-packages-and-standalones) section.
 
 In any case, open up any of the patch files in the `patchers` directory of the repo or the generated Max package, and look at the `.maxhelp` patchers to understand how the `py` and the `pyjs` objects work.
 
