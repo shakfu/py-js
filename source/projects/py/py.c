@@ -2038,7 +2038,7 @@ t_max_err py_func_to_list(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_
         goto error;
     }
 
-    pval = PyObject_CallOneArg(pyfunc, plist);
+    pval = PyObject_CallFunctionObjArgs(pyfunc, plist, NULL);
 
     if (pval == NULL) {
         goto error;

@@ -224,6 +224,7 @@ static inline PyCodeObject* PyFrame_GetCode(PyFrameObject* frame)
 #endif
 
 #if PY_VERSION_HEX < 0x030A00B1 && !defined(Py_IsNone)
+#  define Py_Is(x, y) ((x) == (y))
 #  define Py_IsNone(x) Py_Is(x, Py_None)
 #endif
 

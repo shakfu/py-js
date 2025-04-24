@@ -2,6 +2,8 @@
 
 ## [0.1.x]
 
+- Applied fixes and changes to ensure the `pyjs` external can be built and run on python versions 3.8 to 3.13 inclusive. Tested on: 3.8.20, 3.9.22, 3.10.17, 3.11.12, 3.12.10 and 3.13.3
+
 - Successfully tested `pyjs` using Max 9's `v8` object. Added a test in `py-js/patchers/tests/test_pyjs/test_pyjs_v8.maxpat`.
 
 
