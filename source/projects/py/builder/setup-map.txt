@@ -2,9 +2,96 @@ FrameworkPythonForPkgBuilder = "setup-shared.local"
 FrameworkPythonForExtBuilder = "setup-shared.local"
 SharedPythonForPkgBuilder    = "setup-shared.local"
 SharedPythonForExtBuilder    = "setup-shared.local"
-TinySharedPythonBuilder      = "setup-static-min6.local"
-TinyStaticPythonBuilder      = "setup-static-min6.local"
+TinySharedPythonBuilder      = "setup-static-min6.0.local"
+TinyStaticPythonBuilder      = "setup-static-min6.0.local"
 BeewarePythonBuilder         = "setup.beeware"
 StaticPythonBuilder          = "setup-static-min3.local"
 SharedPythonBuilder          = "setup-shared.local"
 FrameworkPythonBuilder       = "setup-shared.local"
+
+
+
+3.13
+	configure.patch
+	configure.txt
+	Setup
+	setup-shared.local
+	setup-static-min3.local
+	setup-static-min6.0.local
+	setup-static-min6.local
+	setup-static.bootstrap
+	Setup.diff
+	Setup.stdlib
+
+3.12
+	configure.old.patch
+	configure.patch
+	configure.txt
+	Setup
+	setup-shared.local
+	setup-static-min3.local
+	setup-static-min3.old.local
+	setup-static-min6.0.local
+	setup-static-min6.local
+	setup-static.bootstrap
+	setup.beeware
+	Setup.diff
+	Setup.stdlib
+
+3.11
+	analyze.py
+	configure_11_4to5.patch
+	configure_pre_11_4.patch
+	configure.patch
+	configure.txt
+	Setup
+	setup-shared.local
+	setup-static-min2.local
+	setup-static-min3.local
+	setup-static-min6.0.local
+	setup-static-min6.local
+	setup-static.bootstrap
+	setup.beeware
+	Setup.stdlib
+
+3.10
+	configure.patch
+	makesetup.patch
+	setup-shared.local
+	setup-static-api.local
+	setup-static-min.local
+	setup-static-min2.local
+	setup-static-min3.local
+	setup-static-min4.local
+	setup-static-min6.local
+	setup.beeware
+	Setup.orig
+	Setup.orig-diff-from-3.9.diff
+
+3.9
+	configure.patch
+	makesetup.orig*
+	makesetup.patch
+	makesetup2.patch
+	setup-shared.local
+	setup-static-api.local
+	setup-static-min.local
+	setup-static-min2.local
+	setup-static-min3.local
+	setup-static-min4.local
+	setup-static-min5.local
+	setup-static-min6.local
+	Setup.orig
+	Setup.orig-diff-from-3.8.diff
+
+3.8
+	configure.patch
+	makesetup.orig*
+	makesetup.patch
+	setup-shared.local
+	setup-static-min.local
+	setup-static-min2.local
+	setup-static-min3.local
+	setup-static-min4.local
+	setup-static-min6.local
+	Setup.orig

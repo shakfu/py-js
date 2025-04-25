@@ -2,7 +2,9 @@
 
 ## [0.3.x]
 
-- Applied fixes and changes to ensure the `py` external can be built and run on python versions 3.8 to 3.13 inclusive. Tested on: 3.8.20, 3.9.22, 3.10.17, 3.11.12, 3.12.10 and 3.13.3
+- Added `shared-tiny-ext`, `static-tiny-ext` build variant support to `3.8.20`, `3.9.22`, `3.10.17`, and `3.11.12`.
+
+- Applied fixes and changes to ensure the `py` external can be built and run on python versions 3.8 to 3.13 inclusive. Tested on: `3.8.20`, `3.9.22`, `3.10.17`, `3.11.12`, `3.12.10` and `3.13.3`
 
 - Changed cython options for the `api` module, with the addition of `--timestamps` option, set in the `Makefile` and `CMakeLists.txt` files, the c-code is now only generated if the `api.pyx` is modified.
 
