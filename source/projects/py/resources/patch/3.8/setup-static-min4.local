@@ -1,3 +1,4 @@
+# -*- makefile -*-
 #####################################################################
 # Static compilation instructions for all binary modules.
 # Modified from and credit to Beeware Briefcase project

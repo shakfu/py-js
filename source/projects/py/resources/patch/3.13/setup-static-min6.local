@@ -1,3 +1,4 @@
+# -*- makefile -*-
 # This is derivative of min5 for tiny python externals
 # -------------------------------------------------------------------------------
 # VARS

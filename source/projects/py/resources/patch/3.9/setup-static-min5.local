@@ -1,3 +1,4 @@
+# -*- makefile -*-
 # This is derivative of min3 rather than min4
 # -------------------------------------------------------------------------------
 # VARS

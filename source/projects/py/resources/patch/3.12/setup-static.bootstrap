@@ -1,3 +1,4 @@
+# -*- makefile -*-
 DESTLIB=$(LIBDEST)
 MACHDESTLIB=$(BINLIBDEST)
 DESTPATH=

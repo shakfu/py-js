@@ -1,3 +1,4 @@
+# -*- makefile -*-
 zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
 
 *disabled*
