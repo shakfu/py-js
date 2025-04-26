@@ -43,13 +43,8 @@ INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
 CYTHON_OPTIONS = --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
 				 -X emit_code_comments=False
 
-# change MAX_VERSION from 9 to 8 or vice-versa
-
 MAX_APP := "/Applications/Studio/Max.app"
-MAX_VERSION := 9
-MAX_DIR := "Max\ $(MAX_VERSION)"
-PACKAGES := $(HOME)/Documents/$(MAX_DIR)/Packages
-PYJS_PACKAGE := $(HOME)/Documents/$(MAX_DIR)/Packages/$(PKG_NAME)
+MAX_VERSIONS := 8 9
 PKG_DIRS = docs examples extensions externals help init \
            javascript jsextensions media misc patchers
 
@@ -609,7 +604,7 @@ api: source/projects/py/api.c
 # -----------------------------------------------------------------------
 # utilities
 
-.PHONY: help setup update-submodules link max-check
+.PHONY: help setup update-submodules link
 
 help:
 	$(call call-builder,"help")
@@ -622,18 +617,21 @@ update-submodules:
 	@git submodule init && git submodule update
 
 link:
-	$(call section,"symlink to $(PYJS_PACKAGE)")
-	@if ! [ -L "$(PYJS_PACKAGE)" ]; then \
-		ln -s "$(ROOTDIR)" "$(PYJS_PACKAGE)" ; \
-		echo "... symlink created" ; \
-	else \
-		echo "... symlink already exists" ; \
-	fi
-
-max-check:
-	$(call section,"display contents of pyjs package")
-	@echo "$(PYJS_PACKAGE)"
-	@ls "$(PYJS_PACKAGE)"
+	$(call section,"symlink to Max 'Packages' Directories")
+	@for MAX_VERSION in $(MAX_VERSIONS); do \
+		MAX_DIR="Max $${MAX_VERSION}" ; \
+		PACKAGES="$(HOME)/Documents/$${MAX_DIR}/Packages" ; \
+		PYJS_PACKAGE="$${PACKAGES}/$(PKG_NAME)" ; \
+		if [ -d "$${PACKAGES}" ]; then \
+			echo "symlinking to $${PYJS_PACKAGE}" ; \
+			if ! [ -L "$${PYJS_PACKAGE}" ]; then \
+				ln -s "$(ROOTDIR)" "$${PYJS_PACKAGE}" ; \
+				echo "... symlink created" ; \
+			else \
+				echo "... symlink already exists" ; \
+			fi \
+		fi \
+	done
 
 py2c:
 	$(call section,"converting py_prelude.py to py_prelude.h")
