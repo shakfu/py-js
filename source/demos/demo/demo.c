@@ -4,6 +4,7 @@
 #include "ext_dictionary.h"
 #include "ext_dictobj.h"
 
+
 typedef struct _demo {
     t_object ob;
 
@@ -20,8 +21,6 @@ typedef struct _demo {
     float param1;
     float param2;
 } t_demo;
-
-
 
 
 // method prototypes
@@ -61,6 +60,7 @@ void ext_main(void* r)
 void* demo_new(t_symbol* s, long argc, t_atom* argv)
 {
     t_demo* x = (t_demo*)object_alloc(demo_class);
+    post("DEMO");
 
     if (x) {
         x->outlet = outlet_new(x, NULL); // outlet
