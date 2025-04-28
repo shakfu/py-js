@@ -14,28 +14,28 @@ include(${C74_MIN_API_DIR}/script/min-pretarget.cmake)
 # MAX EXTERNAL
 #############################################################
 
-# python3_external(
-#     MIN_API
-#     PROJECT_NAME ${PROJECT_NAME}
-#     BUILD_VARIANT ${BUILD_VARIANT}
+python3_external(
+    MIN_API
+    PROJECT_NAME ${PROJECT_NAME}
+    # BUILD_VARIANT ${BUILD_VARIANT}
+)
+
+
+# include_directories( 
+#     "${C74_INCLUDES}"
 # )
 
 
-include_directories( 
-    "${C74_INCLUDES}"
-)
+# set( SOURCE_FILES
+#     ${PROJECT_NAME}.cpp
+# )
 
 
-set( SOURCE_FILES
-    ${PROJECT_NAME}.cpp
-)
-
-
-add_library( 
-    ${PROJECT_NAME} 
-    MODULE
-    ${SOURCE_FILES}
-)
+# add_library( 
+#     ${PROJECT_NAME} 
+#     MODULE
+#     ${SOURCE_FILES}
+# )
 
 
 

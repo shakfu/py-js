@@ -5,13 +5,13 @@
 
 #include "c74_min.h"
 
-// #define PY_INTERPRETER_IMPLEMENTATION
-// #include "mpy_interpreter.h"
+#define PY_INTERPRETER_IMPLEMENTATION
+#include "mpy_interpreter.h"
 
 using namespace c74::min;
 
 
-class hello_world : public object<hello_world> {
+class PythonExternal : public object<PythonExternal> {
 public:
     MIN_DESCRIPTION {"Post to the Max Console."};
     MIN_TAGS        {"utilities"};
@@ -21,14 +21,11 @@ public:
     inlet<>  input  { this, "(bang) post greeting to the max console" };
     outlet<> output { this, "(anything) output the message which is posted to the max console" };
 
-    int age;
-    // pyjs::PythonInterpreter* py;
+    pyjs::PythonInterpreter* py;
 
-    hello_world()
+    PythonExternal() 
     {
-        // this->py = new pyjs::PythonInterpreter(this_class);
-        this->age = 0;
-        cout << "age: " << this->age << endl;
+        this->py = new pyjs::PythonInterpreter(this_class);
     }
 
     // define an optional argument for setting the message
@@ -71,4 +68,4 @@ public:
 };
 
 
-MIN_EXTERNAL(hello_world);
+MIN_EXTERNAL(PythonExternal);
