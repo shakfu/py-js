@@ -893,7 +893,7 @@ cdef class Atom:
         """Inserts an integer into a t_atom and change its type to A_LONG."""
         mx.atom_setlong(self.ptr + idx, x)
 
-    def get_long(self, int idx=0) -> long:
+    def get_long(self, int idx=0) -> int:
         """Retrieves a long integer value from a t_atom."""
         return <long>mx.atom_getlong(self.ptr + idx)
 
@@ -2302,7 +2302,7 @@ cdef class Dictionary:
         """Test a key to set if it exists in the dictionary."""
         return <bint>mx.dictionary_hasentry(self.ptr, str_to_sym(key))
 
-    def getentrycount(self) -> long:
+    def getentrycount(self) -> int:
         """Return the number of keys in a dictionary."""
         return mx.dictionary_getentrycount(self.ptr)
 
@@ -2944,7 +2944,7 @@ cdef class List:
         """Get the size of the linklist."""
         return mx.linklist_getsize(self.ptr)
 
-    def get_index_of_object(self, MaxObject obj) -> long:
+    def get_index_of_object(self, MaxObject obj) -> int:
         """Return an item's index, given the item itself."""
         cdef long idx = mx.linklist_objptr2index(self.ptr, <mx.t_object*>obj.ptr)
         if idx == mx.MAX_ERR_GENERIC:
@@ -3384,7 +3384,7 @@ cdef class Hashtab:
             raise ValueError("could not lookup object in hashtab")
         return MaxObject.from_ptr(val)
 
-    def lookup_long(self, str key) -> long:
+    def lookup_long(self, str key) -> int:
         """Lookup a long in the hashtab."""
         cdef mx.t_atom_long val = 0
         cdef mx.t_max_err err = mx.hashtab_lookuplong(self.ptr, str_to_sym(key), &val)
@@ -3614,7 +3614,7 @@ cdef class AtomArray:
         """Set the atomarray flags."""
         mx.atomarray_flags(self.ptr, <long>flags)
 
-    def get_flags(self) -> long:
+    def get_flags(self) -> int:
         """Get the atomarray flags."""
         return <long>mx.atomarray_getflags(self.ptr)
 

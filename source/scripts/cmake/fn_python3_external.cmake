@@ -6,6 +6,7 @@ function(python3_external)
     set(options
         DEBUG
         INCLUDE_COMMONSYMS
+        MIN_API
     )
     set(oneValueArgs 
         PROJECT_NAME
@@ -100,11 +101,17 @@ function(python3_external)
     )
     endif()
 
-    include_directories( 
-        "${MAX_SDK_INCLUDES}"
-        "${MAX_SDK_MSP_INCLUDES}"
-        "${MAX_SDK_JIT_INCLUDES}"
-    )
+    if(PY3EXT_MIN_API)
+        include_directories( 
+            "${C74_INCLUDES}"
+        )
+    else()
+        include_directories(
+            "${MAX_SDK_INCLUDES}"
+            "${MAX_SDK_MSP_INCLUDES}"
+            "${MAX_SDK_JIT_INCLUDES}"
+        )
+    endif()
 
     add_library( 
         ${PY3EXT_PROJECT_NAME} 

@@ -18,6 +18,9 @@ option(BUILD_DEMO_EXTERNALS "Enable demo (scratch) externals" OFF)
 option(FETCH_MICROPYTHON "Download latest micropython and use that to build external" OFF)
 option(BUILD_MICROPYTHON_EXTERNAL "Build the micropython external" OFF)
 
+# campatible with 3.5
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 # string options
 set(BUILD_VARIANT "" CACHE STRING "specify build variant")
 set(BUILD_TARGETS "" CACHE STRING "specify build targets")
@@ -99,7 +102,7 @@ if(BUILD_THIRDPARTY_EXTERNALS)
 list(APPEND BUILD_TARGETS ${THIRDPARTY_EXTERNALS})
 endif()
 
-set(DEMO_EXTERNALS mx pyx cmx demo)
+set(DEMO_EXTERNALS cmx demo mx pyx mpyx)
 if(BUILD_DEMO_EXTERNALS)
 list(APPEND BUILD_TARGETS ${DEMO_EXTERNALS})
 endif()
