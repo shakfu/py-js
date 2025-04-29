@@ -72,52 +72,52 @@ class PythonInterpreter
 
         // python <-> atom translation
         
-        // PyObject* atoms_to_plist_with_offset(long argc, t_atom* argv, int start_from);
-        // PyObject* atoms_to_plist(long argc, t_atom* argv); //+
-        // t_max_err plist_to_atoms(PyObject* seq, int* argc, t_atom** argv); //+
-        // PyObject* atoms_to_ptuple(int argc, t_atom* argv); //+
+        PyObject* atoms_to_plist_with_offset(const atoms& args, int start_from);
+        PyObject* atoms_to_plist(const atoms& args);
+        // c74::max::t_max_err plist_to_atoms(PyObject* seq, int* argc, t_atom** argv);
+        PyObject* atoms_to_ptuple(const atoms& args);
 
         PyObject* atom_to_pobject(const atom& arg); // used by atoms_to_ptuple
         c74::max::t_max_err pobject_to_atom(PyObject* value, atom& arg); // used by plist_to_atoms
 
         // // python value -> atom -> output
-        // t_max_err handle_float_output(void* outlet, PyObject* pval);
-        // t_max_err handle_long_output(void* outlet, PyObject* pval);
-        // t_max_err handle_string_output(void* outlet, PyObject* pval);
-        // t_max_err handle_list_output(void* outlet, PyObject* pval);
-        // t_max_err handle_dict_output(void* outlet, PyObject* pval);
-        // t_max_err handle_output(void* outlet, PyObject* pval);
+        // c74::max::t_max_err handle_float_output(void* outlet, PyObject* pval);
+        // c74::max::t_max_err handle_long_output(void* outlet, PyObject* pval);
+        // c74::max::t_max_err handle_string_output(void* outlet, PyObject* pval);
+        // c74::max::t_max_err handle_list_output(void* outlet, PyObject* pval);
+        // c74::max::t_max_err handle_dict_output(void* outlet, PyObject* pval);
+        // c74::max::t_max_err handle_output(void* outlet, PyObject* pval);
 
         // // core message method helpers
-        // t_max_err import_module(char* module);
+        // c74::max::t_max_err import_module(char* module);
         // PyObject* eval_pcode(char* pcode);
-        // t_max_err exec_pcode(char* pcode);
-        // t_max_err execfile_path(char* path);
+        // c74::max::t_max_err exec_pcode(char* pcode);
+        // c74::max::t_max_err execfile_path(char* path);
 
         // // core message methods
-        // t_max_err import(t_symbol* s);
-        // t_max_err eval(t_symbol* s, void* outlet);
-        // t_max_err exec(t_symbol* s);
-        // t_max_err execfile(t_symbol* s);
+        // c74::max::t_max_err import(symbol s);
+        // c74::max::t_max_err eval(symbol s, void* outlet);
+        // c74::max::t_max_err exec(symbol s);
+        // c74::max::t_max_err execfile(symbol s);
 
         // // extra message method helpers
         // PyObject* eval_text(char* text);
-        // t_max_err eval_text_to_outlet(long argc, t_atom* argv, int offset, void* outlet);
+        // c74::max::t_max_err eval_text_to_outlet(const atoms& args, int offset, void* outlet);
 
         // // extra message methods
-        // t_max_err call(t_symbol* s, long argc, t_atom* argv, void* outlet);
-        // t_max_err assign(t_symbol* s, long argc, t_atom* argv);
-        // t_max_err code(t_symbol* s, long argc, t_atom* argv, void* outlet);
-        // t_max_err anything(t_symbol* s, long argc, t_atom* argv, void* outlet);
-        // t_max_err pipe(t_symbol* s, long argc, t_atom* argv, void* outlet);
+        // c74::max::t_max_err call(symbol s, const atoms& args, void* outlet);
+        // c74::max::t_max_err assign(symbol s, const atoms& args);
+        // c74::max::t_max_err code(symbol s, const atoms& args, void* outlet);
+        // c74::max::t_max_err anything(symbol s, const atoms& args, void* outlet);
+        // c74::max::t_max_err pipe(symbol s, const atoms& args, void* outlet);
 
-        // // datastructures
-        // bool table_exists(char* table_name);
-        // t_max_err plist_to_table(char* table_name, PyObject* pval);
-        // PyObject* table_to_plist(char* table_name);
+        // datastructures
+        bool table_exists(char* table_name);
+        c74::max::t_max_err plist_to_table(char* table_name, PyObject* pval);
+        PyObject* table_to_plist(char* table_name);
 
-        // // path helpers
-        // t_max_err locate_path_from_symbol(t_symbol* s);
+        // path helpers
+        // c74::max::t_max_err locate_path_from_symbol(symbol s);
         std::string get_path_to_external(c74::max::t_class* c, char* subpath);
         std::string get_path_to_package(c74::max::t_class* c, char* subpath);
 
@@ -216,13 +216,6 @@ PythonInterpreter::~PythonInterpreter()
 // ---------------------------------------------------------------------------
 // helper methods
 
-
-/**
- * @brief Post msg to Max console.
- *
- * @param fmt character string with format codes
- * @param ... other arguments
- */
 void PythonInterpreter::log_debug(char* fmt, ...)
 {
     if (this->p_log_level >= log_level::PY_DEBUG) {
@@ -238,12 +231,6 @@ void PythonInterpreter::log_debug(char* fmt, ...)
 }
 
 
-/**
- * @brief Post msg to Max console.
- *
- * @param fmt character string with format codes
- * @param ... other arguments
- */
 void PythonInterpreter::log_info(char* fmt, ...)
 {
     if (this->p_log_level >= log_level::PY_INFO) {
@@ -259,12 +246,6 @@ void PythonInterpreter::log_info(char* fmt, ...)
 }
 
 
-/**
- * @brief Post error message to Max console.
- *
- * @param fmt character string with format codes
- * @param ... other arguments
- */
 void PythonInterpreter::log_error(char* fmt, ...)
 {
     if (this->p_log_level >= log_level::PY_ERROR) {
@@ -280,12 +261,6 @@ void PythonInterpreter::log_error(char* fmt, ...)
 }
 
 
-/**
- * @brief Generic python error handler
- *
- * @param fmt format string
- * @param ... other args
- */
 void PythonInterpreter::handle_error(char* fmt, ...)
 {
     if (PyErr_Occurred()) {
@@ -339,12 +314,6 @@ void PythonInterpreter::print_atom(const atoms& args)
 }
 
 
-/**
- * @brief Append string to python sys.path
- * 
- * @param path 
- * @return t_max_err 
- */
 c74::max::t_max_err PythonInterpreter::syspath_append(char* path)
 {
     PyGILState_STATE gstate;
@@ -458,19 +427,14 @@ c74::max::t_max_err PythonInterpreter::pobject_to_atom(PyObject* value, atom& ar
 
     if (value == Py_True)
         arg = 1;
-        // c74::max::atom_setlong(arg, 1);
     else if (value == Py_False)
         arg = 0;
-        // c74::max::atom_setlong(arg, 0);
     else if (PyFloat_Check(value))
         arg = (double)PyFloat_AsDouble(value);
-        // c74::max::atom_setfloat(arg, (double)PyFloat_AsDouble(value));
     else if (PyLong_Check(value))
         arg = (long)PyLong_AsLong(value);
-        // c74::max::atom_setlong(arg, (long)PyLong_AsLong(value));
     else if (PyUnicode_Check(value))
         arg = symbol(PyUnicode_AsUTF8(value));
-        // c74::max::atom_setsym(arg, symbol(PyUnicode_AsUTF8(value)));
     else {
         this->log_error((char*)"Warning: python type unsupported for conversion to max t_atom.");
         err = c74::max::MAX_ERR_GENERIC;
@@ -479,7 +443,78 @@ c74::max::t_max_err PythonInterpreter::pobject_to_atom(PyObject* value, atom& ar
 }
 
 
+PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args, int start_from)
+{
+    PyObject* plist = NULL; // python list
 
+    if ((plist = PyList_New(0)) == NULL) {
+        this->log_error((char*)"could not create an empty python list");
+        goto error;
+    }
+
+    for (int i = start_from; i < (int)args.size(); i++) {
+        switch (args[i].a_type) {
+        case c74::max::A_FLOAT: {
+            double c_float = args[i];
+            PyObject* p_float = PyFloat_FromDouble(c_float);
+            if (p_float == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_float);
+            Py_DECREF(p_float);
+            break;
+        }
+        case c74::max::A_LONG: {
+            long c_long = (long)args[i];
+            PyObject* p_long = PyLong_FromLong(c_long);
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_DECREF(p_long);
+            break;
+        }
+        case c74::max::A_SYM: {
+            const char* c_str = std::string(args[i]).c_str();
+            PyObject* p_str = PyUnicode_FromString(c_str);
+            if (p_str == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_str);
+            Py_DECREF(p_str);
+            break;
+        }
+        default:
+            this->log_debug((char*)"cannot process unknown type");
+            break;
+        }
+    }
+    return plist;
+
+error:
+    this->log_error((char*)"atom to list conversion failed");
+    return NULL;
+}
+
+
+PyObject* PythonInterpreter::atoms_to_plist(const atoms& args)
+{
+    return this->atoms_to_plist_with_offset(args, 0);
+}
+
+
+PyObject* PythonInterpreter::atoms_to_ptuple(const atoms& args)
+{
+    PyObject* ptuple = PyTuple_New(args.size());
+    for (int i = 0; i < (int)args.size(); i++) {
+        PyObject* value = this->atom_to_pobject(args[i]);
+        PyTuple_SetItem(ptuple, i, value); // pass value ref to the tuple
+    }
+    return ptuple;
+}
+
+
+// ----------------------------------------------------------------------------
 
 
 std::string get_path_to_external(c74::max::t_class* c, char* subpath)
