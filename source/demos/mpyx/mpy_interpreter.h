@@ -59,7 +59,7 @@ class PythonInterpreter
         void log_debug(char* fmt, ...);
         void log_info(char* fmt, ...);
         void log_error(char* fmt, ...);
-        // void print_atom(const atoms& args);
+        void print_atom(const atoms& args);
 
         // python helpers
         void handle_error(char* fmt, ...);
@@ -234,6 +234,30 @@ void PythonInterpreter::handle_error(char* fmt, ...)
         Py_XDECREF(ptraceback);
 
         c74::max::error((char*)"[py %s] %s: %s", this->p_name, msg, pvalue_str);
+    }
+}
+
+
+void PythonInterpreter::print_atom(const atoms& args)
+{
+    for (auto i = 0; i < args.size(); ++i) {
+        switch (args[i].a_type) {
+        case c74::max::A_FLOAT: {
+            this->log_info((char*)"(%d) float: %f", i, (double)args[i]);
+            break;
+        }
+        case c74::max::A_LONG: {
+            this->log_info((char*)"(%d) long: %d", i, (long)args[i]);
+            break;
+        }
+        case c74::max::A_SYM: {
+            this->log_info((char*)"(%d) symbol: %s", i, std::string(args[i]).c_str());
+            break;
+        }
+        default:
+            this->log_debug((char*)"cannot process unknown type");
+            break;
+        }
     }
 }
 
