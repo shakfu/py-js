@@ -510,15 +510,15 @@ t_max_err PythonInterpreter::pobject_to_atom(PyObject* value, t_atom* atom)
     else if (value == Py_False)
         atom_setlong(atom, 0);
     else if (PyFloat_Check(value))
-        atom_setfloat(atom, (float)PyFloat_AsDouble(value));
+        atom_setfloat(atom, (double)PyFloat_AsDouble(value));
     else if (PyLong_Check(value))
-        atom_setlong(atom, (float)PyLong_AsLong(value));
+        atom_setlong(atom, (long)PyLong_AsLong(value));
     else if (PyUnicode_Check(value))
         atom_setsym(atom, gensym(PyUnicode_AsUTF8(value)));
     else {
         // FIXME: should this not return an 'error' t_symbol
         this->log_error((char*)"Warning: python type unsupported for conversion to max t_atom.");
-        atom_setsym(atom, gensym("error"));
+        // atom_setsym(atom, gensym("error"));
         err = MAX_ERR_GENERIC;
     }
     return err;
