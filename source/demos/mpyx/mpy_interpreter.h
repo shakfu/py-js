@@ -71,45 +71,45 @@ class PythonInterpreter
         c74::max::t_max_err syspath_append(char* path);
 
         // python <-> atom translation
-        
         PyObject* atoms_to_plist_with_offset(const atoms& args, int start_from);
         PyObject* atoms_to_plist(const atoms& args);
-        // c74::max::t_max_err plist_to_atoms(PyObject* seq, int* argc, t_atom** argv);
+        atoms plist_to_atoms(PyObject* plist);
         PyObject* atoms_to_ptuple(const atoms& args);
 
         PyObject* atom_to_pobject(const atom& arg); // used by atoms_to_ptuple
+        atom pobject_to_atom(PyObject* value);
         c74::max::t_max_err pobject_to_atom(PyObject* value, atom& arg); // used by plist_to_atoms
 
-        // // python value -> atom -> output
-        // c74::max::t_max_err handle_float_output(void* outlet, PyObject* pval);
-        // c74::max::t_max_err handle_long_output(void* outlet, PyObject* pval);
-        // c74::max::t_max_err handle_string_output(void* outlet, PyObject* pval);
-        // c74::max::t_max_err handle_list_output(void* outlet, PyObject* pval);
-        // c74::max::t_max_err handle_dict_output(void* outlet, PyObject* pval);
-        // c74::max::t_max_err handle_output(void* outlet, PyObject* pval);
+        // python value -> atom -> output
+        c74::max::t_max_err handle_float_output(outlet<> *output, PyObject* pfloat);
+        c74::max::t_max_err handle_long_output(outlet<> *output, PyObject* pval);
+        c74::max::t_max_err handle_string_output(outlet<> *output, PyObject* pstring);
+        c74::max::t_max_err handle_list_output(outlet<> *output, PyObject* pval);
+        c74::max::t_max_err handle_dict_output(outlet<> *output, PyObject* pval);
+        c74::max::t_max_err handle_output(outlet<> *output, PyObject* pval);
 
-        // // core message method helpers
-        // c74::max::t_max_err import_module(char* module);
-        // PyObject* eval_pcode(char* pcode);
-        // c74::max::t_max_err exec_pcode(char* pcode);
-        // c74::max::t_max_err execfile_path(char* path);
+        // core message method helpers
+        c74::max::t_max_err import_module(const char* module);
+        PyObject* eval_pcode(const char* pcode);
+        c74::max::t_max_err exec_pcode(const char* pcode);
+        c74::max::t_max_err execfile_path(const char* path);
 
-        // // core message methods
-        // c74::max::t_max_err import(symbol s);
-        // c74::max::t_max_err eval(symbol s, void* outlet);
-        // c74::max::t_max_err exec(symbol s);
-        // c74::max::t_max_err execfile(symbol s);
+        // core message methods
+        c74::max::t_max_err import(symbol s);
+        c74::max::t_max_err eval(symbol s, outlet<> *output);
+        c74::max::t_max_err exec(symbol s);
+        c74::max::t_max_err execfile(symbol s);
 
-        // // extra message method helpers
-        // PyObject* eval_text(char* text);
-        // c74::max::t_max_err eval_text_to_outlet(const atoms& args, int offset, void* outlet);
+        // extra message method helpers
+        PyObject* eval_text(char* text);
+        c74::max::t_max_err eval_text_to_outlet(const atoms& args, int offset, outlet<> *output);
 
-        // // extra message methods
-        // c74::max::t_max_err call(symbol s, const atoms& args, void* outlet);
-        // c74::max::t_max_err assign(symbol s, const atoms& args);
-        // c74::max::t_max_err code(symbol s, const atoms& args, void* outlet);
-        // c74::max::t_max_err anything(symbol s, const atoms& args, void* outlet);
-        // c74::max::t_max_err pipe(symbol s, const atoms& args, void* outlet);
+        // extra message methods
+        c74::max::t_max_err call(symbol s, const atoms& args, outlet<> *output);
+        c74::max::t_max_err assign(symbol s, const atoms& args);
+        c74::max::t_max_err code(symbol s, const atoms& args, outlet<> *output);
+        c74::max::t_max_err anything(symbol s, const atoms& args, outlet<> *output);
+        c74::max::t_max_err pipe(symbol s, const atoms& args, outlet<> *output);
 
         // datastructures
         bool table_exists(char* table_name);
@@ -117,7 +117,7 @@ class PythonInterpreter
         PyObject* table_to_plist(char* table_name);
 
         // path helpers
-        // c74::max::t_max_err locate_path_from_symbol(symbol s);
+        c74::max::t_max_err locate_path_from_symbol(symbol s);
         std::string get_path_to_external(c74::max::t_class* c, char* subpath);
         std::string get_path_to_package(c74::max::t_class* c, char* subpath);
 
@@ -420,7 +420,6 @@ PyObject* PythonInterpreter::atom_to_pobject(const atom& arg)
 }
 
 
-
 c74::max::t_max_err PythonInterpreter::pobject_to_atom(PyObject* value, atom& arg)
 {
     c74::max::t_max_err err = c74::max::MAX_ERR_NONE;
@@ -443,6 +442,25 @@ c74::max::t_max_err PythonInterpreter::pobject_to_atom(PyObject* value, atom& ar
 }
 
 
+atom PythonInterpreter::pobject_to_atom(PyObject* value)
+{
+    atom result = symbol();
+
+    if (value == Py_True)
+        result = 1;
+    else if (value == Py_False)
+        result = 0;
+    else if (PyFloat_Check(value))
+        result = (double)PyFloat_AsDouble(value);
+    else if (PyLong_Check(value))
+        result = (long)PyLong_AsLong(value);
+    else if (PyUnicode_Check(value))
+        result = symbol(PyUnicode_AsUTF8(value));
+    // else if (value == Py_None);
+    return result;
+}
+
+
 PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args, int start_from)
 {
     PyObject* plist = NULL; // python list
@@ -455,8 +473,7 @@ PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args, int s
     for (int i = start_from; i < (int)args.size(); i++) {
         switch (args[i].a_type) {
         case c74::max::A_FLOAT: {
-            double c_float = args[i];
-            PyObject* p_float = PyFloat_FromDouble(c_float);
+            PyObject* p_float = PyFloat_FromDouble((double)args[i]);
             if (p_float == NULL) {
                 goto error;
             }
@@ -465,8 +482,7 @@ PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args, int s
             break;
         }
         case c74::max::A_LONG: {
-            long c_long = (long)args[i];
-            PyObject* p_long = PyLong_FromLong(c_long);
+            PyObject* p_long = PyLong_FromLong((long)args[i]);
             if (p_long == NULL) {
                 goto error;
             }
@@ -475,8 +491,7 @@ PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args, int s
             break;
         }
         case c74::max::A_SYM: {
-            const char* c_str = std::string(args[i]).c_str();
-            PyObject* p_str = PyUnicode_FromString(c_str);
+            PyObject* p_str = PyUnicode_FromString(std::string(args[i]).c_str());
             if (p_str == NULL) {
                 goto error;
             }
@@ -514,7 +529,799 @@ PyObject* PythonInterpreter::atoms_to_ptuple(const atoms& args)
 }
 
 
+atoms PythonInterpreter::plist_to_atoms(PyObject* plist)
+{
+    Py_ssize_t len = 0;
+    Py_ssize_t i;
+    PyObject* elem;
+    atoms result;
+
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (PyList_Check(plist)) {
+        len = PyList_Size(plist);
+        result.reserve(len);
+        for (i = 0; i < len; i++) {
+            elem = PyList_GetItem(plist, i);
+            this->pobject_to_atom(elem, result[i]);
+        }
+        return result;
+    }
+
+error:
+    this->handle_error((char*)"plist_to_atoms failed");
+    Py_XDECREF(plist);
+    return {};
+}
+
+
+// ---------------------------------------------------------------------------
+// output methods
+
+
+c74::max::t_max_err PythonInterpreter::handle_float_output(outlet<> *output, PyObject* pfloat)
+{
+    if (pfloat == NULL) {
+        goto error;
+    }
+
+    if (PyFloat_Check(pfloat)) {
+        float float_result = (float)PyFloat_AsDouble(pfloat);
+        if (float_result == -1.0 && PyErr_Occurred()) {
+            goto error;
+        }
+        output->send(float_result);
+    }
+    Py_XDECREF(pfloat);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"handle_float_output failed");
+    Py_XDECREF(pfloat);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::handle_long_output(outlet<> *output, PyObject* plong)
+{
+    if (plong == NULL) {
+        goto error;
+    }
+
+    if (PyLong_Check(plong)) {
+        long long_result = PyLong_AsLong(plong);
+        if (long_result == -1 && PyErr_Occurred()) {
+            goto error;
+        }
+        output->send(long_result);
+    }
+
+    Py_XDECREF(plong);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"handle_long_output failed");
+    Py_XDECREF(plong);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::handle_string_output(outlet<> *output, PyObject* pstring)
+{
+    if (pstring == NULL) {
+        goto error;
+    }
+
+    if (PyUnicode_Check(pstring)) {
+        const char* unicode_result = PyUnicode_AsUTF8(pstring);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        output->send(symbol(unicode_result));
+    }
+
+    Py_XDECREF(pstring);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"handle_string_output failed");
+    Py_XDECREF(pstring);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::handle_list_output(outlet<> *output, PyObject* plist)
+{
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (PySequence_Check(plist) && !PyUnicode_Check(plist)
+        && !PyBytes_Check(plist) && !PyByteArray_Check(plist)) {
+        PyObject* iter = NULL;
+        PyObject* item = NULL;
+        int i = 0;
+
+        Py_ssize_t seq_size = PySequence_Length(plist);
+        this->log_debug((char*)"seq_size: %d", seq_size);
+
+        atoms result(seq_size);
+
+        if (seq_size == 0) {
+            this->log_error((char*)"cannot convert py list of length 0 to atoms");
+            goto error;
+        }
+
+        if ((iter = PyObject_GetIter(plist)) == NULL) {
+            goto error;
+        }
+
+        while ((item = PyIter_Next(iter)) != NULL) {
+            if (PyLong_Check(item)) {
+                long long_item = PyLong_AsLong(item);
+                if (long_item == -1 && PyErr_Occurred()) {
+                    goto error;
+                }
+                result[i] = long_item;
+                this->log_debug((char*)"%d long: %ld\n", i, long_item);
+                i++;
+            }
+
+            if (PyFloat_Check(item)) {
+                float float_item = PyFloat_AsDouble(item);
+                if (float_item == -1.0 && PyErr_Occurred()) {
+                    goto error;
+                }
+                result[i] = float_item;
+                this->log_debug((char*)"%d float: %f\n", i, float_item);
+                i++;
+            }
+
+            if (PyUnicode_Check(item)) {
+                const char* unicode_item = PyUnicode_AsUTF8(item);
+                if (unicode_item == NULL) {
+                    goto error;
+                }
+                result[i] = symbol(unicode_item);
+                this->log_debug((char*)"%d unicode: %s\n", i, unicode_item);
+                i++;
+            }
+            Py_DECREF(item);
+        }
+        output->send(result);
+    }
+
+    Py_XDECREF(plist);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"handle_list_output failed");
+    Py_XDECREF(plist);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::handle_dict_output(outlet<> *output, PyObject* pdict)
+{
+    PyObject* pfun_co = NULL;
+    PyObject* pfun = NULL;
+    PyObject* pval = NULL;
+
+    if (pdict == NULL) {
+        goto error;
+    }
+
+    if (PyDict_Check(pdict)) {
+
+        pfun_co = PyRun_String("def __py_maxmsp_out_dict(arg):\n"
+                               "\tres = []\n"
+                               "\tfor k,v in arg.items():\n"
+                               "\t\tres.append(k)\n"
+                               "\t\tres.append(':')\n"
+                               "\t\tif type(v) in [list, set, tuple]:\n"
+                               "\t\t\tfor i in v:\n"
+                               "\t\t\t\tres.append(i)\n"
+                               "\t\telse:\n"
+                               "\t\t\tres.append(v)\n"
+                               "\treturn res\n",
+                               Py_single_input, this->p_globals, this->p_globals);
+
+        if (pfun_co == NULL) {
+            this->log_error((char*)"out_dict function code object is NULL");
+            goto error;
+        }
+
+        pfun = PyDict_GetItemString(this->p_globals, "__py_maxmsp_out_dict");
+        if (pfun == NULL) {
+            this->log_error((char*)"retrieving out_dict func from globals failed");
+            goto error;
+        }
+
+        pval = PyObject_CallFunctionObjArgs(pfun, pdict, NULL);
+        if (pval == NULL) {
+            this->log_error((char*)"out_dict call failed to retrieve result");
+            goto error;
+        }
+
+        if (PyList_Check(pval)) {                   // expecting a python list
+            this->handle_list_output(output, pval); // this decrefs pval
+            Py_XDECREF(pfun_co);
+            return c74::max::MAX_ERR_NONE;
+        } else {
+            this->log_error((char*)"expected list output got something else");
+            goto error;
+        }
+    }
+
+error:
+    this->handle_error((char*)"handle_dict_output failed");
+    Py_XDECREF(pfun_co);
+    Py_XDECREF(pval);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::handle_output(outlet<> *output, PyObject* pval)
+{
+    if (pval == NULL) {
+        this->log_error((char*)"cannot handle NULL value");
+        return c74::max::MAX_ERR_GENERIC;
+    }
+
+    if (PyFloat_Check(pval)) {
+        return this->handle_float_output(output, pval);
+    }
+
+    else if (PyLong_Check(pval)) {
+        return this->handle_long_output(output, pval);
+    }
+
+    else if (PyUnicode_Check(pval)) {
+        return this->handle_string_output(output, pval);
+    }
+
+    else if (PySequence_Check(pval) && !PyBytes_Check(pval)
+             && !PyByteArray_Check(pval)) {
+        return this->handle_list_output(output, pval);
+    }
+
+    else if (PyDict_Check(pval)) {
+        return this->handle_dict_output(output, pval);
+    }
+
+    else if (pval == Py_None) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+
+    else {
+        this->log_error((char*)"cannot handle this type of value");
+        return c74::max::MAX_ERR_GENERIC;
+    }
+}
+
+
+// ---------------------------------------------------------------------------------------
+// CORE METHOD HELPERS
+
+
+c74::max::t_max_err PythonInterpreter::import_module(const char* module)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pmodule = NULL;
+
+    if (module == NULL) {
+        goto error;
+    }
+
+    pmodule = PyImport_ImportModule(module);
+    if (pmodule == NULL) {
+        goto error;
+    }
+        
+    PyDict_SetItemString(this->p_globals, module, pmodule);
+    PyGILState_Release(gstate);
+    this->log_debug((char*)"imported: %s", module);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"import %s", module);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+PyObject* PythonInterpreter::eval_pcode(const char* pcode)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = PyRun_String(pcode,
+        Py_eval_input, this->p_globals, this->p_globals);
+
+    if (pval != NULL) {
+        PyGILState_Release(gstate);
+        return pval;
+    } else {
+        this->handle_error((char*)"failed python code eval: %s", pcode);
+        PyGILState_Release(gstate);
+        Py_RETURN_NONE;
+    }
+}
+
+
+c74::max::t_max_err PythonInterpreter::exec_pcode(const char* pcode)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = PyRun_String(pcode,
+        Py_single_input, this->p_globals, this->p_globals);
+
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+
+    this->log_debug((char*)"exec %s", pcode);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"exec %s", pcode);
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::execfile_path(const char* path)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    PyObject* pval = NULL;
+    FILE* fhandle = NULL;
+
+    if (path == NULL) {
+        goto error;
+    }
+
+    fhandle = fopen(path, "r+");
+
+    if (fhandle == NULL) {
+        this->log_error((char*)"could not open file");
+        goto error;
+    }
+
+    pval = PyRun_File(fhandle, path, Py_file_input, this->p_globals, this->p_globals);
+
+    if (pval == NULL) {
+        fclose(fhandle);
+        goto error;
+    }
+
+    // success cleanup
+    fclose(fhandle);
+    Py_DECREF(pval);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"execfile");
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+// ---------------------------------------------------------------------------------------
+// CORE METHODS
+
+
+c74::max::t_max_err PythonInterpreter::import(symbol s)
+{
+    if (s.empty()) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+    return this->import_module((const char*)s);
+}
+
+
+c74::max::t_max_err PythonInterpreter::eval(symbol s, outlet<> *output)
+{
+    PyObject* pval = this->eval_pcode((const char*)s);
+
+    if (pval == NULL) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+
+    this->handle_output(output, pval);
+    return c74::max::MAX_ERR_NONE;
+}
+
+
+
+c74::max::t_max_err PythonInterpreter::exec(symbol s)
+{
+    return this->exec_pcode((const char*)s);
+}
+
+
+c74::max::t_max_err PythonInterpreter::execfile(symbol s)
+{
+    if (s.empty()) {
+        // set this->p_source_path
+        c74::max::t_max_err err = this->locate_path_from_symbol(s);
+        if (err != c74::max::MAX_ERR_NONE) {
+            this->log_error((char*)"could not locate path from symbol");
+            return err;
+        }
+    }
+
+    if (s.empty() || this->p_source_path.empty()) {
+        this->log_error((char*)"could not set filepath");
+        return c74::max::MAX_ERR_GENERIC;
+    }
+
+    // assume this->p_source_path has be been set without errors
+
+    return this->execfile_path((const char*)this->p_source_path);
+
+}
+
+
+// ---------------------------------------------------------------------------------------
+// EXTRA METHODS HELPERS
+
+
+PyObject* PythonInterpreter::eval_text(char* text)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    int is_eval = 1;
+    PyObject* co = NULL;
+    PyObject* pval = NULL;
+    const char * name = this->p_name;
+
+    co = Py_CompileString(text, name, Py_eval_input);
+
+    if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        co = Py_CompileString(text, name, Py_single_input);
+        is_eval = 0;
+    }
+
+    if (co == NULL) { // can be eval-co or exec-co or NULL here
+        c74::max::sysmem_freeptr(text);
+        goto error;
+    }
+    c74::max::sysmem_freeptr(text);
+
+    pval = PyEval_EvalCode(co, this->p_globals, this->p_globals);
+    if (pval == NULL) {
+        goto error;
+    }
+    Py_DECREF(co);
+
+    if (!is_eval) {
+        PyGILState_Release(gstate);
+    }
+
+    return pval;
+
+error:
+    this->handle_error((char*)"python code evaluation failed");
+    PyGILState_Release(gstate);
+    Py_RETURN_NONE;
+}
+
+
+c74::max::t_max_err PythonInterpreter::eval_text_to_outlet(const atoms& args, int offset, outlet<> *output)
+{
+    long textsize = 0;
+    char* text = NULL;
+
+    c74::max::t_max_err err = c74::max::atom_gettext((long)args.size() + (long)offset,
+        (c74::max::t_atom*)&args[0], &textsize, &text,
+        c74::max::OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+
+    if (err == c74::max::MAX_ERR_NONE && textsize && text) {
+        this->log_debug((char*)">>> %s", text);
+        PyObject* pval = this->eval_text(text);
+        if (pval != NULL) {
+            this->handle_output(output, pval);
+            return c74::max::MAX_ERR_NONE;
+        }
+    }
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+// ---------------------------------------------------------------------------------------
+// EXTRA METHODS
+
+
+c74::max::t_max_err PythonInterpreter::call(symbol s, const atoms& args, outlet<> *output)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    const char* callable_name = NULL;
+    PyObject* py_argslist = NULL;
+    PyObject* pval = NULL;
+    PyObject* py_callable = NULL;
+    // python list
+    PyObject* py_args = NULL; // python tuple
+
+    // first atom in argv must be a symbol
+    if (args[0].a_type != c74::max::A_SYM) {
+        this->log_error((char*)"first atom must be a symbol!");
+        goto error;
+    }
+
+    callable_name = (const char*)symbol(args[0]);
+    this->log_debug((char*)"callable_name: %s", callable_name);
+
+    py_callable = PyRun_String(callable_name, Py_eval_input, this->p_globals,
+                               this->p_globals);
+    if (py_callable == NULL) {
+        this->log_error((char*)"could not evaluate %s", callable_name);
+        goto error;
+    }
+
+    py_argslist = this->atoms_to_plist_with_offset(args, 1);
+    if (py_argslist == NULL) {
+        this->log_error((char*)"atom to py list conversion failed");
+        goto error;
+    }
+
+    this->log_debug((char*)"length of argc:%ld list: %d", args.size(),
+           PyList_Size(py_argslist));
+
+    // convert py_args to tuple
+    py_args = PyList_AsTuple(py_argslist);
+    if (py_args == NULL) {
+        this->log_error((char*)"unable to convert args list to tuple");
+        goto error;
+    }
+
+    pval = PyObject_CallObject(py_callable, py_args);
+    if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
+        if (pval == NULL) {
+            this->log_error((char*)"unable to apply callable(*args)");
+            goto error;
+        }
+        goto handle_output;
+    }
+    PyErr_Clear();
+
+    pval = PyObject_CallFunctionObjArgs(py_callable, py_argslist, NULL);
+    if (pval == NULL) {
+        this->log_error((char*)"could not retrieve result of callable(list)");
+        goto error;
+    }
+    goto handle_output; // this is redundant but safer in case code is added
+
+handle_output:
+    this->handle_output(output, pval);
+    // success cleanup
+    Py_XDECREF(py_callable);
+    Py_XDECREF(py_argslist);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"method %s", (const char*)s);
+    // cleanup
+    Py_XDECREF(py_callable);
+    Py_XDECREF(py_argslist);
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::assign(symbol s, const atoms& args)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    const char* varname = NULL;
+    PyObject* list = NULL;
+    int res;
+
+    if (s.empty())
+        this->log_debug((char*)"s: %s", (const char*)s);
+
+    // first atom in argv must be a symbol
+    if (args[0].a_type != c74::max::A_SYM) {
+        this->log_error((char*)"first atom must be a symbol!");
+        goto error;
+    } 
+    
+    varname = (const char*)symbol(args[0]);
+    this->log_debug((char*)"varname: %s", varname);
+
+    list = this->atoms_to_plist_with_offset(args, 1);
+    if (list == NULL) {
+        this->log_error((char*)"atom to py list conversion failed");
+        goto error;
+    }
+
+    if (PyList_Size(list) != (long)args.size() - 1) {
+        this->log_error((char*)"PyList_Size(list) != argc - 1");
+        goto error;
+    }
+    this->log_debug((char*)"length of list: %d", PyList_Size(list));
+    
+
+    // finally, assign list to varname in object namespace
+    this->log_debug((char*)"setting %s to list in namespace", varname);
+    // following does not steal ref to list
+    res = PyDict_SetItemString(this->p_globals, varname, list);
+    if (res != 0) {
+        this->log_error((char*)"assign varname to list failed");
+        goto error;
+    }
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"assign %s", (const char*)s);
+    Py_XDECREF(list);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+c74::max::t_max_err PythonInterpreter::code(symbol s, const atoms& args, outlet<> *output)
+{
+    return this->eval_text_to_outlet(args, 0, output);
+}
+
+
+c74::max::t_max_err PythonInterpreter::anything(symbol s, const atoms& args, outlet<> *output)
+{
+    // t_atom atoms[PY_MAX_ELEMS];
+    atoms results(PY_MAX_ELEMS);
+
+    const char* pythonpath = NULL;
+    int argc = (int)args.size();
+
+    if (s.empty()) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+
+    // set '=' as shorthand for assign method
+    else if (s == symbol("=")) {
+        return this->assign(symbol(""), args);
+    }
+
+    // check for properties
+    else if (s == symbol("pythonpath")) {
+        if (argc == 0) {
+            this->log_info((char*)"property pythonpath: %s", 
+                (const char*)this->p_pythonpath);
+            return c74::max::MAX_ERR_NONE;
+        }
+        
+        if (argc == 1) {
+            if (args[0].a_type == c74::max::A_SYM) {
+                pythonpath = (const char*)symbol(args[0]);
+                this->log_info((char*)"setting pythonpath to %s", pythonpath);
+                this->p_pythonpath = symbol(pythonpath);
+                return this->syspath_append((char*)pythonpath);
+            }
+        }
+        return c74::max::MAX_ERR_GENERIC;
+    }
+
+    else if (s == symbol("log_level")) {
+        if (argc == 0) {
+            this->log_info((char*)"property log_level: %d", 
+                            this->p_log_level);
+            return c74::max::MAX_ERR_NONE;
+        }
+
+        if (argc == 1) {
+            if (args[0].a_type == c74::max::A_LONG) {
+                long level = (long)args[0];
+                this->log_info((char*)"setting log_level to %d", level);
+                this->p_log_level = (log_level)level;
+                return c74::max::MAX_ERR_NONE;
+            }
+        }
+        return c74::max::MAX_ERR_GENERIC;
+    }
+    
+    else {
+
+        // set symbol as first atom in new atoms array
+        results[0] = s;
+
+        for (int i = 0; i < argc; i++) {
+            switch (args[i].a_type) {
+            case c74::max::A_FLOAT: {
+                results[i+1] = (double)args[i];
+                break;
+            }
+            case c74::max::A_LONG: {
+                results[i+1] = (long)args[i];
+                break;
+            }
+            case c74::max::A_SYM: {
+                results[i+1] = symbol(args[i]);
+                break;
+            }
+            default:
+                this->log_debug((char*)"cannot process unknown type");
+                break;
+            }
+        }
+
+        return this->eval_text_to_outlet(args, 1, output);
+    }
+}
+
+
+
 // ----------------------------------------------------------------------------
+// path helpers
+
+
+c74::max::t_max_err PythonInterpreter::locate_path_from_symbol(symbol s)
+{
+    c74::max::t_fourcc filetype = FOUR_CHAR_CODE('TEXT');
+    c74::max::t_fourcc outtype = 0;
+    short path_code = 0;
+    char filename[c74::max::MAX_PATH_CHARS];
+    char pathname[c74::max::MAX_PATH_CHARS];
+    c74::max::t_max_err ret = c74::max::MAX_ERR_NONE;
+
+    if (s.empty()) { // if no arg supplied to ask for file
+        filename[0] = 0;
+
+        if (c74::max::open_dialog(filename, &path_code,
+                        &outtype, &filetype, 1))
+            // non-zero: cancelled
+            ret = c74::max::MAX_ERR_GENERIC;
+        goto finally;
+
+    } else {
+        // must copy symbol before calling locatefile_extended
+        c74::max::strncpy_zero(filename, (const char*)s, c74::max::MAX_PATH_CHARS);
+        if (c74::max::locatefile_extended(filename, &path_code,
+                                &outtype, &filetype, 1)) {
+            // nozero: not found
+            this->log_error((char*)"can't find file %s", (const char*)s);
+            ret = c74::max::MAX_ERR_GENERIC;
+            goto finally;
+        } else {
+            pathname[0] = 0;
+            ret = c74::max::path_toabsolutesystempath(path_code, filename, pathname);
+            if (ret != c74::max::MAX_ERR_NONE) {
+                this->log_error((char*)"can't convert %s to absolutepath", (const char*)s);
+                goto finally;
+            }
+        }
+
+        // success
+        // set attribute from pathname symbol
+        this->log_debug((char*)"filename: %s", filename);
+        this->log_debug((char*)"pathname: %s", pathname);
+        this->p_source_name = symbol(filename);
+        this->p_source_path = symbol(pathname);
+        assert(ret == c74::max::MAX_ERR_NONE);
+    }
+
+finally:
+    return ret;
+}
+
 
 
 std::string get_path_to_external(c74::max::t_class* c, char* subpath)

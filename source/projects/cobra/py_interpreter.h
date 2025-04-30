@@ -954,7 +954,7 @@ t_max_err PythonInterpreter::handle_output(void* outlet, PyObject* pval)
     }
 
     else {
-        this->log_error((char*)"cannot handle his type of value");
+        this->log_error((char*)"cannot handle this type of value");
         return MAX_ERR_GENERIC;
     }
 }
