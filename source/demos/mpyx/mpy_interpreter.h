@@ -27,7 +27,6 @@ namespace pyjs
 // constants
 
 #define PY_MAX_ELEMS 1024
-#define PY_LOG_LEVEL PY_DEBUG
 
 // ---------------------------------------------------------------------------
 // enums
@@ -95,13 +94,13 @@ class PythonInterpreter
         c74::max::t_max_err execfile_path(const char* path);
 
         // core message methods
-        c74::max::t_max_err import(symbol s);
+        c74::max::t_max_err import(const char* module);
         c74::max::t_max_err import(const atoms& args);
-        c74::max::t_max_err eval(symbol s, outlet<> *output);
+        c74::max::t_max_err eval(const char* code, outlet<> *output);
         c74::max::t_max_err eval(const atoms& args, outlet<> *output);
-        c74::max::t_max_err exec(symbol s);
+        c74::max::t_max_err exec(const char* code);
         c74::max::t_max_err exec(const atoms& args);
-        c74::max::t_max_err execfile(symbol s);
+        c74::max::t_max_err execfile(const char* path);
         c74::max::t_max_err execfile(const atoms& args);
 
         // extra message method helpers
@@ -153,7 +152,7 @@ PythonInterpreter::PythonInterpreter(c74::max::t_class* c)
     this->p_pythonpath = "";
     this->p_source_name = "";
     this->p_source_path = "";
-    this->p_log_level = log_level::PY_LOG_LEVEL;
+    this->p_log_level = log_level::PY_DEBUG;
 
     // python init
     wchar_t* python_home = NULL;
@@ -230,7 +229,7 @@ void PythonInterpreter::log_debug(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        c74::max::post("[py debug %s]: %s", this->p_name, msg);
+        c74::max::post("[py debug %s]: %s", (const char*)this->p_name, msg);
     }
 }
 
@@ -245,7 +244,7 @@ void PythonInterpreter::log_info(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        c74::max::post("[py info %s]: %s", this->p_name, msg);
+        c74::max::post("[py info %s]: %s", (const char*)this->p_name, msg);
     }
 }
 
@@ -260,7 +259,7 @@ void PythonInterpreter::log_error(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        c74::max::error("[py error %s]: %s", this->p_name, msg);
+        c74::max::error("[py error %s]: %s", (const char*)this->p_name, msg);
     }
 }
 
@@ -289,7 +288,7 @@ void PythonInterpreter::handle_error(char* fmt, ...)
         Py_XDECREF(pvalue_pstr);
         Py_XDECREF(ptraceback);
 
-        c74::max::error((char*)"[py %s] %s: %s", this->p_name, msg, pvalue_str);
+        c74::max::error((char*)"[py %s] %s: %s", (const char*)this->p_name, msg, pvalue_str);
     }
 }
 
@@ -926,12 +925,9 @@ error:
 // CORE METHODS
 
 
-c74::max::t_max_err PythonInterpreter::import(symbol s)
+c74::max::t_max_err PythonInterpreter::import(const char* module)
 {
-    if (s.empty()) {
-        return c74::max::MAX_ERR_GENERIC;
-    }
-    return this->import_module((const char*)s);
+    return this->import_module(module);
 }
 
 c74::max::t_max_err PythonInterpreter::import(const atoms& args)
@@ -939,13 +935,14 @@ c74::max::t_max_err PythonInterpreter::import(const atoms& args)
     if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
         return c74::max::MAX_ERR_GENERIC;
     }
-    return this->import_module((const char*)symbol(args[0]));
+    const char* module = (const char*)symbol(args[0]);
+    return this->import_module(module);
 }
 
 
-c74::max::t_max_err PythonInterpreter::eval(symbol s, outlet<> *output)
+c74::max::t_max_err PythonInterpreter::eval(const char* code, outlet<> *output)
 {
-    PyObject* pval = this->eval_pcode((const char*)s);
+    PyObject* pval = this->eval_pcode(code);
 
     if (pval == NULL) {
         return c74::max::MAX_ERR_GENERIC;
@@ -960,13 +957,14 @@ c74::max::t_max_err PythonInterpreter::eval(const atoms& args, outlet<> *output)
     if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
         return c74::max::MAX_ERR_GENERIC;
     }
-    return this->eval(symbol(args[0]), output);
+    const char* code = (const char*)symbol(args[0]);
+    return this->eval(code, output);
 }
 
 
-c74::max::t_max_err PythonInterpreter::exec(symbol s)
+c74::max::t_max_err PythonInterpreter::exec(const char* code)
 {
-    return this->exec_pcode((const char*)s);
+    return this->exec_pcode(code);
 }
 
 c74::max::t_max_err PythonInterpreter::exec(const atoms& args)
@@ -974,22 +972,23 @@ c74::max::t_max_err PythonInterpreter::exec(const atoms& args)
     if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
         return c74::max::MAX_ERR_GENERIC;
     }
-    return this->exec_pcode((const char*)symbol(args[0]));
+    const char* code = (const char*)symbol(args[0]);
+    return this->exec_pcode(code);
 }
 
 
-c74::max::t_max_err PythonInterpreter::execfile(symbol s)
+c74::max::t_max_err PythonInterpreter::execfile(const char* path)
 {
-    if (s.empty()) {
-        // set this->p_source_path
-        c74::max::t_max_err err = this->locate_path_from_symbol(s);
+    if (path != NULL) {
+        // set path to this->p_source_path
+        c74::max::t_max_err err = this->locate_path_from_symbol(symbol(path));
         if (err != c74::max::MAX_ERR_NONE) {
             this->log_error((char*)"could not locate path from symbol");
             return err;
         }
     }
 
-    if (s.empty() || this->p_source_path.empty()) {
+    if (path == NULL || this->p_source_path.empty()) {
         this->log_error((char*)"could not set filepath");
         return c74::max::MAX_ERR_GENERIC;
     }
@@ -1003,7 +1002,8 @@ c74::max::t_max_err PythonInterpreter::execfile(const atoms& args)
     if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
         return c74::max::MAX_ERR_GENERIC;
     }
-    return this->execfile(symbol(args[0]));
+    const char* path = (const char*)symbol(args[0]);
+    return this->execfile(path);
 }
 
 // ---------------------------------------------------------------------------------------

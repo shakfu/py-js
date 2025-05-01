@@ -41,10 +41,7 @@ public:
 
     message<> import { this, "import", "Import Python module.",
         [this](const atoms& args, const int inlet) -> atoms {
-            c74::max::t_max_err err = this->py->import(args);
-            if (err != c74::max::MAX_ERR_NONE) {
-                error("import failed");
-            } 
+            this->py->import(args);
             return {};
         }
     };
@@ -107,7 +104,9 @@ public:
     message<> maxclass_setup { this, "maxclass_setup",
         // MIN_FUNCTION {
         [this](const atoms& args, const int inlet) -> atoms {
-            cout << "hello world" << endl;
+            this->py->import("sys");
+            this->py->eval("sys.version", &output);
+            // cout << "hello world" << endl;
             return {};
         }
     };
