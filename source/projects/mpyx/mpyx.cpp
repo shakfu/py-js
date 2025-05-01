@@ -88,6 +88,12 @@ public:
         }
     };    
 
+    message<> anything { this, "anything", "Process arbitrary python code.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            this->py->anything(args, &output);
+            return {};
+        }
+    };
 
     // respond to the bang message to do something
     message<> bang { this, "bang", "Post the greeting.",

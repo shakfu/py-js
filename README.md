@@ -31,6 +31,8 @@ name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [cobra]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
+[pyx]      | maxcpp6    | c++    | uses [cobra] with Graham Wakefield's [maxcpp](https://github.com/grrrwaaa/maxcpp)
+[mpyx]     | min-api    | c++    | single-header c++ library to nest a python3 interpreter in `min-api` externals
 [krait]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
 [mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
 [zedit]    | max-sdk    | c      | a web-based python editor using [codemirror](https://codemirror.net) and the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
@@ -255,6 +257,8 @@ Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing h
 [krait]: https://github.com/shakfu/py-js/tree/main/source/projects/krait
 [mamba]: https://github.com/shakfu/py-js/tree/main/source/projects/mamba
 [cobra]: https://github.com/shakfu/py-js/tree/main/source/projects/cobra
+[pyx]: https://github.com/shakfu/py-js/tree/main/source/projects/pyx
+[mpyx]: https://github.com/shakfu/py-js/tree/main/source/projects/mpyx
 [pktpy]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy
 [pktpy2]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy2
 [zedit]: https://github.com/shakfu/py-js/tree/main/source/projects/zedit

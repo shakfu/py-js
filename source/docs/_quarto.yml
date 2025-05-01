@@ -5,10 +5,10 @@ book:
   title: "Python3 Externals for Max/MSP"
   subtitle: "A PyJS Project Guide"
   author: "S. Alireza"
-  date: "7/19/2024"
+  date: "5/01/2025"
   abstract: "Exploring different ways one can use Python3 in Max/MSP"
   url: "https://github.com/shakfu/py-js"
-  version: "0.0.1"
+  version: "0.1.0"
   chapters:
     - index.qmd
     - part: "The Project"
@@ -28,6 +28,8 @@ book:
         - src/externals/mamba.qmd
         - src/externals/krait.qmd
         - src/externals/mxpy.qmd
+        - src/externals/pyx.qmd
+        - src/externals/mpyx.qmd
 
     - part: "Alternative Externals"
       chapters:

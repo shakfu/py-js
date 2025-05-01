@@ -1,0 +1,25 @@
+---
+title: "mpyx: a single-header c++ python3 library for min-api max externals"
+---
+
+This is a proof-of-concept external using a variant of the `py_interpreter.h` single-header c++ python3 library from the `cobra` project, called `mpy_interpreter.h`, which is compatible for use with [min-api](https://github.com/cycling74/min-api)-based projects.
+
+## Usage
+
+This can be built individually with:
+
+```sh
+make mpyx
+```
+
+For a relocatable dynamically-linked build
+
+```sh
+make mpyx-shared
+```
+
+For a relocatable statically-linked build
+
+```sh
+make mpyx-static
+```

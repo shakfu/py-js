@@ -86,7 +86,7 @@ list(APPEND BUILD_TARGETS py pyjs)
 endif()
 
 if(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS)
-list(APPEND BUILD_TARGETS krait cobra mamba mxpy)
+list(APPEND BUILD_TARGETS krait cobra mamba mxpy pyx mpyx)
 endif()
 
 if(BUILD_POCKETPY_EXTERNALS)
@@ -102,7 +102,7 @@ if(BUILD_THIRDPARTY_EXTERNALS)
 list(APPEND BUILD_TARGETS ${THIRDPARTY_EXTERNALS})
 endif()
 
-set(DEMO_EXTERNALS cmx demo mx pyx mpyx)
+set(DEMO_EXTERNALS cmx demo mx)
 if(BUILD_DEMO_EXTERNALS)
 list(APPEND BUILD_TARGETS ${DEMO_EXTERNALS})
 endif()

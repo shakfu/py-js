@@ -36,7 +36,7 @@ namespace pyjs
  * @brief      specifies three logging levels
  */
 enum log_level {
-    PY_ERROR, PY_INFO, PY_DEBUG 
+    PY_ERROR, PY_INFO, PY_DEBUG
 };
 
 // ---------------------------------------------------------------------------
@@ -119,7 +119,7 @@ class PythonInterpreter
         void call(const atoms& args, outlet<> *output);
         void assign(const atoms& args);
         void code(const atoms& args, outlet<> *output);
-        void anything(symbol s, const atoms& args, outlet<> *output);
+        void anything(const atoms& args, outlet<> *output);
         void pipe(const atoms& args, outlet<> *output);
 
         // datastructures
@@ -451,7 +451,6 @@ finally:
     Py_XDECREF(os);
     PyGILState_Release(gstate);
 }
-
 
 
 // ---------------------------------------------------------------------------
@@ -1417,34 +1416,34 @@ void PythonInterpreter::code(const atoms& args, outlet<> *output)
  * @param[in]  args  The vector of atoms
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::anything(symbol s, const atoms& args, outlet<> *output)
+void PythonInterpreter::anything(const atoms& args, outlet<> *output)
 {
     atoms result(PY_MAX_ELEMS);
 
     const char* pythonpath = NULL;
     int argc = (int)args.size();
 
-    if (s.empty()) {
+    if (argc == 0) {
         this->log_error((char*)"no selector provided");
         return;
     }
 
     // set '=' as shorthand for assign method
-    else if (s == symbol("=")) {
+    else if (args[0] == symbol("=")) {
         return this->assign(args);
     }
 
     // check for properties
-    else if (s == symbol("pythonpath")) {
-        if (argc == 0) {
+    else if (args[0] == symbol("pythonpath")) {
+        if (argc == 1) {
             this->log_info((char*)"property pythonpath: %s", 
                 (const char*)this->p_pythonpath);
             return;
         }
         
-        if (argc == 1) {
-            if (args[0].a_type == c74::max::A_SYM) {
-                pythonpath = (const char*)symbol(args[0]);
+        if (argc == 2) {
+            if (args[1].a_type == c74::max::A_SYM) {
+                pythonpath = (const char*)symbol(args[1]);
                 this->log_info((char*)"setting pythonpath to %s", pythonpath);
                 this->p_pythonpath = symbol(pythonpath);
                 this->syspath_append((const char*)pythonpath);
@@ -1455,42 +1454,39 @@ void PythonInterpreter::anything(symbol s, const atoms& args, outlet<> *output)
         return;
     }
 
-    else if (s == symbol("log_level")) {
-        if (argc == 0) {
+    else if (args[0] == symbol("log_level")) {
+        if (argc == 1) {
             this->log_info((char*)"property log_level: %d", 
                             this->p_log_level);
             return;
         }
 
-        if (argc == 1) {
-            if (args[0].a_type == c74::max::A_LONG) {
-                long level = (long)args[0];
+        if (argc == 2) {
+            if (args[1].a_type == c74::max::A_LONG) {
+                long level = (long)args[1];
                 this->log_info((char*)"setting log_level to %d", level);
                 this->p_log_level = (log_level)level;
                 return;
             }
         }
-        this->log_error((char*)"ncould not get/set log_level");
+        this->log_error((char*)"could not get/set log_level");
         return;
     }
     
     else {
 
-        // set symbol as first atom in new atoms array
-        result[0] = s;
-
         for (int i = 0; i < argc; i++) {
             switch (args[i].a_type) {
             case c74::max::A_FLOAT: {
-                result[i+1] = (double)args[i];
+                result[i] = (double)args[i];
                 break;
             }
             case c74::max::A_LONG: {
-                result[i+1] = (long)args[i];
+                result[i] = (long)args[i];
                 break;
             }
             case c74::max::A_SYM: {
-                result[i+1] = symbol(args[i]);
+                result[i] = symbol(args[i]);
                 break;
             }
             default:
@@ -1499,7 +1495,7 @@ void PythonInterpreter::anything(symbol s, const atoms& args, outlet<> *output)
             }
         }
 
-        this->eval_text_to_outlet(args, 1, output);
+        this->eval_text_to_outlet(args, 0, output);
     }
 }
 
@@ -1694,6 +1690,7 @@ error:
     this->log_error((char*)"table to list conversion failed");
     Py_RETURN_NONE;
 }
+
 
 // ----------------------------------------------------------------------------
 // path helpers

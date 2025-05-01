@@ -1,4 +1,6 @@
-# pyx: example use of cobra with maxcpp
+---
+title: "pyx: example use of cobra with maxcpp"
+---
 
 This is a proof-of-concept of using `cobra`, the single-header c++ python3 library for Max externals with Graham Wakefield's [maxcpp](https://github.com/grrrwaaa/maxcpp) (C++ templates for Max/MSP objects)
 
@@ -10,16 +12,14 @@ This can be built individually with:
 make pyx
 ```
 
-or as part of the `demos` subgroup:
+For a relocatable dynamically-linked build
 
 ```sh
-make demos
+make pyx-shared
 ```
 
-## Possible Future Directions
+For a relocatable statically-linked build
 
-- [ ] Use `nanobind` or `pybind11`
-
-- [ ] Include option to enable `api` module
-
-- [ ] Use `min.api` instead of `maxcpp`
+```sh
+make pyx-static
+```

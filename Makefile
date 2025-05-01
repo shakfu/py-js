@@ -411,8 +411,21 @@ mxpy: clean-cmake-cache clean-externals
 pyx: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
 
+pyx-shared: clean-cmake-cache clean-externals
+	$(call xcode-target,pyx,shared-ext)
+
+pyx-static: clean-cmake-cache clean-externals
+	$(call xcode-target,pyx,static-ext)
+
 mpyx: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
+
+mpyx-shared: clean-cmake-cache clean-externals
+	$(call xcode-target,mpyx,shared-ext)
+
+mpyx-static: clean-cmake-cache clean-externals
+	$(call xcode-target,mpyx,static-ext)
+
 
 pktpy: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
