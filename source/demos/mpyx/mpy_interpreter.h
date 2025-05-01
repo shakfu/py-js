@@ -96,30 +96,34 @@ class PythonInterpreter
 
         // core message methods
         c74::max::t_max_err import(symbol s);
+        c74::max::t_max_err import(const atoms& args);
         c74::max::t_max_err eval(symbol s, outlet<> *output);
+        c74::max::t_max_err eval(const atoms& args, outlet<> *output);
         c74::max::t_max_err exec(symbol s);
+        c74::max::t_max_err exec(const atoms& args);
         c74::max::t_max_err execfile(symbol s);
+        c74::max::t_max_err execfile(const atoms& args);
 
         // extra message method helpers
         PyObject* eval_text(char* text);
         c74::max::t_max_err eval_text_to_outlet(const atoms& args, int offset, outlet<> *output);
 
         // extra message methods
-        c74::max::t_max_err call(symbol s, const atoms& args, outlet<> *output);
-        c74::max::t_max_err assign(symbol s, const atoms& args);
-        c74::max::t_max_err code(symbol s, const atoms& args, outlet<> *output);
+        c74::max::t_max_err call(const atoms& args, outlet<> *output);
+        c74::max::t_max_err assign(const atoms& args);
+        c74::max::t_max_err code(const atoms& args, outlet<> *output);
         c74::max::t_max_err anything(symbol s, const atoms& args, outlet<> *output);
-        c74::max::t_max_err pipe(symbol s, const atoms& args, outlet<> *output);
+        c74::max::t_max_err pipe(const atoms& args, outlet<> *output);
 
         // datastructures
-        bool table_exists(char* table_name);
-        c74::max::t_max_err plist_to_table(char* table_name, PyObject* pval);
-        PyObject* table_to_plist(char* table_name);
+        bool table_exists(const char* table_name);
+        c74::max::t_max_err plist_to_table(const char* table_name, PyObject* pval);
+        PyObject* table_to_plist(const char* table_name);
 
         // path helpers
         c74::max::t_max_err locate_path_from_symbol(symbol s);
-        std::string get_path_to_external(c74::max::t_class* c, char* subpath);
-        std::string get_path_to_package(c74::max::t_class* c, char* subpath);
+        std::string get_path_to_external(c74::max::t_class* c, const char* subpath);
+        std::string get_path_to_package(c74::max::t_class* c, const char* subpath);
 
 };
 
@@ -930,6 +934,14 @@ c74::max::t_max_err PythonInterpreter::import(symbol s)
     return this->import_module((const char*)s);
 }
 
+c74::max::t_max_err PythonInterpreter::import(const atoms& args)
+{
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+    return this->import_module((const char*)symbol(args[0]));
+}
+
 
 c74::max::t_max_err PythonInterpreter::eval(symbol s, outlet<> *output)
 {
@@ -943,11 +955,26 @@ c74::max::t_max_err PythonInterpreter::eval(symbol s, outlet<> *output)
     return c74::max::MAX_ERR_NONE;
 }
 
+c74::max::t_max_err PythonInterpreter::eval(const atoms& args, outlet<> *output)
+{
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+    return this->eval(symbol(args[0]), output);
+}
 
 
 c74::max::t_max_err PythonInterpreter::exec(symbol s)
 {
     return this->exec_pcode((const char*)s);
+}
+
+c74::max::t_max_err PythonInterpreter::exec(const atoms& args)
+{
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+    return this->exec_pcode((const char*)symbol(args[0]));
 }
 
 
@@ -968,11 +995,16 @@ c74::max::t_max_err PythonInterpreter::execfile(symbol s)
     }
 
     // assume this->p_source_path has be been set without errors
-
     return this->execfile_path((const char*)this->p_source_path);
-
 }
 
+c74::max::t_max_err PythonInterpreter::execfile(const atoms& args)
+{
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+        return c74::max::MAX_ERR_GENERIC;
+    }
+    return this->execfile(symbol(args[0]));
+}
 
 // ---------------------------------------------------------------------------------------
 // EXTRA METHODS HELPERS
@@ -1045,7 +1077,7 @@ c74::max::t_max_err PythonInterpreter::eval_text_to_outlet(const atoms& args, in
 // EXTRA METHODS
 
 
-c74::max::t_max_err PythonInterpreter::call(symbol s, const atoms& args, outlet<> *output)
+c74::max::t_max_err PythonInterpreter::call(const atoms& args, outlet<> *output)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1115,7 +1147,7 @@ handle_output:
     return c74::max::MAX_ERR_NONE;
 
 error:
-    this->handle_error((char*)"method %s", (const char*)s);
+    this->handle_error((char*)"call method");
     // cleanup
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
@@ -1125,7 +1157,7 @@ error:
 }
 
 
-c74::max::t_max_err PythonInterpreter::assign(symbol s, const atoms& args)
+c74::max::t_max_err PythonInterpreter::assign(const atoms& args)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1133,9 +1165,6 @@ c74::max::t_max_err PythonInterpreter::assign(symbol s, const atoms& args)
     const char* varname = NULL;
     PyObject* list = NULL;
     int res;
-
-    if (s.empty())
-        this->log_debug((char*)"s: %s", (const char*)s);
 
     // first atom in argv must be a symbol
     if (args[0].a_type != c74::max::A_SYM) {
@@ -1171,14 +1200,14 @@ c74::max::t_max_err PythonInterpreter::assign(symbol s, const atoms& args)
     return c74::max::MAX_ERR_NONE;
 
 error:
-    this->handle_error((char*)"assign %s", (const char*)s);
+    this->handle_error((char*)"assign method");
     Py_XDECREF(list);
     PyGILState_Release(gstate);
     return c74::max::MAX_ERR_GENERIC;
 }
 
 
-c74::max::t_max_err PythonInterpreter::code(symbol s, const atoms& args, outlet<> *output)
+c74::max::t_max_err PythonInterpreter::code(const atoms& args, outlet<> *output)
 {
     return this->eval_text_to_outlet(args, 0, output);
 }
@@ -1186,8 +1215,7 @@ c74::max::t_max_err PythonInterpreter::code(symbol s, const atoms& args, outlet<
 
 c74::max::t_max_err PythonInterpreter::anything(symbol s, const atoms& args, outlet<> *output)
 {
-    // t_atom atoms[PY_MAX_ELEMS];
-    atoms results(PY_MAX_ELEMS);
+    atoms result(PY_MAX_ELEMS);
 
     const char* pythonpath = NULL;
     int argc = (int)args.size();
@@ -1198,7 +1226,7 @@ c74::max::t_max_err PythonInterpreter::anything(symbol s, const atoms& args, out
 
     // set '=' as shorthand for assign method
     else if (s == symbol("=")) {
-        return this->assign(symbol(""), args);
+        return this->assign(args);
     }
 
     // check for properties
@@ -1241,20 +1269,20 @@ c74::max::t_max_err PythonInterpreter::anything(symbol s, const atoms& args, out
     else {
 
         // set symbol as first atom in new atoms array
-        results[0] = s;
+        result[0] = s;
 
         for (int i = 0; i < argc; i++) {
             switch (args[i].a_type) {
             case c74::max::A_FLOAT: {
-                results[i+1] = (double)args[i];
+                result[i+1] = (double)args[i];
                 break;
             }
             case c74::max::A_LONG: {
-                results[i+1] = (long)args[i];
+                result[i+1] = (long)args[i];
                 break;
             }
             case c74::max::A_SYM: {
-                results[i+1] = symbol(args[i]);
+                result[i+1] = symbol(args[i]);
                 break;
             }
             default:
@@ -1268,6 +1296,173 @@ c74::max::t_max_err PythonInterpreter::anything(symbol s, const atoms& args, out
 }
 
 
+c74::max::t_max_err PythonInterpreter::pipe(const atoms& args, outlet<> *output)
+{
+    atoms result;
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    long textsize = 0;
+    char* text = NULL;
+    c74::max::t_max_err err;
+    PyObject* pipe_pre = NULL;
+    PyObject* pipe_fun = NULL;
+    PyObject* pval = NULL;
+    PyObject* pstr = NULL;
+
+    err = c74::max::atom_gettext((long)args.size(), (c74::max::t_atom*)&args[0],
+        &textsize, &text, c74::max::OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    if (err != c74::max::MAX_ERR_NONE || !textsize || !text) {
+        this->log_error((char*)"atom -> text conversion failed");
+        goto error;
+    }
+
+    pipe_pre = PyRun_String(
+        "def __py_maxmsp_pipe(arg):\n"
+        "\targs = arg.split()\n"
+        "\tval = eval(args[0], locals(), globals())\n"
+        "\tfuncs = [eval(f, locals(), globals()) for f in args[1:]]\n"
+        "\tfor f in funcs:\n"
+        "\t\tval = f(val)\n"
+        "\treturn val\n",
+        Py_single_input, this->p_globals, this->p_globals);
+
+    if (pipe_pre == NULL) {
+        this->log_error((char*)"pipe func is NULL");
+        goto error;
+    }
+
+    pstr = PyUnicode_FromString(text);
+    if (pstr == NULL) {
+        this->log_error((char*)"cstr -> pyunicode conversion failed");
+        goto error;
+    }
+
+    c74::max::sysmem_freeptr(text);
+
+    pipe_fun = PyDict_GetItemString(this->p_globals, "__py_maxmsp_pipe");
+    if (pipe_fun == NULL) {
+        this->log_error((char*)"retrieving pipe func from globals failed");
+        goto error;
+    }
+
+    pval = PyObject_CallFunctionObjArgs(pipe_fun, pstr, NULL);
+    if (pval == NULL) {
+        this->log_error((char*)"call python function failed");
+        goto error;
+    }
+
+    if (!PyUnicode_Check(pval)) {
+        this->handle_output(output, pval); // this decrefs pval
+    } else {
+        // special case strings, which will cause crash if handled
+        // out of this methods's scope. (huge PITA to debug!)
+        const char* unicode_result = PyUnicode_AsUTF8(pval);
+        if (unicode_result == NULL) {
+            goto error;
+        }
+        result.push_back(symbol(unicode_result));
+        output->send(result);
+        // outlet_anything(outlet, gensym(unicode_result), 0, (t_atom*)NIL);
+        Py_XDECREF(pval);
+    }
+
+    Py_XDECREF(pipe_pre);
+    Py_XDECREF(pstr);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_NONE;
+
+
+error:
+    this->handle_error((char*)"pipe failed");
+    Py_XDECREF(pipe_pre);
+    Py_XDECREF(pstr);
+    Py_XDECREF(pval);
+    PyGILState_Release(gstate);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+// ---------------------------------------------------------------------------------------
+// datastructure support
+
+
+bool PythonInterpreter::table_exists(const char* table_name)
+{
+    long **storage, size;
+
+    return (c74::max::table_get(symbol(table_name), &storage, &size) == 0);
+}
+
+
+c74::max::t_max_err PythonInterpreter::plist_to_table(const char* table_name, PyObject* plist)
+{
+    long **storage, size, value;
+
+    Py_ssize_t len = 0;
+    PyObject* elem = NULL;
+
+    if (plist == NULL) {
+        goto error;
+    }
+
+    if (!PyList_Check(plist)) {
+        goto error;
+    }
+
+    len = PyList_Size(plist);
+
+    if (c74::max::table_get(symbol(table_name), &storage, &size)) {
+        if (len > size)
+            goto error;
+
+        for(int i = 0; i < len; i++) {
+            elem = PyList_GetItem(plist, i);
+            value = PyLong_AsLong(elem);
+            *((*storage)+i) = value;
+            this->log_debug((char*)"storage[%d] = %d", i, value);
+        }
+    }
+    Py_XDECREF(plist);
+    Py_XDECREF(elem);
+    return c74::max::MAX_ERR_NONE;
+
+error:
+    this->handle_error((char*)"plist to table failed");
+    Py_XDECREF(plist);
+    Py_XDECREF(elem);
+    return c74::max::MAX_ERR_GENERIC;
+}
+
+
+PyObject* PythonInterpreter::table_to_plist(const char* table_name)
+{
+    PyObject* plist = NULL;
+    long **storage, size, value;
+
+    if ((plist = PyList_New(0)) == NULL) {
+        this->log_error((char*)"could not create an empty python list");
+        goto error;
+    }
+
+    if (c74::max::table_get(symbol(table_name), &storage, &size) == 0) {
+        for(int i = 0; i < size; i++) {
+            value = *((*storage)+i);
+            this->log_debug((char*)"storage[%d] = %d", i, value);
+            PyObject* p_long = PyLong_FromLong(value);
+            if (p_long == NULL) {
+                goto error;
+            }
+            PyList_Append(plist, p_long);
+            Py_DECREF(p_long);
+        }
+        return plist;
+    }
+
+error:
+    this->log_error((char*)"table to list conversion failed");
+    Py_RETURN_NONE;
+}
 
 // ----------------------------------------------------------------------------
 // path helpers
@@ -1324,7 +1519,7 @@ finally:
 
 
 
-std::string get_path_to_external(c74::max::t_class* c, char* subpath)
+std::string get_path_to_external(c74::max::t_class* c, const char* subpath)
 {
     char external_path[c74::max::MAX_PATH_CHARS];
     char external_name[c74::max::MAX_PATH_CHARS];
@@ -1350,7 +1545,7 @@ std::string get_path_to_external(c74::max::t_class* c, char* subpath)
 
 
 
-std::string get_path_to_package(c74::max::t_class* c, char* subpath)
+std::string get_path_to_package(c74::max::t_class* c, const char* subpath)
 {
     fs::path external_path = fs::path(get_path_to_external(c, NULL));
     fs::path externals_folder = external_path.parent_path();

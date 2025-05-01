@@ -39,6 +39,58 @@ public:
         }
     };
 
+    message<> import { this, "import", "Import Python module.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            c74::max::t_max_err err = this->py->import(args);
+            if (err != c74::max::MAX_ERR_NONE) {
+                error("import failed");
+            } 
+            return {};
+        }
+    };
+
+    message<> eval { this, "eval", "Evaluate python expression.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            this->py->eval(args, &output);
+            return {};
+        }
+    };
+
+    message<> exec { this, "exec", "Execute python code.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            this->py->exec(args);
+            return {};
+        }
+    };
+
+    message<> execfile { this, "execfile", "Execute python code from file.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            this->py->execfile(args);
+            return {};
+        }
+    };
+
+    message<> call { this, "call", "Call python function with atom arguments.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            this->py->call(args, &output);
+            return {};
+        }
+    };
+
+    message<> assign { this, "assign", "Assign python variable to atom expression.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            this->py->assign(args);
+            return {};
+        }
+    };
+
+    message<> code { this, "code", "Process arbitrary python code.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            this->py->code(args, &output);
+            return {};
+        }
+    };    
+
 
     // respond to the bang message to do something
     message<> bang { this, "bang", "Post the greeting.",

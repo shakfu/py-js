@@ -39,6 +39,41 @@
 			<description>Post the greeting. </description>
 		</method>
 
+		<method name='assign'>
+			<digest>Assign python variable to atom expression</digest>
+			<description>Assign python variable to atom expression. </description>
+		</method>
+
+		<method name='call'>
+			<digest>Call python function with atom arguments</digest>
+			<description>Call python function with atom arguments. </description>
+		</method>
+
+		<method name='code'>
+			<digest>Process arbitrary python code</digest>
+			<description>Process arbitrary python code. </description>
+		</method>
+
+		<method name='exec'>
+			<digest>Execute python code</digest>
+			<description>Execute python code. </description>
+		</method>
+
+		<method name='execfile'>
+			<digest>Execute python code from file</digest>
+			<description>Execute python code from file. </description>
+		</method>
+
+		<method name='eval'>
+			<digest>Evaluate python expression</digest>
+			<description>Evaluate python expression. </description>
+		</method>
+
+		<method name='import'>
+			<digest>Import Python module</digest>
+			<description>Import Python module. </description>
+		</method>
+
 	</methodlist>
 
 
