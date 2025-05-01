@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Added `min-api` and `min-lib` to `source` directory.
+
 - Added `mpyx`, a proof-of-concept single-header c++ python3 library variant of `cobra`, called `mpy_interpreter.h`, for use with [min-api](https://github.com/cycling74/min-api)-based projects which want to use python3.
 
 - Added `pyx`, a proof-of-concept of using `cobra`, the single-header c++ python3 library for Max externals with Graham Wakefield's [maxcpp](https://github.com/grrrwaaa/maxcpp) (C++ templates for Max/MSP objects),
