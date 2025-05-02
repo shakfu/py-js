@@ -6,7 +6,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#include <string>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -40,6 +39,35 @@ enum log_level {
 };
 
 // ---------------------------------------------------------------------------
+// utility functions
+
+/**
+ * @brief      Converts an atom to a c-string.
+ *
+ * @param[in]  arg  The atom to convert.
+ *
+ * @return     The c-string.
+ */
+const char* to_cstr(const atom& arg)
+{
+    assert(arg.a_type == c74::max::A_SYM);
+    return static_cast<const char*>(symbol(arg));
+}
+
+/**
+ * @brief      Converts a symbol to a c-string.
+ *
+ * @param[in]  s  The symbol to convert.
+ *
+ * @return     The c-string.
+ */
+const char* to_cstr(const symbol s)
+{
+    return static_cast<const char*>(s);
+}
+
+
+// ---------------------------------------------------------------------------
 // classes
 
 /**
@@ -57,12 +85,12 @@ enum log_level {
 class PythonInterpreter
 {
     private:
-        symbol p_name;           //!< unique python object name
-        symbol p_pythonpath;     //!< path to python directory
-        symbol p_source_name;    //!< base name of python file to execfile
-        symbol p_source_path;    //!< full path to python file to execfile
-        log_level p_log_level;   //!< object-level log level (error, info, debug)
-        PyObject* p_globals;     //!< per object 'globals' python namespace
+        symbol m_name;           //!< unique python object name
+        symbol m_pythonpath;     //!< path to python directory
+        symbol m_source_name;    //!< base name of python file to execfile
+        symbol m_source_path;    //!< full path to python file to execfile
+        log_level m_log_level;   //!< object-level log level (error, info, debug)
+        PyObject* m_globals;     //!< per object 'globals' python namespace
 
     public:
         PythonInterpreter(c74::max::t_class* c);
@@ -79,8 +107,10 @@ class PythonInterpreter
         void syspath_append(const char* path);
 
         // attribute helpers
+        const char* name();
         void set_name(symbol value);
         symbol get_name();
+        const char* pythonpath();
         void set_pythonpath(symbol value);
         symbol get_pythonpath();
         void set_loglevel(log_level value);
@@ -194,11 +224,11 @@ class PythonInterpreter
  */
 PythonInterpreter::PythonInterpreter(c74::max::t_class* c)
 {
-    this->p_name = c74::max::symbol_unique();
-    this->p_pythonpath = symbol();
-    this->p_source_name = symbol();
-    this->p_source_path = symbol();
-    this->p_log_level = log_level::PY_DEBUG;
+    this->m_name = c74::max::symbol_unique();
+    this->m_pythonpath = symbol();
+    this->m_source_name = symbol();
+    this->m_source_path = symbol();
+    this->m_log_level = log_level::PY_DEBUG;
 
     // python init
     wchar_t* python_home = NULL;
@@ -238,16 +268,17 @@ PythonInterpreter::PythonInterpreter(c74::max::t_class* c)
     PyConfig_Clear(&config);
 #endif
 
-    PyObject* main_mod = PyImport_AddModule((const char*)this->p_name); // borrowed
-    this->p_globals = PyModule_GetDict(main_mod); // borrowed reference
+    const char* main_mod_name = this->name();
+    PyObject* main_mod = PyImport_AddModule(main_mod_name); // borrowed
+    this->m_globals = PyModule_GetDict(main_mod); // borrowed reference
 
     PyObject* py_name = NULL;
     PyObject* builtins = NULL;
 
-    py_name = PyUnicode_FromString((const char*)this->p_name);
+    py_name = PyUnicode_FromString(main_mod_name);
     builtins = PyEval_GetBuiltins();
     PyDict_SetItemString(builtins, "PY_OBJ_NAME", py_name);
-    PyDict_SetItemString(this->p_globals, "__builtins__", builtins);
+    PyDict_SetItemString(this->m_globals, "__builtins__", builtins);
     Py_XDECREF(py_name);
 }
 
@@ -257,7 +288,7 @@ PythonInterpreter::PythonInterpreter(c74::max::t_class* c)
  */
 PythonInterpreter::~PythonInterpreter()
 {
-    Py_XDECREF(this->p_globals);
+    Py_XDECREF(this->m_globals);
     Py_FinalizeEx();
 }
 
@@ -272,7 +303,7 @@ PythonInterpreter::~PythonInterpreter()
  */
 void PythonInterpreter::log_debug(char* fmt, ...)
 {
-    if (this->p_log_level >= log_level::PY_DEBUG) {
+    if (this->m_log_level >= log_level::PY_DEBUG) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -280,7 +311,7 @@ void PythonInterpreter::log_debug(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        c74::max::post("[py debug %s]: %s", (const char*)this->p_name, msg);
+        c74::max::post("[py debug %s]: %s", this->name(), msg);
     }
 }
 
@@ -292,7 +323,7 @@ void PythonInterpreter::log_debug(char* fmt, ...)
  */
 void PythonInterpreter::log_info(char* fmt, ...)
 {
-    if (this->p_log_level >= log_level::PY_INFO) {
+    if (this->m_log_level >= log_level::PY_INFO) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -300,7 +331,7 @@ void PythonInterpreter::log_info(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        c74::max::post("[py info %s]: %s", (const char*)this->p_name, msg);
+        c74::max::post("[py info %s]: %s", this->name(), msg);
     }
 }
 
@@ -312,7 +343,7 @@ void PythonInterpreter::log_info(char* fmt, ...)
  */
 void PythonInterpreter::log_error(char* fmt, ...)
 {
-    if (this->p_log_level >= log_level::PY_ERROR) {
+    if (this->m_log_level >= log_level::PY_ERROR) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -320,7 +351,7 @@ void PythonInterpreter::log_error(char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        c74::max::error("[py error %s]: %s", (const char*)this->p_name, msg);
+        c74::max::error("[py error %s]: %s", this->name(), msg);
     }
 }
 
@@ -354,7 +385,7 @@ void PythonInterpreter::handle_error(char* fmt, ...)
         Py_XDECREF(pvalue_pstr);
         Py_XDECREF(ptraceback);
 
-        c74::max::error((char*)"[py %s] %s: %s", (const char*)this->p_name, msg, pvalue_str);
+        c74::max::error((char*)"[py %s] %s: %s", this->name(), msg, pvalue_str);
     }
 }
 
@@ -369,15 +400,15 @@ void PythonInterpreter::print_atom(const atoms& args)
     for (int i = 0; i < (int)args.size(); ++i) {
         switch (args[i].a_type) {
         case c74::max::A_FLOAT: {
-            this->log_info((char*)"(%d) float: %f", i, (double)args[i]);
+            this->log_info((char*)"(%d) float: %f", i, static_cast<double>(args[i]));
             break;
         }
         case c74::max::A_LONG: {
-            this->log_info((char*)"(%d) long: %d", i, (long)args[i]);
+            this->log_info((char*)"(%d) long: %d", i, static_cast<long>(args[i]));
             break;
         }
         case c74::max::A_SYM: {
-            this->log_info((char*)"(%d) symbol: %s", i, std::string(args[i]).c_str());
+            this->log_info((char*)"(%d) symbol: %s", i, to_cstr(args[i]));
             break;
         }
         default:
@@ -464,31 +495,70 @@ finally:
 // ---------------------------------------------------------------------------
 // attribute helpers
 
+/**
+ * @brief      Gets the name of the PythonInterpreter.
+ *
+ * @return     The name of the PythonInterpreter.
+ */
+const char* PythonInterpreter::name()
+{
+    return static_cast<const char*>(this->m_name);
+}
+
+/**
+ * @brief      Sets the name of the PythonInterpreter.
+ *
+ * @param[in]  value  The value to set the name to.
+ */
 void PythonInterpreter::set_name(symbol value)
 {
-    this->log_debug((char*)"set name: %s", (const char*)value);
-    this->p_name = value;
+    this->log_debug((char*)"set name: %s", static_cast<const char*>(value));
+    this->m_name = value;
 }
 
+/**
+ * @brief      Gets the name of the PythonInterpreter.
+ *
+ * @return     The name of the PythonInterpreter.
+ */
 symbol PythonInterpreter::get_name()
 {
-    return this->p_name;
+    return this->m_name;
 }
 
+/**
+ * @brief      Gets the pythonpath of the PythonInterpreter.
+ *
+ * @return     The pythonpath of the PythonInterpreter.
+ */
+const char* PythonInterpreter::pythonpath()
+{
+    return static_cast<const char*>(this->m_pythonpath);
+}
 
+/**
+ * @brief      Sets the pythonpath of the PythonInterpreter.
+ *
+ * @param[in]  value  The value to set the pythonpath to.
+ */
 void PythonInterpreter::set_pythonpath(symbol value)
 {
-    if (this->p_pythonpath.empty() || this->p_pythonpath != value) {
-        const char* pythonpath = (const char*)value;
+    if (this->m_pythonpath.empty() || this->m_pythonpath != value) {
+        const char* pythonpath = static_cast<const char*>(value);
         this->log_info((char*)"setting pythonpath to %s", pythonpath);
-        this->p_pythonpath = value;
-        this->syspath_append((const char*)pythonpath);
+        this->m_pythonpath = value;
+        this->syspath_append(pythonpath);
     }    
 }
 
+/**
+ * @brief      Gets the pythonpath of the PythonInterpreter.
+ *
+ * @return     The pythonpath of the PythonInterpreter.
+ */
 symbol PythonInterpreter::get_pythonpath()
 {
-    return this->p_pythonpath;
+    return this->m_pythonpath;
 }
 
 
@@ -496,15 +566,15 @@ void PythonInterpreter::set_loglevel(log_level value)
 {
     switch (value) {
     case PY_ERROR:
-        this->p_log_level = PY_ERROR;
+        this->m_log_level = PY_ERROR;
         this->log_debug((char*)"set log_levl: PY_ERROR");
         break;
     case PY_INFO:
-        this->p_log_level = PY_INFO;
+        this->m_log_level = PY_INFO;
         this->log_debug((char*)"set log_levl: PY_INFO");
         break;
     case PY_DEBUG:
-        this->p_log_level = PY_DEBUG;
+        this->m_log_level = PY_DEBUG;
         this->log_debug((char*)"set log_levl: PY_DEBUG");
         break;
     default:
@@ -512,9 +582,14 @@ void PythonInterpreter::set_loglevel(log_level value)
     }
 }
 
+/**
+ * @brief      Gets the loglevel of the PythonInterpreter.
+ *
+ * @return     The loglevel of the PythonInterpreter.
+ */
 log_level PythonInterpreter::get_loglevel()
 {
-    return this->p_log_level;
+    return this->m_log_level;
 }
 
 
@@ -621,7 +696,7 @@ PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args, int s
             break;
         }
         case c74::max::A_SYM: {
-            PyObject* p_str = PyUnicode_FromString(std::string(args[i]).c_str());
+            PyObject* p_str = PyUnicode_FromString(to_cstr(args[i]));
             if (p_str == NULL) {
                 goto error;
             }
@@ -902,14 +977,14 @@ void PythonInterpreter::handle_dict_output(outlet<> *output, PyObject* pdict)
                                "\t\telse:\n"
                                "\t\t\tres.append(v)\n"
                                "\treturn res\n",
-                               Py_single_input, this->p_globals, this->p_globals);
+                               Py_single_input, this->m_globals, this->m_globals);
 
         if (pfun_co == NULL) {
             this->log_error((char*)"out_dict function code object is NULL");
             goto error;
         }
 
-        pfun = PyDict_GetItemString(this->p_globals, "__py_maxmsp_out_dict");
+        pfun = PyDict_GetItemString(this->m_globals, "__py_maxmsp_out_dict");
         if (pfun == NULL) {
             this->log_error((char*)"retrieving out_dict func from globals failed");
             goto error;
@@ -1006,7 +1081,7 @@ void PythonInterpreter::import_module(const char* module)
         goto error;
     }
         
-    PyDict_SetItemString(this->p_globals, module, pmodule);
+    PyDict_SetItemString(this->m_globals, module, pmodule);
     PyGILState_Release(gstate);
     this->log_debug((char*)"imported: %s", module);
     return;
@@ -1030,7 +1105,7 @@ PyObject* PythonInterpreter::eval_pcode(const char* pcode)
     gstate = PyGILState_Ensure();
 
     PyObject* pval = PyRun_String(pcode,
-        Py_eval_input, this->p_globals, this->p_globals);
+        Py_eval_input, this->m_globals, this->m_globals);
 
     if (pval != NULL) {
         PyGILState_Release(gstate);
@@ -1054,7 +1129,7 @@ void PythonInterpreter::exec_pcode(const char* pcode)
     gstate = PyGILState_Ensure();
 
     PyObject* pval = PyRun_String(pcode,
-        Py_single_input, this->p_globals, this->p_globals);
+        Py_single_input, this->m_globals, this->m_globals);
 
     if (pval == NULL) {
         goto error;
@@ -1096,7 +1171,7 @@ void PythonInterpreter::execfile_path(const char* path)
         goto error;
     }
 
-    pval = PyRun_File(fhandle, path, Py_file_input, this->p_globals, this->p_globals);
+    pval = PyRun_File(fhandle, path, Py_file_input, this->m_globals, this->m_globals);
 
     if (pval == NULL) {
         fclose(fhandle);
@@ -1140,7 +1215,7 @@ void PythonInterpreter::import(const atoms& args)
         this->log_error((char*)"no import module provided");
         return;
     }
-    const char* module = (const char*)symbol(args[0]);
+    const char* module = to_cstr(args[0]);
     return this->import_module(module);
 }
 
@@ -1169,7 +1244,7 @@ void PythonInterpreter::eval(const atoms& args, outlet<> *output)
         this->log_error((char*)"no eval args provided");
         return;
     }
-    const char* code = (const char*)symbol(args[0]);
+    const char* code = to_cstr(args[0]);
     this->eval(code, output);
 }
 
@@ -1194,7 +1269,7 @@ void PythonInterpreter::exec(const atoms& args)
         this->log_error((char*)"no exec args provided");
         return;
     }
-    const char* code = (const char*)symbol(args[0]);
+    const char* code = to_cstr(args[0]);
     this->exec_pcode(code);
 }
 
@@ -1208,20 +1283,20 @@ void PythonInterpreter::exec(const atoms& args)
 void PythonInterpreter::execfile(const char* path)
 {
     if (path != NULL) {
-        // set path to this->p_source_path
+        // set path to this->m_source_path
         if (!this->locate_path(path)) {
             this->log_error((char*)"could not locate path from symbol");
             return;
         }
     }
 
-    if (path == NULL || this->p_source_path.empty()) {
+    if (path == NULL || this->m_source_path.empty()) {
         this->log_error((char*)"could not set filepath");
         return;
     }
 
-    // assume this->p_source_path has be been set without errors
-    this->execfile_path((const char*)this->p_source_path);
+    // assume this->m_source_path has be been set without errors
+    this->execfile_path(to_cstr(this->m_source_path));
 }
 
 /**
@@ -1235,7 +1310,7 @@ void PythonInterpreter::execfile(const atoms& args)
         this->log_error((char*)"no execfile path provided");
         return;
     }
-    const char* path = (const char*)symbol(args[0]);
+    const char* path = to_cstr(args[0]);
     this->execfile(path);
 }
 
@@ -1256,7 +1331,7 @@ PyObject* PythonInterpreter::eval_text(char* text)
     int is_eval = 1;
     PyObject* co = NULL;
     PyObject* pval = NULL;
-    const char * name = this->p_name;
+    const char * name = this->m_name;
 
     co = Py_CompileString(text, name, Py_eval_input);
 
@@ -1272,7 +1347,7 @@ PyObject* PythonInterpreter::eval_text(char* text)
     }
     c74::max::sysmem_freeptr(text);
 
-    pval = PyEval_EvalCode(co, this->p_globals, this->p_globals);
+    pval = PyEval_EvalCode(co, this->m_globals, this->m_globals);
     if (pval == NULL) {
         goto error;
     }
@@ -1346,11 +1421,11 @@ void PythonInterpreter::call(const atoms& args, outlet<> *output)
         goto error;
     }
 
-    callable_name = (const char*)symbol(args[0]);
+    callable_name = to_cstr(args[0]);
     this->log_debug((char*)"callable_name: %s", callable_name);
 
-    py_callable = PyRun_String(callable_name, Py_eval_input, this->p_globals,
-                               this->p_globals);
+    py_callable = PyRun_String(callable_name, Py_eval_input, this->m_globals,
+                               this->m_globals);
     if (py_callable == NULL) {
         this->log_error((char*)"could not evaluate %s", callable_name);
         goto error;
@@ -1427,7 +1502,7 @@ void PythonInterpreter::assign(const atoms& args)
         goto error;
     } 
     
-    varname = (const char*)symbol(args[0]);
+    varname = static_cast<const char*>(symbol(args[0]));
     this->log_debug((char*)"varname: %s", varname);
 
     list = this->atoms_to_plist_with_offset(args, 1);
@@ -1446,7 +1521,7 @@ void PythonInterpreter::assign(const atoms& args)
     // finally, assign list to varname in object namespace
     this->log_debug((char*)"setting %s to list in namespace", varname);
     // following does not steal ref to list
-    res = PyDict_SetItemString(this->p_globals, varname, list);
+    res = PyDict_SetItemString(this->m_globals, varname, list);
     if (res != 0) {
         this->log_error((char*)"assign varname to list failed");
         goto error;
@@ -1501,8 +1576,7 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
     // check for properties
     else if (args[0] == symbol("pythonpath")) {
         if (argc == 1) {
-            this->log_info((char*)"property pythonpath: %s", 
-                (const char*)this->p_pythonpath);
+            this->log_info((char*)"property pythonpath: %s", this->pythonpath());
             return;
         }
         
@@ -1519,7 +1593,7 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
     else if (args[0] == symbol("log_level")) {
         if (argc == 1) {
             this->log_info((char*)"property log_level: %d", 
-                            this->p_log_level);
+                            this->m_log_level);
             return;
         }
 
@@ -1527,7 +1601,7 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
             if (args[1].a_type == c74::max::A_LONG) {
                 long level = (long)args[1];
                 this->log_info((char*)"setting log_level to %d", level);
-                this->p_log_level = (log_level)level;
+                this->m_log_level = (log_level)level;
                 return;
             }
         }
@@ -1597,7 +1671,7 @@ void PythonInterpreter::pipe(const atoms& args, outlet<> *output)
         "\tfor f in funcs:\n"
         "\t\tval = f(val)\n"
         "\treturn val\n",
-        Py_single_input, this->p_globals, this->p_globals);
+        Py_single_input, this->m_globals, this->m_globals);
 
     if (pipe_pre == NULL) {
         this->log_error((char*)"pipe func is NULL");
@@ -1612,7 +1686,7 @@ void PythonInterpreter::pipe(const atoms& args, outlet<> *output)
 
     c74::max::sysmem_freeptr(text);
 
-    pipe_fun = PyDict_GetItemString(this->p_globals, "__py_maxmsp_pipe");
+    pipe_fun = PyDict_GetItemString(this->m_globals, "__py_maxmsp_pipe");
     if (pipe_fun == NULL) {
         this->log_error((char*)"retrieving pipe func from globals failed");
         goto error;
@@ -1635,7 +1709,7 @@ void PythonInterpreter::pipe(const atoms& args, outlet<> *output)
         }
         result.push_back(symbol(unicode_result));
         output->send(result);
-        // outlet_anything(outlet, gensym(unicode_result), 0, (t_atom*)NIL);
+
         Py_XDECREF(pval);
     }
 
@@ -1759,7 +1833,7 @@ error:
 
 /**
  * @brief      Locates a path, and if found converts it to absolute path
- *             and sets the the result to the p_source_path attribute.
+ *             and sets the the result to the m_source_path attribute.
  *
  * @param[in]  path  The path
  *
@@ -1773,7 +1847,6 @@ bool PythonInterpreter::locate_path(const char* path)
     char filename[c74::max::MAX_PATH_CHARS];
     char pathname[c74::max::MAX_PATH_CHARS];
     bool ret = false;
-    // c74::max::t_max_err ret = c74::max::MAX_ERR_NONE;
 
     if (path == NULL) { // if no arg supplied to ask for file
         filename[0] = 0;
@@ -1806,8 +1879,8 @@ bool PythonInterpreter::locate_path(const char* path)
         // set attribute from pathname symbol
         this->log_debug((char*)"filename: %s", filename);
         this->log_debug((char*)"pathname: %s", pathname);
-        this->p_source_name = symbol(filename);
-        this->p_source_path = symbol(pathname);
+        this->m_source_name = symbol(filename);
+        this->m_source_path = symbol(pathname);
         assert(ret);
     }
 

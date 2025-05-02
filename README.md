@@ -39,7 +39,6 @@ name       | sdk        | lang   | description
 [pymx]     | min-api    | c++    | concise python3 external, modern, using [pybind11](https://github.com/pybind/pybind11) and [min-api](https://github.com/Cycling74/min-api)
 [xpyc]     | max-sdk    | c      | uses [xpc](https://developer.apple.com/documentation/xpc?language=objc) for inter-process communication with a python service
 
-
 With the exception of `pymx`, which has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-api](https://github.com/Cycling74/min-api) SDK, the experimental subgroup can be built as a whole with the cmake option, `-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON`, or just `make experimentals`.
 
 **Alternative Python Implementation Externals:**
@@ -179,7 +178,7 @@ Now you can build almost all the externals (including `py` and `pyjs`) in one sh
 make projects
 ```
 
-This builds all of the externals *except* for the networking variants, since they have some additional dependencies related to the lightweight networking [zeromq](https://zeromq.org) library. 
+This builds all of the externals *except* for the networking variants, since they have some additional dependencies related to the lightweight networking [zeromq](https://zeromq.org) library.
 
 If you would like to build them first install:
 
@@ -266,4 +265,3 @@ Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing h
 [jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
 [ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/ztp
 [xpyc]: https://github.com/shakfu/py-js/tree/main/source/projects/xpyc
-
