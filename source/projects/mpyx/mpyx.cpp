@@ -8,36 +8,22 @@ using namespace c74::min;
 
 class PythonExternal : public object<PythonExternal> {
 public:
-    MIN_DESCRIPTION {"Post to the Max Console."};
-    MIN_TAGS        {"utilities"};
-    MIN_AUTHOR      {"Cycling '74"};
-    MIN_RELATED     {"print, jit.print, dict.print"};
+    MIN_DESCRIPTION {"Run Python code in Max/MSP."};
+    MIN_TAGS        {"python"};
+    MIN_AUTHOR      {"S. Alireza"};
 
-    inlet<>  input  { this, "(bang) post greeting to the max console" };
-    outlet<> output { this, "(anything) output the message which is posted to the max console" };
+    inlet<>  input  { this, "(anything) receives messages and python code" };
+    outlet<> output { this, "(anything) output results of processing python code" };
 
-    pyjs::PythonInterpreter* py;
-
-    PythonExternal() 
+    PythonExternal(const atoms& args = {})
     {
-        this->py = new pyjs::PythonInterpreter(this_class);
+        this->py = std::make_unique<pyjs::PythonInterpreter>(this_class);
+
+        if (args.size() > 0) {
+            symbol name = args[0];
+            this->py->set_name(name);
+        }
     }
-
-    // define an optional argument for setting the message
-    argument<symbol> greeting_arg { this, "greeting", "Initial value for the greeting attribute.",
-        [this](const atom& arg) {
-            greeting = arg;
-        }
-    };
-
-
-    // the actual attribute for the message
-    attribute<symbol> greeting { this, "greeting", "hello world",
-        description {
-            "Greeting to be posted. "
-            "The greeting will be posted to the Max console when a bang is received."
-        }
-    };
 
     message<> import { this, "import", "Import Python module.",
         [this](const atoms& args, const int inlet) -> atoms {
@@ -95,27 +81,37 @@ public:
         }
     };
 
-    // respond to the bang message to do something
-    message<> bang { this, "bang", "Post the greeting.",
+    message<> bang { this, "bang", "Test things here.",
         [this](const atoms& args, const int inlet) -> atoms {
-            symbol the_greeting = greeting;  // fetch the symbol itself from the attribute named greeting
-            cout << the_greeting << endl;    // post to the max console
-            output.send(the_greeting);       // send out our outlet
+            output.send("bang");
             return {};
         }
     };
 
+    message<> instance_name { this, "name", "Get name of object.",
+        [this](const atoms& args, const int inlet) -> atoms {
+            if (args.size() == 0) {
+                symbol _name = this->py->get_name();
+                output.send(_name);
+            } else {
+                cout << "args.size: " << args.size() << endl;
+                symbol _name = symbol(args[0]);
+                this->py->set_name(_name);
+            }
+            return {};
+        }
+    };
 
     // post to max window == but only when the class is loaded the first time
     message<> maxclass_setup { this, "maxclass_setup",
-        // MIN_FUNCTION {
         [this](const atoms& args, const int inlet) -> atoms {
-            this->py->import("sys");
-            this->py->eval("sys.version", &output);
-            // cout << "hello world" << endl;
+            cout << "python3 external created" << endl;
             return {};
         }
     };
+
+private:
+    std::unique_ptr<pyjs::PythonInterpreter> py;
 
 };
 

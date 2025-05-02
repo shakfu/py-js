@@ -26,7 +26,7 @@ namespace pyjs
 // ---------------------------------------------------------------------------
 // constants
 
-#define PY_MAX_ELEMS 1024
+constexpr int PY_MAX_ELEMS = 1024;
 
 // ---------------------------------------------------------------------------
 // enums
@@ -77,6 +77,14 @@ class PythonInterpreter
         // python helpers
         void handle_error(char* fmt, ...);
         void syspath_append(const char* path);
+
+        // attribute helpers
+        void set_name(symbol value);
+        symbol get_name();
+        void set_pythonpath(symbol value);
+        symbol get_pythonpath();
+        void set_loglevel(log_level value);
+        log_level get_loglevel();
 
         // python <-> atom translation
         PyObject* atoms_to_plist_with_offset(const atoms& args, int start_from);
@@ -187,9 +195,9 @@ class PythonInterpreter
 PythonInterpreter::PythonInterpreter(c74::max::t_class* c)
 {
     this->p_name = c74::max::symbol_unique();
-    this->p_pythonpath = "";
-    this->p_source_name = "";
-    this->p_source_path = "";
+    this->p_pythonpath = symbol();
+    this->p_source_name = symbol();
+    this->p_source_path = symbol();
     this->p_log_level = log_level::PY_DEBUG;
 
     // python init
@@ -450,6 +458,63 @@ finally:
     Py_XDECREF(os_path);
     Py_XDECREF(os);
     PyGILState_Release(gstate);
+}
+
+
+// ---------------------------------------------------------------------------
+// attribute helpers
+
+void PythonInterpreter::set_name(symbol value)
+{
+    this->log_debug((char*)"set name: %s", (const char*)value);
+    this->p_name = value;
+}
+
+symbol PythonInterpreter::get_name()
+{
+    return this->p_name;
+}
+
+
+void PythonInterpreter::set_pythonpath(symbol value)
+{
+    if (this->p_pythonpath.empty() || this->p_pythonpath != value) {
+        const char* pythonpath = (const char*)value;
+        this->log_info((char*)"setting pythonpath to %s", pythonpath);
+        this->p_pythonpath = value;
+        this->syspath_append((const char*)pythonpath);
+    }    
+}
+
+symbol PythonInterpreter::get_pythonpath()
+{
+    return this->p_pythonpath;
+}
+
+
+void PythonInterpreter::set_loglevel(log_level value)
+{
+    switch (value) {
+    case PY_ERROR:
+        this->p_log_level = PY_ERROR;
+        this->log_debug((char*)"set log_levl: PY_ERROR");
+        break;
+    case PY_INFO:
+        this->p_log_level = PY_INFO;
+        this->log_debug((char*)"set log_levl: PY_INFO");
+        break;
+    case PY_DEBUG:
+        this->p_log_level = PY_DEBUG;
+        this->log_debug((char*)"set log_levl: PY_DEBUG");
+        break;
+    default:
+        // do nothing
+    }
+}
+
+log_level PythonInterpreter::get_loglevel()
+{
+    return this->p_log_level;
 }
 
 
@@ -1443,10 +1508,7 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
         
         if (argc == 2) {
             if (args[1].a_type == c74::max::A_SYM) {
-                pythonpath = (const char*)symbol(args[1]);
-                this->log_info((char*)"setting pythonpath to %s", pythonpath);
-                this->p_pythonpath = symbol(pythonpath);
-                this->syspath_append((const char*)pythonpath);
+                this->set_pythonpath(symbol(args[1]));
                 return;
             }
         }
