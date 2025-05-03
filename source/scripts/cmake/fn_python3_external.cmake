@@ -14,6 +14,7 @@ function(python3_external)
     )
     set(multiValueArgs
         PROJECT_SOURCE
+        OTHER_SOURCE
         INCLUDE_DIRS
         LINK_LIBS
         LINK_DIRS
@@ -34,6 +35,7 @@ function(python3_external)
     message(STATUS "BUILD_VARIANT: ${PY3EXT_BUILD_VARIANT}")
     if(DEBUG)
         message(STATUS "PROJECT_SOURCE: ${PY3EXT_PROJECT_SOURCE}")
+        message(STATUS "OTHER_SOURCE: ${PY3EXT_OTHER_SOURCE}")
         message(STATUS "PY3EXT_INCLUDE_DIRS: ${PY3EXT_INCLUDE_DIRS}")
         message(STATUS "PY3EXT_COMPILE_DEFINITIONS: ${PY3EXT_COMPILE_DEFINITIONS}")
         message(STATUS "PY3EXT_COMPILE_OPTIONS: ${PY3EXT_COMPILE_OPTIONS}")
@@ -117,6 +119,7 @@ function(python3_external)
         ${PY3EXT_PROJECT_NAME} 
         MODULE
         ${PROJECT_SRC}
+        ${PY3EXT_OTHER_SOURCE}
         $<$<BOOL:${PY3EXT_INCLUDE_COMMONSYMS}>:${MAX_SDK_INCLUDES}/common/commonsyms.c>
     )
 

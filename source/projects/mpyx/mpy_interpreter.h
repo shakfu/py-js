@@ -8,6 +8,8 @@
 
 #include <filesystem>
 
+// #include <fmt/format.h>
+
 namespace fs = std::filesystem;
 
 using namespace c74::min;
@@ -29,7 +31,6 @@ constexpr int PY_MAX_ELEMS = 1024;
 
 // ---------------------------------------------------------------------------
 // enums
-
 
 /**
  * @brief      specifies three logging levels
@@ -307,8 +308,9 @@ void PythonInterpreter::log_debug(std::string fmt, ...)
         char msg[PY_MAX_ELEMS];
 
         va_list va;
-        va_start(va, fmt.c_str());
-        vsnprintf(msg, PY_MAX_ELEMS, fmt.c_str(), va);
+        const char* _fmt = fmt.c_str();
+        va_start(va, _fmt);
+        vsnprintf(msg, PY_MAX_ELEMS, _fmt, va);
         va_end(va);
 
         c74::max::post("[py debug %s]: %s", this->name(), msg);
@@ -327,8 +329,9 @@ void PythonInterpreter::log_info(std::string fmt, ...)
         char msg[PY_MAX_ELEMS];
 
         va_list va;
-        va_start(va, fmt.c_str());
-        vsnprintf(msg, PY_MAX_ELEMS, fmt.c_str(), va);
+        const char* _fmt = fmt.c_str();
+        va_start(va, _fmt);
+        vsnprintf(msg, PY_MAX_ELEMS, _fmt, va);
         va_end(va);
 
         c74::max::post("[py info %s]: %s", this->name(), msg);
@@ -347,8 +350,9 @@ void PythonInterpreter::log_error(std::string fmt, ...)
         char msg[PY_MAX_ELEMS];
 
         va_list va;
-        va_start(va, fmt.c_str());
-        vsnprintf(msg, PY_MAX_ELEMS, fmt.c_str(), va);
+        const char* _fmt = fmt.c_str();
+        va_start(va, _fmt);
+        vsnprintf(msg, PY_MAX_ELEMS, _fmt, va);
         va_end(va);
 
         c74::max::error("[py error %s]: %s", this->name(), msg);
@@ -369,8 +373,9 @@ void PythonInterpreter::handle_error(std::string fmt, ...)
         char msg[PY_MAX_ELEMS];
 
         va_list va;
-        va_start(va, fmt.c_str());
-        vsnprintf(msg, PY_MAX_ELEMS, fmt.c_str(), va);
+        const char* _fmt = fmt.c_str();
+        va_start(va, _fmt);
+        vsnprintf(msg, PY_MAX_ELEMS, _fmt, va);
         va_end(va);
 
         // get error info
@@ -1560,7 +1565,6 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
 {
     atoms result(PY_MAX_ELEMS);
 
-    const char* pythonpath = NULL;
     int argc = (int)args.size();
 
     if (argc == 0) {

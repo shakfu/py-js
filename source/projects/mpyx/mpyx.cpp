@@ -1,6 +1,6 @@
 #include "c74_min.h"
 
-#define PY_INTERPRETER_IMPLEMENTATION
+#define MPY_INTERPRETER_IMPLEMENTATION
 #include "mpy_interpreter.h"
 
 using namespace c74::min;
