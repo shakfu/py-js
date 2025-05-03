@@ -19,7 +19,7 @@ public:
     {
         this->py = std::make_unique<pyjs::PythonInterpreter>(this_class);
 
-        if (args.size() > 0) {
+        if (!args.empty()) {
             symbol name = args[0];
             this->py->set_name(name);
         }
@@ -90,12 +90,12 @@ public:
 
     message<> instance_name { this, "name", "Get name of object.",
         [this](const atoms& args, const int inlet) -> atoms {
-            if (args.size() == 0) {
+            if (args.empty()) {
                 symbol _name = this->py->get_name();
                 output.send(_name);
             } else {
                 cout << "args.size: " << args.size() << endl;
-                symbol _name = symbol(args[0]);
+                auto _name = symbol(args[0]);
                 this->py->set_name(_name);
             }
             return {};

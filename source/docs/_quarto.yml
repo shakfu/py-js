@@ -44,23 +44,10 @@ book:
         - src/externals/ztp.qmd
         - src/externals/jmx.qmd
 
-    # - part: "Builder"
+    # - part: "Building"
     #   chapters:
-    #     - src/builder/overview.qmd
-    #     - src/builder/building-on-apple-silicon.qmd
-    #     - src/builder/building-pyext-flext.qmd
-    #     - src/builder/cmake.qmd
-    #     - src/builder/codesign-notarize.qmd
-    #     - src/builder/fix_arm64_bug.qmd
-    #     - src/builder/github-actions.qmd
-    #     - src/builder/make-dmg.qmd
-    #     - src/builder/mappings.qmd
-    #     - src/builder/packaging.qmd
-    #     - src/builder/relocatable-python.qmd
-    #     - src/builder/remove-detritus.qmd
-    #     - src/builder/switching-between-modes.qmd
-    #     - src/builder/xcconfig.qmd
-    #     - src/builder/xcode-concepts.qmd
+    #     - src/building/overview.qmd
+    #     - src/building/packaging.qmd
       
     # - part: "Development Guide"
     #   chapters:
@@ -87,6 +74,7 @@ book:
     #     - src/dev/py/type-translation.qmd
     #     - src/dev/py/types.qmd
     #     - src/dev/pyjs/javascript.qmd
+  
   appendices:
     - src/dev/devguide.qmd
 

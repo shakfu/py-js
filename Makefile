@@ -58,8 +58,11 @@ COLOR_RESET = "\033[m"
 HOMEBREW := $(shell brew --prefix)
 CLANG_TIDY := $(HOMEBREW)/opt/llvm/bin/clang-tidy
 PYTHON3_INCLUDES := $(shell python3-config --include)
-MAX_INCLUDES := source/max-sdk-base/c74support/max-includes
-MSP_INCLUDES := source/max-sdk-base/c74support/msp-includes
+C74_INCLUDES := source/max-sdk-base/c74support
+MAX_INCLUDES := $(C74_INCLUDES)/max-includes
+MSP_INCLUDES := $(C74_INCLUDES)/msp-includes
+MIN_API_INCLUDES := source/min-api/include
+MIN_LIB_INCLUDES := source/min-lib/include
 HOMEBREW_INCLUDES := $(HOMEBREW)/include
 HOMEBREW_DEPENDENCIES = "python cmake zmq"
 
@@ -85,6 +88,15 @@ $(call section,"run clang-tidy on $1")
 	-I $(MAX_INCLUDES) -I $(MSP_INCLUDES) \
 	-I $(PYTHON3_INCLUDES) -I $(HOMEBREW_INCLUDES)
 endef
+
+define tidy-min-target
+$(call section,"run clang-tidy on $1")
+@$(CLANG_TIDY) '$1' -- \
+	-I $(MIN_API_INCLUDES) -I $(MIN_LIB_INCLUDES) -I $(C74_INCLUDES) \
+	-I $(MAX_INCLUDES) -I $(MSP_INCLUDES) \
+	-I $(PYTHON3_INCLUDES) -I $(HOMEBREW_INCLUDES)
+endef
+
 
 # $(call xbuild-targets,name)
 define xbuild-targets
@@ -822,6 +834,9 @@ tidy-mamba:
 
 tidy-mxpy:
 	$(call tidy-target,source/projects/mxpy/mxpy.c)
+
+tidy-mpyx:
+	$(call tidy-min-target,source/projects/mpyx/mpyx.cpp)
 
 tidy-ztp:
 	$(call tidy-target,source/projects/ztp/ztp.c)

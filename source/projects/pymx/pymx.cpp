@@ -135,21 +135,27 @@ public:
 	message<> eval {this, "eval", "eval python code.",
 		MIN_FUNCTION {
             if (args[0].a_type == c74::max::A_SYM) {
-				py::object result = py::eval((std::string)args[0], scope);
-                if (py::isinstance<py::int_>(result)) {
-					py_object_to_atom_out<int>(result);
-				} 
-                else if (py::isinstance<py::float_>(result)) {
-					py_object_to_atom_out<float>(result);
-				}
-				else if (py::isinstance<py::str>(result)) {
-					py_object_to_atom_out<string>(result);
-				}
-                // TODO: more type conversion to implement
-                // list, tuple, set, dict, etc..
-				else {
-					cout << "unable to convert py object to atom" << endl;
-				}
+                try {
+                    py::object result = py::eval((std::string)args[0], scope);
+                    if (py::isinstance<py::int_>(result)) {
+                        py_object_to_atom_out<int>(result);
+                    } 
+                    else if (py::isinstance<py::float_>(result)) {
+                        py_object_to_atom_out<float>(result);
+                    }
+                    else if (py::isinstance<py::str>(result)) {
+                        py_object_to_atom_out<string>(result);
+                    }
+                    // TODO: more type conversion to implement
+                    // list, tuple, set, dict, etc..
+                    else {
+                        cout << "unable to convert py object to atom" << endl;
+                    }
+                }
+                catch (std::exception&) {
+                    cerr << "could not eval: " << args[0] << endl;
+                    bang_failure();
+                }
             }
 			return {};
         }
