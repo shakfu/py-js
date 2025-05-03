@@ -1,4 +1,4 @@
-# Building py-js externals on Apple Silicone
+# Building py-js externals on Apple Silicon
 
 
 ## Dev Notes

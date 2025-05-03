@@ -1,5 +1,5 @@
-#ifndef PY_INTERPRETER_H
-#define PY_INTERPRETER_H
+#ifndef MPY_INTERPRETER_H
+#define MPY_INTERPRETER_H
 
 #include "c74_min.h"
 
@@ -171,15 +171,15 @@ class PythonInterpreter
         std::string get_path_to_package(c74::max::t_class* c, const char* subpath);
 };
 
-#endif /* PY_INTERPRETER_H */
+#endif /* MPY_INTERPRETER_H */
 
 // ===========================================================================
 // IMPLEMENTATION
 
-#ifdef PY_INTERPRETER_IMPLEMENTATION
+#ifdef MPY_INTERPRETER_IMPLEMENTATION
 
 /*
-    py_interpreter.h
+    mpy_interpreter.h
     
     single-header library providing minimal python3 services for Max externals.
 
@@ -1945,6 +1945,6 @@ std::string PythonInterpreter::get_path_to_package(c74::max::t_class* c, const c
 
 // ===========================================================================
 
-#endif // PY_INTERPRETER_IMPLEMENTATION
+#endif // MPY_INTERPRETER_IMPLEMENTATION
 
-} // namespace pyjs
+}; // namespace pyjs
