@@ -8,8 +8,6 @@
 
 #include <filesystem>
 
-// #include <fmt/format.h>
-
 namespace fs = std::filesystem;
 
 using namespace c74::min;
