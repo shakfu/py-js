@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Re-Added pybind11/min-api-based `pymx` from its own repo as `min-api` is now supported in `py-js`.
+
 - Added `min-api` and `min-lib` to `source` directory.
 
 - Added `mpyx`, a proof-of-concept single-header c++ python3 library variant of `cobra`, called `mpy_interpreter.h`, for use with [min-api](https://github.com/cycling74/min-api)-based projects which want to use python3.

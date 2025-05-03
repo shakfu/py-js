@@ -14,7 +14,7 @@ pdf documentation - [Python3-Externals-for-Max-MSP.pdf](https://github.com/shakf
 
 This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for Max/MSP. It then evolved into an umbrella project for exploring different ways of using python3 in Max/MSP.
 
-Along the way, a number of externals have been developed for use in a live Max environment (see  below and click on the links to see more detailed documentation):
+Along the way, a number of externals (17 so far) have been developed for use in a live Max environment. In most cases, each external can be built on its own via `make <external-name>` or as part of a related group (see below and click on the links to see more detailed documentation):
 
 **Python3 Core Externals:**
 
@@ -32,14 +32,14 @@ name       | sdk        | lang   | description
 [mamba]    | max-sdk    | c      | single-header c library to nest a python3 interpreter in any external
 [cobra]    | max-sdk    | c++    | single-header c++ library to nest a python3 interpreter in any external
 [pyx]      | maxcpp6    | c++    | uses [cobra] with Graham Wakefield's [maxcpp](https://github.com/grrrwaaa/maxcpp)
-[mpyx]     | min-api    | c++    | single-header c++ library to nest a python3 interpreter in `min-api` externals
+[mpyx]     | min-api    | c++    | single-header c++ library to nest a python3 interpreter in [min-api](https://github.com/Cycling74/min-api) externals
 [krait]    | max-sdk    | c      | python3 external providing deferred and clocked function execution
-[mxpy]     | max-sdk    | c      | a translation of [pdpython](https://github.com/shakfu/pdpython) into Max
-[zedit]    | max-sdk    | c      | a web-based python editor using [codemirror](https://codemirror.net) and the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
+[mxpy]     | max-sdk    | c      | translation of [pdpython](https://github.com/shakfu/pdpython) into Max
+[zedit]    | max-sdk    | c      | web-based python editor using [codemirror](https://codemirror.net) and the [mongoose](https://github.com/cesanta/mongoose) embedded webserver.
 [pymx]     | min-api    | c++    | concise python3 external, modern, using [pybind11](https://github.com/pybind/pybind11) and [min-api](https://github.com/Cycling74/min-api)
 [xpyc]     | max-sdk    | c      | uses [xpc](https://developer.apple.com/documentation/xpc?language=objc) for inter-process communication with a python service
 
-With the exception of `pymx`, which has been moved to its own [github project](https://github.com/shakfu/min.pymx) because it uses the [min-api](https://github.com/Cycling74/min-api) SDK, the experimental subgroup can be built as a whole with the cmake option, `-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON`, or just `make experimentals`.
+The experimental subgroup can be built as a whole with the cmake option, `-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON`, or just `make experimentals`.
 
 **Alternative Python Implementation Externals:**
 
@@ -248,20 +248,20 @@ Thanks to Luigi Castelli for his help with Max/MSP questions, to Stefan Behnel f
 
 Thanks to Greg Neagle for zeroing in on the relocatability problem and sharing his elegant solution for Python frameworks via his [relocatable-python](https://github.com/gregneagle/relocatable-python) project on Github.
 
-[py]: https://github.com/shakfu/py-js/tree/main/source/projects/py
-[pyjs]: https://github.com/shakfu/py-js/tree/main/source/projects/pyjs
-[mxpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mxpy
-[pymx]: https://github.com/shakfu/min.pymx
-[zpy]: https://github.com/shakfu/py-js/tree/main/source/projects/zpy
+[cobra]: https://github.com/shakfu/py-js/tree/main/source/projects/cobra
+[jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
 [krait]: https://github.com/shakfu/py-js/tree/main/source/projects/krait
 [mamba]: https://github.com/shakfu/py-js/tree/main/source/projects/mamba
-[cobra]: https://github.com/shakfu/py-js/tree/main/source/projects/cobra
-[pyx]: https://github.com/shakfu/py-js/tree/main/source/projects/pyx
+[mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
 [mpyx]: https://github.com/shakfu/py-js/tree/main/source/projects/mpyx
+[mxpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mxpy
 [pktpy]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy
 [pktpy2]: https://github.com/shakfu/py-js/tree/main/source/projects/pktpy2
-[zedit]: https://github.com/shakfu/py-js/tree/main/source/projects/zedit
-[mpy]: https://github.com/shakfu/py-js/tree/main/source/projects/mpy
-[jmx]: https://github.com/shakfu/py-js/tree/main/source/projects/jmx
-[ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/ztp
+[py]: https://github.com/shakfu/py-js/tree/main/source/projects/py
+[pyjs]: https://github.com/shakfu/py-js/tree/main/source/projects/pyjs
+[pymx]: https://github.com/shakfu/py-js/tree/main/source/projects/pymx
+[pyx]: https://github.com/shakfu/py-js/tree/main/source/projects/pyx
 [xpyc]: https://github.com/shakfu/py-js/tree/main/source/projects/xpyc
+[zedit]: https://github.com/shakfu/py-js/tree/main/source/projects/zedit
+[zpy]: https://github.com/shakfu/py-js/tree/main/source/projects/zpy
+[ztp]: https://github.com/shakfu/py-js/tree/main/source/projects/ztp

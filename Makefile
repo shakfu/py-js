@@ -426,6 +426,8 @@ mpyx-shared: clean-cmake-cache clean-externals
 mpyx-static: clean-cmake-cache clean-externals
 	$(call xcode-target,mpyx,static-ext)
 
+pymx: clean-cmake-cache clean-externals
+	$(call xcode-target,$@,local)
 
 pktpy: clean-cmake-cache clean-externals
 	$(call xcode-target,$@,local)
