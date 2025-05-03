@@ -12,8 +12,7 @@ namespace fs = std::filesystem;
 
 using namespace c74::min;
 
-namespace pyjs
-{
+namespace pyjs {
 
 // ---------------------------------------------------------------------------
 // macros
@@ -33,9 +32,7 @@ constexpr int PY_MAX_ELEMS = 1024;
 /**
  * @brief      specifies three logging levels
  */
-enum log_level {
-    PY_ERROR, PY_INFO, PY_DEBUG
-};
+enum log_level { PY_ERROR, PY_INFO, PY_DEBUG };
 
 // ---------------------------------------------------------------------------
 // utility functions
@@ -60,20 +57,19 @@ const char* to_cstr(const atom& arg)
  *
  * @return     The c-string.
  */
-const char* to_cstr(const symbol s)
-{
-    return static_cast<const char*>(s);
-}
+const char* to_cstr(const symbol s) { return static_cast<const char*>(s); }
 
 
 // ---------------------------------------------------------------------------
 // classes
 
 /**
- * @brief      A Python interpreter class that provides an interface between Max/MSP and Python.
- * 
- * This class manages Python interpreter state, handles Python code execution, and provides
- * bidirectional translation between Python objects and Max/MSP atoms. It includes methods for:
+ * @brief      A Python interpreter class that provides an interface between
+ * Max/MSP and Python.
+ *
+ * This class manages Python interpreter state, handles Python code execution,
+ * and provides bidirectional translation between Python objects and Max/MSP
+ * atoms. It includes methods for:
  * - Python code execution and evaluation
  * - Module importing
  * - Error handling and logging
@@ -81,93 +77,92 @@ const char* to_cstr(const symbol s)
  * - File and path management
  * - Table operations
  */
-class PythonInterpreter
-{
-    private:
-        symbol m_name;           //!< unique python object name
-        symbol m_pythonpath;     //!< path to python directory
-        symbol m_source_name;    //!< base name of python file to execfile
-        symbol m_source_path;    //!< full path to python file to execfile
-        log_level m_log_level;   //!< object-level log level (error, info, debug)
-        PyObject* m_globals;     //!< per object 'globals' python namespace
+class PythonInterpreter {
+private:
+    symbol m_name;         //!< unique python object name
+    symbol m_pythonpath;   //!< path to python directory
+    symbol m_source_name;  //!< base name of python file to execfile
+    symbol m_source_path;  //!< full path to python file to execfile
+    log_level m_log_level; //!< object-level log level (error, info, debug)
+    PyObject* m_globals;   //!< per object 'globals' python namespace
 
-    public:
-        PythonInterpreter(c74::max::t_class* c);
-        ~PythonInterpreter();
+public:
+    PythonInterpreter(c74::max::t_class* c);
+    ~PythonInterpreter();
 
-        // helpers
-        void log_debug(std::string fmt, ...);
-        void log_info(std::string fmt, ...);
-        void log_error(std::string fmt, ...);
-        void print_atom(const atoms& args);
+    // helpers
+    void log_debug(std::string fmt, ...);
+    void log_info(std::string fmt, ...);
+    void log_error(std::string fmt, ...);
+    void print_atom(const atoms& args);
 
-        // python helpers
-        void handle_error(std::string fmt, ...);
-        void syspath_append(const char* path);
+    // python helpers
+    void handle_error(std::string fmt, ...);
+    void syspath_append(const char* path);
 
-        // attribute helpers
-        const char* name();
-        void set_name(symbol value);
-        symbol get_name();
-        const char* pythonpath();
-        void set_pythonpath(symbol value);
-        symbol get_pythonpath();
-        void set_loglevel(log_level value);
-        log_level get_loglevel();
+    // attribute helpers
+    const char* name();
+    void set_name(symbol value);
+    symbol get_name();
+    const char* pythonpath();
+    void set_pythonpath(symbol value);
+    symbol get_pythonpath();
+    void set_loglevel(log_level value);
+    log_level get_loglevel();
 
-        // python <-> atom translation
-        PyObject* atoms_to_plist_with_offset(const atoms& args, int start_from);
-        PyObject* atoms_to_plist(const atoms& args);
-        atoms plist_to_atoms(PyObject* plist);
-        PyObject* atoms_to_ptuple(const atoms& args);
+    // python <-> atom translation
+    PyObject* atoms_to_plist_with_offset(const atoms& args, int start_from);
+    PyObject* atoms_to_plist(const atoms& args);
+    atoms plist_to_atoms(PyObject* plist);
+    PyObject* atoms_to_ptuple(const atoms& args);
 
-        PyObject* atom_to_pobject(const atom& arg); // used by atoms_to_ptuple
-        atom pobject_to_atom(PyObject* value); // used by plist_to_atoms
+    PyObject* atom_to_pobject(const atom& arg); // used by atoms_to_ptuple
+    atom pobject_to_atom(PyObject* value);      // used by plist_to_atoms
 
-        // python value -> atom -> output
-        void handle_float_output(outlet<> *output, PyObject* pfloat);
-        void handle_long_output(outlet<> *output, PyObject* pval);
-        void handle_string_output(outlet<> *output, PyObject* pstring);
-        void handle_list_output(outlet<> *output, PyObject* pval);
-        void handle_dict_output(outlet<> *output, PyObject* pval);
-        void handle_output(outlet<> *output, PyObject* pval);
+    // python value -> atom -> output
+    void handle_float_output(outlet<>* output, PyObject* pfloat);
+    void handle_long_output(outlet<>* output, PyObject* plong);
+    void handle_string_output(outlet<>* output, PyObject* pstring);
+    void handle_list_output(outlet<>* output, PyObject* plist);
+    void handle_dict_output(outlet<>* output, PyObject* pdict);
+    void handle_output(outlet<>* output, PyObject* pval);
 
-        // core message method helpers
-        void import_module(const char* module);
-        PyObject* eval_pcode(const char* pcode);
-        void exec_pcode(const char* pcode);
-        void execfile_path(const char* path);
+    // core message method helpers
+    void import_module(const char* module);
+    PyObject* eval_pcode(const char* pcode);
+    void exec_pcode(const char* pcode);
+    void execfile_path(const char* path);
 
-        // core message methods
-        void import(const char* module);
-        void import(const atoms& args);
-        void eval(const char* code, outlet<> *output);
-        void eval(const atoms& args, outlet<> *output);
-        void exec(const char* code);
-        void exec(const atoms& args);
-        void execfile(const char* path);
-        void execfile(const atoms& args);
+    // core message methods
+    void import(const char* module);
+    void import(const atoms& args);
+    void eval(const char* code, outlet<>* output);
+    void eval(const atoms& args, outlet<>* output);
+    void exec(const char* code);
+    void exec(const atoms& args);
+    void execfile(const char* path);
+    void execfile(const atoms& args);
 
-        // extra message method helpers
-        PyObject* eval_text(char* text);
-        void eval_text_to_outlet(const atoms& args, int offset, outlet<> *output);
+    // extra message method helpers
+    PyObject* eval_text(char* text);
+    void eval_text_to_outlet(const atoms& args, int offset, outlet<>* output);
 
-        // extra message methods
-        void call(const atoms& args, outlet<> *output);
-        void assign(const atoms& args);
-        void code(const atoms& args, outlet<> *output);
-        void anything(const atoms& args, outlet<> *output);
-        void pipe(const atoms& args, outlet<> *output);
+    // extra message methods
+    void call(const atoms& args, outlet<>* output);
+    void assign(const atoms& args);
+    void code(const atoms& args, outlet<>* output);
+    void anything(const atoms& args, outlet<>* output);
+    void pipe(const atoms& args, outlet<>* output);
 
-        // datastructures
-        bool table_exists(const char* table_name);
-        void plist_to_table(const char* table_name, PyObject* pval);
-        PyObject* table_to_plist(const char* table_name);
+    // datastructures
+    bool table_exists(const char* table_name);
+    void plist_to_table(const char* table_name, PyObject* pval);
+    PyObject* table_to_plist(const char* table_name);
 
-        // path helpers
-        bool locate_path(const char* path);
-        std::string get_path_to_external(c74::max::t_class* c, const char* subpath);
-        std::string get_path_to_package(c74::max::t_class* c, const char* subpath);
+    // path helpers
+    bool locate_path(const char* path);
+    std::string get_path_to_external(c74::max::t_class* c, const char* subpath);
+    std::string get_path_to_package(c74::max::t_class* c, const char* subpath);
 };
 
 #endif /* MPY_INTERPRETER_H */
@@ -179,12 +174,12 @@ class PythonInterpreter
 
 /*
     mpy_interpreter.h
-    
+
     single-header library providing minimal python3 services for Max externals.
 
-    This is a single-header library that provides Python 3 integration for Max/MSP externals.
-    It allows Max objects to:
-    
+    This is a single-header library that provides Python 3 integration for
+   Max/MSP externals. It allows Max objects to:
+
     - Execute Python code directly
     - Import and use Python modules
     - Exchange data between Max and Python
@@ -192,11 +187,11 @@ class PythonInterpreter
     - Manage Python objects and memory
     - Work with tables and lists
     - Handle file paths and resources
-    
-    The library is designed to be included in a single header file and provides a clean
-    C++ interface for Python integration. 
-    It handles Python initialization, GIL management, and proper cleanup of Python objects.
-    
+
+    The library is designed to be included in a single header file and provides
+   a clean C++ interface for Python integration. It handles Python
+   initialization, GIL management, and proper cleanup of Python objects.
+
     Key features:
     - Thread-safe Python execution
     - Automatic memory management
@@ -214,12 +209,12 @@ class PythonInterpreter
  * @brief      Constructs a new PythonInterpreter instance.
  *
  * @param[in]  c  The class
- * 
- * The class parameter is optional and is used to determine the path to PYTHONHOME.
- * If the class parameter is not provided, the python interpreter will be initialized 
- * with the default PYTHONHOME.
- * If the class parameter is provided, the python interpreter will be initialized with
- * either the path to the python interpreter in the package or in the bundle itself.
+ *
+ * The class parameter is optional and is used to determine the path to
+ * PYTHONHOME. If the class parameter is not provided, the python interpreter
+ * will be initialized with the default PYTHONHOME. If the class parameter is
+ * provided, the python interpreter will be initialized with either the path to
+ * the python interpreter in the package or in the bundle itself.
  */
 PythonInterpreter::PythonInterpreter(c74::max::t_class* c)
 {
@@ -235,13 +230,17 @@ PythonInterpreter::PythonInterpreter(c74::max::t_class* c)
     if (c) { // special-case pythonhome config, only makes sense if c not NULL
 
 #if defined(__APPLE__) && defined(BUILD_STATIC)
-    const char* resources_path = this->get_path_to_external(c, "/Contents/Resources").c_str();
-    python_home = Py_DecodeLocale(resources_path, NULL);
+        const char* resources_path = this->get_path_to_external(
+                                             c, "/Contents/Resources")
+                                         .c_str();
+        python_home = Py_DecodeLocale(resources_path, NULL);
 #endif
 
 #if defined(__APPLE__) && defined(BUILD_SHARED_PKG)
-    const char* package_path = this->get_path_to_package(c, "/support/python" PY_VER).c_str();
-    python_home = Py_DecodeLocale(package_path, NULL);
+        const char* package_path = this->get_path_to_package(
+                                           c, "/support/python" PY_VER)
+                                       .c_str();
+        python_home = Py_DecodeLocale(package_path, NULL);
 #endif
 
     } // end special-case python-home config
@@ -448,23 +447,25 @@ void PythonInterpreter::syspath_append(const char* path)
     if (os == NULL) {
         goto error;
     }
-    
+
     os_path = PyObject_GetAttrString(os, "path"); // new ref
     if (os_path == NULL) {
         goto error;
     }
 
-    os_path_expandvars = PyObject_GetAttrString(os_path, "expandvars"); // new ref.
+    os_path_expandvars = PyObject_GetAttrString(os_path,
+                                                "expandvars"); // new ref.
     if (os_path_expandvars == NULL) {
         goto error;
     }
-    
+
     pre_expanded = PyUnicode_FromString(path); // new ref
     if (pre_expanded == NULL) {
         goto error;
     }
 
-    expanded_path = PyObject_CallFunctionObjArgs(os_path_expandvars, pre_expanded, NULL);
+    expanded_path = PyObject_CallFunctionObjArgs(os_path_expandvars,
+                                                 pre_expanded, NULL);
     if (expanded_path == NULL) {
         goto error;
     }
@@ -524,10 +525,7 @@ void PythonInterpreter::set_name(symbol value)
  *
  * @return     The name of the PythonInterpreter.
  */
-symbol PythonInterpreter::get_name()
-{
-    return this->m_name;
-}
+symbol PythonInterpreter::get_name() { return this->m_name; }
 
 /**
  * @brief      Gets the pythonpath of the PythonInterpreter.
@@ -551,7 +549,7 @@ void PythonInterpreter::set_pythonpath(symbol value)
         this->log_info("setting pythonpath to %s", pythonpath);
         this->m_pythonpath = value;
         this->syspath_append(pythonpath);
-    }    
+    }
 }
 
 /**
@@ -559,10 +557,7 @@ void PythonInterpreter::set_pythonpath(symbol value)
  *
  * @return     The pythonpath of the PythonInterpreter.
  */
-symbol PythonInterpreter::get_pythonpath()
-{
-    return this->m_pythonpath;
-}
+symbol PythonInterpreter::get_pythonpath() { return this->m_pythonpath; }
 
 
 void PythonInterpreter::set_loglevel(log_level value)
@@ -590,10 +585,7 @@ void PythonInterpreter::set_loglevel(log_level value)
  *
  * @return     The loglevel of the PythonInterpreter.
  */
-log_level PythonInterpreter::get_loglevel()
-{
-    return this->m_log_level;
-}
+log_level PythonInterpreter::get_loglevel() { return this->m_log_level; }
 
 
 // ---------------------------------------------------------------------------
@@ -629,8 +621,9 @@ PyObject* PythonInterpreter::atom_to_pobject(const atom& arg)
 
     default:
         // FIXME: should be this->log_warning
-        this->log_error("Warning: type %d unsupported for conversion to Python.",
-             arg.a_type);
+        this->log_error(
+            "Warning: type %d unsupported for conversion to Python.",
+            arg.a_type);
         Py_RETURN_NONE;
     }
 }
@@ -662,14 +655,16 @@ atom PythonInterpreter::pobject_to_atom(PyObject* value)
 }
 
 /**
- * @brief      Converts a vector of atoms to a Python list with an optional offset.
+ * @brief      Converts a vector of atoms to a Python list with an optional
+ * offset.
  *
  * @param[in]  args  The vector of atoms
  * @param[in]  start_from  The start index
  *
  * @return     The Python list
  */
-PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args, int start_from = 0)
+PyObject* PythonInterpreter::atoms_to_plist_with_offset(const atoms& args,
+                                                        int start_from = 0)
 {
     PyObject* plist = NULL; // python list
 
@@ -795,7 +790,7 @@ error:
  * @param[in]  output  The output outlet
  * @param[in]  pfloat  The float to handle
  */
-void PythonInterpreter::handle_float_output(outlet<> *output, PyObject* pfloat)
+void PythonInterpreter::handle_float_output(outlet<>* output, PyObject* pfloat)
 {
     if (pfloat == NULL) {
         goto error;
@@ -823,7 +818,7 @@ error:
  * @param[in]  output  The output outlet
  * @param[in]  plong  The long to handle
  */
-void PythonInterpreter::handle_long_output(outlet<> *output, PyObject* plong)
+void PythonInterpreter::handle_long_output(outlet<>* output, PyObject* plong)
 {
     if (plong == NULL) {
         goto error;
@@ -852,7 +847,8 @@ error:
  * @param[in]  output  The output outlet
  * @param[in]  pstring  The string to handle
  */
-void PythonInterpreter::handle_string_output(outlet<> *output, PyObject* pstring)
+void PythonInterpreter::handle_string_output(outlet<>* output,
+                                             PyObject* pstring)
 {
     if (pstring == NULL) {
         goto error;
@@ -881,7 +877,7 @@ error:
  * @param[in]  output  The output outlet
  * @param[in]  plist  The list to handle
  */
-void PythonInterpreter::handle_list_output(outlet<> *output, PyObject* plist)
+void PythonInterpreter::handle_list_output(outlet<>* output, PyObject* plist)
 {
     if (plist == NULL) {
         goto error;
@@ -957,7 +953,7 @@ error:
  * @param[in]  output  The output outlet
  * @param[in]  pdict  The dictionary to handle
  */
-void PythonInterpreter::handle_dict_output(outlet<> *output, PyObject* pdict)
+void PythonInterpreter::handle_dict_output(outlet<>* output, PyObject* pdict)
 {
     PyObject* pfun_co = NULL;
     PyObject* pfun = NULL;
@@ -980,7 +976,8 @@ void PythonInterpreter::handle_dict_output(outlet<> *output, PyObject* pdict)
                                "\t\telse:\n"
                                "\t\t\tres.append(v)\n"
                                "\treturn res\n",
-                               Py_single_input, this->m_globals, this->m_globals);
+                               Py_single_input, this->m_globals,
+                               this->m_globals);
 
         if (pfun_co == NULL) {
             this->log_error("out_dict function code object is NULL");
@@ -1022,7 +1019,7 @@ error:
  * @param[in]  output  The output outlet
  * @param[in]  pval  The value to handle
  */
-void PythonInterpreter::handle_output(outlet<> *output, PyObject* pval)
+void PythonInterpreter::handle_output(outlet<>* output, PyObject* pval)
 {
     if (pval == NULL) {
         this->log_error("cannot handle NULL value");
@@ -1083,7 +1080,7 @@ void PythonInterpreter::import_module(const char* module)
     if (pmodule == NULL) {
         goto error;
     }
-        
+
     PyDict_SetItemString(this->m_globals, module, pmodule);
     PyGILState_Release(gstate);
     this->log_debug("imported: %s", module);
@@ -1107,8 +1104,8 @@ PyObject* PythonInterpreter::eval_pcode(const char* pcode)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    PyObject* pval = PyRun_String(pcode,
-        Py_eval_input, this->m_globals, this->m_globals);
+    PyObject* pval = PyRun_String(pcode, Py_eval_input, this->m_globals,
+                                  this->m_globals);
 
     if (pval != NULL) {
         PyGILState_Release(gstate);
@@ -1131,8 +1128,8 @@ void PythonInterpreter::exec_pcode(const char* pcode)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    PyObject* pval = PyRun_String(pcode,
-        Py_single_input, this->m_globals, this->m_globals);
+    PyObject* pval = PyRun_String(pcode, Py_single_input, this->m_globals,
+                                  this->m_globals);
 
     if (pval == NULL) {
         goto error;
@@ -1174,7 +1171,8 @@ void PythonInterpreter::execfile_path(const char* path)
         goto error;
     }
 
-    pval = PyRun_File(fhandle, path, Py_file_input, this->m_globals, this->m_globals);
+    pval = PyRun_File(fhandle, path, Py_file_input, this->m_globals,
+                      this->m_globals);
 
     if (pval == NULL) {
         fclose(fhandle);
@@ -1214,7 +1212,7 @@ void PythonInterpreter::import(const char* module)
  */
 void PythonInterpreter::import(const atoms& args)
 {
-    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM) {
         this->log_error("no import module provided");
         return;
     }
@@ -1229,7 +1227,7 @@ void PythonInterpreter::import(const atoms& args)
  * @param[in]  code  The Python code
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::eval(const char* code, outlet<> *output)
+void PythonInterpreter::eval(const char* code, outlet<>* output)
 {
     PyObject* pval = this->eval_pcode(code);
     this->handle_output(output, pval);
@@ -1241,9 +1239,9 @@ void PythonInterpreter::eval(const char* code, outlet<> *output)
  * @param[in]  args  The vector of atoms
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::eval(const atoms& args, outlet<> *output)
+void PythonInterpreter::eval(const atoms& args, outlet<>* output)
 {
-    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM) {
         this->log_error("no eval args provided");
         return;
     }
@@ -1268,7 +1266,7 @@ void PythonInterpreter::exec(const char* code)
  */
 void PythonInterpreter::exec(const atoms& args)
 {
-    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM) {
         this->log_error("no exec args provided");
         return;
     }
@@ -1278,7 +1276,7 @@ void PythonInterpreter::exec(const atoms& args)
 
 /**
  * @brief      Executes Python code from a file.
- * 
+ *
  * The file can either be an absolute path or somewhere in the Max search path.
  *
  * @param[in]  path  The path to the file
@@ -1309,7 +1307,7 @@ void PythonInterpreter::execfile(const char* path)
  */
 void PythonInterpreter::execfile(const atoms& args)
 {
-    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM ) {
+    if (args.size() == 0 || args[0].a_type != c74::max::A_SYM) {
         this->log_error("no execfile path provided");
         return;
     }
@@ -1334,7 +1332,7 @@ PyObject* PythonInterpreter::eval_text(char* text)
     int is_eval = 1;
     PyObject* co = NULL;
     PyObject* pval = NULL;
-    const char * name = this->m_name;
+    const char* name = this->m_name;
 
     co = Py_CompileString(text, name, Py_eval_input);
 
@@ -1370,20 +1368,22 @@ error:
 
 
 /**
- * @brief      Evaluates Python code from a string and outputs the result to a Max outlet.
+ * @brief      Evaluates Python code from a string and outputs the result to a
+ * Max outlet.
  *
  * @param[in]  args  The vector of atoms
  * @param[in]  offset  The offset
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::eval_text_to_outlet(const atoms& args, int offset, outlet<> *output)
+void PythonInterpreter::eval_text_to_outlet(const atoms& args, int offset,
+                                            outlet<>* output)
 {
     long textsize = 0;
     char* text = NULL;
 
-    c74::max::t_max_err err = c74::max::atom_gettext((long)args.size() + (long)offset,
-        (c74::max::t_atom*)&args[0], &textsize, &text,
-        c74::max::OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    c74::max::t_max_err err = c74::max::atom_gettext(
+        (long)args.size() + (long)offset, (c74::max::t_atom*)&args[0],
+        &textsize, &text, c74::max::OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
 
     if (err == c74::max::MAX_ERR_NONE && textsize && text) {
         this->log_debug(">>> %s", text);
@@ -1406,7 +1406,7 @@ void PythonInterpreter::eval_text_to_outlet(const atoms& args, int offset, outle
  * @param[in]  args  The vector of atoms
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::call(const atoms& args, outlet<> *output)
+void PythonInterpreter::call(const atoms& args, outlet<>* output)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1441,7 +1441,7 @@ void PythonInterpreter::call(const atoms& args, outlet<> *output)
     }
 
     this->log_debug("length of argc:%ld list: %d", args.size(),
-           PyList_Size(py_argslist));
+                    PyList_Size(py_argslist));
 
     // convert py_args to tuple
     py_args = PyList_AsTuple(py_argslist);
@@ -1503,8 +1503,8 @@ void PythonInterpreter::assign(const atoms& args)
     if (args[0].a_type != c74::max::A_SYM) {
         this->log_error("first atom must be a symbol!");
         goto error;
-    } 
-    
+    }
+
     varname = to_cstr(args[0]);
     this->log_debug("varname: %s", varname);
 
@@ -1519,7 +1519,7 @@ void PythonInterpreter::assign(const atoms& args)
         goto error;
     }
     this->log_debug("length of list: %d", PyList_Size(list));
-    
+
 
     // finally, assign list to varname in object namespace
     this->log_debug("setting %s to list in namespace", varname);
@@ -1545,21 +1545,21 @@ error:
  * @param[in]  args  The vector of atoms
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::code(const atoms& args, outlet<> *output)
+void PythonInterpreter::code(const atoms& args, outlet<>* output)
 {
     this->eval_text_to_outlet(args, 0, output);
 }
 
 
 /**
- * @brief      Evaluates or Executes arbitrary Python code and possibly 
+ * @brief      Evaluates or Executes arbitrary Python code and possibly
  *             outputs the result to a Max outlet.
  *
  * @param[in]  s  The symbol
  * @param[in]  args  The vector of atoms
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::anything(const atoms& args, outlet<> *output)
+void PythonInterpreter::anything(const atoms& args, outlet<>* output)
 {
     atoms result(PY_MAX_ELEMS);
 
@@ -1581,7 +1581,7 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
             this->log_info("property pythonpath: %s", this->pythonpath());
             return;
         }
-        
+
         if (argc == 2) {
             if (args[1].a_type == c74::max::A_SYM) {
                 this->set_pythonpath(symbol(args[1]));
@@ -1594,8 +1594,7 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
 
     else if (args[0] == symbol("log_level")) {
         if (argc == 1) {
-            this->log_info("property log_level: %d", 
-                            this->m_log_level);
+            this->log_info("property log_level: %d", this->m_log_level);
             return;
         }
 
@@ -1610,7 +1609,7 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
         this->log_error("could not get/set log_level");
         return;
     }
-    
+
     else {
 
         for (int i = 0; i < argc; i++) {
@@ -1639,12 +1638,13 @@ void PythonInterpreter::anything(const atoms& args, outlet<> *output)
 
 
 /**
- * @brief      Pipes atoms to a Python function and outputs the result to a Max outlet.
+ * @brief      Pipes atoms to a Python function and outputs the result to a Max
+ * outlet.
  *
  * @param[in]  args  The vector of atoms
  * @param[in]  output  The output outlet
  */
-void PythonInterpreter::pipe(const atoms& args, outlet<> *output)
+void PythonInterpreter::pipe(const atoms& args, outlet<>* output)
 {
     atoms result;
     PyGILState_STATE gstate;
@@ -1658,8 +1658,9 @@ void PythonInterpreter::pipe(const atoms& args, outlet<> *output)
     PyObject* pval = NULL;
     PyObject* pstr = NULL;
 
-    err = c74::max::atom_gettext((long)args.size(), (c74::max::t_atom*)&args[0],
-        &textsize, &text, c74::max::OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
+    err = c74::max::atom_gettext((long)args.size(),
+                                 (c74::max::t_atom*)&args[0], &textsize, &text,
+                                 c74::max::OBEX_UTIL_ATOM_GETTEXT_DEFAULT);
     if (err != c74::max::MAX_ERR_NONE || !textsize || !text) {
         this->log_error("atom -> text conversion failed");
         goto error;
@@ -1775,10 +1776,10 @@ void PythonInterpreter::plist_to_table(const char* table_name, PyObject* plist)
         if (len > size)
             goto error;
 
-        for(int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             elem = PyList_GetItem(plist, i);
             value = PyLong_AsLong(elem);
-            *((*storage)+i) = value;
+            *((*storage) + i) = value;
             this->log_debug("storage[%d] = %d", i, value);
         }
     }
@@ -1811,8 +1812,8 @@ PyObject* PythonInterpreter::table_to_plist(const char* table_name)
     }
 
     if (c74::max::table_get(symbol(table_name), &storage, &size) == 0) {
-        for(int i = 0; i < size; i++) {
-            value = *((*storage)+i);
+        for (int i = 0; i < size; i++) {
+            value = *((*storage) + i);
             this->log_debug("storage[%d] = %d", i, value);
             PyObject* p_long = PyLong_FromLong(value);
             if (p_long == NULL) {
@@ -1853,23 +1854,24 @@ bool PythonInterpreter::locate_path(const char* path)
     if (path == NULL) { // if no arg supplied to ask for file
         filename[0] = 0;
 
-        if (c74::max::open_dialog(filename, &path_code,
-                        &outtype, &filetype, 1))
+        if (c74::max::open_dialog(filename, &path_code, &outtype, &filetype, 1)) {
             // non-zero: cancelled
-        goto finally;
+            goto finally;            
+        }
 
     } else {
         // must copy symbol before calling locatefile_extended
         c74::max::strncpy_zero(filename, path, c74::max::MAX_PATH_CHARS);
-        if (c74::max::locatefile_extended(filename, &path_code,
-                                &outtype, &filetype, 1)) {
+        if (c74::max::locatefile_extended(filename, &path_code, &outtype,
+                                          &filetype, 1)) {
             // nozero: not found
             this->log_error("can't find file %s", path);
             goto finally;
         } else {
             ret = true;
             pathname[0] = 0;
-            ret = c74::max::path_toabsolutesystempath(path_code, filename, pathname);
+            ret = c74::max::path_toabsolutesystempath(path_code, filename,
+                                                      pathname);
             if (ret != c74::max::MAX_ERR_NONE) {
                 this->log_error("can't convert %s to absolutepath", path);
                 ret = false;
@@ -1899,7 +1901,8 @@ finally:
  *
  * @return     The path to the external
  */
-std::string PythonInterpreter::get_path_to_external(c74::max::t_class* c, const char* subpath)
+std::string PythonInterpreter::get_path_to_external(c74::max::t_class* c,
+                                                    const char* subpath)
 {
     char external_path[c74::max::MAX_PATH_CHARS];
     char external_name[c74::max::MAX_PATH_CHARS];
@@ -1912,10 +1915,12 @@ std::string PythonInterpreter::get_path_to_external(c74::max::t_class* c, const 
 #else
     const char* ext_filename = "%s.mxe64";
 #endif
-    c74::max::snprintf_zero(external_name, c74::max::MAX_FILENAME_CHARS, ext_filename, c->c_sym->s_name);
+    c74::max::snprintf_zero(external_name, c74::max::MAX_FILENAME_CHARS,
+                            ext_filename, c->c_sym->s_name);
     c74::max::path_toabsolutesystempath(path_id, external_name, external_path);
-    c74::max::path_nameconform(external_path, conform_path, c74::max::PATH_STYLE_NATIVE,
-                     c74::max::PATH_TYPE_TILDE);
+    c74::max::path_nameconform(external_path, conform_path,
+                               c74::max::PATH_STYLE_NATIVE,
+                               c74::max::PATH_TYPE_TILDE);
     result = fs::path(external_path);
     if (subpath != NULL) {
         result /= subpath;
@@ -1932,7 +1937,8 @@ std::string PythonInterpreter::get_path_to_external(c74::max::t_class* c, const 
  *
  * @return     The path to the package
  */
-std::string PythonInterpreter::get_path_to_package(c74::max::t_class* c, const char* subpath)
+std::string PythonInterpreter::get_path_to_package(c74::max::t_class* c,
+                                                   const char* subpath)
 {
     fs::path external_path = fs::path(get_path_to_external(c, NULL));
     fs::path externals_folder = external_path.parent_path();
