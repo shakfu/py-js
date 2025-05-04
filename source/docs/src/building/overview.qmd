@@ -1,4 +1,106 @@
-# builder: pyjs python external builder
+# Building Python3 Externals
+
+## Overview
+
+The recommended way of building Max/MSP externals is to use `cmake` and the let `cmake` generate the platform-specific build artifacts. This is the approach used in the `max-sdk` project.
+
+At the beginning of this project, there was a desire to use the same `cmake` build system as the `max-sdk` project. This approach was used succesfully to build the `py` and `pyjs` externals against the local system python distribution.
+
+For relocatable builds, `cmake` proved to be unweildy for the need to build custom python distributions and then link them to externals and embed the python libraries into such externals. This is the origin of the python `builder` project, which was written specifically for this project.
+
+The `builder` project first builds a fit-for-purpose python distribution and then builds the `py` and `pyjs` externals against it. It also includes a packaging system for codesigning and notarizing the built products and installers. A view into its many options can be obtained by typing the following:
+
+```sh
+cd py-js/source/py
+python3 -m builder --help
+```
+
+Instead of calling the python `builder` package directly, a `Makefile` was added to the project root to provide a frontend to the python `builder` package. This allows for a number of different build options to be easily called and sequenced.
+
+With the flexibility afforded by the python `builder` package, and the `Makefile` frontend the simplify its use, it was now possible to build relocatable python distributions which were built statically, dynamically, or as frameworks which was especially important for macOS builds scenarios. In addition, package-oriented build variants were conceived which provided for building the relocatable python distribution in the `support` directory and then linking external binaries against it.
+
+A naming convention was adopted to make it easier to differentiate between the different build variants. Relocatable python distributions are named `python-<build-varaint>`. These were converted to `Makefile` targets for ease of use as follows:
+
+```sh
+make python-shared        # minimal shared python build
+make python-shared-ext    # minimal shared python build for externals
+make python-shared-tiny   # tiny shared python build
+make python-shared-pkg    # minimal shared python build for packages
+make python-static        # minimal statically-linked python build
+make python-static-tiny   # tiny statically-linked python build
+make python-framework     # minimal framework python build
+make python-framework-ext # minimal framework python build for externals
+make python-framework-pkg # minimal framework python build for packages
+make python-relocatable   # custom relocatable python framework build
+```
+
+The corresponding build variants for the `py` and `pyjs` externals are as follows:
+
+```sh
+make default              # non-portable pyjs externals linked to your system
+make homebrew-pkg         # portable package w/ pyjs (requires homebrew python)
+make homebrew-ext         # portable pyjs externals (requires homebrew python)
+make shared-pkg           # portable package with pyjs externals (shared)
+make shared-ext           # portable pyjs externals (shared)
+make shared-tiny-ext      # tiny portable pyjs externals (shared)
+make static-ext           # portable pyjs externals (static)
+make static-tiny-ext      # tiny portable pyjs externals (static)
+make framework-pkg        # portable package with pyjs externals (framework)
+make framework-ext        # portable pyjs externals (framework)
+make relocatable-pkg      # portable package w/ more custom options (framework)
+```
+
+So for example, a `python-shared-ext` build is first built by downloading the source from [python.org](http://python.org) and then the `shared-ext` external is build against it. 
+
+While the combination of `builder` and `Makefile` turned out to be comprehensive solution to building variants of the `py` and `pyjs` externals, it was not without its issues. Firstly, it was difficult to get the `builder` package to work with another externals in the `py-js` project. Secondly, it was difficult to get the `builder` package to work with the `cmake` build system. It was also a first effort and had accumulated a number of features over time which made it less than clear how to use it.
+
+It was decided to write a new lightweight general python build system which work in conjunction with the `cmake` build system, and only focus on building relocatable python distribution for more recent version of python. It would incorporate all of the lesson acquired while developing the `builder` package and would be much simpler to use. This new system was initially developed as the [buildpy project](https://github.com/shakfu/buildpy) and then it was brought into the `py-js` project as a single python script called `buildpy.py` which resides in the `py-js/source/scripts` folder. To get a view into the many options available, type the following:
+
+```sh
+python3 ./source/scripts/buildpy.py --help
+```
+
+By using the `buildpy.py` script, it is now possible to use `cmake` to build all python3 externals against a relocatable python distribution and used which is embedded in the package. This is the 'modern' approach to building `py-js` externals.
+
+## Approaches to Building Python3 Externals
+
+1. The `builder` package
+
+The `builder` application is a Python package that can be run on any system with Python 3 installed. It provides a command-line interface for building python3 externals with various options.
+
+Features:
+
+- Organizes compilation and packaging of externals built against custom python builds
+- Provides a modular architecture with specialized builders for different components
+- Supports building various dependencies including OpenSSL, Bzip2, and XZ
+- Offers both relocatable and source-based Python builds
+- Includes dependency management and package management capabilities
+- Features a command-line interface with meta and standard command handling
+- Provides configuration management for Python and project settings
+- Supports patching and setup management for Python builds
+- Includes shell command execution utilities
+- Enables packaging, signing, and notarization of built products
+
+ 2. The `buildpy` application
+
+The `buildpy` application is a Python application that can be run on any system with Python 3 installed. It provides a command-line interface for building python3 externals with various options.
+
+Features:
+
+- Single script which downloads, builds python from source
+- Different build configurations (static, dynamic, framework) possible
+- Trims python builds and zips site-packages by default.
+
+3. Using the `Makefile` in the project root
+
+4. Using the `cmake` build system
+
+
+The `builder` application is a more user-friendly way to build python3 externals. It is a Python application that can be run on any system with Python 3 installed. It provides a command-line interface for building python3 externals with various options.
+
+The `Makefile` in the project root is a more programmatic way to build python3 externals. It is a Makefile that can be used to build python3 externals with various options.
+
+
 
 
 ## Current Status of Builders

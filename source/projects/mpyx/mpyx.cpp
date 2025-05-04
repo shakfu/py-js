@@ -112,7 +112,6 @@ public:
 
 private:
     std::unique_ptr<pyjs::PythonInterpreter> py;
-
 };
 
 
