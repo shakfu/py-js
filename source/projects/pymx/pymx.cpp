@@ -1,9 +1,3 @@
-/*
-TODO:
-    - eval needs try catch
-
-*/
-
 #include "c74_min.h"
 #include <pybind11/embed.h> // everything needed for embedding
 

@@ -180,7 +180,7 @@ all: default
 # High-Level
 # -----------------------------------------------------------------------
 .PHONY: default local-sys core projects \
-		experimentals demos net thirdparty \
+		experimentals demos net \
 		pocketpy mpy \
 		dev ninja \
 		homebrew-pkg homebrew-ext \
@@ -242,15 +242,6 @@ demos: clean-build-dir clean-externals
 		cd build && \
 		cmake -GXcode .. \
 			-DBUILD_DEMO_EXTERNALS=ON \
-			&& \
-		cmake --build . --config Release
-
-thirdparty: clean-build-dir clean-externals
-	$(call section,"building thirdparty externals using cmake with xcode")
-	@mkdir -p build && \
-		cd build && \
-		cmake -GXcode .. \
-			-DBUILD_THIRDPARTY_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 

@@ -10,7 +10,6 @@ option(ENABLE_LTO "enable link-time / interprocedural optimization" OFF)
 option(BUILD_PYTHON3_CORE_EXTERNALS "Enable building python3 core externals" OFF)
 option(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS "Enable building python3 experimental externals" OFF)
 option(BUILD_POCKETPY_EXTERNALS "Enable building pocketpy-based externals" OFF)
-option(BUILD_THIRDPARTY_EXTERNALS "Enable building third-party externals" OFF)
 option(BUILD_NET_EXTERNALS "Enable building networking externals" OFF)
 option(BUILD_DEMO_EXTERNALS "Enable demo (scratch) externals" OFF)
 
@@ -20,6 +19,9 @@ option(BUILD_MICROPYTHON_EXTERNAL "Build the micropython external" OFF)
 
 # campatible with 3.5
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
+# common string variables
+set(THIRDPARTY_DEPS ${CMAKE_SOURCE_DIR}/source/thirdparty)
 
 # string options
 set(BUILD_VARIANT "" CACHE STRING "specify build variant")
@@ -90,16 +92,11 @@ list(APPEND BUILD_TARGETS krait cobra mamba mxpy pyx mpyx pymx)
 endif()
 
 if(BUILD_POCKETPY_EXTERNALS)
-list(APPEND BUILD_TARGETS pktpy pktpy2)
+list(APPEND BUILD_TARGETS pktpy pktpy2 pktpy11)
 endif()
 
 if(BUILD_NETWORKING_EXTERNALS)
 list(APPEND BUILD_TARGETS zedit zpy ztp jmx)
-endif()
-
-set(THIRDPARTY_EXTERNALS shell jit.fill2 jit.foo)
-if(BUILD_THIRDPARTY_EXTERNALS)
-list(APPEND BUILD_TARGETS ${THIRDPARTY_EXTERNALS})
 endif()
 
 set(DEMO_EXTERNALS cmx demo mx)
@@ -111,11 +108,14 @@ if(BUILD_MICROPYTHON_EXTERNAL)
 list(APPEND BUILD_TARGETS mpy)
 endif()
 
+
+# build shared thirdparty dependencies
+add_subdirectory(${THIRDPARTY_DEPS})
+
+
 foreach(proj ${BUILD_TARGETS})
     message(STATUS "to build: ${proj}")
-    if(proj IN_LIST THIRDPARTY_EXTERNALS)
-        add_subdirectory(${CMAKE_SOURCE_DIR}/source/thirdparty/${proj})
-    elseif(proj IN_LIST DEMO_EXTERNALS)
+    if(proj IN_LIST DEMO_EXTERNALS)
         add_subdirectory(${CMAKE_SOURCE_DIR}/source/demos/${proj})
     else()
         add_subdirectory(${CMAKE_SOURCE_DIR}/source/projects/${proj})
@@ -130,7 +130,6 @@ unset(BUILD_VARIANT CACHE)
 unset(BUILD_PYTHON3_CORE_EXTERNALS CACHE)
 unset(BUILD_PYTHON3_EXPERIMENTAL_EXTERNALS CACHE)
 unset(BUILD_POCKETPY_EXTERNALS CACHE)
-unset(BUILD_THIRDPARTY_EXTERNALS CACHE)
 unset(BUILD_NET_EXTERNALS CACHE)
 unset(BUILD_DEMO_EXTERNALS CACHE)
 unset(FETCH_MICROPYTHON CACHE)
