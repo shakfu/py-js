@@ -2,11 +2,11 @@
 
 ## Overview
 
-The recommended way of building Max/MSP externals is to use `cmake` and the let `cmake` generate the platform-specific build artifacts. This is the approach used in the `max-sdk` project.
+The 'modern' way of building Max/MSP externals is to use [cmake](https://cmake.org) to specify the build configuration, and then to generate the platform-specific build solution, and then run it. This is the approach used in the [max-sdk](https://github.com/Cycling74/max-sdk).
 
-At the beginning of this project, there was a desire to use the same `cmake` build system as the `max-sdk` project. This approach was used succesfully to build the `py` and `pyjs` externals against the local system python distribution.
+At the beginning of the `py-js` project, this `cmake`-oriented approach was used to build the `py` and `pyjs` externals against the local system python distribution.
 
-For relocatable builds, `cmake` proved to be unweildy for the need to build custom python distributions and then link them to externals and embed the python libraries into such externals. This is the origin of the python `builder` project, which was written specifically for this project.
+For relocatable builds, which entailed moving the externals to a different system, `cmake` alone proved to be unweildy for the task of building custom python distributions and then linking them to externals and embedding processed python libraries into such externals. For this, more complex build process, a custom python `builder` package as developed.
 
 The `builder` project first builds a fit-for-purpose python distribution and then builds the `py` and `pyjs` externals against it. It also includes a packaging system for codesigning and notarizing the built products and installers. A view into its many options can be obtained by typing the following:
 

@@ -9,8 +9,6 @@ In attributes is specified as follows, there are a few thing to note:
 
 - setting a member in the member `py` instance causes a crash
 
-
-
 ```c++
 
 attribute<symbol> instance_name { this, "name", "myname",
@@ -45,4 +43,50 @@ attribute<symbol> pythonpath { this, "pythonpath", "",
         return result;
     }}
 };
+```
+
+
+## Using fmt::format for logging
+
+
+
+```c++
+    template<typename... Args>
+    void log_info(std::string fmt_str, Args... args) {
+        if (this->m_log_level >= log_level::PY_INFO) {
+            std::string msg = fmt::format(fmt_str, args...);
+            c74::max::post("[py print %s]: %s", this->name(), msg.c_str());
+        }
+    }
+
+    template<typename... Args>
+    void log_debug(std::string fmt_str, Args... args) {
+        if (this->m_log_level >= log_level::PY_DEBUG) {
+            std::string msg = fmt::format(fmt_str, args...);
+            c74::max::post("[py print %s]: %s", this->name(), msg.c_str());
+        }
+    }
+
+    template<typename... Args>
+    void log_error(std::string fmt_str, Args... args) {
+        if (this->m_log_level >= log_level::PY_ERROR) {
+            std::string msg = fmt::format(fmt_str, args...);
+            c74::max::error("[py print %s]: %s", this->name(), msg.c_str());
+        }
+    }
+```
+
+
+Adjust `CMakeLists.txt` to
+
+```cmake
+python3_external(
+    MIN_API
+    PROJECT_NAME ${PROJECT_NAME}
+    OTHER_SOURCE
+        ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt/src/format.cc
+    INCLUDE_DIRS
+        ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt/include
+    BUILD_VARIANT ${BUILD_VARIANT}
+)
 ```
