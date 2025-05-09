@@ -60,6 +60,13 @@
 #define PY_CHECK_REFS 0
 
 /*--------------------------------------------------------------------------*/
+/* Enums */
+
+enum ARGUMENTS { A_NAME, NUM_ARGUMENTS };
+enum INLETS { I_INPUT, NUM_INLETS };
+enum OUTLETS { O_OUTPUT, O_FAILURE, O_SUCCESS, NUM_OUTLETS };
+
+/*--------------------------------------------------------------------------*/
 /* Globals */
 
 t_class* py_class;                    // global pointer to object class

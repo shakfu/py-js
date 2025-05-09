@@ -1,7 +1,5 @@
 # hello.py
-"""This is a demo of a python script in the `py` package."""
-
-# import api # cythonized max c api
+"""This is a scratch pad of a python script in the `py` package."""
 
 # basic examples
 a = 10

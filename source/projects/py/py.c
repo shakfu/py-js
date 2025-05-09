@@ -294,10 +294,10 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         t_dictionary* dict = (t_dictionary*)gensym("#D")->s_thing;
         if (dict) {
+            // dictionary_getsym(dict, gensym("name"), &x->p_name);
             dictionary_getsym(dict, gensym("file"), &x->p_code_filepath);
-            dictionary_getlong(dict, gensym("autoload"),
-                               (t_atom_long*)&x->p_autoload);
             dictionary_getsym(dict, gensym("pythonpath"), &x->p_pythonpath);
+            dictionary_getlong(dict, gensym("autoload"), (t_atom_long*)&x->p_autoload);
         }
 
         // process autoload
@@ -477,7 +477,7 @@ t_max_err py_pythonpath_attr_get(t_py* x, t_object* attr, long* argc,t_atom** ar
  *
  * @return     t_max_err value
  */
-t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc,t_atom* argv)
+t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc, t_atom* argv)
 {
     char conform_path[MAX_PATH_CHARS];
 
@@ -914,31 +914,36 @@ char* str_replace(const char* s, const char* old, const char* new)
  * @brief Sets tool tips for external object inlets.
  *
  * @param x object instance
- * @param b notused (historical)
- * @param m type
- * @param a position
- * @param s name
+ * @param b not used (historical)
+ * @param io can be 0 (ASSIST_INLET) or 1 (ASSIST_OUTLET) 
+ *           of type t_assist_function enum
+ * @param idx index of inlet or outlet
+ * @param s destination string buffer of max length ASSIST_MAX_STRING_LEN
  */
-void py_assist(t_py* x, void* b, long m, long a, char* s)
+void py_assist(t_py* x, void* b, long io, long idx, char* s)
 {
-    if (m == ASSIST_INLET) { // inlet
-        snprintf_zero(s, PY_MAX_ELEMS, "%ld: input", a);
-        // snprintf_zero(s, PY_MAX_ELEMS, "I am inlet %ld", a);
-    } else { // outlet
-        switch (a) {
-          case 0:
-            snprintf_zero(s, PY_MAX_ELEMS, "%ld: output", a);
+    /* Document inlet functions */
+    if (io == ASSIST_INLET) {
+        switch (idx) {
+        case I_INPUT:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: input", idx);
             break;
-          case 1:
-            snprintf_zero(s, PY_MAX_ELEMS, "%ld: (bang) failure", a);
-            break;
-          case 2:
-            snprintf_zero(s, PY_MAX_ELEMS, "%ld: (bang) success", a);
-            break;
-          default:
-            snprintf_zero(s, PY_MAX_ELEMS, "I am outlet %ld", a);
         }
-        // snprintf_zero(s, PY_MAX_ELEMS, "I am outlet %ld", a);
+    } 
+
+    /* Document outlet functions */
+    else if (io == ASSIST_OUTLET) {
+        switch (idx) {
+        case O_OUTPUT:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: output", idx);
+            break;
+        case O_FAILURE:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: (bang) failure", idx);
+            break;
+        case O_SUCCESS:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: (bang) success", idx);
+            break;
+        }
     }
 }
 

@@ -2927,7 +2927,6 @@
 , 							{
 								"box" : 								{
 									"autoload" : 0,
-									"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_functional.py",
 									"id" : "obj-7",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -2937,13 +2936,6 @@
 									"presentation" : 1,
 									"presentation_linecount" : 3,
 									"presentation_rect" : [ 195.0, 268.0, 54.0, 49.0 ],
-									"saved_object_attributes" : 									{
-										"autoload" : 0,
-										"debug" : 1,
-										"file" : "/Volumes/Minx/Users/sa/projects/py-js/examples/tests/test_functional.py",
-										"pythonpath" : "/Users/sa/src"
-									}
-,
 									"text" : "py @name bob",
 									"varname" : "bob"
 								}

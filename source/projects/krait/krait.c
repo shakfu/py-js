@@ -16,6 +16,10 @@
 #include "py.h"           // <-- include this
 
 
+enum INLETS { I_INPUT, I_DELAY, NUM_INLETS };
+enum OUTLETS { O_PRIMARY_BANG_OUTPUT, O_SECONDARY_BANG_OUTPUT, NUM_OUTLETS };
+
+
 // datastructure
 typedef struct krait
 {
@@ -149,18 +153,27 @@ void krait_free(t_krait *x)
 /**
  * @brief Handles assist messages
  */
-void krait_assist(t_krait *x, void *b, long m, long a, char *s)
+void krait_assist(t_krait* x, void* b, long io, long idx, char* s)
 {
-    if (m == ASSIST_INLET) {    // Inlets
-        switch (a) {
-        case 0: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "bang Gets Delayed, stop Cancels"); break;
-        case 1: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "Set Delay Time"); break;
+    if (io == ASSIST_INLET) {
+        switch (idx) {
+        case I_INPUT:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: bang Gets Delayed, stop Cancels", idx);
+            break;
+        case I_DELAY:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: Set Delay Time", idx);
+            break;
         }
-    }
-    else {                      // Outlets
-        switch (a) {
-        case 0: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "Delayed bang"); break;
-        case 1: snprintf_zero(s, ASSIST_MAX_STRING_LEN, "Another Delayed bang"); break;
+    } 
+
+    else if (io == ASSIST_OUTLET) {
+        switch (idx) {
+        case O_PRIMARY_BANG_OUTPUT:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: Delayed bang", idx);
+            break;
+        case O_SECONDARY_BANG_OUTPUT:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: Another Delayed bang", idx);
+            break;
         }
     }
 }

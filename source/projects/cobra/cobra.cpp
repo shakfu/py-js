@@ -15,6 +15,8 @@
 #define PY_INTERPRETER_IMPLEMENTATION
 #include "py_interpreter.h"
 
+enum INLETS { I_INPUT, NUM_INLETS };
+enum OUTLETS { O_OUTPUT, NUM_OUTLETS };
 
 typedef struct _cobra {
     t_object ob;
@@ -93,14 +95,26 @@ void ext_main(void* r)
     post("I am the cobra object");
 }
 
-void cobra_assist(t_cobra* x, void* b, long m, long a, char* s)
+
+void cobra_assist(t_cobra* x, void* b, long io, long idx, char* s)
 {
-    if (m == ASSIST_INLET) { // inlet
-        snprintf(s, PY_MAX_ELEMS, "I am inlet %ld", a);
-    } else { // outlet
-        snprintf(s, PY_MAX_ELEMS, "I am outlet %ld", a);
+    if (io == ASSIST_INLET) {
+        switch (idx) {
+        case I_INPUT:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: input", idx);
+            break;
+        }
+    } 
+
+    else if (io == ASSIST_OUTLET) {
+        switch (idx) {
+        case O_OUTPUT:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: output", idx);
+            break;
+        }
     }
 }
+
 
 void cobra_free(t_cobra* x)
 {
