@@ -260,9 +260,6 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_outlet_middle = bangout((t_object*)x);
         x->p_outlet_left = outlet_new(x, NULL);
 
-        // process @arg attributes
-        attr_args_process(x, argc, argv);
-
         // set patcher object
         object_obex_lookup(x, gensym("#P"), &x->p_patcher);
         if (x->p_patcher == NULL) {
@@ -317,6 +314,9 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         if (x->p_pythonpath != gensym("")) {
             py_pythonpath_add(x, x->p_pythonpath);
         }
+
+        // process @arg attributes
+        attr_args_process(x, argc, argv);
     }
     return (x);
 }
