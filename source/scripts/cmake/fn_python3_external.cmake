@@ -137,7 +137,7 @@ function(python3_external)
         ${PY3EXT_PROJECT_NAME}
         PRIVATE
         ${PY3EXT_COMPILE_DEFINITIONS}
-        -DNDEBUG
+        $<$<CONFIG:Release>:NDEBUG>
         $<$<BOOL:${BUILD_STATIC_EXT}>:-DBUILD_STATIC> # help static find pyhome
         $<$<BOOL:${PY3EXT_INCLUDE_COMMONSYMS}>:-DINCLUDE_COMMONSYMS>
         # $<IN_LIST:${PY3EXT_BUILD_VARIANT},${self_contained}:-DSELFCONTAINED_EXTERNAL> # special case
@@ -170,12 +170,12 @@ function(python3_external)
 
     set(STATIC_LINK_DEPS
         "$<$<PLATFORM_ID:Darwin>:-framework SystemConfiguration>"
-        "$<$<PLATFORM_ID:Darwin>:-lssl>"
-        "$<$<PLATFORM_ID:Darwin>:-lbz2>"
-        "$<$<PLATFORM_ID:Darwin>:-llzma>"
-        "$<$<PLATFORM_ID:Darwin>:-lz>"
-        "$<$<PLATFORM_ID:Darwin>:-lcrypto>"
-        "$<$<PLATFORM_ID:Darwin>:-lsqlite3>"
+        $<$<PLATFORM_ID:Darwin>:-lssl>
+        $<$<PLATFORM_ID:Darwin>:-lbz2>
+        $<$<PLATFORM_ID:Darwin>:-llzma>
+        $<$<PLATFORM_ID:Darwin>:-lz>
+        $<$<PLATFORM_ID:Darwin>:-lcrypto>
+        $<$<PLATFORM_ID:Darwin>:-lsqlite3>
     )
 
     target_link_options(
@@ -187,11 +187,11 @@ function(python3_external)
     target_link_libraries(
         ${PY3EXT_PROJECT_NAME} 
         PRIVATE
-        "${Python3_LIBRARIES}"
-        "${PY3EXT_LINK_LIBS}"
-        "$<$<PLATFORM_ID:Darwin>:-ldl>"
+        ${Python3_LIBRARIES}
+        ${PY3EXT_LINK_LIBS}
+        $<$<PLATFORM_ID:Darwin>:-ldl>
         "$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"
-        "$<$<BOOL:${BUILD_STATIC_EXT}>:${STATIC_LINK_DEPS}>"
+        $<$<BOOL:${BUILD_STATIC_EXT}>:${STATIC_LINK_DEPS}>
     )
 
     if(BUILD_SHARED_EXT OR BUILD_STATIC_EXT)

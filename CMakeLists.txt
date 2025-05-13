@@ -92,7 +92,7 @@ list(APPEND BUILD_TARGETS krait cobra mamba mxpy pyx mpyx pymx)
 endif()
 
 if(BUILD_POCKETPY_EXTERNALS)
-list(APPEND BUILD_TARGETS pktpy pktpy2 pktpy11)
+list(APPEND BUILD_TARGETS pktpy pktpy2)
 endif()
 
 if(BUILD_NETWORKING_EXTERNALS)

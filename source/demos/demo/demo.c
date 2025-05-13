@@ -4,6 +4,11 @@
 #include "ext_dictionary.h"
 #include "ext_dictobj.h"
 
+#define log_error(x, ...) object_error((t_object*)(x), __VA_ARGS__);
+#define log_warn(x, ...)  object_warn((t_object*)(x), __VA_ARGS__);
+#define log_info(x, ...) object_post((t_object*)(x), __VA_ARGS__);
+#define log_debug(x, ...) if ((x->debug)) object_post((t_object*)(x), __VA_ARGS__);
+
 
 typedef struct _demo {
     t_object ob;
@@ -15,6 +20,7 @@ typedef struct _demo {
     long ob_inletnum;     // # of inlet currently in use
 
     t_symbol* name;
+    int debug;
 
     // params
     float param0;
@@ -28,6 +34,7 @@ void* demo_new(t_symbol* s, long argc, t_atom* argv);
 void demo_free(t_demo* x);
 void demo_bang(t_demo* x);
 void demo_float(t_demo *x, double f);
+void demo_assist(t_demo* x, void* b, long io, long idx, char* s);
 t_max_err demo_name_get(t_demo *x, t_object *attr, long *argc, t_atom **argv);
 t_max_err demo_name_set(t_demo *x, t_object *attr, long argc, t_atom *argv);
 void demo_dict(t_demo* x, t_symbol* s);
@@ -42,9 +49,10 @@ void ext_main(void* r)
                            (method)demo_free, (long)sizeof(t_demo), 0L,
                            A_GIMME, 0);
 
-    class_addmethod(c, (method)demo_bang,  "bang", 0);
-    class_addmethod(c, (method)demo_float, "float", A_FLOAT, 0);
-    class_addmethod(c, (method)demo_dict,  "dict",  A_SYM,   0);
+    class_addmethod(c, (method)demo_bang,   "bang",              0);
+    class_addmethod(c, (method)demo_float,  "float",    A_FLOAT, 0);
+    class_addmethod(c, (method)demo_dict,   "dict",     A_SYM,   0);
+    class_addmethod(c, (method)demo_assist, "assist",   A_CANT,  0);
 
     CLASS_ATTR_LABEL(c,     "name", 0,  "patch-wide name");
     CLASS_ATTR_SYM(c,       "name", 0,  t_demo, name);
@@ -74,6 +82,7 @@ void* demo_new(t_symbol* s, long argc, t_atom* argv)
         x->ob_proxy_1 = proxy_new(x, 1, NULL);
 
         x->name = gensym("");
+        x->debug = 1;
 
         x->param0 = 7.0;
         x->param1 = 500.0;
@@ -81,11 +90,10 @@ void* demo_new(t_symbol* s, long argc, t_atom* argv)
 
         attr_args_process(x, argc, argv);
 
-        post("x->param0: %f", x->param0);
-        post("x->param1: %f", x->param1);
-        post("x->param2: %f", x->param2);
-
-        post("x->name: %s", x->name->s_name);
+        log_debug(x, "x->param0: %f", x->param0);
+        log_debug(x, "x->param1: %f", x->param1);
+        log_debug(x, "x->param2: %f", x->param2);
+        log_debug(x, "x->name: %s", x->name->s_name);
     }
     return (x);
 }
@@ -95,25 +103,53 @@ void demo_free(t_demo* x) {
     object_free(x->ob_proxy_1);
 }
 
+void demo_assist(t_demo* x, void* b, long io, long idx, char* s)
+{
+    /* Document inlet functions */
+    if (io == ASSIST_INLET) {
+        switch (idx) {
+        case 0:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: input", idx);
+            break;
+        case 1:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: input", idx);
+            break;
+        case 2:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: input", idx);
+            break;
+        }
+    } 
+
+    /* Document outlet functions */
+    else if (io == ASSIST_OUTLET) {
+        switch (idx) {
+        case 0:
+            snprintf_zero(s, ASSIST_MAX_STRING_LEN, "%ld: output", idx);
+            break;
+        }
+    }
+}
+
+
 
 void demo_float(t_demo *x, double f)
 {
     switch (proxy_getinlet((t_object *)x))
     {
     case 0:
-        post("param0 f: %f", f);
+        log_debug(x, "param0 f: %f", f);
         break;
 
     case 1:
-        post("param1 f: %f", f);
+        log_debug(x, "param1 f: %f", f);
         break;
 
     case 2:
-        post("param2 f: %f", f);
+        log_debug(x, "param2 f: %f", f);
         break;
 
     default:
-        error("demo_float switch out-of-index");
+        log_error(x, "demo_float switch out-of-index");
     }
 }
 
@@ -122,11 +158,11 @@ void demo_bang(t_demo* x) {
     // example of using libcmx.a (common max lib)
     t_string* path_to_ext = get_path_to_external(demo_class, NULL);
     const char* ext_path = string_getptr(path_to_ext);
-    post("path to external: %s", ext_path);
+    log_debug(x, "path to external: %s", ext_path);
 
     t_string* path_to_pkg = get_path_to_package(demo_class, "");
     const char* pkg_path = string_getptr(path_to_pkg);
-    post("path to package: %s", pkg_path);
+    log_debug(x, "path to package: %s", pkg_path);
 
     char filename[MAX_PATH_CHARS];
     char directory[MAX_PATH_CHARS];
@@ -134,8 +170,8 @@ void demo_bang(t_demo* x) {
     path_dirname(pkg_path, directory);
     path_basename(pkg_path, filename);
 
-    post("directory: %s", directory);
-    post("filename: %s", filename);
+    log_debug(x, "directory: %s", directory);
+    log_debug(x, "filename: %s", filename);
 
     outlet_bang(x->outlet); 
 }
@@ -151,7 +187,7 @@ t_max_err demo_name_get(t_demo *x, t_object *attr, long *argc, t_atom **argv)
             }
             if (alloc) {
                 atom_setsym(*argv, x->name);
-                post("demo_name_get: %s", x->name->s_name);
+                log_debug(x, "demo_name_get: %s", x->name->s_name);
         }
     }
     return MAX_ERR_NONE;
@@ -162,7 +198,7 @@ t_max_err demo_name_set(t_demo *x, t_object *attr, long argc, t_atom *argv)
 {
     if (argc && argv) {
         x->name = atom_getsym(argv);
-        post("demo_name_set: %s", x->name->s_name);
+        log_debug(x, "demo_name_set: %s", x->name->s_name);
     }
     return MAX_ERR_NONE;
 }
