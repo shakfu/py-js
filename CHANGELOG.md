@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- Changed minimum macOS version from `10.11` to `10.15` by redirecting to `source/scripts/cmake/max-pretarget.cmake`.
+
 - Re-Added pybind11/min-api-based `pymx` from its own repo as `min-api` is now supported in `py-js`.
 
 - Added `min-api` and `min-lib` to `source` directory.

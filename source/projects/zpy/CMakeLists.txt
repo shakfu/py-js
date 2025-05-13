@@ -1,5 +1,5 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/cmake/common.cmake)
+
 
 
 

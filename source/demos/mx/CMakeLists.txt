@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
+include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/max-pretarget.cmake)
 
 #############################################################
 # MAX EXTERNAL
