@@ -216,13 +216,4 @@ static const char* PY_PRELUDE_MODULE =
 "    signature = str(__signature(func))\n"
 "    return f\"<function {name}{signature}>\"\n"
 "\n"
-"if __name__ == '__main__':\n"
-"    if 1:\n"
-"        xs = ['a', ':', 5, 'a', 'b', ':', 10, 'abv', 'c', ':', 23]\n"
-"        print(__list_to_dict(xs))\n"
-"    else:\n"
-"\n"
-"        xs = [1, ':', 5, 'a', 'b', ':', 10, 'abv', 'c', ':', 23]\n"
-"        print(__list_to_dict(xs))\n"
-"\n"
 "\n";

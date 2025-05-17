@@ -115,8 +115,8 @@ uintptr_t py_get_object_ref(void);
 /*--------------------------------------------------------------------------*/
 /* Path helpers */
 
-t_string* py_get_path_to_external(t_class* c, char* subpath);
-t_string* py_get_path_to_package(t_class* c, char* subpath);
+t_string* py_get_path_to_external(t_class* c, const char* subpath);
+t_string* py_get_path_to_package(t_class* c, const char* subpath);
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s);
 void path_join(char* destination, const char* path1, const char* path2);
 
@@ -163,10 +163,10 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv);
 /*--------------------------------------------------------------------------*/
 /* Generic Python function wrappers */
 
-t_max_err py_func_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
-t_max_err py_func_to_list(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
-t_max_err py_func_to_text(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
-t_max_err py_func_to_pyobj(t_py* x, char* pyfunc_name, PyObject* obj);
+t_max_err py_func_to_atoms(t_py* x, const char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_func_to_list(t_py* x, const char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_func_to_text(t_py* x, const char* pyfunc_name, t_symbol* s, long argc, t_atom* argv);
+t_max_err py_func_to_pyobj(t_py* x, const char* pyfunc_name, PyObject* obj);
 
 /*--------------------------------------------------------------------------*/
 /* Information Methods */

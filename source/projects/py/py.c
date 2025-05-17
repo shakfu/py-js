@@ -77,8 +77,10 @@ struct t_py {
  * @param module_ref used to obtain metadata
  *
  * The sole parameter `module_ref` can be used to obtain a reference
- * to the bundle itself.
+ * to the macOS bundle itself, which is needed for the `py_get_path_to_external`
+ * function.
  *
+ * @note This function is called when the external is loaded.
  */
 void ext_main(void* module_ref)
 {
@@ -211,6 +213,10 @@ void ext_main(void* module_ref)
  * @param argc atom argument count
  * @param argv atom argument vector
  * @return void*
+ *
+ * @note the `attr_args_process` function should be called at the end
+ *       of `py_new` to process any attributes passed to the external.
+ *
  */
 void* py_new(t_symbol* s, long argc, t_atom* argv)
 {
@@ -278,7 +284,7 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
             error("could not set scripting name to box");
         }
 
-        // python init
+        // initialize python interpreter
         py_init(x);
 
         post("initialized python version: %s", PY_VERSION);
@@ -332,8 +338,9 @@ void py_init(t_py* x)
     wchar_t* python_home = NULL;
 
 #if PY_WITH_API
+    // add the `api` module as a built-in module to the python interpreter
     if (!Py_IsInitialized()) {
-        // NOTE: without the above test, addding more than one instance of `py` will
+        // NOTE: without the above test, adding more than one instance of `py` will
         // cause a crash.
         // https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/18
 
@@ -483,6 +490,10 @@ t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc, t_atom* arg
 
     if (argc && argv) {
 
+        if (atom_getsym(argv) == gensym("")) {
+            goto finally;
+        }
+
         // expand path vars like $HOME
         path_nameconform(atom_getsym(argv)->s_name, conform_path,
                          PATH_STYLE_MAX, PATH_TYPE_BOOT);
@@ -493,6 +504,8 @@ t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc, t_atom* arg
         }
         py_debug(x, "py_pythonpath_attr_set: %s", x->p_pythonpath->s_name);
     }
+
+finally:
     return MAX_ERR_NONE;
 }
 
@@ -733,7 +746,7 @@ uintptr_t py_get_object_ref(void) { return py_global_obj_ref; }
  *
  * @return     path to external + (optional subpath)
  */
-t_string* py_get_path_to_external(t_class* c, char* subpath)
+t_string* py_get_path_to_external(t_class* c, const char* subpath)
 {
     char external_path[MAX_PATH_CHARS];
     char external_name[MAX_PATH_CHARS];
@@ -763,7 +776,7 @@ t_string* py_get_path_to_external(t_class* c, char* subpath)
  *
  * @return     path to package + (optional subpath)
  */
-t_string* py_get_path_to_package(t_class* c, char* subpath)
+t_string* py_get_path_to_package(t_class* c, const char* subpath)
 {
     char _dummy[MAX_PATH_CHARS];
     char externals_folder[MAX_PATH_CHARS];
@@ -2019,7 +2032,7 @@ t_max_err py_anything(t_py* x, t_symbol* s, long argc, t_atom* argv)
  *
  * @return     t_max_err error code
  */
-t_max_err py_func_to_list(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_func_to_list(t_py* x, const char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -2091,7 +2104,7 @@ error:
  *
  * @return     t_max_err error code
  */
-t_max_err py_func_to_atoms(t_py* x, char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
+t_max_err py_func_to_atoms(t_py* x, const char* pyfunc_name, t_symbol* s, long argc, t_atom* argv)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -2169,7 +2182,7 @@ error:
  *
  * @return     The t maximum error.
  */
-t_max_err py_func_to_pyobj(t_py* x, char* pyfunc_name, PyObject* obj)
+t_max_err py_func_to_pyobj(t_py* x, const char* pyfunc_name, PyObject* obj)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -2229,7 +2242,7 @@ error:
  *
  * @return     t_max_err error code
  */
-t_max_err py_func_to_text(t_py* x, char* pyfunc_name, t_symbol* s, long argc,
+t_max_err py_func_to_text(t_py* x, const char* pyfunc_name, t_symbol* s, long argc,
                           t_atom* argv)
 {
     PyGILState_STATE gstate;
