@@ -2,6 +2,10 @@
 
 ## [0.3.x]
 
+- Fixed residual bug in `apply` function in `py_prelude.py`
+
+- Added `tests/prelude/test_prelude.py` to provide full pytest-like tests for `py_prelude.py`
+
 - Fixed bug which causes crash due to code trying to set `pythonpath` attribute at object creation before python was initialized.
 
 - Added `shared-tiny-ext`, `static-tiny-ext` build variant support to `3.8.20`, `3.9.22`, `3.10.17`, and `3.11.12`.

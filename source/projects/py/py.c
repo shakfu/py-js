@@ -2328,7 +2328,7 @@ error:
  */
 t_max_err py_apply(t_py* x, t_symbol* s, long argc, t_atom* argv)
 {
-    return py_func_to_list(x, "apply", s, argc, argv);
+    return py_func_to_text(x, "apply", s, argc, argv);
 }
 
 
