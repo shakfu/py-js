@@ -51,7 +51,7 @@ def test_is_iterable(containers):
     assert prelude.is_iterable(xset)
 
 def test_to_val(gdict):
-    to_val = prelude.to_val
+    to_val = prelude.__to_val
     assert to_val(1) == 1
     assert to_val(1.5) == 1.5
     assert to_val({"a": 1}) == {"a": 1}
@@ -63,7 +63,7 @@ def test_to_val(gdict):
     assert to_val("FUNC", gdict) == gdict["FUNC"]
 
 def test_to_fn(gdict):
-    to_fn = prelude.to_fn
+    to_fn = prelude.__to_fn
     assert to_fn("add", gdict) == gdict["add"]
     assert to_fn("f", gdict) == gdict["f"]
     assert to_fn("g", gdict) == gdict["g"]
@@ -73,7 +73,7 @@ def test_compose(gdict):
     assert compose(gdict["f"], gdict["g"])(10) == 120
 
 def test_analyze(gdict):
-    analyze = prelude.analyze
+    analyze = prelude.__analyze
     assert analyze("add 1 2 3", gdict) == ([gdict["add"]], [1, 2, 3], [])
 
 def test_list_to_dict():
@@ -90,8 +90,8 @@ def test_list_to_dict():
 def test_shell():
     assert prelude.shell('echo "hello"') == "hello"
 
-def test_out_dict():
-    assert prelude.out_dict({'a': 1, 'b': [1,2,3,4]}) == [
+def test_dict_to_list():
+    assert prelude.dict_to_list({'a': 1, 'b': [1,2,3,4]}) == [
         'a', ':', 1, 'b', ':', 1, 2, 3, 4]
 
 def test_pipe(gdict):
@@ -109,16 +109,18 @@ def test_fold(gdict):
     assert fold("add 1 2 3 4 5", gdict) == 15
 
 def test_to_string():
-    to_string = prelude.to_string
+    to_string = prelude.__to_string
     assert to_string("f2", 1, 2, 3, a=10, b=[1, 2]) == "f2 1 2 3 a : 10 b : 1 2"
 
 def test_from_list(gdict):
-    assert prelude.from_list(['f1', '1', '2', '3', 'a', ':', '5', '6', 'b', ':', '10'], gdict) == (
+    from_list = prelude.__from_list
+    assert from_list(['f1', '1', '2', '3', 'a', ':', '5', '6', 'b', ':', '10'], gdict) == (
         gdict["f1"], (1, 2, 3), {"a": [5, 6], "b": 10}
     )
 
 def test_from_string(gdict):
-    assert prelude.from_string('f1 1 2 3 a : 5 6 b : 10', gdict) == (
+    from_string = prelude.__from_string
+    assert from_string('f1 1 2 3 a : 5 6 b : 10', gdict) == (
         gdict["f1"], (1, 2, 3), {"a": [5, 6], "b": 10}
     )
 
@@ -134,3 +136,7 @@ def test_product():
 
 def test_sig(gdict):
     assert prelude.sig(gdict["f2"]) == "<function gdict.<locals>.f2(x: int = 10) -> int>"
+
+def test_flatten():
+    assert prelude.flatten([[1,2], [3,4], [5]]) == [1, 2, 3, 4, 5]
+

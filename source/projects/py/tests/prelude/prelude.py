@@ -9,6 +9,7 @@ import os
 import subprocess
 import shlex
 import collections.abc
+import itertools
 import functools
 from keyword import iskeyword as is_keyword
 from inspect import signature as __signature
@@ -25,6 +26,146 @@ EDITOR = "Sublime Text"
 
 # ---------------------------------------------------------
 # private utilities
+
+
+def __to_val(elem: Any, gdict: Optional[dict] = None) -> Any:
+    if not gdict:
+        gdict = globals()
+    if isinstance(elem, (int, float)):
+        return elem
+    elif isinstance(elem, dict):
+        return elem
+    elif isinstance(elem, tuple):
+        return elem
+    elif isinstance(elem, set):
+        return elem
+    elif isinstance(elem, str):
+        val = None
+        try:
+            val = ast.literal_eval(elem)
+        except ValueError:
+            if elem in gdict:
+                val = eval(elem, globals=gdict)
+        except SyntaxError:
+            print(elem)
+            return
+        return val
+    elif callable(elem):
+        return elem
+    else:
+        return __to_val(repr(type(elem)))
+
+
+def __to_fn(s: str, gdict: Optional[dict] = None) -> Callable:
+    """returns a function from a string"""
+    if not gdict:
+        gdict = globals()
+    assert s in gdict, "function not defined"
+    fn = eval(s, globals=gdict)
+    assert callable(fn), "not a callable"
+    return fn
+
+
+def __analyze(s: str, gdict: Optional[dict] = None) -> tuple[list[Callable], list[Any], list[tuple[Any, Any]]]:
+    """returns a list of functions, arguments, and keyword arguments"""
+    if not gdict:
+        gdict = globals()
+    fs = []
+    args = []
+    kwargs = []
+    str_args = s.split()
+    for str_arg in str_args:
+        if "=" in str_arg:
+            k, v = str_arg.split("=")
+            kwargs.append((eval(repr(k), globals=gdict), eval(v, globals=gdict)))
+        else:
+            try:
+                elem = eval(str_arg, globals=gdict)
+            except SyntaxError:
+                elem = eval(repr(str_arg), globals=gdict)
+            if callable(elem):
+                fs.append(elem)
+            else:
+                args.append(elem)
+    return fs, args, kwargs
+
+
+def __to_string(func, *args, **kwds) -> str:
+    """creates max-friendly function calling syntax arguments
+
+    >>> __to_string('f2', 1, 2, 3, a=10, b=[1,2])
+    'f2 1 2 3 a : 10 b : 1 2'
+    """
+    res = [func]
+    res.extend(args)
+    res.extend(dict_to_list(kwds))
+    return " ".join(str(i) for i in res)
+
+
+def __from_list(
+    xs: list[str], gdict: Optional[dict] = None
+) -> tuple[Callable, tuple[Any, ...], dict[str, Any]]:
+    """converts a Max-friendly function calling
+    syntax from a list to py objects
+
+    >>> def f(x, y, z, a=1, b=2): return x + y + z
+    >>> xs = ['f, '1', '2', '3', 'a', ':', '5', '6', 'b', ':', '10']
+    >>> __from_list(xs)
+    (<function f at 0x1008fc5e0>, (1, 2, 3), {'a': [5, 6], 'b': 10})
+    """
+    args = []
+    kwds = []
+    f = __to_fn(xs[0], gdict)
+    xs = xs[1:]
+    if ":" in xs:
+        z = xs.index(":")
+        kwds = xs[z - 1 :]
+        args = [__to_val(arg, gdict) for arg in xs[: z - 1]]
+    else:
+        kwds = []
+        args = xs
+    return f, tuple(args), list_to_dict(kwds, eval_values=True)
+
+
+def __from_string(
+    s: str, gdict: Optional[dict] = None
+) -> tuple[Callable, tuple[Any, ...], dict[str, Any]]:
+    """converts a max-friendly function calling
+    syntax from a string to py objects
+
+    >>> def f(x, y, z, a=1, b=2): return x + y + z
+    >>> s = 'f 1 2 3 a : 5 6 b : 10'
+    >>> __from_string(s)
+    (<function f at 0x1008fc5e0>, (1, 2, 3), {'a': [5, 6], 'b': 10})
+    """
+    xs = s.split()
+    return __from_list(xs, gdict)
+
+
+# ---------------------------------------------------------
+# public utilities
+
+def flatten(a):
+    """flatten nested iterables into a single list
+    
+    >>> flatten([[1,2], [3,4], [5])
+    [1, 2, 3, 4, 5]
+    """
+    return list(itertools.chain.from_iterable(a))
+
+def compose(*funcs: tuple[Callable], reverse=True) -> Callable:
+    """returns a function that is the composition of `funcs`
+
+    >>> def f1(x): return x+1
+    >>> def f2(x): return x+2
+    >>> def f3(x): return x+3
+    >>> f = compose(f1, f2, f3)
+    >>> f(10)
+    16
+    """
+    if reverse:
+        funcs = reversed(funcs)
+    return lambda x: functools.reduce(lambda acc, f: f(acc), funcs, x)
 
 
 def is_sequence(obj) -> bool:
@@ -71,82 +212,6 @@ def is_iterable(obj) -> bool:
     return False
 
 
-def to_val(elem: Any, gdict: Optional[dict] = None) -> Any:
-    if not gdict:
-        gdict = globals()
-    if isinstance(elem, (int, float)):
-        return elem
-    elif isinstance(elem, dict):
-        return elem
-    elif isinstance(elem, tuple):
-        return elem
-    elif isinstance(elem, set):
-        return elem
-    elif isinstance(elem, str):
-        val = None
-        try:
-            val = ast.literal_eval(elem)
-        except ValueError:
-            if elem in gdict:
-                val = eval(elem, globals=gdict)
-        except SyntaxError:
-            print(elem)
-            return
-        return val
-    elif callable(elem):
-        return elem
-    else:
-        return to_val(repr(type(elem)))
-
-
-def to_fn(s: str, gdict: Optional[dict] = None) -> Callable:
-    """returns a function from a string"""
-    if not gdict:
-        gdict = globals()
-    assert s in gdict, "function not defined"
-    fn = eval(s, globals=gdict)
-    assert callable(fn), "not a callable"
-    return fn
-
-
-def compose(f: Callable, g: Callable) -> Callable:
-    """returns a function that is the composition of f and g
-
-    >>> f = lambda x: x + 1
-    >>> g = lambda x: x * 2
-    >>> compose(f, g)(3)
-    7
-
-    >>> compose(f, g)(10)
-    21
-    """
-    return lambda x: f(g(x))
-
-
-def analyze(s: str, gdict: Optional[dict] = None) -> tuple[list[Callable], list[Any], list[tuple[Any, Any]]]:
-    """returns a tuple of functions, arguments, and keyword arguments"""
-    if not gdict:
-        gdict = globals()
-    fs = []
-    args = []
-    kwargs = []
-    str_args = s.split()
-    for str_arg in str_args:
-        if "=" in str_arg:
-            k, v = str_arg.split("=")
-            kwargs.append((eval(repr(k), globals=gdict), eval(v, globals=gdict)))
-        else:
-            try:
-                elem = eval(str_arg, globals=gdict)
-            except SyntaxError:
-                elem = eval(repr(str_arg), globals=gdict)
-            if callable(elem):
-                fs.append(elem)
-            else:
-                args.append(elem)
-    return fs, args, kwargs
-
-
 def list_to_dict(xs: list, eval_values=False) -> dict:
     """converts a list of strings to a dictionary
 
@@ -187,7 +252,7 @@ def list_to_dict(xs: list, eval_values=False) -> dict:
         # Extract values
         values = xs[sep_idx + 1 : end_idx]
         if eval_values:
-            values = [to_val(val) for val in values]
+            values = [__to_val(val) for val in values]
 
         # If single value, don't keep it as a list
         if len(values) == 1:
@@ -225,10 +290,10 @@ def shell(cmd: str, err_func: Optional[Callable] = None) -> Optional[Any]:
         return result
 
 
-def out_dict(py_dict: dict) -> list:
+def dict_to_list(py_dict: dict) -> list:
     """returns a list of strings that represent a python dict in Max dict-syntax
 
-    >>> out_dict({'a':1, 'b': [1,2,3,4]})
+    >>> dict_to_list({'a':1, 'b': [1,2,3,4]})
     ['a', ':', 1, 'b', ':', 1, 2, 3, 4]
     """
     res = []
@@ -262,7 +327,7 @@ def pipe(s: str, gdict: Optional[dict] = None) -> Any:
     >>> pipe('f g sum 10 20 30')
     720
     """
-    fs, args, kwargs = analyze(s, gdict)
+    fs, args, kwargs = __analyze(s, gdict)
     if args and fs:
         if len(args) == 1:
             arg = args[:].pop()
@@ -293,7 +358,7 @@ def call(s: str) -> Any:
     (10, 20) {'a': 1}
 
     """
-    fs, args, kwargs = analyze(s)
+    fs, args, kwargs = __analyze(s)
     if len(fs) == 1:
         f = fs[0]
         try:
@@ -323,7 +388,7 @@ def fold(s: str, gdict: Optional[dict] = None) -> Any:
     :param      s:    code string
     :type       s:    str
     """
-    fs, args, kwargs = analyze(s, gdict)
+    fs, args, kwargs = __analyze(s, gdict)
     if len(fs) == 1:
         f = fs[0]
         accum, seq = args[0], args[1:]
@@ -340,54 +405,6 @@ def fold(s: str, gdict: Optional[dict] = None) -> Any:
         return res
 
 
-def to_string(func, *args, **kwds) -> str:
-    """creates max-friendly function calling syntax arguments
-
-    >>> to_string('f2', 1, 2, 3, a=10, b=[1,2])
-    'f2 1 2 3 a : 10 b : 1 2'
-    """
-    res = [func]
-    res.extend(args)
-    res.extend(out_dict(kwds))
-    return " ".join(str(i) for i in res)
-
-
-def from_list(xs: list[str], gdict: Optional[dict] = None) -> tuple[Callable, tuple[Any, ...], dict[str, Any]]:
-    """converts a Max-friendly function calling
-    syntax from a list to py objects
-
-    >>> def f(x, y, z, a=1, b=2): return x + y + z
-    >>> xs = ['f, '1', '2', '3', 'a', ':', '5', '6', 'b', ':', '10']
-    >>> from_list(xs)
-    (<function f at 0x1008fc5e0>, (1, 2, 3), {'a': [5, 6], 'b': 10})
-    """
-    args = []
-    kwds = []
-    f = to_fn(xs[0], gdict)
-    xs = xs[1:]
-    if ":" in xs:
-        z = xs.index(":")
-        kwds = xs[z - 1 :]
-        args = [to_val(arg, gdict) for arg in xs[: z - 1]]
-    else:
-        kwds = []
-        args = xs
-    return f, tuple(args), list_to_dict(kwds, eval_values=True)
-
-
-def from_string(s: str, gdict: Optional[dict] = None) -> tuple[Callable, tuple[Any, ...], dict[str, Any]]:
-    """converts a max-friendly function calling
-    syntax from a string to py objects
-
-    >>> def f(x, y, z, a=1, b=2): return x + y + z
-    >>> s = 'f 1 2 3 a : 5 6 b : 10'
-    >>> from_string(s)
-    (<function f at 0x1008fc5e0>, (1, 2, 3), {'a': [5, 6], 'b': 10})
-    """
-    xs = s.split()
-    return from_list(xs, gdict)
-
-
 def apply(s: str, gdict: Optional[dict] = None) -> Any:
     """converts a max-friendly function calling
     syntax from a list to py objects
@@ -399,7 +416,7 @@ def apply(s: str, gdict: Optional[dict] = None) -> Any:
     """
     if not gdict:
         gdict = globals()
-    f, args, kwds = from_string(s, gdict)
+    f, args, kwds = __from_string(s, gdict)
     return f(*args, **kwds)
 
 
@@ -440,4 +457,5 @@ def sig(func) -> str:
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
