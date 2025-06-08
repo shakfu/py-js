@@ -1,75 +1,5 @@
 #!/usr/bin/env python3
-"""package.py
-
-Contains two classes:
-
-    PackageManager
-    CodesignExternal
-
-## Package Manager
-
-Does the equivalent of the following workflow
-
-VARIANT="shared-ext"
-
-export DEV_ID="<first_name> <last_name>"
-
-make ${VARIANT}
-
-make sign
-
-make dmg PKG_NAME="${VARIANT}"
-
-export PRODUCT_DMG="<absolute-path-to-dmg>"
-
-make sign-dmg ${PRODUCT_DMG}
-
-xcrun notarytool submit ${PRODUCT_DMG} --keychain-profile "<keychain_profile>"
-
-xcrun stapler staple ${PRODUCT_DMG}
-
-mv ${PRODUCT_DMG} ~/Downloads/pyjs-builds
-
-
-## CodesignExternal
-
-Is a utility class which recursively walks through a bundle or folder structure
-and signs all of the internal binaries which fit the given pattern
-
-Note: you can reduce the logging verbosity by making DEBUG=False
-
-Steps to sign a Max package with a externals in the 'externals' folder
-depending on a framework or two in the 'support' folder:
-
-1. codesign externals [<name>.mxo, ...] in 'externals' folder
-
-builder.sign_folder('externals')
-
-2. codesign frameworks or libraries [<name>.framework | python<ver> | ...]
-
-builder.sign_folder('support')
-
-3. create package as folder then convert to .dmg
-
-    - create $package folder
-    - copy or use ditto to put everything into $package
-    - convert folder into .dmg
-
-builder.package_as_dmg()
-
-    - defaults to project name
-
-
-4. notarize $package.dmg
-
-builder.notarize_dmg()
-
-
-5. staple $package.dmg
-
-builder.staple_dmg()
-
-
+"""package.py - handles codesigning, notarization and packaging of external as Max package.
 """
 
 import argparse
@@ -93,13 +23,23 @@ logging.basicConfig(
     level=logging.DEBUG if DEBUG else logging.INFO,
 )
 
+try: # optional: otherwise have to `source .env`
+    from dotenv import load_dotenv # type: ignore
+    load_dotenv()
+except ImportError:
+    pass
+
 
 def match_suffix(target):
+    """match suffix of target"""
     return target.suffix in CodesignExternal.FOLDER_EXTENSIONS
 
 
 def match_python_shared(target):
-    """FIXME: shared-pkg does not notarize!!"""
+    """match python shared library
+
+    FIXME: shared-pkg does not notarize!!
+    """
     match = re.match(r"python3.\d{1,2}", target.name)
     if match:
         return match.group(0) == target.name
@@ -123,6 +63,7 @@ class PackageManager:
         self.cmd = ShellCmd(self.log)
 
     def setup(self, variant=None):
+        """setup project"""
         if variant:
             self.project.record_variant(variant)
         return (
@@ -132,9 +73,11 @@ class PackageManager:
 
     @property
     def package_name(self):
+        """get package name"""
         return self.project.get_package_name(self.variant)
 
     def process(self):
+        """process"""
         self.sign_all()
         self.package_as_dmg()
         self.sign_dmg()
@@ -142,10 +85,12 @@ class PackageManager:
         self.staple_dmg()
 
     def sign_all(self):
+        """sign all"""
         self.sign_folder(self.project.externals)
         self.sign_folder(self.project.support)
 
     def sign_folder(self, folder):
+        """sign folder"""
         matchers = [match_suffix, match_python_shared]
         root = pathlib.Path(__file__).parent.parent.parent.parent.parent
         target_folder = root / folder
@@ -168,6 +113,7 @@ class PackageManager:
                     signer.process()
 
     def create_dist(self):
+        """create dist"""
         PACKAGE = self.project.root / "PACKAGE"
         targets = [
             "package-info.json",
@@ -185,6 +131,8 @@ class PackageManager:
                     self.cmd(f"ditto {p} {dst}")
                 else:
                     self.cmd.copy(p, destination)
+        pdf = self.project.root / 'source' / 'docs' / '_book' / 'Python3-Externals-for-Max-MSP.pdf'
+        self.cmd.copy(pdf, PACKAGE)
         for f in self.project.root.glob("*.md"):
             self.cmd.copy(f, PACKAGE)
         # cleanup unrelated .maxhelp files
@@ -194,6 +142,7 @@ class PackageManager:
         return PACKAGE
 
     def package_as_dmg(self):
+        """package as dmg"""
         srcfolder = self.create_dist()
         assert srcfolder.exists(), f"{srcfolder} does not exist"
         self.cmd(
@@ -209,6 +158,7 @@ class PackageManager:
                 fopen.write(f"PRODUCT_DMG={self.product_dmg}")
 
     def sign_dmg(self):
+        """sign dmg"""
         assert (
             self.product_dmg.exists() and self.dev_id
         ), f"{self.product_dmg} and DEV_ID not set"

@@ -29,7 +29,10 @@ book:
         - src/externals/krait.qmd
         - src/externals/mxpy.qmd
         - src/externals/pyx.qmd
+        - src/externals/pymx.qmd
         - src/externals/mpyx.qmd
+        - src/externals/mpyx.qmd
+        - src/externals/xpyc.qmd
 
     - part: "Alternative Externals"
       chapters:

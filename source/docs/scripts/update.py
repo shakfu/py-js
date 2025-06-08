@@ -4,49 +4,86 @@ import os
 from pathlib import Path
 import shutil
 
-CWD = Path.cwd()
-DOCS_ROOT = Path(__file__).parent.parent
-PROJECTS_DIR = DOCS_ROOT.parent / 'projects'
-PYJS_ROOT = DOCS_ROOT.parent.parent
-SRC_DIR = DOCS_ROOT / 'src'
-EXTERNALS_DIR = SRC_DIR / 'externals'
-
-
-def update_file(src: Path, dst: Path):
-    shutil.copy(src, dst)
-    with open(dst) as f:
-        newlines = []
-        lines = f.readlines()
-        for line in lines:
-            if line.startswith("# "):
-                title = line.lstrip("# ").strip()
-                newlines.append("---\n")
-                newlines.append(f'title: "{title}"\n')
-                newlines.append("---\n")
-            else:
-                newlines.append(line)
-    with open(dst, 'w') as f:
-        f.writelines(newlines)
+class DocumentIntegrator:
+    """Integrate project documents into the quarto documentation.
     
-print(f"processing PYJS_ROOT: {PYJS_ROOT / 'README.md'} -> {SRC_DIR / 'overview.qmd'}")
-update_file(PYJS_ROOT / 'README.md', SRC_DIR / 'overview.qmd')
+    This script is used to integrate project documents into the quarto documentation.
+    It is used to update the `overview.qmd` file with the contents of the `README.md` file
+    of the `py` external.
 
-print(f"processing FAQ: {PYJS_ROOT / 'FAQ.md'} -> {SRC_DIR / 'faq.qmd'}")
-update_file(PYJS_ROOT / 'FAQ.md', SRC_DIR / 'faq.qmd')
+    It is also used to update the `faq.qmd` file with the contents of the `FAQ.md` file
+    of the `py` external.
+    
+    It is also used to update the `externals.qmd` file with the contents of the `README.md`
+    file of each external.
+    """
 
-assert PROJECTS_DIR.exists()
+    def __init__(self):
+        self.cwd = Path.cwd()
+        self.docs_root = Path(__file__).parent.parent
+        self.projects_dir = self.docs_root.parent / 'projects'
+        self.pyjs_root = self.docs_root.parent.parent
+        self.src_dir = self.docs_root / 'src'
+        self.externals_dir = self.src_dir / 'externals'
 
-for p in PROJECTS_DIR.iterdir():
-    if p.is_dir():
-        dst = EXTERNALS_DIR /  f'{p.stem}.qmd'
-        # print(f'{p.stem}.qmd')
-        src = p / 'README.md'
-        if dst.exists():
-            dst.unlink()
-        src = PROJECTS_DIR / p.stem / 'README.md'
-        # print(f"processing {src} -> {dst}")
-        print("upodating", dst.name)       
-        try:
-            update_file(src, dst)
-        except FileNotFoundError:
-            print(f"failed: {dst}")
+    def update_file(self, src: Path, dst: Path):
+        """Update a file with the contents of another file."""
+        shutil.copy(src, dst)
+        with open(dst) as f:
+            newlines = []
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith("# "):
+                    title = line.lstrip("# ").strip()
+                    newlines.append("---\n")
+                    newlines.append(f'title: "{title}"\n')
+                    newlines.append("---\n")
+                else:
+                    newlines.append(line)
+        with open(dst, 'w') as f:
+            f.writelines(newlines)
+
+    def update_changelog(self, name: str, changelog_file: Path) -> list[str]:
+        """Update the changelog file with the contents of the changelog file of the external."""
+        with open(changelog_file) as f:
+            lines = f.readlines()
+            return lines
+
+    def process(self):
+        """Process the project documents."""
+        print(f"processing PYJS_ROOT: {self.pyjs_root / 'README.md'} -> {self.src_dir / 'overview.qmd'}")
+        self.update_file(self.pyjs_root / 'README.md', self.src_dir / 'overview.qmd')
+
+        print(f"processing FAQ: {self.pyjs_root / 'FAQ.md'} -> {self.src_dir / 'faq.qmd'}")
+        self.update_file(self.pyjs_root / 'FAQ.md', self.src_dir / 'faq.qmd')
+
+        assert self.projects_dir.exists()
+        # changelog = []
+        for p in self.projects_dir.iterdir():
+            if p.is_dir():
+                dst = self.externals_dir /  f'{p.stem}.qmd'
+                # print(f'{p.stem}.qmd')
+                src = p / 'README.md'
+                if dst.exists():
+                    dst.unlink()
+                src = self.projects_dir / p.stem / 'README.md'
+                # print(f"processing {src} -> {dst}")
+                print("updating", dst.name)       
+                try:
+                    self.update_file(src, dst)
+                except FileNotFoundError:
+                    print(f"failed: {dst}")
+
+        #         changelog_file = p / 'CHANGELOG.md'
+        #         if changelog_file.exists():
+        #             changelog += self.update_changelog(p.stem, changelog_file)
+        # if changelog:
+        #     cl_file = self.externals_dir / 'CHANGELOG.qmd'
+        #     with open(cl_file, 'w') as f:
+        #         f.write("".join(changelog))        
+
+
+if __name__ == "__main__":
+    integrator = DocumentIntegrator()
+    integrator.process()
+
