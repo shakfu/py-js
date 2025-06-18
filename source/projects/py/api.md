@@ -14,63 +14,58 @@ The `api` module consists of:
 Cython classes, functions, and constants defined here are optionally
 available for use by python code running in a `py` external instance.
 
-## Example
-
-
-
-
 ## Wrapper Classes
 
 There are several class types:
 
 1. Generic classes which are meant to be used as superclasses, wrapping `t_object*` pointers
 
-- `AbstractMaxObject`: abstract class for basic t_object* based object
+    - `AbstractMaxObject`: abstract class for basic t_object* based object
 
-- `MaxObject`: Base wrapper for Max t_object* objects
+    - `MaxObject`: Base wrapper for Max t_object* objects
 
-```python
+    ```python
 
-# generic objet class usage
+    # generic objet class usage
 
-# has signature
+    # has signature
 
-o = api.Object(classname, name, *args, **kwds)
+    o = api.Object(classname, name, *args, **kwds)
 
-# for example
+    # for example
 
-c = api.Object("coll", "mycol", embed=True)
+    c = api.Object("coll", "mycol", embed=True)
 
-# Another variant is to be used as superclass
+    # Another variant is to be used as superclass
 
-# has signature
+    # has signature
 
-o = api.AbstractObject(name, *args, **kwds)
+    o = api.AbstractObject(name, *args, **kwds)
 
-class Coll(AbstractObject):
-    # ...
+    class Coll(AbstractObject):
+        # ...
 
-```
+    ```
 
 2. Specialized classes with their own c-api methods and type-specific pointer types. These are documented in the Max-api docs:
 
-- `Atom`: Wrapper for Max mx.t_atom* atoms/messages
-- `Table`: Interface to Max tables
-- `Buffer`: Interface to MSP buffers
-- `Dictionary`: Interface to Max dictionaries
-- `DatabaseView`: Interface to Max database views
-- `DatabaseResult`: Interface to Max database results
-- `Database`: Interface to Max databases
-- `List`: Interface to Max linked lists
-- `Binbuf`: Interface to Max binbufs
-- `Atombuf`: Interface to Max atom buffers
-- `Hashtab`: Interface to Max hash tables
-- `AtomArray`: Interface to Max atom arrays
-- `Patcher`: Interface to Max patchers
-- `Box`: Interface to Max boxes/objects
-- `Matrix`: Interface to Max jit matrices
-- `Path`: Interface to Max path handling
-- `MaxApp`: Interface to the Max application
+    - `Atom`: Wrapper for Max mx.t_atom* atoms/messages
+    - `Table`: Interface to Max tables
+    - `Buffer`: Interface to MSP buffers
+    - `Dictionary`: Interface to Max dictionaries
+    - `DatabaseView`: Interface to Max database views
+    - `DatabaseResult`: Interface to Max database results
+    - `Database`: Interface to Max databases
+    - `List`: Interface to Max linked lists
+    - `Binbuf`: Interface to Max binbufs
+    - `Atombuf`: Interface to Max atom buffers
+    - `Hashtab`: Interface to Max hash tables
+    - `AtomArray`: Interface to Max atom arrays
+    - `Patcher`: Interface to Max patchers
+    - `Box`: Interface to Max boxes/objects
+    - `Matrix`: Interface to Max jit matrices
+    - `Path`: Interface to Max path handling
+    - `MaxApp`: Interface to the Max application
 
 3. High-level wrapper: these can only be invoked in the max c-apu using generic object methods and subclass (1) generic classes. An example of this is the `api.Coll` class
 

@@ -6,7 +6,6 @@ the Max/MSP c-api python code while using `py` external.
 Extension Classes:
 - MaxObject: generic wrapper for Max t_object* objects
 - Atom: wrapper for Max mx.t_atom* atoms/messages
-- Table: wrapper for Max tables
 - Buffer: wrapper for MSP buffers
 - Dictionary: wrapper for Max dictionaries
 - DatabaseView: wrapper for Max database views
@@ -19,16 +18,19 @@ Extension Classes:
 - AtomArray: wrapper for Max atom arrays
 - Patcher: wrapper for Max patchers
 - Box: wrapper for Max boxes/objects
-- Max: wrapper for the Max application
-- Matrix: wrapper for Max jit matrices
 - Path: wrapper for Max path handling
 - PyExternal: wrapper for the `py` external
 - PyMxObject: Alternative `py` external extension type (obj pointer retrieved via uintptr_t)
+
+WIP Extension Classes:
+- Matrix: wrapper for Max jit matrices
 
 Simple Wrappers:
     These are semi-generated wrappers (using the scripts/maxref.py -c <name>) which inherit
     from the `Object` extension class, which itself inherits from `MaxObject`.
 - Object(MaxObject): the superclass for simple max objects
+- Max(Object): wrapper for the Max application
+- Table(Object): wrapper for Max tables
 - Coll(Object): wrapper for max coll objects
 - Array(Object): wrapper around `array` object
 
@@ -1141,366 +1143,6 @@ cdef class Atom:
         """set object value into an array of atoms."""
         return mx.atom_setobjval(&self.size, <mx.t_atom **>&self.ptr, obj)
 
-# ----------------------------------------------------------------------------
-# api.Table
-
-cdef class Table(Object):
-    """A wrapper class to acess a pre-existing Max table"""
-
-    cdef long **storage
-    cdef readonly long size
-
-    def __cinit__(self):
-        self.ptr = NULL
-        self.ptr_owner = False
-        self.name = ""
-        self._classname = ""
-        self._namespace = 'box'
-        self.type_map = {}
-        self.storage = NULL
-        self.size = 0
-
-    def __init__(self, name: str, *args, **kwds):
-        self.name = name
-        self._namespace = kwds.get('namespace', 'box')
-        self._classname = "table"
-
-        self.ptr = self._object_ptr_from_existing(self._classname, name)
-        self.ptr_owner = False
-        if self.ptr is not NULL:
-            check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
-            if check == 0: # i.e is found
-                return
-
-        self.ptr = self._object_ptr_from_new(
-            self._classname, self.name, self._namespace, args)
-        self.ptr_owner = True
-        if self.ptr is NULL:
-            raise ValueError("could not retrieve nor create the "
-                            f"{self._classname} object with name '{name}'")
-
-    def __repr__(self) -> str:
-        return f"<Table '{self.name}' size:{self.size}>"
-
-    def __len__(self):
-        return self.size
-
-    def __getitem__(self, int idx):
-        return self.get_int(idx)
-
-    def __setitem__(self, int idx, int value):
-        self.set_int(idx, value)
-
-    def __iter__(self):
-        return iter(self.as_list())
-
-    # helper methods
-
-    def populate(self, list[int] xs):
-        """Populate a table from a python list of ints"""
-        if len(xs) <= self.size:
-            for i, x in enumerate(xs):
-                self.storage[0][i] = <long>x
-        else:
-            for i in range(self.size):
-                self.storage[0][i] = <long>xs[i]
-        self.set_dirty() # makes ui updates faster!
-
-    def to_list(self):
-        """Convert a table to a python list of ints"""
-        cdef long value
-        cdef list[int] xs = []
-        for i in range(self.size):
-            value = self.storage[0][i]
-            xs.append(<int>value)
-        return xs
-
-    def set_dirty(self):
-        """Mark a table object as having changed data."""
-        cdef short res = mx.table_dirty(str_to_sym(self.name))
-        if res != 0:
-            raise TypeError(f"no table is associated with tableName {self.name}")
-
-    # msg methods
-
-    def bang(self):
-        """Output a random quantile
-
-        Same as a `quantile` message with a random number between 0 and 32,768
-        as an argument. See the `quantile` message for more details.
-        """
-        self.call("bang")
-
-    def get_int(self, int index):
-        """Retrieve a number by index
-
-        int(int index?)
-
-        Retrieves the number by address from the `table`, and sends it out the
-        left outlet.
-        """
-        self.call("int", index)
-
-    def set_int(self, int index, int value):
-        """Store a value at an index
-
-        list(int index?, int value?)
-
-        The second number is stored in at the address (index) specified by the
-        first number.
-        """
-        self.call("list", index, value)
-
-    def cancel(self):
-        """Ignore value received
-
-        Causes table to ignore a number received in the right inlet, so that
-        the next number received in the left inlet will output a number,
-        rather than storing a number at that address.
-        """
-        self.call("cancel")
-
-    def clear(self):
-        """Set all values to 0"""
-        self.call("clear")
-
-    def const(self, int value):
-        """Fill the table with a number"""
-        self.call("const", value)
-
-    def dump(self):
-        """Output all numbers
-
-        Sends all the numbers stored in the table out the left outlet in
-        immediate succession, beginning with address 0.
-        """
-        self.call("dump")
-
-    def fquantile(self, float multiplier = 0.5):
-        """Return quantile address from float
-
-        fquantile(float multiplier?)
-
-        Given a number between zero and one, multiplies the number by the sum
-        of all the numbers in the table. Then, table sends out the address
-        at which the sum of the all values up to that address is greater
-        than or equal to the result.
-        """
-        self.call("fquantile", multiplier)
-
-    def getbits(self, int address, int start, int bits):
-        """Get bit values from an index
-
-        getbits(int address?, int start?, int bits?)
-
-        Gets the value of one or more specific bits of a number stored in the
-        table, and sends that value out the left outlet. The first
-        argument is the address to query; the second argument is the
-        starting bit location in the number stored at that address (the
-        bit locations are numbered 0 to 31, from the least significant bit
-        to the most significant bit); and the third argument specifies how
-        many bits to the right of the starting bit location should be sent
-        out. The specified bits are sent out the outlet as a single
-        decimal integer.
-        """
-        self.call("getbits", address, start, bits)
-
-    def goto(self, int index):
-        """Set the pointer location
-
-        goto(int index?)
-
-        Sets a pointer to the address specified by the number. The pointer is
-        set at the beginning of the table initially.
-        """
-        self.call("goto", index)
-
-    def in1(self, int value):
-        """Store a value
-
-        in1(int value?)
-
-        Stores the value at the next index number received at the left inlet.
-        """
-        self.call("in1", value)
-
-    def inv(self, int value):
-        """Find the index of a value
-
-        inv(int value?)
-
-        Finds the first value which is greater than or equal to that number,
-        and sends the address of that value out the left outlet.
-        """
-        self.call("inv", value)
-
-    def length(self):
-        """Output the table size"""
-        self.call("length")
-
-    def load(self):
-        """Fill a table with a stream of data
-
-        Places the table in load mode. In load mode, every number received in
-        the left inlet gets stored in the table, beginning at address 0
-        and continuing until the table is filled (or until the table is
-        taken out of load mode by a `normal` message). If more numbers are
-        received than will fit in the size of the table, additional
-        numbers are ignored.
-        """
-        self.call("load")
-
-    def max(self):
-        """Retrieve the maximum stored value"""
-        self.call("max")
-
-    def min(self):
-        """Retrieve the minimum stored value"""
-        self.call("min")
-
-    def next(self):
-        """Output value, then move the pointer
-
-        Sends the value stored in the address pointed at by the pointer out
-        the left outlet, then sets the pointer to the next address. If the
-        pointer is currently at the last address in the table, it wraps
-        around to the first address.
-        """
-        self.call("next")
-
-    def normal(self):
-        """Exit load mode
-
-        Takes the table out of load mode and reverts it to normal operation.
-        See the `load` message for more details.
-        """
-        self.call("normal")
-
-    def open(self):
-        """Open the graphic editor
-
-        Opens the object’s graphic editor window and brings it to the
-        foreground. Double-clicking on the `table` object in a locked
-        patcher has the same effect.
-        """
-        self.call("open")
-
-    def prev(self):
-        """Output value, then move the pointer
-
-        Causes the same output as the `next` message, but the pointer is then
-        decremented rather than incremented. If the pointer is currently
-        at the first address in the table, it wraps around to the last
-        address.
-        """
-        self.call("prev")
-
-    def quantile(self, int number):
-        """Return quantile address
-
-        quantile(int number?)
-
-        Multiplies the incoming number by the sum of all the numbers in the
-        table. This result is then divided by 2^15 (32,768). Then, table
-        sends out the address at which the sum of all values up to that
-        address is greater than or equal to the result.
-        """
-        self.call("quantile", number)
-
-    def read(self, str filename):
-        """Read a data file from disk
-
-        read(symbol filename?)
-
-        Opens and reads data values from a file in Text or Max binary format.
-        Without an argument, `read` opens a standard Open Document dialog
-        to choose a file. If the file contains valid data, the entire
-        contents of the existing table are replaced with the file
-        contents.
-        """
-        self.call("read", filename)
-
-    def refer(self, str name):
-        """Change table data context
-
-        refer(symbol name?)
-
-        Sets the receiving `table` object to read its data values from the
-        named table.
-        """
-        self.call("refer", name)
-
-    def send(self, str receiver_name, int address):
-        """Send a value to a receive object
-
-        send(symbol receive-name?, int address?)
-
-        Sends the value stored at the incoming address to all `receive`
-        objects with that name.
-        """
-        self.call("send", receiver_name, address)
-
-    def set(self, int start, list[int] values):
-        """Store a list of values
-
-        set(int start?, list values?)
-
-        Stores values in certain addresses. The first argument specifies an
-        address. The next number is the value to be stored in that
-        address, and each number after that is stored in a successive
-        address.
-        """
-        # args = [start]
-        # args.extend(values)
-        self.call("set", start, values)
-
-    def setbits(self, int address, int start, int count, int value):
-        """Change the bit values of an address
-
-        setbits(int address?, int start?, int count?, int value?)
-
-        Changes the value of one or more specific bits of a number stored in
-        the table. The first argument is the address being referred to;
-        the second argument is the starting bit location in the number
-        stored at that address (the bit locations are numbered 0 to 31,
-        from the least significant bit to the most significant bit); the
-        third argument specifies how many bits to the right of the
-        starting bit location should be modified, and the fourth argument
-        is the value (stated in decimal or hexadecimal form) to which
-        those bits should be set.
-        """
-        self.call("setbits", address, start, count, value)
-
-    def sum(self):
-        """Output the sum of all values"""
-        self.call("sum")
-
-    def wclose(self):
-        """Close the graphic editing window"""
-        self.call("wclose")
-
-    def write(self, path: str):
-        """Write data to disk
-
-        Opens a standard save file dialog for choosing a name to write data
-        values from the table. The file can be saved in Text or Max binary
-        format.
-        """
-        self.call("write", path)
-
-
-    # table attributes
-
-    def embed(self, bint value = True):
-        """Embed table with patcher or not.
-
-
-        This is a an attribute so need special methods
-        """
-        cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object*>self.ptr,
-            mx.gensym("embed"), <long>value)
-        if err:
-            raise TypeError("could not set embed attribute")
 
 # ----------------------------------------------------------------------------
 # api.Buffer
@@ -4659,95 +4301,6 @@ cdef class Box:
         cdef mx.t_symbol* _id = mx.jbox_get_id(self.ptr)
         return sym_to_str(_id)
 
-# ----------------------------------------------------------------------------
-# api.Max
-
-cdef class Max(Object):
-    """A class to enable messages to the 'max' application."""
-
-    def __init__(self):
-        self.ptr = <mx.t_object*>mx.object_new(
-            mx.gensym("nobox"), mx.gensym("max"))
-        self.ptr_owner = False
-
-    def __repr__(self) -> str:
-        return "<Max>"
-
-    def clean(self):
-        """Call the 'clean' method on the application object."""
-        self.call("clean")
-
-    def clearmaxwindow(self):
-        """Call the 'clearmaxwindow' method on the application object."""
-        self.call("clearmaxwindow")
-
-    def htmlref(self, name: str):
-        """Call the 'htmlref' method on the application object."""
-        self.call("htmlref", name)
-
-    def openfile(self, name: str):
-        """Call the 'openfile' method on the application object."""
-        self.call("openfile", name)
-
-    def closefile(self, name: str):
-        """Call the 'closefile' method on the application object."""
-        self.call("closefile", name)
-
-    def midilist(self):
-        """Call the 'midilist' method on the application object."""
-        self.call("midilist")
-
-    def maxwindow(self):
-        """Call the 'maxwindow' method on the application object."""
-        self.call("maxwindow")
-
-    def paths(self):
-        """Call the 'paths' method on the application object."""
-        self.call("paths")
-
-    def externaleditor(self, name: str):
-        """Call the 'externaleditor' method on the application object."""
-        self.call("externaleditor", name)
-
-    def useexternaleditor(self, on: bool = True):
-        """Call the 'useexternaleditor' method on the application object."""
-        self.call("useexternaleditor", on)
-
-    def hidemenubar(self):
-        """Call the 'hidemenubar' method on the application object."""
-        self.call("hidemenubar")
-
-    def showmenubar(self):
-        """Call the 'showmenubar' method on the application object."""
-        self.call("showmenubar")
-
-    def externs(self):
-        """Call the 'externs' method on the application object."""
-        self.call("externs")
-
-    def getsystem(self, receiver: str):
-        """Call the 'getsystem' method on the application object."""
-        self.call("getsystem", receiver)
-
-    def getversion(self, receiver: str):
-        """Call the 'getversion' method on the application object."""
-        self.call("getversion", receiver)
-
-    def sendapppath(self, receiver: str):
-        """Call the 'sendapppath' method on the application object."""
-        self.call("sendapppath", receiver)
-
-    def launchbrowser(self, url: str):
-        """Call the 'launchbrowser' method on the application object."""
-        self.call("launchbrowser", url)
-
-    def preempt(self, on: bool = True):
-        """Call the 'preempt' method on the application object."""
-        self.call("preempt", on)
-
-    def quit(self):
-        """Call the 'quit' method on the application object."""
-        self.call("quit")
 
 # ----------------------------------------------------------------------------
 # api.Matrix
@@ -6371,6 +5924,459 @@ cdef class Object(MaxObject):
     #             str_to_sym(method), atom.size, atom.ptr, NULL)
     #     if err:
     #         raise ValueError(f"could not apply single arg to method {method}")
+
+# ----------------------------------------------------------------------------
+# api.Max
+
+cdef class Max(Object):
+    """A class to enable messages to the 'max' application."""
+
+    def __init__(self):
+        self.ptr = <mx.t_object*>mx.object_new(
+            mx.gensym("nobox"), mx.gensym("max"))
+        self.ptr_owner = False
+
+    def __repr__(self) -> str:
+        return "<Max>"
+
+    def clean(self):
+        """Call the 'clean' method on the application object."""
+        self.call("clean")
+
+    def clearmaxwindow(self):
+        """Call the 'clearmaxwindow' method on the application object."""
+        self.call("clearmaxwindow")
+
+    def htmlref(self, name: str):
+        """Call the 'htmlref' method on the application object."""
+        self.call("htmlref", name)
+
+    def openfile(self, name: str):
+        """Call the 'openfile' method on the application object."""
+        self.call("openfile", name)
+
+    def closefile(self, name: str):
+        """Call the 'closefile' method on the application object."""
+        self.call("closefile", name)
+
+    def midilist(self):
+        """Call the 'midilist' method on the application object."""
+        self.call("midilist")
+
+    def maxwindow(self):
+        """Call the 'maxwindow' method on the application object."""
+        self.call("maxwindow")
+
+    def paths(self):
+        """Call the 'paths' method on the application object."""
+        self.call("paths")
+
+    def externaleditor(self, name: str):
+        """Call the 'externaleditor' method on the application object."""
+        self.call("externaleditor", name)
+
+    def useexternaleditor(self, on: bool = True):
+        """Call the 'useexternaleditor' method on the application object."""
+        self.call("useexternaleditor", on)
+
+    def hidemenubar(self):
+        """Call the 'hidemenubar' method on the application object."""
+        self.call("hidemenubar")
+
+    def showmenubar(self):
+        """Call the 'showmenubar' method on the application object."""
+        self.call("showmenubar")
+
+    def externs(self):
+        """Call the 'externs' method on the application object."""
+        self.call("externs")
+
+    def getsystem(self, receiver: str):
+        """Call the 'getsystem' method on the application object."""
+        self.call("getsystem", receiver)
+
+    def getversion(self, receiver: str):
+        """Call the 'getversion' method on the application object."""
+        self.call("getversion", receiver)
+
+    def sendapppath(self, receiver: str):
+        """Call the 'sendapppath' method on the application object."""
+        self.call("sendapppath", receiver)
+
+    def launchbrowser(self, url: str):
+        """Call the 'launchbrowser' method on the application object."""
+        self.call("launchbrowser", url)
+
+    def preempt(self, on: bool = True):
+        """Call the 'preempt' method on the application object."""
+        self.call("preempt", on)
+
+    def quit(self):
+        """Call the 'quit' method on the application object."""
+        self.call("quit")
+
+
+# ----------------------------------------------------------------------------
+# api.Table
+
+cdef class Table(Object):
+    """A wrapper class to acess a pre-existing Max table"""
+
+    cdef long **storage
+    cdef readonly long size
+
+    def __cinit__(self):
+        self.ptr = NULL
+        self.ptr_owner = False
+        self.name = ""
+        self._classname = ""
+        self._namespace = 'box'
+        self.type_map = {}
+        self.storage = NULL
+        self.size = 0
+
+    def __init__(self, name: str, *args, **kwds):
+        self.name = name
+        self._namespace = kwds.get('namespace', 'box')
+        self._classname = "table"
+
+        self.ptr = self._object_ptr_from_existing(self._classname, name)
+        self.ptr_owner = False
+        if self.ptr is not NULL:
+            check = mx.table_get(str_to_sym(name), &self.storage, &self.size)
+            if check == 0: # i.e is found
+                return
+
+        self.ptr = self._object_ptr_from_new(
+            self._classname, self.name, self._namespace, args)
+        self.ptr_owner = True
+        if self.ptr is NULL:
+            raise ValueError("could not retrieve nor create the "
+                            f"{self._classname} object with name '{name}'")
+
+    def __repr__(self) -> str:
+        return f"<Table '{self.name}' size:{self.size}>"
+
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, int idx):
+        return self.get_int(idx)
+
+    def __setitem__(self, int idx, int value):
+        self.set_int(idx, value)
+
+    def __iter__(self):
+        return iter(self.as_list())
+
+    # helper methods
+
+    def populate(self, list[int] xs):
+        """Populate a table from a python list of ints"""
+        if len(xs) <= self.size:
+            for i, x in enumerate(xs):
+                self.storage[0][i] = <long>x
+        else:
+            for i in range(self.size):
+                self.storage[0][i] = <long>xs[i]
+        self.set_dirty() # makes ui updates faster!
+
+    def to_list(self):
+        """Convert a table to a python list of ints"""
+        cdef long value
+        cdef list[int] xs = []
+        for i in range(self.size):
+            value = self.storage[0][i]
+            xs.append(<int>value)
+        return xs
+
+    def set_dirty(self):
+        """Mark a table object as having changed data."""
+        cdef short res = mx.table_dirty(str_to_sym(self.name))
+        if res != 0:
+            raise TypeError(f"no table is associated with tableName {self.name}")
+
+    # msg methods
+
+    def bang(self):
+        """Output a random quantile
+
+        Same as a `quantile` message with a random number between 0 and 32,768
+        as an argument. See the `quantile` message for more details.
+        """
+        self.call("bang")
+
+    def get_int(self, int index):
+        """Retrieve a number by index
+
+        int(int index?)
+
+        Retrieves the number by address from the `table`, and sends it out the
+        left outlet.
+        """
+        self.call("int", index)
+
+    def set_int(self, int index, int value):
+        """Store a value at an index
+
+        list(int index?, int value?)
+
+        The second number is stored in at the address (index) specified by the
+        first number.
+        """
+        self.call("list", index, value)
+
+    def cancel(self):
+        """Ignore value received
+
+        Causes table to ignore a number received in the right inlet, so that
+        the next number received in the left inlet will output a number,
+        rather than storing a number at that address.
+        """
+        self.call("cancel")
+
+    def clear(self):
+        """Set all values to 0"""
+        self.call("clear")
+
+    def const(self, int value):
+        """Fill the table with a number"""
+        self.call("const", value)
+
+    def dump(self):
+        """Output all numbers
+
+        Sends all the numbers stored in the table out the left outlet in
+        immediate succession, beginning with address 0.
+        """
+        self.call("dump")
+
+    def fquantile(self, float multiplier = 0.5):
+        """Return quantile address from float
+
+        fquantile(float multiplier?)
+
+        Given a number between zero and one, multiplies the number by the sum
+        of all the numbers in the table. Then, table sends out the address
+        at which the sum of the all values up to that address is greater
+        than or equal to the result.
+        """
+        self.call("fquantile", multiplier)
+
+    def getbits(self, int address, int start, int bits):
+        """Get bit values from an index
+
+        getbits(int address?, int start?, int bits?)
+
+        Gets the value of one or more specific bits of a number stored in the
+        table, and sends that value out the left outlet. The first
+        argument is the address to query; the second argument is the
+        starting bit location in the number stored at that address (the
+        bit locations are numbered 0 to 31, from the least significant bit
+        to the most significant bit); and the third argument specifies how
+        many bits to the right of the starting bit location should be sent
+        out. The specified bits are sent out the outlet as a single
+        decimal integer.
+        """
+        self.call("getbits", address, start, bits)
+
+    def goto(self, int index):
+        """Set the pointer location
+
+        goto(int index?)
+
+        Sets a pointer to the address specified by the number. The pointer is
+        set at the beginning of the table initially.
+        """
+        self.call("goto", index)
+
+    def in1(self, int value):
+        """Store a value
+
+        in1(int value?)
+
+        Stores the value at the next index number received at the left inlet.
+        """
+        self.call("in1", value)
+
+    def inv(self, int value):
+        """Find the index of a value
+
+        inv(int value?)
+
+        Finds the first value which is greater than or equal to that number,
+        and sends the address of that value out the left outlet.
+        """
+        self.call("inv", value)
+
+    def length(self):
+        """Output the table size"""
+        self.call("length")
+
+    def load(self):
+        """Fill a table with a stream of data
+
+        Places the table in load mode. In load mode, every number received in
+        the left inlet gets stored in the table, beginning at address 0
+        and continuing until the table is filled (or until the table is
+        taken out of load mode by a `normal` message). If more numbers are
+        received than will fit in the size of the table, additional
+        numbers are ignored.
+        """
+        self.call("load")
+
+    def max(self):
+        """Retrieve the maximum stored value"""
+        self.call("max")
+
+    def min(self):
+        """Retrieve the minimum stored value"""
+        self.call("min")
+
+    def next(self):
+        """Output value, then move the pointer
+
+        Sends the value stored in the address pointed at by the pointer out
+        the left outlet, then sets the pointer to the next address. If the
+        pointer is currently at the last address in the table, it wraps
+        around to the first address.
+        """
+        self.call("next")
+
+    def normal(self):
+        """Exit load mode
+
+        Takes the table out of load mode and reverts it to normal operation.
+        See the `load` message for more details.
+        """
+        self.call("normal")
+
+    def open(self):
+        """Open the graphic editor
+
+        Opens the object’s graphic editor window and brings it to the
+        foreground. Double-clicking on the `table` object in a locked
+        patcher has the same effect.
+        """
+        self.call("open")
+
+    def prev(self):
+        """Output value, then move the pointer
+
+        Causes the same output as the `next` message, but the pointer is then
+        decremented rather than incremented. If the pointer is currently
+        at the first address in the table, it wraps around to the last
+        address.
+        """
+        self.call("prev")
+
+    def quantile(self, int number):
+        """Return quantile address
+
+        quantile(int number?)
+
+        Multiplies the incoming number by the sum of all the numbers in the
+        table. This result is then divided by 2^15 (32,768). Then, table
+        sends out the address at which the sum of all values up to that
+        address is greater than or equal to the result.
+        """
+        self.call("quantile", number)
+
+    def read(self, str filename):
+        """Read a data file from disk
+
+        read(symbol filename?)
+
+        Opens and reads data values from a file in Text or Max binary format.
+        Without an argument, `read` opens a standard Open Document dialog
+        to choose a file. If the file contains valid data, the entire
+        contents of the existing table are replaced with the file
+        contents.
+        """
+        self.call("read", filename)
+
+    def refer(self, str name):
+        """Change table data context
+
+        refer(symbol name?)
+
+        Sets the receiving `table` object to read its data values from the
+        named table.
+        """
+        self.call("refer", name)
+
+    def send(self, str receiver_name, int address):
+        """Send a value to a receive object
+
+        send(symbol receive-name?, int address?)
+
+        Sends the value stored at the incoming address to all `receive`
+        objects with that name.
+        """
+        self.call("send", receiver_name, address)
+
+    def set(self, int start, list[int] values):
+        """Store a list of values
+
+        set(int start?, list values?)
+
+        Stores values in certain addresses. The first argument specifies an
+        address. The next number is the value to be stored in that
+        address, and each number after that is stored in a successive
+        address.
+        """
+        # args = [start]
+        # args.extend(values)
+        self.call("set", start, values)
+
+    def setbits(self, int address, int start, int count, int value):
+        """Change the bit values of an address
+
+        setbits(int address?, int start?, int count?, int value?)
+
+        Changes the value of one or more specific bits of a number stored in
+        the table. The first argument is the address being referred to;
+        the second argument is the starting bit location in the number
+        stored at that address (the bit locations are numbered 0 to 31,
+        from the least significant bit to the most significant bit); the
+        third argument specifies how many bits to the right of the
+        starting bit location should be modified, and the fourth argument
+        is the value (stated in decimal or hexadecimal form) to which
+        those bits should be set.
+        """
+        self.call("setbits", address, start, count, value)
+
+    def sum(self):
+        """Output the sum of all values"""
+        self.call("sum")
+
+    def wclose(self):
+        """Close the graphic editing window"""
+        self.call("wclose")
+
+    def write(self, path: str):
+        """Write data to disk
+
+        Opens a standard save file dialog for choosing a name to write data
+        values from the table. The file can be saved in Text or Max binary
+        format.
+        """
+        self.call("write", path)
+
+
+    # table attributes
+
+    def embed(self, bint value = True):
+        """Embed table with patcher or not.
+
+
+        This is a an attribute so need special methods
+        """
+        cdef mx.t_max_err err = mx.object_attr_setlong(<mx.t_object*>self.ptr,
+            mx.gensym("embed"), <long>value)
+        if err:
+            raise TypeError("could not set embed attribute")
+
 
 # ----------------------------------------------------------------------------
 # api.Coll

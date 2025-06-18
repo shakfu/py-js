@@ -14,7 +14,7 @@ pdf documentation - [Python3-Externals-for-Max-MSP.pdf](https://github.com/shakf
 
 This project started out as an attempt (during a covid-19 lockdown) to develop a basic python3 external for Max/MSP. It then evolved into an umbrella project for exploring different ways of using python3 in Max/MSP.
 
-Along the way, a number of externals (17 so far) have been developed for use in a live Max environment. In most cases, each external can be built on its own via `make <external-name>` or as part of a related group (see below and click on the links to see more detailed documentation):
+Along the way, a number of externals (17 so far) have been developed for use in a live Max environment. In most cases, each external can be built on its own via `make <external-name>` or as part of a related group (see below and click on the linked names of the externals in the below tables to see more detailed documentation):
 
 **Python3 Core Externals:**
 
