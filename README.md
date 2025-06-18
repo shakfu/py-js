@@ -8,6 +8,8 @@ repo - <https://github.com/shakfu/py-js>
 
 pdf documentation - [Python3-Externals-for-Max-MSP.pdf](https://github.com/shakfu/py-js/tree/main/source/docs/_book/Python3-Externals-for-Max-MSP.pdf)
 
+ai-enabled deep wiki - [py-js deep wiki](https://deepwiki.com/shakfu/py-js)
+
 [![py-js py.maxhelp](./media/py-maxhelp.png)](patchers/py_test_anything.maxpat)
 
 ## Overview
