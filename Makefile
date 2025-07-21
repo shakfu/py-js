@@ -69,10 +69,8 @@ MIN_LIB_INCLUDES := source/min-lib/include
 HOMEBREW_INCLUDES := $(HOMEBREW)/include
 HOMEBREW_DEPENDENCIES = "python cmake zmq"
 
-ifndef GENERATOR
 ifeq ($(PLATFORM), Darwin)
-GENERATOR = "-GXcode"
-endif
+GENERATOR ?= "-GXcode"
 endif
 
 # ifdef MYFLAG
