@@ -2444,7 +2444,7 @@ void py_scan(t_py* x)
         py_error(x, "scan failed");
     }
     py_debug(x, "scan result: %d", result);
- }
+}
 
 /**
  * @brief A help function used by scan to scan registry and retrieve object

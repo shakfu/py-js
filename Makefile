@@ -1,8 +1,11 @@
 # ============================================================================
 # VARIABLES & CONSTANTS
 
+# os of current system
+PLATFORM = $(shell uname)
+
 # architecture of current system
-# currently only macOS x86_64 and arm64 supported
+# currently only relevant to macOS: x86_64 and arm64 supported
 ARCH = $(shell uname -m)
 
 # python executable to use
@@ -45,12 +48,12 @@ CYTHON_OPTIONS = --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
 
 MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSIONS := 8 9
-PKG_DIRS = docs examples extensions externals help init \
-           javascript jsextensions media misc patchers
+PKG_DIRS := docs examples extensions externals help init \
+            javascript jsextensions media misc patchers
 
 # constants
-COLOR_BOLD_CYAN = "\033[1;36m"
-COLOR_RESET = "\033[m"
+COLOR_BOLD_CYAN := "\033[1;36m"
+COLOR_RESET := "\033[m"
 
 # if using macos and the homebrew package manager, 
 # you can check if build dependencies are installed by
@@ -65,6 +68,12 @@ MIN_API_INCLUDES := source/min-api/include
 MIN_LIB_INCLUDES := source/min-lib/include
 HOMEBREW_INCLUDES := $(HOMEBREW)/include
 HOMEBREW_DEPENDENCIES = "python cmake zmq"
+
+ifndef GENERATOR
+ifeq ($(PLATFORM), Darwin)
+GENERATOR = "-GXcode"
+endif
+endif
 
 # ifdef MYFLAG
 # CFLAGS += -DMYFLAG
@@ -198,37 +207,37 @@ local-sys: clean-local-sys api
 	$(call call-builder,"pyjs" "local_sys")
 
 core: api clean-build-dir clean-externals
-	$(call section,"building core externals using cmake with xcode for auto-signing")
+	$(call section,"building core externals using cmake")
 	@mkdir build && \
 		cd build && \
-		cmake -GXcode .. \
+		cmake $(GENERATOR) .. \
 			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 
 experimentals: clean-build-dir clean-externals
-	$(call section,"building experimental externals using cmake with xcode")
+	$(call section,"building experimental externals using")
 	@mkdir build && \
 		cd build && \
-		cmake -GXcode .. \
+		cmake $(GENERATOR) .. \
 			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 
 pocketpy: clean-build-dir clean-externals
-	$(call section,"building pocketpy externals using cmake with xcode")
+	$(call section,"building pocketpy externals using")
 	@mkdir build && \
 		cd build && \
-		cmake -GXcode .. \
+		cmake $(GENERATOR) .. \
 			-DBUILD_POCKETPY_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 
 projects: clean-build-dir clean-externals
-	$(call section,"building projects using cmake with xcode with auto-signing")
+	$(call section,"building projects using")
 	@mkdir build && \
 		cd build && \
-		cmake -GXcode .. \
+		cmake $(GENERATOR) .. \
 			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
 			-DBUILD_PYTHON3_EXPERIMENTAL_EXTERNALS=ON \
 			-DBUILD_POCKETPY_EXTERNALS=ON \
@@ -237,29 +246,29 @@ projects: clean-build-dir clean-externals
 		cmake --build . --config Release
 
 demos: clean-build-dir clean-externals
-	$(call section,"building demos using cmake with xcode")
+	$(call section,"building demos using cmake")
 	@mkdir -p build && \
 		cd build && \
-		cmake -GXcode .. \
+		cmake $(GENERATOR) .. \
 			-DBUILD_DEMO_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
 
 mpy: clean-build-dir clean-externals
-	$(call section,"building the mpy external using cmake with xcode")
+	$(call section,"building the mpy external using cmake")
 	@mkdir -p build && \
 		cd build && \
-		cmake -GXcode .. \
+		cmake $(GENERATOR) .. \
 			-DFETCH_MICROPYTHON=ON \
 			-DBUILD_MICROPYTHON_EXTERNAL=ON \
 			&& \
 		cmake --build . --config Release
 
 net: clean-build-dir clean-externals
-	$(call section,"building the networking externals using cmake with xcode")
+	$(call section,"building the networking externals using cmake")
 	@mkdir -p build && \
 		cd build && \
-		cmake -GXcode .. \
+		cmake $(GENERATOR) .. \
 			-DBUILD_NETWORKING_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release

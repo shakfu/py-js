@@ -158,7 +158,7 @@ git clone --recursive https://github.com/shakfu/py-js
 cd py-js
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DBUILD_PYTHON3_CORE_EXTERNALS=ON
 cmake --build . --config Release
 ```
 
