@@ -151,18 +151,23 @@ Currently, the externals which are enabled by default in this project can be bui
 
 3. (Optional) since Visual Studio has its captive cmake, [you can use that](https://stackoverflow.com/questions/70178963/where-is-cmake-located-when-downloaded-from-visual-studio-2022), but it is preferable to [install cmake](https://cmake.org/download/#latest) independently.
 
-After installation of the above you can build the externals inside your `Documents/Max 9/Packages` folder as follows:
+After installation of the above you can now build the externals inside your `Documents/Max (8 or 9)/Packages` folder. The entails opening a terminal inside this folder, and then type:
 
 ```sh
 git clone --recursive https://github.com/shakfu/py-js
 cd py-js
+```
+
+If you have a working `make.exe` executable on your path then typing `make core` should build the core externals otherwise type the following:
+
+```sh
 mkdir build
 cd build
 cmake .. -DBUILD_PYTHON3_CORE_EXTERNALS=ON
 cmake --build . --config Release
 ```
 
-Open one of the `.maxhelp` files or any of the files in the `patchers` folders to see how things work.
+Now open one of the `.maxhelp` files or any of the files in the `patchers` folders to see how things work.
 
 ### Building Externals using Cmake
 

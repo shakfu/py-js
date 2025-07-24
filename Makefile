@@ -16,8 +16,8 @@ PYTHON = python3
 # which provides the path to the python executable.
 # To override this, and use a specific version in builds, you can
 # set it as environment var: `make shared-ext PYTHON_VERSION=3.12.9`
-# or just uncomment the line below, to use on more than one build.
-# PYTHON_VERSION = 3.13.2
+# or just uncomment the line below, to set a default.
+# PYTHON_VERSION = 3.13.5
 
 # target: first second
 
@@ -41,10 +41,10 @@ PKG_NAME = py-js
 # cython options
 EXTENSION = $(PYDIR)/api.pyx
 INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
-				   # this requires numpy to be available to the python
-				   # interpreter.
+  # this requires numpy to be available to the python
+  # interpreter.
 CYTHON_OPTIONS = --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
-				 -X emit_code_comments=False
+-X emit_code_comments=False
 
 MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSIONS := 8 9
@@ -55,33 +55,33 @@ PKG_DIRS := docs examples extensions externals help init \
 COLOR_BOLD_CYAN := "\033[1;36m"
 COLOR_RESET := "\033[m"
 
-# if using macos and the homebrew package manager, 
-# you can check if build dependencies are installed by
-# `make check-deps`
-HOMEBREW := $(shell brew --prefix)
-CLANG_TIDY := $(HOMEBREW)/opt/llvm/bin/clang-tidy
-PYTHON3_INCLUDES := $(shell python3-config --include)
 C74_INCLUDES := source/max-sdk-base/c74support
 MAX_INCLUDES := $(C74_INCLUDES)/max-includes
 MSP_INCLUDES := $(C74_INCLUDES)/msp-includes
 MIN_API_INCLUDES := source/min-api/include
 MIN_LIB_INCLUDES := source/min-lib/include
+
+# if using macos and the homebrew package manager,
+# you can check if build dependencies are installed by
+# `make check-deps`
+ifeq ($(PLATFORM), Darwin)
+HOMEBREW := $(shell brew --prefix)
+CLANG_TIDY := $(HOMEBREW)/opt/llvm/bin/clang-tidy
+PYTHON3_INCLUDES := $(shell python3-config --include)
 HOMEBREW_INCLUDES := $(HOMEBREW)/include
 HOMEBREW_DEPENDENCIES = "python cmake zmq"
-
-ifeq ($(PLATFORM), Darwin)
 GENERATOR ?= "-GXcode"
 endif
-
-# ifdef MYFLAG
-# CFLAGS += -DMYFLAG
-# endif
 
 # ============================================================================
 # FUNCTIONS
 
 # $(call section,string)
+ifeq ($(PLATFORM), Darwin)
 section = @echo ${COLOR_BOLD_CYAN}">>> ${1}"${COLOR_RESET}
+else
+section = @echo ">>> ${1}"
+endif
 
 # $(call call-builder,name,etc.)
 define call-builder
