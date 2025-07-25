@@ -33,10 +33,9 @@ BUILDDIR := $(PYDIR)/targets/build
 CFLOW := $(PYDIR)/resources/cflow
 
 # project variables
-NAME = py
-PROJECT = $(NAME).xcodeproj
+NAME = py-js
 TARGETS = py pyjs
-PKG_NAME = py-js
+PKG_NAME = $(NAME)
 
 # cython options
 EXTENSION = $(PYDIR)/api.pyx
@@ -109,7 +108,7 @@ endef
 define xbuild-targets
 $(call section,"build $1")
 @for target in $(TARGETS); do \
-		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target ; \
+		xcodebuild -project targets/'$1'/$(NAME).xcodeproj -target $$target ; \
 	done
 endef
 
@@ -117,7 +116,7 @@ endef
 define xbuild-targets-flags
 $(call section,"build $1 with flags: $2")
 @for target in $(TARGETS); do \
-		xcodebuild -project targets/'$1'/py-js.xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
+		xcodebuild -project targets/'$1'/$(NAME).xcodeproj -target $$target GCC_PREPROCESSOR_DEFINITIONS='$$GCC_PREPROCESSOR_DEFINITIONS $2 ' ; \
 	done
 endef
 
@@ -867,8 +866,7 @@ cflow:
 
 # Cleaning
 # -----------------------------------------------------------------------
-.PHONY: \
-	reset clean clean-targets clean-support clean-externals \
+.PHONY: reset clean clean-targets clean-support clean-externals \
 	clean-build clean-build-dir clean-local-sys \
 	clean-homebrew-pkg clean-homebrew-ext \
 	clean-framework-pkg clean-framework-ext \
