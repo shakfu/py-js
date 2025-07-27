@@ -133,13 +133,13 @@ $(call section,"cleaning build product from python build $1")
 @rm -rf '${BUILDDIR}'/lib/$1
 endef
 
-# $(call xcode-target,name,variant)
-define xcode-target
-$(call section,"xcode building $1 as $2")
+# $(call build-target,name,variant)
+define build-target
+$(call section,"cmake building $1 as $2")
 @./source/scripts/buildpy.py -t $2 && \
 	mkdir -p build && \
 	cd build && \
-	cmake -GXcode .. \
+	cmake $(GENERATOR) .. \
 		-DBUILD_TARGETS=$(1) \
 		-DBUILD_VARIANT=$(2) \
 		&& \
@@ -352,115 +352,115 @@ beeware-ext: clean-externals
 
 
 py: clean-cmake-cache clean-externals
-	$(call xcode-target,py,local)
+	$(call build-target,$@,local)
 
 py-static: clean-cmake-cache clean-externals
-	$(call xcode-target,py,static-ext)
+	$(call build-target,py,static-ext)
 
 py-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,py,shared-ext)
+	$(call build-target,py,shared-ext)
 
 py-framework: clean-cmake-cache clean-externals
-	$(call xcode-target,py,framework-ext)
+	$(call build-target,py,framework-ext)
 
 py-framework-pkg: clean-cmake-cache clean-externals
-	$(call xcode-target,py,framework-pkg)
+	$(call build-target,py,framework-pkg)
 
 pyjs: clean-cmake-cache clean-externals
-	$(call xcode-target,pyjs,local)
+	$(call build-target,$@,local)
 
 pyjs-static: clean-cmake-cache clean-externals
-	$(call xcode-target,pyjs,static-ext)
+	$(call build-target,pyjs,static-ext)
 
 pyjs-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,pyjs,shared-ext)
+	$(call build-target,pyjs,shared-ext)
 
 pyjs-framework: clean-cmake-cache clean-externals
-	$(call xcode-target,pyjs,framework-ext)
+	$(call build-target,pyjs,framework-ext)
 
 pyjs-framework-pkg: clean-cmake-cache clean-externals
-	$(call xcode-target,pyjs,framework-pkg)
+	$(call build-target,pyjs,framework-pkg)
 
 mamba: clean-cmake-cache clean-externals
-	$(call xcode-target,mamba,local)
+	$(call build-target,$@,local)
 
 mamba-static: clean-cmake-cache clean-externals
-	$(call xcode-target,mamba,static-ext)
+	$(call build-target,mamba,static-ext)
 
 mamba-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,mamba,shared-ext)
+	$(call build-target,mamba,shared-ext)
 
 mamba-framework: clean-cmake-cache clean-externals
-	$(call xcode-target,mamba,framework-ext)
+	$(call build-target,mamba,framework-ext)
 
 mamba-framework-pkg: clean-cmake-cache clean-externals
-	$(call xcode-target,mamba,framework-pkg)
+	$(call build-target,mamba,framework-pkg)
 
 cobra: clean-cmake-cache clean-externals
-	$(call xcode-target,cobra,local)
+	$(call build-target,$@,local)
 
 cobra-static: clean-cmake-cache clean-externals
-	$(call xcode-target,cobra,static-ext)
+	$(call build-target,cobra,static-ext)
 
 cobra-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,cobra,shared-ext)
+	$(call build-target,cobra,shared-ext)
 
 cobra-framework: clean-cmake-cache clean-externals
-	$(call xcode-target,cobra,framework-ext)
+	$(call build-target,cobra,framework-ext)
 
 cobra-framework-pkg: clean-cmake-cache clean-externals
-	$(call xcode-target,cobra,framework-pkg)
+	$(call build-target,cobra,framework-pkg)
 
 krait: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 mxpy: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 pyx: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 pyx-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,pyx,shared-ext)
+	$(call build-target,pyx,shared-ext)
 
 pyx-static: clean-cmake-cache clean-externals
-	$(call xcode-target,pyx,static-ext)
+	$(call build-target,pyx,static-ext)
 
 mpyx: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 mpyx-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,mpyx,shared-ext)
+	$(call build-target,mpyx,shared-ext)
 
 mpyx-static: clean-cmake-cache clean-externals
-	$(call xcode-target,mpyx,static-ext)
+	$(call build-target,mpyx,static-ext)
 
 pymx: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 pktpy: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 pktpy2: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 jmx: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 zedit: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 zedit-shared: clean-cmake-cache clean-externals
-	$(call xcode-target,zedit,shared-ext)
+	$(call build-target,zedit,shared-ext)
 
 zedit-static: clean-cmake-cache clean-externals
-	$(call xcode-target,zedit,static-ext)
+	$(call build-target,zedit,static-ext)
 
 zpy: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 ztp: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 python-service: clean-python-service
 	@cd source/projects/xpyc/services && \
@@ -469,10 +469,10 @@ python-service: clean-python-service
 			BUILD_DIR=$(ROOTDIR)/build
 
 xpyc: clean-cmake-cache clean-externals python-service
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 shell: clean-cmake-cache clean-externals
-	$(call xcode-target,$@,local)
+	$(call build-target,$@,local)
 
 # -----------------------------------------------------------------------
 # release external targets

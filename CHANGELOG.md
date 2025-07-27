@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- `Makefile` single targets are now cross-platform, following from prior change. So `make py`, should also work on Windows as well now.
+
 - Made the `Makefile` more cross-platform-friendly. If `make.exe` is installed on `PATH` Windows machine using something like [w64devkit](https://github.com/skeeto/w64devkit), then you can use `make core` to build the core externals.
 
 - Changed minimum macOS version from `10.11` to `10.15` by redirecting to `source/scripts/cmake/max-pretarget.cmake`.
