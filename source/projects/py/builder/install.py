@@ -6,8 +6,6 @@ installs python packages into builder python3 externals
 
 import logging
 import os
-import subprocess
-from fnmatch import fnmatch
 from pathlib import Path
 
 from typing import Optional
@@ -36,7 +34,7 @@ class Installer:
         self.project = Project()
         self.variant = variant if variant else self.project.cache_get('variant')
         self.pkgs = pkgs
-        self.log = log = logging.getLogger(self.__class__.__name__)
+        self.log = logging.getLogger(self.__class__.__name__)
         self.cmd = ShellCmd(self.log)
 
     @property

@@ -69,7 +69,7 @@ At the time of this writing, and since the switch to [max-sdk-base](https://gith
 
 - **MacOS**: both x86_64 and Apple Silicon compatible. Note that the project intentionally only produces 'native' (`x86_64` xor `arm64`) externals with no current plans for 'fat' or universal externals to serve both architectures. You can download codesigned, notarized `x86_64`-based and `arm64`-based python3 externals from the [releases](https://github.com/shakfu/py-js/releases) section.
 
-- **Windows**: windows support was provided relatively recently, with currently all Python3 externals and also the `pktpy` projects building without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. One idea to overcome this constraint is to include the external's dependencies in the 'support' folder. This will hopefully be addressed in future iterations. The `pktpy` external, however, is fully portable and self-contained.
+- **Windows**: windows support was provided relatively recently, with currently all Python3 externals and also the `pktpy` projects building without issues on Windows. The only caveat is that as of this writing python3 externals are dynamically linked to the local Python3 `.dll` and are therefore not relocatable. One idea to overcome this constraint is to include the external's dependencies in the 'support' folder. This will hopefully be addressed in future iterations. The `pktpy` externals, however, are fully portable and self-contained.
 
 The [Quickstart](#quickstart) section below covers general setup for all of the externals, and will get you up and running with the `py` and `pyjs` externals. More details are provided in the [py] documentation section: the [Building Experimental Externals using Cmake](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-experimental-externals-using-cmake) section provides additional info to build the other remaining externals, and the [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones) section covers more advanced building and deployment scenarios for the `py` and `pyjs` externals with details about their many build variations available via a custom python-based build system which was specifically developed to cater for different scenerios of packaging and deploying the externals in Max packages and standalones.
 
@@ -171,7 +171,7 @@ Now open one of the `.maxhelp` files or any of the files in the `patchers` folde
 
 ### Building Externals using Cmake
 
-You can also use `cmake` to build **all** externals using similar methods to the `max-sdk`.
+You can use `cmake` to build **all** externals using similar methods to the `max-sdk`.
 
 First make sure you have completed the [Quickstart](#quickstart) section above. Next you will install `cmake` if necessary and a couple of additional dependencies for some of the subprojects. Of course, skip what is already installed:
 

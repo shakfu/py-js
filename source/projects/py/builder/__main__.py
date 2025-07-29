@@ -353,8 +353,8 @@ class Application(Commander):
     @option("-p", "--pkgs", help="install pkgs", type=str, nargs="+", metavar="PKG")
     def do_install(self, args):
         """install python packages"""
-        installer = Installer(*args.pkgs)
-        print("not yet implemented")
+        # installer = Installer(*args.pkgs)
+        raise NotImplementedError("TODO: implement")
 
     @option("-p", "--pkgs", help="install pkgs", type=str, nargs="+", metavar="PKG")
     def do_install_numpy(self, args):

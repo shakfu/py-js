@@ -12,7 +12,7 @@
 *.sdf
 *.sln
 *.suo
-workbook.leo
+#workbook.leo
 .DS_Store
 .env
 .mypy_cache
@@ -37,3 +37,4 @@ source/projects/py/scripts/archive/*
 support/*
 sysbuild
 tmp
+uv.lock

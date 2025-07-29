@@ -1,0 +1,18 @@
+[project]
+name = "py-js"
+version = "0.3.0"
+description = "python3 externals for Max/MSP"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "cython>=3.1.2",
+]
+
+[tool.uv]
+python-preference = "system"
+
+[dependency-groups]
+dev = [
+    "leo>=6.8.5",
+    "ruff>=0.12.5",
+]
