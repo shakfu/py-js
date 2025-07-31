@@ -10,7 +10,11 @@ ARCH = $(shell uname -m)
 
 # python executable to use
 # PYTHON = /usr/bin/python3
+ifeq ($(PLATFORM), Darwin)
 PYTHON = python3
+else
+PYTHON = python
+endif
 
 # PYTHON_VERSION is picked-up by default from the $(PYTHON) variable
 # which provides the path to the python executable.
@@ -136,7 +140,7 @@ endef
 # $(call build-target,name,variant)
 define build-target
 $(call section,"cmake building $1 as $2")
-@./source/scripts/buildpy.py -t $2 && \
+@$(PYTHON) ./source/scripts/buildpy.py -t $2 && \
 	mkdir -p build && \
 	cd build && \
 	cmake $(GENERATOR) .. \
@@ -149,7 +153,7 @@ endef
 # $(call make-target,name,variant) with make backend
 define make-target
 $(call section,"make building $1 as $2")
-@./source/scripts/buildpy.py -t $2 && \
+@$(PYTHON) ./source/scripts/buildpy.py -t $2 && \
 	mkdir -p build && \
 	cd build && \
 	cmake .. -G"Unix Makefiles" \
@@ -164,7 +168,7 @@ endef
 # $(call ninja-target,name,variant) with ninja backend
 define ninja-target
 $(call section,"ninja building $1 as $2")
-@./source/scripts/buildpy.py -t $2 && \
+@$(PYTHON) ./source/scripts/buildpy.py -t $2 && \
 	mkdir -p build && \
 	cd build && \
 	cmake .. -G"Ninja" \
