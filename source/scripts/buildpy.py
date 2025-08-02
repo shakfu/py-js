@@ -28,6 +28,7 @@ ShellCmd
 
 """
 
+import argparse
 import datetime
 import json
 import logging
@@ -1239,27 +1240,6 @@ class XzBuilder(Builder):
             )
             self.cmd("make && make install", cwd=self.src_dir)
 
-class WindowsPythonBuilder(Builder):
-    """Downloads embedable windows python"""
-
-    name = "Python"
-    version = DEFAULT_PY_VERSION
-    repo_url = "https://github.com/python/cpython.git"
-    download_url_template = "https://www.python.org/ftp/python/{ver}/python-{ver}-embed-amd64.zip"
-    depends_on = []
-    libs_static = []
-
-    @property
-    def install_dir(self) -> Path:
-        """return folder where binaries are installed"""
-        return self.project.support / "python"
-
-    def setup(self):
-        """setup build environment"""
-        self.project.setup()
-        archive = self.download(self.download_url, tofolder=self.project.downloads)
-        self.extract(archive, tofolder=self.install_dir)
-
 
 class PythonBuilder(Builder):
     """Builds python locally"""
@@ -1590,8 +1570,77 @@ class PythonDebugBuilder(PythonBuilder):
     required_packages = []
 
 
-if __name__ == "__main__":
-    import argparse
+class WindowsEmbeddablePythonBuilder(Builder):
+    """Downloads embeddable windows python"""
+
+    name = "Python"
+    version = DEFAULT_PY_VERSION
+    repo_url = "https://github.com/python/cpython.git"
+    download_url_template = "https://www.python.org/ftp/python/{ver}/python-{ver}-embed-amd64.zip"
+    depends_on = []
+    libs_static = []
+
+    @property
+    def install_dir(self) -> Path:
+        """return folder where binaries are installed"""
+        return self.project.support / "python"
+
+    def setup(self):
+        """setup build environment"""
+        self.project.setup()
+        archive = self.download(self.download_url, tofolder=self.project.downloads)
+        self.extract(archive, tofolder=self.install_dir)
+
+
+class WindowsPythonBuilder(PythonBuilder):
+    """class for building python from source on windows"""
+
+    config_options: list[str] = [
+        # "--disable-gil",
+        # "--no-ctypes",
+        # "--no-ssl",
+        "--no-tkinter",
+    ]
+
+    remove_patterns: list[str] = [
+        "*.pdb",
+        "*.exp",
+        "*.lib",
+        "_test*",
+        "xx*",
+        "py.exe",
+        "venvlauncher.exe",
+        "venvwlauncher.exe",
+        "_ctypes_test*",
+        "LICENSE.txt",
+    ]
+
+    depends_on = []
+
+    def __init__(
+        self,
+        version: str = DEFAULT_PY_VERSION,
+        project: Optional[Project] = None,
+        config: str = "shared_max",
+        optimize: bool = False,
+        pkgs: Optional[list[str]] = None,
+        cfg_opts: Optional[list[str]] = None,
+        jobs: int = 1,
+        is_max_package: bool = False,
+    ):
+
+        super().__init__(version, project)
+        self.config = config
+        self.optimize = optimize
+        self.pkgs = pkgs or []
+        self.cfg_opts = cfg_opts or []
+        self.jobs = jobs
+        self.is_max_package = is_max_package
+        self.log = logging.getLogger(self.__class__.__name__)
+
+
+def main():
+    """commandline api entrypoint"""
 
     parser = argparse.ArgumentParser(
         prog="buildpy.py",
@@ -1617,12 +1666,15 @@ if __name__ == "__main__":
     python_builder_class: type[PythonBuilder] = PythonBuilder
     if args.debug:
         python_builder_class = PythonDebugBuilder
-    if PLATFORM == 'Windows':
-        builder = WindowsPythonBuilder(
-            version=args.version
-        )
-        builder.process()
-        sys.exit()
+    # if PLATFORM == 'Windows':
+    #     builder = WindowsEmbeddablePythonBuilder(
+    #         version=args.version
+    #     )
+    #     builder.process()
+    #     sys.exit()
+
+    if PLATFORM == "Windows":
+        python_builder_class = WindowsPythonBuilder
 
     if args.type and args.type in BUILD_TYPES:
         if args.type == 'local':
@@ -1632,7 +1684,7 @@ if __name__ == "__main__":
             'static-ext': 'static_mid',
             'framework-ext': 'framework_mid',
             'framework-pkg': 'framework_mid',
-            # 'windows-pkg': 'windows_max',
+            'windows-pkg': 'shared_max',
         }[args.type]
         is_max_package = args.type[-3:] == 'pkg'
         builder = python_builder_class(
@@ -1677,3 +1729,7 @@ if __name__ == "__main__":
     if args.reset:
         builder.remove("build")
     builder.process()
+
+
+if __name__ == "__main__":
+    main()
