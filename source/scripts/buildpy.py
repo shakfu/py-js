@@ -76,13 +76,19 @@ PYTHON = sys.executable
 PLATFORM = platform.system()
 ARCH = platform.machine()
 PY_VER_MINOR = sys.version_info.minor
-if PLATFORM == "Darwin":
-    MACOSX_DEPLOYMENT_TARGET = setenv("MACOSX_DEPLOYMENT_TARGET", "12.6")
-DEFAULT_PY_VERSION = "3.13.2"
+DEFAULT_PY_VERSION = "3.13.5"
 DEBUG = getenv('DEBUG', default=True)
 COLOR = getenv('COLOR', default=True)
-BUILD_TYPES = ['local', 'shared-ext', 'static-ext', 'framework-ext', 
-               'framework-pkg', 'windows-pkg']
+
+# ----------------------------------------------------------------------------
+# platform-specific config
+
+if PLATFORM == "Darwin":
+    MACOSX_DEPLOYMENT_TARGET = setenv("MACOSX_DEPLOYMENT_TARGET", "12.6")
+    BUILD_TYPES = ['local', 'shared-ext', 'static-ext', 'framework-ext', 
+                   'framework-pkg']
+elif PLATFORM == "Windows":
+    BUILD_TYPES = ['local', 'shared-pkg']
 
 # ----------------------------------------------------------------------------
 # logging config
@@ -1624,7 +1630,7 @@ class WindowsPythonBuilder(PythonBuilder):
         config: str = "shared_max",
         optimize: bool = False,
         pkgs: Optional[list[str]] = None,
-        cfg_opts: Optional[list[str]] = None,
+        cfZpts: Optional[list[str]] = None,
         jobs: int = 1,
         is_max_package: bool = False,
     ):
@@ -1637,6 +1643,124 @@ class WindowsPythonBuilder(PythonBuilder):
         self.jobs = jobs
         self.is_max_package = is_max_package
         self.log = logging.getLogger(self.__class__.__name__)
+
+    @property
+    def libname(self):
+        """library name suffix"""
+        return f"lib{self.name_ver}"
+
+    @property
+    def build_type(self):
+        """build type: 'static', 'shared' or 'framework'"""
+        return self.config.split("_")[0]
+
+    @property
+    def size_type(self):
+        """size qualifier: 'max', 'mid', 'min', etc.."""
+        return self.config.split("_")[1]
+
+    @property
+    def prefix(self):
+        """python builder prefix path"""
+        install_dir = self.project.support
+        return install_dir / "python"
+
+    @property
+    def python(self):
+        """path to python3 executable"""
+        return self.prefix / "python.exe"
+
+    @property
+    def pip(self):
+        """path to pip3 executable"""
+        return self.prefix / "pip.exe"
+
+    def pre_process(self):
+        """override by subclass if needed"""
+
+    def configure(self):
+        """configure build"""
+
+    def build(self):
+        """main build process"""
+        self.cmd(f"PCbuild/build.bat -e --no-tkinter", cwd=self.src_dir)
+
+    def install(self):
+        """install to prefix"""
+        if self.prefix.exists():
+            self.remove(self.prefix)
+        self.copy(self.src_dir / "PCbuild/arm64", self.prefix)
+        self.copy(self.src_dir / "include", self.prefix / "include")
+
+    def clean(self):
+        """clean installed build"""
+        self.glob_remove(
+            self.prefix,
+            self.remove_patterns,
+            skip_dirs=[".git"],
+        )
+
+    def ziplib(self):
+        """zip python site-packages"""
+
+        src = self.prefix / "lib" / self.name_ver
+
+        self.move(
+            src / "lib-dynload",
+            self.project.build / "lib-dynload",
+        )
+        self.move(src / "os.py", self.project.build / "os.py")
+
+        zip_path = self.prefix / "lib" / f"python{self.ver_nodot}"
+        shutil.make_archive(str(zip_path), "zip", str(src))
+        self.remove(src)
+
+        site_packages = src / "site-packages"
+        self.remove(self.prefix / "lib" / "pkgconfig")
+        src.mkdir()
+        site_packages.mkdir()
+        self.move(self.project.build / "lib-dynload", src / "lib-dynload")
+        self.move(self.project.build / "os.py", src / "os.py")
+
+    def install_pkgs(self):
+        """install python packages"""
+        # required_pkgs = " ".join(self.required_packages)
+        # self.cmd(f"{self.python} -m ensurepip")
+        # self.cmd(f"{self.pip} install {required_pkgs}")
+
+    def post_process(self):
+        """override by subclass if needed"""
+        self.log.info("%s DONE", self.config)
+
+    def can_run(self) -> bool:
+        """check if a run is merited"""
+        
+        self.log.debug("dylib path: %s", self.dylib)
+        self.log.debug("dylib exists: %s", self.dylib.exists())
+        if not self.dylib.exists():
+            # staticlib not built
+            return True
+
+        # if all tests pass then can run
+        return False
+
+
+    def process(self):
+        """main builder process"""
+        # if not self.can_run():
+        #     self.log.info("everything built: skipping run")
+        #     return
+
+        self.pre_process()
+        self.setup()
+        self.configure()
+        self.build()
+        self.install()
+        self.clean()
+        # self.ziplib()
+        # if self.pkgs:
+        #     self.install_pkgs()
+        self.post_process()
 
 
 def main():
@@ -1663,18 +1787,16 @@ def main():
     opt("-t", "--type", help="build based on build type")
 
     args = parser.parse_args()
-    python_builder_class: type[PythonBuilder] = PythonBuilder
-    if args.debug:
-        python_builder_class = PythonDebugBuilder
-    # if PLATFORM == 'Windows':
-    #     builder = WindowsEmbeddablePythonBuilder(
-    #         version=args.version
-    #     )
-    #     builder.process()
-    #     sys.exit()
+    if PLATFORM == "Darwin":
+        python_builder_class: type[PythonBuilder] = PythonBuilder
+        if args.debug:
+            python_builder_class = PythonDebugBuilder
 
-    if PLATFORM == "Windows":
+    elif PLATFORM == "Windows":
         python_builder_class = WindowsPythonBuilder
+
+    else:
+        raise NotImplementedError("script only works on MacOS and Windows")      
 
     if args.type and args.type in BUILD_TYPES:
         if args.type == 'local':
@@ -1684,7 +1806,7 @@ def main():
             'static-ext': 'static_mid',
             'framework-ext': 'framework_mid',
             'framework-pkg': 'framework_mid',
-            'windows-pkg': 'shared_max',
+            'shared-pkg': 'shared_max',
         }[args.type]
         is_max_package = args.type[-3:] == 'pkg'
         builder = python_builder_class(
