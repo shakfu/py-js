@@ -38,6 +38,7 @@ import stat
 import subprocess
 import sys
 import tarfile
+import zipfile
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Callable, Optional, Union
@@ -79,7 +80,8 @@ if PLATFORM == "Darwin":
 DEFAULT_PY_VERSION = "3.13.2"
 DEBUG = getenv('DEBUG', default=True)
 COLOR = getenv('COLOR', default=True)
-BUILD_TYPES = ['local', 'shared-ext', 'static-ext', 'framework-ext', 'framework-pkg']
+BUILD_TYPES = ['local', 'shared-ext', 'static-ext', 'framework-ext', 
+               'framework-pkg', 'windows-pkg']
 
 # ----------------------------------------------------------------------------
 # logging config
@@ -725,9 +727,9 @@ class ShellCmd:
         if tarfile.is_tarfile(archive):
             with tarfile.open(archive) as f:
                 f.extractall(tofolder)
-        # elif zipfile.is_zipfile(archive):
-        #     with zipfile.ZipFile(archive) as f:
-        #         f.extractall(tofolder)
+        elif zipfile.is_zipfile(archive):
+            with zipfile.ZipFile(archive) as f:
+                f.extractall(tofolder)
         else:
             raise TypeError("cannot extract from this file.")
 
@@ -1237,6 +1239,27 @@ class XzBuilder(Builder):
             )
             self.cmd("make && make install", cwd=self.src_dir)
 
+class WindowsPythonBuilder(Builder):
+    """Downloads embedable windows python"""
+
+    name = "Python"
+    version = DEFAULT_PY_VERSION
+    repo_url = "https://github.com/python/cpython.git"
+    download_url_template = "https://www.python.org/ftp/python/{ver}/python-{ver}-embed-amd64.zip"
+    depends_on = []
+    libs_static = []
+
+    @property
+    def install_dir(self) -> Path:
+        """return folder where binaries are installed"""
+        return self.project.support / "python"
+
+    def setup(self):
+        """setup build environment"""
+        self.project.setup()
+        archive = self.download(self.download_url, tofolder=self.project.downloads)
+        self.extract(archive, tofolder=self.install_dir)
+
 
 class PythonBuilder(Builder):
     """Builds python locally"""
@@ -1594,6 +1617,12 @@ if __name__ == "__main__":
     python_builder_class: type[PythonBuilder] = PythonBuilder
     if args.debug:
         python_builder_class = PythonDebugBuilder
+    if PLATFORM == 'Windows':
+        builder = WindowsPythonBuilder(
+            version=args.version
+        )
+        builder.process()
+        sys.exit()
 
     if args.type and args.type in BUILD_TYPES:
         if args.type == 'local':
@@ -1602,7 +1631,8 @@ if __name__ == "__main__":
             'shared-ext': 'shared_mid',
             'static-ext': 'static_mid',
             'framework-ext': 'framework_mid',
-            'framework-pkg': 'framework_mid',            
+            'framework-pkg': 'framework_mid',
+            # 'windows-pkg': 'windows_max',
         }[args.type]
         is_max_package = args.type[-3:] == 'pkg'
         builder = python_builder_class(
