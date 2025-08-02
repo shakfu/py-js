@@ -348,7 +348,7 @@ beeware-ext: clean-externals
 # -----------------------------------------------------------------------
 # experimental python3 externals
 
-.PHONY: py py-static py-shared py-framework py-framework-pkg py-windows-pkg \
+.PHONY: py py-static py-shared py-framework py-framework-pkg py-shared-pkg \
 		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
 		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
 		cobra cobra-static cobra-shared cobra-framework cobra-framework-pkg \
@@ -370,8 +370,8 @@ py-framework: clean-cmake-cache clean-externals
 py-framework-pkg: clean-cmake-cache clean-externals
 	$(call build-target,py,framework-pkg)
 
-py-windows-pkg: clean-cmake-cache clean-externals
-	$(call build-target,py,windows-pkg)
+py-shared-pkg: clean-cmake-cache clean-externals
+	$(call build-target,py,shared-pkg)
 
 pyjs: clean-cmake-cache clean-externals
 	$(call build-target,$@,local)

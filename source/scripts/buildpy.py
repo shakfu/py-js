@@ -733,7 +733,7 @@ class ShellCmd:
         """extract a tar archive"""
         if tarfile.is_tarfile(archive):
             with tarfile.open(archive) as f:
-                f.extractall(tofolder)
+                f.extractall(tofolder, filter='data')
         elif zipfile.is_zipfile(archive):
             with zipfile.ZipFile(archive) as f:
                 f.extractall(tofolder)
@@ -1534,7 +1534,6 @@ class PythonBuilder(Builder):
         # if all tests pass then can run
         return False
 
-
     def process(self):
         """main builder process"""
         if not self.can_run():
@@ -1611,10 +1610,12 @@ class WindowsPythonBuilder(PythonBuilder):
     remove_patterns: list[str] = [
         "*.pdb",
         "*.exp",
-        "*.lib",
+        # "*.lib",
         "_test*",
         "xx*",
         "py.exe",
+        "pyw.exe",
+        "pythonw.exe",
         "venvlauncher.exe",
         "venvwlauncher.exe",
         "_ctypes_test*",
@@ -1630,7 +1631,7 @@ class WindowsPythonBuilder(PythonBuilder):
         config: str = "shared_max",
         optimize: bool = False,
         pkgs: Optional[list[str]] = None,
-        cfZpts: Optional[list[str]] = None,
+        cfg_opts: Optional[list[str]] = None,
         jobs: int = 1,
         is_max_package: bool = False,
     ):
@@ -1683,14 +1684,14 @@ class WindowsPythonBuilder(PythonBuilder):
 
     def build(self):
         """main build process"""
-        self.cmd(f"PCbuild/build.bat -e --no-tkinter", cwd=self.src_dir)
+        self.cmd(f"PCbuild\\build.bat -e --no-tkinter", cwd=self.src_dir)
 
     def install(self):
         """install to prefix"""
         if self.prefix.exists():
             self.remove(self.prefix)
-        self.copy(self.src_dir / "PCbuild/arm64", self.prefix)
-        self.copy(self.src_dir / "include", self.prefix / "include")
+        self.move(self.src_dir / "PCbuild" / "amd64", self.prefix)
+        self.move(self.src_dir / "Include", self.prefix / "include")
 
     def clean(self):
         """clean installed build"""

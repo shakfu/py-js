@@ -44,13 +44,13 @@ function(python3_external)
         message(STATUS "PY3EXT_LINK_OPTIONS: ${PY3EXT_LINK_OPTIONS}")
     endif()
 
-    set(variants local shared-ext static-ext framework-ext framework-pkg windows-pkg)
+    set(variants local shared-ext static-ext framework-ext framework-pkg shared-pkg)
     set(self_contained shared-ext static-ext framework-ext)
 
     if (NOT ${PY3EXT_BUILD_VARIANT} IN_LIST variants)
         message(FATAL_ERROR 
             "BUILD_VARIANT must be one of local, shared-ext, static-ext, "
-            "framework-ext, framework-pkg" )
+            "framework-ext, framework-pkg, shared-pkg" )
     endif()
 
     if(PY3EXT_BUILD_VARIANT STREQUAL "shared-ext")
@@ -61,7 +61,7 @@ function(python3_external)
         set(BUILD_FRAMEWORK_EXT 1)
     elseif(PY3EXT_BUILD_VARIANT STREQUAL "framework-pkg")
         set(BUILD_FRAMEWORK_PKG 1)
-    elseif(PY3EXT_BUILD_VARIANT STREQUAL "windows-pkg")
+    elseif(PY3EXT_BUILD_VARIANT STREQUAL "shared-pkg")
         set(BUILD_WINDOWS_PKG 1)
     endif()
 
