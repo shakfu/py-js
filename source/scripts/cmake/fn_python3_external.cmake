@@ -159,7 +159,7 @@ function(python3_external)
         $<$<CONFIG:Release>:NDEBUG>
         $<$<BOOL:${BUILD_STATIC_EXT}>:-DBUILD_STATIC> # help static find pyhome
         $<$<BOOL:${PY3EXT_INCLUDE_COMMONSYMS}>:-DINCLUDE_COMMONSYMS>
-        $<$<BOOL:${BUILD_WINDOWS_PKG}>:-DSHARED_PKG>
+        $<$<BOOL:${BUILD_WINDOWS_PKG}>:-DPY_SHARED_PKG>
         # $<IN_LIST:${PY3EXT_BUILD_VARIANT},${self_contained}:-DSELFCONTAINED_EXTERNAL> # special case
     )
 
