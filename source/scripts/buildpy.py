@@ -1026,6 +1026,11 @@ class AbstractBuilder(ShellCmd):
         return f"{self.name.lower()}{self.ver}"
 
     @property
+    def name_ver_nodot(self) -> str:
+        """return name.lower-<ver_nodot>: e.g. python311"""
+        return f"{self.name.lower()}{self.ver_nodot}"
+
+    @property
     def download_url(self) -> str:
         """return download url with version interpolated"""
         return self.download_url_template.format(ver=self.version)
@@ -1675,6 +1680,25 @@ class WindowsPythonBuilder(PythonBuilder):
     def pip(self):
         """path to pip3 executable"""
         return self.prefix / "pip.exe"
+    
+    @property
+    def pth(self):
+        """syspath modifier"""
+        return f"{self.name_ver_nodot}._pth"
+    
+    @property
+    def binary_dir(self):
+        """path to folder in python source where windows binaries are built"""
+        return self.src_dir / "PCbuild" / "amd64"
+    
+    @property
+    def pyconfig_h(self):
+        """path to generated pyconfig.h header"""
+        _path = self.src_dir / "PC" / "pyconfig.h"
+        if _path.exists():
+            return _path
+        else:
+            return self.src_dir / "PCbuild" / "obj" / f"{self.ver_nodot}amd64_Release" / "pythoncore" / "pyconfig.h"
 
     def pre_process(self):
         """override by subclass if needed"""
@@ -1688,10 +1712,18 @@ class WindowsPythonBuilder(PythonBuilder):
 
     def install(self):
         """install to prefix"""
+        if not self.binary_dir.exists():
+            raise IOError("Build error")
         if self.prefix.exists():
             self.remove(self.prefix)
-        self.move(self.src_dir / "PCbuild" / "amd64", self.prefix)
+        self.move(self.binary_dir, self.prefix)
         self.move(self.src_dir / "Include", self.prefix / "include")
+        self.move(self.pyconfig_h, self.prefix / "include")
+        self.move(self.src_dir / "Lib", self.prefix / "Lib")
+        with open(self.prefix / self.pth, "w") as f:
+            print("Lib", file=f)
+            print("site-packages", file=f)
+            print(".", file=f)
 
     def clean(self):
         """clean installed build"""

@@ -591,7 +591,8 @@ xz:
 .PHONY: build-homebrew-pkg build-homebrew-ext \
 		build-framework-pkg build-framework-ext \
 		build-shared-pkg build-shared-ext build-shared-tiny-ext \
-		build-static-pkg build-static-ext build-static-tiny-ext
+		build-static-pkg build-static-ext build-static-tiny-ext \
+		build-shared-pkg
 
 
 build-shared-pkg: clean-shared-pkg
@@ -623,6 +624,15 @@ build-shared-tiny-ext: clean-shared-ext
 
 build-beeware-ext: clean-static-ext
 	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
+
+build-shared-pkg:
+	@mkdir -p build && \
+	cd build && \
+	cmake $(GENERATOR) .. \
+		-DBUILD_TARGETS=py \
+		-DBUILD_VARIANT=shared-pkg \
+		&& \
+	cmake --build . --config Release
 
 
 # cython re-generation of api.c only if api.pyx is modified
