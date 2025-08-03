@@ -159,6 +159,7 @@ function(python3_external)
         $<$<CONFIG:Release>:NDEBUG>
         $<$<BOOL:${BUILD_STATIC_EXT}>:-DBUILD_STATIC> # help static find pyhome
         $<$<BOOL:${PY3EXT_INCLUDE_COMMONSYMS}>:-DINCLUDE_COMMONSYMS>
+        $<$<BOOL:${BUILD_WINDOWS_PKG}>:-DSHARED_PKG>
         # $<IN_LIST:${PY3EXT_BUILD_VARIANT},${self_contained}:-DSELFCONTAINED_EXTERNAL> # special case
     )
 
@@ -252,4 +253,13 @@ function(python3_external)
             COMMAND strip -x "${SUPPORT_DIR}/Python.framework/Versions/Current/Python"
         )
     endif()
+
+    if(BUILD_WINDOWS_PKG)
+        ADD_CUSTOM_COMMAND(
+            TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rm -f "${SUPPORT_DIR}/python/*.lib"
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${SUPPORT_DIR}/python/include"
+        )
+    endif() 
+
 endfunction()

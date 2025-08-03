@@ -9,6 +9,11 @@
 /* max/msp api */
 #include "api.h"
 
+#if defined(_WIN32) && defined(PY_SHARED_PKG)
+#include <libloaderapi.h> // For AddDllDirectory, LoadLibraryEx, etc.
+#include <windows.h>    // General Windows API functions
+#endif
+
 /*--------------------------------------------------------------------------*/
 /* Globals */
 
@@ -361,6 +366,15 @@ void py_init(t_py* x)
     const char* package_path = string_getptr(
         py_get_path_to_package(py_class, "/support/python" PY_VER));
     python_home = Py_DecodeLocale(package_path, NULL);
+#endif
+
+#if defined(_WIN32) && defined(PY_SHARED_PKG)
+    const char* package_path = string_getptr(
+        py_get_path_to_package(py_class, "/support/python"));
+    python_home = Py_DecodeLocale(package_path, NULL);
+
+    SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS); 
+    DLL_DIRECTORY_COOKIE cookie = AddDllDirectory(python_home);
 #endif
 
 #if PY_VERSION_HEX < 0x0308000
