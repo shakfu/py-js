@@ -1625,6 +1625,21 @@ class WindowsPythonBuilder(PythonBuilder):
         "venvwlauncher.exe",
         "_ctypes_test*",
         "LICENSE.txt",
+        "*tcl*",
+        "*tdbc*",
+        "*tk*",
+        "__phello__",
+        "__pycache__",
+        "_tk*",
+        "ensurepip",
+        "idlelib",
+        "LICENSE.txt",
+        "pydoc*",
+        "site-packages",
+        "test",
+        "Tk*",
+        "turtle*",
+        "venv",
     ]
 
     depends_on = []
@@ -1721,7 +1736,7 @@ class WindowsPythonBuilder(PythonBuilder):
         self.move(self.pyconfig_h, self.prefix / "include")
         self.move(self.src_dir / "Lib", self.prefix / "Lib")
         with open(self.prefix / self.pth, "w") as f:
-            print("Lib", file=f)
+            print(f"{self.name_ver_nodot}.zip", file=f)
             print("site-packages", file=f)
             print(".", file=f)
 
@@ -1736,24 +1751,15 @@ class WindowsPythonBuilder(PythonBuilder):
     def ziplib(self):
         """zip python site-packages"""
 
-        src = self.prefix / "lib" / self.name_ver
-
-        self.move(
-            src / "lib-dynload",
-            self.project.build / "lib-dynload",
-        )
-        self.move(src / "os.py", self.project.build / "os.py")
-
-        zip_path = self.prefix / "lib" / f"python{self.ver_nodot}"
+        src = self.prefix / "Lib"
+        # self.move(src / "os.py", self.project.build / "os.py")
+        zip_path = self.prefix /  self.name_ver_nodot
         shutil.make_archive(str(zip_path), "zip", str(src))
         self.remove(src)
 
-        site_packages = src / "site-packages"
-        self.remove(self.prefix / "lib" / "pkgconfig")
-        src.mkdir()
+        site_packages = self.prefix / "site-packages"
         site_packages.mkdir()
-        self.move(self.project.build / "lib-dynload", src / "lib-dynload")
-        self.move(self.project.build / "os.py", src / "os.py")
+        # self.move(self.project.build / "os.py", src / "os.py")
 
     def install_pkgs(self):
         """install python packages"""
@@ -1790,7 +1796,7 @@ class WindowsPythonBuilder(PythonBuilder):
         self.build()
         self.install()
         self.clean()
-        # self.ziplib()
+        self.ziplib()
         # if self.pkgs:
         #     self.install_pkgs()
         self.post_process()

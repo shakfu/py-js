@@ -370,7 +370,7 @@ py-framework: clean-cmake-cache clean-externals
 py-framework-pkg: clean-cmake-cache clean-externals
 	$(call build-target,py,framework-pkg)
 
-py-shared-pkg: clean-cmake-cache clean-externals
+py-shared-pkg: clean-build-dir clean-externals clean-support
 	$(call build-target,py,shared-pkg)
 
 pyjs: clean-cmake-cache clean-externals
@@ -595,8 +595,8 @@ xz:
 		build-shared-pkg
 
 
-build-shared-pkg: clean-shared-pkg
-	$(call call-builder,"pyjs" "shared_pkg" "--build")
+# build-shared-pkg: clean-shared-pkg
+# 	$(call call-builder,"pyjs" "shared_pkg" "--build")
 
 build-shared-ext: clean-shared-ext
 	$(call call-builder,"pyjs" "shared_ext" "--build" "-p" "$(PYTHON_VERSION)")
