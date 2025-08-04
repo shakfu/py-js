@@ -343,20 +343,6 @@ void py_init(t_py* x)
 
 post("starting py_init");
 
-#if PY_WITH_API
-    // add the `api` module as a built-in module to the python interpreter
-    if (!Py_IsInitialized()) {
-        // NOTE: without the above test, adding more than one instance of `py` will
-        // cause a crash.
-        // https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/18
-
-        /* Add the cythonized 'api' built-in module, before Py_Initialize */
-        if (PyImport_AppendInittab("api", PyInit_api) == -1) {
-            py_error(x, "could not add api module to builtin modules table");
-        }
-    }
-#endif
-
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
         py_get_path_to_external(py_class, "/Contents/Resources"));
@@ -371,12 +357,27 @@ post("starting py_init");
 
 #if defined(_WIN32) && defined(PY_SHARED_PKG)
     post("initializing python on windows");
+    // FIXME: not working yet
     const char* package_path = string_getptr(
         py_get_path_to_package(py_class, "/support"));
     python_home = Py_DecodeLocale(package_path, NULL);
 
-    SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS); 
+    SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
     DLL_DIRECTORY_COOKIE cookie = AddDllDirectory(python_home);
+#endif
+
+#if PY_WITH_API
+    // add the `api` module as a built-in module to the python interpreter
+    if (!Py_IsInitialized()) {
+        // NOTE: without the above test, adding more than one instance of `py` will
+        // cause a crash.
+        // https://gitlab.archlinux.org/archlinux/packaging/packages/blender/-/issues/18
+
+        /* Add the cythonized 'api' built-in module, before Py_Initialize */
+        if (PyImport_AppendInittab("api", PyInit_api) == -1) {
+            py_error(x, "could not add api module to builtin modules table");
+        }
+    }
 #endif
 
 #if PY_VERSION_HEX < 0x0308000
