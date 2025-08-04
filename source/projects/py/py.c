@@ -10,7 +10,6 @@
 #include "api.h"
 
 #if defined(_WIN32) && defined(PY_SHARED_PKG)
-#include <libloaderapi.h> // For AddDllDirectory, LoadLibraryEx, etc.
 #include <windows.h>    // General Windows API functions
 #endif
 
@@ -342,6 +341,8 @@ void py_init(t_py* x)
 {
     wchar_t* python_home = NULL;
 
+post("starting py_init");
+
 #if PY_WITH_API
     // add the `api` module as a built-in module to the python interpreter
     if (!Py_IsInitialized()) {
@@ -369,8 +370,9 @@ void py_init(t_py* x)
 #endif
 
 #if defined(_WIN32) && defined(PY_SHARED_PKG)
+    post("initializing python on windows");
     const char* package_path = string_getptr(
-        py_get_path_to_package(py_class, "/support/python"));
+        py_get_path_to_package(py_class, "/support"));
     python_home = Py_DecodeLocale(package_path, NULL);
 
     SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS); 
