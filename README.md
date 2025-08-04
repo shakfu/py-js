@@ -22,7 +22,7 @@ Along the way, a number of externals (17 so far) have been developed for use in 
 
 name       | sdk        | lang   | description
 :--------- | :--------- | :----: | :---------------------------------------------------
-[py]       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) api
+[py]       | max-sdk    | c      | well-featured, many packaging options + [cython](https://cython.org) wrapper of Max/MSP c-api
 [pyjs]     | max-sdk    | c      | js/v8-friendly -- written as a Max javascript-extension
 
 These two externals have many [build options](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones) covering almost all deployment scenarios, but if you just want to get up and running quickly use the cmake option `-DBUILD_PYTHON3_CORE_EXTERNALS=ON` or just `make core`.
