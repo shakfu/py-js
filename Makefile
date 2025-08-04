@@ -884,7 +884,7 @@ cflow:
 # Cleaning
 # -----------------------------------------------------------------------
 .PHONY: reset clean clean-targets clean-support clean-externals \
-	clean-build clean-build-dir clean-local-sys \
+	clean-build clean-build-dir clean-local-sys clean-src \
 	clean-homebrew-pkg clean-homebrew-ext \
 	clean-framework-pkg clean-framework-ext \
 	clean-shared-pkg clean-shared-ext \
@@ -927,6 +927,10 @@ clean-build: clean-build-dir
 	@rm -rf '${BUILDDIR}'/lib/python-shared
 	@rm -rf '${BUILDDIR}'/lib/python-static
 	@rm -rf '${BUILDDIR}'/lib/Python.framework
+
+clean-src:
+	$(call section,"removing build/src directory")
+	@rm -rf ${ROOTDIR}/build/src
 
 reset-build: clean-build-dir
 	$(call section,"reset build dependencies")
