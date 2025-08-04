@@ -99,6 +99,7 @@ function(python3_external)
     endif()
 
     if(BUILD_WINDOWS_PKG)
+        # set(Python3_ROOT_DIR "${SUPPORT_DIR}/python")
         set(Python3_ROOT_DIR "${SUPPORT_DIR}")
         set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/python.exe")
         set(Python3_INCLUDE_DIRS "${Python3_ROOT_DIR}/include")

@@ -1684,6 +1684,7 @@ class WindowsPythonBuilder(PythonBuilder):
     def prefix(self):
         """python builder prefix path"""
         install_dir = self.project.support
+        # return install_dir / "python"
         return install_dir
 
     @property
