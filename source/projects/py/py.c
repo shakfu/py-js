@@ -9,10 +9,6 @@
 /* max/msp api */
 #include "api.h"
 
-// #if defined(_WIN32) && defined(PY_SHARED_PKG)
-// #include <windows.h>    // General Windows API functions
-// #endif
-
 /*--------------------------------------------------------------------------*/
 /* Globals */
 
@@ -341,8 +337,6 @@ void py_init(t_py* x)
 {
     wchar_t* python_home = NULL;
 
-post("starting py_init");
-
 #if defined(__APPLE__) && defined(PY_STATIC_EXT)
     const char* resources_path = string_getptr(
         py_get_path_to_external(py_class, "/Contents/Resources"));
@@ -354,17 +348,6 @@ post("starting py_init");
         py_get_path_to_package(py_class, "/support/python" PY_VER));
     python_home = Py_DecodeLocale(package_path, NULL);
 #endif
-
-// #if defined(_WIN32) && defined(PY_SHARED_PKG)
-//     post("initializing python on windows");
-//     // FIXME: not working yet
-//     const char* package_path = string_getptr(
-//         py_get_path_to_package(py_class, "/support"));
-//     python_home = Py_DecodeLocale(package_path, NULL);
-
-//     SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
-//     DLL_DIRECTORY_COOKIE cookie = AddDllDirectory(python_home);
-// #endif
 
 #if PY_WITH_API
     // add the `api` module as a built-in module to the python interpreter

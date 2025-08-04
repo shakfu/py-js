@@ -255,12 +255,12 @@ function(python3_external)
         )
     endif()
 
-    if(BUILD_WINDOWS_PKG)
-        ADD_CUSTOM_COMMAND(
-            TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E rm -f "${SUPPORT_DIR}/python/*.lib"
-            COMMAND ${CMAKE_COMMAND} -E rm -rf "${SUPPORT_DIR}/python/include"
-        )
-    endif() 
+    # if(BUILD_WINDOWS_PKG)
+    #     ADD_CUSTOM_COMMAND(
+    #         TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+    #         COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/source/scripts/cmake/post_build_win32_cleanup.cmake"
+    #         # COMMAND ${CMAKE_COMMAND} -E rm -rf "${SUPPORT_DIR}/include"
+    #     )
+    # endif()
 
 endfunction()
