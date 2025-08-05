@@ -21,9 +21,11 @@ jobs:
       with:
         name: pyjs-core-win64-externals
         path: |
-            docs
+            docs/py.maxref.xml
+            docs/pyjs.maxref.xml
             externals
-            help
+            help/py.maxhelp
+            help/pyjs.maxhelp
             examples
             javascript
             jsextensions
