@@ -1,0 +1,33 @@
+name: build-windows
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        fetch-depth: '0'
+
+    - name: build with make
+      run: make core-windows-pkg
+
+    - name: cleanup
+      run: cmake -P source/scripts/win-pkg-cleanup.cmake
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: pyjs-core-win64-externals
+        path: |
+            docs/[py|pyjs].maxref.xml
+            externals
+            help/[py|pyjs].maxhelp
+            examples
+            javascript
+            jsextensions
+            patchers
+            LICENSE
+            README.md
+            source/docs/_book/Python3-Externals-for-Max-MSP.pdf
