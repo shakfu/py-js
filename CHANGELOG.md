@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
+- `Makefile` has new targets for recently introduced support for relocatable python3 externals for Windows if `make.exe` is available in your PATH via something like [w64devkit](https://github.com/skeeto/w64devkit).
+
 - `Makefile` single targets are now cross-platform, following from prior change. So `make py`, should also work on Windows as well now.
 
 - Made the `Makefile` more cross-platform-friendly. If `make.exe` is installed on `PATH` Windows machine using something like [w64devkit](https://github.com/skeeto/w64devkit), then you can use `make core` to build the core externals.

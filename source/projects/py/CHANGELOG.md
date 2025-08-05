@@ -2,6 +2,19 @@
 
 ## [0.3.x]
 
+- Added relocatable python3 externals for windows which can be used in packages and standalones. The feature is currently enabled for package-type builds via `make core-windows-pkg` if `make.exe` is available or the following:
+
+  ```sh
+  python ./source/scripts/buildpy.py -t windows-pkg && \
+  mkdir -p build && \
+  cd build && \
+  cmake .. \
+    -DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+    -DBUILD_VARIANT=windows-pkg \
+    && \
+  cmake --build . --config Release
+  ```
+
 - Fixed residual bug in `apply` function in `py_prelude.py`
 
 - Added `tests/prelude/test_prelude.py` to provide full pytest-like tests for `py_prelude.py`

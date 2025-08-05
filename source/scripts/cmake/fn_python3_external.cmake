@@ -44,13 +44,13 @@ function(python3_external)
         message(STATUS "PY3EXT_LINK_OPTIONS: ${PY3EXT_LINK_OPTIONS}")
     endif()
 
-    set(variants local shared-ext static-ext framework-ext framework-pkg shared-pkg)
+    set(variants local shared-ext static-ext framework-ext framework-pkg windows-pkg)
     set(self_contained shared-ext static-ext framework-ext)
 
     if (NOT ${PY3EXT_BUILD_VARIANT} IN_LIST variants)
         message(FATAL_ERROR 
             "BUILD_VARIANT must be one of local, shared-ext, static-ext, "
-            "framework-ext, framework-pkg, shared-pkg" )
+            "framework-ext, framework-pkg, windows-pkg" )
     endif()
 
     if(PY3EXT_BUILD_VARIANT STREQUAL "shared-ext")
@@ -61,7 +61,7 @@ function(python3_external)
         set(BUILD_FRAMEWORK_EXT 1)
     elseif(PY3EXT_BUILD_VARIANT STREQUAL "framework-pkg")
         set(BUILD_FRAMEWORK_PKG 1)
-    elseif(PY3EXT_BUILD_VARIANT STREQUAL "shared-pkg")
+    elseif(PY3EXT_BUILD_VARIANT STREQUAL "windows-pkg")
         set(BUILD_WINDOWS_PKG 1)
     endif()
 
@@ -99,7 +99,6 @@ function(python3_external)
     endif()
 
     if(BUILD_WINDOWS_PKG)
-        # set(Python3_ROOT_DIR "${SUPPORT_DIR}/python")
         set(Python3_ROOT_DIR "${SUPPORT_DIR}")
         set(Python3_EXECUTABLE "${Python3_ROOT_DIR}/python.exe")
         set(Python3_INCLUDE_DIRS "${Python3_ROOT_DIR}/include")
@@ -116,11 +115,11 @@ function(python3_external)
     if(PY3EXT_PROJECT_SOURCE)
         set(PROJECT_SRC ${PY3EXT_PROJECT_SOURCE})
     else()
-    file(GLOB PROJECT_SRC
-        "*.h"
-        "*.c"
-        "*.cpp"
-    )
+        file(GLOB PROJECT_SRC
+            "*.h"
+            "*.c"
+            "*.cpp"
+        )
     endif()
 
     if(PY3EXT_MIN_API)
@@ -160,7 +159,7 @@ function(python3_external)
         $<$<CONFIG:Release>:NDEBUG>
         $<$<BOOL:${BUILD_STATIC_EXT}>:-DBUILD_STATIC> # help static find pyhome
         $<$<BOOL:${PY3EXT_INCLUDE_COMMONSYMS}>:-DINCLUDE_COMMONSYMS>
-        $<$<BOOL:${BUILD_WINDOWS_PKG}>:-DPY_SHARED_PKG>
+        $<$<BOOL:${BUILD_WINDOWS_PKG}>:-DPY_WINDOWS_PKG>
         # $<IN_LIST:${PY3EXT_BUILD_VARIANT},${self_contained}:-DSELFCONTAINED_EXTERNAL> # special case
     )
 
@@ -187,6 +186,7 @@ function(python3_external)
         $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/bzip2/lib>
         $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/openssl/lib>
         $<$<BOOL:${BUILD_STATIC_EXT}>:${DEPS_DIR}/xz/lib>
+        $<$<BOOL:${BUILD_WINDOWS_PKG}>:${SUPPORT_DIR}/libs>
     )
 
     set(STATIC_LINK_DEPS
@@ -255,15 +255,15 @@ function(python3_external)
         )
     endif()
 
-    if(BUILD_WINDOWS_PKG)
-        cmake_path(SET SUPPORT_DIR NORMALIZE ${SUPPORT_DIR})
-        ADD_CUSTOM_COMMAND(
-            TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
-            COMMAND cmd /C "del *.lib"
-            COMMAND cmd /C "rmdir /S /Q include"
-            WORKING_DIRECTORY ${SUPPORT_DIR}
-            VERBATIM
-        )
-    endif()
+    # if(BUILD_WINDOWS_PKG)
+    #     cmake_path(SET SUPPORT_DIR NORMALIZE ${SUPPORT_DIR})
+    #     ADD_CUSTOM_COMMAND(
+    #         TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+    #         COMMAND cmd /C "del *.lib"
+    #         COMMAND cmd /C "rmdir /S /Q include"
+    #         WORKING_DIRECTORY ${SUPPORT_DIR}
+    #         VERBATIM
+    #     )
+    # endif()
 
 endfunction()

@@ -196,7 +196,8 @@ all: default
 		homebrew-pkg homebrew-ext \
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
-		static-pkg static-ext static-tiny-ext
+		static-pkg static-ext static-tiny-ext \
+		core-windows-pkg
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -215,6 +216,16 @@ core: api clean-build-dir clean-externals
 			-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
 			&& \
 		cmake --build . --config Release
+
+core-windows-pkg: api clean-build-dir clean-externals clean-support
+	@$(PYTHON) ./source/scripts/buildpy.py -t windows-pkg && \
+	mkdir -p build && \
+	cd build && \
+	cmake .. \
+		-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+		-DBUILD_VARIANT=windows-pkg \
+		&& \
+	cmake --build . --config Release
 
 experimentals: clean-build-dir clean-externals
 	$(call section,"building experimental externals using")
@@ -348,7 +359,7 @@ beeware-ext: clean-externals
 # -----------------------------------------------------------------------
 # experimental python3 externals
 
-.PHONY: py py-static py-shared py-framework py-framework-pkg py-shared-pkg \
+.PHONY: py py-static py-shared py-framework py-framework-pkg py-windows-pkg \
 		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
 		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
 		cobra cobra-static cobra-shared cobra-framework cobra-framework-pkg \
@@ -370,8 +381,8 @@ py-framework: clean-cmake-cache clean-externals
 py-framework-pkg: clean-cmake-cache clean-externals
 	$(call build-target,py,framework-pkg)
 
-py-shared-pkg: clean-build-dir clean-externals clean-support
-	$(call build-target,py,shared-pkg)
+py-windows-pkg: clean-build-dir clean-externals clean-support
+	$(call build-target,py,windows-pkg)
 
 pyjs: clean-cmake-cache clean-externals
 	$(call build-target,$@,local)
@@ -387,6 +398,9 @@ pyjs-framework: clean-cmake-cache clean-externals
 
 pyjs-framework-pkg: clean-cmake-cache clean-externals
 	$(call build-target,pyjs,framework-pkg)
+
+pyjs-windows-pkg: clean-build-dir clean-externals clean-support
+	$(call build-target,pyjs,windows-pkg)
 
 mamba: clean-cmake-cache clean-externals
 	$(call build-target,$@,local)
@@ -517,7 +531,7 @@ release-relocatable-pkg: clean-framework-pkg
 .PHONY: python-shared python-shared-pkg python-shared-ext python-shared-tiny \
 		python-static  python-static-tiny \
 		python-framework python-framework-ext python-framework-pkg \
-		python-beeware python-cmake
+		python-beeware python-cmake python-windows-pkg
 
 python-shared: clean-python-shared
 	$(call call-builder,"python" "shared" "--install")
@@ -558,7 +572,8 @@ python-beeware:
 python-cmake: clean-python-cmake
 	$(call call-builder,"python" "cmake" "--install" "-p" "3.9.17")
 
-
+python-windows-pkg: clean-support clean-src-dir
+	@$(PYTHON) ./source/scripts/buildpy.py -t windows-pkg
 
 
 # -----------------------------------------------------------------------
@@ -592,11 +607,11 @@ xz:
 		build-framework-pkg build-framework-ext \
 		build-shared-pkg build-shared-ext build-shared-tiny-ext \
 		build-static-pkg build-static-ext build-static-tiny-ext \
-		build-shared-pkg
+		build-core-windows-pkg
 
 
-# build-shared-pkg: clean-shared-pkg
-# 	$(call call-builder,"pyjs" "shared_pkg" "--build")
+build-shared-pkg: clean-shared-pkg
+	$(call call-builder,"pyjs" "shared_pkg" "--build")
 
 build-shared-ext: clean-shared-ext
 	$(call call-builder,"pyjs" "shared_ext" "--build" "-p" "$(PYTHON_VERSION)")
@@ -625,12 +640,12 @@ build-shared-tiny-ext: clean-shared-ext
 build-beeware-ext: clean-static-ext
 	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
 
-build-shared-pkg:
+build-core-windows-pkg:
 	@mkdir -p build && \
 	cd build && \
 	cmake $(GENERATOR) .. \
-		-DBUILD_TARGETS=py \
-		-DBUILD_VARIANT=shared-pkg \
+		-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+		-DBUILD_VARIANT=windows-pkg \
 		&& \
 	cmake --build . --config Release
 
@@ -890,7 +905,7 @@ cflow:
 	clean-shared-pkg clean-shared-ext \
 	clean-static-pkg clean-static-ext \
 	clean-relocatable-pkg clean-mambo \
-	clean-cmake-cache clean-python-service
+	clean-cmake-cache clean-python-service clean-src-dir
 
 clean: clean-externals clean-support clean-targets clean-build clean-docs
 
@@ -919,6 +934,10 @@ clean-products: clean-support clean-externals clean-build
 clean-build-dir:
 	$(call section,"cleaning build directory")
 	@rm -rf '${ROOTDIR}'/build
+
+clean-src-dir:
+	$(call section,"cleaning build/src directory")
+	@rm -rf '${ROOTDIR}'/build/src/*
 
 clean-build: clean-build-dir
 	$(call section,"cleaning build detritus")
