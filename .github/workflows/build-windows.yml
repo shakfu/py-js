@@ -14,8 +14,8 @@ jobs:
     - name: build with make
       run: make core-windows-pkg
 
-    - name: cleanup
-      run: cmake -P source/scripts/cmake/win-pkg-cleanup.cmake
+    # - name: cleanup
+    #   run: cmake -P source/scripts/cmake/win-pkg-cleanup.cmake
 
     - uses: actions/upload-artifact@v4
       with:
