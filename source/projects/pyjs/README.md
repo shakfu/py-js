@@ -28,9 +28,34 @@ pyjs max external (jsextension)
 
 Note that the source files in this projects are soft-linked from the `py` project. The reason for this is that the `py` and `pyjs` were originally developed together and there is still extensive non-cmake driven build infrastructure which assumes this.
 
-Creating a separate folder for pyjs with its own CMakeLists.txt file means that the pyjs external will be built when `make projects` is called.
+## Building
 
-Ultimately all externals should have their own folders and documentation, but it will take some iterations to get there.
+On macOS, the `pyjs` external has the same dependencies as the `py` external and is also included in the very large number of build variants which can built so please consult the [py](https://github.com/shakfu/py-js/tree/main/source/projects/py) external documentation section for more details about this.
+
+It can also be built alone via `make pyjs` or with the `py` external via `make core`. It is also built if `make projects` is called.
+
+On Windows, provided you have the requisite Visual Studio Community (or above) compiler and cmake as well as python3 installed (see `py` docs for more details on requirements), the above `make` targets will also work for Windows if `make.exe` is installed.
+
+Otherwise, you can build the `pyjs` external which links to local system python by doing the following inside your `Documents\\Max [8 or 9]\\Packages` folder:
+
+```sh
+git clone --recursive https://github.com/shakfu/py-js
+cd py-js
+mkdir build
+cd build
+cmake .. -DBUILD_TARGETS=pyjs
+cmake --build . --config Release
+```
+
+If you want to build a relocatable python3 external for Windows version which can be used in Max packages and standalones the following option is also available:
+
+```sh
+python source\\scripts\\buildpy.py -t windows-pkg
+mkdir build
+cd build
+cmake .. -DBUILD_TARGETS=pyjs -DBUILD_VARIANT=windows-pkg
+cmake --build . --config Release
+```
 
 ## Overview
 
@@ -116,7 +141,6 @@ Deployment Scenario    | `pyjs`
 Linked to sys python   | yes
 Embeddded in package   | yes
 Embeddded in external  | yes
-
 
 Please review the [py](https://github.com/shakfu/py-js/tree/main/source/projects/py) documentation for more information about building in the case of (2) and (3). Since the `py` and `pyjs` are built together simultaneously, the information provided there is quite relevent for `pyjs`.
 

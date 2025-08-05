@@ -177,7 +177,7 @@ For a relocatable windows build, type `make core-windows-pkg` if you have `make.
 
 ```sh
 python ./source/scripts/buildpy.py -t windows-pkg
-mkdir -p build
+mkdir build
 cd build
 cmake .. -DBUILD_PYTHON3_CORE_EXTERNALS=ON -DBUILD_VARIANT=windows-pkg
 cmake --build . --config Release

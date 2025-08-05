@@ -402,6 +402,9 @@ pyjs-framework-pkg: clean-cmake-cache clean-externals
 pyjs-windows-pkg: clean-build-dir clean-externals clean-support
 	$(call build-target,pyjs,windows-pkg)
 
+pyjs-windows-pkg: clean-build-dir clean-externals clean-support
+	$(call build-target,pyjs,windows-pkg)
+
 mamba: clean-cmake-cache clean-externals
 	$(call build-target,$@,local)
 

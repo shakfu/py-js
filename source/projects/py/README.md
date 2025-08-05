@@ -230,7 +230,7 @@ git clone --recursive https://github.com/shakfu/py-js.git
 
 ### Windows
 
-Since Windows support still is relatively new, no releases have been made pending further testing.
+Since Windows support for relocatable builds still is relatively new, releases will be made pending further testing.
 
 Currently, the externals which are enabled by default in this project can be built with only a few requirements:
 
@@ -240,14 +240,24 @@ Currently, the externals which are enabled by default in this project can be bui
 
 3. (Optional) since Visual Studio has its captive cmake, [you can use that](https://stackoverflow.com/questions/70178963/where-is-cmake-located-when-downloaded-from-visual-studio-2022), but it is preferable to [install cmake](https://cmake.org/download/#latest) independently.
 
-After installation of the above you can build the externals inside your `Documents/Max 8/Packages` folder as follows:
+After installation of the above you can build the `py` external which links to local system python by doing the following inside your `Documents/Max [8 or 9]/Packages` folder:
 
 ```sh
 git clone --recursive https://github.com/shakfu/py-js
 cd py-js
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DBUILD_TARGETS=py
+cmake --build . --config Release
+```
+
+If you want to build a relocatable python3 external for Windows which can be used in Max packages and standalones then type the following in the previously cloned `py-js` directory:
+
+```sh
+python source\\scripts\\buildpy.py -t windows-pkg
+mkdir build
+cd build
+cmake .. -DBUILD_TARGETS=py -DBUILD_VARIANT=windows-pkg
 cmake --build . --config Release
 ```
 
