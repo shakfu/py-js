@@ -733,10 +733,16 @@ class ShellCmd:
         """extract a tar archive"""
         if tarfile.is_tarfile(archive):
             with tarfile.open(archive) as f:
-                f.extractall(tofolder, filter='data')
+                if sys.version_info.minor >= 12:
+                    f.extractall(tofolder, filter='data')
+                else:
+                    f.extractall(tofolder)
         elif zipfile.is_zipfile(archive):
             with zipfile.ZipFile(archive) as f:
-                f.extractall(tofolder)
+                if sys.version_info.minor >= 12:
+                    f.extractall(tofolder, filter='data')
+                else:
+                    f.extractall(tofolder)
         else:
             raise TypeError("cannot extract from this file.")
 
