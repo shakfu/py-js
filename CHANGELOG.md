@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
-- `buildpy` (Windows and MacOS builds) now pre-compiles the zipped stdlib to bytecode by default. An option to switch this off will be provided next.
+- `buildpy` (Windows and MacOS builds) now pre-compiles the zipped stdlib to bytecode by default. The `BUILDPY_OPTIONS` can be set at the `Makefile` level to change this.
 
 - `Makefile` has new targets for recently introduced support for relocatable python3 externals for Windows if `make.exe` is available in your PATH via something like [w64devkit](https://github.com/skeeto/w64devkit).
 

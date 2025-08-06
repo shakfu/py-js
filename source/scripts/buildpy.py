@@ -57,9 +57,11 @@ ActionFn = Callable[[Path], None]
 # ----------------------------------------------------------------------------
 # env helpers
 
+
 def getenv(key: str, default: bool = False) -> bool:
     """convert '0','1' env values to bool {True, False}"""
     return bool(int(os.getenv(key, default)))
+
 
 def setenv(key: str, default: str):
     """get environ variable if it is exists else set default"""
@@ -69,6 +71,7 @@ def setenv(key: str, default: str):
         os.environ[key] = default
         return default
 
+
 # ----------------------------------------------------------------------------
 # constants
 
@@ -77,21 +80,27 @@ PLATFORM = platform.system()
 ARCH = platform.machine()
 PY_VER_MINOR = sys.version_info.minor
 DEFAULT_PY_VERSION = "3.13.5"
-DEBUG = getenv('DEBUG', default=True)
-COLOR = getenv('COLOR', default=True)
+DEBUG = getenv("DEBUG", default=True)
+COLOR = getenv("COLOR", default=True)
 
 # ----------------------------------------------------------------------------
 # platform-specific config
 
 if PLATFORM == "Darwin":
     MACOSX_DEPLOYMENT_TARGET = setenv("MACOSX_DEPLOYMENT_TARGET", "12.6")
-    BUILD_TYPES = ['local', 'shared-ext', 'static-ext', 'framework-ext', 
-                   'framework-pkg']
+    BUILD_TYPES = [
+        "local",
+        "shared-ext",
+        "static-ext",
+        "framework-ext",
+        "framework-pkg",
+    ]
 elif PLATFORM == "Windows":
-    BUILD_TYPES = ['local', 'windows-pkg']
+    BUILD_TYPES = ["local", "windows-pkg"]
 
 # ----------------------------------------------------------------------------
 # logging config
+
 
 class CustomFormatter(logging.Formatter):
     """custom logging formatting class"""
@@ -105,10 +114,12 @@ class CustomFormatter(logging.Formatter):
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
     fmt = "%(delta)s - %(levelname)s - %(name)s.%(funcName)s - %(message)s"
-    cfmt = (f"{white}%(delta)s{reset} - "
-            f"{{}}%(levelname)s{{}} - "
-            f"{white}%(name)s.%(funcName)s{reset} - "
-            f"{grey}%(message)s{reset}")
+    cfmt = (
+        f"{white}%(delta)s{reset} - "
+        f"{{}}%(levelname)s{{}} - "
+        f"{white}%(name)s.%(funcName)s{reset} - "
+        f"{grey}%(message)s{reset}"
+    )
 
     FORMATS = {
         logging.DEBUG: cfmt.format(grey, reset),
@@ -132,8 +143,7 @@ class CustomFormatter(logging.Formatter):
                 record.relativeCreated / 1000, datetime.UTC
             )
         else:
-            duration = datetime.datetime.utcfromtimestamp(
-                record.relativeCreated / 1000)
+            duration = datetime.datetime.utcfromtimestamp(record.relativeCreated / 1000)
         record.delta = duration.strftime("%H:%M:%S")
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
@@ -190,7 +200,7 @@ BASE_CONFIG = {
         "_codecs_tw": ["cjkcodecs/_codecs_tw.c"],
         "_collections": ["_collectionsmodule.c"],
         "_contextvars": ["_contextvarsmodule.c"],
-        "_crypt":  ["_cryptmodule.c", "-lcrypt"],
+        "_crypt": ["_cryptmodule.c", "-lcrypt"],
         "_csv": ["_csv.c"],
         "_ctypes": [
             "_ctypes/_ctypes.c",
@@ -514,14 +524,14 @@ class Config:
         for section in ["shared", "static", "disabled"]:
             _add_section(section)
 
-        with open(to, "w", encoding='utf8') as f:
+        with open(to, "w", encoding="utf8") as f:
             self.out.append("# end \n")
             f.write("\n".join(self.out))
 
     def write_json(self, method: str, to: Pathlike):
         self.log.info("write method '%s' to json: %s", method, to)
         getattr(self, method)()
-        with open(to, 'w') as f:
+        with open(to, "w") as f:
             json.dump(self.cfg, f, indent=4)
 
 
@@ -675,12 +685,13 @@ class PythonConfig313(PythonConfig312):
 
         self.cfg["extensions"].update(
             {
-                "_interpchannels" : ["_interpchannelsmodule.c"],
-                "_interpqueues" : ["_interpqueuesmodule.c"],
-                "_interpreters" : ["_interpretersmodule.c"],
-                "_sysconfig" : ["_sysconfig.c"],
-                "_testexternalinspection" : ["_testexternalinspection.c"],
-            })
+                "_interpchannels": ["_interpchannelsmodule.c"],
+                "_interpqueues": ["_interpqueuesmodule.c"],
+                "_interpreters": ["_interpretersmodule.c"],
+                "_sysconfig": ["_sysconfig.c"],
+                "_testexternalinspection": ["_testexternalinspection.c"],
+            }
+        )
 
         del self.cfg["extensions"]["_crypt"]
         del self.cfg["extensions"]["ossaudiodev"]
@@ -701,9 +712,9 @@ class PythonConfig313(PythonConfig312):
         self.cfg["disabled"].append("_testexternalinspection")
 
 
-
 # ----------------------------------------------------------------------------
 # utility classes
+
 
 class ShellCmd:
     """Provides platform agnostic file/folder handling."""
@@ -734,13 +745,13 @@ class ShellCmd:
         if tarfile.is_tarfile(archive):
             with tarfile.open(archive) as f:
                 if sys.version_info.minor >= 12:
-                    f.extractall(tofolder, filter='data')
+                    f.extractall(tofolder, filter="data")
                 else:
                     f.extractall(tofolder)
         elif zipfile.is_zipfile(archive):
             with zipfile.ZipFile(archive) as f:
                 if sys.version_info.minor >= 12:
-                    f.extractall(tofolder, filter='data')
+                    f.extractall(tofolder, filter="data")
                 else:
                     f.extractall(tofolder)
         else:
@@ -803,11 +814,11 @@ class ShellCmd:
         self.log.info("move path %s to %s", src, dst)
         shutil.move(src, dst)
 
-    def glob_move(self, src: Pathlike, patterns: str,  dst: Pathlike):
+    def glob_move(self, src: Pathlike, patterns: str, dst: Pathlike):
         """Move with glob patterns"""
         targets = src.glob(patterns)
         for t in targets:
-            self.move(t, dst)           
+            self.move(t, dst)
 
     def copy(self, src: Pathlike, dst: Pathlike):
         """copy file or folders -- tries to be behave like `cp -rf`"""
@@ -832,7 +843,6 @@ class ShellCmd:
                     raise exc_info
             os.chmod(path, stat.S_IWRITE)
             func(path)
-
 
         path = Path(path)
         if path.is_dir():
@@ -885,8 +895,7 @@ class ShellCmd:
         def remove(entry: Path):
             self.remove(entry)
 
-        self.walk(root, match_func=match, action_func=remove,
-                  skip_patterns=skip_dirs)
+        self.walk(root, match_func=match, action_func=remove, skip_patterns=skip_dirs)
 
     def pip_install(
         self,
@@ -949,16 +958,18 @@ class ShellCmd:
             _cmds.append(f"--prefix {prefix}")
         self.cmd(" ".join(_cmds))
 
+
 # ----------------------------------------------------------------------------
 # main classes
+
 
 class Project(ShellCmd):
     """Utility class to hold project directory structure"""
 
     def __init__(self):
-        self.cwd = Path.cwd()
-        self.build = self.cwd / "build"
-        self.support = self.cwd / "support"
+        self.root = Path.cwd()
+        self.build = self.root / "build"
+        self.support = self.root / "support"
         self.downloads = self.build / "downloads"
         self.src = self.build / "src"
         self.install = self.build / "install"
@@ -990,7 +1001,9 @@ class AbstractBuilder(ShellCmd):
     lib_products: list[str]
     depends_on: list[type["Builder"]]
 
-    def __init__(self, version: Optional[str] = None, project: Optional[Project] = None):
+    def __init__(
+        self, version: Optional[str] = None, project: Optional[Project] = None
+    ):
         self.version = version or self.version
         self.project = project or Project()
         self.log = logging.getLogger(self.__class__.__name__)
@@ -1051,7 +1064,9 @@ class AbstractBuilder(ShellCmd):
     @property
     def download_url(self) -> str:
         """return download url with version interpolated"""
-        return self.download_url_template.format(archive=self.download_archive, ver=self.version)
+        return self.download_url_template.format(
+            archive=self.download_archive, ver=self.version
+        )
 
     @property
     def downloaded_archive(self) -> str:
@@ -1127,7 +1142,7 @@ class AbstractBuilder(ShellCmd):
     @property
     def dylib(self) -> Path:
         """dylib path"""
-        return self.prefix / 'lib' / self.dylib_name
+        return self.prefix / "lib" / self.dylib_name
 
     @property
     def dylib_link(self) -> Path:
@@ -1137,7 +1152,7 @@ class AbstractBuilder(ShellCmd):
     @property
     def staticlib(self) -> Path:
         """staticlib path"""
-        return self.prefix / 'lib' / self.staticlib_name
+        return self.prefix / "lib" / self.staticlib_name
 
     @property
     def prefix(self) -> Path:
@@ -1146,8 +1161,7 @@ class AbstractBuilder(ShellCmd):
 
     def lib_products_exist(self) -> bool:
         """check if all built lib_products already exist"""
-        return all((self.prefix / "lib" / lib).exists()
-                    for lib in self.lib_products)
+        return all((self.prefix / "lib" / lib).exists() for lib in self.lib_products)
 
     def pre_process(self):
         """override by subclass if needed"""
@@ -1214,8 +1228,7 @@ class OpensslBuilder(Builder):
         """main build method"""
         if not self.lib_products_exist():
             self.cmd(
-                f"./config no-shared no-tests --prefix={self.prefix}",
-                cwd=self.src_dir
+                f"./config no-shared no-tests --prefix={self.prefix}", cwd=self.src_dir
             )
             self.cmd("make install_sw", cwd=self.src_dir)
 
@@ -1248,7 +1261,7 @@ class XzBuilder(Builder):
     version = "5.6.3"
     repo_url = "https://github.com/python/cpython-source-deps.git"
     download_archive_template = "xz-{ver}.tar.gz"
-    download_url_template = "http://tukaani.org/xz/{archive}" # not used
+    download_url_template = "http://tukaani.org/xz/{archive}"  # not used
     depends_on = []
     lib_products = ["liblzma.a"]
 
@@ -1274,17 +1287,19 @@ class XzBuilder(Builder):
             for f in [configure, install_sh]:
                 self.chmod(f, 0o755)
             self.cmd(
-                " ".join([
-                    "/bin/sh",
-                    "configure",
-                    "--disable-dependency-tracking",
-                    "--disable-xzdec",
-                    "--disable-lzmadec",
-                    "--disable-nls",
-                    "--enable-small",
-                    "--disable-shared",
-                    f"--prefix={self.prefix}",
-                    ]),
+                " ".join(
+                    [
+                        "/bin/sh",
+                        "configure",
+                        "--disable-dependency-tracking",
+                        "--disable-xzdec",
+                        "--disable-lzmadec",
+                        "--disable-nls",
+                        "--enable-small",
+                        "--disable-shared",
+                        f"--prefix={self.prefix}",
+                    ]
+                ),
                 cwd=self.src_dir,
             )
             self.cmd("make && make install", cwd=self.src_dir)
@@ -1369,7 +1384,6 @@ class PythonBuilder(Builder):
         jobs: int = 1,
         is_max_package: bool = False,
     ):
-
         super().__init__(version, project)
         self.config = config
         self.precompile = precompile
@@ -1453,8 +1467,9 @@ class PythonBuilder(Builder):
         prefix = self.prefix
 
         if self.build_type == "shared":
-            self.config_options.extend([
-                "--enable-shared", "--without-static-libpython"])
+            self.config_options.extend(
+                ["--enable-shared", "--without-static-libpython"]
+            )
         elif self.build_type == "framework":
             if self.is_max_package:
                 prefix = self.project.support
@@ -1475,15 +1490,14 @@ class PythonBuilder(Builder):
 
         if self.cfg_opts:
             for cfg_opt in self.cfg_opts:
-                cfg_opt = cfg_opt.replace('_', '-')
-                cfg_opt = '--' + cfg_opt
+                cfg_opt = cfg_opt.replace("_", "-")
+                cfg_opt = "--" + cfg_opt
                 if cfg_opt not in self.config_options:
-                     self.config_options.append(cfg_opt)
+                    self.config_options.append(cfg_opt)
 
         config.write(self.config, to=self.src_dir / "Modules" / "Setup.local")
         config_opts = " ".join(self.config_options)
-        self.cmd(f"./configure --prefix={prefix} {config_opts}",
-                 cwd=self.src_dir)
+        self.cmd(f"./configure --prefix={prefix} {config_opts}", cwd=self.src_dir)
 
     def build(self):
         """main build process"""
@@ -1516,7 +1530,7 @@ class PythonBuilder(Builder):
 
     def ziplib(self):
         """zip python library
-        
+
         Precompiles to bytecode by default to save compilation time, and drops .py
         source files to save space. Note that only same version interpreter can compile
         bytecode. Also can specify optimization levels of bytecode precompilation:
@@ -1532,10 +1546,16 @@ class PythonBuilder(Builder):
         )
 
         if self.precompile:
-            self.cmd(f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} {src}", cwd=src.parent)
-            self.walk(src, match_func=lambda f: str(f).endswith('.py'),
-                           action_func=lambda f: self.remove(f),
-                           skip_patterns=[])
+            self.cmd(
+                f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} {src}",
+                cwd=src.parent,
+            )
+            self.walk(
+                src,
+                match_func=lambda f: str(f).endswith(".py"),
+                action_func=lambda f: self.remove(f),
+                skip_patterns=[],
+            )
             self.move(src / "os.pyc", self.project.build / "os.pyc")
         else:
             self.move(src / "os.py", self.project.build / "os.py")
@@ -1566,7 +1586,9 @@ class PythonBuilder(Builder):
             if self.build_type == "shared":
                 dylib = self.prefix / "lib" / self.dylib_name
                 self.chmod(dylib)
-                self.cmd(f"install_name_tool -id @loader_path/../Resources/lib/{self.dylib_name} {dylib}")
+                self.cmd(
+                    f"install_name_tool -id @loader_path/../Resources/lib/{self.dylib_name} {dylib}"
+                )
                 to = f"@executable_path/../lib/{self.dylib_name}"
                 exe = self.prefix / "bin" / self.name_ver
                 self.cmd(f"install_name_tool -change {dylib} {to} {exe}")
@@ -1582,9 +1604,16 @@ class PythonBuilder(Builder):
                 to = "@executable_path/../Python"
                 exe = self.prefix / "bin" / self.name_ver
                 self.cmd(f"install_name_tool -change {dylib} {to} {exe}")
-                # changing app 
+                # changing app
                 to = "@executable_path/../../../../Python"
-                app = self.prefix / "Resources" / "Python.app" / "Contents" / "MacOS" / "Python"
+                app = (
+                    self.prefix
+                    / "Resources"
+                    / "Python.app"
+                    / "Contents"
+                    / "MacOS"
+                    / "Python"
+                )
                 self.cmd(f"install_name_tool -change {dylib} {to} {app}")
         elif PLATFORM == "Linux":
             if self.build_type == "shared":
@@ -1600,10 +1629,10 @@ class PythonBuilder(Builder):
     def can_run(self) -> bool:
         """check if a run is merited"""
         if not all(dep().lib_products for dep in self.depends_on):
-            return True # dependencies not built
+            return True  # dependencies not built
 
         if self.build_type == "static":
-            self.log.debug('staticlib path: %s', self.staticlib)
+            self.log.debug("staticlib path: %s", self.staticlib)
             self.log.debug("staticlib exists: %s", self.staticlib.exists())
             if not self.staticlib.exists():
                 # staticlib not built
@@ -1665,7 +1694,9 @@ class WindowsEmbeddablePythonBuilder(Builder):
     name = "Python"
     version = DEFAULT_PY_VERSION
     repo_url = "https://github.com/python/cpython.git"
-    download_url_template = "https://www.python.org/ftp/python/{ver}/python-{ver}-embed-amd64.zip"
+    download_url_template = (
+        "https://www.python.org/ftp/python/{ver}/python-{ver}-embed-amd64.zip"
+    )
     depends_on = []
     libs_static = []
 
@@ -1733,7 +1764,6 @@ class WindowsPythonBuilder(PythonBuilder):
         jobs: int = 1,
         is_max_package: bool = False,
     ):
-
         super().__init__(version, project)
         self.config = config
         self.optimize = optimize
@@ -1780,17 +1810,17 @@ class WindowsPythonBuilder(PythonBuilder):
     def pip(self):
         """path to pip3 executable"""
         return self.prefix / "pip.exe"
-    
+
     @property
     def pth(self):
         """syspath modifier"""
         return f"{self.name_ver_nodot}._pth"
-    
+
     @property
     def binary_dir(self):
         """path to folder in python source where windows binaries are built"""
         return self.src_dir / "PCbuild" / "amd64"
-    
+
     @property
     def pyconfig_h(self):
         """path to generated pyconfig.h header"""
@@ -1856,7 +1886,7 @@ class WindowsPythonBuilder(PythonBuilder):
 
     def ziplib(self):
         """zip python library
-        
+
         Precompiles to bytecode by default to save compilation time, and drops .py
         source files to save space. Note that only same version interpreter can compile
         bytecode. Also can specify optimization levels of bytecode precompilation:
@@ -1867,11 +1897,17 @@ class WindowsPythonBuilder(PythonBuilder):
         """
         src = self.prefix / "Lib"
         if self.precompile:
-            self.cmd(f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} Lib", cwd=self.prefix)
-            self.walk(src, match_func=lambda f: str(f).endswith('.py'),
-                           action_func=lambda f: self.remove(f),
-                           skip_patterns=[])
-        zip_path = self.prefix /  self.name_ver_nodot
+            self.cmd(
+                f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} Lib",
+                cwd=self.prefix,
+            )
+            self.walk(
+                src,
+                match_func=lambda f: str(f).endswith(".py"),
+                action_func=lambda f: self.remove(f),
+                skip_patterns=[],
+            )
+        zip_path = self.prefix / self.name_ver_nodot
         shutil.make_archive(str(zip_path), "zip", str(src))
         self.remove(src)
 
@@ -1913,6 +1949,7 @@ def main():
     )
     opt = parser.add_argument
 
+    # fmt: off
     opt("-a", "--cfg-opts", help="add config options", type=str, nargs="+", metavar="CFG")
     opt("-b", "--optimize-bytecode", help="set optimization levels -1 .. 2 (default: %(default)s)", type=int, default=-1)
     opt("-c", "--config", default="shared_mid", help="build configuration (default: %(default)s)", metavar="NAME")
@@ -1927,6 +1964,7 @@ def main():
     opt("-j", "--jobs", help="# of build jobs (default: %(default)s)", type=int, default=4)
     opt("-s", "--json", help="serialize config to json file", action="store_true")
     opt("-t", "--type", help="build based on build type")
+    # fmt: on
 
     args = parser.parse_args()
     if PLATFORM == "Darwin":
@@ -1938,19 +1976,19 @@ def main():
         python_builder_class = WindowsPythonBuilder
 
     else:
-        raise NotImplementedError("script only works on MacOS and Windows")      
+        raise NotImplementedError("script only works on MacOS and Windows")
 
     if args.type and args.type in BUILD_TYPES:
-        if args.type == 'local':
+        if args.type == "local":
             sys.exit(0)
         cfg = {
-            'shared-ext': 'shared_mid',
-            'static-ext': 'static_mid',
-            'framework-ext': 'framework_mid',
-            'framework-pkg': 'framework_mid',
-            'windows-pkg': 'shared_max',
+            "shared-ext": "shared_mid",
+            "static-ext": "static_mid",
+            "framework-ext": "framework_mid",
+            "framework-pkg": "framework_mid",
+            "windows-pkg": "shared_max",
         }[args.type]
-        is_max_package = args.type[-3:] == 'pkg'
+        is_max_package = args.type[-3:] == "pkg"
         builder = python_builder_class(
             version=args.version,
             config=cfg,
@@ -1967,8 +2005,8 @@ def main():
         builder.process()
         sys.exit(0)
 
-    if '-' in args.config:
-        _config = args.config.replace('-', '_')
+    if "-" in args.config:
+        _config = args.config.replace("-", "_")
     else:
         _config = args.config
 
@@ -1977,7 +2015,7 @@ def main():
         config=_config,
         precompile=args.precompile,
         optimize=args.optimize,
-        optimize_bytecode=args.optimize_bytecode,   
+        optimize_bytecode=args.optimize_bytecode,
         pkgs=args.install,
         cfg_opts=args.cfg_opts,
         jobs=args.jobs,
