@@ -29,6 +29,7 @@ ShellCmd
 """
 
 import argparse
+import compileall
 import datetime
 import json
 import logging
@@ -1743,8 +1744,8 @@ class WindowsPythonBuilder(PythonBuilder):
         return self.prefix / self.dylib_name
 
     @property
-    def python(self):
-        """path to python3 executable"""
+    def executable(self):
+        """executable path of buld target"""
         return self.prefix / "python.exe"
 
     @property
@@ -1811,6 +1812,7 @@ class WindowsPythonBuilder(PythonBuilder):
         self.makedirs(self.prefix / "libs")
         self.glob_move(self.prefix, "*.lib", self.prefix / "libs")
         with open(self.prefix / self.pth, "w") as f:
+            print("Lib", file=f)
             print(f"{self.name_ver_nodot}.zip", file=f)
             print("site-packages", file=f)
             print(".", file=f)
@@ -1824,9 +1826,23 @@ class WindowsPythonBuilder(PythonBuilder):
             skip_dirs=[".git"],
         )
 
-    def ziplib(self):
-        """zip python library"""
+    def ziplib(self, precompile: bool = True,  optimize: int = 2):
+        """zip python library
+        
+        Precompiles to bytecode by default to save compilation time, and drops .py
+        source files to save space. Note that only same version interpreter can compile
+        bytecode. Also can specify optimization levels of bytecode precompilation:
+            -1 is system default optimization
+            0 off
+            1 drops asserts and __debug__ blocks
+            2 same as 1 and discards docstrings (saves ~588K of compressed space)
+        """
         src = self.prefix / "Lib"
+        if precompile:
+            self.cmd(f"{self.executable} -m compileall -f -b -o {optimize} Lib", cwd=self.prefix)
+            self.walk(src, match_func=lambda f: str(f).endswith('.py'),
+                           action_func=lambda f: self.remove(f),
+                           skip_patterns=[])
         zip_path = self.prefix /  self.name_ver_nodot
         shutil.make_archive(str(zip_path), "zip", str(src))
         self.remove(src)
