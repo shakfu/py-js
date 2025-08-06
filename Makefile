@@ -43,11 +43,12 @@ PKG_NAME = $(NAME)
 
 # cython options
 EXTENSION = $(PYDIR)/api.pyx
-INCLUDE_NUMPY := 0 # change this to 1 if you want to enable numpy in api.pyx
-  # this requires numpy to be available to the python
-  # interpreter.
-CYTHON_OPTIONS = --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
--X emit_code_comments=False
+INCLUDE_NUMPY := 0 # change to 1 if you want to enable numpy in api.pyx
+  								 # requires numpy to be available to the python interpreter.
+CYTHON_OPTIONS := --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
+									-X emit_code_comments=False
+
+BUILDPY_OPTIONS := --precompile --optimize-bytecode 2
 
 MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSIONS := 8 9
@@ -140,7 +141,7 @@ endef
 # $(call build-target,name,variant)
 define build-target
 $(call section,"cmake building $1 as $2")
-@$(PYTHON) ./source/scripts/buildpy.py -t $2 && \
+@$(PYTHON) ./source/scripts/buildpy.py $(BUILDPY_OPTIONS) -t $2 && \
 	mkdir -p build && \
 	cd build && \
 	cmake $(GENERATOR) .. \
@@ -153,7 +154,7 @@ endef
 # $(call make-target,name,variant) with make backend
 define make-target
 $(call section,"make building $1 as $2")
-@$(PYTHON) ./source/scripts/buildpy.py -t $2 && \
+@$(PYTHON) ./source/scripts/buildpy.py $(BUILDPY_OPTIONS) -t $2 && \
 	mkdir -p build && \
 	cd build && \
 	cmake .. -G"Unix Makefiles" \
@@ -168,7 +169,7 @@ endef
 # $(call ninja-target,name,variant) with ninja backend
 define ninja-target
 $(call section,"ninja building $1 as $2")
-@$(PYTHON) ./source/scripts/buildpy.py -t $2 && \
+@$(PYTHON) ./source/scripts/buildpy.py $(BUILDPY_OPTIONS) -t $2 && \
 	mkdir -p build && \
 	cd build && \
 	cmake .. -G"Ninja" \

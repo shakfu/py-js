@@ -29,7 +29,6 @@ ShellCmd
 """
 
 import argparse
-import compileall
 import datetime
 import json
 import logging
@@ -1362,7 +1361,9 @@ class PythonBuilder(Builder):
         version: str = DEFAULT_PY_VERSION,
         project: Optional[Project] = None,
         config: str = "shared_max",
+        precompile: bool = True,
         optimize: bool = False,
+        optimize_bytecode: int = -1,
         pkgs: Optional[list[str]] = None,
         cfg_opts: Optional[list[str]] = None,
         jobs: int = 1,
@@ -1371,7 +1372,9 @@ class PythonBuilder(Builder):
 
         super().__init__(version, project)
         self.config = config
+        self.precompile = precompile
         self.optimize = optimize
+        self.optimize_bytecode = optimize_bytecode
         self.pkgs = pkgs or []
         self.cfg_opts = cfg_opts or []
         self.jobs = jobs
@@ -1414,9 +1417,14 @@ class PythonBuilder(Builder):
         return self.project.install / name
 
     @property
-    def python(self):
+    def executable(self) -> Path:
         """path to python3 executable"""
         return self.prefix / "bin" / "python3"
+
+    @property
+    def python(self):
+        """path to python3 executable"""
+        return self.executable
 
     @property
     def pip(self):
@@ -1507,15 +1515,30 @@ class PythonBuilder(Builder):
             self.remove(self.prefix / "bin" / executable)
 
     def ziplib(self):
-        """zip python site-packages"""
-
+        """zip python library
+        
+        Precompiles to bytecode by default to save compilation time, and drops .py
+        source files to save space. Note that only same version interpreter can compile
+        bytecode. Also can specify optimization levels of bytecode precompilation:
+            -1 is system default optimization
+            0 off
+            1 drops asserts and __debug__ blocks
+            2 same as 1 and discards docstrings (saves ~588K of compressed space)
+        """
         src = self.prefix / "lib" / self.name_ver
-
         self.move(
             src / "lib-dynload",
             self.project.build / "lib-dynload",
         )
-        self.move(src / "os.py", self.project.build / "os.py")
+
+        if self.precompile:
+            self.cmd(f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} {src}", cwd=src.parent)
+            self.walk(src, match_func=lambda f: str(f).endswith('.py'),
+                           action_func=lambda f: self.remove(f),
+                           skip_patterns=[])
+            self.move(src / "os.pyc", self.project.build / "os.pyc")
+        else:
+            self.move(src / "os.py", self.project.build / "os.py")
 
         zip_path = self.prefix / "lib" / f"python{self.ver_nodot}"
         shutil.make_archive(str(zip_path), "zip", str(src))
@@ -1526,7 +1549,10 @@ class PythonBuilder(Builder):
         src.mkdir()
         site_packages.mkdir()
         self.move(self.project.build / "lib-dynload", src / "lib-dynload")
-        self.move(self.project.build / "os.py", src / "os.py")
+        if self.precompile:
+            self.move(self.project.build / "os.pyc", src / "os.pyc")
+        else:
+            self.move(self.project.build / "os.py", src / "os.py")
 
     def install_pkgs(self):
         """install python packages"""
@@ -1573,7 +1599,7 @@ class PythonBuilder(Builder):
 
     def can_run(self) -> bool:
         """check if a run is merited"""
-        if not all(dep().lib_products() for dep in self.depends_on):
+        if not all(dep().lib_products for dep in self.depends_on):
             return True # dependencies not built
 
         if self.build_type == "static":
@@ -1701,6 +1727,7 @@ class WindowsPythonBuilder(PythonBuilder):
         project: Optional[Project] = None,
         config: str = "shared_max",
         optimize: bool = False,
+        optimize_bytecode: int = -1,
         pkgs: Optional[list[str]] = None,
         cfg_opts: Optional[list[str]] = None,
         jobs: int = 1,
@@ -1710,6 +1737,7 @@ class WindowsPythonBuilder(PythonBuilder):
         super().__init__(version, project)
         self.config = config
         self.optimize = optimize
+        self.optimize_bytecode = optimize_bytecode
         self.pkgs = pkgs or []
         self.cfg_opts = cfg_opts or []
         self.jobs = jobs
@@ -1826,7 +1854,7 @@ class WindowsPythonBuilder(PythonBuilder):
             skip_dirs=[".git"],
         )
 
-    def ziplib(self, precompile: bool = True,  optimize: int = 2):
+    def ziplib(self):
         """zip python library
         
         Precompiles to bytecode by default to save compilation time, and drops .py
@@ -1838,8 +1866,8 @@ class WindowsPythonBuilder(PythonBuilder):
             2 same as 1 and discards docstrings (saves ~588K of compressed space)
         """
         src = self.prefix / "Lib"
-        if precompile:
-            self.cmd(f"{self.executable} -m compileall -f -b -o {optimize} Lib", cwd=self.prefix)
+        if self.precompile:
+            self.cmd(f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} Lib", cwd=self.prefix)
             self.walk(src, match_func=lambda f: str(f).endswith('.py'),
                            action_func=lambda f: self.remove(f),
                            skip_patterns=[])
@@ -1886,11 +1914,13 @@ def main():
     opt = parser.add_argument
 
     opt("-a", "--cfg-opts", help="add config options", type=str, nargs="+", metavar="CFG")
+    opt("-b", "--optimize-bytecode", help="set optimization levels -1 .. 2 (default: %(default)s)", type=int, default=-1)
     opt("-c", "--config", default="shared_mid", help="build configuration (default: %(default)s)", metavar="NAME")
     opt("-d", "--debug", help="build debug python", action="store_true")
+    opt("-i", "--install", help="install python pkgs", type=str, nargs="+", metavar="PKG")
     opt("-m", "--max-package", help="max package build", action="store_true")
-    opt("-o", "--optimize", help="optimize build", action="store_true")
-    opt("-p", "--pkgs", help="install pkgs", type=str, nargs="+", metavar="PKG")
+    opt("-o", "--optimize", help="enable optimization during build",  action="store_true")
+    opt("-p", "--precompile", help="precompile stdlib to bytecode", action="store_true")
     opt("-r", "--reset", help="reset build", action="store_true")
     opt("-v", "--version", default=DEFAULT_PY_VERSION, help="python version (default: %(default)s)")
     opt("-w", "--write", help="write configuration", action="store_true")
@@ -1924,8 +1954,10 @@ def main():
         builder = python_builder_class(
             version=args.version,
             config=cfg,
+            precompile=args.precompile,
             optimize=args.optimize,
-            pkgs=args.pkgs,
+            optimize_bytecode=args.optimize_bytecode,
+            pkgs=args.install,
             cfg_opts=args.cfg_opts,
             jobs=args.jobs,
             is_max_package=is_max_package,
@@ -1943,8 +1975,10 @@ def main():
     builder = python_builder_class(
         version=args.version,
         config=_config,
+        precompile=args.precompile,
         optimize=args.optimize,
-        pkgs=args.pkgs,
+        optimize_bytecode=args.optimize_bytecode,   
+        pkgs=args.install,
         cfg_opts=args.cfg_opts,
         jobs=args.jobs,
         is_max_package=args.max_package,
