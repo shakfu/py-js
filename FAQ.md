@@ -4,9 +4,9 @@
 
 ### Does this project work with Windows?
 
-Yes, although Windows support came relatively recently, all python externals and also the `pktpy` external can be compiled using the default MSVC buildsystem.
+Yes, although Windows support came relatively recently, all python externals and also the `pktpy` externals can be compiled using the default MSVC buildsystem.
 
-Currently only building via cmake with dynamic linking of externals is supported. Refer to the README quickstart for compilation instructions.
+There are now several build variants for Windows: local externals linked to system Python, and relocatable builds suitable for Max packages and standalones. Refer to the README quickstart for compilation instructions.
 
 ### Does this project work with macOS?
 
