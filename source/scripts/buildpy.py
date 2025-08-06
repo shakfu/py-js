@@ -1545,7 +1545,7 @@ class PythonBuilder(Builder):
             self.project.build / "lib-dynload",
         )
 
-        if self.precompile:
+        if self.precompile or getenv("PRECOMPILE"):
             self.cmd(
                 f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} {src}",
                 cwd=src.parent,

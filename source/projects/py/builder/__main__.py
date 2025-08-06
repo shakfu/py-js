@@ -53,6 +53,7 @@ common_options = option_group(
     option("-z", "--ziplib", action="store_true", help="zip python library"),
     option("--dump", action="store_true", help="dump project and product vars"),
     option("--release", action="store_true", help="set configuration to release"),
+    option("--precompile", action="store_true", help="use precompiled bytecode in zipped stdlib")
 )
 
 # combined_options = common_options + relocatable_options

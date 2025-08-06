@@ -43,12 +43,19 @@ PKG_NAME = $(NAME)
 
 # cython options
 EXTENSION = $(PYDIR)/api.pyx
-INCLUDE_NUMPY := 0 # change to 1 if you want to enable numpy in api.pyx
-  								 # requires numpy to be available to the python interpreter.
-CYTHON_OPTIONS := --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) \
-									-X emit_code_comments=False
+INCLUDE_NUMPY := 0 	# change to 1 if you want to enable numpy in api.pyx
+					# requires numpy to be available to the python interpreter.
+CYTHON_OPTIONS := --timestamps -E INCLUDE_NUMPY=$(ENABLE_NUMPY) -X emit_code_comments=False
 
-BUILDPY_OPTIONS := --precompile --optimize-bytecode 2
+PRECOMPILE ?= 0 	# change to 1 to precompile stdlib to bytecode
+
+ifeq ($(PRECOMPILE), 1)
+BUILDPY_OPTIONS = --precompile --optimize-bytecode 2
+BUILDER_PRECOMPILE = --precompile
+else
+BUILDPY_OPTIONS =
+BUILDER_PRECOMPILE =
+endif
 
 MAX_APP := "/Applications/Studio/Max.app"
 MAX_VERSIONS := 8 9
@@ -89,8 +96,8 @@ endif
 
 # $(call call-builder,name,etc.)
 define call-builder
-$(call section,"builder $1 $2 $3 $4 $5 $6")
-@cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4 $5 $6
+$(call section,"builder $1 $2 $3 $4 $5 $6 $7 $8")
+@cd '$(PYDIR)' && $(PYTHON) -m builder $1 $2 $3 $4 $5 $6 $7 $8
 endef
 
 define tidy-target
@@ -198,13 +205,18 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
 		static-pkg static-ext static-tiny-ext \
-		core-windows-pkg
+		core-windows-pkg show
 
 # -----------------------------------------------------------------------
 # python3 external argets
 
 
 default: local-sys api
+
+show:
+	@echo "PRECOMPILE = $(PRECOMPILE)"
+	@echo "BUILDPY_OPTIONS = $(BUILDPY_OPTIONS)"
+	@echo "BUILDER_PRECOMPILE = $(BUILDER_PRECOMPILE)"
 
 local-sys: clean-local-sys api
 	$(call call-builder,"pyjs" "local_sys")

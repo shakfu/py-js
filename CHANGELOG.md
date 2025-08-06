@@ -17,11 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
-- `buildpy` (Windows and MacOS builds) now pre-compiles the zipped stdlib to bytecode by default. The `BUILDPY_OPTIONS` can be set at the `Makefile` level to change this.
+- The `builder` and `buildpy` build subsystems (for both Windows and MacOS builds) can now pre-compile the stdlib to bytecode before it is zipped. This is enabled the `PRECOMPILE` environmental value is enabled as in `make <target> PRECOMPILE=1`. This generally adds 2M to each external's size but you get a performance bump due to skipping compilation.
 
-- `Makefile` has new targets for recently introduced support for relocatable python3 externals for Windows if `make.exe` is available in your PATH via something like [w64devkit](https://github.com/skeeto/w64devkit).
-
-- `Makefile` targets are now cross-platform. If `make.exe` is installed on `PATH` Windows machine using something like [w64devkit](https://github.com/skeeto/w64devkit), then you can use, `make py` to build just the `py` external, `make core` to build the core externals.
+- `Makefile` targets are now cross-platform. If `make.exe` is installed on `PATH` Windows machine using something like [w64devkit](https://github.com/skeeto/w64devkit), then you can use, `make py` to build just the `py` external, `make core` to build the core externals, etc.
 
 - Changed minimum macOS version from `10.11` to `10.15` by redirecting to `source/scripts/cmake/max-pretarget.cmake`.
 

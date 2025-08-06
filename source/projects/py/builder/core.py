@@ -76,6 +76,9 @@ logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 # ----------------------------------------------------------------------------
 # Utility Functions
 
+def getenv(key: str, default: bool = False) -> bool:
+    """convert '0','1' env values to bool {True, False}"""
+    return bool(int(os.getenv(key, default)))
 
 def quote(obj):
     """convert object to string and ensure it's quoted"""
@@ -757,6 +760,11 @@ class PythonBuilder(Builder):
         return self.prefix_lib / self.product.name_ver
 
     @property
+    def executable(self):
+        """the python executable"""
+        return self.prefix_bin / self.product.name_ver
+
+    @property
     def site_packages(self):
         """path to 'site-packages'"""
         return self.python_lib / "site-packages"
@@ -869,13 +877,25 @@ class PythonBuilder(Builder):
 
     def ziplib(self):
         """zip python package in site-packages in .zip archive"""
+        if self.settings.precompile or getenv("PRECOMPILE"):
+            os_py = "os.pyc"
+            self.cmd(f"{self.executable} -m compileall -f -b {self.python_lib}")
+            self.cmd.walk(
+                self.python_lib,
+                match_func=lambda f: str(f).endswith(".py"),
+                action_func=lambda f: self.cmd.remove(f),
+                skip_patterns=[],
+            )
+        else:
+            os_py = "os.py"
+
         temp_lib_dynload = self.prefix_lib / "lib-dynload"
-        temp_os_py = self.prefix_lib / "os.py"
+        temp_os_py = self.prefix_lib / os_py
 
         self.cmd.remove(self.site_packages)
         assert self.lib_dynload.exists(), f"not found: {self.lib_dynload}"
         self.lib_dynload.rename(temp_lib_dynload)
-        self.cmd.copy(self.python_lib / "os.py", temp_os_py)
+        self.cmd.copy(self.python_lib / os_py, temp_os_py)
 
         zip_path = self.prefix_lib / f"python{self.product.ver_nodot}"
         shutil.make_archive(str(zip_path), "zip", str(self.python_lib))
@@ -883,7 +903,7 @@ class PythonBuilder(Builder):
         self.cmd.remove(self.python_lib)
         self.python_lib.mkdir()
         temp_lib_dynload.rename(self.lib_dynload)
-        temp_os_py.rename(self.python_lib / "os.py")
+        temp_os_py.rename(self.python_lib / os_py)
         self.site_packages.mkdir()
 
     def fix_dylib_for_shared_pkg(self, dylib):
