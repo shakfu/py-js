@@ -7,12 +7,13 @@ import subprocess
 import shlex
 import sys
 from pathlib import Path
+from typing import Union
 
+Pathlike = Union[Path, str]
 
 # ----------------------------------------------------------------------------
 # constants
 
-Pathlike = Path | str
 PY_VERSION = "{v.major}.{v.minor}.{v.micro}".format(v=sys.version_info)
 
 
