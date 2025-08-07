@@ -210,13 +210,7 @@ all: default
 # -----------------------------------------------------------------------
 # python3 external argets
 
-
 default: local-sys api
-
-show:
-	@echo "PRECOMPILE = $(PRECOMPILE)"
-	@echo "BUILDPY_OPTIONS = $(BUILDPY_OPTIONS)"
-	@echo "BUILDER_PRECOMPILE = $(BUILDER_PRECOMPILE)"
 
 local-sys: clean-local-sys api
 	$(call call-builder,"pyjs" "local_sys")
@@ -327,7 +321,6 @@ ninja: clean-build-dir clean-externals
 		cd .. && \
 		$(MAKE) sign
 
-
 homebrew-pkg: clean-homebrew-pkg
 	$(call call-builder,"pyjs" "homebrew_pkg")
 	@$(MAKE) sign
@@ -366,9 +359,6 @@ relocatable-pkg: clean-framework-pkg
 relocatable-pkg-nopip: clean-framework-pkg
 	$(call call-builder,"pyjs" "relocatable_pkg" "--install" "--build" "--without-pip")
 
-beeware-ext: clean-externals
-	$(call call-builder,"pyjs" "beeware_ext" "--install" "--build" "--release")
-
 # -----------------------------------------------------------------------
 # experimental python3 externals
 
@@ -376,7 +366,7 @@ beeware-ext: clean-externals
 		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
 		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
 		cobra cobra-static cobra-shared cobra-framework cobra-framework-pkg \
-		mxpy krait jmx ztp zpy zedit shell xpyc python-service mpyx
+		mxpy krait jmx ztp zpy zedit xpyc python-service mpyx
 
 
 py: clean-cmake-cache clean-externals
@@ -505,9 +495,6 @@ python-service: clean-python-service
 xpyc: clean-cmake-cache clean-externals python-service
 	$(call build-target,$@,local)
 
-shell: clean-cmake-cache clean-externals
-	$(call build-target,$@,local)
-
 # -----------------------------------------------------------------------
 # release external targets
 
@@ -544,7 +531,7 @@ release-relocatable-pkg: clean-framework-pkg
 .PHONY: python-shared python-shared-pkg python-shared-ext python-shared-tiny \
 		python-static  python-static-tiny \
 		python-framework python-framework-ext python-framework-pkg \
-		python-beeware python-cmake python-windows-pkg
+		python-cmake python-windows-pkg
 
 python-shared: clean-python-shared
 	$(call call-builder,"python" "shared" "--install")
@@ -570,17 +557,11 @@ python-framework-pkg: clean-python-framework-pkg
 python-relocatable: clean-python-framework-pkg
 	$(call call-builder,"python" "relocatable" "--install")
 
-# python-relocatable: clean-python-framework-pkg
-# 	$(call call-builder,"python" "relocatable_pkg")
-
 python-static-tiny:
 	$(call call-builder,"python" "static_tiny" "--install" "-p" "$(PYTHON_VERSION)")
 
 python-shared-tiny:
 	$(call call-builder,"python" "shared_tiny" "--install" "-p" "$(PYTHON_VERSION)")
-
-python-beeware:
-	$(call call-builder,"python" "beeware" "--install")
 
 python-cmake: clean-python-cmake
 	$(call call-builder,"python" "cmake" "--install" "-p" "3.9.17")
@@ -649,9 +630,6 @@ build-static-tiny-ext: clean-static-ext
 
 build-shared-tiny-ext: clean-shared-ext
 	$(call call-builder,"pyjs" "shared_tiny_ext" "--build" "--release" "-p" "$(PYTHON_VERSION)")
-
-build-beeware-ext: clean-static-ext
-	$(call call-builder,"pyjs" "beeware_ext" "--build" "--release")
 
 build-core-windows-pkg:
 	@mkdir -p build && \
@@ -824,14 +802,6 @@ test-static-pkg: clean-products
 	$(call section,"running static-pkg test")
 	$(call call-builder,"test" "static_pkg")
 
-check:
-	$(call section,"checking test results")
-	$(call call-builder,"logs" "check_current")
-
-check_logs:
-	$(call section,"checking all test results")
-	$(call call-builder,"logs" "check_all")
-
 
 # Install python packages
 # -----------------------------------------------------------------------
@@ -860,7 +830,6 @@ clang-format:
 	$(call section,"clang-format")
 	@clang-format -i -style=file $(PYDIR)/py.c
 	@clang-format -i -style=file $(PYDIR)/pyjs.c
-
 
 tidy-py:
 	$(call tidy-target,source/projects/py/py.c)
@@ -902,7 +871,6 @@ cflow:
 
 	@cflow2dot -x $(CFLOW)/ignore.txt -i source/projects/mamba/py.h -f pdf -o $(CFLOW)/mamba_cflow
 	@rm -f $(CFLOW)/*.dot
-
 
 # fat:
 # 	@echo "NOT FUNCTIONAL UNLESS DEPS ARE ALSO FAT"
