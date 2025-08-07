@@ -17,6 +17,10 @@ jobs:
     - name: cleanup
       run: cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
 
+    - name: pre-upload
+      run: |
+        mv source/docs/_book/Python3-Externals-for-Max-MSP.pdf ./userguide.pdf
+
     - uses: actions/upload-artifact@v4
       with:
         name: pyjs-core-win64-externals
@@ -32,5 +36,5 @@ jobs:
             patchers
             LICENSE
             README.md
-            source/docs/_book/Python3-Externals-for-Max-MSP.pdf
+            userguide.pdf
             support
