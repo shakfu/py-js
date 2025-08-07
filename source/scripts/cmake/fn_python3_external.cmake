@@ -257,13 +257,6 @@ function(python3_external)
 
     if(BUILD_WINDOWS_PKG)
         cmake_path(SET SUPPORT_DIR NORMALIZE ${SUPPORT_DIR})
-        # ADD_CUSTOM_COMMAND(
-        #     TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
-        #     COMMAND PowerShell -Command "Remove-Item -Path \"libs\" -Recurse -Force"
-        #     COMMAND PowerShell -Command "Remove-Item -Path \"include\" -Recurse -Force"
-        #     WORKING_DIRECTORY ${SUPPORT_DIR}
-        #     VERBATIM
-        # )
 
         execute_process(
             OUTPUT_VARIABLE DOCUMENTS_DIR
@@ -278,11 +271,10 @@ function(python3_external)
             cmake_path(SET MAX_PKGS_DIR NORMALIZE "${MAX_PKGS_DIR}")
             if (NOT EXISTS ${MAX_PKGS_DIR})
                 message(WARNING "cannot find Max package directory")
-                return()
+                return() # exit this file
             endif()
         endif()
 
-        # cmake_path(APPEND MAX_PKGS_DIR "py-js" OUTPUT_VARIABLE PYJS_PKG_DIR)
         if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
             set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${MAX_PKGS_DIR}")
         endif()
