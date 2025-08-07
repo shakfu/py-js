@@ -113,16 +113,23 @@ def main():
     elif args.record:
         db.record()
     elif args.metadata:
-        github_output_path = os.environ.get('GITHUB_OUTPUT')
+        def set_output(name, value):
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                print(f'{name}={value}', file=fh)
 
-        # Check if GITHUB_OUTPUT is available (it should be in a GitHub Actions environment)
-        if github_output_path:
-            # Open the file in append mode and write the output
-            with open(github_output_path, 'a') as fh:
-                print(f'pkg={args.package_name}', file=fh)
-        else:
-            # Fallback for local testing or environments outside GitHub Actions
-            print(f"GITHUB_OUTPUT environment variable not found.")
+
+        set_output('pkg', db.package_name)
+
+        # github_output_path = os.environ.get('GITHUB_OUTPUT')
+
+        # # Check if GITHUB_OUTPUT is available (it should be in a GitHub Actions environment)
+        # if github_output_path:
+        #     # Open the file in append mode and write the output
+        #     with open(github_output_path, 'a') as fh:
+        #         print(f'pkg={args.package_name}', file=fh)
+        # else:
+        #     # Fallback for local testing or environments outside GitHub Actions
+        #     print("GITHUB_OUTPUT environment variable not found.")
 
 if __name__ == "__main__":
     main()
