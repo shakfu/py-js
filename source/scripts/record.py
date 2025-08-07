@@ -48,7 +48,7 @@ class BuildDB:
         system = self.system.lower()
         arch = self.arch
         ver = self.version
-        return f"{project}-{target}-{system}-{arch}-{ver}"
+        return f"{project}-{target}-{system}-{arch}-{ver}".lower()
 
     @property
     def dmg(self) -> Path:
@@ -79,8 +79,8 @@ class BuildDB:
             TARGET=self.target,
             NAME=self.name,
             VARIANT=self.variant,
-            PACKAGE_NAME=self.get_package_name(),
-            PRODUCT_DMG=self.get_dmg(),
+            PACKAGE_NAME=self.package_name(),
+            PRODUCT_DMG=self.dmg(),
         )
 
 

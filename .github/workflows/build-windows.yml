@@ -59,12 +59,12 @@ jobs:
 
     - name: set run variables
       id: myvars
-      run: python source/scripts/record.py -m ${{ env.TARGET }} >> $GITHUB_OUTPUT
+      run: |
+        PROCESS_OUTPUT=$(python source/scripts/record.py -p ${{ env.TARGET }})
+        echo "pkg=${PROCESS_OUTPUT}" >> $GITHUB_OUTPUT
 
     - name: set run variables
-      run: |
-        python source/scripts/record.py -m ${{ env.TARGET }}
-        echo "${{ steps.myvars.outputs.pkg }}"
+      run: echo "${{ steps.myvars.outputs.pkg }}"
 
     # - uses: actions/upload-artifact@v4
     #   with:
