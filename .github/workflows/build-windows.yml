@@ -59,9 +59,7 @@ jobs:
 
     - name: set run variables
       id: myvars
-      run: |
-        PROCESS_OUTPUT=$(python source/scripts/record.py -p ${{ env.TARGET }})
-        echo "pkg=${PROCESS_OUTPUT}" >> $GITHUB_OUTPUT
+      run: python source/scripts/record.py -m ${{ env.TARGET }})
 
     - name: set run variables
       run: echo "${{ steps.myvars.outputs.pkg }}"
