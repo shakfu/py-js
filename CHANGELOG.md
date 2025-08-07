@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.3.x]
 
-- Fixed a crashing bug in `relocatable-pkg` build which prevented it from setting itself to install packages in the `supprt/Python.fromework`.
+- Fixed a crashing bug in `relocatable-pkg` build which prevented it from installing pip packages.
 
 - The `builder` and `buildpy` build subsystems (for both Windows and MacOS builds) can now pre-compile the stdlib to bytecode before it is zipped. This is enabled the `PRECOMPILE` environmental value is enabled as in `make <target> PRECOMPILE=1`. This generally adds 2M to each external's size but you get a performance bump due to skipping compilation.
 

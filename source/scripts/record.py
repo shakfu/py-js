@@ -3,6 +3,8 @@
 import argparse
 import configparser
 import platform
+import subprocess
+import shlex
 import sys
 from pathlib import Path
 
@@ -14,19 +16,48 @@ Pathlike = Path | str
 PY_VERSION = "{v.major}.{v.minor}.{v.micro}".format(v=sys.version_info)
 
 
-class BuildRecord:
+class BuildDB:
     project = "pyjs"
     system = platform.system()
     arch = platform.machine()
 
-    def __init__(self, name: str, variant: str, version: str = PY_VERSION):
-        self.name = name
-        self.variant = variant
+    def __init__(self, target: str, version: str = PY_VERSION):
+        _parts = target.split('-')
+        self.target = target
+        self.name = _parts[0]
+        self.variant = "-".join(_parts[1:])
         self.version = version
         self.root = Path.cwd()
         self.build_cache = (
             self.root / "source" / "projects" / "py" / "targets" / "build" / "build.ini"
         )
+
+    @property
+    def short_sha(self) -> str:
+        return subprocess.check_output(
+            shlex.split("git rev-parse --short HEAD")).decode().strip()
+
+    @property
+    def package_name(self) -> str:
+        """ensure package name has standard format.
+        `<project>-<name>-<variant>-<system>-<arch>-<version>`
+        """
+        project = self.project
+        target = self.target
+        system = self.system.lower()
+        arch = self.arch
+        ver = self.version
+        return f"{project}-{target}-{system}-{arch}-{ver}"
+
+    @property
+    def dmg(self) -> Path:
+        """get final dmg package name and path"""
+        package_name = self.get_package_name()
+        dmg = self.root / f"{package_name}.dmg"
+        return dmg.resolve()
+
+    def print_metadata(self):
+        print(f"pkg={self.package_name}")
 
     def cache_set(self, **kwds):
         config = configparser.ConfigParser()
@@ -42,28 +73,12 @@ class BuildRecord:
             value = Path(value)
         return value
 
-    def get_package_name(self) -> str:
-        """ensure package name has standard format.
-        `<project>-<name>-<variant>-<system>-<arch>-<version>`
-        """
-        project = self.project
-        name = self.name
-        variant = self.variant
-        system = self.system.lower()
-        arch = self.arch
-        ver = self.version
-        return f"{project}-{name}-{variant}-{system}-{arch}-{ver}"
-
-    def get_dmg(self) -> Path:
-        """get final dmg package name and path"""
-        package_name = self.get_package_name()
-        dmg = self.root / f"{package_name}.dmg"
-        return dmg.resolve()
-
     def record(self):
         self.cache_set(
+            TARGET=self.target,
             NAME=self.name,
             VARIANT=self.variant,
+            PACKAGE_NAME=self.get_package_name(),
             PRODUCT_DMG=self.get_dmg(),
         )
 
@@ -78,18 +93,25 @@ def main():
     )
     opt = parser.add_argument
 
-    opt("name", help="external name")
-    opt("variant", help="build variant")
+    opt("target", help="target name")
     opt("-v", "--version", help="python version", default=PY_VERSION)
-    opt("-d", "--dmg", help="get dmg path")
+    opt("-d", "--dmg", help="get dmg path", action="store_true")
+    opt("-r", "--record", help="record a build", action="store_true")
+    opt("-p", "--package-name", help="print package name", action="store_true")
+    opt("-m", "--metadata", help="print metadata", action="store_true")
 
     args = parser.parse_args()
 
-    rec = BuildRecord(args.name, args.variant, args.version)
+    db = BuildDB(args.target, args.version)
     if args.dmg:
-        print(rec.get_dmg())
+        print(db.dmg)
         return
-    rec.record()
+    elif args.package_name:
+        print(db.package_name)
+    elif args.record:
+        db.record()
+    elif args.metadata:
+        db.print_metadata()
 
 
 if __name__ == "__main__":
