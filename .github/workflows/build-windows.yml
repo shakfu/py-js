@@ -15,10 +15,10 @@ on:
         type: boolean
         description: Precompile stdlib to bytecode?
         required: true
-      # embedded:
-      #   type: boolean
-      #   description: Use python embedded package for runtime?
-      #   required: true
+      embedded:
+        type: boolean
+        description: Use python embedded package for runtime?
+        required: true
 
 jobs:
   build:
@@ -39,7 +39,12 @@ jobs:
       if: ${{ inputs.precompiled == true }} 
       run: make core-windows-pkg PRECOMPILE=1
 
+    - name: use python embedded package for runtime
+      if: ${{ inputs.embedded == true }}
+      run: python source/scripts/buildpy.py -e
+
     - name: cleanup
+      if: ${{ inputs.embedded == false }}
       run: cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
 
     - name: pre-upload

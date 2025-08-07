@@ -1707,7 +1707,10 @@ class WindowsEmbeddablePythonBuilder(Builder):
 
     def setup(self):
         """setup build environment"""
+        if self.project.support.exists():
+            self.remove(self.project.support)
         self.project.setup()
+        self.makedirs(self.project.support)
         archive = self.download(self.download_url, tofolder=self.project.downloads)
         self.extract(archive, tofolder=self.install_dir)
 
@@ -1932,6 +1935,7 @@ def main():
     opt("-b", "--optimize-bytecode", help="set optimization levels -1 .. 2 (default: %(default)s)", type=int, default=-1)
     opt("-c", "--config", default="shared_mid", help="build configuration (default: %(default)s)", metavar="NAME")
     opt("-d", "--debug", help="build debug python", action="store_true")
+    opt("-e", "--embeddable-pkg", help="install python embeddable package", action="store_true")
     opt("-i", "--install", help="install python pkgs", type=str, nargs="+", metavar="PKG")
     opt("-m", "--max-package", help="max package build", action="store_true")
     opt("-o", "--optimize", help="enable optimization during build",  action="store_true")
@@ -1951,7 +1955,12 @@ def main():
             python_builder_class = PythonDebugBuilder
 
     elif PLATFORM == "Windows":
-        python_builder_class = WindowsPythonBuilder
+        if args.embeddable_pkg:
+            builder = WindowsEmbeddablePythonBuilder()
+            builder.setup()
+            sys.exit(0)
+        else:
+            python_builder_class = WindowsPythonBuilder
 
     else:
         raise NotImplementedError("script only works on MacOS and Windows")
