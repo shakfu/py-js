@@ -22,15 +22,6 @@ on:
           - built with zipped precompiled stdlib
           - downloaded windows embeddable package
 
-      precompiled:
-        type: boolean
-        description: Precompile stdlib to bytecode?
-        required: true
-      embedded:
-        type: boolean
-        description: Use python embedded package for runtime?
-        required: true
-
 jobs:
   build:
     runs-on: ${{ inputs.os }}
