@@ -32,11 +32,11 @@ jobs:
         fetch-depth: '0'
 
     - name: build windows python3 externals 
-      if: ${{ inputs.precompiled == 'false' }} 
+      if: ${{ inputs.precompiled == false }} 
       run: make core-windows-pkg
 
     - name: build windows python3 externals (precompiled stdlib)
-      if: ${{ inputs.precompiled == 'true' }} 
+      if: ${{ inputs.precompiled == true }} 
       run: make core-windows-pkg PRECOMPILE=1
 
     - name: cleanup
