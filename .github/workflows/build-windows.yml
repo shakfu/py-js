@@ -59,7 +59,7 @@ jobs:
 
     - name: set run variables
       id: myvars
-      run: python source/scripts/record.py -m ${{ env.TARGET }})
+      run: python source/scripts/record.py -m ${{ env.TARGET }}
 
     - name: set run variables
       run: echo "${{ steps.myvars.outputs.pkg }}"
