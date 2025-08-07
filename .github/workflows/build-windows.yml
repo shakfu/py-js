@@ -11,7 +11,6 @@ on:
           - windows-latest
           - windows-2025
           - windows-2022
-          - windows-2019
       precompiled:
         type: boolean
         description: Precompile stdlib to bytecode?
