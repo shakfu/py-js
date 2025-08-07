@@ -1703,7 +1703,7 @@ class WindowsEmbeddablePythonBuilder(Builder):
     @property
     def install_dir(self) -> Path:
         """return folder where binaries are installed"""
-        return self.project.support / "python"
+        return self.project.support
 
     def setup(self):
         """setup build environment"""

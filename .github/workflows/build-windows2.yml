@@ -1,0 +1,82 @@
+name: build-windows2
+on: 
+  workflow_dispatch:
+    inputs:
+      os:
+        type: choice
+        description: Select a Windows version
+        default: windows-2025
+        required: true
+        options: 
+          - windows-latest
+          - windows-2025
+          - windows-2022
+
+      runtime:
+        type: choice
+        description: Select runtime package
+        required: true
+        default: built with zipped stdlib
+        options:
+          - built with zipped stdlib
+          - built with zipped precompiled stdlib
+          - downloaded windows embeddable package
+
+      precompiled:
+        type: boolean
+        description: Precompile stdlib to bytecode?
+        required: true
+      embedded:
+        type: boolean
+        description: Use python embedded package for runtime?
+        required: true
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+
+    steps:
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        fetch-depth: '0'
+
+    - name: build windows python3 externals
+      if: ${{ inputs.runtime == 'built with zipped stdlib' }} 
+      run: |
+        make core-windows-pkg
+        cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
+
+    - name: build windows python3 externals (precompiled stdlib)
+      if: ${{ inputs.runtime == 'built with zipped precompiled stdlib' }} 
+      run: |
+        make core-windows-pkg PRECOMPILE=1
+        cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
+
+    - name: use python embedded package for runtime
+      if: ${{ inputs.runtime == 'downloaded windows embeddable package' }}
+      run: |
+        make core-windows-pkg
+        python source/scripts/buildpy.py -e
+
+    - name: pre-upload
+      run: mv source/docs/_book/Python3-Externals-for-Max-MSP.pdf ./userguide.pdf
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: pyjs-core-win64-externals
+        path: |
+            docs/py.maxref.xml
+            docs/pyjs.maxref.xml
+            externals
+            help/py.maxhelp
+            help/pyjs.maxhelp
+            examples
+            javascript
+            jsextensions
+            patchers
+            support
+            LICENSE
+            README.md
+            userguide.pdf
