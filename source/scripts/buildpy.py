@@ -1694,9 +1694,9 @@ class WindowsEmbeddablePythonBuilder(Builder):
     name = "Python"
     version = DEFAULT_PY_VERSION
     repo_url = "https://github.com/python/cpython.git"
-    download_url_template = (
-        "https://www.python.org/ftp/python/{ver}/python-{ver}-embed-amd64.zip"
-    )
+
+    download_archive_template = "python-{ver}-embed-amd64.zip"
+    download_url_template = "https://www.python.org/ftp/python/{ver}/{archive}"
     depends_on = []
     libs_static = []
 
