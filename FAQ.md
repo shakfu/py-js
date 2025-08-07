@@ -26,9 +26,9 @@ Definitely, if python is installed using [Homebrew](https://brew.sh) you can cre
 
 ### Is the python interpreter embedded in the external or does the external basically use the host's python interpreter?
 
-The `make default` build creates a lightweight external dynamically linked to your local python3 interpreter; other build variants such as `framework-pkg` embeds python3 into an external that is dynamically linked to a python3 interpreter which is part of the containing Max package; and another such as `framework-ext` embeds python into the external itself without any dependencies. There are other ways as well. The section, [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones), gives an overview of the different approaches.
+The default `make` build creates a lightweight external dynamically linked to your local python3 interpreter; other build variants such as `framework-pkg` embed python3 into an external that is dynamically linked to a python3 interpreter which is part of the containing Max package; another variant,`framework-ext`, embeds python into the external itself without any dependencies. There are other ways as well. The section, [Building self-contained Python3 Externals for Packages and Standalones](https://github.com/shakfu/py-js/tree/main/source/projects/py#building-self-contained-python3-externals-for-packages-and-standalones), gives an overview of the different approaches.
 
-Recent work on the `mamba` single-header c library project makes it possible build relocatable python3 externals along the lines of what is possible with `py` and `pyjs`
+Alternatively, the `cobra` aand `mamba` projects which, respectively, provide a single-header cpp and c library to facilitate the embedding of Python interpreter in a pre-existing externals make it relatively easy to embed such features in pre-existings externals.
 
 ## Installation
 

@@ -255,15 +255,61 @@ function(python3_external)
         )
     endif()
 
-    # if(BUILD_WINDOWS_PKG)
-    #     cmake_path(SET SUPPORT_DIR NORMALIZE ${SUPPORT_DIR})
-    #     ADD_CUSTOM_COMMAND(
-    #         TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
-    #         COMMAND cmd /C "del *.lib"
-    #         COMMAND cmd /C "rmdir /S /Q include"
-    #         WORKING_DIRECTORY ${SUPPORT_DIR}
-    #         VERBATIM
-    #     )
-    # endif()
+    if(BUILD_WINDOWS_PKG)
+        cmake_path(SET SUPPORT_DIR NORMALIZE ${SUPPORT_DIR})
+        # ADD_CUSTOM_COMMAND(
+        #     TARGET ${PY3EXT_PROJECT_NAME} POST_BUILD
+        #     COMMAND PowerShell -Command "Remove-Item -Path \"libs\" -Recurse -Force"
+        #     COMMAND PowerShell -Command "Remove-Item -Path \"include\" -Recurse -Force"
+        #     WORKING_DIRECTORY ${SUPPORT_DIR}
+        #     VERBATIM
+        # )
+
+        execute_process(
+            OUTPUT_VARIABLE DOCUMENTS_DIR
+            COMMAND PowerShell -Command "[Environment]::GetFolderPath('MyDocuments')"
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        set(MAX_PKGS_DIR "${DOCUMENTS_DIR}/Max 9/Packages")
+        cmake_path(SET MAX_PKGS_DIR NORMALIZE "${MAX_PKGS_DIR}")
+        if (NOT EXISTS ${MAX_PKGS_DIR})
+            set(MAX_PKGS_DIR "${DOCUMENTS_DIR}/Max 8/Packages")
+            cmake_path(SET MAX_PKGS_DIR NORMALIZE "${MAX_PKGS_DIR}")
+            if (NOT EXISTS ${MAX_PKGS_DIR})
+                message(FATAL_ERROR "cannot find Max package directory")
+            endif()
+        endif()
+
+        # cmake_path(APPEND MAX_PKGS_DIR "py-js" OUTPUT_VARIABLE PYJS_PKG_DIR)
+        if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+            set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${MAX_PKGS_DIR}")
+        endif()
+
+        set(INSTALL_DIRS
+            docs
+            examples
+            init
+            javascript
+            jsextensions
+            patchers
+        )
+
+        foreach(dir ${INSTALL_DIRS})
+            install(DIRECTORY ${CMAKE_SOURCE_DIR}/${dir} DESTINATION py-js)
+        endforeach()
+
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/support DESTINATION py-js
+            PATTERN "include" EXCLUDE
+            PATTERN "libs" EXCLUDE
+        )
+
+        install(FILES ${CMAKE_SOURCE_DIR}/externals/${PY3EXT_PROJECT_NAME}.mxe64 DESTINATION py-js/externals)
+        install(FILES ${CMAKE_SOURCE_DIR}/help/${PY3EXT_PROJECT_NAME}.maxhelp DESTINATION py-js/help)
+        install(FILES ${CMAKE_SOURCE_DIR}/README.md DESTINATION py-js)
+        install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION py-js)
+        install(FILES ${CMAKE_SOURCE_DIR}/source/docs/_book/Python3-Externals-for-Max-MSP.pdf DESTINATION py-js)
+
+    endif()
 
 endfunction()

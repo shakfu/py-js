@@ -1752,28 +1752,6 @@ class WindowsPythonBuilder(PythonBuilder):
 
     depends_on = []
 
-    def __init__(
-        self,
-        version: str = DEFAULT_PY_VERSION,
-        project: Optional[Project] = None,
-        config: str = "shared_max",
-        optimize: bool = False,
-        optimize_bytecode: int = -1,
-        pkgs: Optional[list[str]] = None,
-        cfg_opts: Optional[list[str]] = None,
-        jobs: int = 1,
-        is_max_package: bool = False,
-    ):
-        super().__init__(version, project)
-        self.config = config
-        self.optimize = optimize
-        self.optimize_bytecode = optimize_bytecode
-        self.pkgs = pkgs or []
-        self.cfg_opts = cfg_opts or []
-        self.jobs = jobs
-        self.is_max_package = is_max_package
-        self.log = logging.getLogger(self.__class__.__name__)
-
     @property
     def build_type(self):
         """build type: 'static', 'shared' or 'framework'"""
@@ -1896,7 +1874,7 @@ class WindowsPythonBuilder(PythonBuilder):
             2 same as 1 and discards docstrings (saves ~588K of compressed space)
         """
         src = self.prefix / "Lib"
-        if self.precompile:
+        if self.precompile or getenv("PRECOMPILE"):
             self.cmd(
                 f"{self.executable} -m compileall -f -b -o {self.optimize_bytecode} Lib",
                 cwd=self.prefix,
