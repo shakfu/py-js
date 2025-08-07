@@ -8,7 +8,15 @@ from ...config import Project
 
 from sysconfig import get_config_var
 
-AVAILABLE_VERSIONS = ["3.7.9", "3.8.9", "3.9.13", "3.10.11", "3.11.4", "3.12.4"]
+AVAILABLE_VERSIONS = [
+    "3.7.9",
+    "3.8.10",
+    "3.9.13",
+    "3.10.11",
+    "3.11.9",
+    "3.12.10",
+    "3.13.6",
+]
 
 if Project.python.arch == "arm64":
     DEFAULT_OS_VERSION = "11"
@@ -32,7 +40,8 @@ def get_default_py_version(version: str = None):
             if ver.startswith(_short_version):
                 return ver
 
-    print("version not found, selecting latest available version")
+    # selects latest available version
+    # print("version not found, selecting latest available version")
     return AVAILABLE_VERSIONS[-1]
 
 

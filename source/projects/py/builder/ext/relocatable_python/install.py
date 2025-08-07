@@ -29,7 +29,7 @@ def ensure_pip(framework_path, version):
     if not os.path.exists(python_path):
         print("No python at %s" % python_path, file=sys.stderr)
         return
-    cmd = [python_path, "-s", "-m", "ensurepip"]
+    cmd = [python_path, "-s", "-m", "ensurepip", "--upgrade"]
     print("Ensuring pip is installed...")
     subprocess.check_call(cmd)
 
