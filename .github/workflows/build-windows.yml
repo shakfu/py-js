@@ -36,46 +36,51 @@ jobs:
         submodules: 'recursive'
         fetch-depth: '0'
 
-    - name: build windows python3 externals
-      if: ${{ inputs.runtime == 'compiled runtime' }} 
-      run: |
-        make ${{ env.TARGET }}
-        cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
+    # - name: build windows python3 externals
+    #   if: ${{ inputs.runtime == 'compiled runtime' }} 
+    #   run: |
+    #     make ${{ env.TARGET }}
+    #     cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
 
-    - name: build windows python3 externals (precompiled stdlib)
-      if: ${{ inputs.runtime == 'compiled runtime + precompiled stdlib' }} 
-      run: |
-        make ${{ env.TARGET }} PRECOMPILE=1
-        cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
+    # - name: build windows python3 externals (precompiled stdlib)
+    #   if: ${{ inputs.runtime == 'compiled runtime + precompiled stdlib' }} 
+    #   run: |
+    #     make ${{ env.TARGET }} PRECOMPILE=1
+    #     cmake -P source/scripts/cmake/win_pkg_cleanup.cmake
 
-    - name: use python windows embeddable package for runtime
-      if: ${{ inputs.runtime == 'downloaded windows embeddable package' }}
-      run: |
-        make ${{ env.TARGET }}
-        python source/scripts/buildpy.py -e
+    # - name: use python windows embeddable package for runtime
+    #   if: ${{ inputs.runtime == 'downloaded windows embeddable package' }}
+    #   run: |
+    #     make ${{ env.TARGET }}
+    #     python source/scripts/buildpy.py -e
 
-    - name: pre-upload
-      run: mv source/docs/_book/Python3-Externals-for-Max-MSP.pdf ./userguide.pdf
+    # - name: pre-upload
+    #   run: mv source/docs/_book/Python3-Externals-for-Max-MSP.pdf ./userguide.pdf
 
     - name: set run variables
-      id: vars
+      id: myvars
       run: python source/scripts/record.py -m ${{ env.TARGET }} >> $GITHUB_OUTPUT
 
-    - uses: actions/upload-artifact@v4
-      with:
-        # name: pyjs-core-${{ github.RUNNER_ARCH }}-externals
-        name: ${{ steps.vars.outputs.pkg }}
-        path: |
-            docs/py.maxref.xml
-            docs/pyjs.maxref.xml
-            externals
-            help/py.maxhelp
-            help/pyjs.maxhelp
-            examples
-            javascript
-            jsextensions
-            patchers
-            support
-            LICENSE
-            README.md
-            userguide.pdf
+    - name: set run variables
+      run: |
+        python source/scripts/record.py -m ${{ env.TARGET }}
+        echo "${{ steps.myvars.outputs.pkg }}"
+
+    # - uses: actions/upload-artifact@v4
+    #   with:
+    #     # name: pyjs-${{ env.TARGET }}-${{ github.RUNNER_ARCH }}-externals
+    #     name: ${{ steps.vars.outputs.pkg }}
+    #     path: |
+    #         docs/py.maxref.xml
+    #         docs/pyjs.maxref.xml
+    #         externals
+    #         help/py.maxhelp
+    #         help/pyjs.maxhelp
+    #         examples
+    #         javascript
+    #         jsextensions
+    #         patchers
+    #         support
+    #         LICENSE
+    #         README.md
+    #         userguide.pdf
