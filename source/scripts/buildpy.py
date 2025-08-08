@@ -738,22 +738,22 @@ class ShellCmd:
             if _path.exists():
                 return _path
         filename, _ = urlretrieve(url, filename=_path)
+        self.log.info("downloaded %s from %s", filename, url)
         return Path(filename)
 
     def extract(self, archive: Pathlike, tofolder: Pathlike = "."):
         """extract a tar archive"""
         if tarfile.is_tarfile(archive):
             with tarfile.open(archive) as f:
+                self.log.info("extracting %s to %s", archive, tofolder)
                 if sys.version_info.minor >= 12:
                     f.extractall(tofolder, filter="data")
                 else:
                     f.extractall(tofolder)
         elif zipfile.is_zipfile(archive):
+            self.log.info("extracting %s to %s", archive, tofolder)
             with zipfile.ZipFile(archive) as f:
-                if sys.version_info.minor >= 12:
-                    f.extractall(tofolder, filter="data")
-                else:
-                    f.extractall(tofolder)
+                f.extractall(tofolder)
         else:
             raise TypeError("cannot extract from this file.")
 

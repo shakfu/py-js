@@ -52,7 +52,7 @@ jobs:
       if: ${{ inputs.runtime == 'downloaded windows embeddable package' }}
       run: |
         make ${{ env.TARGET }}
-        python source/scripts/buildpy.py -e
+        python source/scripts/buildpy.py --embeddable-pkg
 
     - name: pre-upload
       run: mv source/docs/_book/Python3-Externals-for-Max-MSP.pdf ./userguide.pdf

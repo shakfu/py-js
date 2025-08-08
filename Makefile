@@ -205,7 +205,8 @@ all: default
 		framework-pkg framework-ext \
 		shared-pkg shared-ext shared-tiny-ext \
 		static-pkg static-ext static-tiny-ext \
-		core-windows-pkg show
+		core-windows-pkg core-windows-pkg-embed \
+		core-windows-pkg-min
 
 # -----------------------------------------------------------------------
 # python3 external argets
@@ -233,6 +234,20 @@ core-windows-pkg: api clean-build-dir clean-externals clean-support
 		-DBUILD_VARIANT=windows-pkg \
 		&& \
 	cmake --build . --config Release
+
+core-windows-pkg-min: api clean-build-dir clean-externals clean-support
+	@$(PYTHON) ./source/scripts/buildpy.py -t windows-pkg && \
+	mkdir -p build && \
+	cd build && \
+	cmake .. \
+		-DBUILD_PYTHON3_CORE_EXTERNALS=ON \
+		-DBUILD_VARIANT=windows-pkg \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		&& \
+	cmake --build . --config MinSizeRel
+
+core-windows-pkg-embed: core-windows-pkg
+	@$(PYTHON) ./source/scripts/buildpy.py --embeddable-pkg
 
 experimentals: clean-build-dir clean-externals
 	$(call section,"building experimental externals using")
