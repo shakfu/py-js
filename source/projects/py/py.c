@@ -26,45 +26,49 @@ static uintptr_t py_global_obj_ref = 0;
 
 struct t_py {
     /* object header */
-    t_object p_ob;              /*!< object header */
+    t_object p_ob;                /*!< object header */
 
     /* object attributes */
-    t_symbol* p_name;           /*!< unique object name */
+    struct {
+        t_symbol* name;           /*!< unique object name */
+        t_patcher* patcher;       /*!< to send msgs to objects */
+        t_box* box;               /*!< the ui box of the py instance? */
+    } obj;
 
     /* python-related */
-    t_symbol* p_pythonpath;     /*!< path to python directory */
-    t_bool p_debug;             /*!< bool to switch per-object debug state */
-    PyObject* p_globals;        /*!< per object 'globals' python namespace */
-
-    /* infrastructure objects */
-    t_patcher* p_patcher;       /*!< to send msgs to objects */
-    t_box* p_box;               /*!< the ui box of the py instance? */
+    struct {
+        t_symbol* pythonpath;    /*!< path to python directory */
+        t_bool debug;            /*!< bool to switch per-object debug state */
+        PyObject* globals;       /*!< per object 'globals' python namespace */
+    } python;
 
     /* time-based ops */
-    void* p_clock;              /*!< a clock in case of scheduled ops */
-    t_atomarray* p_sched_atoms; /*!< atomarray for scheduled python function call */
+    struct {
+        void* clock;              /*!< a clock in case of scheduled ops */
+        t_atomarray* sched_data;  /*!< atomarray for scheduled python function call */
+    } scheduler;
 
     /* text editor attrs */
-    t_object* p_code_editor;    /*!< code editor object */
-    char** p_code;              /*!< handle to code buffer for code editor */
-    long p_code_size;           /*!< length of code buffer */
-    t_fourcc p_code_filetype;   /*!< filetype four char code of 'TEXT' */
-    t_fourcc p_code_outtype;    /*!< savetype four char code of 'TEXT' */
-    char p_code_filename[MAX_PATH_CHARS]; /*!< file name field */
-    char p_code_pathname[MAX_PATH_CHARS]; /*!< file path field */
-    short p_code_path;          /*!< short code for max file system */
-    long p_run_on_save;         /*!< evaluate/run code in editor on save */
-    long p_run_on_close;        /*!< evaluate/run code in editor on close */
-    // t_symbol* p_run_on;
-
-    t_symbol* p_code_filepath;  /*!< default python filepath to load into
+    struct {
+        t_object* code_editor;   /*!< code editor object */
+        char** code;             /*!< handle to code buffer for code editor */
+        long code_size;          /*!< length of code buffer */
+        t_fourcc code_filetype;  /*!< filetype four char code of 'TEXT' */
+        t_fourcc code_outtype;   /*!< savetype four char code of 'TEXT' */
+        char code_filename[MAX_PATH_CHARS]; /*!< file name field */
+        char code_pathname[MAX_PATH_CHARS]; /*!< file path field */
+        short code_path;         /*!< short code for max file system */
+        long run_on_save;        /*!< evaluate/run code in editor on save */
+        long run_on_close;       /*!< evaluate/run code in editor on close */
+        t_symbol* code_filepath; /*!< default python filepath to load into
                                  the code editor and 'globals' namespace */
-    t_bool p_autoload;          /*!< bool to autoload of p_code_filepath  */
+        t_bool autoload;         /*!< bool to autoload of code_filepath  */
+    } editor;
 
     /* outlet creation */
-    void* p_outlet_right;      /*!< right outlet to bang success */
-    void* p_outlet_middle;     /*!< middle outleet to bang error */
-    void* p_outlet_left;       /*!< left outleet for msg output  */
+    void* p_outlet_right;       /*!< right outlet to bang success */
+    void* p_outlet_middle;      /*!< middle outleet to bang error */
+    void* p_outlet_left;        /*!< left outleet for msg output  */
 };
 
 
@@ -146,37 +150,37 @@ void ext_main(void* module_ref)
     // class attributes
     //------------------------------------------------------------------------
 
-    CLASS_ATTR_SYM(c,       "name", 0,      t_py, p_name);
+    CLASS_ATTR_SYM(c,       "name", 0,      t_py, obj.name);
     CLASS_ATTR_BASIC(c,     "name", 0);
 
-    CLASS_ATTR_SYM(c,       "file", 0,     t_py,  p_code_filepath);
+    CLASS_ATTR_SYM(c,       "file", 0,     t_py,  editor.code_filepath);
     CLASS_ATTR_STYLE(c,     "file", 0,     "file");
     CLASS_ATTR_BASIC(c,     "file", 0);
     CLASS_ATTR_SAVE(c,      "file", 0);
 
-    CLASS_ATTR_LONG(c,      "autoload", 0,     t_py, p_autoload);
+    CLASS_ATTR_LONG(c,      "autoload", 0,     t_py, editor.autoload);
     CLASS_ATTR_STYLE(c,     "autoload", 0,     "onoff");
     CLASS_ATTR_BASIC(c,     "autoload", 0);
     CLASS_ATTR_SAVE(c,      "autoload", 0);
 
-    CLASS_ATTR_LONG(c,      "run_on_save", 0,  t_py, p_run_on_save);
+    CLASS_ATTR_LONG(c,      "run_on_save", 0,  t_py, editor.run_on_save);
     CLASS_ATTR_STYLE(c,     "run_on_save", 0, "onoff");
     CLASS_ATTR_DEFAULT(c,   "run_on_save", 0, "0");
     CLASS_ATTR_BASIC(c,     "run_on_save", 0);
     CLASS_ATTR_SAVE(c,      "run_on_save", 0);
 
-    CLASS_ATTR_LONG(c,      "run_on_close", 0,  t_py, p_run_on_close);
+    CLASS_ATTR_LONG(c,      "run_on_close", 0,  t_py, editor.run_on_close);
     CLASS_ATTR_STYLE(c,     "run_on_close", 0, "onoff");
     CLASS_ATTR_DEFAULT(c,   "run_on_close", 0, "1");
     CLASS_ATTR_BASIC(c,     "run_on_close", 0);
     CLASS_ATTR_SAVE(c,      "run_on_close", 0);
 
-    CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, p_pythonpath);
+    CLASS_ATTR_SYM(c,       "pythonpath", 0,  t_py, python.pythonpath);
     CLASS_ATTR_BASIC(c,     "pythonpath", 0);
     CLASS_ATTR_SAVE(c,      "pythonpath", 0);
     CLASS_ATTR_ACCESSORS(c, "pythonpath", py_pythonpath_attr_get, py_pythonpath_attr_set);
 
-    CLASS_ATTR_LONG(c,      "debug", 0,  t_py, p_debug);
+    CLASS_ATTR_LONG(c,      "debug", 0,  t_py, python.debug);
     CLASS_ATTR_STYLE(c,     "debug", 0, "onoff");
     CLASS_ATTR_DEFAULT(c,   "debug", 0,     "0");
     CLASS_ATTR_BASIC(c,     "debug", 0);
@@ -229,37 +233,37 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         if (py_global_obj_count == 0) {
             // if name is not set as argument then
             // first py obj is called '__main__' by default
-            x->p_name = gensym("__main__");
+            x->obj.name = gensym("__main__");
         } else {
-            x->p_name = symbol_unique();
+            x->obj.name = symbol_unique();
         }
 
         // communication
-        x->p_patcher = NULL;
-        x->p_box = NULL;
+        x->obj.patcher = NULL;
+        x->obj.box = NULL;
 
         // python-related
-        x->p_pythonpath = gensym("");
+        x->python.pythonpath = gensym("");
 
         // text editor
-        x->p_code = (t_handle)sysmem_newhandle(0);
-        x->p_code_size = 0;
-        x->p_code_editor = NULL;
-        x->p_code_filetype = FOUR_CHAR_CODE('TEXT');
-        x->p_code_outtype = 0;
-        x->p_code_filename[0] = 0;
-        x->p_code_pathname[0] = 0;
-        x->p_code_filepath = gensym("");
-        x->p_autoload = 0;
-        x->p_run_on_save = 0;
-        x->p_run_on_close = 1;
+        x->editor.code = (t_handle)sysmem_newhandle(0);
+        x->editor.code_size = 0;
+        x->editor.code_editor = NULL;
+        x->editor.code_filetype = FOUR_CHAR_CODE('TEXT');
+        x->editor.code_outtype = 0;
+        x->editor.code_filename[0] = 0;
+        x->editor.code_pathname[0] = 0;
+        x->editor.code_filepath = gensym("");
+        x->editor.autoload = 0;
+        x->editor.run_on_save = 0;
+        x->editor.run_on_close = 1;
 
         // set default debug level
-        x->p_debug = 0;
+        x->python.debug = 0;
 
         // clocked tasks
-        x->p_clock = clock_new((t_object*)x, (method)py_task);
-        x->p_sched_atoms = NULL;
+        x->scheduler.clock = clock_new((t_object*)x, (method)py_task);
+        x->scheduler.sched_data = NULL;
 
         // create outlet(s)
         x->p_outlet_right = bangout((t_object*)x);
@@ -267,19 +271,19 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
         x->p_outlet_left = outlet_new(x, NULL);
 
         // set patcher object
-        object_obex_lookup(x, gensym("#P"), &x->p_patcher);
-        if (x->p_patcher == NULL) {
+        object_obex_lookup(x, gensym("#P"), &x->obj.patcher);
+        if (x->obj.patcher == NULL) {
             error("patcher object not created.");
         }
 
         // set box object
-        object_obex_lookup(x, gensym("#B"), &x->p_box);
-        if (x->p_box == NULL) {
+        object_obex_lookup(x, gensym("#B"), &x->obj.box);
+        if (x->obj.box == NULL) {
             error("box object not created.");
         }
 
         // create scripting name
-        t_max_err err = jbox_set_varname(x->p_box, x->p_name);
+        t_max_err err = jbox_set_varname(x->obj.box, x->obj.name);
         if (err != MAX_ERR_NONE) {
             error("could not set scripting name to box");
         }
@@ -297,28 +301,28 @@ void* py_new(t_symbol* s, long argc, t_atom* argv)
 
         t_dictionary* dict = (t_dictionary*)gensym("#D")->s_thing;
         if (dict) {
-            // dictionary_getsym(dict, gensym("name"), &x->p_name);
-            dictionary_getsym(dict, gensym("file"), &x->p_code_filepath);
-            dictionary_getsym(dict, gensym("pythonpath"), &x->p_pythonpath);
-            dictionary_getlong(dict, gensym("autoload"), (t_atom_long*)&x->p_autoload);
+            // dictionary_getsym(dict, gensym("name"), &x->obj.name);
+            dictionary_getsym(dict, gensym("file"), &x->editor.code_filepath);
+            dictionary_getsym(dict, gensym("pythonpath"), &x->python.pythonpath);
+            dictionary_getlong(dict, gensym("autoload"), (t_atom_long*)&x->editor.autoload);
         }
 
         // process autoload
         py_debug(x, "checking autoload / code_filepath / pythonpath");
         py_debug(x, "autoload: %d\ncode_filepath: %s\npythonpath: %s",
-                 x->p_autoload, x->p_code_filepath->s_name,
-                 x->p_pythonpath->s_name);
+                 x->editor.autoload, x->editor.code_filepath->s_name,
+                 x->python.pythonpath->s_name);
         py_debug(x, "via object_attr_getsym: %s",
                  object_attr_getsym(x, gensym("file"))->s_name);
 
-        if ((x->p_autoload == 1) && (x->p_code_filepath != gensym(""))) {
-            py_debug(x, "autoloading: %s", x->p_code_filepath->s_name);
-            py_load(x, x->p_code_filepath);
+        if ((x->editor.autoload == 1) && (x->editor.code_filepath != gensym(""))) {
+            py_debug(x, "autoloading: %s", x->editor.code_filepath->s_name);
+            py_load(x, x->editor.code_filepath);
         }
 
         // if pythonpath is set, add it to sys.path
-        if (x->p_pythonpath != gensym("")) {
-            py_pythonpath_add(x, x->p_pythonpath);
+        if (x->python.pythonpath != gensym("")) {
+            py_pythonpath_add(x, x->python.pythonpath);
         }
 
         // process @arg attributes
@@ -388,12 +392,12 @@ void py_init(t_py* x)
 #endif
 
     // python init
-    PyObject* main_mod = PyImport_AddModule(x->p_name->s_name); // borrowed
-    x->p_globals = PyModule_GetDict(main_mod); // borrowed reference
+    PyObject* main_mod = PyImport_AddModule(x->obj.name->s_name); // borrowed
+    x->python.globals = PyModule_GetDict(main_mod); // borrowed reference
     py_init_builtins(x); // does this have to be a separate function?
 
     // register the object
-    object_register(CLASS_BOX, x->p_name, x);
+    object_register(CLASS_BOX, x->obj.name, x);
 
     // increment global object counter
     py_global_obj_count++;
@@ -417,17 +421,17 @@ void py_init(t_py* x)
 void py_free(t_py* x)
 {
     // code editor cleanup
-    object_free(x->p_code_editor);
-    object_free(x->p_clock);
-    if (x->p_sched_atoms) {
-        object_free(x->p_sched_atoms);
+    object_free(x->editor.code_editor);
+    object_free(x->scheduler.clock);
+    if (x->scheduler.sched_data) {
+        object_free(x->scheduler.sched_data);
     }
     
-    if (x->p_code) {
-        sysmem_freehandle(x->p_code);
+    if (x->editor.code) {
+        sysmem_freehandle(x->editor.code);
     }
 
-    Py_XDECREF(x->p_globals);
+    Py_XDECREF(x->python.globals);
     // python objects cleanup
     py_debug(x, "will be deleted");
     py_global_obj_count--;
@@ -467,8 +471,8 @@ t_max_err py_pythonpath_attr_get(t_py* x, t_object* attr, long* argc,t_atom** ar
             return MAX_ERR_OUT_OF_MEM;
         }
         if (alloc) {
-            atom_setsym(*argv, x->p_pythonpath);
-            // py_debug(x, "py_pythonpath_attr_get: %s", x->p_pythonpath->s_name);
+            atom_setsym(*argv, x->python.pythonpath);
+            // py_debug(x, "py_pythonpath_attr_get: %s", x->python.pythonpath->s_name);
         }
     }
     return MAX_ERR_NONE;
@@ -498,11 +502,11 @@ t_max_err py_pythonpath_attr_set(t_py* x, t_object* attr, long argc, t_atom* arg
         path_nameconform(atom_getsym(argv)->s_name, conform_path,
                          PATH_STYLE_MAX, PATH_TYPE_BOOT);
 
-        if (x->p_pythonpath != gensym(conform_path)) {
-            x->p_pythonpath = gensym(conform_path);
-            py_pythonpath_add(x, x->p_pythonpath);
+        if (x->python.pythonpath != gensym(conform_path)) {
+            x->python.pythonpath = gensym(conform_path);
+            py_pythonpath_add(x, x->python.pythonpath);
         }
-        py_debug(x, "py_pythonpath_attr_set: %s", x->p_pythonpath->s_name);
+        py_debug(x, "py_pythonpath_attr_set: %s", x->python.pythonpath->s_name);
     }
 
 finally:
@@ -547,11 +551,11 @@ t_max_err py_pythonpath_add(t_py* x, t_symbol* path)
 t_max_err py_get(t_py* x, t_symbol* s)
 {
     if (s == gensym("pythonpath")) {
-        outlet_anything(x->p_outlet_left, x->p_pythonpath, 0, NULL);
+        outlet_anything(x->p_outlet_left, x->python.pythonpath, 0, NULL);
     } else if (s == gensym("name")) {
-        outlet_anything(x->p_outlet_left, x->p_name, 0, NULL);
+        outlet_anything(x->p_outlet_left, x->obj.name, 0, NULL);
     } else if (s == gensym("file")) {
-        outlet_anything(x->p_outlet_left, gensym(x->p_code_filename), 0, NULL);
+        outlet_anything(x->p_outlet_left, gensym(x->editor.code_filename), 0, NULL);
     }
     return MAX_ERR_NONE;
 }
@@ -617,7 +621,7 @@ void py_info(t_py* x, char* fmt, ...)
     vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
     va_end(va);
 
-    object_post((t_object*)x, "[INFO] (%s) %s", x->p_name->s_name, msg);
+    object_post((t_object*)x, "[INFO] (%s) %s", x->obj.name->s_name, msg);
 }
 
 /**
@@ -628,14 +632,14 @@ void py_info(t_py* x, char* fmt, ...)
  * @param ... other arguments
  *
  * This log function is a variadic function which does not `post` its message
- * if the object struct member `x->p_debug` is 0.
+ * if the object struct member `x->python.debug` is 0.
  *
  * WARNING: if PY_MAX_ELEMS is less than
  * the length of the log or err message, Max will crash.
  */
 void py_debug(t_py* x, char* fmt, ...)
 {
-    if (x->p_debug) {
+    if (x->python.debug) {
         char msg[PY_MAX_ELEMS];
 
         va_list va;
@@ -643,7 +647,7 @@ void py_debug(t_py* x, char* fmt, ...)
         vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
         va_end(va);
 
-        object_post((t_object*)x, "[DEBUG] (%s) %s", x->p_name->s_name, msg);
+        object_post((t_object*)x, "[DEBUG] (%s) %s", x->obj.name->s_name, msg);
     }
 }
 
@@ -663,7 +667,7 @@ void py_error(t_py* x, char* fmt, ...)
     vsnprintf(msg, PY_MAX_ELEMS, fmt, va);
     va_end(va);
 
-    object_post((t_object*)x, "[ERROR] (%s) %s", x->p_name->s_name, msg);
+    object_post((t_object*)x, "[ERROR] (%s) %s", x->obj.name->s_name, msg);
 }
 
 /**
@@ -681,7 +685,7 @@ void py_init_builtins(t_py* x)
     PyObject* p_code_obj = NULL;
     int err = -1;
 
-    p_name = PyUnicode_FromString(x->p_name->s_name);
+    p_name = PyUnicode_FromString(x->obj.name->s_name);
     if (p_name == NULL) {
         goto error;
     }
@@ -696,13 +700,13 @@ void py_init_builtins(t_py* x)
         goto error;
     }
 
-    err = PyDict_SetItemString(x->p_globals, "__builtins__", builtins);
+    err = PyDict_SetItemString(x->python.globals, "__builtins__", builtins);
     if (err == -1) {
         goto error;
     }
 
-    p_code_obj = PyRun_String(PY_PRELUDE_MODULE, Py_file_input, x->p_globals,
-                              x->p_globals);
+    p_code_obj = PyRun_String(PY_PRELUDE_MODULE, Py_file_input, x->python.globals,
+                              x->python.globals);
 
     if (p_code_obj == NULL) {
         py_error(x, "cannot import PY_PRELUDE_MODULE");
@@ -808,7 +812,7 @@ t_string* py_get_path_to_package(t_class* c, const char* subpath)
  * @param s symbol to be searched
  * @return t_max_err
  *
- * If successful, this function will set `x->p_code_filepath` with
+ * If successful, this function will set `x->editor.code_filepath` with
  * the Max readable path of the found file.
  */
 t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
@@ -816,28 +820,28 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
     t_max_err ret = MAX_ERR_NONE;
 
     if (s == gensym("")) {
-        x->p_code_filename[0] = 0;
+        x->editor.code_filename[0] = 0;
 
-        if (open_dialog(x->p_code_filename, &x->p_code_path,
-                        &x->p_code_outtype, &x->p_code_filetype, 1)) {
+        if (open_dialog(x->editor.code_filename, &x->editor.code_path,
+                        &x->editor.code_outtype, &x->editor.code_filetype, 1)) {
                 /* non-zero: cancelled */
                 ret = MAX_ERR_GENERIC;
                 goto finally;
         }
     } else {
 
-        strncpy_zero(x->p_code_filename, s->s_name, MAX_PATH_CHARS);
+        strncpy_zero(x->editor.code_filename, s->s_name, MAX_PATH_CHARS);
 
-        if (locatefile_extended(x->p_code_filename, &x->p_code_path,
-                                &x->p_code_outtype, &x->p_code_filetype, 1)) {
+        if (locatefile_extended(x->editor.code_filename, &x->editor.code_path,
+                                &x->editor.code_outtype, &x->editor.code_filetype, 1)) {
             // nozero: not found
             py_error(x, "can't find file %s", s->s_name);
             ret = MAX_ERR_GENERIC;
             goto finally;
         } else {
-            x->p_code_pathname[0] = 0;
-            ret = path_toabsolutesystempath(x->p_code_path, x->p_code_filename,
-                                            x->p_code_pathname);
+            x->editor.code_pathname[0] = 0;
+            ret = path_toabsolutesystempath(x->editor.code_path, x->editor.code_filename,
+                                            x->editor.code_pathname);
             if (ret != MAX_ERR_NONE) {
                 py_error(x, "can't convert %s to absolutepath", s->s_name);
                 goto finally;
@@ -845,7 +849,7 @@ t_max_err py_locate_path_from_symbol(t_py* x, t_symbol* s)
         }
 
         // success: set attribute from pathname symbol
-        x->p_code_filepath = gensym(x->p_code_pathname);
+        x->editor.code_filepath = gensym(x->editor.code_pathname);
         assert(ret == MAX_ERR_NONE);
     }
 
@@ -863,8 +867,8 @@ finally:
 void py_appendtodict(t_py* x, t_dictionary* dict)
 {
     if (dict) {
-        dictionary_appendsym(dict, gensym("file"), x->p_code_filepath);
-        dictionary_appendlong(dict, gensym("autoload"), x->p_autoload);
+        dictionary_appendsym(dict, gensym("file"), x->editor.code_filepath);
+        dictionary_appendlong(dict, gensym("autoload"), x->editor.autoload);
     }
 }
 
@@ -1171,17 +1175,17 @@ t_max_err py_sched(t_py* x, t_symbol* s, long argc, t_atom* argv)
 
     // success
     // reset it
-    if (x->p_sched_atoms != NULL) {
-        object_free(x->p_sched_atoms);
-        x->p_sched_atoms = NULL;
+    if (x->scheduler.sched_data != NULL) {
+        object_free(x->scheduler.sched_data);
+        x->scheduler.sched_data = NULL;
     }
 
-    x->p_sched_atoms = atomarray_new(argc, argv);
-    if (x->p_sched_atoms == NULL) {
-        py_error(x, "atom not scheduled");
+    x->scheduler.sched_data = atomarray_new(argc, argv);
+    if (x->scheduler.sched_data == NULL) {
+        py_error(x, "sched_data not scheduled");
         goto error;
     }
-    clock_fdelay(x->p_clock, time);
+    clock_fdelay(x->scheduler.clock, time);
     ret = MAX_ERR_NONE;
     goto finally;
 
@@ -1207,7 +1211,7 @@ t_max_err py_task(t_py* x)
 
     clock_getftime(&time);
     // also scheduler_gettime(&time);
-    t_max_err err = atomarray_getatoms(x->p_sched_atoms, &argc, &argv);
+    t_max_err err = atomarray_getatoms(x->scheduler.sched_data, &argc, &argv);
     if (err != MAX_ERR_NONE) {
         py_error(x, "atomarray arg initialization failed");
         return MAX_ERR_GENERIC;
@@ -1256,7 +1260,7 @@ void py_handle_error(t_py* x, char* fmt, ...)
     Py_XDECREF(pvalue);
     Py_XDECREF(pvalue_pstr);
 
-    object_error((t_object*)x, "[ERROR] (%s) %s: %s", x->p_name->s_name, msg,
+    object_error((t_object*)x, "[ERROR] (%s) %s: %s", x->obj.name->s_name, msg,
                  pvalue_str);
     Py_XDECREF(ptraceback);
 }
@@ -1478,7 +1482,7 @@ t_max_err py_handle_dict_output(t_py* x, PyObject* pdict)
     if (PyDict_Check(pdict)) {
 
         // depends on definition in py_prelude.h
-        pfun = PyDict_GetItemString(x->p_globals, "out_dict"); // borrowed
+        pfun = PyDict_GetItemString(x->python.globals, "out_dict"); // borrowed
         if (pfun == NULL) {
             py_error(x, "retrieving out_dict func from globals failed");
             goto error;
@@ -1658,7 +1662,7 @@ t_max_err py_import(t_py* x, t_symbol* s)
         if (x_module == NULL) {
             goto error;
         }
-        PyDict_SetItemString(x->p_globals, s->s_name, x_module);
+        PyDict_SetItemString(x->python.globals, s->s_name, x_module);
         PyGILState_Release(gstate);
         py_bang_success(x);
         py_debug(x, "imported: %s", s->s_name);
@@ -1689,8 +1693,8 @@ t_max_err py_eval(t_py* x, t_symbol* s, long argc, t_atom* argv)
     char* py_argv = atom_getsym(argv)->s_name;
     py_debug(x, "%s %s", s->s_name, py_argv);
 
-    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->p_globals,
-                                  x->p_globals);
+    PyObject* pval = PyRun_String(py_argv, Py_eval_input, x->python.globals,
+                                  x->python.globals);
 
     if (pval != NULL) {
         py_handle_output(x, pval);
@@ -1725,7 +1729,7 @@ t_max_err py_exec(t_py* x, t_symbol* s, long argc, t_atom* argv)
         goto error;
     }
 
-    pval = PyRun_String(py_argv, Py_file_input, x->p_globals, x->p_globals);
+    pval = PyRun_String(py_argv, Py_file_input, x->python.globals, x->python.globals);
     if (pval == NULL) {
         goto error;
     }
@@ -1761,7 +1765,7 @@ t_max_err py_execfile(t_py* x, t_symbol* s)
     FILE* fhandle = NULL;
 
     if (s != gensym("")) {
-        // set x->p_code_filepath
+        // set x->editor.code_filepath
         t_max_err err = py_locate_path_from_symbol(x, s);
         if (err != MAX_ERR_NONE) {
             py_error(x, "could not locate path from symbol");
@@ -1769,23 +1773,23 @@ t_max_err py_execfile(t_py* x, t_symbol* s)
         }
     }
 
-    if (s == gensym("") || x->p_code_filepath == gensym("")) {
+    if (s == gensym("") || x->editor.code_filepath == gensym("")) {
         py_error(x, "could not set filepath");
         goto error;
     }
 
-    // assume x->p_code_filepath has be been set without errors
+    // assume x->editor.code_filepath has be been set without errors
 
-    py_debug(x, "pathname: %s", x->p_code_filepath->s_name);
-    fhandle = fopen(x->p_code_filepath->s_name, "r+");
+    py_debug(x, "pathname: %s", x->editor.code_filepath->s_name);
+    fhandle = fopen(x->editor.code_filepath->s_name, "r+");
 
     if (fhandle == NULL) {
         py_error(x, "could not open file");
         goto error;
     }
 
-    pval = PyRun_File(fhandle, x->p_code_filepath->s_name, Py_file_input,
-                      x->p_globals, x->p_globals);
+    pval = PyRun_File(fhandle, x->editor.code_filepath->s_name, Py_file_input,
+                      x->python.globals, x->python.globals);
     if (pval == NULL) {
         fclose(fhandle);
         goto error;
@@ -1862,7 +1866,7 @@ t_max_err py_assign(t_py* x, t_symbol* s, long argc, t_atom* argv)
     // finally, assign list to varname in object namespace
     py_debug(x, "setting %s to list in namespace", varname);
     // following does not steal ref to list
-    res = PyDict_SetItemString(x->p_globals, varname, list);
+    res = PyDict_SetItemString(x->python.globals, varname, list);
     if (res != 0) {
         py_error(x, "assign varname to list failed");
         goto error;
@@ -1909,12 +1913,12 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv)
 
     char* new_text = str_replace(text, "\\", "");
 
-    co = Py_CompileString(new_text, x->p_name->s_name, Py_eval_input);
+    co = Py_CompileString(new_text, x->obj.name->s_name, Py_eval_input);
 
     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
         PyErr_Clear();
-        // co = Py_CompileString(new_text, x->p_name->s_name, Py_single_input);
-        co = Py_CompileString(new_text, x->p_name->s_name, Py_file_input);
+        // co = Py_CompileString(new_text, x->obj.name->s_name, Py_single_input);
+        co = Py_CompileString(new_text, x->obj.name->s_name, Py_file_input);
         is_eval = 0;
     }
 
@@ -1927,7 +1931,7 @@ t_max_err py_eval_text(t_py* x, long argc, t_atom* argv)
 
     // sysmem_freeptr(text);
 
-    pval = PyEval_EvalCode(co, x->p_globals, x->p_globals);
+    pval = PyEval_EvalCode(co, x->python.globals, x->python.globals);
     if (pval == NULL) {
         goto error;
     }
@@ -2049,7 +2053,7 @@ t_max_err py_func_to_list(t_py* x, const char* pyfunc_name, t_symbol* s, long ar
     }
 
     // depends on definition in py_prelude.h
-    pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
+    pyfunc = PyDict_GetItemString(x->python.globals, pyfunc_name);
     if (pyfunc == NULL) {
         py_error(x, "retrieving python func '%s' from globals failed",
                  pyfunc_name);
@@ -2130,7 +2134,7 @@ t_max_err py_func_to_atoms(t_py* x, const char* pyfunc_name, t_symbol* s, long a
     Py_XDECREF(plist);
 
     // depends on definition in py_prelude.h
-    pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
+    pyfunc = PyDict_GetItemString(x->python.globals, pyfunc_name);
     if (pyfunc == NULL) {
         py_error(x, "retrieving python func '%s' from globals failed",
                  pyfunc_name);
@@ -2191,7 +2195,7 @@ t_max_err py_func_to_pyobj(t_py* x, const char* pyfunc_name, PyObject* obj)
     PyObject* pval = NULL;
 
     // depends on definition in py_prelude.h
-    pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
+    pyfunc = PyDict_GetItemString(x->python.globals, pyfunc_name);
     if (pyfunc == NULL) {
         py_error(x, "retrieving python func '%s' from globals failed",
                  pyfunc_name);
@@ -2271,7 +2275,7 @@ t_max_err py_func_to_text(t_py* x, const char* pyfunc_name, t_symbol* s, long ar
     sysmem_freeptr(text);
 
     // depends on definition in py_prelude.h
-    pyfunc = PyDict_GetItemString(x->p_globals, pyfunc_name);
+    pyfunc = PyDict_GetItemString(x->python.globals, pyfunc_name);
     if (pyfunc == NULL) {
         py_error(x, "retrieving python func '%s' from globals failed",
                  pyfunc_name);
@@ -2436,8 +2440,8 @@ void py_scan(t_py* x)
 
     hashtab_clear(py_global_registry);
 
-    if (x->p_patcher) {
-        object_method(x->p_patcher, gensym("iterate"),
+    if (x->obj.patcher) {
+        object_method(x->obj.patcher, gensym("iterate"),
                       (method)py_scan_callback, x, PI_DEEP | PI_WANTBOX,
                       &result);
     } else {
@@ -2608,14 +2612,14 @@ error:
  */
 void py_dblclick(t_py* x)
 {
-    if (x->p_code_editor) {
-        object_attr_setchar(x->p_code_editor, gensym("visible"), 1);
+    if (x->editor.code_editor) {
+        object_attr_setchar(x->editor.code_editor, gensym("visible"), 1);
     } else {
-        x->p_code_editor = (t_object*)object_new(CLASS_NOBOX, gensym("jed"), x, 0);
-        object_method(x->p_code_editor, gensym("settext"), *x->p_code,
+        x->editor.code_editor = (t_object*)object_new(CLASS_NOBOX, gensym("jed"), x, 0);
+        object_method(x->editor.code_editor, gensym("settext"), *x->editor.code,
                       gensym("utf-8"));
-        object_attr_setchar(x->p_code_editor, gensym("scratch"), 1);
-        object_attr_setsym(x->p_code_editor, gensym("title"),
+        object_attr_setchar(x->editor.code_editor, gensym("scratch"), 1);
+        object_attr_setsym(x->editor.code_editor, gensym("title"),
                            gensym("py-editor"));
     }
 }
@@ -2645,13 +2649,13 @@ void py_doread(t_py* x, t_symbol* s, long argc, t_atom* argv)
     t_filehandle fh;
 
     py_locate_path_from_symbol(x, s);
-    err = path_opensysfile(x->p_code_filename, x->p_code_path, &fh, READ_PERM);
+    err = path_opensysfile(x->editor.code_filename, x->editor.code_path, &fh, READ_PERM);
     if (!err) {
-        sysfile_readtextfile(fh, x->p_code, 0, TEXT_LB_NATIVE);
+        sysfile_readtextfile(fh, x->editor.code, 0, TEXT_LB_NATIVE);
         // sysfile_readtextfile(fh, x->p_code, 0,
         //                      TEXT_LB_UNIX | TEXT_NULL_TERMINATE);
         sysfile_close(fh);
-        x->p_code_size = sysmem_handlesize(x->p_code);
+        x->editor.code_size = sysmem_handlesize(x->editor.code);
     }
 }
 
@@ -2668,13 +2672,13 @@ void py_run(t_py* x)
 
     PyObject* pval = NULL;
 
-    if ((*(x->p_code) != NULL) && (*(x->p_code)[0] == '\0')) {
+    if ((*(x->editor.code) != NULL) && (*(x->editor.code)[0] == '\0')) {
         // is empty string
         goto error;
     }
 
-    pval = PyRun_String(*(x->p_code), Py_file_input, x->p_globals,
-                        x->p_globals);
+    pval = PyRun_String(*(x->editor.code), Py_file_input, x->python.globals,
+                        x->python.globals);
     if (pval == NULL) {
         goto error;
     }
@@ -2702,15 +2706,15 @@ error:
  */
 void py_edclose(t_py* x, char** text, long size)
 {
-    if (x->p_code) {
-        sysmem_freehandle(x->p_code);
+    if (x->editor.code) {
+        sysmem_freehandle(x->editor.code);
     }
 
-    x->p_code = (t_handle)sysmem_newhandleclear(size + 1);
-    sysmem_copyptr(*text, *x->p_code, size);
-    x->p_code_size = size + 1;
-    x->p_code_editor = NULL;
-    if (x->p_run_on_close) {
+    x->editor.code = (t_handle)sysmem_newhandleclear(size + 1);
+    sysmem_copyptr(*text, *x->editor.code, size);
+    x->editor.code_size = size + 1;
+    x->editor.code_editor = NULL;
+    if (x->editor.run_on_close) {
         py_run(x);
     }
 }
@@ -2728,7 +2732,7 @@ void py_edclose(t_py* x, char** text, long size)
 void py_okclose(t_py* x, char* s, short* result)
 {
     // see: https://cycling74.com/forums/text-editor-without-dirty-bit
-    py_debug(x, "okclose: called -- run-on-close: %d", x->p_run_on_close);
+    py_debug(x, "okclose: called -- run-on-close: %d", x->editor.run_on_close);
     *result = 3; // don't put up a dialog
     // const char *string = "custom save text";
     // memcpy(s, string, strlen(string)+1);
@@ -2749,11 +2753,11 @@ t_max_err py_edsave(t_py* x, char** text, long size)
 
     PyObject* pval = NULL;
 
-    if (x->p_run_on_save) {
+    if (x->editor.run_on_save) {
 
         py_debug(x, "run-on-save activated");
 
-        pval = PyRun_String(*text, Py_file_input, x->p_globals, x->p_globals);
+        pval = PyRun_String(*text, Py_file_input, x->python.globals, x->python.globals);
         if (pval == NULL) {
             py_error(x, "py_edsave: pval == NULL");
             goto error;

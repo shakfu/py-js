@@ -2,6 +2,8 @@
 
 ## [0.3.x]
 
+- Changed `struct t_py` implementation in `py.c` from a flat struct to a nested struct, to make the code more self-documenting and readable.
+
 - Added relocatable python3 externals for windows which can be used in packages and standalones. The feature is currently enabled for package-type builds via `make core-windows-pkg` if `make.exe` is available or the following:
 
   ```sh

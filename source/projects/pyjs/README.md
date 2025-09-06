@@ -106,7 +106,7 @@ Note that the `code` method allows for import/exec/eval of python code, which ca
 
 #### Core
 
-py/js's *core* features have a one-to-one correspondance to python's *very high layer* as specified [here](https://docs.python.org/3/c-api/veryhigh.html). In the following, when we refer to *object*, we refer to instances of the `pyjs` external.
+py/js's *core* features have a one-to-one correspondance to python's [very high layer](https://docs.python.org/3/c-api/veryhigh.html). In the following, when we refer to *object*, we refer to instances of the `pyjs` external.
 
 - **Per-object namespaces**. Each object has a unique name (which is provided automatically or can be set by the user), and responds to an `import <module>` message which loads the specified python module in its namespace (essentially a `globals` dictionary). Notably, namespaces can be different for each instance.
 

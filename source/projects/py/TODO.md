@@ -39,7 +39,7 @@ There are three major subsystems in this subproject
 
 ### Bugs
 
-- [ ] `api` object won't reload if a patch is closed (i.e. `PyFinalize`) and new one opened. Requires a restart of Max. (Python bug which is being worked on see [here](https://discuss.python.org/t/safely-using-the-c-api-when-python-might-shut-down)
+- [ ] `api` object won't reload if a patch is closed (i.e. `PyFinalize`) and new one opened. Requires a restart of Max. Refer to the [relevant Python bug](https://discuss.python.org/t/safely-using-the-c-api-when-python-might-shut-down) which is being worked.
 
 - [ ] `PyLong_Check` can't pick up `numpy` numbers: the type of numpy numbers has to be implmented in the type translator. This assume tight integration with numpy headers, which creates a dependency on numpy. Should be an option if it is implemented.
 
@@ -58,7 +58,6 @@ There are three major subsystems in this subproject
 - [x] Add `api.Path` extension class which wraps the `ext_path.h` api (also `ext_sysfile.h`)
 
 - [ ] Simplify `api` module's 'api' so to speak. It currently is includes quite a bit of redundancy and some low-level classes which may not be worthwhile exposing to users (such as the `LinkList` class).
-
 
 ### Testing
 

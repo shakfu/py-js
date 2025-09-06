@@ -23,8 +23,7 @@ id  | name             | language   | comment       | code          | note
 1   | `py.c`           | c          | 729           | 1,598         | handwritten
 2   | `py_prelude.py`  | python     | 95            | 181           | handwritten
 3   | `api.pyx`        | cython     | 2,014         | 3,714         | handwritten
-4   | `api.c `         | c          | 3,185         | 147,855       | generated from (3)
-
+4   | `api.c`         | c          | 3,185         | 147,855       | generated from (3)
 
 The following cheatsheat provides a brief view of key attributes and methods of the `py` external:
 
@@ -112,7 +111,7 @@ Note that he `code` method allows for import/exec/eval of python code, which can
 
 #### Core
 
-py/js's *core* features have a one-to-one correspondance to python's *very high layer* as specified [here](https://docs.python.org/3/c-api/veryhigh.html). In the following, when we refer to an *object*, we refer to instances of the `py` external.
+py/js's *core* features have a one-to-one correspondance to python's [very high layer](https://docs.python.org/3/c-api/veryhigh.html). In the following, when we refer to an *object*, we refer to instances of the `py` external.
 
 - **Per-object namespaces**. Each object has a unique name (which is provided automatically or can be set by the user), and responds to an `import <module>` message which loads the specified python module in its namespace (essentially a `globals` dictionary). Notably, namespaces can be different for each instance.
 
@@ -204,11 +203,11 @@ There are 3 general deployment variations:
 
 As of this writing all three deployment scenarios are availabe, however it is worth looking more closely into the tradeoffs in each case, and the [related build variations which exist](#building-self-contained-python3-externals-for-packages-and-standalones).
 
-Deployment Scenario    | Available | Python Versions       |
-:--------------------- | :-------: | :-------------------- |
-Linked to sys python   | yes       | version of sys python |
-Embeddded in package   | yes       | 3.8 to 3.13 inclusive |
-Embeddded in external  | yes       | 3.8 to 3.13 inclusive |
+Deployment Scenario    | Available | Python Versions
+:--------------------- | :-------: | :--------------------
+Linked to sys python   | yes       | version of sys python
+Embeddded in package   | yes       | 3.8 to 3.13 inclusive
+Embeddded in external  | yes       | 3.8 to 3.13 inclusive
 
 ## Quickstart
 
