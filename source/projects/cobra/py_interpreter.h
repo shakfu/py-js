@@ -51,13 +51,18 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+// C++ includes for thread safety and RAII
+#include <mutex>
+#include <memory>
+#include <cstdio>
+
 namespace pyjs
 {
 
 // ---------------------------------------------------------------------------
 // macros
 
-#define if_null_error(x) if(x == NULL) { goto error; }
+#define if_null_error(x) if(x == nullptr) { goto error; }
 #define _STR(x) #x
 #define STR(x) _STR(x)
 #define PY_VER STR(PY_MAJOR_VERSION) "." STR(PY_MINOR_VERSION)
@@ -76,7 +81,49 @@ namespace pyjs
  * @brief      specifies three logging levels
  */
 enum log_level {
-    PY_ERROR, PY_INFO, PY_DEBUG 
+    PY_ERROR, PY_INFO, PY_DEBUG
+};
+
+// ---------------------------------------------------------------------------
+// RAII Helpers
+
+/**
+ * @brief RAII wrapper for Python GIL state management
+ */
+class GILGuard {
+private:
+    PyGILState_STATE m_gstate;
+
+public:
+    GILGuard() : m_gstate(PyGILState_Ensure()) {}
+    ~GILGuard() { PyGILState_Release(m_gstate); }
+
+    // Non-copyable
+    GILGuard(const GILGuard&) = delete;
+    GILGuard& operator=(const GILGuard&) = delete;
+};
+
+/**
+ * @brief RAII wrapper for FILE* handles
+ */
+class FileGuard {
+private:
+    FILE* m_fp;
+
+public:
+    explicit FileGuard(const char* path, const char* mode = "r+")
+        : m_fp(std::fopen(path, mode)) {}
+
+    ~FileGuard() {
+        if (m_fp) std::fclose(m_fp);
+    }
+
+    operator FILE*() const { return m_fp; }
+    bool is_open() const { return m_fp != nullptr; }
+
+    // Non-copyable
+    FileGuard(const FileGuard&) = delete;
+    FileGuard& operator=(const FileGuard&) = delete;
 };
 
 // ---------------------------------------------------------------------------
@@ -84,16 +131,38 @@ enum log_level {
 
 /**
  * @brief      This class describes a python interpreter.
+ *
+ * @par Thread Safety
+ * All public methods acquire appropriate locks. However, be cautious when
+ * calling from Max's scheduler thread vs main thread.
+ *
+ * @par Memory Management
+ * Uses proper reference counting for Python objects. The interpreter is
+ * reference-counted across all instances - first instance initializes,
+ * last instance finalizes.
+ *
+ * @par Ownership Semantics
+ * Returned PyObject* pointers transfer ownership to caller unless documented
+ * otherwise. Most methods handle cleanup internally.
  */
 class PythonInterpreter
 {
     private:
+        // Instance data
         t_symbol* p_name;           //!< unique python object name
         t_symbol* p_pythonpath;     //!< path to python directory
         t_symbol* p_source_name;    //!< base name of python file to execfile
         t_symbol* p_source_path;    //!< full path to python file to execfile
         log_level p_log_level;      //!< object-level log level (error, info, debug)
-        PyObject* p_globals;        //!< per object 'globals' python namespace
+        PyObject* p_globals;        //!< per object 'globals' python namespace (owned reference)
+
+        // Thread safety
+        mutable std::mutex m_mutex; //!< mutex for thread-safe access to member variables
+
+        // Static shared interpreter state
+        static int s_interpreter_count;          //!< reference count for interpreter lifecycle
+        static std::mutex s_interpreter_mutex;   //!< mutex for interpreter initialization
+        static PyThreadState* s_main_thread_state; //!< main thread state for sub-interpreters
 
     public:
         PythonInterpreter(t_class* c);
@@ -175,10 +244,20 @@ class PythonInterpreter
 
 
 // ---------------------------------------------------------------------------
+// Static member initialization
+
+int PythonInterpreter::s_interpreter_count = 0;
+std::mutex PythonInterpreter::s_interpreter_mutex;
+PyThreadState* PythonInterpreter::s_main_thread_state = nullptr;
+
+// ---------------------------------------------------------------------------
 // constructor / destructor methods
 
 /**
  * @brief      Constructs a new PythonInterpreter instance.
+ *
+ * First instance initializes the Python interpreter.
+ * Subsequent instances reuse the existing interpreter.
  */
 PythonInterpreter::PythonInterpreter(t_class* c)
 {
@@ -187,68 +266,120 @@ PythonInterpreter::PythonInterpreter(t_class* c)
     this->p_source_name = gensym("");
     this->p_source_path = gensym("");
     this->p_log_level = log_level::PY_LOG_LEVEL;
+    this->p_globals = nullptr;
 
-    // python init
-    wchar_t* python_home = NULL;
+    // Thread-safe interpreter initialization
+    {
+        std::lock_guard<std::mutex> lock(s_interpreter_mutex);
 
-    if (c) { // special-case pythonhome config, only makes sense if c not NULL
+        if (s_interpreter_count == 0) {
+            // First instance: initialize Python interpreter
+            wchar_t* python_home = nullptr;
+
+            if (c) { // special-case pythonhome config
 
 #if defined(__APPLE__) && defined(BUILD_STATIC)
-    const char* resources_path = string_getptr(
-        this->get_path_to_external(c, "/Contents/Resources"));
-    python_home = Py_DecodeLocale(resources_path, NULL);
+                const char* resources_path = string_getptr(
+                    this->get_path_to_external(c, "/Contents/Resources"));
+                python_home = Py_DecodeLocale(resources_path, nullptr);
 #endif
 
 #if defined(__APPLE__) && defined(BUILD_SHARED_PKG)
-    const char* package_path = string_getptr(
-        this->get_path_to_package(c, "/support/python" PY_VER));
-    python_home = Py_DecodeLocale(package_path, NULL);
+                const char* package_path = string_getptr(
+                    this->get_path_to_package(c, "/support/python" PY_VER));
+                python_home = Py_DecodeLocale(package_path, nullptr);
 #endif
 
-    } // end special-case python-home config
+            } // end special-case python-home config
 
-#if PY_VERSION_HEX < 0x0308000
-    if (python_home != NULL) {
-        Py_SetPythonHome(python_home);
-        PyMem_RawFree(python_home);
-    }
-    Py_Initialize();
+#if PY_VERSION_HEX < 0x03080000
+            if (python_home != nullptr) {
+                Py_SetPythonHome(python_home);
+                PyMem_RawFree(python_home);
+            }
+            Py_Initialize();
 #else
-    PyConfig config;
-    PyConfig_InitPythonConfig(&config);
-    config.parse_argv = 0; // Disable parsing command line arguments
-    config.isolated = 0;   // default is disabled
-    config.home = python_home;
+            PyConfig config;
+            PyConfig_InitPythonConfig(&config);
+            config.parse_argv = 0; // Disable parsing command line arguments
+            config.isolated = 0;   // default is disabled
+            config.home = python_home;
 
-    PyStatus status = Py_InitializeFromConfig(&config);
-    if (PyStatus_Exception(status)) {
-        PyConfig_Clear(&config);
-        this->log_error((char*)"could not initialize python");
-    }
-    PyConfig_Clear(&config);
+            PyStatus status = Py_InitializeFromConfig(&config);
+            if (PyStatus_Exception(status)) {
+                PyConfig_Clear(&config);
+                post("[py error] could not initialize python interpreter");
+                return; // Constructor cannot fail, but we mark the error
+            }
+            PyConfig_Clear(&config);
 #endif
 
-    PyObject* main_mod = PyImport_AddModule(this->p_name->s_name); // borrowed
-    this->p_globals = PyModule_GetDict(main_mod); // borrowed reference
+            // Save main thread state
+            s_main_thread_state = PyEval_SaveThread();
 
-    PyObject* py_name = NULL;
-    PyObject* builtins = NULL;
+        } // end first-instance initialization
 
-    py_name = PyUnicode_FromString(this->p_name->s_name);
-    builtins = PyEval_GetBuiltins();
-    PyDict_SetItemString(builtins, "PY_OBJ_NAME", py_name);
-    PyDict_SetItemString(this->p_globals, "__builtins__", builtins);
-    Py_XDECREF(py_name);
+        s_interpreter_count++;
+
+    } // end interpreter mutex scope
+
+    // Per-instance Python setup (must acquire GIL)
+    {
+        GILGuard gil;
+
+        PyObject* main_mod = PyImport_AddModule(this->p_name->s_name); // borrowed
+        if (main_mod == nullptr) {
+            this->log_error((char*)"could not create module for object");
+            Py_INCREF(Py_None);
+            this->p_globals = Py_None; // Set to None to avoid null dereference
+            return;
+        }
+
+        this->p_globals = PyModule_GetDict(main_mod); // borrowed reference
+        Py_INCREF(this->p_globals); // CRITICAL FIX: Take ownership
+
+        PyObject* py_name = PyUnicode_FromString(this->p_name->s_name);
+        PyObject* builtins = PyEval_GetBuiltins(); // borrowed
+
+        if (py_name && builtins) {
+            PyDict_SetItemString(builtins, "PY_OBJ_NAME", py_name);
+            PyDict_SetItemString(this->p_globals, "__builtins__", builtins);
+        }
+
+        Py_XDECREF(py_name);
+    }
 }
 
 
 /**
  * @brief      PythonInterpreter destructor method.
+ *
+ * Cleans up per-instance resources. Last instance finalizes the interpreter.
  */
 PythonInterpreter::~PythonInterpreter()
 {
-    Py_XDECREF(this->p_globals);
-    Py_FinalizeEx();
+    // Clean up per-instance Python objects (requires GIL)
+    {
+        GILGuard gil;
+        Py_XDECREF(this->p_globals);
+        this->p_globals = nullptr;
+    }
+
+    // Thread-safe interpreter cleanup
+    {
+        std::lock_guard<std::mutex> lock(s_interpreter_mutex);
+
+        s_interpreter_count--;
+
+        if (s_interpreter_count == 0) {
+            // Last instance: finalize Python interpreter
+            PyEval_RestoreThread(s_main_thread_state);
+            if (Py_FinalizeEx() < 0) {
+                post("[py warning] Python finalization returned error");
+            }
+            s_main_thread_state = nullptr;
+        }
+    }
 }
 
 
@@ -381,77 +512,90 @@ void PythonInterpreter::print_atom(int argc, t_atom* argv)
 
 /**
  * @brief Append string to python sys.path
- * 
- * @param path 
- * @return t_max_err 
+ *
+ * @param path Path to append (can contain environment variables)
+ * @return t_max_err Error code
  */
 t_max_err PythonInterpreter::syspath_append(char* path)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
     t_max_err err = MAX_ERR_NONE;
-    PyObject* os = NULL;
-    PyObject* os_path = NULL;
-    PyObject* os_path_expandvars = NULL;
-    PyObject* pre_expanded = NULL;
-    PyObject* expanded_path = NULL;
-    PyObject* sys_path = NULL;
-    const char* expanded_path_cstr = NULL;
+    PyObject* os = nullptr;
+    PyObject* os_path = nullptr;
+    PyObject* os_path_expandvars = nullptr;
+    PyObject* pre_expanded = nullptr;
+    PyObject* expanded_path = nullptr;
+    PyObject* sys_path = nullptr;
+    const char* expanded_path_cstr = nullptr; // Declare at top to avoid goto issues
 
-    if (path == NULL) {
-        goto error;
+    if (path == nullptr) {
+        this->log_error((char*)"syspath_append: path is null");
+        return MAX_ERR_GENERIC;
     }
 
     os = PyImport_ImportModule("os"); // new ref
-    if (os == NULL) {
-        goto error;
+    if (os == nullptr) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
     }
-    
+
     os_path = PyObject_GetAttrString(os, "path"); // new ref
-    if (os_path == NULL) {
-        goto error;
+    if (os_path == nullptr) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
     }
 
-    os_path_expandvars = PyObject_GetAttrString(os_path, "expandvars"); // new ref.
-    if (os_path_expandvars == NULL) {
-        goto error;
+    os_path_expandvars = PyObject_GetAttrString(os_path, "expandvars"); // new ref
+    if (os_path_expandvars == nullptr) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
     }
-    
+
     pre_expanded = PyUnicode_FromString(path); // new ref
-    if (pre_expanded == NULL) {
-        goto error;
+    if (pre_expanded == nullptr) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
     }
 
-    expanded_path = PyObject_CallFunctionObjArgs(os_path_expandvars, pre_expanded, NULL);
-    if (expanded_path == NULL) {
-        goto error;
+    expanded_path = PyObject_CallFunctionObjArgs(os_path_expandvars, pre_expanded, nullptr);
+    if (expanded_path == nullptr) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
     }
 
     expanded_path_cstr = PyUnicode_AsUTF8(expanded_path);
-    if (expanded_path_cstr == NULL) {
-        goto error;
+    if (expanded_path_cstr == nullptr) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
     }
+
     this->log_debug((char*)"expanded string: %s", expanded_path_cstr);
 
     sys_path = PySys_GetObject((char*)"path"); // borrowed ref
-    if (sys_path == NULL) {
-        goto error;
+    if (sys_path == nullptr) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
     }
-    PyList_Append(sys_path, expanded_path);
-    goto finally;
 
-error:
-    err = MAX_ERR_GENERIC;
-    this->handle_error((char*)"syspath append failed");
+    if (PyList_Append(sys_path, expanded_path) < 0) {
+        err = MAX_ERR_GENERIC;
+        goto cleanup;
+    }
 
-finally:
+    // Success path
+    goto cleanup;
+
+cleanup:
+    if (err != MAX_ERR_NONE) {
+        this->handle_error((char*)"syspath append failed");
+    }
     Py_XDECREF(expanded_path);
     Py_XDECREF(pre_expanded);
     Py_XDECREF(os_path_expandvars);
     Py_XDECREF(os_path);
     Py_XDECREF(os);
-    PyGILState_Release(gstate);
     return err;
 }
 
@@ -971,88 +1115,81 @@ t_max_err PythonInterpreter::handle_output(void* outlet, PyObject* pval)
  */
 t_max_err PythonInterpreter::import_module(char* module)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
-    PyObject* pmodule = NULL;
+    PyObject* pmodule = nullptr;
 
-    if (module == NULL) {
-        goto error;
+    if (module == nullptr) {
+        this->log_error((char*)"import_module: module name is null");
+        return MAX_ERR_GENERIC;
     }
 
     pmodule = PyImport_ImportModule(module);
-    if (pmodule == NULL) {
-        goto error;
+    if (pmodule == nullptr) {
+        this->handle_error((char*)"import %s", module);
+        return MAX_ERR_GENERIC;
     }
-        
-    PyDict_SetItemString(this->p_globals, module, pmodule);
-    PyGILState_Release(gstate);
+
+    if (PyDict_SetItemString(this->p_globals, module, pmodule) < 0) {
+        Py_DECREF(pmodule);
+        this->handle_error((char*)"failed to set module in globals");
+        return MAX_ERR_GENERIC;
+    }
+
+    Py_DECREF(pmodule); // Dict took a reference
     this->log_debug((char*)"imported: %s", module);
     return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"import %s", module);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
 }
 
 
 /**
  * @brief      eval python code from cstring
  *
- * @param      python code in cstring
+ * @param      pcode Python code in cstring
  *
- * @return     result of python evaluation
+ * @return     result of python evaluation (new reference, caller owns)
  */
 PyObject* PythonInterpreter::eval_pcode(char* pcode)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
     PyObject* pval = PyRun_String(pcode,
         Py_eval_input, this->p_globals, this->p_globals);
 
-    if (pval != NULL) {
-        PyGILState_Release(gstate);
-        return pval;
-    } else {
+    if (pval == nullptr) {
         this->handle_error((char*)"failed python code eval: %s", pcode);
-        PyGILState_Release(gstate);
-        Py_RETURN_NONE;
+        Py_INCREF(Py_None);
+        return Py_None;
     }
+
+    return pval; // Caller owns the reference
 }
 
 
 /**
  * @brief Execute a line of python code
  *
- * @param s symbol
- * @param argc atom argument count
- * @param argv atom argument vector
+ * @param pcode Python code to execute
  * @return t_max_err error code
- */ 
+ */
 t_max_err PythonInterpreter::exec_pcode(char* pcode)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
     PyObject* pval = PyRun_String(pcode,
         Py_single_input, this->p_globals, this->p_globals);
 
-    if (pval == NULL) {
-        goto error;
+    if (pval == nullptr) {
+        this->handle_error((char*)"exec %s", pcode);
+        return MAX_ERR_GENERIC;
     }
-    Py_XDECREF(pval);
-    PyGILState_Release(gstate);
 
+    Py_DECREF(pval);
     this->log_debug((char*)"exec %s", pcode);
     return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"exec %s", pcode);
-    Py_XDECREF(pval);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
 }
 
 
@@ -1064,89 +1201,79 @@ error:
  */
 t_max_err PythonInterpreter::execfile_path(char* path)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
-    PyObject* pval = NULL;
-    FILE* fhandle = NULL;
-
-    if (path == NULL) {
-        goto error;
+    if (path == nullptr) {
+        this->log_error((char*)"execfile_path: path is null");
+        return MAX_ERR_GENERIC;
     }
 
-    fhandle = fopen(path, "r+");
-
-    if (fhandle == NULL) {
-        this->log_error((char*)"could not open file");
-        goto error;
+    // RAII file handle
+    FileGuard fhandle(path, "r");
+    if (!fhandle.is_open()) {
+        this->log_error((char*)"could not open file: %s", path);
+        return MAX_ERR_GENERIC;
     }
 
-    pval = PyRun_File(fhandle, path, Py_file_input, this->p_globals, this->p_globals);
+    PyObject* pval = PyRun_File(fhandle, path, Py_file_input,
+                                this->p_globals, this->p_globals);
 
-    if (pval == NULL) {
-        fclose(fhandle);
-        goto error;
+    if (pval == nullptr) {
+        this->handle_error((char*)"execfile");
+        return MAX_ERR_GENERIC;
     }
 
-    // success cleanup
-    fclose(fhandle);
     Py_DECREF(pval);
-    PyGILState_Release(gstate);
+    this->log_debug((char*)"executed file: %s", path);
     return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"execfile");
-    Py_XDECREF(pval);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
+    // File automatically closed by FileGuard destructor
 }
 
 
 /**
  * @brief A helper function to evaluate Max text as a Python expression.
  *
- * @param text c-string
+ * @param text c-string (will be freed by this function)
  *
- * @return PyObject* pointer to python object
+ * @return PyObject* pointer to python object (new reference, caller owns)
  */
 PyObject* PythonInterpreter::eval_text(char* text)
 {
-    PyGILState_STATE gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
-    int is_eval = 1;
-    PyObject* co = NULL;
-    PyObject* pval = NULL;
+    PyObject* co = nullptr;
+    PyObject* pval = nullptr;
 
+    // Try to compile as expression first
     co = Py_CompileString(text, this->p_name->s_name, Py_eval_input);
 
     if (PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        // If syntax error, try as statement
         PyErr_Clear();
         co = Py_CompileString(text, this->p_name->s_name, Py_single_input);
-        is_eval = 0;
     }
 
-    if (co == NULL) { // can be eval-co or exec-co or NULL here
+    if (co == nullptr) {
         sysmem_freeptr(text);
-        goto error;
+        this->handle_error((char*)"python code compilation failed");
+        Py_INCREF(Py_None);
+        return Py_None;
     }
+
     sysmem_freeptr(text);
 
     pval = PyEval_EvalCode(co, this->p_globals, this->p_globals);
-    if (pval == NULL) {
-        goto error;
-    }
     Py_DECREF(co);
 
-    if (!is_eval) {
-        PyGILState_Release(gstate);
+    if (pval == nullptr) {
+        this->handle_error((char*)"python code evaluation failed");
+        Py_INCREF(Py_None);
+        return Py_None;
     }
 
-    return pval;
-
-error:
-    this->handle_error((char*)"python code evaluation failed");
-    PyGILState_Release(gstate);
-    Py_RETURN_NONE;
+    return pval; // Caller owns the reference
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1281,82 +1408,84 @@ t_max_err PythonInterpreter::eval_text_to_outlet(long argc, t_atom* argv, int of
  */
 t_max_err PythonInterpreter::call(t_symbol* s, long argc, t_atom* argv, void* outlet)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
-    char* callable_name = NULL;
-    PyObject* py_argslist = NULL;
-    PyObject* pval = NULL;
-    PyObject* py_callable = NULL;
-    // python list
-    PyObject* py_args = NULL; // python tuple
+    PyObject* py_callable = nullptr;
+    PyObject* py_argslist = nullptr;
+    PyObject* py_args = nullptr;
+    PyObject* pval = nullptr;
+    t_max_err result = MAX_ERR_GENERIC;
 
     // first atom in argv must be a symbol
-    if (argv->a_type != A_SYM) {
-        this->log_error((char*)"first atom must be a symbol!");
-        goto error;
-
-    } else {
-        callable_name = atom_getsym(argv)->s_name;
-        this->log_debug((char*)"callable_name: %s", callable_name);
+    if (argc < 1 || argv->a_type != A_SYM) {
+        this->log_error((char*)"call: first argument must be a symbol (callable name)");
+        return MAX_ERR_GENERIC;
     }
 
-    py_callable = PyRun_String(callable_name, Py_eval_input, this->p_globals,
-                               this->p_globals);
-    if (py_callable == NULL) {
-        this->log_error((char*)"could not evaluate %s", callable_name);
-        goto error;
+    char* callable_name = atom_getsym(argv)->s_name;
+    this->log_debug((char*)"callable_name: %s", callable_name);
+
+    py_callable = PyRun_String(callable_name, Py_eval_input,
+                               this->p_globals, this->p_globals);
+    if (py_callable == nullptr) {
+        this->handle_error((char*)"could not evaluate %s", callable_name);
+        goto cleanup;
+    }
+
+    if (!PyCallable_Check(py_callable)) {
+        this->log_error((char*)"%s is not callable", callable_name);
+        goto cleanup;
     }
 
     py_argslist = this->atoms_to_plist_with_offset(argc, argv, 1);
-    if (py_argslist == NULL) {
+    if (py_argslist == nullptr) {
         this->log_error((char*)"atom to py list conversion failed");
-        goto error;
+        goto cleanup;
     }
 
-    this->log_debug((char*)"length of argc:%ld list: %d", argc,
-           PyList_Size(py_argslist));
+    this->log_debug((char*)"argc:%ld list size: %d", argc, (int)PyList_Size(py_argslist));
 
-    // convert py_args to tuple
+    // Try calling with unpacked arguments
     py_args = PyList_AsTuple(py_argslist);
-    if (py_args == NULL) {
+    if (py_args == nullptr) {
         this->log_error((char*)"unable to convert args list to tuple");
-        goto error;
+        goto cleanup;
     }
 
     pval = PyObject_CallObject(py_callable, py_args);
-    if (!PyErr_ExceptionMatches(PyExc_TypeError)) {
-        if (pval == NULL) {
-            this->log_error((char*)"unable to apply callable(*args)");
-            goto error;
+    if (pval != nullptr) {
+        // Success with unpacked arguments
+        this->handle_output(outlet, pval); // handle_output takes ownership
+        result = MAX_ERR_NONE;
+        goto cleanup;
+    }
+
+    // If TypeError, try calling with list as single argument
+    if (PyErr_ExceptionMatches(PyExc_TypeError)) {
+        PyErr_Clear();
+        Py_XDECREF(py_args);
+        py_args = nullptr;
+
+        pval = PyObject_CallFunctionObjArgs(py_callable, py_argslist, nullptr);
+        if (pval != nullptr) {
+            this->handle_output(outlet, pval); // handle_output takes ownership
+            result = MAX_ERR_NONE;
+            goto cleanup;
         }
-        goto handle_output;
     }
-    PyErr_Clear();
 
-    pval = PyObject_CallFunctionObjArgs(py_callable, py_argslist, NULL);
-    if (pval == NULL) {
-        this->log_error((char*)"could not retrieve result of callable(list)");
-        goto error;
-    }
-    goto handle_output; // this is redundant but safer in case code is added
+    this->handle_error((char*)"call %s failed", callable_name);
 
-handle_output:
-    this->handle_output(outlet, pval);
-    // success cleanup
+cleanup:
     Py_XDECREF(py_callable);
     Py_XDECREF(py_argslist);
-    PyGILState_Release(gstate);
-    return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"method %s", s->s_name);
-    // cleanup
-    Py_XDECREF(py_callable);
-    Py_XDECREF(py_argslist);
-    Py_XDECREF(pval);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
+    Py_XDECREF(py_args);
+    // Note: pval ownership transferred to handle_output if successful
+    if (result != MAX_ERR_NONE) {
+        Py_XDECREF(pval);
+    }
+    return result;
 }
 
 /**
@@ -1368,60 +1497,48 @@ error:
  * @return t_max_err error code
  *
  * The first item of the Max list must be a symbol. This is converted into a
- * python variable and the rest of the list is assignment to this variable in
+ * python variable and the rest of the list is assigned to this variable in
  * the object's python namespace.
  */
 t_max_err PythonInterpreter::assign(t_symbol* s, long argc, t_atom* argv)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    GILGuard gil;
 
-    char* varname = NULL;
-    PyObject* list = NULL;
-    int res;
+    PyObject* list = nullptr;
 
-    if (s != gensym(""))
-        this->log_debug((char*)"s: %s", s->s_name);
+    if (s != gensym("")) {
+        this->log_debug((char*)"symbol: %s", s->s_name);
+    }
 
     // first atom in argv must be a symbol
-    if (argv->a_type != A_SYM) {
-        this->log_error((char*)"first atom must be a symbol!");
-        goto error;
-
-    } else {
-        varname = atom_getsym(argv)->s_name;
-        this->log_debug((char*)"varname: %s", varname);
+    if (argc < 1 || argv->a_type != A_SYM) {
+        this->log_error((char*)"assign: first argument must be a symbol (variable name)");
+        return MAX_ERR_GENERIC;
     }
+
+    char* varname = atom_getsym(argv)->s_name;
+    this->log_debug((char*)"varname: %s", varname);
 
     list = this->atoms_to_plist_with_offset(argc, argv, 1);
-    if (list == NULL) {
+    if (list == nullptr) {
         this->log_error((char*)"atom to py list conversion failed");
-        goto error;
+        return MAX_ERR_GENERIC;
     }
 
-    if (PyList_Size(list) != argc - 1) {
-        this->log_error((char*)"PyList_Size(list) != argc - 1");
-        goto error;
-    } else {
-        this->log_debug((char*)"length of list: %d", PyList_Size(list));
+    Py_ssize_t list_size = PyList_Size(list);
+    this->log_debug((char*)"list length: %d", (int)list_size);
+
+    // Assign list to varname in object namespace
+    if (PyDict_SetItemString(this->p_globals, varname, list) < 0) {
+        this->handle_error((char*)"assign varname to list failed");
+        Py_DECREF(list);
+        return MAX_ERR_GENERIC;
     }
 
-    // finally, assign list to varname in object namespace
-    this->log_debug((char*)"setting %s to list in namespace", varname);
-    // following does not steal ref to list
-    res = PyDict_SetItemString(this->p_globals, varname, list);
-    if (res != 0) {
-        this->log_error((char*)"assign varname to list failed");
-        goto error;
-    }
-    PyGILState_Release(gstate);
+    Py_DECREF(list); // Dict took a reference
+    this->log_debug((char*)"assigned %s successfully", varname);
     return MAX_ERR_NONE;
-
-error:
-    this->handle_error((char*)"assign %s", s->s_name);
-    Py_XDECREF(list);
-    PyGILState_Release(gstate);
-    return MAX_ERR_GENERIC;
 }
 
 
