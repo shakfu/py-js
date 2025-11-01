@@ -157,7 +157,7 @@ class PythonInterpreter
         PyObject* p_globals;        //!< per object 'globals' python namespace (owned reference)
 
         // Thread safety
-        mutable std::mutex m_mutex; //!< mutex for thread-safe access to member variables
+        mutable std::recursive_mutex m_mutex; //!< recursive mutex for thread-safe access to member variables
 
         // Static shared interpreter state
         static int s_interpreter_count;          //!< reference count for interpreter lifecycle
@@ -518,7 +518,7 @@ void PythonInterpreter::print_atom(int argc, t_atom* argv)
  */
 t_max_err PythonInterpreter::syspath_append(char* path)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     t_max_err err = MAX_ERR_NONE;
@@ -1067,6 +1067,8 @@ error:
  */
 t_max_err PythonInterpreter::handle_output(void* outlet, PyObject* pval)
 {
+    GILGuard gil;  // Must hold GIL for all Python C API calls
+
     if (pval == NULL) {
         this->log_error((char*)"cannot handle NULL value");
         return MAX_ERR_GENERIC;
@@ -1094,11 +1096,13 @@ t_max_err PythonInterpreter::handle_output(void* outlet, PyObject* pval)
     }
 
     else if (pval == Py_None) {
+        Py_DECREF(pval);  // Need to release the reference to Py_None
         return MAX_ERR_GENERIC;
     }
 
     else {
         this->log_error((char*)"cannot handle this type of value");
+        Py_DECREF(pval);  // Need to release the reference
         return MAX_ERR_GENERIC;
     }
 }
@@ -1115,7 +1119,7 @@ t_max_err PythonInterpreter::handle_output(void* outlet, PyObject* pval)
  */
 t_max_err PythonInterpreter::import_module(char* module)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     PyObject* pmodule = nullptr;
@@ -1152,7 +1156,7 @@ t_max_err PythonInterpreter::import_module(char* module)
  */
 PyObject* PythonInterpreter::eval_pcode(char* pcode)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     PyObject* pval = PyRun_String(pcode,
@@ -1176,7 +1180,7 @@ PyObject* PythonInterpreter::eval_pcode(char* pcode)
  */
 t_max_err PythonInterpreter::exec_pcode(char* pcode)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     PyObject* pval = PyRun_String(pcode,
@@ -1201,7 +1205,7 @@ t_max_err PythonInterpreter::exec_pcode(char* pcode)
  */
 t_max_err PythonInterpreter::execfile_path(char* path)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     if (path == nullptr) {
@@ -1240,7 +1244,7 @@ t_max_err PythonInterpreter::execfile_path(char* path)
  */
 PyObject* PythonInterpreter::eval_text(char* text)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     PyObject* co = nullptr;
@@ -1408,7 +1412,7 @@ t_max_err PythonInterpreter::eval_text_to_outlet(long argc, t_atom* argv, int of
  */
 t_max_err PythonInterpreter::call(t_symbol* s, long argc, t_atom* argv, void* outlet)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     PyObject* py_callable = nullptr;
@@ -1502,7 +1506,7 @@ cleanup:
  */
 t_max_err PythonInterpreter::assign(t_symbol* s, long argc, t_atom* argv)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     GILGuard gil;
 
     PyObject* list = nullptr;
