@@ -99,7 +99,7 @@ if(BUILD_NETWORKING_EXTERNALS)
 list(APPEND BUILD_TARGETS zedit zpy ztp jmx)
 endif()
 
-set(DEMO_EXTERNALS cmx demo mx)
+set(DEMO_EXTERNALS cmx demo mx kernel)
 if(BUILD_DEMO_EXTERNALS)
 list(APPEND BUILD_TARGETS ${DEMO_EXTERNALS})
 endif()

@@ -1,0 +1,2 @@
+.dockerignore
+build_emscripten.sh
