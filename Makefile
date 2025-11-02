@@ -381,7 +381,7 @@ relocatable-pkg-nopip: clean-framework-pkg
 		pyjs pyjs-static pyjs-shared pyjs-framework pyjs-framework-pkg \
 		mamba mamba-static mamba-shared mamba-framework mamba-framework-pkg \
 		cobra cobra-static cobra-shared cobra-framework cobra-framework-pkg \
-		mxpy krait jmx ztp zpy zedit xpyc python-service mpyx kernel
+		mxpy krait jmx ztp zpy zedit xpyc python-service mpyx
 
 
 py: clean-cmake-cache clean-externals
@@ -499,9 +499,6 @@ zpy: clean-cmake-cache clean-externals
 	$(call build-target,$@,local)
 
 ztp: clean-cmake-cache clean-externals
-	$(call build-target,$@,local)
-
-kernel: clean-cmake-cache clean-externals
 	$(call build-target,$@,local)
 
 python-service: clean-python-service
