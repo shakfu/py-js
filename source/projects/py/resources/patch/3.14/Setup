@@ -1,0 +1,238 @@
+# -*- makefile -*-
+# -----------------------------------------------------------------------------
+# VARS
+
+DESTLIB=$(LIBDEST)
+MACHDESTLIB=$(BINLIBDEST)
+DESTPATH=
+SITEPATH=
+TESTPATH=
+COREPYTHONPATH=$(DESTPATH)$(SITEPATH)$(TESTPATH)
+PYTHONPATH=$(COREPYTHONPATH)
+
+# ---
+# Built-in modules required to get a functioning interpreter are listed in
+# Modules/Setup.bootstrap.
+
+# ---
+# The rest of the modules listed in this file are all commented out by
+# default.  Usually they can be detected and built as dynamically
+# loaded modules by setup.py.  If you're on a platform that doesn't
+# support dynamic loading, want to compile modules statically into the
+# Python binary, or need to specify some odd set of compiler switches,
+# you can uncomment the appropriate lines below.
+
+# Uncommenting the following line tells makesetup that all following
+# modules are to be built as shared libraries (see above for more
+# detail; also note that *static* or *disabled* cancels this effect):
+
+#*shared*
+
+# Modules that should always be present (POSIX and Windows):
+
+#_asyncio _asynciomodule.c
+#_bisect _bisectmodule.c
+#_csv _csv.c
+#_datetime _datetimemodule.c
+#_decimal _decimal/_decimal.c
+#_heapq _heapqmodule.c
+#_interpchannels _interpchannelsmodule.c
+#_interpqueues _interpqueuesmodule.c
+#_interpreters _interpretersmodule.c
+#_json _json.c
+#_lsprof _lsprof.c rotatingtree.c
+#_multiprocessing -I$(srcdir)/Modules/_multiprocessing _multiprocessing/multiprocessing.c _multiprocessing/semaphore.c
+#_opcode _opcode.c
+#_pickle _pickle.c
+#_queue _queuemodule.c
+#_random _randommodule.c
+#_socket socketmodule.c
+#_statistics _statisticsmodule.c
+#_struct _struct.c
+#_types _typesmodule.c
+#_typing _typingmodule.c
+#_zoneinfo _zoneinfo.c
+#array arraymodule.c
+#binascii binascii.c
+#cmath cmathmodule.c
+#math mathmodule.c
+#mmap mmapmodule.c
+#select selectmodule.c
+#_sysconfig _sysconfig.c
+
+# XML
+#_elementtree _elementtree.c
+#pyexpat pyexpat.c
+
+# hashing builtins
+#_blake2 blake2module.c
+#_md5 md5module.c
+#_sha1 sha1module.c
+#_sha2 sha2module.c
+#_sha3 sha3module.c
+#_hmac hmacmodule.c
+
+# text encodings and unicode
+#_codecs_cn cjkcodecs/_codecs_cn.c
+#_codecs_hk cjkcodecs/_codecs_hk.c
+#_codecs_iso2022 cjkcodecs/_codecs_iso2022.c
+#_codecs_jp cjkcodecs/_codecs_jp.c
+#_codecs_kr cjkcodecs/_codecs_kr.c
+#_codecs_tw cjkcodecs/_codecs_tw.c
+#_multibytecodec cjkcodecs/multibytecodec.c
+#unicodedata unicodedata.c
+
+# Modules with some UNIX dependencies
+
+#_posixsubprocess _posixsubprocess.c
+#_posixshmem -I$(srcdir)/Modules/_multiprocessing _multiprocessing/posixshmem.c -lrt
+#fcntl fcntlmodule.c
+#grp grpmodule.c
+#resource resource.c
+#syslog syslogmodule.c
+#termios termios.c
+
+# Modules that require external libraries.
+
+#_bz2 _bz2module.c -lbz2
+#_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -ldl -lffi -DHAVE_FFI_PREP_CIF_VAR -DHAVE_FFI_PREP_CLOSURE_LOC -DHAVE_FFI_CLOSURE_ALLOC
+# The _dbm module supports NDBM, GDBM with compat module, and Berkeley DB.
+#_dbm _dbmmodule.c -lgdbm_compat -DUSE_GDBM_COMPAT
+#_gdbm _gdbmmodule.c -lgdbm
+#_lzma _lzmamodule.c -llzma
+#_uuid _uuidmodule.c -luuid
+#_zstd _zstd/_zstdmodule.c -lzstd -I$(srcdir)/Modules/_zstd
+#zlib  zlibmodule.c -lz
+
+# The readline module also supports libeditline (-leditline).
+# Some systems may require -ltermcap or -ltermlib.
+#readline readline.c -lreadline -ltermcap
+
+# OpenSSL bindings
+#_ssl _ssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) $(OPENSSL_LIBS)
+#_hashlib _hashopenssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) -lcrypto
+
+# To statically link OpenSSL:
+# _ssl _ssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) \
+#     -l:libssl.a -Wl,--exclude-libs,libssl.a \
+#     -l:libcrypto.a -Wl,--exclude-libs,libcrypto.a
+# _hashlib _hashopenssl.c $(OPENSSL_INCLUDES) $(OPENSSL_LDFLAGS) \
+#     -l:libcrypto.a -Wl,--exclude-libs,libcrypto.a
+
+# The _tkinter module.
+#
+# The command for _tkinter is long and site specific.  Please
+# uncomment and/or edit those parts as indicated.  If you don't have a
+# specific extension (e.g. Tix or BLT), leave the corresponding line
+# commented out.  (Leave the trailing backslashes in!  If you
+# experience strange errors, you may want to join all uncommented
+# lines and remove the backslashes -- the backslash interpretation is
+# done by the shell's "read" command and it may not be implemented on
+# every system.
+
+# *** Always uncomment this (leave the leading underscore in!):
+#_tkinter _tkinter.c tkappinit.c -DWITH_APPINIT $(TCLTK_INCLUDES) $(TCLTK_LIBS) \
+# *** Uncomment and edit to reflect where your Tcl/Tk libraries are:
+#	-L/usr/local/lib \
+# *** Uncomment and edit to reflect where your Tcl/Tk headers are:
+#	-I/usr/local/include \
+# *** Uncomment and edit to reflect where your X11 header files are:
+#	-I/usr/X11R6/include \
+# *** Or uncomment this for Solaris:
+#	-I/usr/openwin/include \
+# *** Uncomment and edit for Tix extension only:
+#	-DWITH_TIX -ltix8.1.8.2 \
+# *** Uncomment and edit for BLT extension only:
+#	-DWITH_BLT -I/usr/local/blt/blt8.0-unoff/include -lBLT8.0 \
+# *** Uncomment and edit for PIL (TkImaging) extension only:
+#     (See http://www.pythonware.com/products/pil/ for more info)
+#	-DWITH_PIL -I../Extensions/Imaging/libImaging  tkImaging.c \
+# *** Uncomment and edit for TOGL extension only:
+#	-DWITH_TOGL togl.c \
+# *** Uncomment and edit to reflect where your X11 libraries are:
+#	-L/usr/X11R6/lib \
+# *** Or uncomment this for Solaris:
+#	-L/usr/openwin/lib \
+# *** Uncomment these for TOGL extension only:
+#	-lGL -lGLU -lXext -lXmu \
+# *** Uncomment for AIX:
+#	-lld \
+# *** Always uncomment this; X11 libraries to link with:
+#	-lX11
+
+# Some system have -lcurses
+#_curses -lncurses -lncursesw -ltermcap _cursesmodule.c
+#_curses_panel -lpanel -lncurses _curses_panel.c
+
+# macOS specific module, needs SystemConfiguration and CoreFoundation framework
+# _scproxy _scproxy.c
+
+# Examples
+
+#xx xxmodule.c
+#xxlimited xxlimited.c
+#xxlimited_35 xxlimited_35.c
+#xxsubtype xxsubtype.c
+
+# Testing
+
+#_xxtestfuzz _xxtestfuzz/_xxtestfuzz.c _xxtestfuzz/fuzzer.c
+#_testbuffer _testbuffer.c
+#_testinternalcapi _testinternalcapi.c
+
+# Some testing modules MUST be built as shared libraries.
+
+#*shared*
+#_ctypes_test _ctypes/_ctypes_test.c
+#_remote_debugging _remote_debugging_module.c
+#_testcapi _testcapimodule.c
+#_testimportmultiple _testimportmultiple.c
+#_testmultiphase _testmultiphase.c
+#_testsinglephase _testsinglephase.c
+
+# ---
+# Uncommenting the following line tells makesetup that all following modules
+# are not built (see above for more detail).
+#
+#*disabled*
+#
+# _sqlite3 _tkinter _curses pyexpat
+# _codecs_jp _codecs_kr _codecs_tw unicodedata
+#
+
+# -----------------------------------------------------------------------------
+# DISABLED
+
+*disabled*
+
+_codecs_cn cjkcodecs/_codecs_cn.c
+_codecs_hk cjkcodecs/_codecs_hk.c
+_codecs_iso2022 cjkcodecs/_codecs_iso2022.c
+_codecs_jp cjkcodecs/_codecs_jp.c
+_codecs_kr cjkcodecs/_codecs_kr.c
+_codecs_tw cjkcodecs/_codecs_tw.c
+_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -ldl -lffi -DHAVE_FFI_PREP_CIF_VAR -DHAVE_FFI_PREP_CLOSURE_LOC -DHAVE_FFI_CLOSURE_ALLOC
+_ctypes_test _ctypes/_ctypes_test.c
+_curses -lncurses -lncursesw -ltermcap _cursesmodule.c
+_curses_panel -lpanel -lncurses _curses_panel.c
+_dbm _dbmmodule.c -lgdbm_compat -DUSE_GDBM_COMPAT
+_gdbm _gdbmmodule.c -lgdbm
+#_multibytecodec cjkcodecs/multibytecodec.c
+_testbuffer _testbuffer.c
+_testcapi _testcapimodule.c
+_testimportmultiple _testimportmultiple.c
+_testinternalcapi _testinternalcapi.c
+_testmultiphase _testmultiphase.c
+# _testexternalinspection _testexternalinspection
+_tkinter _tkinter.c tkappinit.c -DWITH_APPINIT $(TCLTK_INCLUDES) $(TCLTK_LIBS) \
+_uuid _uuidmodule.c -luuid
+_xxtestfuzz _xxtestfuzz/_xxtestfuzz.c _xxtestfuzz/fuzzer.c
+ossaudiodev ossaudiodev.c
+readline readline.c -lreadline -ltermcap
+#unicodedata unicodedata.c
+xx xxmodule.c
+xxlimited xxlimited.c
+xxlimited_35 xxlimited_35.c
+xxsubtype xxsubtype.c
+
+

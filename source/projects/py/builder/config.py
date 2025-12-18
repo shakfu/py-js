@@ -485,7 +485,7 @@ class Project:
     release_dir = HOME / "Downloads" / "PYJS_RELEASE"
 
     # settings
-    mac_dep_target = "10.13"
+    mac_dep_target = "10.15"
 
     def to_dict(self) -> dict:
         return {
