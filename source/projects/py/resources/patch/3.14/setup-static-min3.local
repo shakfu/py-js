@@ -38,15 +38,15 @@ time -DPy_BUILD_CORE_BUILTIN -I$(srcdir)/Include/internal timemodule.c
 
 _asyncio _asynciomodule.c
 _bisect _bisectmodule.c
-_blake2 _blake2/blake2module.c _blake2/blake2b_impl.c _blake2/blake2s_impl.c
+# _blake2 blake2module.c
 _bz2 _bz2module.c -I$(BZIP2)/include -L$(BZIP2)/lib $(BZIP2)/lib/libbz2.a
-_contextvars _contextvarsmodule.c
 _csv _csv.c
 _datetime _datetimemodule.c
 # _decimal _decimal/_decimal.c -DCONFIG_64=1
 _elementtree _elementtree.c
 _hashlib _hashopenssl.c -I$(OPENSSL)/include -L$(OPENSSL)/lib $(OPENSSL)/lib/libcrypto.a
 _heapq _heapqmodule.c
+# _hmac hmacmodule.c
 _interpchannels _interpchannelsmodule.c
 _interpqueues _interpqueuesmodule.c
 _interpreters _interpretersmodule.c
@@ -96,16 +96,18 @@ _codecs_tw
 _ctypes
 _curses
 _curses_panel
-_decimal
 _dbm
+_decimal
+_remote_debugging
 _scproxy
 _sqlite3
+_testexternalinspection
 _tkinter
+_zstd
 readline
 resource
 syslog
 termios
 xxlimited
 xxlimited_35
-_testexternalinspection
 # end 
