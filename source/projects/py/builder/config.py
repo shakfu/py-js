@@ -521,6 +521,10 @@ class Project:
     def __hash__(self):
         return hash((self.name, self.python.name, self.mac_dep_target))
 
+    def setup(self):
+        if not self.support.exists():
+            self.support.mkdir()
+
     def cache_set(self, **kwds):
         config = configparser.ConfigParser()
         config["cache"] = kwds

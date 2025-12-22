@@ -309,6 +309,7 @@ class Builder:
     ):
         self.product = product
         self.project = project or Project()
+        self.project.setup()
         self.depends_on = depends_on or []
         self.settings = Settings(**settings)
         self.log = logging.getLogger(self.__class__.__name__)
