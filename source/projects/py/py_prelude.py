@@ -3,17 +3,14 @@
 This module is automatically loaded into the global namespace of every `py`
 object instance.
 """
-
-import ast
 import os
 import subprocess
 import shlex
 import collections.abc
-import itertools
 import functools
 from keyword import iskeyword as is_keyword
 from inspect import signature as __signature
-from typing import Any, Optional, Callable
+from typing import Any
 
 
 # ---------------------------------------------------------
@@ -27,62 +24,34 @@ EDITOR = "Sublime Text"
 # ---------------------------------------------------------
 # private utilities
 
-
-def __to_val(elem: Any, gdict: Optional[dict] = None) -> Any:
-    if not gdict:
-        gdict = globals()
-    if isinstance(elem, (int, float)):
-        return elem
-    elif isinstance(elem, dict):
-        return elem
-    elif isinstance(elem, tuple):
-        return elem
-    elif isinstance(elem, set):
-        return elem
-    elif isinstance(elem, str):
-        val = None
-        try:
-            val = ast.literal_eval(elem)
-        except ValueError:
-            if elem in gdict:
-                val = eval(elem, globals=gdict)
-        except SyntaxError:
-            print(elem)
-            return
-        return val
-    elif callable(elem):
-        return elem
-    else:
-        return __to_val(repr(type(elem)))
+def is_sequence(obj):
+    if isinstance(obj, str):
+        return False
+    return isinstance(obj, collections.abc.Sequence)
 
 
-def __to_fn(s: str, gdict: Optional[dict] = None) -> Callable:
-    """returns a function from a string"""
-    if not gdict:
-        gdict = globals()
-    assert s in gdict, "function not defined"
-    fn = eval(s, globals=gdict)
-    assert callable(fn), "not a callable"
-    return fn
+def __compose(f, g):
+    """f . g"""
+    return lambda x: f(g(x))
 
 
-def __analyze(s: str, gdict: Optional[dict] = None) -> tuple[list[Callable], list[Any], list[tuple[Any, Any]]]:
-    """returns a list of functions, arguments, and keyword arguments"""
-    if not gdict:
-        gdict = globals()
+def __analyze(s: str):
     fs = []
     args = []
     kwargs = []
     str_args = s.split()
     for str_arg in str_args:
-        if "=" in str_arg:
-            k, v = str_arg.split("=")
-            kwargs.append((eval(repr(k), globals=gdict), eval(v, globals=gdict)))
+        if '=' in str_arg:
+            k, v = str_arg.split('=')
+            kwargs.append((
+                eval(repr(k), locals(), globals()),
+                eval(v, locals(), globals())
+            ))
         else:
             try:
-                elem = eval(str_arg, globals=gdict)
+                elem = eval(str_arg, locals(), globals())
             except SyntaxError:
-                elem = eval(repr(str_arg), globals=gdict)
+                elem = eval(repr(str_arg), locals(), globals())
             if callable(elem):
                 fs.append(elem)
             else:
@@ -90,150 +59,19 @@ def __analyze(s: str, gdict: Optional[dict] = None) -> tuple[list[Callable], lis
     return fs, args, kwargs
 
 
-def __to_string(func, *args, **kwds) -> str:
-    """creates max-friendly function calling syntax arguments
 
-    >>> __to_string('f2', 1, 2, 3, a=10, b=[1,2])
-    'f2 1 2 3 a : 10 b : 1 2'
-    """
-    res = [func]
-    res.extend(args)
-    res.extend(dict_to_list(kwds))
-    return " ".join(str(i) for i in res)
-
-
-def __from_list(
-    xs: list[str], gdict: Optional[dict] = None
-) -> tuple[Callable, tuple[Any, ...], dict[str, Any]]:
-    """converts a Max-friendly function calling
-    syntax from a list to py objects
-
-    >>> def f(x, y, z, a=1, b=2): return x + y + z
-    >>> xs = ['f, '1', '2', '3', 'a', ':', '5', '6', 'b', ':', '10']
-    >>> __from_list(xs)
-    (<function f at 0x1008fc5e0>, (1, 2, 3), {'a': [5, 6], 'b': 10})
-    """
-    args = []
-    kwds = []
-    f = __to_fn(xs[0], gdict)
-    xs = xs[1:]
-    if ":" in xs:
-        z = xs.index(":")
-        kwds = xs[z - 1 :]
-        args = [__to_val(arg, gdict) for arg in xs[: z - 1]]
-    else:
-        kwds = []
-        args = xs
-    return f, tuple(args), list_to_dict(kwds, eval_values=True)
-
-
-def __from_string(
-    s: str, gdict: Optional[dict] = None
-) -> tuple[Callable, tuple[Any, ...], dict[str, Any]]:
-    """converts a max-friendly function calling
-    syntax from a string to py objects
-
-    >>> def f(x, y, z, a=1, b=2): return x + y + z
-    >>> s = 'f 1 2 3 a : 5 6 b : 10'
-    >>> __from_string(s)
-    (<function f at 0x1008fc5e0>, (1, 2, 3), {'a': [5, 6], 'b': 10})
-    """
-    xs = s.split()
-    return __from_list(xs, gdict)
-
-
-# ---------------------------------------------------------
-# public utilities
-
-def flatten(a):
-    """flatten nested iterables into a single list
-    
-    >>> flatten([[1,2], [3,4], [5])
-    [1, 2, 3, 4, 5]
-    """
-    return list(itertools.chain.from_iterable(a))
-
-def compose(*funcs: tuple[Callable], reverse=True) -> Callable:
-    """returns a function that is the composition of `funcs`
-
-    >>> def f1(x): return x+1
-    >>> def f2(x): return x+2
-    >>> def f3(x): return x+3
-    >>> f = compose(f1, f2, f3)
-    >>> f(10)
-    16
-    """
-    if reverse:
-        funcs = reversed(funcs)
-    return lambda x: functools.reduce(lambda acc, f: f(acc), funcs, x)
-
-
-def is_sequence(obj) -> bool:
-    """returns True if obj is an ordered collection
-
-    >>> is_sequence([1, 2, 3])
-    True
-
-    >>> is_sequence((1, 2, 3))
-    True
-
-    >>> is_sequence({1, 2, 3})
-    False
-    """
-    if isinstance(obj, str):
-        return False
-    return isinstance(obj, collections.abc.Sequence)
-
-
-def is_iterable(obj) -> bool:
-    """returns True if obj is iterable
-
-    >>> is_iterable([1, 2, 3])
-    True
-
-    >>> is_iterable((1, 2, 3))
-    True
-
-    >>> is_iterable({'a': 1, 'b': 2})
-    True
-
-    >>> is_iterable('hello')
-    True
-    """
-    if hasattr(obj, "__iter__"):
-        return True
-    if isinstance(obj, collections.abc.Iterable):
-        return True
-    try:
-        iter(obj)
-        return True
-    except TypeError:
-        pass
-    return False
-
-
-def list_to_dict(xs: list, eval_values=False) -> dict:
-    """converts a list of strings to a dictionary
-
-    >>> list_to_dict(['a', ':', '1', 'b', ':', '2', '3'])
-    {'a': '1', 'b': ['2', '3']}
-
-    >>> list_to_dict(['a', ':', '1', 'b', ':', '2', '3'], eval_values=True)
-    {'a': 1, 'b': [2, 3]}
-
-    claude.ai's simplification of my version!
-    """
-    print("xs", xs)
+def __list_to_dict(xs: list) -> dict:
+    """claude.ai's simplification of my version!"""
     result = {}
     if not xs:
         return result
-
+    
     # Find all separator positions
-    seps = [i for i, x in enumerate(xs) if x == ":"]
-
+    seps = [i for i, x in enumerate(xs) if x == ':']
+    
     if not seps:
         return result
-
+    
     # Process each key-value pair
     prev_idx = 0
     for i in range(len(seps)):
@@ -241,40 +79,33 @@ def list_to_dict(xs: list, eval_values=False) -> dict:
         key = xs[prev_idx]
 
         if not isinstance(key, str) or is_keyword(key) or not key.isidentifier():
-            raise ValueError(f"key {key} is not a valid python identifier")
+            raise ValueError(f'key {key} is not a valid python identifier')
 
         # Determine end of current value section
         if i < len(seps) - 1:
             end_idx = seps[i + 1] - 1
         else:
             end_idx = len(xs)
-
+        
         # Extract values
-        values = xs[sep_idx + 1 : end_idx]
-        if eval_values:
-            values = [__to_val(val) for val in values]
-
+        values = xs[sep_idx + 1:end_idx]
+        
         # If single value, don't keep it as a list
         if len(values) == 1:
             values = values[0]
-
+            
         result[key] = values
         prev_idx = end_idx
-
+    
     return result
 
 
 # ---------------------------------------------------------
-# funcs used by methods
+# funcs are used by methods
 
 
-def shell(cmd: str, err_func: Optional[Callable] = None) -> Optional[Any]:
-    """runs a shell command and returns the result
 
-    >>> shell('echo "hello"')
-    'hello'
-
-    """
+def shell(cmd: str, err_func=None):
     result = None
     try:
         elems = shlex.split(cmd)
@@ -290,10 +121,10 @@ def shell(cmd: str, err_func: Optional[Callable] = None) -> Optional[Any]:
         return result
 
 
-def dict_to_list(py_dict: dict) -> list:
-    """returns a list of strings that represent a python dict in Max dict-syntax
-
-    >>> dict_to_list({'a':1, 'b': [1,2,3,4]})
+def out_dict(py_dict: dict):
+    """Output python dict in Max dict-syntax
+    
+    >>> out_dict({'a':1, 'b': [1,2,3,4]})
     ['a', ':', 1, 'b', ':', 1, 2, 3, 4]
     """
     res = []
@@ -308,26 +139,30 @@ def dict_to_list(py_dict: dict) -> list:
     return res
 
 
-def pipe(s: str, gdict: Optional[dict] = None) -> Any:
+def pipe(s: str):
     """pipe variable(s) through a list of functions
 
-    >>> f = lambda x: x + 100
-    >>> g = lambda x: x * 2
+    With a single variable a list of function:
 
-    >>> pipe('10 f g')
-    220
+    >>> pipe('10 math.sin math.cos')
+    0.8556343548213665
 
-    Acts like a chain of maps with many variables and many functions:
+    Acts like a chain of maps With many variables
+    and many functions:
 
-    >>> pipe('f g 10 20 30')
-    [220, 240, 260]
+    >>> pipe('math.sin math.cos 10 20 30')
+    [0.8556343548213665, 0.6114178044194122, 0.5503344099628433]
 
-    Can apply results to a single function like `sum` in this case:
+    Consistent with the pipe function can apply several
+    variables to a single function like `sum` in this case:
 
-    >>> pipe('f g sum 10 20 30')
-    720
+    >>> pipe('math.sin math.cos sum 10 20 30')
+    2.017386569203622
+
+    :param      s:    code string
+    :type       s:    str
     """
-    fs, args, kwargs = __analyze(s, gdict)
+    fs, args, kwargs = __analyze(s)
     if args and fs:
         if len(args) == 1:
             arg = args[:].pop()
@@ -344,19 +179,23 @@ def pipe(s: str, gdict: Optional[dict] = None) -> Any:
                 return args
 
 
-def call(s: str) -> Any:
-    """Applies args to a function
+
+def call(s: str):
+    """
+    Applies args to a function
 
     >>> call('sum 1 2 3')
     6
 
     >>> call("add 'abc' 'def'")
     abcdef
-
+    
     >>> f = lambda *args, **kwargs: print(args, kwargs)
     >>> call('f 10 20 a=1')
     (10, 20) {'a': 1}
-
+    
+    :param      s:    code string
+    :type       s:    str
     """
     fs, args, kwargs = __analyze(s)
     if len(fs) == 1:
@@ -369,10 +208,10 @@ def call(s: str) -> Any:
         return f(args[0])
 
 
-def fold(s: str, gdict: Optional[dict] = None) -> Any:
+def fold(s: str):
     """
-    Uses functools.reduce internally, applies a left fold function of two
-    arguments cumulatively to the items of the iterable, from left to right,
+    Uses functools.reduce internally, applies a left fold function of two 
+    arguments cumulatively to the items of the iterable, from left to right, 
     so as to reduce the iterable to a single value.
 
     >>> fold('add 0 10 20 30 40')
@@ -384,11 +223,11 @@ def fold(s: str, gdict: Optional[dict] = None) -> Any:
     >>> txts = ['abc', 'def']
     >>> fold('add "" txts')
     abcdef
-
+    
     :param      s:    code string
     :type       s:    str
     """
-    fs, args, kwargs = __analyze(s, gdict)
+    fs, args, kwargs = __analyze(s)
     if len(fs) == 1:
         f = fs[0]
         accum, seq = args[0], args[1:]
@@ -405,35 +244,79 @@ def fold(s: str, gdict: Optional[dict] = None) -> Any:
         return res
 
 
-def apply(s: str, gdict: Optional[dict] = None) -> Any:
-    """converts a max-friendly function calling
-    syntax from a list to py objects
-
-    >>> def f(*args, **kwds): return sum(args)
-    >>> s = 'f 1 2 3 a : 5 6 b : 10'
-    >>> apply(s)
-    6
+def to_string(func, *args, **kwds):
+    """creates max-friendly function calling syntax arguments
+    
+    >>> to_string('f2', 1, 2, 3, a=10, b=[1,2])
+    'f2 1 2 3 a : 10 b : 1 2'
     """
-    if not gdict:
-        gdict = globals()
-    f, args, kwds = __from_string(s, gdict)
-    return f(*args, **kwds)
+    res = [func]
+    res.extend(args)
+    res.extend(out_dict(kwds))
+    return " ".join(str(i) for i in res)
 
+
+def from_string(s: str):
+    """converts a max-friendly function calling 
+    syntax from a string to py objects
+
+    >>> s = 'f 1 2 3 a : 5 6 b : 10'
+    >>> from_string(s)
+    f(1, 2, 3, a=[5, 6], b=10)
+    """
+    args = []
+    kwds = []
+    xs = s.split()
+    f = xs[0]
+    xs = xs[1:]
+    if ':' in xs:
+        z = xs.index(':')
+        kwds = xs[z-1:]
+        args = xs[:z-1]
+    else:
+        kwds = []
+        args = xs
+    return f, tuple(args), __list_to_dict(kwds, d={})
+
+
+def apply(xs) -> Any:
+    """converts a max-friendly function calling 
+    syntax from a string to py objects
+
+    >>> xs = 'f 1 2 3 a : 5 6 b : 10'.split()
+    >>> apply(s)
+    f(1, 2, 3, a=[5, 6], b=10)
+    """
+    args = []
+    kwds = []
+    f = xs[0]
+    f = eval(f, locals(), globals())
+    xs = xs[1:]
+    if ':' in xs:
+        z = xs.index(':')
+        kwds = xs[z-1:]
+        args = xs[:z-1]
+    else:
+        kwds = []
+        args = xs
+    args = tuple(args)
+    kwds = __list_to_dict(kwds)
+    return f(*args, **kwds)
 
 # ---------------------------------------------------------
 # misc funcs
 
 
-def edit(path: str) -> None:
+def edit(path: str):
     """open the file in the editor"""
     editor = os.getenv("EDITOR", EDITOR)
     path = os.path.expanduser(path)
     shell(f"open -a '{editor}' '{path}'")
 
 
-def product(*args) -> int | float:
+def product(*args):
     """return result of multiplying arguments with each other
-
+    
     >>> product(1, 2, 4, 6, 20)
     960
     """
@@ -443,7 +326,7 @@ def product(*args) -> int | float:
     return result
 
 
-def sig(func) -> str:
+def sig(func):
     """returns func name and signature
 
     >>> def f(x: int = 10) -> int: return x+1
@@ -455,7 +338,12 @@ def sig(func) -> str:
     return f"<function {name}{signature}>"
 
 
-if __name__ == "__main__":
-    import doctest
+if __name__ == '__main__':
+    if 1:
+        xs = ['a', ':', 5, 'a', 'b', ':', 10, 'abv', 'c', ':', 23]
+        print(__list_to_dict(xs))
+    else:
+        # SHOULD FAIL
+        xs = [1, ':', 5, 'a', 'b', ':', 10, 'abv', 'c', ':', 23]
+        print(__list_to_dict(xs))
 
-    doctest.testmod()
