@@ -85,9 +85,10 @@ class PackageManager:
         self.staple_dmg()
 
     def sign_all(self):
-        """sign all"""
+        """sign externals and, for `*-pkg` variants, the support folder"""
         self.sign_folder(self.project.externals)
-        self.sign_folder(self.project.support)
+        if (self.variant or "").endswith("-pkg"):
+            self.sign_folder(self.project.support)
 
     def sign_folder(self, folder):
         """sign folder"""

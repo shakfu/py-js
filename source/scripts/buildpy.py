@@ -79,7 +79,7 @@ PYTHON = sys.executable
 PLATFORM = platform.system()
 ARCH = platform.machine()
 PY_VER_MINOR = sys.version_info.minor
-DEFAULT_PY_VERSION = "3.13.5"
+DEFAULT_PY_VERSION = "3.13.15"
 DEBUG = getenv("DEBUG", default=True)
 COLOR = getenv("COLOR", default=True)
 
