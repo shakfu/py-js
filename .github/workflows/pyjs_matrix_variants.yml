@@ -19,7 +19,7 @@ jobs:
           - framework-ext
           - relocatable-pkg
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           submodules: 'recursive'
           fetch-depth: '0'
@@ -38,7 +38,7 @@ jobs:
           key: $${{ env.cache-name }}-${{ hashFiles('source/projects/py/resources/pyjs-dependencies.txt') }}
 
       - name: setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip' # caching pip dependencies

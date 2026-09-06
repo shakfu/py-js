@@ -28,7 +28,7 @@ jobs:
     runs-on: ${{ github.event.inputs.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v7
       with:
         submodules: 'recursive'
         fetch-depth: '0'
@@ -70,7 +70,7 @@ jobs:
         rm -rf $PACKAGE_NAME && mkdir -p $PACKAGE_NAME
         mv ${PACKAGE_NAME}.zip $PACKAGE_NAME/
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v7
       with:
         name: ${{ github.event.repository.name }}-${{ github.event.inputs.variant }}-${{ env.PY_VERSION }}-${{ steps.short-sha.outputs.sha }}
         path: ${{ github.event.repository.name }}

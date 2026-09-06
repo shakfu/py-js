@@ -28,7 +28,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v7
       with:
         submodules: 'recursive'
         fetch-depth: '0'
@@ -39,7 +39,7 @@ jobs:
         length: 7
 
     - name: Setup python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ github.event.inputs.py_version }}
 
@@ -84,7 +84,7 @@ jobs:
       with:
         product-path: "${{ env.PRODUCT_DMG }}"
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v7
       with:
         name: ${{ github.event.repository.name }}-relocatable-pkg-${{ env.arch }}-${{ github.event.inputs.py_version }}-${{ steps.short-sha.outputs.sha }}
         path: "${{ env.PRODUCT_DMG }}"
